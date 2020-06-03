@@ -150,12 +150,14 @@
 	    //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
 	    function zTreeOnClick(event, treeId, treeNode) 
 	    {
-	    	  //手机端上点击则打开
+	    	console.log("zTreeOnClick treeId:"+ treeId, treeNode);
+	    	//手机端上点击则打开
 	    }
 	      
 	      //Double Click 对于文件应该是编辑，对于目录应该是打开
 	    function zTreeOnDbClick(event, treeId, treeNode) 
 	    {
+	    	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
     		openDoc(treeNode, false, false);
 	    }
 		

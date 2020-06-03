@@ -157,6 +157,18 @@ function getDocInfoFromRequestParamStr()
 
 //获取文件链接接口
 function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
+{
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle);
+	}
+	else
+	{
+		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle);
+	}
+}
+
+function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -202,12 +214,75 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
     });
 }
 
-//获取文件链接接口(链接带officeEditorAuthCode)
-function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
+//获取压缩文件的文件链接接口
+function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 {	
 	var fileLink = "";
 	var errorInfo = "";
-	console.log("getDocOfficeLink()  docInfo:", docInfo);
+	console.log("getZipDocFileLink()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	return;
+    }
+  	
+	$.ajax({
+        url : "/DocSystem/Doc/getZipDocFileLink.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            isZip: docInfo.isZip,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
+            shareId: docInfo.shareId,
+            urlStyle: urlStyle,
+        },
+        success : function (ret) {
+        	console.log("getZipDocFileLink ret",ret);
+        	if( "ok" == ret.status )
+        	{
+        		var docLink = ret.data;
+        		var fileLink = buildFullLink(docLink);
+        		successCallback &&successCallback(fileLink);
+            }
+            else 
+            {
+            	console.log(ret.msgInfo);
+            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+            	errorCallback && errorCallback(errorInfo);
+            }
+        },
+        error : function () {
+        	errorInfo = "获取文件信息失败：服务器异常";
+        	errorCallback && errorCallback(errorInfo);
+        }
+    });
+}
+
+//获取文件链接接口(链接带officeEditorAuthCode)
+
+function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
+{
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle);
+	}
+	else
+	{
+		getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle);
+	}
+}
+
+function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
+{	
+	var fileLink = "";
+	var errorInfo = "";
+	console.log("getDocOfficeLinkBasic()  docInfo:", docInfo);
     if(!docInfo || docInfo == null || docInfo.id == 0)
     {
     	//未定义需要显示的文件
@@ -224,12 +299,64 @@ function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
         	reposId: docInfo.vid,
             path: docInfo.path,
             name: docInfo.name,
+            isZip: docInfo.isZip,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
             shareId: docInfo.shareId,
             preview: "office",
             urlStyle: urlStyle,
         },
         success : function (ret) {
-        	console.log("getDocOfficeLink ret",ret);
+        	console.log("getDocOfficeLinkBasic ret",ret);
+        	if( "ok" == ret.status )
+        	{
+        		successCallback &&successCallback(ret.data, ret.dataEx);
+            }
+            else 
+            {
+            	console.log(ret.msgInfo);
+            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+            	errorCallback && errorCallback(errorInfo);
+            }
+        },
+        error : function () {
+        	errorInfo = "获取文件信息失败：服务器异常";
+        	errorCallback && errorCallback(errorInfo);
+        }
+    });
+}
+
+//获取压缩文件的文件链接接口(链接带officeEditorAuthCode)
+function getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
+{	
+	var fileLink = "";
+	var errorInfo = "";
+	console.log("getZipDocOfficeLink()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	return;
+    }
+  	
+	$.ajax({
+        url : "/DocSystem/Doc/getZipDocOfficeLink.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            isZip: docInfo.isZip,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
+            shareId: docInfo.shareId,
+            preview: "office",
+            urlStyle: urlStyle,
+        },
+        success : function (ret) {
+        	console.log("getZipDocOfficeLink ret",ret);
         	if( "ok" == ret.status )
         	{
         		successCallback &&successCallback(ret.data, ret.dataEx);
@@ -250,6 +377,18 @@ function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
 
 //文件文本内容获取接口
 function getDocText(docInfo, successCallback, errorCallback)
+{
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		getDocTextBasic(docInfo, successCallback, errorCallback);
+	}
+	else
+	{
+		getZipDocText(docInfo, successCallback, errorCallback)
+	}	
+}
+
+function getDocTextBasic(docInfo, successCallback, errorCallback)
 {
 	var docText = "";
 	var tmpSavedDocText = "";
