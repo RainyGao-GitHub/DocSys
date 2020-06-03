@@ -83,8 +83,20 @@
 		editor.session.setMode("ace/mode/text");
 		editor.setReadOnly(true); // false to make it editable
 	
-		getDocText(docInfo, showText, showErrorMessage);
+		getDocContent(docInfo, showText, showErrorMessage);
 	  	
+		function getDocContent()
+		{
+			if(docInfo.isZip && docInfo.isZip == true)
+			{
+				getZipDocText(docInfo, showText, showErrorMessage);
+			}
+			else
+			{
+				getDocText(docInfo, showText, showErrorMessage);
+			}
+		}
+		
 		function showText(docText, tmpSavedDocText)
 		{
 			
@@ -267,6 +279,11 @@
 		
 		function checkAndSetEditBtn(docInfo)
 		{
+			if(docInfo.isZip && docInfo.isZip == true)
+			{
+				return;
+			}
+			
 			if(docInfo.fileSuffix)
 			{
 				switch(docInfo.fileSuffix)

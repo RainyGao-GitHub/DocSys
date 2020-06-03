@@ -328,34 +328,7 @@ function getZipDocText(docInfo, successCallback, errorCallback)
             	{
 	            	docText = ret1.substring(2);
 	            	//console.log("getDocText docText",docText);
-	            	
-	            	//Try to get tmpSavedDocContent
-	            	$.ajax({
-	            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
-	            	           type : "post",
-	            	           dataType : "text",
-	            	           data : {
-	            	            	reposId: docInfo.vid,
-	            	                docId : docInfo.id,
-	            	                pid: docInfo.pid,
-	            	                path: docInfo.path,
-	            	                name: docInfo.name,
-	            	                docType: 1, //取回文件内容
-	            	                shareId: docInfo.shareId,
-	            	            },
-	            	            success : function (ret2) {
-	            	            	//console.log("getDocText ret2",ret2);
-	            	            	tmpSavedDocText = ret2;
-	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
-	            	            },
-	            	            error : function () {	            	            	
-	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
-
-	            	            	errorInfo = "临时保存文件内容获取失败：服务器异常";
-	            	            	errorCallback && errorCallback(errorInfo);
-	            	                //showErrorMessage("临时保存文件内容失败：服务器异常");
-	            	            }
-	            	        });
+	            	successCallback &&successCallback(docText, "");
             	}
             	else
             	{
