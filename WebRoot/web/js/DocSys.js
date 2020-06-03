@@ -290,6 +290,88 @@ function getDocText(docInfo, successCallback, errorCallback)
         });
 }
 
+//压缩文件中的文件文本内容获取接口
+function getZipDocText(docInfo, successCallback, errorCallback)
+{
+	var docText = "";
+	var tmpSavedDocText = "";
+	var errorInfo = "";
+	console.log("getZipDocText()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	//showErrorMessage("请选择文件");
+    	return;
+    }
+      	
+    $.ajax({
+           url : "/DocSystem/Doc/getZipDocContent.do",
+           type : "post",
+           dataType : "text",
+           data : {
+            	reposId: docInfo.vid,
+                docId : docInfo.id,
+                pid: docInfo.pid,
+                path: docInfo.path,
+                name: docInfo.name,
+                rootPath: docInfo.rootPath, //压缩文件的路径
+                rootName: docInfo.rootName, //压缩文件名
+                docType: 1, //取回文件内容
+                shareId: docInfo.shareId,
+            },
+            success : function (ret1) {
+            	//console.log("getDocText ret1",ret1);
+            	var status = ret1.substring(0,2);
+            	if("ok" == status)
+            	{
+	            	docText = ret1.substring(2);
+	            	//console.log("getDocText docText",docText);
+	            	
+	            	//Try to get tmpSavedDocContent
+	            	$.ajax({
+	            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
+	            	           type : "post",
+	            	           dataType : "text",
+	            	           data : {
+	            	            	reposId: docInfo.vid,
+	            	                docId : docInfo.id,
+	            	                pid: docInfo.pid,
+	            	                path: docInfo.path,
+	            	                name: docInfo.name,
+	            	                docType: 1, //取回文件内容
+	            	                shareId: docInfo.shareId,
+	            	            },
+	            	            success : function (ret2) {
+	            	            	//console.log("getDocText ret2",ret2);
+	            	            	tmpSavedDocText = ret2;
+	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+	            	            },
+	            	            error : function () {	            	            	
+	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+
+	            	            	errorInfo = "临时保存文件内容获取失败：服务器异常";
+	            	            	errorCallback && errorCallback(errorInfo);
+	            	                //showErrorMessage("临时保存文件内容失败：服务器异常");
+	            	            }
+	            	        });
+            	}
+            	else
+            	{
+            		errorInfo = "获取文件内容失败：" + ret1
+            		errorCallback && errorCallback(errorInfo);
+            		//showErrorMessage("获取文件内容失败：" + ret1);
+            	}
+            },
+            error : function () {
+            	errorInfo = "获取文件内容失败：服务器异常";
+        		errorCallback && errorCallback(errorInfo);
+                //showErrorMessage("获取文件内容失败：服务器异常");
+            }
+        });
+}
+
 //文件链接获取接口
 function buildFullLink(docLink)
 {
