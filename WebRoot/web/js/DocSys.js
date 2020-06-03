@@ -948,7 +948,7 @@ function showSuccessMsg(msg)
 }
 
 /****************** Show File In NewPage/Dialog **************************/
-function openDoc(doc, showUnknownFile, openInNewPage, preview)
+function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 {
 	console.log("openDoc() showUnknownFile:" + showUnknownFile + " openInNewPage:" + openInNewPage + " preview:" + preview);
 	console.log("openDoc() doc:",doc);
@@ -960,7 +960,7 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview)
 	}
 	
 	//copy do to docInfo
-	var docInfo = copyDocInfo(doc);
+	var docInfo = copyDocInfo(doc, shareId);
 	
 	if(showUnknownFile && (showUnknownFile == true || showUnknownFile == "showUnknownFile"))
 	{
@@ -1018,7 +1018,7 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview)
 	}
 }
 
-function copyDocInfo(doc)
+function copyDocInfo(doc, shareId)
 {
 	if(doc)
 	{
@@ -1075,12 +1075,12 @@ function openOffice(docInfo, openInNewPage, preview)
         type : "post",
         dataType : "json",
         data : {
-        	reposId: gReposInfo.id,
+        	reposId: docInfo.vid,
             docId : docInfo.docId,
             pid: docInfo.pid,
             path: docInfo.path,
             name: docInfo.name,
-            shareId: gShareId,
+            shareId: docInfo.shareId,
             preview: preview,  //preview表示是否是预览，预览则是转成pdf
         },
         success : function (ret) {
