@@ -380,11 +380,11 @@ function getDocText(docInfo, successCallback, errorCallback)
 {
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		getDocTextBasic(docInfo, successCallback, errorCallback);
+		getZipDocText(docInfo, successCallback, errorCallback);
 	}
 	else
 	{
-		getZipDocText(docInfo, successCallback, errorCallback)
+		getDocTextBasic(docInfo, successCallback, errorCallback)
 	}	
 }
 
