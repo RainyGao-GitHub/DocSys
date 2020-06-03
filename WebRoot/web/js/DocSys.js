@@ -66,7 +66,25 @@ function buildRequestParamStrForDoc(docInfo)
 		urlParamStr += andFlag + "name=" + base64_encode(docInfo.name);
 		andFlag = "&";
 	}
+	
+	if(docInfo.isZip)
+	{
+		urlParamStr += andFlag + "isZip=" + docInfo.isZip;
+		andFlag = "&";		
+	}
 
+	if(docInfo.rootPath)
+	{
+		urlParamStr += andFlag + "rootPath=" + base64_encode(docInfo.path);
+		andFlag = "&";
+	}
+	
+	if(docInfo.rootName)
+	{
+		urlParamStr += andFlag + "rootName=" + base64_encode(docInfo.name);
+		andFlag = "&";
+	}
+	
 	if(docInfo.fileLink)
 	{
 		urlParamStr += andFlag + "fileLink=" + docInfo.fileLink;
@@ -113,6 +131,26 @@ function getDocInfoFromRequestParamStr()
 		name = "";
 	}
 	docInfo.name = name;
+	
+	var isZip = getQueryString("isZip");
+	if(isZip && isZip != null)
+	{
+		docInfo.isZip = isZip;
+	}
+	
+	var rootPath = getQueryString("rootPath");
+	if(rootPath && rootPath != null)
+	{
+		rootPath = base64_decode(rootPath);
+		docInfo.rootPath = rootPath;
+	}
+
+	var rootName = getQueryString("rootName");
+	if(rootName && rootName != null)
+	{
+		rootName = base64_decode(rootName);
+		docInfo.rootName = rootName;
+	}
 
 	return docInfo;
 }
@@ -771,6 +809,172 @@ function showSuccessMsg(msg)
 }
 
 /****************** Show File In NewPage/Dialog **************************/
+function openDoc(doc, showUnknownFile, openInNewPage, preview)
+{
+	console.log("openDoc() showUnknownFile:" + showUnknownFile + " openInNewPage:" + openInNewPage + " preview:" + preview);
+	console.log("openDoc() doc:",doc);
+	
+	if(doc == null || doc.type == 2)
+	{
+		//Folder do nothing
+		return;
+	}
+	
+	//copy do to docInfo
+	var docInfo = copyDocInfo(doc);
+	
+	if(showUnknownFile && (showUnknownFile == true || showUnknownFile == "showUnknownFile"))
+	{
+		showUnknownFile = true;
+	}
+	else
+	{
+		showUnknownFile = false;
+	}
+	
+	if(openInNewPage && (openInNewPage == true || openInNewPage == "openInNewPage"))
+	{
+		openInNewPage = true;
+	}
+	else
+	{
+		openInNewPage = false;
+	}
+	
+	if(isPicture(docInfo.fileSuffix))
+	{
+		showImage(docInfo, openInNewPage);
+	}
+	else if(isVideo(docInfo.fileSuffix))
+	{
+		showVideo(docInfo, openInNewPage);
+	}
+	else if(isPdf(docInfo.fileSuffix))
+	{
+		docInfo.fileLink = ""; //copyDocInfo的fileLink不是RESTLink，因此需要清空，保证showPdf接口重新获取RESTLINK
+		showPdf(docInfo, openInNewPage);
+	}
+	else if(isOffice(docInfo.fileSuffix))
+	{
+		openOffice(docInfo, openInNewPage, preview);
+	}
+	else if(isText(docInfo.fileSuffix))
+	{
+		showText(docInfo, openInNewPage);
+	}
+	else if(isZip(docInfo.fileSuffix))
+	{
+		showZip(docInfo, openInNewPage);
+	}
+	else if(isBinary(docInfo.fileSuffix))
+	{
+		//Do nothing	
+	}
+	else	//UnknownFile
+	{
+		if(showUnknownFile && showUnknownFile == true)
+		{
+			showText(docInfo, openInNewPage);
+		}
+	}
+}
+
+function copyDocInfo(doc)
+{
+	if(doc)
+	{
+		var docInfo = {};
+    	if(doc.vid)
+    	{
+			docInfo.vid = doc.vid;
+    	}
+    	else
+    	{
+    		docInfo.vid = gReposInfo.id;
+    	}
+    	
+    	if(gShareId)
+    	{
+    		docInfo.shareId = gShareId;
+    	}
+    	
+		docInfo.docId = doc.docId;
+		docInfo.path = doc.path;
+		docInfo.name = doc.name;
+		docInfo.isZip = doc.isZip;
+		docInfo.rootPath = doc.rootPath;
+		docInfo.rootName = doc.rootName;	
+		
+		if(doc.fileSuffix)
+		{
+			docInfo.fileSuffix = doc.fileSuffix;	
+		}
+		else
+		{
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);    			
+		}
+		
+		if(doc.dataEx)
+		{
+			docInfo.dataEx = doc.dataEx;
+			var fileLink = getDocDownloadFullLink(docInfo);
+			if(fileLink && fileLink != null)
+			{
+				docInfo.fileLink = fileLink;
+			}
+		}
+		
+		return docInfo;
+	}
+	return null;
+}
+
+function openOffice(docInfo, openInNewPage, preview)
+{
+    $.ajax({
+        url : "/DocSystem/Doc/getDocOfficeLink.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: gReposInfo.id,
+            docId : docInfo.docId,
+            pid: docInfo.pid,
+            path: docInfo.path,
+            name: docInfo.name,
+            shareId: gShareId,
+            preview: preview,  //preview表示是否是预览，预览则是转成pdf
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	console.log("openOffice ret", ret);
+            	if(ret.dataEx == "pdf")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdf(docInfo, openInNewPage);
+                }
+            	else
+                {
+            		if(openInNewPage == false)
+            		{
+            			docInfo.fileLink = ret.data;
+            		}
+            		showOffice(docInfo, openInNewPage);
+                }
+            }
+            else
+            {
+            	console.log("previewOfficeInDialog getDocOfficeLink Failed");
+            	showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+            }
+        },
+        error : function () {
+            //showErrorMessage("文件预览失败：服务器异常");
+            console.log("previewOfficeInDialog getDocOfficeLink Failed 服务器异常");
+            showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+        }
+    });
+}
+
 function showImage(docInfo, openInNewPage)
 {
 	if(openInNewPage)
