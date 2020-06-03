@@ -445,7 +445,7 @@ public class BaseFunction{
 		String [] paths = entryPath.split("/");
 		
 		int deepth = paths.length;
-		System.out.println("seperatePathAndName() deepth:" + deepth); 
+		//System.out.println("seperatePathAndName() deepth:" + deepth); 
 		
 		String  path = "";
 		String name = "";
