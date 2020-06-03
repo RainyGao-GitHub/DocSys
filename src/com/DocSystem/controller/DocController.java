@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
@@ -23,6 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipFile;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -4392,8 +4395,43 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+        System.out.println("getZipSubDocList() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+
+        String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+        String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        ZipFile zipFile = null;
+        List <Doc> subDocList = new ArrayList<Doc>();
+		try {
+			zipFile = new ZipFile(new File(zipFilePath));
+			
+			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
+				ZipEntry entry = entries.nextElement();
+				String subDocPath = rootPath + entry.getName();
+				System.out.println("subDoc: " + subDocPath);
+				Doc subDoc = null;
+				if (entry.isDirectory()) {
+					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+ 				} else {
+					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+ 				}
+				subDocList.add(subDoc);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			if(zipFile != null)
+			{
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return subDocList;
 	}
 	
 	/****************   get Zip SubDocList ******************/
