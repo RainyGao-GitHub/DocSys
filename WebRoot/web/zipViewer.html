@@ -70,6 +70,9 @@ var ZipViewer = (function () {
            jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
            jsonObj.Level = jsonObj.level;
+           jsonObj.isZip = 1;
+           jsonObj.rootPath = docInfo.path;
+           jsonObj.rootName = docInfo.name;
            //设置用户自定义文件图标（必须在standardStyle中有定义）
            if(jsonObj.type == 1)
            {
@@ -136,13 +139,15 @@ var ZipViewer = (function () {
     //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
     function zTreeOnClick(event, treeId, treeNode) 
     {
-    	  //手机端上点击则打开
+    	console.log("zTreeOnClick treeId:"+ treeId, treeNode);
+    	//手机端上点击则打开
     }
       
       //Double Click 对于文件应该是编辑，对于目录应该是打开
     function zTreeOnDbClick(event, treeId, treeNode) 
     {
-			//打开文件
+    	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
+		openDoc(treeNode, false, false);
     }
 	
       //This function was used to get the rightClick treeNode,it will be used for contextjs
@@ -173,6 +178,9 @@ var ZipViewer = (function () {
            jsonObj.id = jsonObj.docId;
            jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.isZip = 1;
+           jsonObj.rootPath = docInfo.path;
+           jsonObj.rootName = docInfo.name;
            //设置用户自定义文件图标（必须在standardStyle中有定义）
            if(jsonObj.type == 1)
            {
