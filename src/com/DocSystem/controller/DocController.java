@@ -4576,7 +4576,7 @@ public class DocController extends BaseController{
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
 				String subDocPath = rootPath + entry.getName();
-				System.out.println("subDoc: " + subDocPath);
+				//System.out.println("subDoc: " + subDocPath);
 				Doc subDoc = null;
 				if (entry.isDirectory()) {
 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
