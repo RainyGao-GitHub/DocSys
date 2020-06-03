@@ -714,3 +714,288 @@ function showSuccessMsg(msg)
 			time : 1000,
 	});
 }
+
+/****************** Show File In NewPage/Dialog **************************/
+function showImage(docInfo, openInNewPage)
+{
+	if(openInNewPage)
+	{
+		showImgInNewPage(docInfo);
+	}
+	else
+	{
+		showImgInDialog(docInfo);
+	}
+}
+
+function showVideo(docInfo, openInNewPage)
+{
+	if(openInNewPage)
+	{
+		showVideoInNewPage(docInfo);
+	}
+	else
+	{
+		showVideoInDialog(docInfo);
+	}
+}
+
+function showZip(docInfo, openInNewPage)
+{
+	if(openInNewPage)
+	{
+		showZipInNewPage(docInfo);
+	}
+	else
+	{
+		showZipInDialog(docInfo);
+	}
+}
+
+function showPdf(docInfo, openInNewPage)
+{
+	if(openInNewPage)
+	{
+		showPdfInNewPage(docInfo);
+	}
+	else
+	{
+		showPdfInDialog(docInfo);
+	}
+}
+
+function showText(docInfo, openInNewPage)
+{
+	if(openInNewPage)
+	{
+		showTextInNewPage(docInfo);
+	}
+	else
+	{
+		showTextInDialog(docInfo);
+	}
+}
+
+function showOffice(docInfo, openInNewPage)
+{
+	if(openInNewPage)
+	{
+		showOfficeInNewPage(docInfo);
+	}
+	else
+	{
+		showOfficeInDialog(docInfo);
+	}
+}
+
+//ShowDocInNewPage
+function showImgInNewPage(docInfo, fileLink)
+{
+	console.log("showImgInDialog docInfo:", docInfo);
+	if(fileLink && fileLink != "")
+	{
+		docInfo.fileLink = fileLink;
+	}
+	var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	window.open("/DocSystem/web/image.html?" + urlParamStr);
+}
+
+function showVideoInNewPage(docInfo, fileLink){
+	console.log("showVideoInNewPage docInfo:", docInfo);
+	if(fileLink && fileLink != "")
+	{
+		docInfo.fileLink = fileLink;
+	}
+	var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	window.open("/DocSystem/web/video.html?" + urlParamStr);
+}
+
+function showZipInNewPage(docInfo)
+{
+	console.log("showZipInNewPage docInfo:", docInfo);
+	var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	window.open("/DocSystem/web/zip.html?" + urlParamStr);
+}
+
+function showPdfInNewPage(docInfo, fileLink)
+{
+	console.log("showPdfInNewPage docInfo:", docInfo);
+	if(fileLink && fileLink != "")
+	{
+		docInfo.fileLink = fileLink;
+	}
+	var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	window.open("/DocSystem/web/pdf.html?" + urlParamStr);
+}
+
+function showMarkdownInNewPage(docInfo)
+{
+	console.log("showMarkdownInNewPage docInfo:", docInfo);
+	var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	window.open("/DocSystem/web/markdown.html?" + urlParamStr);
+}
+
+function showTextInNewPage(docInfo, openType)
+{
+	console.log("showTextInNewPage docInfo:", docInfo);
+	var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	if(openType && openType == "textViewer")
+	{
+		window.open("/DocSystem/web/text.html?" + urlParamStr);
+	}
+	else
+	{
+		window.open("/DocSystem/web/ace.html?" + urlParamStr);			
+	}
+}
+
+function showOfficeInNewPage(docInfo)
+{	
+	console.log("showOfficeInNewPage docInfo:", docInfo);
+
+    var urlParamStr = buildRequestParamStrForDoc(docInfo);
+    console.log("urlParamStr=" + urlParamStr);
+	var link = "/DocSystem/web/office.jsp?" + urlParamStr;
+    window.open(link);
+}
+
+//ShowDocInDialog
+function showImgInDialog(docInfo)
+{
+	console.log("showImgInDialog docInfo:", docInfo);
+	bootstrapQ.dialog({
+		id: "ImgViewer",
+		title: docInfo.name,
+		url: 'imgViewer.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		mstyle: getDialogStyle(),
+		callback: function(){
+			ImgViewer.imgViewerPageInit(docInfo);
+		},
+	});
+}
+
+function showVideoInDialog(docInfo){
+	console.log("showVideoInDialog docInfo:", docInfo);
+	bootstrapQ.dialog({
+		id: "VideoViewer",
+		title: docInfo.name,
+		url: 'videoViewer.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		mstyle: getDialogStyle(),
+		callback: function(){
+			VideoViewer.videoViewerPageInit(docInfo);
+		},
+	});
+}
+
+function showZipInDialog(docInfo)
+	{
+	bootstrapQ.dialog({
+		id: "ZipViewer",
+		title: docInfo.name,
+		url: 'zipViewer.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		mstyle: "width:50%;height:95%;",
+		callback: function(){
+			ZipViewer.zipViewerPageInit(docInfo);
+		},
+	});
+	}
+
+function showPdfInDialog(docInfo)
+	{
+	bootstrapQ.dialog({
+		id: "PdfViewer",
+		title: docInfo.name,
+		url: 'pdfViewer.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		mstyle: "width:95%;height:95%;",
+		callback: function(){
+			PdfViewer.pdfViewerPageInit(docInfo);
+		},
+	});
+	}
+
+function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
+{
+	console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
+	
+	bootstrapQ.dialog({
+		id: "MdViewer",
+		title: docInfo.name,
+		url: 'mdViewer.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		mstyle: getDialogStyle(),
+		callback: function(){
+			MdViewer.mdViewerPageInit(docInfo);
+		},
+	});
+}
+
+function showTextInDialog(docInfo, openType)
+{
+	console.log("showTextInDialog docInfo.docId:" + docInfo.docId);
+	if(openType && openType == "textViewer")
+	{
+		bootstrapQ.dialog({
+			id: "textViewer",
+			title: docInfo.name,
+			url: 'textViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle: getDialogStyle(),
+			callback: function(){
+				TextViewer.textViewerPageInit(docInfo);
+			},
+		});
+	}
+	else
+	{
+		bootstrapQ.dialog({
+			id: "AceEditor",
+			title: docInfo.name,
+			url: 'aceEditor.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle: getDialogStyle(),
+			callback: function(){
+				TextEditor.textEditorPageInit(docInfo);
+			},
+		});
+	}
+}
+
+function showOfficeInDialog(docInfo)
+{
+	console.log("showOfficeInDialog docInfo:", docInfo);
+	bootstrapQ.dialog({
+		id: "OfficeEditor",
+		title: docInfo.name,
+		url: 'officeEditor.jsp',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		mstyle: "width:95%;height:95%;",
+		callback: function(){
+			setTimeout(function (){OfficeEditor.officeEditorPageInit(docInfo)}, 2000); 
+		},
+	});
+}
+
+function getDialogStyle()
+{
+	return 'width:95%;';	
+}
