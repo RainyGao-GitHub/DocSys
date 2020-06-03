@@ -2592,7 +2592,7 @@ public class DocController extends BaseController{
 
 		ZipFile zipFile = null;
 		try {
-			zipFile = new ZipFile(new File(rootDoc.getPath() + rootDoc.getName()));
+			zipFile = new ZipFile(new File(localRootPath + rootDoc.getPath() + rootDoc.getName()));
 			ZipEntry entry = zipFile.getEntry(relativePath + name);
 			if(entry == null)
 			{

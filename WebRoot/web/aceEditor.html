@@ -73,9 +73,9 @@ var TextEditor = (function () {
 		//console.log("textEditorPageInit Input_docText:", Input_docText);
 		docInfo = Input_doc;		
 	
-		getDocText(docInfo, showText, showErrorMessage);
+		getDocText(docInfo, showText, showErrorMessage);	  	
   	}
-    
+
 	function showText(docText, tmpSavedDocText)
 	{
 		checkAndSetFileShowMode(docInfo);
@@ -257,6 +257,11 @@ var TextEditor = (function () {
 	
 	function checkAndSetEditBtn(docInfo)
 	{
+		if(docInfo.isZip && docInfo.isZip == 1)
+		{
+			return;
+		}
+		
 		if(docInfo.fileSuffix)
 		{
 			switch(docInfo.fileSuffix)

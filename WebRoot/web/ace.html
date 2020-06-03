@@ -83,20 +83,8 @@
 		editor.session.setMode("ace/mode/text");
 		editor.setReadOnly(true); // false to make it editable
 	
-		getDocContent(docInfo, showText, showErrorMessage);
-	  	
-		function getDocContent()
-		{
-			if(docInfo.isZip && docInfo.isZip == 1)
-			{
-				getZipDocText(docInfo, showText, showErrorMessage);
-			}
-			else
-			{
-				getDocText(docInfo, showText, showErrorMessage);
-			}
-		}
-		
+		getDocText(docInfo, showText, showErrorMessage);
+	  			
 		function showText(docText, tmpSavedDocText)
 		{
 			
