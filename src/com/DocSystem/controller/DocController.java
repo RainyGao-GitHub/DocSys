@@ -2608,15 +2608,15 @@ public class DocController extends BaseController{
 			}
 			
 			//如果压缩文件有变化则解压文件到临时目录
-			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser()) + rootDoc.getDocId() + "/";
-			File dir = new File(tmpLocalRootPath + relativePath);
+			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
+			File dir = new File(tmpLocalRootPath + path);
 			if(dir.exists() == false)
 			{
 				dir.mkdirs();
 			}
 			
 			//Dump to localFile
-			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + relativePath + name) == false)
+			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + path + name) == false)
 			{
 				docSysErrorLog("解压文件 " + name + " 失败！", rt);
 				writeJson(rt, response);			
@@ -2624,7 +2624,7 @@ public class DocController extends BaseController{
 			}
 			
 			//buildDocInfo
-			Doc tmpDoc = buildBasicDoc(reposId, null, null, relativePath, name, null, 1, true, tmpLocalRootPath, null, null, null);
+			Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 			
 			//根据文件类型获取文件内容或者文件链接			
 			String status = "ok";
