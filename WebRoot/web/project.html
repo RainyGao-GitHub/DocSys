@@ -100,7 +100,7 @@
 		/* 调整zTree每行的高度 */
 		.ztree li a {
             /*height: 25px !important;*/
-            width: 100% !important;
+            width: 95% !important;
         }
         /*.ztree li ul {
             padding-left: 0 !important;
@@ -1958,6 +1958,22 @@
 			},
 		});
     }
+    
+    function showZipInDialog(docInfo)
+   	{
+		bootstrapQ.dialog({
+			id: "ZipViewer",
+			title: docInfo.name,
+			url: 'zipViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle: "width:50%;height:95%;",
+			callback: function(){
+				ZipViewer.zipViewerPageInit(docInfo);
+			},
+		});
+   	}
 	
     function showPdfInDialog(docInfo)
    	{
