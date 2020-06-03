@@ -732,6 +732,12 @@ public class BaseFunction{
 		return hashId;
 	}
 	
+	protected String getReposTmpPathForUnzip(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/Unzip/";
+		createDir(userTmpDir);
+		return userTmpDir;
+	}
+	
 	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
 	protected String getReposUserTmpPath(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";

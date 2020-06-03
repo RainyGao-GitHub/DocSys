@@ -2,6 +2,7 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -2551,7 +2552,175 @@ public class DocController extends BaseController{
 		return hash;
 	}
 	
+	/****************   get Zip Document Content ******************/
+	@RequestMapping("/getZipDocContent.do")
+	public void getZipDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String rootPath,
+			String rootName,
+			Integer shareId,
+			HttpServletRequest request,HttpServletResponse response,HttpSession session){
+		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " shareId:" + shareId);
+
+		if(path == null)
+		{
+			path = "";
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, rootPath, rootName, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		Doc rootDoc = buildBasicDoc(reposId, null, null, rootPath, rootName, null, 1, true, localRootPath, localVRootPath, null, null);
+		
+		//判断文件在压缩文件中的类型
+		String relativePath = getZipRelativePath(path, rootPath + rootName + "/");
+
+		ZipFile zipFile = null;
+		try {
+			zipFile = new ZipFile(new File(rootDoc.getPath() + rootDoc.getName()));
+			ZipEntry entry = zipFile.getEntry(relativePath + name);
+			if(entry == null)
+			{
+				docSysErrorLog("压缩文件中 " + name + " 不存在！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			if(entry.isDirectory())
+			{
+				docSysErrorLog(name + " 是目录！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			//如果压缩文件有变化则解压文件到临时目录
+			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser()) + rootDoc.getDocId() + "/";
+			File dir = new File(tmpLocalRootPath + relativePath);
+			if(dir.exists() == false)
+			{
+				dir.mkdirs();
+			}
+			
+			//Dump to localFile
+			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + relativePath + name) == false)
+			{
+				docSysErrorLog("解压文件 " + name + " 失败！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
+			//buildDocInfo
+			Doc tmpDoc = buildBasicDoc(reposId, null, null, relativePath, name, null, 1, true, tmpLocalRootPath, null, null, null);
+			
+			//根据文件类型获取文件内容或者文件链接			
+			String status = "ok";
+			String content = "";
+			String fileSuffix = getFileSuffix(name);
+			if(isText(fileSuffix))
+			{
+				content = readRealDocContent(repos, tmpDoc);
+			}
+			else if(isOffice(fileSuffix) || isPdf(fileSuffix))
+			{
+				if(checkAndGenerateOfficeContent(repos, tmpDoc, reposAccess.getAccessUser(), fileSuffix))
+				{
+					content = readOfficeContent(repos, tmpDoc, reposAccess.getAccessUser());
+				}
+			}
+			else
+			{
+				if(isBinaryFile(repos, tmpDoc))
+				{
+					status="isBinary";
+				}
+				else
+				{
+					content = readRealDocContent(repos, tmpDoc);
+				}
+			}
+			
+			if(content == null)
+			{
+				content = "";
+			}
+			
+			writeText(status+content, response);			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			docSysErrorLog("压缩文件信息获取异常", rt);
+			writeJson(rt, response);
+		} finally {
+			if(zipFile != null)
+			{
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 	
+	private boolean dumpZipEntryToFile(ZipFile zipFile, ZipEntry entry, String filePath) {
+		boolean ret = false;
+		int bufSize = 4096;
+		byte[] buf = new byte[bufSize];
+		int readedBytes;
+		
+		File file = new File(filePath);
+		
+		FileOutputStream fileOutputStream = null;
+		InputStream inputStream = null;
+		try {
+			fileOutputStream = new FileOutputStream(file);
+			inputStream = zipFile.getInputStream(entry);
+			
+			while ((readedBytes = inputStream.read(buf)) > 0) {
+				fileOutputStream.write(buf, 0, readedBytes);
+			}
+			ret = true;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			if(fileOutputStream != null)
+			{
+				try {
+					fileOutputStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if(inputStream != null)
+			{
+				try {
+					inputStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		return ret;
+	}
+
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
 	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
@@ -4466,7 +4635,7 @@ public class DocController extends BaseController{
 		
 		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
 		
-		String relativePath = getZipRelativePath(path, rootDoc);
+		String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
 		System.out.println("getZipSubDocList relativePath: " + relativePath);
 		
 		List <Doc> subDocList = getZipSubDocList(repos, rootDoc, relativePath, name, rt);
@@ -4482,18 +4651,18 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private String getZipRelativePath(String path, Doc rootDoc) {
-		if(rootDoc.getPath().equals(""))
+	private String getZipRelativePath(String path, String rootPath) {
+		if(rootPath.equals(""))
 		{
 			return path;
 		}
 		
-		if(path.indexOf(rootDoc.getPath()) != 0)
+		if(path.indexOf(rootPath) != 0)
 		{
 			return null; //非法path
 		}
 		
-		return path.substring(rootDoc.getPath().length());
+		return path.substring(rootPath.length());
 	}
 	
 }
