@@ -80,7 +80,7 @@
 	           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
 	           jsonObj.isParent = jsonObj.type == 1? false: true;
 	           jsonObj.Level = jsonObj.level;
-	           jsonObj.isZip = true;
+	           jsonObj.isZip = 1;
 	           jsonObj.rootPath = docInfo.path;
 	           jsonObj.rootName = docInfo.name;
 	           
@@ -156,7 +156,7 @@
 	      //Double Click 对于文件应该是编辑，对于目录应该是打开
 	    function zTreeOnDbClick(event, treeId, treeNode) 
 	    {
-				//打开文件
+    		openDoc(treeNode, false, false);
 	    }
 		
 	      //This function was used to get the rightClick treeNode,it will be used for contextjs
@@ -187,7 +187,7 @@
 	           jsonObj.id = jsonObj.docId;
 	           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
 	           jsonObj.isParent = jsonObj.type == 1? false: true;
-	           jsonObj.isZip = true;
+	           jsonObj.isZip = 1;
 	           jsonObj.rootPath = docInfo.path;
 	           jsonObj.rootName = docInfo.name;
 

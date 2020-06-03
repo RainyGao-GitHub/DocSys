@@ -87,7 +87,7 @@
 	  	
 		function getDocContent()
 		{
-			if(docInfo.isZip && docInfo.isZip == true)
+			if(docInfo.isZip && docInfo.isZip == 1)
 			{
 				getZipDocText(docInfo, showText, showErrorMessage);
 			}
@@ -279,7 +279,7 @@
 		
 		function checkAndSetEditBtn(docInfo)
 		{
-			if(docInfo.isZip && docInfo.isZip == true)
+			if(docInfo.isZip && docInfo.isZip == 1)
 			{
 				return;
 			}
