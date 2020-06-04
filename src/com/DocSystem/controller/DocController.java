@@ -2202,6 +2202,135 @@ public class DocController extends BaseController{
 		sendFileToWebPage(localParentPath,fileName,rt, response, request); 
 	}
 
+	/**************** getZipDocOfficeLink ******************/
+	@RequestMapping("/getZipDocOfficeLink.do")
+	public void getZipDocOfficeLink(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String rootPath, String rootName,
+			String preview,
+			Integer shareId,
+			String urlStyle,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{	
+		System.out.println("getZipDocOfficeLink reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
+
+		if(path == null)
+		{
+			path = "";
+		}
+
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, rootPath, rootName, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		Doc rootDoc = buildBasicDoc(reposId, docId, pid, rootPath, rootName, level, type, true, localRootPath, localVRootPath, null, null);
+		
+		//检查用户是否有文件读取权限
+		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), rootDoc, null, rt) == false)
+		{
+			System.out.println("getZipDocOfficeLink() you have no access right on doc:" + rootDoc.getName());
+			writeJson(rt, response);	
+			return;
+		}
+		
+		//判断文件在压缩文件中的类型
+		String relativePath = getZipRelativePath(path, rootPath + rootName + "/");
+
+		ZipFile zipFile = null;
+		try {
+			zipFile = new ZipFile(new File(localRootPath + rootDoc.getPath() + rootDoc.getName()));
+			ZipEntry entry = zipFile.getEntry(relativePath + name);
+			if(entry == null)
+			{
+				docSysErrorLog("压缩文件中 " + name + " 不存在！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			if(entry.isDirectory())
+			{
+				docSysErrorLog(name + " 是目录！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			//如果压缩文件有变化则解压文件到临时目录
+			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
+			File dir = new File(tmpLocalRootPath + path);
+			if(dir.exists() == false)
+			{
+				dir.mkdirs();
+			}
+			
+			//Dump to localFile
+			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + path + name) == false)
+			{
+				docSysErrorLog("解压文件 " + name + " 失败！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
+			//buildDocInfo
+			Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
+			
+			if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
+			{	
+				JSONObject jobj = new JSONObject();
+				String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
+				String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
+				jobj.put("fileLink", fileLink);
+				
+				Doc localDoc = docSysGetDoc(repos, tmpDoc);
+				jobj.put("saveFileLink", ""); //不允许保存
+				jobj.put("key", tmpDoc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime() + "_" + reposAccess.getAccessUser().getId());
+				rt.setData(jobj);
+				rt.setDataEx("office");
+				writeJson(rt, response);
+				return;
+			}
+			
+			//转换成pdf进行预览
+			String pdfLink = convertOfficeToPdf(repos, tmpDoc, rt);
+			if(pdfLink == null)
+			{
+				System.out.println("getDocOfficeLink() convertOfficeToPdf failed");
+				writeJson(rt, response);	
+				return;
+			}
+			rt.setData(pdfLink);
+			rt.setDataEx("pdf");
+			writeJson(rt, response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			docSysErrorLog("压缩文件信息获取异常", rt);
+			writeJson(rt, response);
+		} finally {
+			if(zipFile != null)
+			{
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
 	/**************** getDocOfficeLink ******************/
 	@RequestMapping("/getDocOfficeLink.do")
 	public void getDocOfficeLink(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
@@ -2559,7 +2688,7 @@ public class DocController extends BaseController{
 			String rootName,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " shareId:" + shareId);
+		System.out.println("getZipDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -3041,6 +3170,103 @@ public class DocController extends BaseController{
 		rt.setData(doc);
 
 		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/getZipDocFileLink.do")
+	public void getZipDocFileLink(Integer reposId, String path, String name,
+			String rootPath, String rootName,
+			Integer shareId,
+			String urlStyle,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
+
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, rootPath, rootName, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		Doc rootDoc = buildBasicDoc(reposId, null, null, rootPath, rootName, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		//判断文件在压缩文件中的类型
+		String relativePath = getZipRelativePath(path, rootPath + rootName + "/");
+
+		ZipFile zipFile = null;
+		try {
+			zipFile = new ZipFile(new File(localRootPath + rootDoc.getPath() + rootDoc.getName()));
+			ZipEntry entry = zipFile.getEntry(relativePath + name);
+			if(entry == null)
+			{
+				docSysErrorLog("压缩文件中 " + name + " 不存在！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			if(entry.isDirectory())
+			{
+				docSysErrorLog(name + " 是目录！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			//如果压缩文件有变化则解压文件到临时目录
+			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
+			File dir = new File(tmpLocalRootPath + path);
+			if(dir.exists() == false)
+			{
+				dir.mkdirs();
+			}
+			
+			//Dump to localFile
+			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + path + name) == false)
+			{
+				docSysErrorLog("解压文件 " + name + " 失败！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
+			//buildDocInfo
+			Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
+			
+			String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
+			if(fileLink == null)
+			{
+				System.out.println("getDocFileLink() buildDocFileLink failed");
+				return;
+			}
+			
+			rt.setData(fileLink);
+			writeJson(rt, response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			docSysErrorLog("压缩文件信息获取异常", rt);
+			writeJson(rt, response);
+		} finally {
+			if(zipFile != null)
+			{
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	@RequestMapping("/getDocFileLink.do")
