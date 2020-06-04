@@ -1003,7 +1003,14 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 	}
 	else if(isZip(docInfo.fileSuffix))
 	{
-		showZip(docInfo, openInNewPage);
+		if(docInfo.isZip && docInfo.isZip == 1)
+		{
+			console.log("目前不支持在线打开压缩文件中的压缩文件");
+		}
+		else
+		{
+			showZip(docInfo, openInNewPage);
+		}
 	}
 	else if(isBinary(docInfo.fileSuffix))
 	{
