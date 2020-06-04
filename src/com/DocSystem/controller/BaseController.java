@@ -3761,7 +3761,7 @@ public class BaseController  extends BaseFunction{
 		localDoc.setName(doc.getName());
 		localDoc.setType(0);	//不存在
 	
-		String localParentPath = getReposRealPath(repos) + doc.getPath();
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File localEntry = new File(localParentPath,doc.getName());
 		if(localEntry.exists())
 		{
