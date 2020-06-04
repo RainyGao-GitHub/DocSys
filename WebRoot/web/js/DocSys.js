@@ -1307,7 +1307,7 @@ function showZipInDialog(docInfo)
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
-		mstyle: "width:50%;height:95%;",
+		mstyle: getZipDialogStyle(),
 		callback: function(){
 			ZipViewer.zipViewerPageInit(docInfo);
 		},
@@ -1398,6 +1398,19 @@ function showOfficeInDialog(docInfo)
 			setTimeout(function (){OfficeEditor.officeEditorPageInit(docInfo)}, 2000); 
 		},
 	});
+}
+
+function getZipDialogStyle()
+{
+	console.log("getZipDialogStyle gIsPC:" + gIsPC);
+	if(gIsPC == false)
+	{
+		return "width:95%;height:95%;";	
+	}
+	else
+	{
+		return "width:50%;height:95%;";				
+	}
 }
 
 function getDialogStyle()
