@@ -19,6 +19,8 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 历史版本
 ![输入图片说明](https://images.gitee.com/uploads/images/2018/1119/095414_fba9ce48_1558129.png "8.png")
 
+在线编辑
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0606/001059_0f0438de_1558129.png "在线编辑.png")
 
 ### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
