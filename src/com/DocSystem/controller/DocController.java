@@ -3883,70 +3883,77 @@ public class DocController extends BaseController{
 
 		if(isRealDoc)
 		{
-			Doc localEntry = fsGetDoc(repos, doc);
-			if(localEntry == null)
+			if(repos.getType() == 3 || repos.getType() == 4)
 			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
-				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
-				writeJson(rt, response);
-				return;				
+				//前置类型仓库不需要判断本地是否有改动
+				System.out.println("revertDocHistory reposId:" + reposId + " SVN或GIT前置仓库不需要检查本地是否有改动");
 			}
-
-			Doc remoteEntry = verReposGetDoc(repos, doc, null);		
-			if(remoteEntry == null)
+			else
 			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
-				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
-				writeJson(rt, response);
-				return;				
-			}
-			
-			Doc dbDoc = dbGetDoc(repos, doc, false);
-			
-			HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
-			HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-			if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2) == false)
-			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
-				System.out.println("revertDocHistory() syncupScanForDoc_FSM!");	
-				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
-				writeJson(rt, response);
-				return;
-			}
-			
-			if(localChanges.size() > 0)
-			{
-				System.out.println("revertDocHistory() 本地有改动！");
-				String localChangeInfo = buildChangeInfo(localChanges);
-				
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
-				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
-				writeJson(rt, response);
-				return;
-			}
-			
-			if(remoteChanges.size() > 0)
-			{
-				System.out.println("revertDocHistory() 远程有改动！");
-				String remoteChangeInfo = buildChangeInfo(remoteChanges);				
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 远程有改动!" + "</br></br>"+ remoteChangeInfo,rt);
-				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
-				writeJson(rt, response);
-				return;
-			}
-			
-			if(localEntry.getType() != 0)
-			{
-				if(commitId.equals(remoteEntry.getRevision()))
+				Doc localEntry = fsGetDoc(repos, doc);
+				if(localEntry == null)
 				{
-					System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
-					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
+					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					writeJson(rt, response);
+					return;				
+				}
+	
+				Doc remoteEntry = verReposGetDoc(repos, doc, null);		
+				if(remoteEntry == null)
+				{
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
+					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					writeJson(rt, response);
+					return;				
+				}
+				
+				Doc dbDoc = dbGetDoc(repos, doc, false);
+				
+				HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
+				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
+				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2) == false)
+				{
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
+					System.out.println("revertDocHistory() syncupScanForDoc_FSM!");	
 					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 					writeJson(rt, response);
 					return;
 				}
-			}
-			
+				
+				if(localChanges.size() > 0)
+				{
+					System.out.println("revertDocHistory() 本地有改动！");
+					String localChangeInfo = buildChangeInfo(localChanges);
+					
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
+					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					writeJson(rt, response);
+					return;
+				}
+				
+				if(remoteChanges.size() > 0)
+				{
+					System.out.println("revertDocHistory() 远程有改动！");
+					String remoteChangeInfo = buildChangeInfo(remoteChanges);				
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 远程有改动!" + "</br></br>"+ remoteChangeInfo,rt);
+					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					writeJson(rt, response);
+					return;
+				}
+				
+				if(localEntry.getType() != 0)
+				{
+					if(commitId.equals(remoteEntry.getRevision()))
+					{
+						System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
+						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+						unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+						writeJson(rt, response);
+						return;
+					}
+				}
+			}	
 			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
 		}	
 		else
