@@ -2374,6 +2374,12 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
+		
+		//SVN和GIT前置类型仓库，需要先将文件CheckOut出来
+		if(repos.getType() == 3 || repos.getType() == 4)
+		{
+			verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);		
+		}
 				
 		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
 		{	
