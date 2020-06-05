@@ -2551,14 +2551,15 @@ public class BaseController  extends BaseFunction{
 		
 		//文件管理系统类型需要进行RealDoc的同步
 		boolean realDocSyncResult = false;
-		if(repos.getType() == 1)	
+		
+		if(repos.getIsRemote() == 1)
 		{
-			if(repos.getIsRemote() == 1)
-			{
-				//Sync Up local VerRepos with remote VerRepos
-				verReposPullPush(repos, true, null);
-			}
-			
+			//Sync Up local VerRepos with remote VerRepos
+			verReposPullPush(repos, true, null);
+		}
+		
+		if(repos.getType() == 1)	
+		{	
 			Doc localEntry = fsGetDoc(repos, doc);
 			if(localEntry == null)
 			{
