@@ -133,25 +133,27 @@ var ZipViewer = (function () {
 	    view: {
         	//showLine: false,	//不显示文件下面的下划线
         	//addDiyDom: addDiyDom         //设置zTree的自定义图标
-			//addHoverDom: addHoverDom,
-			//removeHoverDom: removeHoverDom,
+			addHoverDom: addHoverDom,
+			removeHoverDom: removeHoverDom,
         }
 	};
 	
 	function addHoverDom(treeId, treeNode) {
 		var aObj = $("#" + treeNode.tId + "_a");
 		if ($("#diyBtn_"+treeNode.id).length>0) return;
-		var editStr = "<span id='diyBtn_space_" +treeNode.id+ "' > </span>"
-			+ "<button type='button' class='diyBtn1' id='diyBtn_" + treeNode.id
-			+ "' title='"+treeNode.name+"' onfocus='this.blur();'></button>";
+		var editStr = "<span class='caret pull-right' id='diyBtn_" + treeNode.id
+			+ "' title='"+treeNode.name+"' onfocus='this.blur();'></span>";
 		aObj.append(editStr);
 		var btn = $("#diyBtn_"+treeNode.id);
-		if (btn) btn.bind("click", function(){alert("diy Button for " + treeNode.name);});
+		if (btn) btn.bind("click", function(){
+			console.log("diyBtn onclick for " + treeNode.name);
+		});
 	}
+	
 	function removeHoverDom(treeId, treeNode) {
 		$("#diyBtn_"+treeNode.id).unbind().remove();
-		$("#diyBtn_space_" +treeNode.id).unbind().remove();
 	}
+	
 	
     //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
     function zTreeOnClick(event, treeId, treeNode) 
