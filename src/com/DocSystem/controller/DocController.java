@@ -2887,27 +2887,40 @@ public class DocController extends BaseController{
 		String content = "";
 		if(docType == 1)
 		{
+			Doc tmpDoc = doc;
+			//对于SVN前置类型的仓库，需要从SVN仓库dump到local
+			if(repos.getType() == 3)
+			{
+				verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);
+			}
+			else if(repos.getType() == 4)
+			{
+				//对于GIT前置类型的仓库，需要从本地的GIT仓库中读取
+				String tempLocalRootPath = getLocalVerReposPath(repos, true);
+				tmpDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, tempLocalRootPath, localVRootPath, null, null);				
+			}
+			
 			String fileSuffix = getFileSuffix(name);
 			if(isText(fileSuffix))
 			{
-				content = readRealDocContent(repos, doc);
+				content = readRealDocContent(repos, tmpDoc);
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix))
 			{
-				if(checkAndGenerateOfficeContent(repos, doc, reposAccess.getAccessUser(), fileSuffix))
+				if(checkAndGenerateOfficeContent(repos, tmpDoc, reposAccess.getAccessUser(), fileSuffix))
 				{
-					content = readOfficeContent(repos, doc, reposAccess.getAccessUser());
+					content = readOfficeContent(repos, tmpDoc, reposAccess.getAccessUser());
 				}
 			}
 			else
 			{
-				if(isBinaryFile(repos, doc))
+				if(isBinaryFile(repos, tmpDoc))
 				{
 					status="isBinary";
 				}
 				else
 				{
-					content = readRealDocContent(repos, doc);
+					content = readRealDocContent(repos, tmpDoc);
 				}
 			}
 		}
@@ -3117,7 +3130,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		doc.setType(dbDoc.getType());
-		
+			
 		//图片、视频、音频文件需要返回文件的访问信息，如果是文本文件或Office文件需要根据前端需求返回docText
 		if(doc.getType() == 1)
 		{
