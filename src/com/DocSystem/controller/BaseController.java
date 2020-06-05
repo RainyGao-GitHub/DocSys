@@ -1957,7 +1957,6 @@ public class BaseController  extends BaseFunction{
 		{	
 			unlockDoc(doc, login_user, docLock);
 			docSysDebugLog("addDoc() " +localDocPath + "　已存在！", rt);
-			return false;
 		}
 		
 		if(uploadFile == null)
