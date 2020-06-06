@@ -225,11 +225,16 @@
 	    	}
     		
     		Batch.state = 2;
-    		Content.batchIndex++;
-    		if(Content.batchIndex == Content.batchNum)
+    		if((Content.batchIndex + 1) == Content.batchNum) //It is the last batchIndex
     		{
     			Content.state = 2;
     			console.log("buildSubContextList() all Batch Inited");
+    		}
+    		else
+    		{
+    			Content.batchIndex++;
+    			Content.state = 1;
+    			console.log("buildSubContextList() there is more Batch need to be Inited");
     		}
 	   	}
       	
