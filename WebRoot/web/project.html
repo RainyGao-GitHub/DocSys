@@ -2159,15 +2159,17 @@
       function selectAllNode(currentNode)
       {
     	  var parentNode = null;
+    	  var pid = 0;
     	  if(currentNode != null)
     	  {
-  			var node = getNodeByNodeId(currentNode.docId);
-			gParentNode = getParentNodeByNode(node);
+	  			var node = getNodeByNodeId(currentNode.docId);
+				gParentNode = getParentNodeByNode(node);
+	  		    pid = currentNode.pid;
     	  }
   		  var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		  var nodes = treeObj.getNodeByParam("name", name, parentNode);
+		  var nodes = treeObj.getNodesByParam("pid", pid, parentNode);
 		  for (var i=0, l=nodes.length; i < l; i++) {
-				treeObj.selectNode(nodes[i]);
+				treeObj.selectNode(nodes[i], true, true); //
 		  }
       }
       
@@ -3925,6 +3927,12 @@
 						refreshDoc(null, 0);
 					}
 			},			
+			{divider: true},
+			{text: '全选', action: function(e){
+					e.preventDefault();
+					selectAllNode(null);
+		    	}
+			},
 			{divider: true},
 			{text: '更多...', subMenu: [
 						{text: '查看仓库历史', action: function(e){
