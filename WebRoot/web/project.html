@@ -2156,6 +2156,21 @@
        	console.log("zTreeOnChange");
       }
       
+      function selectAllNode(currentNode)
+      {
+    	  var parentNode = null;
+    	  if(currentNode != null)
+    	  {
+  			var node = getNodeByNodeId(currentNode.docId);
+			gParentNode = getParentNodeByNode(node);
+    	  }
+  		  var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		  var nodes = treeObj.getNodeByParam("name", name, parentNode);
+		  for (var i=0, l=nodes.length; i < l; i++) {
+				treeObj.selectNode(nodes[i]);
+		  }
+      }
+      
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) 
       {
@@ -4047,6 +4062,12 @@
 							curRightClickedTreeNode = null;
 		    			}
 					}
+			},
+			{divider: true},
+			{text: '全选', action: function(e){
+					e.preventDefault();
+					selectAllNode(curRightClickedTreeNode);
+		    	}
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
