@@ -531,7 +531,7 @@
 	                if( "ok" == ret.status ){
 	                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
 						gDocContent = content;
-
+						gTmpSavedContent = content;
 	                    bootstrapQ.msg({
 									msg : "保存成功 :" + (new Date()).toLocaleDateString(),
 									type : 'success',
