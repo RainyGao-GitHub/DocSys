@@ -8322,10 +8322,10 @@ public class BaseController  extends BaseFunction{
 			List<Object> list = dbQuery(null, objId, type, url, user, pwd);
 			if(list != null)
 			{
-				sqlStr += convertListToInertSqls(objId, list, encode);
+				sqlStr += convertListToInertSqls(objId, list, null); //统一进行编码转换写入
 			}
 		}
-		boolean ret = saveDocContentToFile(sqlStr, path, name, "UTF-8");
+		boolean ret = saveDocContentToFile(sqlStr, path, name, encode);
 		System.out.println("backupDB() End with ret:" + ret);
 		return ret;
 	}
