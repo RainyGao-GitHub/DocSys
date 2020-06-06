@@ -37,7 +37,7 @@
                 <a class="navbar-brand"  style="color: #445;font-weight: 600;" href="/DocSystem"><i class="fa fa-paper-plane"></i> DocSys</a>
                 <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
                     <div class="form-inline">
-                        <input class="form-control" id="searchWord" name="searchWord" type="search" placeholder="请输入关键词...">
+                        <input class="form-control" id="searchWord" name="searchWord" type="search" placeholder="请输入关键词..." oninput="$('[id=\'searchWord\']:eq(1)').val(this.value)">
                         <button class="search-btn" onclick="searchDoc();">
                             <i class="fa fa-search"></i>
                         </button>
@@ -56,7 +56,7 @@
                             <a onclick="userLogout()" title="退出登录">退出登录</a>
                         </li>
                     </ul>
-                </div>            
+                </div>
              </div>
 
             <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
@@ -83,7 +83,19 @@
             </nav>
         </div>
     </header>
+
     <div class="container smart-container">
+        <div class="row">
+            <div class="searchbar visible-sm-inline-block visible-xs-inline-block" style="width: 100%;">
+                <form class="form-inline" action="/search" method="get">
+                    <input class="form-control line-search-input" id="searchWord" name="keyword" type="search" placeholder="请输入关键词..." oninput="$('[id=\'searchWord\']:eq(0)').val(this.value)">
+                    <button class="line-search-btn" onclick="searchDoc();">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <div class="row">
             <div id="project-box" class="project-box"></div>
             <div class="clearfix"></div>
@@ -104,6 +116,8 @@
             </div>
         </div>
     </footer>
+
+    <div id="scrollToTopDiv"></div>
 </div>
 
 <script type="text/html" id="tmpl-projects">
@@ -128,24 +142,31 @@
 </script>
 
 <script type="text/html" id="tmpl-searchResults">
-	<ul>
-        {{each list as doc i}}
-    <li>
-        <a href="{{doc.link}}" class="box" title="" target="_blank">
-            <div class="pull-left imgbox">
+    {{each list as doc i}}
+        <div class="s-box">
+            <div class="s-img">
                 <i class="{{doc.iconStyle}}"></i>
             </div>
-            <h4>{{ doc.name }}</h4>
-            <span></span>
-        </a>
-        <p class="summary hidden-xs hidden-sm hidden-md">
-            <a href="{{doc.link}}" class="text" target="_blank">
-                {{ doc.path }}
-            </a>
-        </p>
-    </li>
-        {{/each}}
-    </ul>
+            <div class="s-content-box">
+                <h4 class="s-title">
+                    <a href="{{doc.link}}" title="" target="_blank">{{# doc.name}}</a>
+                </h4>
+                <div class="s-content">
+                    {{doc.timeInfo}} {{# doc.info}}
+                </div>
+                <div class="s-footer">
+                    <a href="{{doc.link}}" target="_blank">
+                        {{ doc.path }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    {{/each}}
+    <!-- 搜索结果分页功能 -->
+    <div class="wrap">
+        <ul id="newsList"></ul>
+        <div id="pagination" class="l-page"></div>
+    </div>
 </script>
 
 <!-- Include all compiled plugins (below), or include individual files as needed -->
@@ -156,13 +177,15 @@
 <script type="text/javascript" src="js/DocSys.js"></script>
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
+<link rel="stylesheet" href="static/pagination/pagination.css"/>
+<script type="text/javascript" src="static/pagination/jquery.pagination.js"></script>
 <script type="text/javascript">
 	//页面初始化
 	var gDocSysConfig = null;
 	var login_user = "";
 	var gShareId;
 	var gPageIndex = 0;
-	var gPageSize = 1000; //默认显示1000个搜索结果
+	var gPageSize = 20; //默认显示1000个搜索结果
 	
 	function pageInit()
     {
@@ -178,6 +201,9 @@
 		}
 		
     	getDocSysConfig();
+
+		// 加载滚动到顶端功能
+		$("#scrollToTopDiv").load("goTop.html")
     	 	
     	//确定当前登录用户是否已登录
     	$.ajax({
@@ -359,10 +385,16 @@
 	 	}
 	}
 	
-	function searchDoc()
+	function searchDoc(pageIndex)
 	{
 		var searchWord = $("#searchWord").val();
 		var sort = "";
+
+		var page = 0;
+		if (pageIndex && pageIndex > 0) {
+		    // 分页插件传过来的页码从1开始，后端的分页处理从0开始，所以这里减1处理
+		    page = pageIndex - 1;
+        }
 		
        	$.ajax({
                url : "/DocSystem/Doc/searchDoc.do",
@@ -371,17 +403,16 @@
                data : {
                    searchWord:searchWord,
                    sort:sort,
-                   pageIndex: gPageIndex,
-               	   pageSize: gPageSize,
+                   pageIndex: page,
+               	   pageSize: gPageSize
                },
                success : function (ret) {
-	           		console.log("searchDoc ret:", ret)
+	           		console.log("searchDoc ret:", ret);
 	        		if(ret.status == "ok")
 	           		{
 	           			console.log("文件搜索成功", ret);
 						var docList = ret.data;
 						var total = ret.dataEx; //搜索结果总数
-		            	
 				      	for(var i=0; i<docList.length; i++)
 				      	{
 				           var jsonObj = docList[i];
@@ -404,12 +435,43 @@
 				           {
 				        	   jsonObj.iconStyle = "icons bigicon folder";
 				           }
+
+                            // 加粗渲染搜索结果
+                            jsonObj.name = searchWordsRender(jsonObj.name, searchWord);
+                            jsonObj.info = searchWordsRender(jsonObj.info, searchWord);
 				       }
-	           			
-		                var html = template('tmpl-searchResults', {
+
+
+                        var html = template('tmpl-searchResults', {
 		                    list : docList,
 		                });
+				      	console.log(html);
 		                $("#project-box").html(html);
+
+
+		                // 渲染分页
+                        $("#pagination").pagination({
+                            /*当前页码*/
+                            currentPage: pageIndex,
+                            /*总共有多少页*/
+                            totalPage: Math.ceil(total/gPageSize),
+                            /*是否显示首页、尾页 true：显示 false：不显示*/
+                            isShow:true,
+                            /*分页条显示可见页码数量*/
+                            count:5,
+                            /*第一页显示文字*/
+                            homePageText:'首页',
+                            /*最后一页显示文字*/
+                            endPageText:'尾页',
+                            /*上一页显示文字*/
+                            prevPageText:'上一页',
+                            /* 下一页显示文字*/
+                            nextPageText:'下一页',
+                            /*点击翻页绑定事件*/
+                            callback: function(page) {
+                                searchDoc(page);
+                            }
+                        });
 	               	}
 	               	else
 	               	{
@@ -421,6 +483,47 @@
                }
            });
 	}
+
+    /**
+     * 加粗加红显示搜索关键字
+     * @param str 原始字符串
+     * @param keyword 关键字
+     */
+	function searchWordsRender(str, keyword) {
+	    if (str && keyword && str.length > keyword.length) {
+	        var keywordLength = keyword.length;
+	        var tmpStr = str.toLowerCase();
+	        keyword = keyword.toLowerCase();
+	        var indexs = [];
+
+	        var startPosition = 0;
+	        var index = -1;
+	        while ((index = tmpStr.indexOf(keyword, startPosition)) >= 0) {
+	            startPosition = index + keyword.length;
+	            indexs.push(index);
+            }
+
+            if (indexs.length == 0) {
+                return str;
+            } else {
+                // 倒序替换
+                for (var i = indexs.length - 1; i >=0; i--) {
+                    var start = indexs[i];
+                    var end = start + keywordLength;
+                    var left = str.substring(0, start);
+                    var mid = str.substring(start, end);
+                    var right = str.substring(end, str.length);
+
+                    // 关键字加粗显示
+                    str = left + "<em>" + mid + "</em>" + right;
+                }
+                return str;
+            }
+        } else {
+	        return str;
+        }
+
+    }
 
 </script>
 </body>
