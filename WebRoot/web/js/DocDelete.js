@@ -7,13 +7,13 @@
         var successNum = 0;	//成功删除个数
 		var failNum = 0; //删除失败个数
         
-        /*DeleteContent 用于保存文件删除的初始信息*/
-        var DeleteContent = {};
-        DeleteContent.DeleteBatchList = [];
-        DeleteContent.batchNum = 0;	//totalBatchNum
-        DeleteContent.batchIndex = 0;	//curBatchIndex
-        DeleteContent.state = 0;	//0: all DeleteBatch not inited 1: DeleteBatch Init is on going 2: DeleteBatch Init completed
-        DeleteContent.totalFileNum = 0; 
+        /*Content 用于保存文件删除的初始信息*/
+        var Content = {};
+        Content.DeleteBatchList = [];
+        Content.batchNum = 0;	//totalBatchNum
+        Content.batchIndex = 0;	//curBatchIndex
+        Content.state = 0;	//0: all DeleteBatch not inited 1: DeleteBatch Init is on going 2: DeleteBatch Init completed
+        Content.totalFileNum = 0; 
         
         /*DeleteDoc conditions 用于指示当前的删除文件及删除状态*/
         var index = 0; //当前操作的索引
@@ -66,18 +66,18 @@
 			DeleteBatch.index = 0;
 			DeleteBatch.state = 0;
 			
-			//add to DeleteContent
-			DeleteContent.DeleteBatchList = [];
-			DeleteContent.DeleteBatchList.push(DeleteBatch);			
-			DeleteContent.batchNum = 1;
-	        DeleteContent.totalFileNum = fileNum;
-			totalNum = DeleteContent.totalFileNum;
+			//add to Content
+			Content.DeleteBatchList = [];
+			Content.DeleteBatchList.push(DeleteBatch);			
+			Content.batchNum = 1;
+	        Content.totalFileNum = fileNum;
+			totalNum = Content.totalFileNum;
 			
-			//Init DeleteContent state
-			DeleteContent.initedFileNum = 0;
-			DeleteContent.batchIndex = 0;
-			DeleteContent.state = 1;
-			console.log("DocCopyInit DeleteContent:", DeleteContent);
+			//Init Content state
+			Content.initedFileNum = 0;
+			Content.batchIndex = 0;
+			Content.state = 1;
+			console.log("DocCopyInit Content:", Content);
 	        
 			
 			isDeleteing = true;
@@ -89,7 +89,7 @@
 			index = 0;
 			
 			//Build SubContextList(totalFileNum will also be caculated)
-			buildSubContextList(DeleteContent, SubContextList, 1000);
+			buildSubContextList(Content, SubContextList, 1000);
       	}
         
       	//增加删除文件
@@ -119,35 +119,35 @@
 			DeleteBatch.index = 0;
 			DeleteBatch.state = 0;
 			
-			//Append to DeleteContent.DeleteBatchList
-			DeleteContent.DeleteBatchList.push(DeleteBatch);
-			DeleteContent.batchNum++;
-			DeleteContent.totalFileNum += fileNum;
-			totalNum = DeleteContent.totalFileNum;
+			//Append to Content.DeleteBatchList
+			Content.DeleteBatchList.push(DeleteBatch);
+			Content.batchNum++;
+			Content.totalFileNum += fileNum;
+			totalNum = Content.totalFileNum;
 			
-			console.log("DocDeleteAppend DeleteContent:", DeleteContent);
+			console.log("DocDeleteAppend Content:", Content);
 			
-			if(DeleteContent.state == 2)	//DeleteBatch already initiated, need to restart it
+			if(Content.state == 2)	//DeleteBatch already initiated, need to restart it
 			{
-				DeleteContent.batchIndex++;
-				DeleteContent.state = 1;
-				buildSubContextList(DeleteContent,SubContextList,1000);
+				Content.batchIndex++;
+				Content.state = 1;
+				buildSubContextList(Content,SubContextList,1000);
 			}
       	}
       	
       	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
-		function buildSubContextList(DeleteContent,SubContextList,maxInitNum)
+		function buildSubContextList(Content,SubContextList,maxInitNum)
 		{
-			if(DeleteContent.state == 2)
+			if(Content.state == 2)
 			{
 				return;
 			}
 			
       		console.log("buildSubContextList() maxInitNum:" + maxInitNum);
 			
-      		var curBatchIndex = DeleteContent.batchIndex;
-      		var DeleteBatch = DeleteContent.DeleteBatchList[curBatchIndex];
-      		console.log("buildSubContextList() DeleteContent curBatchIndex:" + curBatchIndex + " num:" + DeleteContent.batchNum );
+      		var curBatchIndex = Content.batchIndex;
+      		var DeleteBatch = Content.DeleteBatchList[curBatchIndex];
+      		console.log("buildSubContextList() Content curBatchIndex:" + curBatchIndex + " num:" + Content.batchNum );
     		
       		var treeNodes = DeleteBatch.treeNodes;
       		var vid = DeleteBatch.vid;
@@ -167,7 +167,7 @@
  				}
  				
  				DeleteBatch.index++;
- 				DeleteContent.initedFileNum++;
+ 				Content.initedFileNum++;
  				
     			var treeNode = treeNodes[i];
     	   		if(treeNode && treeNode != null)
@@ -193,11 +193,16 @@
 	    	}
     		
     		DeleteBatch.state = 2;
-    		DeleteContent.batchIndex++;
-    		if(DeleteContent.batchIndex == DeleteContent.batchNum)
+    		if((Content.batchIndex + 1) == Content.batchNum) //It is the last batchIndex
     		{
-    			DeleteContent.state = 2;
-    			console.log("buildSubContextList() all DeleteBatch Inited");
+    			Content.state = 2;
+    			console.log("buildSubContextList() all Batch Inited");
+    		}
+    		else
+    		{
+    			Content.batchIndex++;
+    			Content.state = 1;
+    			console.log("buildSubContextList() there is more Batch need to be Inited");
     		}
 	   	}
         		      		
@@ -205,9 +210,9 @@
 		function DeleteDoc()
 		{
     		//Delete files 没有全部加入到SubContextList
-    		if(DeleteContent.state != 2)
+    		if(Content.state != 2)
     		{
-				buildSubContextList(DeleteContent,SubContextList,1000);
+				buildSubContextList(Content,SubContextList,1000);
     		}
     		
     		console.log("DeleteDoc() index:" + index + " totalNum:" + totalNum);
