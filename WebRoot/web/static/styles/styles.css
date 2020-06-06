@@ -40,6 +40,20 @@ body {
     border: 0;
     background-color: transparent
 }
+
+.line-search-input{
+    width: 100% !important;
+    display: block !important;
+}
+
+.line-search-btn{
+    float: right;
+    margin-top: -30px;
+    margin-right: 5px;
+    background-color: transparent;
+    border: 0;
+}
+
 .navbar-header .searchbar .search-btn>i.fa{
     padding: 10px;
 }
@@ -604,4 +618,38 @@ body {
     .article-edit-btn,.project-user-btn{
         display: none;
     }
+}
+
+.s-box{
+    min-height: 50px;
+}
+
+.s-box em{
+    text-decoration: underline;
+    font-style: normal;
+    color: #c00;
+}
+.s-img{
+    position: absolute;
+}
+
+.s-content-box{
+    padding-left: 44px;
+    font-size: 13px;
+    line-height: 1.54;
+    word-wrap: break-word;
+    word-break: break-word;
+    margin-bottom: 14px;
+}
+
+.s-content .s-title{
+    padding-top: 0px;
+}
+
+.s-title a{
+    text-decoration: underline;
+}
+
+.s-footer a {
+    color: green;
 }
