@@ -3725,11 +3725,11 @@
       	//拖拽上传:目录树区域
     	var treeBodyZone = document.getElementById("treeBody");  
     	treeBodyZone.onclick = function(e){
-    		console.log("treeBodyZone.onclick()");
+    		console.log("treeBodyZone.onclick() e.target.tagName:", e.target.tagName);
             e.preventDefault();
             //判断现在所在的zTree Node
-            if(e.target.tagName != "SPAN"){
-            	//清除选中
+            if(e.target.tagName != "SPAN" && e.target.tagName != "A")
+            {
             	var treeObj = $.fn.zTree.getZTreeObj("doctree");
             	treeObj.cancelSelectedNode();
 				showDocList(gRootDoc);
