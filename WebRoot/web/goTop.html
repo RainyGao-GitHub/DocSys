@@ -1,0 +1,82 @@
+<style type="text/css">
+    #s_side_wrapper {
+        position: fixed;
+        right: 24px;
+        bottom: 64px;
+        background-color: #f5f5f6;
+        width: 44px;
+        border-radius: 22px;
+        z-index: 3;
+    }
+
+    #s_side_wrapper .qrcode-feed, #s_side_wrapper .top-feed {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+    }
+
+    #s_side_wrapper .icon-mask-wrapper {
+        width: 100%;
+        border-radius: 50%;
+        padding: 10px 0;
+        cursor: pointer;
+    }
+
+    #s_side_wrapper .icon-mask-wrapper .icon-hover {
+        display: none;
+    }
+
+    .icon, #s_side_wrapper .icon-mask-wrapper .icon-hover {
+        height: 24px;
+        width: 24px;
+        margin-right: auto;
+        margin-left: auto;
+        display: block;
+    }
+
+    #s_side_wrapper .totop-tooltip {
+        width: 80px;
+        height: 36px;
+        line-height: 36px;
+    }
+
+    #s_side_wrapper .tooltip {
+        display: none;
+        position: absolute;
+        right: 56px;
+        bottom: 0;
+        background-color: #fff;
+        z-index: 303;
+        box-shadow: 0 2px 10px 0 rgba(0,0,0,.1);
+        border-radius: 12px;
+    }
+
+    .s-isindex-wrap .c-color-text {
+        color: #333;
+    }
+
+</style>
+<div id="s_side_wrapper">
+    <div id="s_top_feed" class="top-feed" style="display: none;">
+        <div class="to-top icon-mask-wrapper" data-tool="1">
+            <img class="icon" src="images/totop.png"
+                 onmouseenter="this.src='images/totop-hover.png'"
+                 onmouseleave="this.src='images/totop.png'"
+                 onclick="$('html,body').animate({scrollTop:'0px'},'slow');"
+
+            />
+        </div>
+        <div class="tooltip totop-tooltip c-font-medium c-color-text">返回顶部</div>
+    </div>
+</div>
+<!--<script type="text/javascript" src="static/ContextJS/js/jquery.min.js"></script>-->
+<script type="text/javascript">
+    $(window).scroll(function () {
+        var topOffset = $(window).scrollTop();
+        if (topOffset > 300) {
+            $("#s_top_feed").fadeIn(500);
+        } else {
+            $("#s_top_feed").fadeOut(500);
+        }
+    })
+</script>

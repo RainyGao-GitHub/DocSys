@@ -1,0 +1,26 @@
+/**分页样式*/
+.l-page{
+    margin-top: 30px;
+    margin-bottom: 55px;
+    text-align: center;
+}
+.l-page .ui-pagination-container .ui-pagination-page-item.active{
+    background-color: #2771ff;;
+    border:1px solid #2771ff;
+    color: #fff;
+}
+.l-page .ui-pagination-container .ui-pagination-page-item{
+    margin: 0 3px;
+    padding: 4px 14px;
+    border:1px solid #dddddd;
+    color: #636363;
+    font-size: 14px;
+    border-radius: 2px;
+    text-decoration: none;
+}
+.l-page .ui-pagination-container .ui-pagination-page-item:hover{
+    color: #636363;
+}
+.l-page .ui-pagination-container .ui-pagination-page-item.active:hover{
+    color: #fff;
+}
