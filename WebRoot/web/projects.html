@@ -86,13 +86,13 @@
 
     <div class="container smart-container">
         <div class="row">
-            <div class="searchbar visible-sm-inline-block visible-xs-inline-block" style="width: 100%;">
-                <form class="form-inline" action="/search" method="get">
+            <div class="searchbar visible-sm-inline-block visible-xs-inline-block" style="width: 95%; margin-left: 10px;">
+                <div class="form-inline">
                     <input class="form-control line-search-input" id="searchWord" name="keyword" type="search" placeholder="请输入关键词..." oninput="$('[id=\'searchWord\']:eq(0)').val(this.value)">
                     <button class="line-search-btn" onclick="searchDoc();">
                         <i class="fa fa-search"></i>
                     </button>
-                </form>
+                </div>
             </div>
         </div>
 
@@ -447,7 +447,7 @@
 	               	}
                },
                error : function () {
-                   alert('服务器异常: 搜索文件异常');
+                   showErrorMessage("文件搜索出错:服务器异常");
                }
            });
 	}
