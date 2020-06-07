@@ -184,8 +184,8 @@
 	var gDocSysConfig = null;
 	var login_user = "";
 	var gShareId;
-	var gPageIndex = 0;
-	var gPageSize = 20; //默认显示1000个搜索结果
+	var gPageIndex = 1;
+	var gPageSize = 10;
 	
 	function pageInit()
     {
@@ -385,16 +385,12 @@
 	 	}
 	}
 	
+	//注意:page从0开始，pageIndex从1开始
+	var searchResults = [];
 	function searchDoc(pageIndex)
 	{
 		var searchWord = $("#searchWord").val();
 		var sort = "";
-
-		var page = 0;
-		if (pageIndex && pageIndex > 0) {
-		    // 分页插件传过来的页码从1开始，后端的分页处理从0开始，所以这里减1处理
-		    page = pageIndex - 1;
-        }
 		
        	$.ajax({
                url : "/DocSystem/Doc/searchDoc.do",
@@ -403,8 +399,8 @@
                data : {
                    searchWord:searchWord,
                    sort:sort,
-                   pageIndex: page,
-               	   pageSize: gPageSize
+                   //pageIndex: page,
+               	   //pageSize: gPageSize
                },
                success : function (ret) {
 	           		console.log("searchDoc ret:", ret);
@@ -412,6 +408,8 @@
 	           		{
 	           			console.log("文件搜索成功", ret);
 						var docList = ret.data;
+						searchResults = docList; //赋值给searchResult,用于分页显示控制
+						
 						var total = ret.dataEx; //搜索结果总数
 				      	for(var i=0; i<docList.length; i++)
 				      	{
@@ -441,37 +439,7 @@
                             jsonObj.info = searchWordsRender(jsonObj.info, searchWord);
 				       }
 
-
-                        var html = template('tmpl-searchResults', {
-		                    list : docList,
-		                });
-				      	console.log(html);
-		                $("#project-box").html(html);
-
-
-		                // 渲染分页
-                        $("#pagination").pagination({
-                            /*当前页码*/
-                            currentPage: pageIndex,
-                            /*总共有多少页*/
-                            totalPage: Math.ceil(total/gPageSize),
-                            /*是否显示首页、尾页 true：显示 false：不显示*/
-                            isShow:true,
-                            /*分页条显示可见页码数量*/
-                            count:5,
-                            /*第一页显示文字*/
-                            homePageText:'首页',
-                            /*最后一页显示文字*/
-                            endPageText:'尾页',
-                            /*上一页显示文字*/
-                            prevPageText:'上一页',
-                            /* 下一页显示文字*/
-                            nextPageText:'下一页',
-                            /*点击翻页绑定事件*/
-                            callback: function(page) {
-                                searchDoc(page);
-                            }
-                        });
+				       showSearchResults(searchResults, pageIndex);
 	               	}
 	               	else
 	               	{
@@ -483,6 +451,63 @@
                }
            });
 	}
+	
+	function showSearchResults(searchResults, pageIndex)
+	{
+		console.log("showSearchResults pageIndex:" + pageIndex);
+		var page = 0;
+		if (pageIndex && pageIndex > 0) {
+		    // 分页插件传过来的页码从1开始，后端的分页处理从0开始，所以这里减1处理
+		    page = pageIndex - 1;
+        }
+		
+		var docList = [];
+		var startIndex = page * gPageSize; //当前页第一个搜索结果索引号
+		var total = searchResults.length;
+		var size = total - startIndex;
+		if(size > gPageSize)
+		{
+			size = gPageSize;
+		}
+		for(var i=0; i< size; i++)
+		{
+			docList[i] = searchResults[startIndex+i];
+		}
+		console.log(docList);
+		
+        var html = template('tmpl-searchResults', {
+                list : docList,
+        });
+	    
+        $("#project-box").html(html);
+        
+
+        // 渲染分页
+        $("#pagination").pagination({
+             /*当前页码*/
+             currentPage: pageIndex,
+             /*总共有多少页*/
+             totalPage: Math.ceil(total/gPageSize),
+             /*是否显示首页、尾页 true：显示 false：不显示*/
+             isShow:true,
+             /*分页条显示可见页码数量*/
+             count:5,
+             /*第一页显示文字*/
+             homePageText:'首页',
+             /*最后一页显示文字*/
+             endPageText:'尾页',
+             /*上一页显示文字*/
+             prevPageText:'上一页',
+             /* 下一页显示文字*/
+             nextPageText:'下一页',
+             /*点击翻页绑定事件*/
+             callback: function(newPageIndex) {
+             	showSearchResults(searchResults, newPageIndex);
+             }
+        });
+        
+	}
+
 
     /**
      * 加粗加红显示搜索关键字
