@@ -261,6 +261,10 @@ var TextEditor = (function () {
 		{
 			return;
 		}
+		if(docInfo.isHistory && docInfo.isHistory == 1)
+		{
+			return;
+		}
 		
 		if(docInfo.fileSuffix)
 		{

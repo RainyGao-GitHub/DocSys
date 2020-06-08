@@ -31,17 +31,13 @@
 
 			var entryPath = changeItem.entryPath;
 			console.log("viewHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
-		    var path = getPathFromEntryPath(entryPath);
-		    var name = getNameFromEntryPath(entryPath);
-		    var docInfo = {
-		    	vid: reposId,
-		    	path: path,
-		    	name: name,
-		    	isHistory: 1,
-		    	commitId: commitId,
-		    	docType: historyType,
-		    };
-		    openDoc(docInfo, false, false, shareId);
+		    var docInfo = buildBasicDoc(entryPath, "");
+		    docInfo.vid = reposId;
+		    docInfo.type = 1;
+		    docInfo.isHistory = 1;
+		    docInfo.commitId = commitId;
+		    docInfo.docType = historyType == 0? 1:2;
+		    openDoc(docInfo, false, false, gShareId);
 		}
 			
 		function downloadHistory(index)
@@ -290,7 +286,9 @@
 	    	historyDetailsPageInit: function(vid, docId, pid, path, name, type){
 	    		historyDetailsPageInit(vid, docId, pid, path, name, type);
 	        },
-
+	        viewHistory: function(index){
+	        	viewHistory(index);
+	        },
 	        downloadHistory: function(index){
 	        	downloadHistory(index);
 	        },

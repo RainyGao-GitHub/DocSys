@@ -443,34 +443,40 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
             	{
 	            	docText = ret1.substring(2);
 	            	//console.log("getDocText docText",docText);
-	            	
-	            	//Try to get tmpSavedDocContent
-	            	$.ajax({
-	            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
-	            	           type : "post",
-	            	           dataType : "text",
-	            	           data : {
-	            	            	reposId: docInfo.vid,
-	            	                docId : docInfo.id,
-	            	                pid: docInfo.pid,
-	            	                path: docInfo.path,
-	            	                name: docInfo.name,
-	            	                docType: docInfo.docType, //取回文件内容
-	            	                shareId: docInfo.shareId,
-	            	            },
-	            	            success : function (ret2) {
-	            	            	//console.log("getDocText ret2",ret2);
-	            	            	tmpSavedDocText = ret2;
-	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
-	            	            },
-	            	            error : function () {	            	            	
-	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
-
-	            	            	errorInfo = "临时保存文件内容获取失败：服务器异常";
-	            	            	errorCallback && errorCallback(errorInfo);
-	            	                //showErrorMessage("临时保存文件内容失败：服务器异常");
-	            	            }
-	            	        });
+	            	if(docInfo.isHistory && docInfo.isHistory == 1)
+	            	{
+	            		successCallback &&successCallback(docText, "");
+	            	}
+	            	else
+	            	{
+		            	//Try to get tmpSavedDocContent
+		            	$.ajax({
+		            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
+		            	           type : "post",
+		            	           dataType : "text",
+		            	           data : {
+		            	            	reposId: docInfo.vid,
+		            	                docId : docInfo.id,
+		            	                pid: docInfo.pid,
+		            	                path: docInfo.path,
+		            	                name: docInfo.name,
+		            	                docType: docInfo.docType, //取回文件内容
+		            	                shareId: docInfo.shareId,
+		            	            },
+		            	            success : function (ret2) {
+		            	            	//console.log("getDocText ret2",ret2);
+		            	            	tmpSavedDocText = ret2;
+		            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+		            	            },
+		            	            error : function () {	            	            	
+		            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+	
+		            	            	errorInfo = "临时保存文件内容获取失败：服务器异常";
+		            	            	errorCallback && errorCallback(errorInfo);
+		            	                //showErrorMessage("临时保存文件内容失败：服务器异常");
+		            	            }
+		            	        });
+	            	}
             	}
             	else
             	{
@@ -634,6 +640,30 @@ function getDocDownloadFullLink(docInfo, urlStyle)
 	var docLink = getDocDownloadLink(docInfo, urlStyle);
 	var url =  buildFullLink(docLink);
 	return url;
+}
+
+//文件类型获取与判断接口
+function buildBasicDoc(path, name)
+{
+	var doc = {
+		path: path,
+		name: name,
+	};
+	
+	if(name == "" && path != "")
+	{
+		var offset = path.lastIndexOf("/");
+		if( offset < 0 ){
+			doc.path = "";
+			doc.name = path;
+		}
+		else
+		{
+			doc.path = path.substring(0, offset+1);
+			doc.name = path.substring(offset + 1 , path.length);
+		}
+	}
+	return doc;
 }
 
 //文件类型获取与判断接口
