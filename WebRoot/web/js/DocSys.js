@@ -31,7 +31,6 @@ function isWeiXin(){
     } 
 }
     
-
 //构造 buildRequestParamStrForDoc 和 getDocInfoFromRequestParamStr 需要成对使用，用于前端页面之间传递参数
 //如果是传给后台的url需要用base64_urlsafe_encode
 function buildRequestParamStrForDoc(docInfo)
@@ -71,18 +70,28 @@ function buildRequestParamStrForDoc(docInfo)
 	{
 		urlParamStr += andFlag + "isZip=" + docInfo.isZip;
 		andFlag = "&";		
-	}
-
-	if(docInfo.rootPath)
-	{
-		urlParamStr += andFlag + "rootPath=" + base64_encode(docInfo.path);
-		andFlag = "&";
+		if(docInfo.rootPath)
+		{
+			urlParamStr += andFlag + "rootPath=" + base64_encode(docInfo.path);
+			andFlag = "&";
+		}
+		
+		if(docInfo.rootName)
+		{
+			urlParamStr += andFlag + "rootName=" + base64_encode(docInfo.name);
+			andFlag = "&";
+		}
 	}
 	
-	if(docInfo.rootName)
+	if(docInfo.isHistory)
 	{
-		urlParamStr += andFlag + "rootName=" + base64_encode(docInfo.name);
-		andFlag = "&";
+		urlParamStr += andFlag + "isHistory=" + docInfo.isHistory;
+		andFlag = "&";		
+		if(docInfo.commitId)
+		{
+			urlParamStr += andFlag + "commitId=" + docInfo.commitId;
+			andFlag = "&";		
+		}
 	}
 	
 	if(docInfo.fileLink)
@@ -136,22 +145,32 @@ function getDocInfoFromRequestParamStr()
 	if(isZip && isZip != null)
 	{
 		docInfo.isZip = isZip;
+		var rootPath = getQueryString("rootPath");
+		if(rootPath && rootPath != null)
+		{
+			rootPath = base64_decode(rootPath);
+			docInfo.rootPath = rootPath;
+		}
+
+		var rootName = getQueryString("rootName");
+		if(rootName && rootName != null)
+		{
+			rootName = base64_decode(rootName);
+			docInfo.rootName = rootName;
+		}
 	}
 	
-	var rootPath = getQueryString("rootPath");
-	if(rootPath && rootPath != null)
+	var isHistory = getQueryString("isHistory");
+	if(isHistory && isHistory != null)
 	{
-		rootPath = base64_decode(rootPath);
-		docInfo.rootPath = rootPath;
+		docInfo.isHistory = isHistory;
+		var commitId = getQueryString("commitId");
+		if(commitId && commitId != null)
+		{
+			docInfo.commitId = commitId;
+		}
 	}
-
-	var rootName = getQueryString("rootName");
-	if(rootName && rootName != null)
-	{
-		rootName = base64_decode(rootName);
-		docInfo.rootName = rootName;
-	}
-
+	
 	return docInfo;
 }
 
@@ -189,6 +208,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
         	reposId: docInfo.vid,
             path: docInfo.path,
             name: docInfo.name,
+            commitId: docInfo.commitId,
             shareId: docInfo.shareId,
             urlStyle: urlStyle,
         },
@@ -299,6 +319,7 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
         	reposId: docInfo.vid,
             path: docInfo.path,
             name: docInfo.name,
+            commitId: docInfo.commitId,
             isZip: docInfo.isZip,
             rootPath: docInfo.rootPath,
             rootName: docInfo.rootName,
@@ -409,11 +430,10 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
            dataType : "text",
            data : {
             	reposId: docInfo.vid,
-                docId : docInfo.id,
-                pid: docInfo.pid,
                 path: docInfo.path,
                 name: docInfo.name,
-                docType: 1, //取回文件内容
+                docType: docInfo.docType, //取回文件内容
+                commitId: docInfo.commitId,
                 shareId: docInfo.shareId,
             },
             success : function (ret1) {
@@ -435,7 +455,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
 	            	                pid: docInfo.pid,
 	            	                path: docInfo.path,
 	            	                name: docInfo.name,
-	            	                docType: 1, //取回文件内容
+	            	                docType: docInfo.docType, //取回文件内容
 	            	                shareId: docInfo.shareId,
 	            	            },
 	            	            success : function (ret2) {
@@ -1047,9 +1067,24 @@ function copyDocInfo(doc, shareId)
 		docInfo.docId = doc.docId;
 		docInfo.path = doc.path;
 		docInfo.name = doc.name;
+		docInfo.docType = doc.docType;
+		if(!docInfo.docType)
+		{
+			docInfo.docType = 1; //默认是1
+		}
+		
 		docInfo.isZip = doc.isZip;
-		docInfo.rootPath = doc.rootPath;
-		docInfo.rootName = doc.rootName;	
+		if(docInfo.isZip && docInfo.isZip == 1)
+		{
+			docInfo.rootPath = doc.rootPath;
+			docInfo.rootName = doc.rootName;
+		}
+		
+		docInfo.isHistory = doc.isHistory;
+		if(docInfo.isHistory && docInfo.isHistory == 1)
+		{
+			docInfo.commitId = doc.commitId;
+		}
 		
 		if(doc.fileSuffix)
 		{
@@ -1083,10 +1118,9 @@ function openOffice(docInfo, openInNewPage, preview)
         dataType : "json",
         data : {
         	reposId: docInfo.vid,
-            docId : docInfo.docId,
-            pid: docInfo.pid,
             path: docInfo.path,
             name: docInfo.name,
+            commitId: docInfo.commitId,
             shareId: docInfo.shareId,
             preview: preview,  //preview表示是否是预览，预览则是转成pdf
         },

@@ -732,8 +732,16 @@ public class BaseFunction{
 		return hashId;
 	}
 	
-	protected String getReposTmpPathForHistory(Repos repos, String commitId) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/History/" + commitId + "/";
+	protected String getReposTmpPathForHistory(Repos repos, String commitId, boolean isRealDoc) {
+		if(isRealDoc)
+		{	
+			String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/History/rdata/" + commitId + "/";
+			createDir(userTmpDir);
+			return userTmpDir;
+		}
+		
+		//is VDoc
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/History/vdata/" + commitId + "/";
 		createDir(userTmpDir);
 		return userTmpDir;
 	}
