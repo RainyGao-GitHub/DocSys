@@ -2961,15 +2961,14 @@ public class DocController extends BaseController{
 			else
 			{
 				String tempLocalRootPath = getReposTmpPathForHistory(repos, commitId, isRealDoc);
-				String vDocName = getVDocName(doc);
-				File dir = new File(tempLocalRootPath + vDocName);
+				File dir = new File(tempLocalRootPath + path);
 				if(dir.exists() == false)
 				{
 					dir.mkdirs();
-					verReposCheckOut(repos, true, doc, tempLocalRootPath, vDocName, commitId, true, true, null);
+					verReposCheckOut(repos, true, doc, tempLocalRootPath + path, name, commitId, true, true, null);
 				}
 
-				Doc tmpDoc = buildBasicDoc(reposId, null, null, vDocName, "content.md", null, 1, true, tempLocalRootPath, localVRootPath, null, null);
+				Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
 				content = readRealDocContent(repos, tmpDoc);
 			}
 		}
