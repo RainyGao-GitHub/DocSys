@@ -222,9 +222,9 @@
 					return;
 				}
 				
+				changeItems = data;
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					changeItems.push(d);
 					
 					var changeType = getChangeType(d);
 					var entryPath = d.entryPath;
