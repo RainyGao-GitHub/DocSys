@@ -2202,7 +2202,6 @@ public class DocController extends BaseController{
 		sendFileToWebPage(localParentPath,fileName,rt, response, request); 
 	}
 
-	/**************** getZipDocOfficeLink ******************/
 	@RequestMapping("/getZipDocOfficeLink.do")
 	public void getZipDocOfficeLink(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String rootPath, String rootName,
@@ -2329,6 +2328,111 @@ public class DocController extends BaseController{
 				}
 			}
 		}
+	}
+	
+	public void getHistoryDocOfficeLink(Integer reposId, String path, String name, String commitId,
+			String preview,
+			Integer shareId,
+			String urlStyle,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{	
+		System.out.println("getHistoryDocOfficeLink reposId:" + reposId + " path:" + path + " name:" + name  + " shareId:" + shareId + " commitId:" + commitId);
+
+		if(path == null)
+		{
+			path = "";
+		}
+
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		//检查用户是否有文件读取权限
+		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), doc, null, rt) == false)
+		{
+			System.out.println("getHistoryDocOfficeLink() you have no access right on doc:" + doc.getName());
+			writeJson(rt, response);	
+			return;
+		}
+		
+		Doc remoteDoc = verReposGetDoc(repos, doc, commitId);
+		if(remoteDoc == null)
+		{
+			docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		if(remoteDoc.getType() == 0)
+		{
+			docSysErrorLog(name + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		else if(remoteDoc.getType() == 2)
+		{
+			docSysErrorLog(name + " 是目录！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		
+		//checkOut历史版本文件
+		String tempLocalRootPath = getReposTmpPathForHistory(repos, commitId);
+		File dir = new File(tempLocalRootPath + path);
+		if(dir.exists() == false)
+		{
+			dir.mkdirs();
+		}
+		File file = new File(tempLocalRootPath + path + name);
+		if(file.exists() == false)
+		{
+			verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+		}
+		
+		Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);				
+			
+		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
+		{	
+			JSONObject jobj = new JSONObject();
+			String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
+			String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
+			jobj.put("fileLink", fileLink);
+				
+			Doc localDoc = docSysGetDoc(repos, tmpDoc);
+			jobj.put("saveFileLink", ""); //不允许保存
+			jobj.put("key", tmpDoc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime() + "_" + reposAccess.getAccessUser().getId());
+			rt.setData(jobj);
+			rt.setDataEx("office");
+			writeJson(rt, response);
+			return;
+		}
+			
+		//转换成pdf进行预览
+		String pdfLink = convertOfficeToPdf(repos, tmpDoc, rt);
+		if(pdfLink == null)
+		{
+			System.out.println("getDocOfficeLink() convertOfficeToPdf failed");
+			writeJson(rt, response);	
+			return;
+		}
+		rt.setData(pdfLink);
+		rt.setDataEx("pdf");
+		writeJson(rt, response);
 	}
 	
 	/**************** getDocOfficeLink ******************/
@@ -2855,6 +2959,108 @@ public class DocController extends BaseController{
 		}
 		return ret;
 	}
+	
+	/****************   get History Document Content ******************/
+	@RequestMapping("/getHistoryDocContent.do")
+	public void getHistoryDocContent(Integer reposId, String path, String name, String commitId,
+			Integer shareId,
+			HttpServletRequest request,HttpServletResponse response,HttpSession session){
+		System.out.println("getHistoryDocContent reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId);
+
+		if(path == null)
+		{
+			path = "";
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, localRootPath, localVRootPath, null, null);				
+		
+		Doc remoteDoc = verReposGetDoc(repos, doc, commitId);
+		if(remoteDoc == null)
+		{
+			docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		if(remoteDoc.getType() == 0)
+		{
+			docSysErrorLog(name + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		else if(remoteDoc.getType() == 2)
+		{
+			docSysErrorLog(name + " 是目录！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		
+		//checkOut历史版本文件
+		String tempLocalRootPath = getReposTmpPathForHistory(repos, commitId);
+		File dir = new File(tempLocalRootPath + path);
+		if(dir.exists() == false)
+		{
+			dir.mkdirs();
+		}
+		File file = new File(tempLocalRootPath + path + name);
+		if(file.exists() == false)
+		{
+			verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+		}
+		
+		Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);				
+			
+		//根据文件类型获取文件内容或者文件链接			
+		String status = "ok";
+		String content = "";
+		String fileSuffix = getFileSuffix(name);
+		if(isText(fileSuffix))
+		{
+			content = readRealDocContent(repos, tmpDoc);
+		}
+		else if(isOffice(fileSuffix) || isPdf(fileSuffix))
+		{
+			if(checkAndGenerateOfficeContent(repos, tmpDoc, reposAccess.getAccessUser(), fileSuffix))
+			{
+				content = readOfficeContent(repos, tmpDoc, reposAccess.getAccessUser());
+			}
+		}
+		else
+		{
+			if(isBinaryFile(repos, tmpDoc))
+			{
+				status="isBinary";
+			}
+			else
+			{
+				content = readRealDocContent(repos, tmpDoc);
+			}
+		}
+			
+		if(content == null)
+		{
+			content = "";
+		}
+			
+		writeText(status+content, response);			
+	}
 
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
@@ -2894,16 +3100,10 @@ public class DocController extends BaseController{
 		if(docType == 1)
 		{
 			Doc tmpDoc = doc;
-			//对于SVN前置类型的仓库，需要从SVN仓库dump到local
-			if(repos.getType() == 3)
+			//SVN/GIT前置类型仓库需要先将文件下载到本地
+			if(repos.getType() == 3 || repos.getType() == 4)
 			{
 				verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);
-			}
-			else if(repos.getType() == 4)
-			{
-				//对于GIT前置类型的仓库，需要从本地的GIT仓库中读取
-				String tempLocalRootPath = getLocalVerReposPath(repos, true);
-				tmpDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, tempLocalRootPath, localVRootPath, null, null);				
 			}
 			
 			String fileSuffix = getFileSuffix(name);
@@ -3264,7 +3464,7 @@ public class DocController extends BaseController{
 			String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
 			if(fileLink == null)
 			{
-				System.out.println("getDocFileLink() buildDocFileLink failed");
+				System.out.println("getZipDocFileLink() buildDocFileLink failed");
 				return;
 			}
 			
@@ -3286,6 +3486,81 @@ public class DocController extends BaseController{
 				}
 			}
 		}
+	}
+	
+	@RequestMapping("/getHistoryDocFileLink.do")
+	public void getHistoryDocFileLink(Integer reposId, String path, String name, String commitId, 
+			Integer shareId,
+			String urlStyle,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getHistoryDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId);
+
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		Doc remoteDoc = verReposGetDoc(repos, doc, commitId);
+		if(remoteDoc == null)
+		{
+			docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		if(remoteDoc.getType() == 0)
+		{
+			docSysErrorLog(name + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		else if(remoteDoc.getType() == 2)
+		{
+			docSysErrorLog(name + " 是目录！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		
+		//checkOut历史版本文件
+		String tempLocalRootPath = getReposTmpPathForHistory(repos, commitId);
+		File dir = new File(tempLocalRootPath + path);
+		if(dir.exists() == false)
+		{
+			dir.mkdirs();
+		}
+		File file = new File(tempLocalRootPath + path + name);
+		if(file.exists() == false)
+		{
+			verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+		}
+		
+		Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
+		
+		String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
+		if(fileLink == null)
+		{
+			System.out.println("getHistoryDocFileLink() buildDocFileLink failed");
+			return;
+		}
+		
+		rt.setData(fileLink);
+		writeJson(rt, response);
 	}
 	
 	@RequestMapping("/getDocFileLink.do")

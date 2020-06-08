@@ -732,6 +732,12 @@ public class BaseFunction{
 		return hashId;
 	}
 	
+	protected String getReposTmpPathForHistory(Repos repos, String commitId) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/History/" + commitId + "/";
+		createDir(userTmpDir);
+		return userTmpDir;
+	}
+	
 	protected String getReposTmpPathForUnzip(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/Unzip/";
 		createDir(userTmpDir);
