@@ -24,6 +24,25 @@
 			
 			showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType);	
 		}
+		
+		function viewHistory(index)
+		{			
+			var changeItem = changeItems[index];
+
+			var entryPath = changeItem.entryPath;
+			console.log("viewHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
+		    var path = getPathFromEntryPath(entryPath);
+		    var name = getNameFromEntryPath(entryPath);
+		    var docInfo = {
+		    	vid: reposId,
+		    	path: path,
+		    	name: name,
+		    	isHistory: 1,
+		    	commitId: commitId,
+		    	docType: historyType,
+		    };
+		    openDoc(docInfo, false, false, shareId);
+		}
 			
 		function downloadHistory(index)
 		{			
@@ -221,8 +240,9 @@
 						changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+entryPath+ " from " + srcEntryPath + "</a>";
 					}
 
-					var	opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-					var	opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
+					var	opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.viewHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>查看</a>";
+					var	opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
+					var	opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
 					
 					var se = "<li>" 
 						+"	<i class='cell changeType w10'>"
@@ -238,6 +258,7 @@
 						+"	<i class='cell operation w10'>"
 						+ 		opBtn1 
 						+ 		opBtn2 
+						+ 		opBtn3 
 						+"	</i>"
 						+"</li>";
 					
