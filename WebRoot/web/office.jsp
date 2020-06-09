@@ -30,7 +30,7 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	   	{
 			var fileLink = buildFullLink(data.fileLink);
 			var saveFileLink = buildFullLink(data.saveFileLink);
-			var key = data.key;
+			var key = data.key;	//key是用来标志唯一性的，文件改动了key也必须改动
 			
 	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 			var type = 'desktop';
