@@ -6473,10 +6473,12 @@ public class BaseController  extends BaseFunction{
 		return saveVirtualDocContent(repos, doc, rt);
 	}
 	
+	//从OfficeText文本文件中读取文本内容
 	protected String readOfficeContent(Repos repos, Doc doc, User login_user)
 	{
-		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos,login_user);
-		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName(), true);
+		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
+		String officeTextFileName = getOfficeTextFileName(doc);
+		return readDocContentFromFile(userTmpDir, officeTextFileName, true);
 	}
 	
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
