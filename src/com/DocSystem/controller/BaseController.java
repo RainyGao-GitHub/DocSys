@@ -6492,13 +6492,13 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
-		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
+		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, true);
 		return saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName(), doc.getCharset());
 	}
 	
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
-		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
+		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, true);
 		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName(), true);
 	}
 	
@@ -6516,13 +6516,13 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
-		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
+		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, false);
 		return saveDocContentToFile(doc.getContent(),  userTmpDir + docVName + "/", "content.md", null);
 	}
 	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String docVName = getVDocName(doc);		
-		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
+		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, false);
 		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md", false);
 	}
 	
