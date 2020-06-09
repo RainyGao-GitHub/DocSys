@@ -920,7 +920,7 @@ public class DocController extends BaseController{
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		String fileChunkName = name + "_" + chunkIndex;
-		String userTmpDir = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
+		String userTmpDir = getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 		String chunkParentPath = userTmpDir;
 		String chunkFilePath = chunkParentPath + fileChunkName;
 		if(false == isChunkMatched(chunkFilePath,chunkHash))
@@ -1054,7 +1054,7 @@ public class DocController extends BaseController{
 		{
 			//Save File chunk to tmp dir with name_chunkIndex
 			String fileChunkName = name + "_" + chunkIndex;
-			String userTmpDir = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
+			String userTmpDir = getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			if(saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
@@ -1079,7 +1079,7 @@ public class DocController extends BaseController{
 				commitMsg = "上传 " + path + name;
 			}
 			String commitUser = reposAccess.getAccessUser().getName();
-			String chunkParentPath = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
+			String chunkParentPath = getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
 			if(dbDoc == null || dbDoc.getType() == 0)
 			{
@@ -1309,7 +1309,7 @@ public class DocController extends BaseController{
 		
 		String docVName = getVDocName(doc);
 		
-		String userTmpDir = getReposUserTmpPathForVDOC(repos, accessUser);
+		String userTmpDir = getReposTmpPathForTextEdit(repos, accessUser, false);
 		
 		String vDocPath = userTmpDir + docVName + "/";
 		
@@ -1318,7 +1318,7 @@ public class DocController extends BaseController{
 	
 	private void deleteTmpRealDocContent(Repos repos, Doc doc, User accessUser) 
 	{
-		String userTmpDir = getReposUserTmpPathForRDOC(repos, accessUser);
+		String userTmpDir = getReposTmpPathForTextEdit(repos, accessUser, true);
 		String mdFilePath = userTmpDir + doc.getDocId() + "_" + doc.getName();
 		delFileOrDir(mdFilePath);
 	}
@@ -1441,7 +1441,7 @@ public class DocController extends BaseController{
 		}
 				
 		String targetName = doc.getName();
-		String targetPath = getReposUserTmpPathForDownload(repos,accessUser);
+		String targetPath = getReposTmpPathForDownload(repos,accessUser);
 				
 		//Do checkout to local
 		if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
@@ -1514,7 +1514,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		targetPath = getReposUserTmpPathForDownload(repos,accessUser);
+		targetPath = getReposTmpPathForDownload(repos,accessUser);
 		if(localEntry.getType() == 2)
 		{	
 			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
@@ -1623,7 +1623,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		String targetPath = getReposUserTmpPathForDownload(repos,accessUser);
+		String targetPath = getReposTmpPathForDownload(repos,accessUser);
 		//doCompressDir and save the zip File under userTmpDir
 		if(doCompressDir(vDoc.getLocalRootPath() + vDoc.getPath(), vDoc.getName(), targetPath, targetName, rt) == false)
 		{
@@ -1889,7 +1889,7 @@ public class DocController extends BaseController{
 	        {
 	            String downloadUri = (String) jsonObj.get("url");
 	            
-	            String chunkParentPath = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
+	            String chunkParentPath = getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 	            String chunkName = doc.getName() + "_0";
 	            if(downloadFileFromUrl(downloadUri, chunkParentPath, chunkName) == null)
 	            {
@@ -2076,7 +2076,7 @@ public class DocController extends BaseController{
 	        {
 	            String downloadUri = (String) jsonObj.get("url");
 	            
-	            String chunkParentPath = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
+	            String chunkParentPath = getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 	            String chunkName = doc.getName() + "_0";
 	            if(downloadFileFromUrl(downloadUri, chunkParentPath, chunkName) == null)
 	            {
@@ -2191,7 +2191,7 @@ public class DocController extends BaseController{
 		}
 		
 		//get userTmpDir
-		String userTmpDir = getReposUserTmpPathForDownload(repos,reposAccess.getAccessUser());
+		String userTmpDir = getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 		
 		String localParentPath = userTmpDir;
 		if(path != null)
@@ -2557,59 +2557,53 @@ public class DocController extends BaseController{
 			return null;
 		}		
 
-		String webTmpPath = getWebTmpPathForPreview();
-		String dstName = repos.getId() + "_" + doc.getDocId() + ".pdf";
-		String dstPath = webTmpPath + dstName;
-		System.out.println("DocToPDF_FSM() dstPath:" + dstPath);
-
-		String fileLink = "/DocSystem/tmp/preview/" + dstName;
-		
-		File file = new File(dstPath);
-		//预览文件已存在
-		if(file.exists())
-		{
-			if(isUpdateNeeded(repos, doc) == false)
-			{
-				rt.setData(fileLink);
-				return fileLink;				
-			}
-		}
-		else
-		{
-			File previewDir = new File(webTmpPath);
-			if(!previewDir.exists())
-			{
-				previewDir.mkdirs();
-			}
-		}
-		
-		//Do convert
-		String localEntryPath = getReposRealPath(repos) + doc.getPath() + doc.getName();
 		if(isPdf(fileSuffix))
 		{
-			if(copyFile(localEntryPath, dstPath,true) == false)
+			//直接返回预览地址
+			String fileLink = buildDocFileLink(doc, null, "REST", rt);
+			if(fileLink == null)
 			{
-				docSysErrorLog("预览失败", rt);
-				docSysDebugLog("Failed to copy " + localEntryPath + " to " + dstPath, rt);
-				return null;					
-			}
-			
-			rt.setData(fileLink);
-			return fileLink;
-		}
-		
-		if(isOffice(fileSuffix) || isText(fileSuffix) || isPicture(fileSuffix))
-		{
-			if(convertToPdf(localEntryPath,dstPath,rt) == false)
-			{
+				docSysErrorLog("buildDocFileLink failed", rt);
 				return null;
 			}
 			return fileLink;
 		}
 		
-		docSysErrorLog("该文件类型不支持预览", rt);
-		docSysDebugLog("srcPath:"+localEntryPath, rt);
-		return null;
+		
+		String preivewTmpPath = getReposTmpPathForPreview(repos, doc);
+		String previewFileName = getPreviewFileName(doc);
+		String dstPath = preivewTmpPath + previewFileName;
+		System.out.println("DocToPDF_FSM() dstPath:" + dstPath);		
+		File file = new File(dstPath);
+		if(file.exists() == false)
+		{
+			clearDir(preivewTmpPath);
+			//Do convert
+			String localEntryPath = getReposRealPath(repos) + doc.getPath() + doc.getName();
+			if(isOffice(fileSuffix) || isText(fileSuffix) || isPicture(fileSuffix))
+			{
+				if(convertToPdf(localEntryPath,dstPath,rt) == false)
+				{
+					docSysErrorLog("预览文件生成失败", rt);
+					return null;
+				}
+			}
+			else
+			{
+				docSysErrorLog("该文件类型不支持预览", rt);
+				docSysDebugLog("srcPath:"+localEntryPath, rt);
+				return null;
+			}
+		}
+		
+		Doc previewDoc = buildBasicDoc(repos.getId(), null, null, "", previewFileName, null, 1, true, preivewTmpPath, null, null, null);
+		String fileLink = buildDocFileLink(previewDoc, null, "REST", rt);
+		if(fileLink == null)
+		{
+			docSysErrorLog("buildDocFileLink failed", rt);
+			return null;
+		}
+		return fileLink;
 	}
 
 	private boolean isUpdateNeeded(Repos repos, Doc doc) {
@@ -3728,7 +3722,7 @@ public class DocController extends BaseController{
 		List <Doc> successDocList = null;
 		
 		//userTmpDir will be used to tmp store the history doc 
-		String userTmpDir = getReposUserTmpPathForDownload(repos,reposAccess.getAccessUser());
+		String userTmpDir = getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 		
 		if(isRealDoc)
 		{
