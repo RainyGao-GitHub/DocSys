@@ -732,6 +732,7 @@ public class BaseFunction{
 		return hashId;
 	}
 	
+	//历史文件缓存目录，需要区分RDoc和VDoc
 	protected String getReposTmpPathForHistory(Repos repos, String commitId, boolean isRealDoc) {
 		if(isRealDoc)
 		{	
@@ -746,23 +747,30 @@ public class BaseFunction{
 		return userTmpDir;
 	}
 	
+	//压缩文件解压缓存目录
 	protected String getReposTmpPathForUnzip(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/Unzip/";
 		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
-	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
-	protected String getReposUserTmpPath(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
+	//用户的仓库临时目录
+	protected String getReposTmpPathForUser(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/User/" + login_user.getId() + "/";
 		createDir(userTmpDir);
 		return userTmpDir;
 	}
 
-	protected String getReposUserTmpPathForOfficeTmp(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/OfficeTmp/";
+	protected String getReposTmpPathForOfficeText(Repos repos, Doc doc) {
+		String docLocalPath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/OfficeText/" + docLocalPath.hashCode() + "_" + doc.getName() + "/";
 		createDir(userTmpDir);
 		return userTmpDir;
+	}
+	
+	protected String getOfficeTextFileName(Doc doc) {
+		File file = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		return "officeText_" + file.length() + "_" + file.lastModified() + ".txt";
 	}
 	
 	protected String getReposUserTmpPathForRDOC(Repos repos, User login_user) {
@@ -2150,6 +2158,23 @@ public class BaseFunction{
         }
         return true;
     }
+    
+    //Clear Directory
+    public static boolean clearDir(String path){
+        File file=new File(path);
+        File[] tmp=file.listFiles();            
+        for(int i=0;i<tmp.length;i++)
+        {
+        	String subDirPath = path+"/"+tmp[i].getName();
+            if(delFileOrDir(subDirPath) == false)
+            {
+            	System.out.println("delFileOrDir() delete subDir Failed:" + subDirPath);
+                return false;
+            }
+        }
+        return true;
+    }
+    
     //检查文件是否存在
     public static boolean isFileExist(String path){
     	File file=new File(path);
