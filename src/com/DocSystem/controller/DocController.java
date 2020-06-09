@@ -2290,14 +2290,18 @@ public class DocController extends BaseController{
 				JSONObject jobj = new JSONObject();
 				String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
 				String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
+				String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
 				jobj.put("fileLink", fileLink);
+				jobj.put("saveFileLink", saveFileLink);
 				
 				Doc localDoc = docSysGetDoc(repos, tmpDoc);
 				tmpDoc.setSize(localDoc.getSize());
 				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
 				
-				jobj.put("saveFileLink", ""); //不允许保存
 				jobj.put("key", buildOfficeEditorKey(tmpDoc));
+				jobj.put("editEn", 0);
+				jobj.put("downloadEn", 0);
+				
 				rt.setData(jobj);
 				rt.setDataEx("office");
 				writeJson(rt, response);
@@ -2436,7 +2440,9 @@ public class DocController extends BaseController{
 			JSONObject jobj = new JSONObject();
 			String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
 			String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
+			String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
 			jobj.put("fileLink", fileLink);
+			jobj.put("saveFileLink", saveFileLink);
 
 			if(commitId == null)
 			{
@@ -2445,16 +2451,25 @@ public class DocController extends BaseController{
 				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
 				
 				//检查用户是否有文件编辑权限
-				if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, null, rt) == true)
+				DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, null);
+				if(docUserAuth.getDownloadEn() != null || docUserAuth.getDownloadEn() == 1)
 				{
-					String saveFileLink = buildSaveDocLink(doc, authCode, urlStyle, rt);
-					jobj.put("saveFileLink", saveFileLink);
-					jobj.put("key", buildOfficeEditorKey(tmpDoc));				
+					jobj.put("downloadEn", 1);
 				}
 				else
 				{
-					jobj.put("saveFileLink", ""); //不允许保存
-					jobj.put("key", buildOfficeEditorKey(tmpDoc) + "_" + reposAccess.getAccessUser().getId());	
+					jobj.put("downloadEn", 0);				
+				}
+				
+				if(docUserAuth.getEditEn() != null || docUserAuth.getEditEn() == 1)
+				{
+					jobj.put("key", buildOfficeEditorKey(tmpDoc));			
+					jobj.put("editEn", 1);
+				}
+				else
+				{
+					jobj.put("key", buildOfficeEditorKey(tmpDoc) + "_" + reposAccess.getAccessUser().getId());
+					jobj.put("editEn", 0);
 				}
 			}
 			else
@@ -2463,8 +2478,9 @@ public class DocController extends BaseController{
 				tmpDoc.setSize(localDoc.getSize());
 				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
 				
-				jobj.put("saveFileLink", ""); //不允许保存
 				jobj.put("key", buildOfficeEditorKey(tmpDoc));
+				jobj.put("editEn", 0);
+				jobj.put("downloadEn", 0);
 			}
 			
 			rt.setData(jobj);
@@ -2488,7 +2504,7 @@ public class DocController extends BaseController{
 	}
 
 	private Object buildOfficeEditorKey(Doc doc) {
-		return doc.getLocalRootPath().hashCode() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime();
+		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode();
 	}
 
 	private String getAuthCodeForOfficeEditor(Doc doc, ReposAccess reposAccess) {
