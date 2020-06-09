@@ -2083,10 +2083,10 @@
           	return false;
           }
           
-          	//get targe parentNode
-      		var parentNode = targetNode;
-      		if(targetNode)
-      		{
+          //get targe parentNode
+      	  var parentNode = targetNode;
+      	  if(targetNode)
+      	  {
       			if(moveType == "prev" || moveType == "next")	//如果拖到节点的前面或后面，则表示要放到上一层目录,leaf的inner属性是通过setting来控制的
       			{
       				parentNode = targetNode.getParentNode();
@@ -2095,15 +2095,15 @@
       			{
 	      			parentNode = targetNode;
       			}
-      		}
-      		else
-      		{
+      	  }
+      	  else
+      	  {
       			showErrorMessage("targetNode is null,理论上不该出现");
-      			return;
-      		}
-           
-          	className = (className === "dark" ? "":"dark");
-          	return true;
+      			return false;
+      	  }
+          
+          className = (className === "dark" ? "":"dark");
+          return true;
       }
       
       //Drop处理函数
@@ -2146,7 +2146,15 @@
 			
 			var vid = gReposInfo.id;
  	 		
-	      	DocMove.moveDocs(treeNodes,parentNode,vid); 
+			qiao.bs.confirm({
+			        id: 'bsconfirm',
+			        msg: '是否移动文件！'
+			},function(){
+			        //alert('点击了确定！');
+		      		DocMove.moveDocs(treeNodes,parentNode,vid); 
+			},function(){
+			        //alert('点击了取消！');
+			});
       }
       //Drag and Drop Implementation End
       
