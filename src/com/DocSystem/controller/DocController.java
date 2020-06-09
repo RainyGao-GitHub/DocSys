@@ -2293,8 +2293,11 @@ public class DocController extends BaseController{
 				jobj.put("fileLink", fileLink);
 				
 				Doc localDoc = docSysGetDoc(repos, tmpDoc);
+				tmpDoc.setSize(localDoc.getSize());
+				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
+				
 				jobj.put("saveFileLink", ""); //不允许保存
-				jobj.put("key", tmpDoc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime() + "_" + reposAccess.getAccessUser().getId());
+				jobj.put("key", buildOfficeEditorKey(tmpDoc));
 				rt.setData(jobj);
 				rt.setDataEx("office");
 				writeJson(rt, response);
@@ -2438,24 +2441,30 @@ public class DocController extends BaseController{
 			if(commitId == null)
 			{
 				Doc localDoc = docSysGetDoc(repos, doc);
+				tmpDoc.setSize(localDoc.getSize());
+				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
+				
 				//检查用户是否有文件编辑权限
 				if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, null, rt) == true)
 				{
 					String saveFileLink = buildSaveDocLink(doc, authCode, urlStyle, rt);
 					jobj.put("saveFileLink", saveFileLink);
-					jobj.put("key", doc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime());				
+					jobj.put("key", buildOfficeEditorKey(tmpDoc));				
 				}
 				else
 				{
 					jobj.put("saveFileLink", ""); //不允许保存
-					jobj.put("key", doc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime() + "_" + reposAccess.getAccessUser().getId());	
+					jobj.put("key", buildOfficeEditorKey(tmpDoc) + "_" + reposAccess.getAccessUser().getId());	
 				}
 			}
 			else
 			{
 				Doc localDoc = fsGetDoc(repos, tmpDoc);
+				tmpDoc.setSize(localDoc.getSize());
+				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
+				
 				jobj.put("saveFileLink", ""); //不允许保存
-				jobj.put("key", tmpDoc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime() + "_" + reposAccess.getAccessUser().getId());
+				jobj.put("key", buildOfficeEditorKey(tmpDoc));
 			}
 			
 			rt.setData(jobj);
@@ -2476,6 +2485,10 @@ public class DocController extends BaseController{
 		rt.setDataEx("pdf");
 		writeJson(rt, response);
 		return;	
+	}
+
+	private Object buildOfficeEditorKey(Doc doc) {
+		return doc.getLocalRootPath().hashCode() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime();
 	}
 
 	private String getAuthCodeForOfficeEditor(Doc doc, ReposAccess reposAccess) {
