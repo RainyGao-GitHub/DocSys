@@ -2293,7 +2293,9 @@ public class DocController extends BaseController{
 				String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
 				jobj.put("fileLink", fileLink);
 				jobj.put("saveFileLink", saveFileLink);
-				
+				jobj.put("userId", reposAccess.getAccessUser().getId());
+				jobj.put("userName", reposAccess.getAccessUser().getName());
+
 				Doc localDoc = docSysGetDoc(repos, tmpDoc);
 				tmpDoc.setSize(localDoc.getSize());
 				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
@@ -2443,6 +2445,8 @@ public class DocController extends BaseController{
 			String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
 			jobj.put("fileLink", fileLink);
 			jobj.put("saveFileLink", saveFileLink);
+			jobj.put("userId", reposAccess.getAccessUser().getId());
+			jobj.put("userName", reposAccess.getAccessUser().getName());
 
 			if(commitId == null)
 			{
