@@ -26,11 +26,11 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	    
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
 	    	    
-	    function showOffice(data, dataEx)
+	    function showOffice(data)
 	   	{
 			var fileLink = buildFullLink(data.fileLink);
-			var saveFileLink = buildFullLink(data.saveFileLink);
-			var key = data.key;	//key是用来标志唯一性的，文件改动了key也必须改动
+			var saveFileLink = "";
+			var key = data.key + "";	//key是用来标志唯一性的，文件改动了key也必须改动
 			
 	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 			var type = 'desktop';
@@ -38,6 +38,14 @@ String officeEditorApi = BaseController.getOfficeEditor();
 			{
 				type = 'mobile';
 			}
+	    	
+			var editEn =  data.editEn == 1? true:false;
+			if(editEn == true)
+			{
+				saveFileLink = buildFullLink(data.saveFileLink);
+			}
+			var downloadEn = data.downloadEn == 1? true:false;
+			console.log("editEn:" + editEn + " downloadEn:" + downloadEn);
 			
 	    	var config = {
 					"type": type,
@@ -47,13 +55,13 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	    		        "title": title,
 	    		        "url": fileLink,
 	    		        "permissions": {
-	    		            "comment": true,
-	    		            "download": true,
-	    		            "edit": true,
-	    		            "fillForms": true,
-	    		            "modifyContentControl": true,
-	    		            "modifyFilter": true,
-	    		            "print": true,
+	    		            "comment": editEn,
+	    		            "download": downloadEn,
+	    		            "edit": editEn,
+	    		            "fillForms": editEn,
+	    		            "modifyContentControl": editEn,
+	    		            "modifyFilter": editEn,
+	    		            "print": downloadEn,
 	    		            "review": true
 	    		        },
 	    		    },
