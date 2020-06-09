@@ -49,13 +49,19 @@ var OfficeEditor = (function () {
 		}
     	
 		var editEn =  data.editEn == 1? true:false;
+		var mode = "view";
 		if(editEn == true)
 		{
 			saveFileLink = buildFullLink(data.saveFileLink);
+			mode = "edit";
 		}
 		var downloadEn = data.downloadEn == 1? true:false;
 		console.log("editEn:" + editEn + " downloadEn:" + downloadEn);
-			
+		var user = {
+                "id": data.userId + "",
+                "name": data.userName,
+            };
+		
     	var config = {
 				"type" : type,
     		    "document": {
@@ -76,8 +82,10 @@ var OfficeEditor = (function () {
     		    },
     		    "documentType": documentType,
     		    "editorConfig": {
+    		    	"mode": mode,
                     "callbackUrl": saveFileLink,
                     "lang": "zh-CN",
+                    "user": user,
                 },
                 "height": "100%",
                 "width": width,
