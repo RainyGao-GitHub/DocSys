@@ -33,11 +33,11 @@ var OfficeEditor = (function () {
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
 	}
 	
-    function showOffice(data, dataEx)
+    function showOffice(data)
    	{
 		var fileLink = buildFullLink(data.fileLink);
-		var saveFileLink = buildFullLink(data.saveFileLink);
-		var key = data.key;
+		var saveFileLink = "";
+		var key = data.key + "";
     	
     	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 		var type = 'desktop';
@@ -48,6 +48,14 @@ var OfficeEditor = (function () {
 			width = "90%";
 		}
     	
+		var editEn =  data.editEn == 1? true:false;
+		if(editEn == true)
+		{
+			saveFileLink = buildFullLink(data.saveFileLink);
+		}
+		var downloadEn = data.downloadEn == 1? true:false;
+		console.log("editEn:" + editEn + " downloadEn:" + downloadEn);
+			
     	var config = {
 				"type" : type,
     		    "document": {
@@ -56,13 +64,13 @@ var OfficeEditor = (function () {
     		        "title": title,
     		        "url": fileLink,
     		        "permissions": {
-    		            "comment": true,
-    		            "download": true,
-    		            "edit": true,
+    		            "comment": editEn,
+    		            "download": downloadEn,
+    		            "edit": editEn,
     		            "fillForms": true,
-    		            "modifyContentControl": true,
-    		            "modifyFilter": true,
-    		            "print": true,
+    		            "modifyContentControl": editEn,
+    		            "modifyFilter": editEn,
+    		            "print": downloadEn,
     		            "review": true
     		        },
     		    },
