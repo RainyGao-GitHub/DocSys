@@ -628,7 +628,7 @@ public class DocController extends BaseController{
 	private String localExecuteDoc(Repos repos, Doc doc, String cmdLine, User user) {
 		
 		//命令在userTmp目录下运行
-		String runPath = getReposUserTmpPath(repos, user);
+		String runPath = getReposTmpPathForUser(repos, user);
 		File dir = new File(runPath);
 		
 		String cmd = buildDocExecuteCmd(repos, doc, cmdLine);
@@ -3083,32 +3083,30 @@ public class DocController extends BaseController{
 	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, User accessUser, String fileSuffix) 
 	{
 		
-		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos, accessUser);
-		File file = new File(userTmpDir, doc.getDocId() + "_" + doc.getName());
-		if(file.exists())
-		{
-			if(isUpdateNeeded(repos, doc) == false)
-			{
-				return true;
-			}
+		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
+		String officeTextFileName = getOfficeTextFileName(doc);
+		File file = new File(userTmpDir, officeTextFileName);
+		if(file.exists() == false)
+		{	
+			clearDir(userTmpDir);
 		}
 		
 		switch(fileSuffix)
 		{
 		case "doc":
-			return extractToFileForWord(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+			return extractToFileForWord(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
 		case "docx":
-			return extractToFileForWord2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+			return extractToFileForWord2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
 		case "ppt":
-			return extractToFileForPPT(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+			return extractToFileForPPT(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
 		case "pptx":
-			return extractToFileForPPT2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+			return extractToFileForPPT2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
 		case "xls":
-			return extractToFileForExcel(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+			return extractToFileForExcel(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
 		case "xlsx":
-			return extractToFileForExcel2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+			return extractToFileForExcel2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
 		case "pdf":
-			return extractToFileForPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+			return extractToFileForPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
 		}
 		return false;
 	}
