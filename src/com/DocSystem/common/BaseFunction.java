@@ -773,32 +773,39 @@ public class BaseFunction{
 		return "officeText_" + file.length() + "_" + file.lastModified() + ".txt";
 	}
 	
-	protected String getReposUserTmpPathForRDOC(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/RDOC/";
+	protected String getReposTmpPathForPreview(Repos repos, Doc doc) {
+		String docLocalPath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/preview/" +  docLocalPath.hashCode() + "_" + doc.getName() + "/";
 		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
-	protected String getReposUserTmpPathForVDOC(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/VDOC/";
+	protected String getPreviewFileName(Doc doc) {
+		File file = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		return "preview_" + file.length() + "_" + file.lastModified() + ".pdf";
+	}
+	
+	protected String getReposTmpPathForTextEdit(Repos repos, User login_user, boolean isRealDoc) {
+		if(isRealDoc)
+		{
+			String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/TextEdit/" + login_user.getId() + "/RDOC/";
+			createDir(userTmpDir);
+		}
+		
+		//VDoc
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/TextEdit/" + login_user.getId() + "/VDOC/";
 		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
-	protected String getReposUserTmpPathForPreview(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/preview/";
-		createDir(userTmpDir);
-		return userTmpDir;
-	}
-
-	protected String getReposUserTmpPathForDownload(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/download/";
+	protected String getReposTmpPathForDownload(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/download/" + login_user.getId() + "/";
 		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
-	protected String getReposUserTmpPathForUpload(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/upload/";
+	protected String getReposTmpPathForUpload(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/upload/" + login_user.getId() + "/";
 		createDir(userTmpDir);
 		return userTmpDir;
 	}
