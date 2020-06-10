@@ -794,7 +794,7 @@ public class ManageController extends BaseController{
 		}
 		
 		User user = null;
-		if(userName != null)
+		if(userName != null && !userName.isEmpty())
 		{
 			user = new User();
 			user.setName(userName);
