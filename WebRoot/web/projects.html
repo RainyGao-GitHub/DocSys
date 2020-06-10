@@ -126,6 +126,9 @@
     </footer>
 
     <div id="scrollToTopDiv"></div>
+
+    <!-- 利用bootstrap的响应式，判断是否小屏幕 -->
+    <div id="visibleOnSmall" class="visible-xs"></div>
 </div>
 
 <script type="text/html" id="tmpl-projects">
@@ -150,6 +153,7 @@
 </script>
 
 <script type="text/html" id="tmpl-searchResults">
+    <div style="margin-top: 20px"></div>
     {{each list as doc i}}
         <div class="s-box">
             <!--<div class="s-img">
@@ -170,8 +174,7 @@
                 </div>
             </div>
 
-            <!-- 仅小屏幕显示分割线 -->
-            <hr class="hidden-md hidden-lg"/>
+            <hr/>
         </div>
     {{/each}}
     <!-- 搜索结果分页功能 -->
@@ -466,12 +469,8 @@
 	function showSearchResults(searchResults, pageIndex)
 	{
 		console.log("showSearchResults pageIndex:" + pageIndex);
-		var page = 0;
-		if (pageIndex && pageIndex > 0) {
-		    // 分页插件传过来的页码从1开始，后端的分页处理从0开始，所以这里减1处理
-		    page = pageIndex - 1;
-        }
-		
+		var page = pageIndex ? pageIndex : 0;
+
 		var docList = [];
 		var startIndex = page * gPageSize; //当前页第一个搜索结果索引号
 		var total = searchResults.length;
@@ -496,13 +495,13 @@
         // 渲染分页
         $("#pagination").pagination({
              /*当前页码*/
-             currentPage: pageIndex,
+             currentPage: page + 1,
              /*总共有多少页*/
              totalPage: Math.ceil(total/gPageSize),
              /*是否显示首页、尾页 true：显示 false：不显示*/
              isShow:true,
-             /*分页条显示可见页码数量*/
-             count:5,
+             /*分页条显示可见页码数量, 小屏幕只显示3个页码，大屏幕显示5个*/
+             count: onSmallScreen() ? 3 : 5,
              /*第一页显示文字*/
              homePageText:'首页',
              /*最后一页显示文字*/
@@ -513,7 +512,7 @@
              nextPageText:'下一页',
              /*点击翻页绑定事件*/
              callback: function(newPageIndex) {
-             	showSearchResults(searchResults, newPageIndex);
+             	showSearchResults(searchResults, newPageIndex - 1);
              }
         });
         
@@ -559,6 +558,10 @@
 	        return str;
         }
 
+    }
+
+    function onSmallScreen() {
+        return $("#visibleOnSmall:visible").size() > 0;
     }
 
 </script>
