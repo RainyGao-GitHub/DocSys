@@ -460,7 +460,7 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
-		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		//System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 
 		//利用Index的切词器将查询条件切词后进行精确查找
 		Analyzer analyzer = null;
@@ -477,7 +477,7 @@ public class LuceneUtil2   extends BaseFunction
 			stream.reset(); //这句很重要
 	
 			while(stream.incrementToken()) {
-				System.out.println(cta.toString());
+				//System.out.println(cta.toString());
 				list.add(cta.toString());
 			}
 	
@@ -536,7 +536,7 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
-		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
+		//System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
 		
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
 		if(str != null && !str.isEmpty())
@@ -571,7 +571,7 @@ public class LuceneUtil2   extends BaseFunction
     
     public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, HashMap<String, HitDoc> searchResult, int weight, int hitType)
 	{
-		System.out.println("multiSearch() indexLib:" + indexLib + " weight:" + weight);
+		//System.out.println("multiSearch() indexLib:" + indexLib + " weight:" + weight);
 		
 	    Directory directory = null;
         DirectoryReader ireader = null;
@@ -581,7 +581,7 @@ public class LuceneUtil2   extends BaseFunction
     		File file = new File(indexLib);
     		if(!file.exists())
     		{
-    			System.out.println("multiSearch() indexLib:" + indexLib);
+    			//System.out.println("multiSearch() indexLib:" + indexLib + " 不存在！");
     			return false;
     		}
     		
