@@ -4711,7 +4711,6 @@ public class DocController extends BaseController{
 			List<Doc> result =  searchInRepos(queryRepos, pid, path, searchWord, sort);
 			if(result != null && result.size() > 0)
 			{
-				
 				System.out.println("searchDoc() ["+ result.size() +"] hit with " + searchWord + " in reposId:" + queryRepos.getId() + " reposName:" + queryRepos.getName());
 				searchResult.addAll(result);
 			}
@@ -4799,10 +4798,6 @@ public class DocController extends BaseController{
 	private List<Doc> convertSearchResultToDocList(Repos repos, HashMap<String, HitDoc> searchResult) 
 	{
 		List<Doc> docList = new ArrayList<Doc>();
-		
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
-		
 		for(HitDoc hitDoc: searchResult.values())
         {
       	    Doc doc = hitDoc.getDoc();
@@ -4844,14 +4839,12 @@ public class DocController extends BaseController{
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
       	    {
       	    	hitText = getDocContent(repos, doc, 0, 120);
-     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
+     	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
       	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
-      	    	String vDocName = getVDocName(doc);
-      	    	String hitVText = readDocContentFromFile(localVRootPath, vDocName, false, 0, 120);
-     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitVText:" + hitVText);	
-      	    	hitText += hitVText;
+      	    	hitText = readVirtualDocContent(repos, doc, 0, 120);
+     	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
   	    	doc.setContent(hitText);
 		}
@@ -4924,9 +4917,9 @@ public class DocController extends BaseController{
 		//文件名通配符搜索（带空格）
 		if((searchMask & SEARCH_MASK[0]) > 0)
 		{
-			System.out.println("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
+			//System.out.println("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
 			LuceneUtil2.search(repos, preConditions, "name", searchWord, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, SEARCH_MASK[0]); 	//Search By DocName
-			System.out.println("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
+			//System.out.println("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
 		}
 		
 		//空格是或条件
@@ -4940,28 +4933,28 @@ public class DocController extends BaseController{
 				{
 					//0x00000001; //文件内容
 					//文件名通配符搜索（不切词搜索）
-					System.out.println("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
+					//System.out.println("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
 					LuceneUtil2.search(repos, preConditions, "name", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1, SEARCH_MASK[0]);	//Search By FileName
-					System.out.println("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
+					//System.out.println("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
 
 					//文件名智能搜索（切词搜索）
-					System.out.println("luceneSearch() 文件名智能搜索:" + searchStr);
+					//System.out.println("luceneSearch() 文件名智能搜索:" + searchStr);
 					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, 1, SEARCH_MASK[0]);	//Search By FileName
-					System.out.println("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
+					//System.out.println("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
 					//0x00000002; //文件内容搜索
-					System.out.println("luceneSearch() 文件内容智能搜索:" + searchStr);
+					//System.out.println("luceneSearch() 文件内容智能搜索:" + searchStr);
 					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);	//Search By FileContent
-					System.out.println("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());
+					//System.out.println("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
 				if((searchMask & SEARCH_MASK[2]) > 0)
 				{	
 					//0x00000004; //文件备注搜索
-					System.out.println("luceneSearch() 文件备注智能搜索:" + searchStr);
+					//System.out.println("luceneSearch() 文件备注智能搜索:" + searchStr);
 					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);	//Search By VDoc
-					System.out.println("luceneSearch() 文件备注智能搜索:" + searchStr + " count:" + searchResult.size());
+					//System.out.println("luceneSearch() 文件备注智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
 			}
 		}
