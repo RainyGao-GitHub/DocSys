@@ -6525,6 +6525,18 @@ public class BaseController  extends BaseFunction{
 		String docVName = getVDocName(doc);		
 		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", false);
 	}
+	
+	protected String readVirtualDocContent(Repos repos, Doc doc, int offset, int size) 
+	{
+		String docVName = getVDocName(doc);
+		String localVRootPath = doc.getLocalVRootPath();
+		if(localVRootPath == null || localVRootPath.isEmpty())
+		{
+			localVRootPath = getReposVirtualPath(repos);
+		}
+
+		return readDocContentFromFile(localVRootPath + docVName + "/", "content.md", false, offset, size);
+	}
 
 	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
