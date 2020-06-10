@@ -4711,7 +4711,7 @@ public class DocController extends BaseController{
 			List<Doc> result =  searchInRepos(queryRepos, pid, path, searchWord, sort);
 			if(result != null && result.size() > 0)
 			{
-				System.out.println("searchDoc() ["+ result.size() +"] hit with " + searchWord + " in reposId:" + queryRepos.getId() + " reposName:" + queryRepos.getName());
+				System.out.println("searchDoc() 共 ["+ result.size() +"]结果 hits with " + searchWord + " in reposId:" + queryRepos.getId() + " reposName:" + queryRepos.getName());
 				searchResult.addAll(result);
 			}
 		}
