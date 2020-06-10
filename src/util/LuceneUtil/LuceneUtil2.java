@@ -458,7 +458,7 @@ public class LuceneUtil2   extends BaseFunction
     } 
 
 
-	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
+	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
 		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 
@@ -502,7 +502,7 @@ public class LuceneUtil2   extends BaseFunction
 		if(list.size() == 1)
 		{
 			String searchStr = list.get(0);
-			return search(repos, preConditions, field, searchStr, pathFilter, indexLib, searchResult, searchType, weight);
+			return search(repos, preConditions, field, searchStr, pathFilter, indexLib, searchResult, searchType, weight, hitType);
 		}
 		
 		List<HashMap<String, HitDoc>> subSearcResults = new ArrayList<HashMap<String, HitDoc>>();
@@ -510,7 +510,7 @@ public class LuceneUtil2   extends BaseFunction
 		{
 			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
 			String searchStr = list.get(i);
-			search(repos, preConditions, field, searchStr, pathFilter, indexLib, subSearchResult, searchType, weight);
+			search(repos, preConditions, field, searchStr, pathFilter, indexLib, subSearchResult, searchType, weight, hitType);
 			if(subSearchResult.size() <= 0)
 			{
 				//subSearchStr Not found
@@ -528,12 +528,13 @@ public class LuceneUtil2   extends BaseFunction
     /**
      * 	关键字模糊查询， 返回docId List
      * @param weight 
+     * @param hitType 
      * @param parentPath 
      * @param <SearchResult>
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
+    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
 		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
 		
@@ -565,10 +566,10 @@ public class LuceneUtil2   extends BaseFunction
 		{
 			return false;
 		}
-	    return multiSearch(repos, conditions, indexLib, searchResult, weight);
+	    return multiSearch(repos, conditions, indexLib, searchResult, weight, hitType);
     }
     
-    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, HashMap<String, HitDoc> searchResult, int weight)
+    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, HashMap<String, HitDoc> searchResult, int weight, int hitType)
 	{
 		System.out.println("multiSearch() indexLib:" + indexLib + " weight:" + weight);
 		
@@ -600,7 +601,7 @@ public class LuceneUtil2   extends BaseFunction
 		            {
 		            	continue;
 		            }
-		            AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight);
+		            AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight, hitType);
 	        	}
 	        }
 	        
