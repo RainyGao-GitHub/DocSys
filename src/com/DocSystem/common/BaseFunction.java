@@ -1072,7 +1072,7 @@ public class BaseFunction{
 			//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
 		}
 		
-		System.out.println("AddHitDocToSearchResult() hitType:" + tempHitDoc.getHitType());	
+		//System.out.println("AddHitDocToSearchResult() hitType:" + tempHitDoc.getHitType());	
 	}
 	
 	/***************************** json相关接口 ***************************/
