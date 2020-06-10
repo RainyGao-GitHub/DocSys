@@ -4760,6 +4760,12 @@ public class DocController extends BaseController{
 		for(HitDoc hitDoc: searchResult.values())
         {
       	    Doc doc = hitDoc.getDoc();
+      	    doc.setReposName(repos.getName());
+      	    doc.setContent("测试用的1111111111111111111111111111111111111111111111111111111111111fdsfasd"
+      	    		+ "dfasdfsdfsdfsdfsdf"
+      	    		+ "dfsdfsdfsdf/r/n"
+      	    		+ "fsdfsdfsdfsd/rn"
+      	    		+ "rejrjekljklerj");
       	    docList.add(doc);
 		}
 	
