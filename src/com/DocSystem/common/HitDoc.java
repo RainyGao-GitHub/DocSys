@@ -8,6 +8,8 @@ public class HitDoc {
     private Doc doc = null;
     private String docPath = null;
     private int hitCount = 0;
+    private int hitType = 0; //0x00000001 02 04 文件名、文件内容、备注内容
+    
     private HashMap<String, Integer> hitInfo = null;
     
     public void setDocPath(String docPath) {
@@ -40,11 +42,19 @@ public class HitDoc {
 
 	public int getHitCount() 
 	{
-		// TODO Auto-generated method stub
 		return hitCount;
 	}
 	
-	public void getHitCount(int hitCount) {
+	public void setHitCount(int hitCount) {
 		this.hitCount = hitCount;
+	}
+	
+	public int getHitType() 
+	{
+		return hitType;
+	}
+	
+	public void settHitType(int hitType) {
+		this.hitType = hitType;
 	}
 }

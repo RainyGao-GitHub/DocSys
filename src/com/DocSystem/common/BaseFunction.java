@@ -1020,7 +1020,7 @@ public class BaseFunction{
 	}
 	/***********************  全文搜索接口 
 	 * @param weight *******************************************/
-	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord, int weight) 
+	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord, int weight, int hitType) 
 	{
 		//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " searchWord:" + keyWord);
 		HitDoc tempHitDoc = searchResult.get(hitDoc.getDocPath());
@@ -1040,13 +1040,16 @@ public class BaseFunction{
 			//Set HitDoc
 			hitDoc.setDoc(doc);
 			hitDoc.setHitInfo(hitInfo);
+			hitDoc.settHitType(hitType); //设置hitType
 			searchResult.put(hitDoc.getDocPath(), hitDoc);
+			tempHitDoc = hitDoc;
 		}
 		else
-		{			
+		{	
+			tempHitDoc.settHitType(tempHitDoc.getHitType() | hitType);	//增加hitType
+			
 			HashMap<String, Integer> hitInfo = tempHitDoc.getHitInfo();
 			Doc doc = tempHitDoc.getDoc();
-
 			
 			//Caculate sortIndex
 			Integer hitCount = hitInfo.get(keyWord);
@@ -1067,12 +1070,9 @@ public class BaseFunction{
 				doc.setSortIndex(sortIndex);
 			}
 			//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
-
-			//Java默认是引用，所以下面的操作是不需要的
-			//tempHitDoc.setHitInfo(hitInfo);
-			//tempHitDoc.setDoc(doc);
-			//searchResult.put(hitDoc.getDocPath(), tempHitDoc);	//Update searchResult
 		}
+		
+		System.out.println("AddHitDocToSearchResult() hitType:" + tempHitDoc.getHitType());	
 	}
 	
 	/***************************** json相关接口 ***************************/
@@ -1583,6 +1583,58 @@ public class BaseFunction{
 			FileInputStream in;
 			in = new FileInputStream(filePath);
 			in.read(buffer, 0, fileSize);
+			in.close();	
+
+			String content = null;
+			if(encodeDetectEnable)
+			{
+				//encode = getEncodeOfBuffer(buffer, fileSize);
+				encode = getCharset(filePath);
+				System.out.println("readDocContentFromFile " +filePath+ " encode:" + encode);
+			}	
+			if(encode == null)
+			{
+				content = new String(buffer);
+			}
+			else
+			{
+				content = new String(buffer, encode);
+			}
+			//System.out.println("content:[" + content + "]");
+			return content;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	protected static String readDocContentFromFile(String path, String name, boolean encodeDetectEnable, int offset, int size) 
+	{	
+		String filePath = path + name;
+		try 
+		{			
+			File file = new File(filePath);
+			if(!file.exists() || !file.isFile())
+			{
+				//System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				return null;
+			}
+			
+			int fileSize = (int) file.length();
+			//System.out.println("fileSize:[" + fileSize + "]");
+			if(fileSize  <= 0)
+			{
+				return null;
+			}
+			
+			int readSize = fileSize > (offset + size) ? size: (fileSize - offset);
+					
+			String encode = null;
+	
+			byte buffer[] = new byte[readSize];
+			FileInputStream in;
+			in = new FileInputStream(filePath);
+			in.read(buffer, offset, readSize);
 			in.close();	
 
 			String content = null;
