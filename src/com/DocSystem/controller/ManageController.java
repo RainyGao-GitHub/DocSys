@@ -783,9 +783,9 @@ public class ManageController extends BaseController{
 	}
 	/********** 获取用户列表 ***************/
 	@RequestMapping("/getUserList.do")
-	public void getUserList(Integer pageIndex, Integer pageSize, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getUserList(String userName, Integer pageIndex, Integer pageSize, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getUserList() pageIndex:" + pageIndex + " pageSize:" + pageSize);
+		System.out.println("getUserList() userName:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(null, null, session, rt) == false)
 		{
@@ -793,9 +793,15 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		User user = null;
+		if(userName != null)
+		{
+			user = new User();
+			user.setName(userName);
+		}
 		
 		//List <User> UserList = userService.geAllUsers();
-		HashMap<String, String> param = buildQueryParamForObj(null, DOCSYS_USER, pageIndex, pageSize);
+		HashMap<String, String> param = buildQueryParamForObj(user, DOCSYS_USER, pageIndex, pageSize);
 		Integer total = userService.getCountWithParam(param);
 		List <User> UserList = userService.getUserListWithParam(param);
 		
