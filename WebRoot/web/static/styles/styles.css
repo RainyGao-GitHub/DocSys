@@ -621,7 +621,7 @@ body {
 }
 
 .s-box{
-    min-height: 50px;
+    margin: 15px 10px;
 }
 
 .s-box em{
@@ -634,7 +634,6 @@ body {
 }
 
 .s-content-box{
-    padding-left: 44px;
     font-size: 13px;
     line-height: 1.54;
     word-wrap: break-word;
@@ -648,6 +647,12 @@ body {
 
 .s-title a{
     text-decoration: underline;
+}
+
+/* 图标放到第一行后，与标题对齐 */
+.s-title i{
+    display: inline-block;
+    vertical-align: bottom;
 }
 
 .s-footer a {

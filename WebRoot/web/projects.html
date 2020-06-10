@@ -27,6 +27,13 @@
 		    width: 40px;
 		    height: 40px;
         }
+
+        /* 小图标 */
+        .smallicon {
+            background-size:20px 20px !important;
+            width: 20px;
+            height: 20px;
+        }
     </style>
 </head>
 <body>
@@ -144,15 +151,16 @@
 <script type="text/html" id="tmpl-searchResults">
     {{each list as doc i}}
         <div class="s-box">
-            <div class="s-img">
+            <!--<div class="s-img">
                 <i class="{{doc.iconStyle}}"></i>
-            </div>
+            </div>-->
             <div class="s-content-box">
                 <h4 class="s-title">
+                    <i class="{{doc.iconStyle}}"></i>
                     <a href="{{doc.link}}" title="" target="_blank">{{# doc.name}}</a>
                 </h4>
                 <div class="s-content">
-                    {{doc.timeInfo}} {{# doc.info}}
+                    {{doc.timeInfo}} {{# doc.content}}
                 </div>
                 <div class="s-footer">
                     <a href="{{doc.link}}" target="_blank">
@@ -160,6 +168,9 @@
                     </a>
                 </div>
             </div>
+
+            <!-- 仅小屏幕显示分割线 -->
+            <hr class="hidden-md hidden-lg"/>
         </div>
     {{/each}}
     <!-- 搜索结果分页功能 -->
@@ -422,16 +433,16 @@
 				        	   var iconType = getDiyFileIconType(jsonObj.name);
 				        	   if(iconType && iconType != "")
 				        	   {
-				        		   jsonObj.iconStyle = "icons bigicon file " + iconType;
+				        		   jsonObj.iconStyle = "icons smallicon file " + iconType;
 				        	   }
 				        	   else
 				        	   {
-				        		   jsonObj.iconStyle = "icons bigicon file";
+				        		   jsonObj.iconStyle = "icons smallicon file";
 				        	   }
 				           }
 				           else
 				           {
-				        	   jsonObj.iconStyle = "icons bigicon folder";
+				        	   jsonObj.iconStyle = "icons smallicon folder";
 				           }
 
                             // 加粗渲染搜索结果
