@@ -4846,8 +4846,7 @@ public class DocController extends BaseController{
       	    	hitText = getDocContent(repos, doc, 0, 120);
      	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
-      	    
-      	    if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
+      	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
       	    	String vDocName = getVDocName(doc);
       	    	String hitVText = readDocContentFromFile(localVRootPath, vDocName, false, 0, 120);
