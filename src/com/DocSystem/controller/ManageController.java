@@ -799,6 +799,8 @@ public class ManageController extends BaseController{
 		Integer total = userService.getCountWithParam(param);
 		List <User> UserList = userService.getUserListWithParam(param);
 		
+		System.out.println("getUserList() total:" + total);
+		
 		rt.setData(UserList);
 		rt.setDataEx(total);
 		writeJson(rt, response);
@@ -806,12 +808,22 @@ public class ManageController extends BaseController{
 
 	private HashMap<String, String> buildQueryParamForObj(Object obj, int objType, Integer pageIndex, Integer pageSize) {
 		HashMap<String, String> param = new HashMap<String,String>();
+		JSONArray ObjMemberList = getObjMemberList(objType);
+		System.out.println("buildQueryParamForObj pageIndex:" + pageIndex + " pageSize:" + pageSize);
+		if(pageIndex != null && pageSize != null)
+		{
+			String start = pageIndex*pageSize + "";
+			String number =  pageSize+"";
+			System.out.println("buildQueryParamForObj start:" + start + " number:" + number);
+			param.put("start", start);
+			param.put("number", number);
+		}
+		
 		if(obj == null)
 		{
 			return param;
 		}
 		
-		JSONArray ObjMemberList = getObjMemberList(objType);
 		if(ObjMemberList == null)
 		{
 			return param;
@@ -836,11 +848,6 @@ public class ManageController extends BaseController{
 			}			
 		}
 		
-		if(pageIndex != null && pageSize != null)
-		{
-			param.put("start", pageIndex*pageSize+"");
-			param.put("number", pageSize+"");
-		}
 		return param;
 	}
 	
