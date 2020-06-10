@@ -4757,22 +4757,30 @@ public class DocController extends BaseController{
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		
 		for(HitDoc hitDoc: searchResult.values())
         {
       	    Doc doc = hitDoc.getDoc();
       	    doc.setReposName(repos.getName());
       	    //根据hitType决定是否要取出文件内容或文件备注
       	    int hitType = hitDoc.getHitType();
+    		System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitType:" + hitDoc.getHitType());	
+
       	    String hitText = "";
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
       	    {
-      	    	hitText = readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), true, 0, 1200);
+      	    	
+      	    	hitText = readDocContentFromFile(localRootPath + doc.getPath(), doc.getName(), true, 0, 1200);
+     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
       	    
       	    if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
       	    	String vDocName = getVDocName(doc);
-      	    	String hitVText = readDocContentFromFile(doc.getLocalVRootPath(), vDocName, false, 0, 1200);
+      	    	String hitVText = readDocContentFromFile(localVRootPath, vDocName, false, 0, 1200);
+     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitVText:" + hitVText);	
       	    	hitText += hitVText;
       	    }
   	    	doc.setContent(hitText);
