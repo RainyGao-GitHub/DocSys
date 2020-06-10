@@ -6474,11 +6474,19 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//从OfficeText文本文件中读取文本内容
-	protected String readOfficeContent(Repos repos, Doc doc, User login_user)
+	protected String readOfficeContent(Repos repos, Doc doc)
 	{
 		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
 		String officeTextFileName = getOfficeTextFileName(doc);
 		return readDocContentFromFile(userTmpDir, officeTextFileName, true);
+	}
+	
+	//从OfficeText文本文件中读取文本内容
+	protected String readOfficeContent(Repos repos, Doc doc, int offset, int size)
+	{
+		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
+		String officeTextFileName = getOfficeTextFileName(doc);
+		return readDocContentFromFile(userTmpDir, officeTextFileName, true, offset, size);
 	}
 	
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
@@ -6488,6 +6496,11 @@ public class BaseController  extends BaseFunction{
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
 		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), true);
+	}
+	
+	protected String readRealDocContent(Repos repos, Doc doc, int offset, int size) 
+	{
+		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), true, offset, size);
 	}
 	
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
