@@ -6,7 +6,13 @@
               <div class="widget-icons pull-right">
                 <!-- <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
                 <a href="#" class="wclose"><i class="icon-remove"></i></a>  -->
-                <button onclick="showAddUserPanel()" class="btn btn-lg btn-success examine_ban">新增用户</button>
+                  <div class="form-inline">
+                      <button onclick="showAddUserPanel()" class="btn btn-md btn-success examine_ban">新增用户</button>
+                      <div class="form-group">
+                          <input type="input" class="form-control" id="search-userName" placeholder="请输入用户名">
+                      </div>
+                      <button onclick="showUserList()" class="btn btn-md btn-primary" style="margin-left: 0px;">搜索</button>
+                  </div>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -49,8 +55,8 @@
               </table>
 
               <div class="widget-foot">
-
-                <div class="clearfix"></div>
+                  <!-- 组件footer，渲染分页插件 -->
+                  <div id="userList-pagination" class="l-page"></div>
 
               </div>
 
