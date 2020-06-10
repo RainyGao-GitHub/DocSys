@@ -56,6 +56,8 @@ public class Doc  implements Comparable<Doc>{
     private String charset;
 
 	private String reposName;
+	
+	private Integer hitType;
 
     public Integer getId() {
         return id;
@@ -335,4 +337,12 @@ public class Doc  implements Comparable<Doc>{
 	public String getReposName() {
 		return reposName;
 	}
+	
+    public Integer getHitType() {
+        return hitType;
+    }
+
+    public void setHitType(Integer hitType) {
+        this.hitType = hitType;
+    }
 }

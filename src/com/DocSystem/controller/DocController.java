@@ -2775,9 +2775,9 @@ public class DocController extends BaseController{
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix))
 			{
-				if(checkAndGenerateOfficeContent(repos, tmpDoc, reposAccess.getAccessUser(), fileSuffix))
+				if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
 				{
-					content = readOfficeContent(repos, tmpDoc, reposAccess.getAccessUser());
+					content = readOfficeContent(repos, tmpDoc);
 				}
 			}
 			else
@@ -2959,9 +2959,9 @@ public class DocController extends BaseController{
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix))
 			{
-				if(checkAndGenerateOfficeContent(repos, tmpDoc, reposAccess.getAccessUser(), fileSuffix))
+				if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
 				{
-					content = readOfficeContent(repos, tmpDoc, reposAccess.getAccessUser());
+					content = readOfficeContent(repos, tmpDoc);
 				}
 			}
 			else
@@ -3013,6 +3013,49 @@ public class DocController extends BaseController{
 		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
 		String code = FileUtils2.getFileEncode(filePath);
 		return FileUtils2.isBinaryFile(code);
+	}
+	
+	public String getDocContent(Repos repos, Doc doc, int offset, int size)
+	{
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		boolean isRealDoc = true;
+		doc.setIsRealDoc(isRealDoc);
+		doc.setLocalRootPath(localRootPath);
+		doc.setLocalVRootPath(localVRootPath);
+		
+		Doc tmpDoc = doc;
+		//SVN/GIT前置类型仓库需要先将文件下载到本地
+		if(repos.getType() == 3 || repos.getType() == 4)
+		{
+			verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);
+		}		
+	
+		String content = "";
+		String fileSuffix = getFileSuffix(doc.getName());
+		if(isText(fileSuffix))
+		{
+			content = readRealDocContent(repos, tmpDoc, offset, size);
+		}
+		else if(isOffice(fileSuffix) || isPdf(fileSuffix))
+		{
+			if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
+			{
+				content = readOfficeContent(repos, tmpDoc, offset, size);
+			}
+		}
+		else
+		{
+			if(isBinaryFile(repos, tmpDoc))
+			{
+				content = "";
+			}
+			else
+			{
+				content = readRealDocContent(repos, tmpDoc, offset, size);
+			}
+		}
+		return content;
 	}
 
 	/****************   get Tmp Saved Document Content ******************/
@@ -3107,7 +3150,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, User accessUser, String fileSuffix) 
+	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, String fileSuffix) 
 	{
 		
 		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
@@ -3221,9 +3264,9 @@ public class DocController extends BaseController{
 				}
 				else if(isOffice(fileSuffix) || isPdf(fileSuffix))
 				{
-					if(checkAndGenerateOfficeContent(repos, doc, reposAccess.getAccessUser(), fileSuffix))
+					if(checkAndGenerateOfficeContent(repos, doc, fileSuffix))
 					{
-						docText = readOfficeContent(repos, doc, reposAccess.getAccessUser());
+						docText = readOfficeContent(repos, doc);
 					}
 				}
 				doc.setDocText(docText);
@@ -4764,27 +4807,7 @@ public class DocController extends BaseController{
         {
       	    Doc doc = hitDoc.getDoc();
       	    doc.setReposName(repos.getName());
-      	    //根据hitType决定是否要取出文件内容或文件备注
-      	    int hitType = hitDoc.getHitType();
-    		System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitType:" + hitDoc.getHitType());	
-
-      	    String hitText = "";
-      	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
-      	    {
-      	    	
-      	    	hitText = readDocContentFromFile(localRootPath + doc.getPath(), doc.getName(), true, 0, 1200);
-     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
-      	    }
-      	    
-      	    if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
-      	    {
-      	    	String vDocName = getVDocName(doc);
-      	    	String hitVText = readDocContentFromFile(localVRootPath, vDocName, false, 0, 1200);
-     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitVText:" + hitVText);	
-      	    	hitText += hitVText;
-      	    }
-  	    	doc.setContent(hitText);
-      	    
+      	    doc.setHitType(hitDoc.getHitType());      	    
       	    docList.add(doc);
 		}
 	
@@ -4806,6 +4829,35 @@ public class DocController extends BaseController{
 				}
 			}
 		);*/
+		
+		//读取排序前二十文件的内容
+		int size = docList.size() > 20? 20 : docList.size();
+		for(int i=0; i <size; i++)
+		{
+			Doc doc = docList.get(i);
+			
+      	    //根据hitType决定是否要取出文件内容或文件备注
+      	    int hitType = doc.getHitType();
+    		System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitType:" + doc.getHitType());	
+
+      	    String hitText = "";
+      	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
+      	    {
+      	    	hitText = getDocContent(repos, doc, 0, 120);
+     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
+      	    }
+      	    
+      	    if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
+      	    {
+      	    	String vDocName = getVDocName(doc);
+      	    	String hitVText = readDocContentFromFile(localVRootPath, vDocName, false, 0, 120);
+     	    	System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitVText:" + hitVText);	
+      	    	hitText += hitVText;
+      	    }
+  	    	doc.setContent(hitText);
+		}
+		
+		
 		return docList;
 	}
 
