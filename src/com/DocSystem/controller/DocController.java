@@ -4839,21 +4839,37 @@ public class DocController extends BaseController{
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
       	    {
       	    	hitText = getDocContent(repos, doc, 0, 120);
+      	    	hitText = jsonStrHandler(hitText);
      	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
       	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
       	    	hitText = readVirtualDocContent(repos, doc, 0, 120);
+      	    	hitText = jsonStrHandler(hitText);
      	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
   	    	doc.setContent(hitText);
 		}
 		
-		
 		return docList;
 	}
-
 	
+	private String jsonStrHandler(String str) {
+	    str = str.replace("[", "");
+	    str = str.replace("]", "");
+	    str = str.replace("{", "");
+	    str = str.replace("}", "");
+	    str = str.replace(">", "");
+	    str = str.replace("<", "");
+	    str = str.replace(" ", "");
+	    str = str.replace("\"", "");
+	    str = str.replace("\'", "");
+	    str = str.replace("\\", "/");//对斜线的转义
+	    str = str.replace("\n", "");
+	    str = str.replace("\r", "");
+		return str;
+	}
+
 	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, String path, HashMap<String, HitDoc> searchResult) 
 	{
 		String [] keyWords = searchWord.split(" ");
