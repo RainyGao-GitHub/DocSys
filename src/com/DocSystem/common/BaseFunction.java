@@ -581,15 +581,6 @@ public class BaseFunction{
 	//获取OfficeEditorApi的配置
 	protected static String getOfficeEditorApi() {
 		String officeEditorApi = ReadProperties.read("docSysConfig.properties", "officeEditorApi");
-		if(officeEditorApi != null && !officeEditorApi.isEmpty())
-		{
-			if(officeEditorApi.indexOf("localhost") >= 0)
-			{
-				String serverIP = getIpAddress();
-				officeEditorApi = officeEditorApi.replaceAll("localhost", serverIP);
-			}
-		}
-		System.out.println("getOfficeEditorApi() officeEditorApi:" + officeEditorApi);
 		return officeEditorApi;
 	}
 	
