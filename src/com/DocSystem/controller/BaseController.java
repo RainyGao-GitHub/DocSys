@@ -7392,7 +7392,17 @@ public class BaseController  extends BaseFunction{
 	
 	public static String getOfficeEditor()
 	{
-		return officeEditorApi;
+		String officeEditor = officeEditorApi;
+		if(officeEditorApi != null && !officeEditorApi.isEmpty())
+		{
+			if(officeEditorApi.indexOf("localhost") >= 0)
+			{
+				String serverIP = getIpAddress();
+				officeEditor = officeEditorApi.replaceAll("localhost", serverIP);
+			}
+		}
+		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
+		return officeEditor;
 	}
 	
 	public void setOfficeEditor(String editor) {
