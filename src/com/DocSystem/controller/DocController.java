@@ -4825,8 +4825,9 @@ public class DocController extends BaseController{
 			}
 		);*/
 		
-		//读取排序前二十文件的内容
-		int size = docList.size() > 20? 20 : docList.size();
+		//读取排序前十文件的内容
+		int numOfContentShow = 10;
+		int size = docList.size() > numOfContentShow? numOfContentShow : docList.size();
 		for(int i=0; i <size; i++)
 		{
 			Doc doc = docList.get(i);
@@ -4839,13 +4840,13 @@ public class DocController extends BaseController{
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
       	    {
       	    	hitText = getDocContent(repos, doc, 0, 120);
-      	    	hitText = jsonStrHandler(hitText);
+      	    	hitText = removeSpecialJsonChars(hitText);
      	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
       	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
       	    	hitText = readVirtualDocContent(repos, doc, 0, 120);
-      	    	hitText = jsonStrHandler(hitText);
+     	    	hitText = removeSpecialJsonChars(hitText);
      	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
   	    	doc.setContent(hitText);
@@ -4854,19 +4855,53 @@ public class DocController extends BaseController{
 		return docList;
 	}
 	
-	private String jsonStrHandler(String str) {
-	    str = str.replace("[", "");
-	    str = str.replace("]", "");
-	    str = str.replace("{", "");
-	    str = str.replace("}", "");
-	    str = str.replace(">", "");
-	    str = str.replace("<", "");
-	    str = str.replace(" ", "");
-	    str = str.replace("\"", "");
-	    str = str.replace("\'", "");
-	    str = str.replace("\\", "/");//对斜线的转义
-	    str = str.replace("\n", "");
-	    str = str.replace("\r", "");
+	
+	/**
+     * 去除字符串中所包含的空格（包括:空格(全角，半角)、制表符、换页符等）
+     * @param s
+     * @return
+     */
+    public static String removeAllBlank(String s){
+        String result = "";
+        if(null!=s && !"".equals(s)){
+            result = s.replaceAll("[　*| *| *|//s*]*", "");
+        }
+        return result;
+    }
+
+    /**
+     * 去除字符串中头部和尾部所包含的空格（包括:空格(全角，半角)、制表符、换页符等）
+     * @param s
+     * @return
+     */
+    public static String trim(String s){
+        String result = "";
+        if(null!=s && !"".equals(s)){
+            result = s.replaceAll("^[　*| *| *|//s*]*", "").replaceAll("[　*| *| *|//s*]*$", "");
+        }
+        return result;
+    }
+    
+	private String removeSpecialJsonChars(String str) {
+		//str = removeAllBlank(str);
+		//str = trim(str);
+	    //str = str.replace("[", "");
+	    //str = str.replace("]", "");
+	    //str = str.replace("{", "");
+	    //str = str.replace("}", "");
+	   //str = str.replace(">", "");
+	    //str = str.replace("<", "");
+	    //str = str.replace(" ", "");
+	    //str = str.replace("\"", ""); //双引号
+	    //str = str.replace("\'", ""); //单引号
+	    //str = str.replace("\\", "/");//对斜线的转义
+	    //str = str.replace("\n", ""); //回车
+	    //str = str.replace("\r", ""); //换行
+	    str = str.replace("\t", ""); //水平制表符
+		/* \n 回车(\u000a)
+		// \t 水平制表符(\u0009)
+		// \s 空格(\u0008)
+		// \r 换行(\u000d)	 */   
 		return str;
 	}
 
