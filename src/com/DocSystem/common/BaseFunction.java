@@ -586,9 +586,10 @@ public class BaseFunction{
 			if(officeEditorApi.indexOf("localhost") >= 0)
 			{
 				String serverIP = getIpAddress();
-				officeEditorApi.replaceAll("localhost", serverIP);
+				officeEditorApi = officeEditorApi.replaceAll("localhost", serverIP);
 			}
 		}
+		System.out.println("getOfficeEditorApi() officeEditorApi:" + officeEditorApi);
 		return officeEditorApi;
 	}
 	
