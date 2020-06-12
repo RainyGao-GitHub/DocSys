@@ -580,7 +580,16 @@ public class BaseFunction{
     
 	//获取OfficeEditorApi的配置
 	protected static String getOfficeEditorApi() {
-		return ReadProperties.read("docSysConfig.properties", "officeEditorApi");
+		String officeEditorApi = ReadProperties.read("docSysConfig.properties", "officeEditorApi");
+		if(officeEditorApi != null && !officeEditorApi.isEmpty())
+		{
+			if(officeEditorApi.indexOf("localhost") >= 0)
+			{
+				String serverIP = getIpAddress();
+				officeEditorApi.replaceAll("localhost", serverIP);
+			}
+		}
+		return officeEditorApi;
 	}
 	
 	//正确格式化仓库根路径
