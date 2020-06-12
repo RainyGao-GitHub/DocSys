@@ -4854,7 +4854,32 @@ public class DocController extends BaseController{
 		
 		return docList;
 	}
-	
+    
+	private String removeSpecialJsonChars(String str) {
+		if(str != null && !str.isEmpty())
+		{
+			//str = removeAllBlank(str);
+			//str = trim(str);
+		    //str = str.replace("[", "");
+		    //str = str.replace("]", "");
+		    //str = str.replace("{", "");
+		    //str = str.replace("}", "");
+		   //str = str.replace(">", "");
+		    //str = str.replace("<", "");
+		    //str = str.replace(" ", "");
+		    //str = str.replace("\"", ""); //双引号
+		    //str = str.replace("\'", ""); //单引号
+		    //str = str.replace("\\", "/");//对斜线的转义
+		    //str = str.replace("\n", ""); //回车
+		    //str = str.replace("\r", ""); //换行
+		    str = str.replace("\t", ""); //水平制表符
+			/* \n 回车(\u000a)
+			// \t 水平制表符(\u0009)
+			// \s 空格(\u0008)
+			// \r 换行(\u000d)	 */   
+		}
+		return str;
+	}
 	
 	/**
      * 去除字符串中所包含的空格（包括:空格(全角，半角)、制表符、换页符等）
@@ -4881,29 +4906,6 @@ public class DocController extends BaseController{
         }
         return result;
     }
-    
-	private String removeSpecialJsonChars(String str) {
-		//str = removeAllBlank(str);
-		//str = trim(str);
-	    //str = str.replace("[", "");
-	    //str = str.replace("]", "");
-	    //str = str.replace("{", "");
-	    //str = str.replace("}", "");
-	   //str = str.replace(">", "");
-	    //str = str.replace("<", "");
-	    //str = str.replace(" ", "");
-	    //str = str.replace("\"", ""); //双引号
-	    //str = str.replace("\'", ""); //单引号
-	    //str = str.replace("\\", "/");//对斜线的转义
-	    //str = str.replace("\n", ""); //回车
-	    //str = str.replace("\r", ""); //换行
-	    str = str.replace("\t", ""); //水平制表符
-		/* \n 回车(\u000a)
-		// \t 水平制表符(\u0009)
-		// \s 空格(\u0008)
-		// \r 换行(\u000d)	 */   
-		return str;
-	}
 
 	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, String path, HashMap<String, HitDoc> searchResult) 
 	{
