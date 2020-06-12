@@ -3930,6 +3930,12 @@
 					}
 			},
 			{divider: true},
+			{text: '分享', action: function(e){
+						e.preventDefault();
+						shareDoc(gRootDoc);    
+					}
+			},
+			{divider: true},
 			{text: '刷新', action: function(e){
 						e.preventDefault();
 						refreshDoc(null, 0);
@@ -4208,6 +4214,12 @@
 						curRightClickedDocListNode = null;
 						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 						DoPaste(gCopiedNodes, parentNode, gIsCopy);
+					}
+			},
+			{divider: true},
+			{text: '分享', action: function(e){
+						e.preventDefault();
+						shareDoc(gDocInfo);    
 					}
 			},
 			{divider: true},
