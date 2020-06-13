@@ -2903,6 +2903,10 @@ public class DocController extends BaseController{
 		String status = "ok";
 		String content = "";
 		boolean isRealDoc = true;
+		if(docType == null) //docType表示是否为实体文件
+		{
+			docType = 1;
+		}
 		if(docType == 1)
 		{
 			doc.setIsRealDoc(isRealDoc);
@@ -3093,6 +3097,10 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		String content = "";
+		if(docType == null)
+		{
+			docType = 1;
+		}
 		if(docType == 1)
 		{
 			String fileSuffix = getFileSuffix(name);
