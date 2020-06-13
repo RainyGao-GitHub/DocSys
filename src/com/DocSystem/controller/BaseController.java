@@ -7403,7 +7403,7 @@ public class BaseController  extends BaseFunction{
 				if(officeEditorApi.indexOf("localhost") >= 0)
 				{
 					String serverIP = getIpAddress();
-					officeEditor = officeEditorApi.replaceAll("localhost", serverIP);
+					officeEditor = officeEditorApi.replace("localhost", serverIP);
 					if(testUrlWithTimeOut(officeEditor,3000) == false)
 					{
 						officeEditor = null;
