@@ -9316,7 +9316,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//检测网址是否可用
-    public static boolean testUrl(String urlString){
+    public static boolean testUrl(String urlString)
+    {
+    	System.out.println("testUrl() URL:" + urlString);
         boolean ret = false;
         long lo = System.currentTimeMillis();
         URL url = null;  
@@ -9330,12 +9332,13 @@ public class BaseController  extends BaseFunction{
         	e.printStackTrace();
             System.out.println("连接打不开!");
         } 
-        System.out.println("testUrl used time:" + (System.currentTimeMillis()-lo) + " ms");
+        System.out.println("testUrl() used time:" + (System.currentTimeMillis()-lo) + " ms");
         return ret;
     }
     
     public static boolean testUrlWithTimeOut(String urlString,int timeOutMillSeconds){
-        boolean ret = false;
+    	System.out.println("testUrlWithTimeOut() URL:" + urlString);
+    	boolean ret = false;
     	long lo = System.currentTimeMillis();
         URL url = null;
         try {  
@@ -9349,7 +9352,7 @@ public class BaseController  extends BaseFunction{
         	e.printStackTrace();
             System.out.println("连接打不开!");  
         }  
-        System.out.println("testUrlWithTimeOut used time:" + (System.currentTimeMillis()-lo) + " ms");
+        System.out.println("testUrlWithTimeOut() used time:" + (System.currentTimeMillis()-lo) + " ms");
         return ret;
     }
     
