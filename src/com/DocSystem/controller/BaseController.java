@@ -9318,15 +9318,16 @@ public class BaseController  extends BaseFunction{
     public static boolean testUrl(String urlString){
         boolean ret = false;
         long lo = System.currentTimeMillis();
-        URL url;  
+        URL url = null;  
         try {  
              url = new URL(urlString);  
              InputStream in = url.openStream();
              in.close();
              ret = true;
              System.out.println("连接可用");  
-        } catch (Exception e1) {  
-             System.out.println("连接打不开!");
+        } catch (Exception e) {
+        	e.printStackTrace();
+            System.out.println("连接打不开!");
         } 
         System.out.println(System.currentTimeMillis()-lo);
         return ret;
@@ -9335,7 +9336,7 @@ public class BaseController  extends BaseFunction{
     public static boolean testUrlWithTimeOut(String urlString,int timeOutMillSeconds){
         boolean ret = false;
     	long lo = System.currentTimeMillis();
-        URL url;  
+        URL url = null;
         try {  
              url = new URL(urlString);  
              URLConnection co =  url.openConnection();
@@ -9343,9 +9344,9 @@ public class BaseController  extends BaseFunction{
              co.connect();
              ret = true;
              System.out.println("连接可用");  
-        } catch (Exception e1) {  
-             System.out.println("连接打不开!");  
-             url = null;  
+        } catch (Exception e) {
+        	e.printStackTrace();
+            System.out.println("连接打不开!");  
         }  
         System.out.println(System.currentTimeMillis()-lo);
         return ret;
