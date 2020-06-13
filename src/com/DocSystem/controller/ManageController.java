@@ -685,7 +685,7 @@ public class ManageController extends BaseController{
 		
 		if(officeEditorApi != null)
 		{
-			officeEditorApi.replaceAll("\\", "/");
+			officeEditorApi.replace("\\", "/");
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "officeEditorApi", officeEditorApi);
 			setOfficeEditor(officeEditorApi);
 		}
