@@ -2529,11 +2529,12 @@ public class DocController extends BaseController{
 
 	private boolean isOfficeEditorApiConfiged() {
 		System.out.println("isOfficeEditorApiConfiged() officeEditorApi:" + officeEditorApi);
-		if(officeEditorApi == null)
+		String officeEditor = getOfficeEditor();
+		if(officeEditor == null)
 		{
 			return false;
 		}
-		if(officeEditorApi.isEmpty())
+		if(officeEditor.isEmpty())
 		{
 			return false;
 		}
