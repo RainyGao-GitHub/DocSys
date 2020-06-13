@@ -581,7 +581,7 @@ public class BaseFunction{
 	//获取OfficeEditorApi的配置
 	protected static String getOfficeEditorApi() {
 		String officeEditorApi = ReadProperties.read("docSysConfig.properties", "officeEditorApi");
-		return officeEditorApi;
+		return officeEditorApi.replace("\\", "/");
 	}
 	
 	//正确格式化仓库根路径
