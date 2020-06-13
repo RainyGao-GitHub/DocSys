@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.sql.Connection;
@@ -7393,12 +7395,19 @@ public class BaseController  extends BaseFunction{
 	public static String getOfficeEditor()
 	{
 		String officeEditor = officeEditorApi;
-		if(officeEditorApi != null && !officeEditorApi.isEmpty())
+		if(officeEditor != null && !officeEditor.isEmpty())
 		{
-			if(officeEditorApi.indexOf("localhost") >= 0)
-			{
-				String serverIP = getIpAddress();
-				officeEditor = officeEditorApi.replaceAll("localhost", serverIP);
+			if(testUrl(officeEditor) == false)
+			{				
+				if(officeEditorApi.indexOf("localhost") >= 0)
+				{
+					String serverIP = getIpAddress();
+					officeEditor = officeEditorApi.replaceAll("localhost", serverIP);
+					if(testUrl(officeEditor) == false)
+					{
+						officeEditor = null;
+					}
+				}
 			}
 		}
 		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
@@ -9304,4 +9313,41 @@ public class BaseController  extends BaseFunction{
 		}
 		return null;
 	}
+	
+	//检测网址是否可用
+    public static boolean testUrl(String urlString){
+        boolean ret = false;
+        long lo = System.currentTimeMillis();
+        URL url;  
+        try {  
+             url = new URL(urlString);  
+             InputStream in = url.openStream();
+             in.close();
+             ret = true;
+             System.out.println("连接可用");  
+        } catch (Exception e1) {  
+             System.out.println("连接打不开!");
+        } 
+        System.out.println(System.currentTimeMillis()-lo);
+        return ret;
+    }
+    
+    public static boolean testUrlWithTimeOut(String urlString,int timeOutMillSeconds){
+        boolean ret = false;
+    	long lo = System.currentTimeMillis();
+        URL url;  
+        try {  
+             url = new URL(urlString);  
+             URLConnection co =  url.openConnection();
+             co.setConnectTimeout(timeOutMillSeconds);
+             co.connect();
+             ret = true;
+             System.out.println("连接可用");  
+        } catch (Exception e1) {  
+             System.out.println("连接打不开!");  
+             url = null;  
+        }  
+        System.out.println(System.currentTimeMillis()-lo);
+        return ret;
+    }
 }
