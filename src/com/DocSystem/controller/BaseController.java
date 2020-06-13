@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7397,13 +7398,13 @@ public class BaseController  extends BaseFunction{
 		String officeEditor = officeEditorApi;
 		if(officeEditor != null && !officeEditor.isEmpty())
 		{
-			if(testUrl(officeEditor) == false)
+			if(testUrlWithTimeOut(officeEditor,3000) == false)
 			{				
 				if(officeEditorApi.indexOf("localhost") >= 0)
 				{
 					String serverIP = getIpAddress();
 					officeEditor = officeEditorApi.replaceAll("localhost", serverIP);
-					if(testUrl(officeEditor) == false)
+					if(testUrlWithTimeOut(officeEditor,3000) == false)
 					{
 						officeEditor = null;
 					}
@@ -9329,7 +9330,7 @@ public class BaseController  extends BaseFunction{
         	e.printStackTrace();
             System.out.println("连接打不开!");
         } 
-        System.out.println(System.currentTimeMillis()-lo);
+        System.out.println("testUrl used time:" + (System.currentTimeMillis()-lo));
         return ret;
     }
     
@@ -9348,7 +9349,39 @@ public class BaseController  extends BaseFunction{
         	e.printStackTrace();
             System.out.println("连接打不开!");  
         }  
-        System.out.println(System.currentTimeMillis()-lo);
+        System.out.println("testUrlWithTimeOut used time:" + (System.currentTimeMillis()-lo));
         return ret;
     }
+    
+    /** 
+     * 功能：检测当前URL是否可连接或是否有效, 
+     * 描述：最多连接网络 5 次, 如果 5 次都不成功，视为该地址不可用 
+     * @param urlStr 指定URL网络地址 
+     * @return URL 
+     */  
+  public synchronized URL isConnect(String urlStr) {  
+     int counts = 0;  
+     if (urlStr == null || urlStr.length() <= 0) {                         
+      return null;                   
+     }  
+     URL url = null;
+	while (counts < 5) {  
+      try {  
+       url = new URL(urlStr);  
+       HttpURLConnection con = (HttpURLConnection) url.openConnection();  
+       int state = con.getResponseCode();  
+       System.out.println(counts +"= "+state);  
+       if (state == 200) {  
+        System.out.println("URL可用！");  
+       }  
+       break;  
+      }catch (Exception ex) {  
+       counts++;   
+       System.out.println("URL不可用，连接第 "+counts+" 次");  
+       urlStr = null;  
+       continue;  
+      }  
+     }  
+     return url;  
+  }  
 }
