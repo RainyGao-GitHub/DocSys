@@ -5,22 +5,31 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 主要应用场景：文件管理系统、日志管理系统、网页版SVN仓库、网页版GIT仓库、电子书、软件接口管理系统、远程桌面管理、自动备份软件。
 
 全平台支持:Linux，Windows，Mac.
-![输入图片说明](https://images.gitee.com/uploads/images/2018/1117/233316_639ed640_1558129.png "1.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105533_edab58c1_1558129.png "docsys_首页1.png")
 
 开源协议: 采用GPL 2.0协议;
-![输入图片说明](https://images.gitee.com/uploads/images/2018/1117/233347_2cc1a65f_1558129.png "2.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105551_20a8ac4f_1558129.png "docsys_首页2.png")
 
 仓库列表
-![输入图片说明](https://images.gitee.com/uploads/images/2018/1117/234733_69d967ef_1558129.png "6.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105615_5aa90a26_1558129.png "docsys_仓库列表1.png")
 
 仓库主页
-![输入图片说明](https://images.gitee.com/uploads/images/2018/1117/234744_2850feb3_1558129.png "7.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105650_d4a010aa_1558129.png "docsys_仓库主页1.png")
 
 历史版本
-![输入图片说明](https://images.gitee.com/uploads/images/2018/1119/095414_fba9ce48_1558129.png "8.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105708_0888bd30_1558129.png "docsys_仓库主页3.png")
 
 在线编辑
-![输入图片说明](https://images.gitee.com/uploads/images/2020/0606/001059_0f0438de_1558129.png "在线编辑.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105732_88ed0a73_1558129.png "docsys_仓库主页2.png")
+
+文件分享
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105757_67ca6763_1558129.png "docsys_仓库主页4.png")
+
+全文搜索
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105917_2ee5c143_1558129.png "docsys_仓库列表2.png")
+
+后台管理
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105813_e858feb3_1558129.png "docsys_管理后台1.png")
 
 ### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
