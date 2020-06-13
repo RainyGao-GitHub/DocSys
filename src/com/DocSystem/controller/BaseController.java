@@ -9330,7 +9330,7 @@ public class BaseController  extends BaseFunction{
         	e.printStackTrace();
             System.out.println("连接打不开!");
         } 
-        System.out.println("testUrl used time:" + (System.currentTimeMillis()-lo));
+        System.out.println("testUrl used time:" + (System.currentTimeMillis()-lo) + " ms");
         return ret;
     }
     
@@ -9349,7 +9349,7 @@ public class BaseController  extends BaseFunction{
         	e.printStackTrace();
             System.out.println("连接打不开!");  
         }  
-        System.out.println("testUrlWithTimeOut used time:" + (System.currentTimeMillis()-lo));
+        System.out.println("testUrlWithTimeOut used time:" + (System.currentTimeMillis()-lo) + " ms");
         return ret;
     }
     
