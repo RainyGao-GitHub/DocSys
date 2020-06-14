@@ -7,7 +7,8 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 ### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
 全平台支持:Linux，Windows，Mac.
-![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105533_edab58c1_1558129.png "docsys_首页1.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0614/223719_03bd18e1_1558129.png "docsys_首页1.png")
+
 开源协议: 采用GPL 2.0协议;
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105551_20a8ac4f_1558129.png "docsys_首页2.png")
 
