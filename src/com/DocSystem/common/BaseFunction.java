@@ -1315,6 +1315,25 @@ public class BaseFunction{
 		try {
 			byte[] textByte = str.getBytes("UTF-8");
 			//编码
+			String base64Str = Base64.encodeBase64String(textByte);
+			return base64Str;
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}		
+	}
+	
+	protected String base64EncodeURLSafe(String str) 
+	{
+		if(str == null || str.isEmpty())
+		{
+			return str;
+		}
+		
+		try {
+			byte[] textByte = str.getBytes("UTF-8");
+			//编码
 			String base64Str = Base64.encodeBase64URLSafeString(textByte);
 			return base64Str;
 		} catch (UnsupportedEncodingException e) {

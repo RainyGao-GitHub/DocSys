@@ -1204,8 +1204,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String encTargetName = base64Encode(fileName);
-		String encTargetPath = base64Encode(localParentPath);
+		String encTargetName = base64EncodeURLSafe(fileName);
+		String encTargetPath = base64EncodeURLSafe(localParentPath);
 		res.put("url", "/DocSystem/Doc/downloadDoc.do?targetPath="+encTargetPath+"&targetName="+encTargetName);
 		res.put("success", 1);
 		res.put("message", "upload success!");
@@ -3516,13 +3516,13 @@ public class DocController extends BaseController{
 	}
 	
 	private String buildDocFileLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		String encTargetName = base64Encode(doc.getName());
+		String encTargetName = base64EncodeURLSafe(doc.getName());
 		if(encTargetName == null)
 		{
 			docSysErrorLog("buildDocFileLink() get encTargetName Failed", rt);
 			return null;
 		}	
-		String encTargetPath = base64Encode(doc.getLocalRootPath() + doc.getPath());
+		String encTargetPath = base64EncodeURLSafe(doc.getLocalRootPath() + doc.getPath());
 		if(encTargetPath == null)
 		{
 			docSysErrorLog("buildDocFileLink() get encTargetPath Failed", rt);
@@ -3550,7 +3550,7 @@ public class DocController extends BaseController{
 	}
 	
 	private String buildSaveDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		String encFilePath = base64Encode(doc.getPath() + doc.getName());
+		String encFilePath = base64EncodeURLSafe(doc.getPath() + doc.getName());
 		if(encFilePath == null)
 		{
 			docSysErrorLog("buildSaveDocLink() get encFilePath Failed", rt);
@@ -4856,15 +4856,7 @@ public class DocController extends BaseController{
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
       	    {
       	    	hitText = getDocContent(repos, doc, 0, 120);
-      	    	//hitText = removeSpecialJsonChars(hitText);
-      	    	byte[] textByte;
-				try {
-					textByte = hitText.getBytes("UTF-8");
-					hitText = Base64.encodeBase64String(textByte);
-  	    		} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+      	    	hitText = base64Encode(hitText);
       	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
       	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
