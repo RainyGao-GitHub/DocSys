@@ -1307,6 +1307,11 @@ public class BaseFunction{
 	/************************ base64Encode相关接口 **************************************/
 	protected String base64Encode(String str) 
 	{
+		if(str == null || str.isEmpty())
+		{
+			return str;
+		}
+		
 		try {
 			byte[] textByte = str.getBytes("UTF-8");
 			//编码

@@ -4854,14 +4854,16 @@ public class DocController extends BaseController{
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
       	    {
       	    	hitText = getDocContent(repos, doc, 0, 120);
-      	    	hitText = removeSpecialJsonChars(hitText);
-     	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
+      	    	//hitText = removeSpecialJsonChars(hitText);
+      	    	hitText = base64Encode(hitText);
+      	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
       	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
       	    	hitText = readVirtualDocContent(repos, doc, 0, 120);
-     	    	hitText = removeSpecialJsonChars(hitText);
-     	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
+     	    	//hitText = removeSpecialJsonChars(hitText);
+     	    	hitText = base64Encode(hitText);
+      	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
   	    	doc.setContent(hitText);
 		}
@@ -4885,7 +4887,7 @@ public class DocController extends BaseController{
 		    //str = str.replace("\'", ""); //单引号
 		    //str = str.replace("\\", "/");//对斜线的转义
 		    //str = str.replace("\n", ""); //回车
-		    //str = str.replace("\r", ""); //换行
+		    str = str.replace("\r", ""); //换行
 		    str = str.replace("\t", ""); //水平制表符
 			/* \n 回车(\u000a)
 			// \t 水平制表符(\u0009)
