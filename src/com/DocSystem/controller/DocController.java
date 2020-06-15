@@ -4862,6 +4862,7 @@ public class DocController extends BaseController{
       	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
       	    	hitText = readVirtualDocContent(repos, doc, 0, 120);
+      	    	hitText = base64Encode(hitText);
      	    	//hitText = removeSpecialJsonChars(hitText);
       	    	//System.out.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
