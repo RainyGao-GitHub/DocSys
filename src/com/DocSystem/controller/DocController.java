@@ -3165,11 +3165,13 @@ public class DocController extends BaseController{
 		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
 		String officeTextFileName = getOfficeTextFileName(doc);
 		File file = new File(userTmpDir, officeTextFileName);
-		if(file.exists() == false)
-		{	
-			clearDir(userTmpDir);
+		if(file.exists() == true)
+		{
+			return true;
 		}
 		
+		//文件需要转换
+		clearDir(userTmpDir);
 		switch(fileSuffix)
 		{
 		case "doc":
