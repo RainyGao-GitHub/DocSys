@@ -4784,6 +4784,7 @@ public class DocController extends BaseController{
 		return result;
 	}
 
+	//通过路径搜索的话，只查找本地的目录，避免远程仓库链接不上或者时间太长
 	private Doc getHitDoc(Repos repos, String path, String searchWord) {
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
@@ -4800,7 +4801,7 @@ public class DocController extends BaseController{
 			docPath = docPath.replace('\\','/');
 		}
 		Doc doc = buildBasicDoc(repos.getId(), null, null, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
-		Doc hitDoc = docSysGetDoc(repos, doc);
+		Doc hitDoc = fsGetDoc(repos, doc);
 		return hitDoc;
 	}
 
