@@ -482,6 +482,16 @@
 		for(var i=0; i< size; i++)
 		{
 			docList[i] = searchResults[startIndex+i];
+			if(!docList[i].state)
+			{
+				//do decode the content
+				if(docList[i].content)
+				{
+					docList[i].content = base64_decode(docList[i].content);
+					docList[i].content = subByte(docList[i].content, docList[i].content.length);
+				}
+				docList[i].state = 1;
+			}
 		}
 		console.log(docList);
 		
@@ -517,7 +527,16 @@
         });
         
 	}
-
+	
+	//截取字符 去除乱码 避免半个中文字符
+	function subByte(source, length) {
+	    source = String(source);
+	    source = source.substr(0,length).replace(/([^\x00-\xff])/g,"\x241 ")//双字节字符替换成两个
+	       .substr(0,length)//截取长度
+	       .replace(/[^\x00-\xff]$/,"")//去掉临界双字节字符
+	       .replace(/([^\x00-\xff]) /g,"\x241");//还原
+	    return source;
+	};
 
     /**
      * 加粗加红显示搜索关键字
