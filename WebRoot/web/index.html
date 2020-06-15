@@ -237,7 +237,8 @@
         <div class="overlay spacer">
             <div class="container">
                 <div class="row text-center">
-                DocSys V2.01.71
+	                DocSys V2.01.71
+	                <a id="downloadPackageBtn" class="banner_btn"  onclick="downloadInstallPackage();">下载</a>
                 </div>
             </div>
         </div>
@@ -490,6 +491,12 @@
 				FeebackPageInit();
 			},
 		});
+	}
+	
+	function downloadInstallPackage()
+	{
+		var href = "https://download.csdn.net/download/highrain/12524112";
+		window.open(href);   //新窗口打开	
 	}
 	
 </script>	
