@@ -4724,6 +4724,8 @@ public class DocController extends BaseController{
 				searchResult.addAll(result);
 			}
 		}
+		//对搜索结果进行统一排序
+		Collections.sort(searchResult);
 		
 		Integer total = searchResult.size();
 		rt.setData(searchResult);
@@ -4816,7 +4818,7 @@ public class DocController extends BaseController{
       	    docList.add(doc);
 		}
 	
-		Collections.sort(docList);
+		//Collections.sort(docList);
 		/*
 		Collections.sort(docList,
 			new Comparator<Doc>() {
