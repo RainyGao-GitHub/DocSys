@@ -31,6 +31,8 @@ public class DocShare {
 
 	private String reposName;
 
+	private String serverIp; //服务器IP地址
+
     public Integer getId() {
         return id;
     }
@@ -149,6 +151,14 @@ public class DocShare {
 
 	public void setReposName(String reposName) {
 		this.reposName = reposName;
+	}
+
+    public String getServerIp() {
+		return serverIp;
+    }
+    
+	public void setServerIp(String serverIp) {
+		this.serverIp = serverIp;
 	}
 	
 	

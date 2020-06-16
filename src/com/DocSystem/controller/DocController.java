@@ -4431,10 +4431,15 @@ public class DocController extends BaseController{
 		List<DocShare> list = reposService.getDocShareList(qDocShare);
 		if(list != null && list.size() > 0)
 		{
+			String IpAddress = getIpAddress();
 			HashMap<Integer, Repos> ReposInfoHashMap = getReposInfoHashMap();
 			for(int i=0; i< list.size(); i++)
 			{
 				DocShare docShare = list.get(i);
+				docShare.setServerIp(IpAddress);
+				Long validHours = getValidHours(docShare.getExpireTime());
+				docShare.setValidHours(validHours);
+				
 				Repos repos = ReposInfoHashMap.get(docShare.getVid());
 				//printObject("repos",repos);
 				if(repos != null)
