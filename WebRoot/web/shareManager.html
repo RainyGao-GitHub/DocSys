@@ -124,8 +124,6 @@
 </script>
 
 <script type="text/javascript">	
-	var gDocShareList = null;
-	
 	//进入分享编辑状态
     function editShare() {
     	console.log("editShare");
@@ -147,9 +145,7 @@
           	if($("#DocShare"+index).prop("checked") == true)
           	{
           		var docShare = [];
-				docShare.id = $("#DocShare"+index).val();
-				docShare.reposId =  $("#Repos"+index).attr("value");
-				docShare.docPath = $("#DocPath"+index).attr("value");
+				docShare.shareId = $("#DocShare"+index).val();
 				docShare.editEn = $("#EditEn"+index).prop("checked")?1:0;
 				docShare.addEn = $("#AddEn"+index).prop("checked")?1:0;
 				docShare.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
@@ -168,46 +164,39 @@
         $("#btnSaveShare").hide();
         $("#btnCancelSaveShare").hide();
         //刷新分享列表
-        showShareList(gDocShareList);
+        showShareList();
     }
-	function showShareList(shareList){
+	function showShareList(){
 	   	console.log("showShareList()");
-	    if(!shareList || shareList == null)
-	    {
-		   	$.ajax({
-		                url : "/DocSystem/Doc/getDocShareList.do",
-		                type : "post",
-		                dataType : "json",
-		                data : {
-		                    //reposId : vid, //指定仓库
-		                	//path: parentPath, //指定文件
-		                	//name: docName,
-		                },
-		                success : function (ret) {
-		                    if( "ok" == ret.status ){
-						        $("#btnSaveShare").hide();
-						        $("#btnCancelSaveShare").hide();
-						        gDocShareList = ret.data;
-		                    	showDocShareList(gDocShareList);
-		                    }
-		                    else
-		                    {
-						        $("#btnSaveShare").hide();
-						        $("#btnCancelSaveShare").hide();
-		                    	showErrorMessage("文件分享列表获取失败:" + ret.msgInfo);
-		                    }
-		                },
-		                error : function () {
-		    		        $("#btnSaveShare").hide();
+	   	$.ajax({
+	                url : "/DocSystem/Doc/getDocShareList.do",
+	                type : "post",
+	                dataType : "json",
+	                data : {
+	                    //reposId : vid, //指定仓库
+	                	//path: parentPath, //指定文件
+	                	//name: docName,
+	                },
+	                success : function (ret) {
+	                    if( "ok" == ret.status ){
+					        $("#btnSaveShare").hide();
 					        $("#btnCancelSaveShare").hide();
-		                   	showErrorMessage('文件分享列表获取失败：服务器异常');
-		                }
-		    });
-	    }
-	    else
-	    {
-	    	showDocShareList(shareList);
-	    }
+	                    	showDocShareList(ret.data);
+	                    }
+	                    else
+	                    {
+					        $("#btnSaveShare").hide();
+					        $("#btnCancelSaveShare").hide();
+	                    	showErrorMessage("文件分享列表获取失败:" + ret.msgInfo);
+	                    }
+	                },
+	                error : function () {
+	    		        $("#btnSaveShare").hide();
+				        $("#btnCancelSaveShare").hide();
+	                   	showErrorMessage('文件分享列表获取失败：服务器异常');
+	                }
+	    });
+	    
 	    
 	    function shareAuthCovert(docShare)
 	    {
@@ -272,7 +261,7 @@
 				
 				var opBtn = "";
 				var docShareId = "";
-				docShareId = d.id;
+				docShareId = d.shareId;
 				opBtn = "<a href='javascript:void(0)' onclick='deleteDocShareConfirm("+docShareId+");' class='mybtn-primary'>删除</a>";
 				
 				var shareInfo = d.reposName + "::" + d.path + d.name;
@@ -349,13 +338,13 @@
 	   	console.log("deleteDocDocShareConfirm()");
 			qiao.bs.confirm({
 	 	    	id: 'deleteDocShareConfirm',
-	 	        msg: "是否删除该用户的目录权限设置?",
+	 	        msg: "是否删除该分享?",
 	 	        close: false,		
 	 	        okbtn: "删除",
 	 	        qubtn: "取消",
 	 	    },function () {
 	 	    	//alert("点击了确定");
-	 	    	deleteDocShare(docShareId);
+	 	    	deleteDocShare(shareId);
 	 	    	return true;   
 	 	    },function(){
 	 	    	//alert("点击了取消");
@@ -367,11 +356,11 @@
 	{	
 	   	console.log("deleteDocShare()");   	
 	   	$.ajax({
-	            url : "/DocSystem/Repos/deleteDocShare.do",
+	            url : "/DocSystem/Doc/deleteDocShare.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	                docShareId: docShareId,
+	                shareId: docShareId,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -398,10 +387,6 @@
         var failNum =0;
         var successNum = 0;
         var configErrorConfirmSet = 0;
-        //Context Cache
-        var indexCache = [];
-        var docShareListCache =[];
-        var totalNumCache = [];
         
         //标准Java成员操作接口
 		function getIndex()
@@ -433,32 +418,6 @@
 		{
 			totalNum = num;
 		}
-				
-		//上下文操作接口
-		function pushContext()
-		{
-			indexCache.push(index);
-			docShareListCache.push(docShareList);
-			totalNumCache.push(totalNum);
-		}
-		function popContext()
-		{
-			index = indexCache.pop();
-			docShareList = docShareListCache.pop();
-			totalNum = totalNumCache.pop();
-		}
-		
-		function clearContext()	//清空上下文，出错时需要清空，避免下次进来是被pop out来执行
-		{
-			indexCache = [];
-	        docShareListCache =[];
-	        totalNumCache = [];
-	    }
-		
-		function ContextSize()
-		{
-			return indexCache.length;
-		}
       	
       	function ConfigDocShareSet(docShares)
 		{
@@ -488,18 +447,20 @@
     		console.log(docShare);
     		
     		$.ajax({
-				  url : "/DocSystem/Doc/configDocShare.do",
+				  url : "/DocSystem/Doc/updateDocShare.do",
 				  	type : "post",
 				    dataType : "json",
 				    data : {
-				         shareId : docShare.id,
-				         reposId : docShare.reposId,
-				         path: docShare.path,
-				         name: docShare.name,
-				         editEn: docShare.editEn, 
-				         addEn: docShare.addEn, 
-				         deleteEn: docShare.deleteEn, 
-				         downloadEn: docShare.downloadEn,
+				         shareId : docShare.shareId,
+			             isAdmin : 0,
+			             access : 1,
+					     editEn: docShare.editEn, 
+					     addEn: docShare.addEn, 
+					     deleteEn: docShare.deleteEn, 
+					     downloadEn: docShare.downloadEn,
+			             heritable : 1,     
+			             sharePwd : docShare.sharePwd,
+			             shareHours : docShare.shareHours,
 				     },
 				     success : function (ret) {
 				         if( "ok" == ret.status){
@@ -665,13 +626,10 @@
 		}
 
 		//多文件move接口
-		function configDocShares(docShares,vid)	//多用户设置函数
+		function configDocShares(docShares)	//多用户设置函数
 		{
 			console.log("configDocShares");
-
-			clearContext();	//清空Context缓存
-			
-			ConfigDocShareSet(docShares,vid);	//设置configDocShare Parameters
+			ConfigDocShareSet(docShares);	//设置configDocShare Parameters
 
 			//启动复制操作      		
 			configDocShare();	//start set
@@ -679,8 +637,8 @@
 		
 		//开放给外部的调用接口
         return {
-            configDocShares: function(docShares,vid){
-            	configDocShares(docShares,vid);
+            configDocShares: function(docShares){
+            	configDocShares(docShares);
             },
             configDocShare: function(){
             	configDocShare();
