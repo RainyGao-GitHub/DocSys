@@ -365,14 +365,20 @@
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
 	                    showShareList();
+                    	// 普通消息提示条
+						bootstrapQ.msg({
+								msg : '删除成功！',
+								type : 'success',
+								time : 2000,
+							    });
 	                }
 	                else
 	                {
-	                	showErrorMessage("Error:" + ret.msgInfo);
+	                	showErrorMessage("删除失败:" + ret.msgInfo);
 	                }
 	            },
 	            error : function () {
-	               showErrorMessage('服务器异常：删除用户的目录权限设置失败！');
+	               showErrorMessage('删除失败:服务器异常！');
 	            }
 	    });
 	}
