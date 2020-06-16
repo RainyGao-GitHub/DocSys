@@ -18,16 +18,9 @@
     <link href="static/nprogress/nprogress.css" rel="stylesheet">
     <link href="static/styles/kancloud.css" rel="stylesheet">
     <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
-    <link href="static/markdown/css/editormd.min.css" rel="stylesheet">
-
-	<!-- FreeTeam CSS-->
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
-
-	<!-- context.js -->
-	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
-	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
-
+    <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
     <script src="static/scripts/jquery.min.js" type="text/javascript"></script>
     <script src="js/DocSys.js" type="text/javascript"></script>
 
@@ -56,13 +49,13 @@
         </div>      
     </header>
     <article class="container-fluid manual-body">
-        <div class="manual-right" style="left:282px;overflow-y: auto;">
+        <div class="manual-right" style="left:0px;overflow-y: auto;">
             <div class="manual-article">
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell select w5">选择</i>
-							<i class="cell repos w15">仓库</i>
+							<i class="cell select w7">选择</i>
+							<i class="cell repos w10">仓库</i>
 							<i class="cell docpath w15">路径</i>
 							<i class="cell add w7">允许上传</i>
 							<i class="cell download w7">允许下载</i>
@@ -83,26 +76,11 @@
 </div>
 
 <script type="text/javascript">
-	$(function () {
-	    initHighlighting();
-	});
-
 	//页面加载完成处理函数    
 	$(document).ready(function(){
 		console.log("Page is ready");
-		showShareList();
+		showDocShareList();
 	});
-   
-	/**
-     * 初始化高亮插件
-     */
-    function initHighlighting() {
-        $('pre code').each(function (i, block) {
-            hljs.highlightBlock(block);
-        });
-
-        hljs.initLineNumbersOnLoad();
-    }
 </script>
 
 <script type="text/javascript">	
