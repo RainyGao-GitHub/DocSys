@@ -58,10 +58,13 @@
 <script type="text/javascript">
 	var shareId = null;
 	var shareLink = null;
-	function DocSharePageInit(docShare, docName, url)
+	var callback = null;
+	function DocSharePageInit(docShare, docName, url, _callback)
 	{
 		shareId = docShare.shareId;
 		shareLink = url;
+		callback = _callback;
+		
 		$("#shareLink").val(url);
 		
 		//设置分享密码
@@ -217,7 +220,8 @@
              success : function (ret) {
              	console.log("updateDocShare ret:", ret);
              	if( "ok" == ret.status){
-            		bootstrapQ.msg({
+                	callback && callback();
+             		bootstrapQ.msg({
     					msg : '保存成功！',
     					type : 'success',
     					time : 1000,
@@ -226,6 +230,7 @@
 	            }
                 else
                 {
+                	callback && callback();
             		bootstrapQ.msg({
     					msg : '保存失败:' + ret.msgInfo,
     					type : 'danger',
@@ -235,6 +240,7 @@
                 }
             },
             error : function () {
+            	callback && callback();
         		bootstrapQ.msg({
 					msg : '保存失败:服务器异常',
 					type : 'danger',
@@ -260,6 +266,7 @@
              success : function (ret) {
             	console.log("deleteDocShare ret:", ret);
              	if( "ok" == ret.status){
+                	callback && callback();
             		bootstrapQ.msg({
     					msg : '取消成功！',
     					type : 'success',
@@ -272,6 +279,7 @@
 	            }
                 else
                 {
+                	callback && callback();
             		bootstrapQ.msg({
     					msg : '取消失败:' + ret.msgInfo,
     					type : 'danger',
@@ -281,6 +289,7 @@
                 }
             },
             error : function () {
+            	callback && callback();
         		bootstrapQ.msg({
 					msg : '取消失败:服务器异常',
 					type : 'danger',

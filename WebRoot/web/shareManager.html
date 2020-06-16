@@ -19,6 +19,8 @@
     <link href="static/styles/kancloud.css" rel="stylesheet">
     <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
     <link href="static/markdown/css/editormd.min.css" rel="stylesheet">
+    <link href="static/zTree/css/metroStyle/standardStyle.css" rel="stylesheet" id="zTreeCss">
+    
 
 	<!-- FreeTeam CSS-->
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
@@ -166,6 +168,32 @@
         //刷新分享列表
         showShareList();
     }
+	
+	function showDocShareEditPanel(index)
+	{
+		var docShare = gDocShareList[index];
+		var url = getDocShareLink(docShare.vid,docShare,docShare.serverIp);
+	 	console.log(url);	 		
+	 	showDocSharePanel(docShare, docShare.name, url, showShareList);
+	}
+	
+	function showDocSharePanel(docShare, docName, url, callback)
+	{
+		console.log("showDocSharePanel docName:" + docName);
+		bootstrapQ.dialog({
+			id: 'docShare',
+			url: 'docShare.html',
+			title: '文件分享:' + docName,
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				DocSharePageInit(docShare, docName, url, callback);
+			},
+		});
+	}
+	
+	var gDocShareList = [];
 	function showShareList(){
 	   	console.log("showShareList()");
 	   	$.ajax({
@@ -181,6 +209,7 @@
 	                    if( "ok" == ret.status ){
 					        $("#btnSaveShare").hide();
 					        $("#btnCancelSaveShare").hide();
+					        gDocShareList = ret.data;
 	                    	showDocShareList(ret.data);
 	                    }
 	                    else
@@ -259,11 +288,13 @@
 				var downloadChecked = d.downloadEn == 1? "checked":"";
 				var selectAllChecked = "";
 				
-				var opBtn = "";
+				var opBtn1 = "";
+				var opBtn2 = "";
 				var docShareId = "";
 				docShareId = d.shareId;
-				opBtn = "<a href='javascript:void(0)' onclick='deleteDocShareConfirm("+docShareId+");' class='mybtn-primary'>删除</a>";
-				
+				opBtn1 = "<a href='javascript:void(0)' onclick='showDocShareEditPanel("+i+");' class='mybtn-primary'>编辑</a>";
+				opBtn2 = "<a href='javascript:void(0)' onclick='deleteDocShareConfirm("+docShareId+");' class='mybtn-primary'>删除</a>";
+								
 				var shareInfo = d.reposName + "::" + d.path + d.name;
 				var expireTime = getDate(d.expireTime);
 				var se = "<li value="+ i +">"
@@ -296,7 +327,9 @@
 					+"		<input id='SelectAll"+i+"' value='"+ d.selectAll+"' type='checkbox' " + selectAllChecked + " onclick='selectAllShare(" +i+")' onchange='EnableShareConfig("+i+");'>全部</input>"
 					+"	</i>"
 					+"	<i class='cell operation w10'>"
-					+ 		opBtn
+					+ 		opBtn1
+					+ " "
+					+ 		opBtn2
 					+"	</i>"
 					+"</li>";
 				
