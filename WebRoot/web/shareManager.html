@@ -34,7 +34,6 @@
 </head>
 <body>
 <div class="m-manual manual-reader">
-
     <header class="navbar navbar-static-top manual-head" role="banner">
         <div class="container-fluid">
             <div class="navbar-header pull-left manual-title">
@@ -46,18 +45,12 @@
 
             <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
                 <ul class="nav navbar-nav navbar-left">
-            		<li id="userInfoDiv" style="display:block">
-							<a id="curRepos" href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>请选择仓库</span><span class="caret"></span></a>
-							<ul class="dropdown-menu" role="menu" id="reposList">
-							</ul>
-					</li>
+                	<div>我的分享</div>
             	</ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <button id="btnAddReposUser"  class="btn btn-default" type="button" onclick="showAddReposUserPanel()" style="display:none">添加用户</button>
-                    <button id="btnAddReposGroup"  class="btn btn-default" type="button" onclick="showAddReposGroupPanel()" style="display:none">添加组</button>
-                    <button id="btnEditAuth" class="btn btn-default" type="button" onclick="editAuth()" style="display:none">编辑</button>
-                    <button id="btnSaveAuth" class="btn btn-default" type="button" onclick="saveAuth()" style="display:none">保存</button>
-                    <button id="btnCancelSaveAuth" class="btn btn-default" type="button" onclick="cancelSaveAuth()" style="display:none">取消</button>
+                    <button id="btnEditShare" class="btn btn-default" type="button" onclick="editShare()" style="display:none">编辑</button>
+                    <button id="btnSaveShare" class="btn btn-default" type="button" onclick="saveShare()" style="display:none">保存</button>
+                    <button id="btnCancelSaveShare" class="btn btn-default" type="button" onclick="cancelSaveShare()" style="display:none">取消</button>
             	</ul>
             </nav>
         </div>      
@@ -68,23 +61,19 @@
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell select w5"> 选择</i>
-							<i class="cell username w10">用户名</i>
-							<i class="cell groupname w10">组</i>
+							<i class="cell select w5">选择</i>
+							<i class="cell repos w15">仓库</i>
 							<i class="cell docpath w15">路径</i>
-							<i class="cell access w7">管理员权限</i>
-							<i class="cell read w7">读权限</i>
-							<i class="cell edit w7">写权限</i>
-							<i class="cell add w7">增加权限</i>
-							<i class="cell delete w7">删除权限</i>
-							<i class="cell download w7">下载权限</i>
-							<i class="cell heritable w7">可继承</i>
+							<i class="cell add w7">允许上传</i>
+							<i class="cell download w7">允许下载</i>
+							<i class="cell edit w7">允许修改</i>
+							<i class="cell delete w7">允许删除</i>
 							<i class="cell selectAll w7"></i>
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
-               		<div class="panel-body eventset-list" id="reposAuthArea">
-			 			<!-- 仓库权限列表区域-->
+               		<div class="panel-body eventset-list" id="shareListArea">
+			 			<!-- 分享列表区域-->
 					</div>
 			 </div>
 			</div>
@@ -92,73 +81,19 @@
     </article>
     <div class="manual-mask"></div>
 </div>
-           
-<!-- Include all compiled plugins (below), or include individual file	s as needed -->
-<script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="static/layer/layer.js"></script>
-<script type="text/javascript" src="static/nprogress/nprogress.js"></script>
-<script type="text/javascript" src="static/highlight/highlight.js"></script>
-<script type="text/javascript" src="static/highlight/highlightjs-line-numbers.min.js"></script>
-<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
-<script type="application/javascript" src="static/markdown/lib/raphael.min.js"></script>
-<script type="application/javascript" src="static/scripts/jsonEscape.js"></script>
-<!-- zTree -->
-<script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
-<!-- For ajax form submit -->
-<script  type="text/javascript" src="static/scripts/jquery.form.js"></script>
-<!-- context。js -->
-<script type="text/javascript" src="static/ContextJS/js/context.js"></script>
-<!-- <script  type="text/javascript" src="static/ContextJS/js/jquery.min.js"></script>
- -->
-
-
-
-<script>
-	//通用函数接口
-    function showErrorMessage($msg) {
-        qiao.bs.alert($msg);
-        //alert($msg);
-    }
-
-    var zTree = jQuery.fn.zTree;
-
-    $(document).keydown(function(e){
-        // ctrl + s
-        if( e.ctrlKey  == true && e.keyCode == 83 ){
-
-            return false;
-        }
-    });
-
-    // 从 url 中获取参数
-    function getQueryString(name) {
-        var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
-        var r = window.location.search.substr(1).match(reg);
-        if (r != null) {
-            return unescape(r[2]);
-        }
-        return null;
-    }
-
-	function getTime() {
-        var now= new Date(),
-        h=now.getHours(),
-        m=now.getMinutes(),
-        s=now.getSeconds(),
-        ms=now.getMilliseconds();
-        return (h+":"+m+":"+s+ " " +ms);
-    }
-
-</script>
-
 
 <script type="text/javascript">
+	$(function () {
+	    initHighlighting();
+	});
 
-
-
-    var events = $("body");
-    var catalog = null;
-    /**
+	//页面加载完成处理函数    
+	$(document).ready(function(){
+		console.log("Page is ready");
+		showShareList();
+	});
+   
+	/**
      * 初始化高亮插件
      */
     function initHighlighting() {
@@ -168,839 +103,196 @@
 
         hljs.initLineNumbersOnLoad();
     }
-    $(function () {
-        initHighlighting();
-
-        var windowHeight = $(window).height();
-        var bodyHeight = $(document).height();
-
-        $(window).resize(function(){
-            var windowHeight = $(window).height();
-            var bodyHeight = $(document).height();
-        });
-
-        $("#slidebar").on("click",function () {
-            $(".m-manual").addClass('manual-mobile-show-left');
-        });
-        $(".manual-mask").on("click",function () {
-            $(".m-manual").removeClass('manual-mobile-show-left');
-        });
-    });
-
-    events.on('article.open', function (event, url,init) {
-        if ('pushState' in history) {
-
-            if (init == false) {
-                history.replaceState({}, '', url);
-                init = true;
-            } else {
-                history.pushState({}, '', url);
-            }
-
-        } else {
-            location.hash = url;
-        }
-        initHighlighting();
-
-    });
-    
-    //目录列表区域拖放功能：预览区和子目录区域需要一起变化
-    var oDiv=document.getElementById('line');
-    oDiv.onmousedown=function(ev){
-      var disX=ev.clientX-oDiv.offsetLeft;
-      var disY=ev.clientY-oDiv.offsetTop;
-
-      document.onmousemove=function(ev){
-          var l=ev.clientX-disX;	//计算Line的位置
-          oDiv.style.left=l+'px';	//设置Line的位置
-     	  $(".manual-left")[0].style.width=ev.clientX+'px';
-       	  $(".manual-right")[0].style.left=ev.clientX+'px';
-   	  };
-      
-      document.onmouseup=function(ev){
-   	  	//$(".manual-left")[0].style.width=ev.clientX+'px';
-   	 	//$(".manual-right")[0].style.left=ev.clientX+'px';
-   	 	document.onmousemove=null;
-   	  	document.onmouseup=null;
-      };
-    };
-
 </script>
 
-
-<script type="text/javascript">
-	/******************************** Repos Interfaces***************************************/
-	//获取仓库信息,callback是成功后的回调函数
-	var reposType = 1; //默认是普通文件系统
-	var reposName = "";
-    function getReposInfo(callback){
-		console.log("getReposInfo");
-        //set the vid in upload form
-		var reposId = getQueryString("vid");
-		if(reposId == null)
-		{
-			//bootstrapQ.alert("请选择仓库！");
-			return;
-		}
-		gReposId = reposId;
-		console.log("gReposId:" + gReposId);
-		
-        $.ajax({
-            url : "/DocSystem/Repos/getRepos.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                vid:getQueryString("vid")
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    //设置当前选中的仓库名字
-                    $("#curRepos span:first-child").text(ret.data.name);
-                    
-                    //设置仓库信息
-                    reposType = ret.data.type;
-                    reposName = ret.data.name;
-                    $("#projectName").text(ret.data.name);
-                    var time=getDate(ret.data.createTime);
-                    $("#editTime").text(time);
-                    if(reposType == 0)
-                    {
-                    	//alert("虚拟文件系统");
-                        var keep = {};	//将虚拟文件系统的isParent锁定属性去掉
-            			setting.data.keep = keep;
-					}
-					//回调函数	
-                    callback && callback();
-                    //显示编辑按键和增加用户按键
-                    $("#btnAddReposUser").show();
-                    $("#btnAddReposGroup").show();
-                }else {
-                    $("#projectName").text("项目名");
-                    $("#editTime").text((new Date()).toLocaleTimeString());
-                    alert(ret.msgInfo);
-                    window.location.href = "index.html";
-                    //隐藏编辑按键和增加用户按键
-                    $("#btnAddReposUser").hide();
-				    $("#btnAddReposGroup").hide();
-				    $("#btnSaveAuth").hide();
-				    $("#btnCancelSaveAuth").hide();
-                }
-            },
-            error : function () {
-                //隐藏编辑按键和增加用户按键
-                $("#btnAddReposUser").hide();
-			    $("#btnAddReposGroup").hide();
-			    $("#btnSaveAuth").hide();
-			    $("#btnCancelSaveAuth").hide();
-                showErrorMessage("服务器异常:获取仓库信息失败");
-            }
-        });
-
-    }
-    
-	//更新后台的zTree数据: callback是成功后的回调函数
-	function updateMenu(callback) {
-		console.log("updateMenu");
-		//get Menu from current zTree (this menu maybe not equals to window.menu)
-		var treeObj = zTree.getZTreeObj("doctree");
-	    if ( !treeObj ){
-	        alert("系统错误：can not find the doctree");
-	        // 初始化过程中似乎获取不到 tree 对象
-	        return;
-	    }
-	    var nodes = treeObj.getNodes();
-	    //console.log(nodes);
-	    var curMenu = [];
-	    getinfo(nodes);	 
-	    
-		//更新后台的Menu 
-        var newMenu = jsonEscape(curMenu); //Convert the array to jason Format
-        $.ajax({
-             url : "/DocSystem/Repos/updateReposMenu.do",
-             type : "post",
-             dataType : "json",
-             data : {
-                 vid : getQueryString("vid"),
-                 menu : newMenu
-             },
-             success : function (ret) {
-                 if( "ok" == ret.status ){
-                     window.menu = newMenu;	//更新本地menu，但不需要再syncUp了，因为本来就是一样的
-                     console.log("更新目录成功");
-                     callback && callback();
-                 }
-                 else
-                 {	
-                 	showErrorMessage("更新目录失败:" + ret.msgInfo); 
-                 }
-             },
-             error : function () {
-                 syncUpMenu();
-                 showErrorMessage("服务器异常：" + ret.msgInfo);
-             }
-         });
-         
-        //递归获取zTree信息，并放到ret数组中
-		function getinfo(nodes){
-	        if( nodes && nodes.length )
-	        {
-	            for(i in nodes)
-	            {
-	                var node = nodes[i];
-	                curMenu.push({
-	                    "id" : node.id,
-	                    "name" : node.name,
-	                    "pId" : node.pId ? node.pId : "root",
-	                    "isParent": node.isParent,
-	                });
-	                getinfo(node.children);
-	            };
-	        };
-	    };	
-	}
-
-	//从后台获取zTree数据: callback是成功后的回调函数，需要后续处理的话加在这里处理
-	function getMenu(callback) {
-		console.log("getMenu");
-		$.ajax({
-		    url : "/DocSystem/Repos/getReposManagerMenu.do",
-		    type : "post",
-		    dataType : "json",
-		    data : {
-		        vid : getQueryString("vid")
-		    },
-		    success : function (ret) {
-		        	if( "ok" == ret.status ){
-		        		console.log(ret);
-		                callback && callback(ret.data);
-		            }
-		            else
-		           	{
-		           		showErrorMessage("Error:获取仓库目录失败" + ret.MsgInfo);
-		           	}
-		        },
-		        error : function () {
-		            showErrorMessage("服务器异常:获取仓库目录异常");
-		        }
-		    });
-	}
-	
-	function deleteReposConfirm(vid)
-	{	
-		console.log("deleteReposConfirm");
-		bootstrapQ.confirm({
-	        title: "删除仓库",
-	        msg: "仓库删除后数据将无法恢复，是否删除？",
-	        okbtn: "删除",
-	        qubtn: "取消",
-	    },function () {
-	    	deleteRepos(vid);
-	    	return true;   
-	    });
-	}
-    
-    function deleteRepos(vid)
-	{
-		console.log("deleteRepos() id:" + vid);
-    	$.ajax({
-                url : "/DocSystem/Repos/deleteRepos.do",
-                type : "post",
-                dataType : "json",
-                data : {
-                    vid : vid,
-                },
-                success : function (ret) {
-                    if( "ok" == ret.status ){
-                        bootstrapQ.msg({
-    							msg : '删除成功！',
-    							type : 'success',
-    							time : 2000,
-    					});
-    					window.location.reload();	//刷新页面
-                    }
-                    else
-                    {
-                    	syncUpMenu();	//删除失败，只需要用本地数据刷新整个tree
-                    	showErrorMessage("Error:" + ret.msgInfo);
-                    }
-                },
-                error : function () {
-                   syncUpMenu();	//删除失败，只需要用本地数据刷新整个tree
- 	               showErrorMessage('服务器异常：仓库删除失败！');
-                }
-        });
-	}
-    
-</script>
-
-<script type="text/javascript">
-	//Interfaces for Tree Operation
-	
-	//Get Node by NodeId
-	function getNodeByNodeId(nodeId)
-	{
-		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",nodeId);
-		return node;
-	}
-	
-</script>
-
-<script type="text/javascript">
-	/********************* 文件编辑接口 *********************************************/
-		//退出文件编辑状态
-    function exitEdit() {
-        var params = {
-            vid : getQueryString("vid"),
-            doc : curDoc,
-            edit : false
-        }
-        window.location.href = makeUrl(params)
-    }
-	
-	//进入权限编辑状态
-    function editAuth() {
-    	console.log("editAuth");
-    	$("#btnAddReposUser").hide();
-    	$("#btnAddReposGroup").hide();
-        $("#btnSaveAuth").show();
-        $("#btnCancelSaveAuth").show();
-        //使能用户列表的第一个复选框
-        //$(".UserEnable").attr("disabled",false);
+<script type="text/javascript">	
+	//进入分享编辑状态
+    function editShare() {
+    	console.log("editShare");
+    	$("#btnSaveShare").show();
+        $("#btnCancelSaveShare").show();
     }
     
     //将权限保存到后台
-    function saveAuth() {
-    	console.log("saveAuth");
-    	$("#btnAddReposUser").show();
-    	$("#btnAddReposGroup").show();
-        $("#btnSaveAuth").hide();
-        $("#btnCancelSaveAuth").hide();
-        //Disable用户列表的第一个复选框
-        $(".UserEnable").attr("disabled",true);
-		
+    function saveShare() {
+    	console.log("saveShare");
+    	$("#btnSaveShare").hide();
+        $("#btnCancelSaveShare").hide();
+        
 		//遍历所有勾选的用户权限
-		var docAuths = [];
-		$("#reposAuthArea >li").each(function(){
+		var docShares = [];
+		$("#shareListArea >li").each(function(){
           	var index =$(this).val();  //获取li的索引
           	//alert(index);
-          	if($("#DocAuth"+index).prop("checked") == true)
+          	if($("#DocShare"+index).prop("checked") == true)
           	{
-          		var docAuth = [];
-				docAuth.id = $("#DocAuth"+index).val();
-				docAuth.userId = $("#User"+index).attr("value"); //a标签没有value,所以需要使用attr来获取值
-				docAuth.userName =  $("#User"+index).text();
-				docAuth.groupId = $("#Group"+index).attr("value");
-				docAuth.groupName =  $("#Group"+index).text();
-				docAuth.docId = $("#Doc"+index).attr("value");
-				docAuth.isAdmin = $(".IsAdmin"+index).prop("checked")?1:0;
-				docAuth.access = $("#Access"+index).prop("checked")?1:0;
-				docAuth.editEn = $("#EditEn"+index).prop("checked")?1:0;
-				docAuth.addEn = $("#AddEn"+index).prop("checked")?1:0;
-				docAuth.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
-				docAuth.downloadEn = $("#DownloadEn"+index).prop("checked")?1:0;
-				docAuth.heritable = $("#Heritable"+index).prop("checked")?1:0;
-				console.log(docAuth);
-				docAuths.push(docAuth);	//将用户加入到列表中
+          		var docShare = [];
+				docShare.id = $("#DocShare"+index).val();
+				docShare.reposId =  $("#Repos"+index).attr("value");
+				docShare.docPath = $("#DocPath"+index).attr("value");
+				docShare.editEn = $("#EditEn"+index).prop("checked")?1:0;
+				docShare.addEn = $("#AddEn"+index).prop("checked")?1:0;
+				docShare.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
+				docShare.downloadEn = $("#DownloadEn"+index).prop("checked")?1:0;
+				console.log(docShare);
+				docShares.push(docShare);	//将用户加入到列表中
 		    }
 		});
-		console.log(docAuths);
+		console.log(docShares);
 		
-		var vid = getQueryString("vid");
-		ConfigUserAuth.configUserAuths(docAuths,vid);
+		ConfigDocShare.configDocShares(docShares);
     }
 	
-	//将权限保存到后台
-    function cancelSaveAuth() {
-    	console.log("cancelSaveAuth");
-    	$("#btnAddReposUser").show();
-    	$("#btnAddReposGroup").show();
-        $("#btnSaveAuth").hide();
-        $("#btnCancelSaveAuth").hide();
-        //disable用户列表的第一个复选框
-        $(".UserEnable").attr("disabled",true);
-        //刷新用户列表
-        showAuthList();
+	function cancelSaveShare() {
+    	console.log("cancelSaveShare");
+        $("#btnSaveShare").hide();
+        $("#btnCancelSaveShare").hide();
+        //刷新分享列表
+        showShareList();
     }
-
-    function getDate(tm){
-        var tt = new Date(tm).toLocaleString();
-        return tt;
-    }
-	
 </script>
 
 <SCRIPT type="text/javascript" >
-	/********************** zTree设置与接口**********************************/
-    var gReposId = null;
-	var curDoc = 0;	
-	
-	//zTree初始化接口:根据data和setting生成zTree
-	function zTreeInit(data) {
-	    console.log("zTreeInit gReposId:" + gReposId);
-	    console.log(setting);
-	    
-	    //zTree's setting
-		var setting = {
-			//异步加载的工作原理
-			async : {  
-	    		enable : true,//设置 zTree 是否开启异步加载模式  
-	            url : "/DocSystem/Repos/getSubDocList.do",
-	            type : "post",
-	    		autoParam : ["id","Level","path","name"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
-	    		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
-	    		dataFilter: asyncDataFilter, 
-			},
-	        //zTree数据格式
-		   	data: {
-		   			//使用简单数据模式
-		            simpleData: {
-		                enable: true,
-		            },
-		            //不允许修改leaf node and parent node的isParent属性
-		            keep: {
-		            	leaf: true,
-		            	parent: true,
-		            },
-		    },
-		    //zTree各种操作的回调函数定义
-		    callback: {
-		            onClick: zTreeOnClick,
-		            beforeRightClick: zTreeBeforeRightClick,
-		    },
-		};
-	    
-	    var doctree = zTree.init($("#doctree"), setting, data);
-	    //doctree.expandAll(true); //考虑只自动展开根目录下目录
-	}
-	
-	function asyncDataFilter(treeId, parentNode, responseData) {
-		console.log("asyncDataFilter");
-		var docList = responseData.data;
-		//遍历jason_arry, convert the node type to isParent flag
-      	for(var i=0; i<docList.length; i++)
-      	{
-           var jsonObj = docList[i];
-           jsonObj.id = jsonObj.docId,
-           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",
-           jsonObj.isParent = jsonObj.type == 1? false: true;
-           jsonObj.Level = jsonObj.level;
-       }
-       console.log(docList);
-	   return docList;
-	}
 
-	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
-	var curRightClickedTreeNode = null;
-
-	//This function was used to get the rightClick treeNode,it will be used for contextjs
-	function zTreeBeforeRightClick(treeId, treeNode) {
-		//alert(treeNode ? treeNode.tId + ", " + treeNode.name : "isRoot");
-		curRightClickedTreeNode = treeNode;
-    	return true;	
-	};
-    
-    //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
-    function zTreeOnClick(event, treeId, treeNode) {
-	    console.log("zTreeOnClick()");
-        if ( curDoc != treeNode.id ){
-        	curDoc = treeNode.id;
-        	showAuthList();
-        }
-        //alert(curDoc);
-    };
-      
-      //Double Click 对于文件应该是编辑，对于目录应该是打开
-
-	//判断当前目录下名字为 name的Node是否已经存在，parentNode是null表示根目录
-	function isNodeExist(name,parentNode)
-	{
-		var parentId = null;
-		if(parentNode && parentNode.id) 
-		{
-			parentId =  parentNode.id;
-		}
-		
-		var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		var nodes = treeObj.getNodesByParam("name", name, parentNode);
-		for (var i=0,l=nodes.length; i<l; i++)
-		{
-			if(nodes[i].pId == parentId)
-			{	
-				//alert(name + " 已存在");
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	//get the treeNode under parentNode with name
-	function getNodeByName(name,parentNode)
-	{
-		var parentId = null;
-		if(parentNode && parentNode.id) 
-		{
-			parentId =  parentNode.id;
-		}
-		
-		var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		var nodes = treeObj.getNodesByParam("name", name, parentNode);
-		for (var i=0,l=nodes.length; i<l; i++)
-		{
-			if(nodes[i].pId == parentId)
-			{	
-				return nodes[i];
-			}
-		}
-		return null;
-	}
-	
-	//获取Node的路径
-	function getNodePath(treeNode)
-	{
-		var remoteDir = ".../";
-		if(treeNode)
-		{
-			var nodes = treeNode.getPath();	//获取当前节点的所有父节点
-			for( var i = 0 ; i < nodes.length ; i++ )
-			{
-				remoteDir += nodes[i].name + "/"; 
-			}
-		}
-		return remoteDir;
-	}
-	
-	//PageInit
-	function SysInit()
-	{
-		console.log("SysInit");
-		//绘制zTree并显示权限列表
-		syncUpMenu(showAuthList);	    
-
-		//初始化zTree的右键菜单 
-		zTreeContextMenuInit();
-	}
-	
-	//将后台Menu,同步回前台
-	function syncUpMenu(callback)
-	{
-		console.log("syncUpMenu");
-	    getMenu(function (data) {
-	        if( window.menu != data ){
-	        	console.log("同步菜单");
-	        	drawMenu(data);
-	        }else{
-	            console.log("重新绘制菜单，因为当前菜单数据与zTree不一致");
-	            drawMenu(data);
-	        }
-		    //仓库获取成功后再获取仓库用户列表
-			showAuthList();
-	    });
-	}
-
-	
-	//绘制zTree with the data:强制绘制，判断的东西不应该放在这里
-	function drawMenu(data) {
-		console.log("drawMenu", data);
-		window.menu = data;
-	    //data = JSON.parse('"' + data + '"'); //We need to use JSON parse one more time here  
-	    //var menu = JSON.parse(data);
-	    var menu = data;
-	    //遍历jason_arry
-      	for(var i=0; i<menu.length; i++)
-      	{
-           var jsonObj = menu[i];
-           jsonObj.id = jsonObj.docId,
-           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",	//id = 0是rootDoc
-           jsonObj.isParent = jsonObj.type == 1? false: true;
-           jsonObj.Level = jsonObj.level;
-       }
-	   console.log("menu",menu);
-	   zTreeInit(menu);
-	}
-
-    //页面加载完成处理函数    
-    $(document).ready(function(){
-    	console.log("Page is ready");
-
-    	//获取docSys基本配置
-    	getDocSysConfig();
-    	
-		//getReposList
-		showReposSelectList(); //获取当前用户可管理仓库列表		
-    });
-    
-    //zTree部分的右键菜单初始化
-    function zTreeContextMenuInit()
-   	{
-		//右键菜单实现：contextMenu Start
-		context.init({preventDoubleContext: true});
-		
-		//zTree上的右键管理菜单
-		context.attach('#tree', [
-			{divider: true},
-			{text: '仓库设置', action: function(e){
-					e.preventDefault();
-					var treeObj = $.fn.zTree.getZTreeObj("doctree");
-					if(curRightClickedTreeNode !== null)
-					{
-						console.log("仓库设置：" + curRightClickedTreeNode.id);	
-						showReposBasicSettingPanel();
-					}
-				}
-			},
-			/*{text: '高级设置', action: function(e){
-					e.preventDefault();
-					var treeObj = $.fn.zTree.getZTreeObj("doctree");
-					if(curRightClickedTreeNode !== null)
-					{
-						console.log("高级设置：" + curRightClickedTreeNode.id);	
-						showReposSettingPanel();
-					}
-				}
-			},
-			*/
-			{divider: true},
-			{text: '设置密码', action: function(e){
-						e.preventDefault();
-	        			showDocPwdSetPanel();
-					}
-			},
-			{divider: true},
-			{text: '删除仓库', action: function(e){
-						var vid = getQueryString("vid");
-						console.log("删除仓库：" + vid);	
-						deleteReposConfirm(vid);
-					}
-			},
-		]);
-		
-		context.settings({compress: true});
-		
-		$(document).on('mouseover', '.me-codesta', function(){
-		$('.finale h1:first').css({opacity:0});
-		$('.finale h1:last').css({opacity:1});
-		});
-	
-		$(document).on('mouseout', '.me-codesta', function(){
-			$('.finale h1:last').css({opacity:0});
-			$('.finale h1:first').css({opacity:1});
-		});
-		//右键菜单实现：contextMenu End   		
-   	}
 </SCRIPT>
 
 <script>
-//显示curDoc对应的用户权限列表
-function showAuthList()
-{
-	console.log("showAuthList()");
-	var docId = curDoc;
-	console.log("docId:" + docId);
-	showDocAuthList();
-}
-
-function showDocAuthList(){
-   	console.log("showDocAuthList()");
-   	var docId = curDoc;
-   	var parentPath = "";
-   	var docName = "";
-   	var node = getNodeByNodeId(docId);
-	if(node && node != null)
-	{
-		parentPath = node.path;
-		docName = node.name;
-	}
-   	console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
-   	
-   	var vid = getQueryString("vid");
-	
+function showDocShareList(){
+   	console.log("showDocShareList()");
     $.ajax({
-                url : "/DocSystem/Repos/getDocAuthList.do",
+                url : "/DocSystem/Doc/getDocShareList.do",
                 type : "post",
                 dataType : "json",
                 data : {
-                    reposId : vid,
-                	docId: docId,
-                	path: parentPath,
-                	name: docName,
+                    //reposId : vid, //指定仓库
+                	//path: parentPath, //指定文件
+                	//name: docName,
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){
-                        //显示编辑按键和增加用户按键
-                        $("#btnAddReposUser").show();
-				    	$("#btnAddReposGroup").show();
-				        $("#btnSaveAuth").hide();
-				        $("#btnCancelSaveAuth").hide();
-                    	showUserList(ret.data);
+				        $("#btnSaveShare").hide();
+				        $("#btnCancelSaveShare").hide();
+                    	showDocShareList(ret.data);
                     }
                     else
                     {
-                        //隐藏编辑按键和增加用户按键
-                        $("#btnAddReposUser").hide();
-				    	$("#btnAddReposGroup").hide();
-				        $("#btnSaveAuth").hide();
-				        $("#btnCancelSaveAuth").hide();
-                    	showErrorMessage("Error:" + ret.msgInfo);
+				        $("#btnSaveShare").hide();
+				        $("#btnCancelSaveShare").hide();
+                    	showErrorMessage("文件分享列表获取失败:" + ret.msgInfo);
                     }
                 },
                 error : function () {
-                    //隐藏编辑按键和增加用户按键
-                    $("#btnAddReposUser").hide();
-			    	$("#btnAddReposGroup").hide();
-			        $("#btnSaveAuth").hide();
-			        $("#btnCancelSaveAuth").hide();
-                   	showErrorMessage('服务器异常：获取仓库用户列表失败！');
+    		        $("#btnSaveShare").hide();
+			        $("#btnCancelSaveShare").hide();
+                   	showErrorMessage('文件分享列表获取失败：服务器异常');
                 }
     });
 
 
-	//根据获取到的目录权限用户列表数据，绘制列表
-	function showUserList(data){
-		console.log("showUserList");
+	function showDocShareList(data){
+		console.log("showDocShareList");
 		console.log(data);
 		
-		var c = $("#reposAuthArea").children();
+		var c = $("#shareListArea").children();
 		$(c).remove();
 		if(data.length==0)
 		{
-			$("#reposAuthArea").append("<p>暂无数据</p>");
+			$("#shareListArea").append("<p>暂无数据</p>");
 		}
-		
-		var vid = getQueryString("vid");
 		
 		for(var i=0;i<data.length;i++){
 			var d = data[i];
-			var adminChecked = d.isAdmin == 1? "checked":"";
-			var readChecked = d.access == 1? "checked":"";
 			var editChecked = d.editEn == 1? "checked":"";
 			var addChecked = d.addEn == 1? "checked":"";
 			var deleteChecked = d.deleteEn == 1? "checked":"";
 			var downloadChecked = d.downloadEn == 1? "checked":"";
-			var heritableChecked = d.heritable == 1? "checked":"";
-			//var selectAllChecked = d.selectAll == 1? "checked":"";
 			var selectAllChecked = "";
 			
 			var opBtn = "";
-			var docAuthId = "";
-			if(d.id > 0) //docAuthId > 0 表示这不是继承的权限
-			{
-				docAuthId = d.id;
-				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+docAuthId+");' class='mybtn-primary'>删除</a>";
-				//var opBtn = "<a href='javascript:void(0)' onclick='configDocAuth("+docAuthId+");' class='mybtn'>设置</a>";
-			}
-			var userId = "";
-			if(d.userId >= 0)
-			{
-				userId = d.userId;
-			}
-			var groupId = "";
-			if(d.groupId > 0)
-			{
-				groupId = d.groupId;
-			}
+			var docShareId = "";
+			docShareId = d.id;
+			opBtn = "<a href='javascript:void(0)' onclick='deleteDocShareConfirm("+docShareId+");' class='mybtn-primary'>删除</a>";
+			
+			var docpath = d.path + d.name;
 			var se = "<li value="+ i +">"
 				+"	<i class='cell select w5'>"
-				+"		<input class='DocAuthEnable' id='DocAuth"+i+"' value='"+docAuthId+"' type='checkbox' onclick='editAuth()'/>"
+				+"		<input class='DocShareEnable' id='DocShare"+i+"' value='"+docShareId+"' type='checkbox' onclick='editShare()'/>"
 				+"	</i> "
-				+"	<i class='cell username w10'>"
+				+"	<i class='cell repos w10'>"
 				+"		<span class='name'>"
-				+"			<a id='User"+i+"' value='"+userId+"' href='javascript:void(0)'>"+d.userName+"</a>"
+				+"			<a id='Repos"+i+"' value='"+d.reposId+"' href='javascript:void(0)'>"+d.reposName+"</a>"
 				+"		</span>"
 				+"	</i>"
-				+"	<i class='cell groupname w10'>"
+				+"	<i class='cell docpath w10'>"
 				+"		<span class='name'>"
-				+"			<a id='Group"+i+"' value='"+groupId+"' href='javascript:void(0)'>"+d.groupName+"</a>"
+				+"			<a id='DocPath"+i+"' value='"+docpath +"' href='javascript:void(0)'>"+docpath+"</a>"
 				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell docpath w15'>"
-				+"		<span class='name'>"
-				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell access w7'>"
-				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>管理员</input>"
-				+"	</i>"
-				+"	<i class='cell  read w7'>"
-				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>读</input>"
-				+"	</i>"
-				+"	<i class='cell edit w7'>"
-				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>写</input>"
 				+"	</i>"
 				+"	<i class='cell add w7'>"
 				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " onchange='EnableUserConfig("+i+");'>增加</input>"
 				+"	</i>"
-				+"	<i class='cell delete w7'>"
-				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>删除</input>"
-				+"	</i>"
 				+"	<i class='cell download w7'>"
 				+"		<input id='DownloadEn"+i+"' value='"+ d.downloadEn+"' type='checkbox' " + downloadChecked + " onchange='EnableUserConfig("+i+");'>下载</input>"
 				+"	</i>"
-				+"	<i class='cell heritable w7'>"
-				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " onchange='EnableUserConfig("+i+");'>可继承</input>"
+				+"	<i class='cell edit w7'>"
+				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>写</input>"
+				+"	</i>"
+				+"	<i class='cell delete w7'>"
+				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>删除</input>"
 				+"	</i>"
 				+"	<i class='cell selectAll w7'>"
-				+"		<input id='SelectAll"+i+"' value='"+ d.selectAll+"' type='checkbox' " + selectAllChecked + " onclick='selectAllAuth(" +i+")' onchange='EnableUserConfig("+i+");'>全部</input>"
+				+"		<input id='SelectAll"+i+"' value='"+ d.selectAll+"' type='checkbox' " + selectAllChecked + " onclick='selectAllShare(" +i+")' onchange='EnableUserConfig("+i+");'>全部</input>"
 				+"	</i>"
 				+"	<i class='cell operation w10'>"
 				+ 		opBtn
 				+"	</i>"
 				+"</li>";
 			
-			$("#reposAuthArea").append(se);
+			$("#shareListArea").append(se);
 		}
 	}
 }
 
-function EnableUserConfig(index){
-	//alert(index);
-	//alert($("#User"+index).prop("checked"));
-	editAuth();
-	if($("#DocAuth"+index).prop("checked") == false)
+function EnableShareConfig(index){
+	editShare();
+	if($("#DocShare"+index).prop("checked") == false)
 	{
-		$("#DocAuth"+index).prop("checked",true);
+		$("#DocShare"+index).prop("checked",true);
 	}
 }
 
-function selectAllAuth(index)
+function selectAllShare(index)
 {
 	if($("#SelectAll"+index).prop("checked") == true)
 	{
 		//SelectAll
-		$(".IsAdmin"+index).prop("checked",true);
-		$("#Access"+index).prop("checked",true);
 		$("#EditEn"+index).prop("checked",true);
 		$("#AddEn"+index).prop("checked",true);
 		$("#DeleteEn"+index).prop("checked",true);
 		$("#DownloadEn"+index).prop("checked",true);
-		$("#Heritable"+index).prop("checked",true);
 	}
 	else
 	{
 		//UnselectAll
-		$(".IsAdmin"+index).prop("checked",false);
-		$("#Access"+index).prop("checked",false);
 		$("#EditEn"+index).prop("checked",false);
 		$("#AddEn"+index).prop("checked",false);
 		$("#DeleteEn"+index).prop("checked",false);
 		$("#DownloadEn"+index).prop("checked",false);
-		$("#Heritable"+index).prop("checked",false);
 	}
 }
 
-
-function deleteDocAuthConfirm(docAuthId)
+function deleteDocShareConfirm(shareId)
 {
-   	console.log("deleteDocAuthAuthConfirm()");
+   	console.log("deleteDocShareShareConfirm()");
 		qiao.bs.confirm({
- 	    	id: 'deleteDocAuthConfirm',
+ 	    	id: 'deleteDocShareConfirm',
  	        msg: "是否删除该用户的目录权限设置?",
  	        close: false,		
  	        okbtn: "删除",
  	        qubtn: "取消",
  	    },function () {
  	    	//alert("点击了确定");
- 	    	deleteDocAuth(docAuthId);
+ 	    	deleteDocShare(docShareId);
  	    	return true;   
  	    },function(){
  	    	//alert("点击了取消");
@@ -1008,24 +300,19 @@ function deleteDocAuthConfirm(docAuthId)
  	    }); 
 }
 
-function deleteDocAuth(docAuthId)
+function deleteDocShare(docShareId)
 {	
-   	console.log("deleteDocAuth()");
-   	
-   	var vid = getQueryString("vid");
+   	console.log("deleteDocShare()");   	
    	$.ajax({
-            url : "/DocSystem/Repos/deleteDocAuth.do",
+            url : "/DocSystem/Repos/deleteDocShare.do",
             type : "post",
             dataType : "json",
             data : {
-                docAuthId: docAuthId,
-                //userId: userId,
-                //docId: docId,
-                reposId: vid,
+                docShareId: docShareId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    showAuthList();
+                    showShareList();
                 }
                 else
                 {
@@ -1037,161 +324,21 @@ function deleteDocAuth(docAuthId)
             }
     });
 }
-
-//获取系统默认配置信息
-var gDocSysConfig = null;
-function getDocSysConfig()
-{
-	console.log("getDocSysConfig");
-    $.ajax({
-        url : "/DocSystem/Repos/getDocSysConfig.do",
-        type :"post",
-        dataType :"json",
-        data : null,
-        success : function (ret) {
-            if(ret.status == "ok")
-            {
-            	gDocSysConfig = ret.data;
-            	console.log("getDocSysConfig config:", gDocSysConfig);
-            }
-            else
-            {
-            	console.log(ret.msgInfo);
-            }
-        },
-        error : function () {
-        	console.log('服务器异常:获取DocSysConfig失败');
-        }
-    });
-}
-
-function showReposSelectList(callback)
-{
-   	console.log("showReposSelectList()");
-   	
-    $.ajax({
-               	url : "/DocSystem/Repos/getManagerReposList.do",
-                type : "post",
-                dataType : "json",
-                data : null,
-                success : function (ret) {
-                    if( "ok" == ret.status ){
-                        showReposList(ret.data);
-                        
-    					//获取仓库信息
-						getReposInfo(SysInit);
-                    }
-                    else
-                    {
-                    	showErrorMessage("Error:" + ret.msgInfo);
-                    }
-                },
-                error : function () {
-                   showErrorMessage('服务器异常：获取仓库列表失败！');
-                }
-    });
-	    
-	//根据获取到的仓库列表数据，绘制列表
-	function showReposList(data){
-		console.log(data);
-		var c = $("#reposList").children();
-		$(c).remove();
-		if(data.length==0){
-			$("#reposList").append("<p>暂无数据</p>");
-		}
-		
-		for(var i=0;i<data.length;i++){
-			var d = data[i];
-			//alert(d.id);				
-			var se = "<li>"
-				+ "		<a href='/DocSystem/web/reposManager.html?vid=" + d.id + "'>" + d.name +"</a>"
-				+ "	  </li>";
-			
-			$("#reposList").append(se);
-		}
-	}	    
-}
-
-function showAddReposUserPanel(){
-	console.log("showAddReposUserPanel");
-	bootstrapQ.dialog({
-		title: '添加访问用户',
-		url: 'addReposUser.html',
-		msg: '页面正在加载，请稍等...',
-		foot: false,
-		big: true,
-	}, null);
-}
-
-function showAddReposGroupPanel(){
-	console.log("showAddReposGroupPanel");
-	bootstrapQ.dialog({
-		title: '添加访问组',
-		url: 'addReposGroup.html',
-		msg: '页面正在加载，请稍等...',
-		foot: false,
-		big: true,
-	}, null);
-}
-
-function showReposBasicSettingPanel(){
-	console.log("showReposBasicSettingPanel");
-	bootstrapQ.dialog({
-		title: '仓库设置',
-		url: 'reposBasicSetting.html',
-		msg: '页面正在加载，请稍等...',
-		foot: false,
-		big: true,
-	}, null);
-}
-
-function showReposSettingPanel(){
-	console.log("showReposSettingPanel");
-	bootstrapQ.dialog({
-		title: '高级设置',
-		url: 'reposAdvancedSetting.html',
-		msg: '页面正在加载，请稍等...',
-		foot: false,
-		big: true,
-	}, null);
-}
-
-function showDocPwdSetPanel()
-{
-	console.log("showDocPwdSetPanel");
-	bootstrapQ.dialog({
-		id: 'docPwdSet',
-		url: 'docPwdSet.html',
-		title: '密码设置',
-		msg: '页面正在加载，请稍等...',
-		foot: false,
-		big: true,
-		//okbtn: "确定",
-		callback: function(){
-			DocPwdSetPageInit(gReposId, curRightClickedTreeNode);
-		}, 
-	}, null);
-}
-
 </script>
 <script type="text/javascript">
-	
-
-	//ConfigUserAuth类
-    var ConfigUserAuth = (function () {
+	//ConfigDocShare类
+    var ConfigDocShare = (function () {
         //当前操作的索引
         var index = 0;
-        var docAuthList = null; //id(docAuthId),userId,groupId,docId,isAdmin, access, editEn, addEn, deleteEn
+        var docShareList = null; //id(docShareId), reposId, docPath, editEn, addEn, deleteEn, downloadEn
         var totalNum = 0;
         var failNum =0;
         var successNum = 0;
-        var vid = 0;
         var configErrorConfirmSet = 0;
         //Context Cache
         var indexCache = [];
-        var docAuthListCache =[];
+        var docShareListCache =[];
         var totalNumCache = [];
-        var vidCache = [];
         
         //标准Java成员操作接口
 		function getIndex()
@@ -1206,12 +353,12 @@ function showDocPwdSetPanel()
 		
 		function getDocAutList()
 		{
-            return docAuthList;
+            return docShareList;
 		}
 		
-		function setDocAuthList(docAuths)
+		function setDocShareList(docShares)
 		{
-			docAuthList = docAuths;
+			docShareList = docShares;
 		}
 		
 		function getTotalNum()
@@ -1223,113 +370,82 @@ function showDocPwdSetPanel()
 		{
 			totalNum = num;
 		}
-		
-		function getVid()
-		{
-            return vid;
-		}
-		
-		function setVid(id)
-		{
-			vid = id;
-		}
 				
 		//上下文操作接口
 		function pushContext()
 		{
 			indexCache.push(index);
-			docAuthListCache.push(docAuthList);
+			docShareListCache.push(docShareList);
 			totalNumCache.push(totalNum);
-			vidCache.push(vid);	
 		}
 		function popContext()
 		{
 			index = indexCache.pop();
-			docAuthList = docAuthListCache.pop();
+			docShareList = docShareListCache.pop();
 			totalNum = totalNumCache.pop();
-			vid = vidCache.pop();
 		}
 		
 		function clearContext()	//清空上下文，出错时需要清空，避免下次进来是被pop out来执行
 		{
 			indexCache = [];
-	        docAuthListCache =[];
+	        docShareListCache =[];
 	        totalNumCache = [];
-	        vidCache = [];
-		}
+	    }
 		
 		function ContextSize()
 		{
 			return indexCache.length;
 		}
       	
-      	//初始化ConfigUserAuth设置
-      	function ConfigUserAuthSet(docAuths,vid)	//多用户设置函数
+      	function ConfigDocShareSet(docShares)
 		{
-			console.log("ConfigUserAuthSet");
+			console.log("ConfigUserShareSet");
 
 			setIndex(0);
 
-			setDocAuthList(docAuths);
+			setDocShareList(docShares);
 			
 			var totalNum = 0;
-			if(docAuthList && docAuthList.length)
+			if(docShareList && docShareList.length)
 			{
-				totalNum = docAuthList.length;
+				totalNum = docShareList.length;
 			}
 			setTotalNum(totalNum);
 			failNum = 0;
 			successNum = 0;
 			configErrorConfirmSet = 0;
-			
-			setVid(vid);			
       	}
       		
-		//ConfigUserAuth接口，该接口是个递归调用
-    	function configUserAuth()
+		function configDocShare()
     	{
-    		console.log("configUserAuth index:" + index + " totalNum:" + totalNum);
+    		console.log("configDocShare index:" + index + " totalNum:" + totalNum);
 
-			//set docAuth
-    		var docAuth = docAuthList[index];
-    		console.log(docAuth);
+			//set docShare
+    		var docShare = docShareList[index];
+    		console.log(docShare);
     		
-    		var node = getNodeByNodeId(docAuth.docId);
-    		var parentPath = "";
-    		var docName = "";
-    		if(node && node != null && node.id != 0)
-    		{
-    			parentPath = node.path;
-    			docName = node.name;
-    		}
-    		   		
     		$.ajax({
-				  url : "/DocSystem/Repos/configDocAuth.do",
+				  url : "/DocSystem/Doc/configDocShare.do",
 				  	type : "post",
 				    dataType : "json",
 				    data : {
-				         userId : docAuth.userId,
-				         groupId : docAuth.groupId,
-				         reposId : vid,
-				         docId : docAuth.docId,
-				         path: node.path,
-				         name: node.name,
-				         isAdmin: docAuth.isAdmin, 
-				         access: docAuth.access,
-				         editEn: docAuth.editEn, 
-				         addEn: docAuth.addEn, 
-				         deleteEn: docAuth.deleteEn, 
-				         downloadEn: docAuth.downloadEn,
-				         heritable: docAuth.heritable,
+				         shareId : docShare.id,
+				         reposId : docShare.reposId,
+				         path: docShare.path,
+				         name: docShare.name,
+				         editEn: docShare.editEn, 
+				         addEn: docShare.addEn, 
+				         deleteEn: docShare.deleteEn, 
+				         downloadEn: docShare.downloadEn,
 				     },
 				     success : function (ret) {
 				         if( "ok" == ret.status){
 					          	index++;
 				                if(index < totalNum)
 				                {
-				                	configUserAuth();	//设置完成继续设置下一个
+				                	configDocShare();	//设置完成继续设置下一个
 				                }else{
-					                showAuthList();
+					                showShareList();
 			                    	// 普通消息提示条
 									bootstrapQ.msg({
 											msg : '设置完成！',
@@ -1339,13 +455,13 @@ function showDocPwdSetPanel()
 				                }
  				          }else{
 								//设置失败
-								configErrorConfirmHandler(docAuth.userName, ret.msgInfo);
+								configErrorConfirmHandler(docShare.userName, ret.msgInfo);
 								return;
 				            }
 				      },
 				      error : function () {
 						  		//设置失败
-						  		configErrorConfirmHandler(docAuth.userName, "设置异常");
+						  		configErrorConfirmHandler(docShare.userName, "设置异常");
 								return;
 					 }	
 				});				
@@ -1361,7 +477,7 @@ function showDocPwdSetPanel()
       	function configErrorConfirm(UserName,errMsg)
       	{
       		var configErrorTimer = setTimeout(function () {	//超时用户没有动作，则直接继续
-            	console.log("用户确认超时,继续配置其他用户");
+            	console.log("用户确认超时,继续配置其他分享");
             	configErrorConfirmSet = 1; //全局继续
             	closeBootstrapDialog("configErrorConfirm");
             	configErrorHanlder(UserName,errMsg);
@@ -1477,7 +593,7 @@ function showDocPwdSetPanel()
 			index++;
 			if(index < totalNum)
 			{
-				configUserAuth(); 
+				configUserShare(); 
 			}
 			else
 			{
@@ -1486,25 +602,25 @@ function showDocPwdSetPanel()
 		}
 
 		//多文件move接口
-		function configUserAuths(docAuths,vid)	//多用户设置函数
+		function configUserShares(docShares,vid)	//多用户设置函数
 		{
-			console.log("configUserAuths");
+			console.log("configUserShares");
 
 			clearContext();	//清空Context缓存
 			
-			ConfigUserAuthSet(docAuths,vid);	//设置configUserAuth Parameters
+			ConfigUserShareSet(docShares,vid);	//设置configUserShare Parameters
 
 			//启动复制操作      		
-			configUserAuth();	//start set
+			configUserShare();	//start set
 		}
 		
 		//开放给外部的调用接口
         return {
-            configUserAuths: function(docAuths,vid){
-            	configUserAuths(docAuths,vid);
+            configUserShares: function(docShares,vid){
+            	configUserShares(docShares,vid);
             },
-            configUserAuth: function(){
-            	configUserAuth();
+            configUserShare: function(){
+            	configUserShare();
             }
             
         };
