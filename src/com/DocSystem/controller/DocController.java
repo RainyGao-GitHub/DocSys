@@ -4617,6 +4617,13 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
+		if(shareId == null)
+		{
+			docSysErrorLog("文件分享信息不能为空！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		
 		DocShare docShare = new DocShare();
 		docShare.setShareId(shareId);				
 		if(reposService.deleteDocShare(docShare) == 0)
