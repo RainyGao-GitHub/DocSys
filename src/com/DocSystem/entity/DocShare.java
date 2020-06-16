@@ -29,6 +29,8 @@ public class DocShare {
 
     private Long validHours; //有效时间
 
+	private String reposName;
+
     public Integer getId() {
         return id;
     }
@@ -140,5 +142,15 @@ public class DocShare {
     public void setValidHours(Long validHours) {
         this.validHours = validHours;
     }
+
+    public String getReposName() {
+        return reposName;
+    }
+
+	public void setReposName(String reposName) {
+		this.reposName = reposName;
+	}
+	
+	
 
 }
