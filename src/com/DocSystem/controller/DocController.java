@@ -4411,6 +4411,59 @@ public class DocController extends BaseController{
 	    
 	    return ip.equals("0:0:0:0:0:0:0:1")?"127.0.0.1":ip;
 	}
+	
+	/****************   add a DocShare ******************/
+	@RequestMapping("/getDocShareList.do")
+	public void getDocShareList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getDocShareList ");
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		DocShare qDocShare = new DocShare();
+		qDocShare.setSharedBy(reposAccess.getAccessUserId());
+		List<DocShare> list = reposService.getDocShareList(qDocShare);
+		if(list != null && list.size() > 0)
+		{
+			HashMap<Integer, Repos> ReposInfoHashMap = getReposInfoHashMap();
+			for(int i=0; i< list.size(); i++)
+			{
+				DocShare docShare = list.get(i);
+				Repos repos = ReposInfoHashMap.get(docShare.getVid());
+				//printObject("repos",repos);
+				if(repos != null)
+				{
+					docShare.setReposName(repos.getName());
+				}
+				else
+				{
+					docShare.setReposName("未知仓库");					
+				}
+			}
+		}
+		rt.setData(list);
+		writeJson(rt, response);
+	}
+
+	private HashMap<Integer, Repos> getReposInfoHashMap() {
+		//convert to HashMap
+		HashMap<Integer, Repos> hashMap = new HashMap<Integer, Repos>();
+
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0; i< reposList.size(); i++)
+		{
+			Repos repos = reposList.get(i);
+			//printObject("repos",repos);
+			hashMap.put(repos.getId(), repos);
+		}
+		return hashMap;
+	}
 
 	/****************   add a DocShare ******************/
 	@RequestMapping("/addDocShare.do")
