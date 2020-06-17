@@ -774,6 +774,12 @@ public class BaseFunction{
 		return "officeText_" + file.length() + "_" + file.lastModified() + ".txt";
 	}
 	
+	protected String getReposTmpPathForDoc(Repos repos, Doc doc) {
+		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/doc/" +  doc.getDocId() + "_" + doc.getName() + "/";
+		createDir(tmpDir);
+		return tmpDir;
+	}
+	
 	protected String getReposTmpPathForPreview(Repos repos, Doc doc) {
 		String docLocalPath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/preview/" +  docLocalPath.hashCode() + "_" + doc.getName() + "/";
@@ -2318,6 +2324,29 @@ public class BaseFunction{
 	protected static boolean isTextFile(String name) {
 		String fileSuffix = getFileSuffix(name);
 		return isText(fileSuffix);
+	}
+	
+	public static boolean isZipFile(String name) 
+	{
+		String fileSuffix = getFileSuffix(name);
+		return isZip(fileSuffix);
+	}
+	
+	protected static boolean isZip(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+
+		switch(fileSuffix)
+		{
+		case "zip":
+			return true;
+		default:
+			break;
+		}
+		return false;
 	}
 	
 	protected boolean isPdf(String fileSuffix) {
