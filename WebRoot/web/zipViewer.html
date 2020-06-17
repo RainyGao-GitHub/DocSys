@@ -88,6 +88,19 @@ var ZipViewer = (function () {
 	
 	function zTreeInit(data) {
 	    console.log("zTreeInit");
+	    var async = {  
+    		enable : true,//设置 zTree 是否开启异步加载模式  
+            url : "/DocSystem/Doc/getZipSubDocList.do",
+            type : "post",
+    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
+    		otherParam:{
+    			"reposId": docInfo.vid,
+		    	"docPath": docInfo.path, //zipFile的路径
+		    	"docName": docInfo.name, //zipFile的名字
+                "shareId": docInfo.shareId,
+    		}
+	    };
+    	setting.async = async;
 	    var doctree = $.fn.zTree.init($("#zipPlayer"), setting, data);
 	}
 	
