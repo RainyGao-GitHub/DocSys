@@ -5217,7 +5217,7 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
-
+		
 		List <Doc> subDocList = null;
 		if(isZipFile(name) == false)
 		{
@@ -5258,17 +5258,22 @@ public class DocController extends BaseController{
 
 	private void extractZipFile(Repos repos, Doc parentZipDoc, Doc zipDoc) 
 	{
-		if(isFileExist(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()) == false)
+		String parentZipPath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		System.out.println("extractZipFile() parentZipPath:" + parentZipPath);
+		if(isFileExist(parentZipPath) == false)
 		{
 			Doc parentParentZipDoc = getParentZipDoc(repos, parentZipDoc);
-			extractZipFile(repos, parentParentZipDoc,parentZipDoc);
+			if(parentParentZipDoc != null)
+			{
+				extractZipFile(repos, parentParentZipDoc,parentZipDoc);
+			}
 		}
 		
 		//解压zipDoc
 		String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
 		ZipFile parentZipFile = null;
 		try {
-			parentZipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
+			parentZipFile = new ZipFile(new File(parentZipPath));
 			ZipEntry entry = parentZipFile.getEntry(relativePath + zipDoc.getName());
 			if(entry == null)
 			{
@@ -5306,7 +5311,8 @@ public class DocController extends BaseController{
 			Doc parentZipDoc = buildBasicDoc(repos.getId(), null, null, zipPath, "", null, 1, true, null, null, 0L, "");
 			String tmpLocalRootPath = getReposTmpPathForDoc(repos, parentZipDoc);	
 			parentZipDoc.setLocalRootPath(tmpLocalRootPath);
-			return parentZipDoc;
+			printObject("getParentZipDoc() ", parentZipDoc);
+			return parentZipDoc;			
 		}
 		return null;
 	}
