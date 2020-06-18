@@ -18,6 +18,7 @@ import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
+import org.tukaani.xz.XZInputStream;
 
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
@@ -29,31 +30,35 @@ class UnzipTest
     {  
         try {
 			//UnZip Works
-        	//System.out.println("解压缩测试，使用7-Zip压缩后的文件解压后中文乱码");
-        	//ZipFile zipFile = new ZipFile(new File("C:\\DocSysTest\\AAAAAA.zip"));
-			//unZip("C:\\DocSysTest\\AAAAAA", zipFile);
+        	System.out.println("解压缩测试，使用7-Zip压缩后的文件解压后中文乱码");
+        	ZipFile zipFile = new ZipFile(new File("C:\\DocSysTest\\AAAAAA.zip"));
+			unZip("C:\\DocSysTest\\AAAAAA", zipFile);
 	        	
 			//UnTarGz works
-			//File tgzFile = new File("C:\\DocSysTest\\BBBBBB.tgz");
-			//decompressTarGz(tgzFile, "C:/DocSysTest/BBBBBB", false);
+			File tgzFile = new File("C:\\DocSysTest\\BBBBBB.tgz");
+			decompressTarGz(tgzFile, "C:/DocSysTest/BBBBBB", false);
 	        
 			//UnTar Works
-			//File tarFile = new File("C:\\DocSysTest\\CCCCCC.tar");
-			//decompressTar(tarFile, "C:/DocSysTest/CCCCCC", false);
+			File tarFile = new File("C:\\DocSysTest\\CCCCCC.tar");
+			decompressTar(tarFile, "C:/DocSysTest/CCCCCC", false);
 
 			//UnGz Works (gz表示单个文件)
-			//File gzFile = new File("C:\\DocSysTest\\DDDDDD.gz");
-			//decompressGz(gzFile, "C:/DocSysTest/DDDDDD", false);
+			File gzFile = new File("C:\\DocSysTest\\DDDDDD.gz");
+			decompressGz(gzFile, "C:/DocSysTest/DDDDDD", false);
 			//File gzFile = new File("C:\\DocSysTest\\CCS.boot.gz");
 			//decompressGz(gzFile, "C:/DocSysTest/CCS.boot", false);
 
-			//Can not work
+			//UnXz works
 			File xzFile = new File("C:\\DocSysTest\\EEEEEE.xz");
-			decompressGz(xzFile, "C:/DocSysTest/EEEEEE", false);
-	
+			decompressXz(xzFile, "C:/DocSysTest/EEEEEE", false);
+
+			//UnXz works
+			File txzFile = new File("C:\\DocSysTest\\GGGGGG.txz");
+			decompressTarXz(txzFile, "C:/DocSysTest/GGGGGG", false);
+
 			//UnRar works
-			//File rarFile = new File("C:\\DocSysTest\\FFFFFF.rar");
-			//decompressRAR(rarFile, "C:/DocSysTest/FFFFFF", false);
+			File rarFile = new File("C:\\DocSysTest\\FFFFFF.rar");
+			decompressRAR(rarFile, "C:/DocSysTest/FFFFFF", false);
 			
 	        //File srcFile = new File("C:\\DocSysTest\\压缩测试");
 	        //File dstFile = new File("C:\\DocSysTest\\压缩测试.zip");
@@ -446,6 +451,116 @@ class UnzipTest
                 }
                 if(bufferedInputStream != null){
                     bufferedInputStream.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * 解压缩tar.xz txz文件
+     * @param file 压缩包文件
+     * @param targetPath 目标文件夹
+     * @param delete 解压后是否删除原压缩包文件
+     */
+    private static void decompressTarXz(File file, String targetPath,  boolean delete){
+        FileInputStream  fileInputStream = null;
+        BufferedInputStream bufferedInputStream = null;
+        XZInputStream gzipIn = null;
+        TarInputStream tarIn = null;
+        OutputStream out = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            bufferedInputStream = new BufferedInputStream(fileInputStream);
+            gzipIn = new XZInputStream(bufferedInputStream);
+            tarIn = new TarInputStream(gzipIn, 1024 * 2);
+
+            // 创建输出目录
+            createDirectory(targetPath, null);
+
+            TarEntry entry = null;
+            while((entry = tarIn.getNextEntry()) != null){
+            	System.out.println("subEntry:" + entry.getName());
+                if(entry.isDirectory()){ // 是目录
+                    createDirectory(targetPath, entry.getName()); // 创建子目录
+                }else{ // 是文件
+                    File tempFIle = new File(targetPath + File.separator + entry.getName());
+                    createDirectory(tempFIle.getParent() + File.separator, null);
+                    out = new FileOutputStream(tempFIle);
+                    int len =0;
+                    byte[] b = new byte[2048];
+
+                    while ((len = tarIn.read(b)) != -1){
+                        out.write(b, 0, len);
+                    }
+                    out.flush();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(out != null){
+                    out.close();
+                }
+                if(tarIn != null){
+                    tarIn.close();
+                }
+                if(gzipIn != null){
+                    gzipIn.close();
+                }
+                if(bufferedInputStream != null){
+                    bufferedInputStream.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * 解压缩xz文件
+     * @param file 压缩包文件
+     * @param targetPath 目标文件夹
+     * @param delete 解压后是否删除原压缩包文件
+     */
+    private static void decompressXz(File file, String targetPath,  boolean delete){
+        FileInputStream  fileInputStream = null;
+        XZInputStream gzipIn = null;
+        OutputStream out = null;
+        String suffix = ".xz";
+        try {
+            fileInputStream = new FileInputStream(file);
+            
+            gzipIn = new XZInputStream(fileInputStream, 100 * 1024);
+            
+            // 创建输出目录
+            createDirectory(targetPath, null);
+
+            File tempFile = new File(targetPath + File.separator + file.getName().replace(suffix, ""));
+            out = new FileOutputStream(tempFile);
+            int count;
+            byte data[] = new byte[2048];
+            while ((count = gzipIn.read(data)) != -1) {
+                out.write(data, 0, count);
+            }
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(out != null){
+                    out.close();
+                }
+                if(gzipIn != null){
+                    gzipIn.close();
                 }
                 if(fileInputStream != null){
                     fileInputStream.close();
