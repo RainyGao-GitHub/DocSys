@@ -5156,7 +5156,7 @@ public class DocController extends BaseController{
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
 				String subDocPath = rootPath + entry.getName();
-				//System.out.println("subDoc: " + subDocPath);
+				System.out.println("subDoc: " + subDocPath);
 				Doc subDoc = null;
 				if (entry.isDirectory()) {
 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
@@ -5227,19 +5227,16 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			Doc doc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, localRootPath, localVRootPath, null, null);
+			//Build ZipDoc Info
+			Doc zipDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, null, null, null, null);
+			String tmpLocalRootPath = getReposTmpPathForDoc(repos, zipDoc);
+			zipDoc.setLocalRootPath(tmpLocalRootPath);
 			
-			String tmpLocalRootPath = getReposTmpPathForDoc(repos, doc);
-			Doc zipDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
-			
+			//判断zipDoc是否已经被解压出来了，如果没有的话需要解压到本地
+			//TODO: 目前没有检查是否文件已变更
 			if(isFileExist(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()) == false)
 			{
-				Doc parentZipDoc = getParentZipDoc(repos, zipDoc);
-				if(parentZipDoc.getDocId() == rootDoc.getDocId())
-				{
-					parentZipDoc = rootDoc;
-				}
-				extractZipFile(repos, parentZipDoc, zipDoc);
+				extractZipFile(repos, rootDoc, zipDoc);
 			}
 			
 			subDocList = getZipSubDocList(repos, zipDoc, null, null, rt);
@@ -5256,33 +5253,56 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private void extractZipFile(Repos repos, Doc parentZipDoc, Doc zipDoc) 
+	private void extractZipFile(Repos repos, Doc rootDoc, Doc zipDoc) 
 	{
-		String parentZipPath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
-		System.out.println("extractZipFile() parentZipPath:" + parentZipPath);
-		if(isFileExist(parentZipPath) == false)
+		System.out.println("extractZipFile() " + zipDoc.getPath() + zipDoc.getName());
+		//printObject("rootDoc", rootDoc);
+		
+		Doc parentZipDoc = getParentZipDoc(repos, zipDoc);
+		if(parentZipDoc == null)
 		{
-			Doc parentParentZipDoc = getParentZipDoc(repos, parentZipDoc);
-			if(parentParentZipDoc != null)
+			System.out.println("extractZipFile() " + zipDoc.getPath() + zipDoc.getName() + " is rootDoc");
+			return;
+		}
+		
+		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
+		{
+			System.out.println("extractZipFile() parentZipDoc of " + zipDoc.getPath() + zipDoc.getName() + " is rootDoc");
+			parentZipDoc = rootDoc;
+			//printObject("parentZipDoc", parentZipDoc);
+		}
+		else
+		{
+			if(isFileExist(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()) == false)
 			{
-				extractZipFile(repos, parentParentZipDoc,parentZipDoc);
+				extractZipFile(repos, rootDoc, parentZipDoc);
 			}
 		}
+		
 		
 		//解压zipDoc
 		String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
 		ZipFile parentZipFile = null;
 		try {
-			parentZipFile = new ZipFile(new File(parentZipPath));
+			parentZipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
 			ZipEntry entry = parentZipFile.getEntry(relativePath + zipDoc.getName());
 			if(entry == null)
 			{
+				System.out.println("extractZipFile() " + relativePath + zipDoc.getName() + " not exists in zipFile:" + parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName());
 				return;
 			}
 			if(entry.isDirectory())
 			{
+				System.out.println("extractZipFile() " + relativePath + zipDoc.getName() + " is Directory in zipFile:" + parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName());
 				return;				
 			}
+			
+			File zipDocParentDir = new File(zipDoc.getLocalRootPath() + zipDoc.getPath());
+			if(zipDocParentDir.exists() == false)
+			{
+				zipDocParentDir.mkdirs();
+			}
+			
 			dumpZipEntryToFile(parentZipFile, entry, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -5311,7 +5331,7 @@ public class DocController extends BaseController{
 			Doc parentZipDoc = buildBasicDoc(repos.getId(), null, null, zipPath, "", null, 1, true, null, null, 0L, "");
 			String tmpLocalRootPath = getReposTmpPathForDoc(repos, parentZipDoc);	
 			parentZipDoc.setLocalRootPath(tmpLocalRootPath);
-			printObject("getParentZipDoc() ", parentZipDoc);
+			//printObject("getParentZipDoc() ", parentZipDoc);
 			return parentZipDoc;			
 		}
 		return null;

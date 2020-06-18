@@ -98,7 +98,8 @@ var ZipViewer = (function () {
 		    	"docPath": docInfo.path, //zipFile的路径
 		    	"docName": docInfo.name, //zipFile的名字
                 "shareId": docInfo.shareId,
-    		}
+    		},
+    		dataFilter: asyncDataFilter,
 	    };
     	setting.async = async;
 	    var doctree = $.fn.zTree.init($("#zipPlayer"), setting, data);
