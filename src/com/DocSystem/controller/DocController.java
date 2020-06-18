@@ -2728,13 +2728,18 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc rootDoc = buildBasicDoc(reposId, null, null, rootPath, rootName, null, 1, true, localRootPath, localVRootPath, null, null);
-		
+		Doc parentZipDoc = buildParentZipDoc(repos, path);
+		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
+		{
+			parentZipDoc = rootDoc;
+		}
+				
 		//判断文件在压缩文件中的类型
-		String relativePath = getZipRelativePath(path, rootPath + rootName + "/");
+		String relativePath = getZipRelativePath(path, parentZipDoc.getPath() + parentZipDoc.getName() + "/");
 
 		ZipFile zipFile = null;
 		try {
-			zipFile = new ZipFile(new File(localRootPath + rootDoc.getPath() + rootDoc.getName()));
+			zipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
 			ZipEntry entry = zipFile.getEntry(relativePath + name);
 			if(entry == null)
 			{
@@ -5156,7 +5161,7 @@ public class DocController extends BaseController{
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
 				String subDocPath = rootPath + entry.getName();
-				System.out.println("subDoc: " + subDocPath);
+				//System.out.println("subDoc: " + subDocPath);
 				Doc subDoc = null;
 				if (entry.isDirectory()) {
 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
@@ -5258,7 +5263,7 @@ public class DocController extends BaseController{
 		System.out.println("extractZipFile() " + zipDoc.getPath() + zipDoc.getName());
 		//printObject("rootDoc", rootDoc);
 		
-		Doc parentZipDoc = getParentZipDoc(repos, zipDoc);
+		Doc parentZipDoc = buildParentZipDoc(repos, zipDoc.getPath());
 		if(parentZipDoc == null)
 		{
 			System.out.println("extractZipFile() " + zipDoc.getPath() + zipDoc.getName() + " is rootDoc");
@@ -5319,10 +5324,9 @@ public class DocController extends BaseController{
 			}
 		}
 	}
-	
-	//根据zipDoc的信息获取parentZipDoc
-	private Doc getParentZipDoc(Repos repos, Doc zipDoc) {
-		String path = zipDoc.getPath(); 
+
+	//根据文件路径构造parentZipDocInfo
+	private Doc buildParentZipDoc(Repos repos, String path) {
 		//反向查找path中的第一个.zip的位置
 		int offset = path.lastIndexOf(".zip/");
 		if(offset > 0)
