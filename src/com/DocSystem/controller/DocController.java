@@ -2234,12 +2234,12 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
+
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc rootDoc = buildBasicDoc(reposId, docId, pid, rootPath, rootName, level, type, true, localRootPath, localVRootPath, null, null);
-		
+
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), rootDoc, null, rt) == false)
 		{
@@ -2248,12 +2248,18 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc parentZipDoc = buildParentZipDoc(repos, path);
+		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
+		{
+			parentZipDoc = rootDoc;
+		}
+
 		//判断文件在压缩文件中的类型
-		String relativePath = getZipRelativePath(path, rootPath + rootName + "/");
+		String relativePath = getZipRelativePath(path, parentZipDoc.getPath() + parentZipDoc.getName() + "/");
 
 		ZipFile zipFile = null;
 		try {
-			zipFile = new ZipFile(new File(localRootPath + rootDoc.getPath() + rootDoc.getName()));
+			zipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
 			ZipEntry entry = zipFile.getEntry(relativePath + name);
 			if(entry == null)
 			{
