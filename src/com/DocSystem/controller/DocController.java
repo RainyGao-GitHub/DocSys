@@ -5286,12 +5286,15 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-
+		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-        String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		
+		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
         List <Doc> subDocList = new ArrayList<Doc>();
-		
+		HashMap<Long, Doc> subDocHashMap = new HashMap<Long, Doc>();
+        
         FileInputStream fis = null;
         OutputStream fos = null;
         TarInputStream tarInputStream = null;
@@ -5300,13 +5303,14 @@ public class DocController extends BaseController{
             tarInputStream = new TarInputStream(fis, 1024 * 2);
 
             TarEntry entry = null;
-            while(true){
+            while(true)
+            {
                 entry = tarInputStream.getNextEntry();
                 if( entry == null){
                     break;
                 }
 				String subDocPath = rootPath + entry.getName();
-				//System.out.println("subDoc: " + subDocPath);
+				System.out.println("subDoc: " + subDocPath);
 				Doc subDoc = null;
 				if (entry.isDirectory()) {
 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
@@ -5317,7 +5321,17 @@ public class DocController extends BaseController{
  						subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
  					}
  				}
+				subDocHashMap.put(subDoc.getDocId(), subDoc);
+				
+				//printObject("subDoc:", subDoc);
 				subDocList.add(subDoc);
+            }
+            
+            //注意由于entryList只包含文件，因此直接生成docList会导致父节点丢失，造成前端目录树混乱，因此需要检查并添加父节点
+            List<Doc> parentDocListForAdd = checkAndGetParentDocListForAdd(subDocList, rootDoc, subDocHashMap);
+            if(parentDocListForAdd.size() > 0)
+            {
+            	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
            e.printStackTrace();
@@ -5337,6 +5351,40 @@ public class DocController extends BaseController{
             }
         }
 		return subDocList;
+	}
+
+	private List<Doc> checkAndGetParentDocListForAdd(List<Doc> subDocList, Doc rootDoc, HashMap<Long, Doc> subDocHashMap) 
+	{
+		
+		List<Doc> addedParentDocList = new ArrayList<Doc>();
+		for(int i=0; i<subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			if(!subDoc.getPid().equals(rootDoc.getDocId())) //rootDoc不需要添加，因此不检查
+			{
+				Doc parentDoc = subDocHashMap.get(subDoc.getPid());
+				if(parentDoc == null)
+				{
+					addParentDocs(subDoc, rootDoc, subDocHashMap, addedParentDocList);					
+				}
+			}
+		}
+		return addedParentDocList;
+	}
+
+	private void addParentDocs(Doc subDoc, Doc rootDoc, HashMap<Long, Doc> subDocHashMap, List<Doc> addedParentDocList) 
+	{
+		Doc parentDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDoc.getPath(),"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		addedParentDocList.add(parentDoc);
+		subDocHashMap.put(parentDoc.getDocId(), parentDoc);
+		if(!parentDoc.getPid().equals(rootDoc.getDocId())) //rootDoc不需要添加，因此不检查
+		{
+			Doc parentParentDoc = subDocHashMap.get(parentDoc.getPid());
+			if(parentParentDoc == null)
+			{
+				addParentDocs(parentDoc, rootDoc, subDocHashMap, addedParentDocList);					
+			}
+		}
 	}
 
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
