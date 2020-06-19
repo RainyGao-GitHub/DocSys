@@ -28,6 +28,8 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.tools.tar.TarEntry;
+import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
 import org.springframework.stereotype.Controller;
@@ -5217,7 +5219,7 @@ public class DocController extends BaseController{
             archive = new Archive(file);
             FileHeader fileHeader;
             while( (fileHeader = archive.nextFileHeader()) != null){
-            	String subDocPath = rootPath + fileHeader.getFileNameW();
+            	String subDocPath = rootPath + fileHeader.getFileNameW().replace("\\", "/");
 				//System.out.println("subDoc: " + subDocPath);
 				Doc subDoc = null;
 				if (fileHeader.isDirectory()) {
@@ -5284,8 +5286,57 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+        String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        File file = new File(zipFilePath);
+        List <Doc> subDocList = new ArrayList<Doc>();
+		
+        FileInputStream fis = null;
+        OutputStream fos = null;
+        TarInputStream tarInputStream = null;
+        try {
+            fis = new FileInputStream(file);
+            tarInputStream = new TarInputStream(fis, 1024 * 2);
+
+            TarEntry entry = null;
+            while(true){
+                entry = tarInputStream.getNextEntry();
+                if( entry == null){
+                    break;
+                }
+				String subDocPath = rootPath + entry.getName();
+				//System.out.println("subDoc: " + subDocPath);
+				Doc subDoc = null;
+				if (entry.isDirectory()) {
+					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+ 				} else {
+ 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+ 					if(isZipFile(subDoc.getName()))
+ 					{
+ 						subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+ 					}
+ 				}
+				subDocList.add(subDoc);
+            }
+        } catch (IOException e) {
+           e.printStackTrace();
+        }finally {
+            try {
+                if(fis != null){
+                    fis.close();
+                }
+                if(fos != null){
+                    fos.close();
+                }
+                if(tarInputStream != null){
+                    tarInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+		return subDocList;
 	}
 
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
