@@ -25,7 +25,7 @@
 		
 		function showHistoryDetail(index)
 		{
-			var commitId = $("#commitId" + index).text();
+			var commitId = $("#commitId" + index).attr("value");
 		   	console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
 			var title = "历史详情";
@@ -46,7 +46,7 @@
 		
 		function showDownloadConfirm(index)
 		{
-			var commitId = $("#commitId" + index).text();
+			var commitId = $("#commitId" + index).attr("value");
 		   	console.log("showDownloadConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
 			var title = "下载确认";
@@ -89,7 +89,7 @@
 		{
 			//TODO: 如果当前是目录的话，需要提示是否只下载修改过的文件，否则下载该版本的整个目录
 		   	
-			var commitId = $("#commitId" + index).text();
+			var commitId = $("#commitId" + index).attr("value");
 		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);
 		   	
 			//执行后台downloadDoc操作
@@ -149,7 +149,7 @@
 		
 		function showRevertConfirm(index)
 		{
-			var commitId = $("#commitId" + index).text();
+			var commitId = $("#commitId" + index).attr("value");
 		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
 			var title = "恢复确认";
@@ -192,7 +192,7 @@
 		{
 			//TODO: 如果当前是目录的话，需要提示是否只还原修改过的文件，否则将把目录下所有的文件都还原到该版本
 		   	
-			var commitId = $("#commitId" + index).text();
+			var commitId = $("#commitId" + index).attr("value");
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);
 	
 	   		$.ajax({
@@ -271,6 +271,7 @@
 				
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
+					var version = "V" + (data.length - i);
 					var commitId = d.commitId;
 					var commitUser = d.commitUser;
 					var commitMsg = d.commitMsg;
@@ -282,7 +283,7 @@
 					var se = "<li>"
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
-						+"			<a id='commitId"+i+"' href='javascript:void(0)'>"+commitId+"</a>"
+						+"			<a id='commitId"+i+"' value='" +commitId+ "' href='javascript:void(0)'>"+version+"</a>"
 						+"		</span>"
 						+"	</i>"
 						+"	<i class='cell commitMsg w30'>"
