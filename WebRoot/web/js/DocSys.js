@@ -807,7 +807,15 @@ function isZip(suffix)
 	}
 	var fileTypeMap = {
 			zip : true,
-		};
+			rar : true,
+			"7z" : true,
+			gz : true,
+			tgz : true,
+			xz : true,
+			txz : true,
+			bz2 : true,
+			tbz2 : true,
+	};
 	
 	var type = fileTypeMap[suffix];
 	if ( undefined == type )
