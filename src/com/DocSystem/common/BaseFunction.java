@@ -2326,8 +2326,72 @@ public class BaseFunction{
 		return isText(fileSuffix);
 	}
 	
-	public static boolean isZipFile(String name) 
-	{
+	protected boolean isTxzFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".txz") + 4;
+		if(pos == name.length())
+		{
+			pos = name.toLowerCase().lastIndexOf(".tar.xz") + 7;
+			return pos == name.length();
+		}
+		return false;
+	}
+
+	protected boolean isTgzFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".tgz") + 4;
+		if(pos == name.length())
+		{
+			pos = name.toLowerCase().lastIndexOf(".tar.gz") + 7;
+			return pos == name.length();
+		}
+		return false;
+	}
+
+	protected boolean isTarBz2File(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".tbz2") + 5;
+		if(pos == name.length())
+		{
+			pos = name.toLowerCase().lastIndexOf(".tar.bz2") + 8;
+			return pos == name.length();
+		}
+		return false;
+	}
+
+	protected boolean isTarFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".tar") + 4;
+		return pos == name.length();
+	}
+	
+	protected boolean isBz2File(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".bz2") + 4;
+		return pos == name.length();
+	}
+	
+	protected boolean isXzFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".xz") + 3;
+		return pos == name.length();
+	}
+	
+	protected boolean isGzFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".gz") + 3;
+		return pos == name.length();
+	}
+
+	protected boolean is7zFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".7z") + 3;
+		return pos == name.length();
+	}
+
+	protected boolean isRarFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".rar") + 4;
+		return pos == name.length();
+	}
+	
+	protected boolean isZipFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".zip") + 4;
+		return pos == name.length();
+	}
+	
+	protected boolean isCompressFile(String name) {
 		String fileSuffix = getFileSuffix(name);
 		return isZip(fileSuffix);
 	}
@@ -2342,6 +2406,14 @@ public class BaseFunction{
 		switch(fileSuffix)
 		{
 		case "zip":
+		case "rar":
+		case "7z":
+		case "tgz":
+		case "gz":
+		case "txz":
+		case "xz":
+		case "bz2":
+		case "tbz2":
 			return true;
 		default:
 			break;
