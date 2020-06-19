@@ -815,6 +815,7 @@ function isZip(suffix)
 			txz : true,
 			bz2 : true,
 			tbz2 : true,
+			tar : true,
 	};
 	
 	var type = fileTypeMap[suffix];
