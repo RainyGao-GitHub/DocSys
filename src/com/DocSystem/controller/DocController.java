@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
@@ -53,6 +54,8 @@ import com.DocSystem.entity.User;
 import com.alibaba.druid.support.json.JSONParser;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.github.junrar.Archive;
+import com.github.junrar.rarfile.FileHeader;
 import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocChange;
@@ -5154,8 +5157,139 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-        System.out.println("getZipSubDocList() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+	private List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) 
+	{
+		if(isZipFile(rootDoc.getName()))
+		{
+			return getSubDocListForZip(repos, rootDoc, path, name, rt);
+		}
+		else if(isRarFile(rootDoc.getName()))
+		{
+			return getSubDocListForRar(repos, rootDoc, path, name, rt);			
+		}
+		else if(is7zFile(rootDoc.getName()))
+		{
+			return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
+		}
+		else if(isTgzFile(rootDoc.getName()))
+		{
+			return getSubDocListForTgz(repos, rootDoc, path, name, rt);			
+		}
+		else if(isTxzFile(rootDoc.getName()))
+		{
+			return getSubDocListForTxz(repos, rootDoc, path, name, rt);			
+		}
+		else if(isTarBz2File(rootDoc.getName()))
+		{
+			return getSubDocListForTarBz2(repos, rootDoc, path, name, rt);						
+		}
+		else if(isGzFile(rootDoc.getName()))
+		{
+			return getSubDocListForGz(repos, rootDoc, path, name, rt);						
+		}
+		else if(isXzFile(rootDoc.getName()))
+		{
+			return getSubDocListForXz(repos, rootDoc, path, name, rt);	
+		}
+		else if(isBz2File(rootDoc.getName()))
+		{
+			return getSubDocListForBz2(repos, rootDoc, path, name, rt);	
+		}
+		else if(isTarFile(rootDoc.getName()))
+		{
+			return getSubDocListForTar(repos, rootDoc, path, name, rt);	
+		}
+		return null;
+	}
+	
+
+	private List<Doc> getSubDocListForRar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+        System.out.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+
+        String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+        String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        File file = new File(zipFilePath);
+        
+        Archive archive = null;
+        OutputStream outputStream = null;
+        List <Doc> subDocList = new ArrayList<Doc>();
+        try {
+            archive = new Archive(file);
+            FileHeader fileHeader;
+            while( (fileHeader = archive.nextFileHeader()) != null){
+            	String subDocPath = rootPath + fileHeader.getFileNameW();
+				//System.out.println("subDoc: " + subDocPath);
+				Doc subDoc = null;
+				if (fileHeader.isDirectory()) {
+					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+ 				} else {
+ 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+ 					if(isCompressFile(subDoc.getName()))
+ 					{
+ 						subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+ 					}
+ 				}
+				subDocList.add(subDoc);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(archive != null){
+                    archive.close();
+                }
+                if(outputStream != null){
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+		return subDocList;
+	}
+
+	private List<Doc> getSubDocListForBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListForXz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListForGz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListForTarBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListForTxz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListForTgz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListFor7z(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListForTar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+        System.out.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 
         String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
