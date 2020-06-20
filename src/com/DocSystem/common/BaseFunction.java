@@ -2330,30 +2330,33 @@ public class BaseFunction{
 		int pos = name.toLowerCase().lastIndexOf(".txz") + 4;
 		if(pos == name.length())
 		{
-			pos = name.toLowerCase().lastIndexOf(".tar.xz") + 7;
-			return pos == name.length();
+			return true;
 		}
-		return false;
+		
+		pos = name.toLowerCase().lastIndexOf(".tar.xz") + 7;
+		return pos == name.length();
 	}
 
 	protected boolean isTgzFile(String name) {
 		int pos = name.toLowerCase().lastIndexOf(".tgz") + 4;
 		if(pos == name.length())
 		{
-			pos = name.toLowerCase().lastIndexOf(".tar.gz") + 7;
-			return pos == name.length();
-		}
-		return false;
+			return true;
+		}	
+		
+		pos = name.toLowerCase().lastIndexOf(".tar.gz") + 7;
+		return pos == name.length();
 	}
 
 	protected boolean isTarBz2File(String name) {
 		int pos = name.toLowerCase().lastIndexOf(".tbz2") + 5;
 		if(pos == name.length())
 		{
-			pos = name.toLowerCase().lastIndexOf(".tar.bz2") + 8;
-			return pos == name.length();
+			return true;
 		}
-		return false;
+		
+		pos = name.toLowerCase().lastIndexOf(".tar.bz2") + 8;
+		return pos == name.length();
 	}
 
 	protected boolean isTarFile(String name) {
