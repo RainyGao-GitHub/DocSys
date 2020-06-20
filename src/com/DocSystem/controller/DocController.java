@@ -15,6 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -4902,25 +4903,6 @@ public class DocController extends BaseController{
       	    doc.setHitType(hitDoc.getHitType());      	    
       	    docList.add(doc);
 		}
-	
-		//Collections.sort(docList);
-		/*
-		Collections.sort(docList,
-			new Comparator<Doc>() {
-				public int compare(Doc u1, Doc u2) {
-					int diff = u1.getSortIndex() - u2.getSortIndex();
-					if (diff > 0) 
-					{
-						return 1;
-					}
-					else if (diff < 0) 
-					{
-						return -1;
-					}
-					return 0;
-				}
-			}
-		);*/
 		
 		//读取排序前十文件的内容
 		int numOfContentShow = 10;
@@ -5333,6 +5315,10 @@ public class DocController extends BaseController{
             {
             	subDocList.addAll(parentDocListForAdd);
             }
+            
+            //排序不会影响zTree的展示，问题在于前端获取后端subDocList的时候，没有处理path和name
+            //sortDocListWithDocId(subDocList);
+            
         } catch (IOException e) {
            e.printStackTrace();
         }finally {
@@ -5351,6 +5337,31 @@ public class DocController extends BaseController{
             }
         }
 		return subDocList;
+	}
+
+	private void sortDocListWithDocId(List<Doc> subDocList) {
+		Collections.sort(subDocList,
+			new Comparator<Doc>() {
+				public int compare(Doc u1, Doc u2) {
+					long diff = u1.getDocId() - u2.getDocId();
+					if (diff > 0) 
+					{
+						return 1;
+					}
+					else if (diff < 0) 
+					{
+						return -1;
+					}
+					return 0;
+				}
+			}
+		);
+		
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc doc =  subDocList.get(i);
+			System.out.println("sortDocListWithDocId docId:" + doc.getDocId() + " pid:" + doc.getPid() + " " + doc.getPath() + doc.getName());
+		}
 	}
 
 	private List<Doc> checkAndGetParentDocListForAdd(List<Doc> subDocList, Doc rootDoc, HashMap<Long, Doc> subDocHashMap) 
