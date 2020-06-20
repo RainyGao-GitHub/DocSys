@@ -1,5 +1,6 @@
 package com.DocSystem.controller;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,6 +30,9 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
+import org.apache.commons.compress.archivers.sevenz.SevenZFile;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
@@ -39,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.tukaani.xz.XZInputStream;
 
 import util.ReadProperties;
 import util.ReturnAjax;
@@ -59,6 +64,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
+import com.jcraft.jzlib.GZIPInputStream;
 import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocChange;
@@ -5205,20 +5211,10 @@ public class DocController extends BaseController{
         List <Doc> subDocList = new ArrayList<Doc>();
         try {
             archive = new Archive(file);
-            FileHeader fileHeader;
-            while( (fileHeader = archive.nextFileHeader()) != null){
-            	String subDocPath = rootPath + fileHeader.getFileNameW().replace("\\", "/");
-				//System.out.println("subDoc: " + subDocPath);
-				Doc subDoc = null;
-				if (fileHeader.isDirectory()) {
-					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
- 				} else {
- 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
- 					if(isCompressFile(subDoc.getName()))
- 					{
- 						subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
- 					}
- 				}
+            FileHeader entry;
+            while( (entry = archive.nextFileHeader()) != null){
+            	String subDocPath = rootPath + entry.getFileNameW().replace("\\", "/");
+            	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocList.add(subDoc);
             }
         } catch (Exception e) {
@@ -5239,38 +5235,329 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		List <Doc> subDocList = new ArrayList<Doc>();
+		
+		String subDocName = name.substring(0,name.lastIndexOf("."));
+		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		if(isZipFile(subDoc.getName()))
+		{
+			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+		}
+		subDocList.add(subDoc);
+		return subDocList;
 	}
 
 	private List<Doc> getSubDocListForXz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		List <Doc> subDocList = new ArrayList<Doc>();
+		
+		String subDocName = name.substring(0,name.lastIndexOf("."));
+		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		if(isZipFile(subDoc.getName()))
+		{
+			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+		}
+		subDocList.add(subDoc);
+		return subDocList;
 	}
 
 	private List<Doc> getSubDocListForGz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		List <Doc> subDocList = new ArrayList<Doc>();
+		
+		String subDocName = name.substring(0,name.lastIndexOf("."));
+		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		if(isZipFile(subDoc.getName()))
+		{
+			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+		}
+		subDocList.add(subDoc);
+		return subDocList;
 	}
 
 	private List<Doc> getSubDocListForTarBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		
+		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        File file = new File(zipFilePath);
+        List <Doc> subDocList = new ArrayList<Doc>();
+		HashMap<Long, Doc> subDocHashMap = new HashMap<Long, Doc>();
+		
+		FileInputStream fis = null;
+        OutputStream fos = null;
+        BZip2CompressorInputStream bis = null;
+        TarInputStream tis = null;
+        try {
+            fis = new FileInputStream(file);
+            bis = new BZip2CompressorInputStream(fis);
+            tis = new TarInputStream(bis, 1024 * 2);
+
+            TarEntry entry;
+            while((entry = tis.getNextEntry()) != null){
+				String subDocPath = rootPath + entry.getName();
+				System.out.println("subDoc: " + subDocPath);
+            	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
+				subDocHashMap.put(subDoc.getDocId(), subDoc);
+				subDocList.add(subDoc);
+            }
+            
+            //注意由于entryList只包含文件，因此直接生成docList会导致父节点丢失，造成前端目录树混乱，因此需要检查并添加父节点
+            List<Doc> parentDocListForAdd = checkAndGetParentDocListForAdd(subDocList, rootDoc, subDocHashMap);
+            if(parentDocListForAdd.size() > 0)
+            {
+            	subDocList.addAll(parentDocListForAdd);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(fis != null){
+                    fis.close();
+                }
+                if(fos != null){
+                    fos.close();
+                }
+                if(bis != null){
+                    bis.close();
+                }
+                if(tis != null){
+                    tis.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+		return subDocList;
 	}
 
 	private List<Doc> getSubDocListForTxz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		
+		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        File file = new File(zipFilePath);
+        List <Doc> subDocList = new ArrayList<Doc>();
+		HashMap<Long, Doc> subDocHashMap = new HashMap<Long, Doc>();
+		
+        FileInputStream  fileInputStream = null;
+        BufferedInputStream bufferedInputStream = null;
+        XZInputStream gzipIn = null;
+        TarInputStream tarIn = null;
+        OutputStream out = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            bufferedInputStream = new BufferedInputStream(fileInputStream);
+            gzipIn = new XZInputStream(bufferedInputStream);
+            tarIn = new TarInputStream(gzipIn, 1024 * 2);
+
+            TarEntry entry = null;
+            while((entry = tarIn.getNextEntry()) != null){
+				String subDocPath = rootPath + entry.getName();
+				System.out.println("subDoc: " + subDocPath);
+            	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
+				subDocHashMap.put(subDoc.getDocId(), subDoc);
+				subDocList.add(subDoc);
+            }
+            
+            //注意由于entryList只包含文件，因此直接生成docList会导致父节点丢失，造成前端目录树混乱，因此需要检查并添加父节点
+            List<Doc> parentDocListForAdd = checkAndGetParentDocListForAdd(subDocList, rootDoc, subDocHashMap);
+            if(parentDocListForAdd.size() > 0)
+            {
+            	subDocList.addAll(parentDocListForAdd);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(out != null){
+                    out.close();
+                }
+                if(tarIn != null){
+                    tarIn.close();
+                }
+                if(gzipIn != null){
+                    gzipIn.close();
+                }
+                if(bufferedInputStream != null){
+                    bufferedInputStream.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+		return subDocList;
 	}
 
 	private List<Doc> getSubDocListForTgz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		
+		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        File file = new File(zipFilePath);
+        List <Doc> subDocList = new ArrayList<Doc>();
+		HashMap<Long, Doc> subDocHashMap = new HashMap<Long, Doc>();
+		
+        FileInputStream  fileInputStream = null;
+        BufferedInputStream bufferedInputStream = null;
+        GZIPInputStream gzipIn = null;
+        TarInputStream tarIn = null;
+        OutputStream out = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            bufferedInputStream = new BufferedInputStream(fileInputStream);
+            gzipIn = new GZIPInputStream(bufferedInputStream);
+            tarIn = new TarInputStream(gzipIn, 1024 * 2);
+            
+            TarEntry entry = null;
+            while((entry = tarIn.getNextEntry()) != null){
+				String subDocPath = rootPath + entry.getName();
+				System.out.println("subDoc: " + subDocPath);
+            	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
+				subDocHashMap.put(subDoc.getDocId(), subDoc);
+				subDocList.add(subDoc);
+            }
+            
+            //注意由于entryList只包含文件，因此直接生成docList会导致父节点丢失，造成前端目录树混乱，因此需要检查并添加父节点
+            List<Doc> parentDocListForAdd = checkAndGetParentDocListForAdd(subDocList, rootDoc, subDocHashMap);
+            if(parentDocListForAdd.size() > 0)
+            {
+            	subDocList.addAll(parentDocListForAdd);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(out != null){
+                    out.close();
+                }
+                if(tarIn != null){
+                    tarIn.close();
+                }
+                if(gzipIn != null){
+                    gzipIn.close();
+                }
+                if(bufferedInputStream != null){
+                    bufferedInputStream.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+		return subDocList;
 	}
 
 	private List<Doc> getSubDocListFor7z(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		
+		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        File file = new File(zipFilePath);
+        List <Doc> subDocList = new ArrayList<Doc>();
+		HashMap<Long, Doc> subDocHashMap = new HashMap<Long, Doc>();
+		
+		SevenZFile sevenZFile = null;
+        OutputStream outputStream = null;
+        try {
+            sevenZFile = new SevenZFile(file);
+
+            SevenZArchiveEntry entry;
+            while((entry = sevenZFile.getNextEntry()) != null){
+				String subDocPath = rootPath + entry.getName();
+				System.out.println("subDoc: " + subDocPath);
+            	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
+				subDocHashMap.put(subDoc.getDocId(), subDoc);
+				subDocList.add(subDoc);
+            }
+            
+            //注意由于entryList只包含文件，因此直接生成docList会导致父节点丢失，造成前端目录树混乱，因此需要检查并添加父节点
+            List<Doc> parentDocListForAdd = checkAndGetParentDocListForAdd(subDocList, rootDoc, subDocHashMap);
+            if(parentDocListForAdd.size() > 0)
+            {
+            	subDocList.addAll(parentDocListForAdd);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(sevenZFile != null){
+                    sevenZFile.close();
+                }
+                if(outputStream != null){
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return subDocList;
+	}
+	
+	
+	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, ZipEntry entry) {
+		Doc subDoc = null;
+		if (entry.isDirectory()) {
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			} else {
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+				if(isZipFile(subDoc.getName()))
+				{
+					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+				}
+			}
+		return subDoc;
+	}
+	
+
+	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, FileHeader entry) {
+		Doc subDoc = null;
+		if (entry.isDirectory()) {
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			} else {
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+				if(isZipFile(subDoc.getName()))
+				{
+					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+				}
+			}
+		return subDoc;
+	}
+	
+
+	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, TarEntry entry) {
+		Doc subDoc = null;
+		if (entry.isDirectory()) {
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			} else {
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+				if(isZipFile(subDoc.getName()))
+				{
+					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+				}
+			}
+		return subDoc;
+	}
+
+	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, SevenZArchiveEntry entry) {
+		Doc subDoc = null;
+		if (entry.isDirectory()) {
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			} else {
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+				if(isZipFile(subDoc.getName()))
+				{
+					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+				}
+			}
+		return subDoc;
 	}
 
 	private List<Doc> getSubDocListForTar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
@@ -5299,16 +5586,7 @@ public class DocController extends BaseController{
                 }
 				String subDocPath = rootPath + entry.getName();
 				System.out.println("subDoc: " + subDocPath);
-				Doc subDoc = null;
-				if (entry.isDirectory()) {
-					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
- 				} else {
- 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
- 					if(isZipFile(subDoc.getName()))
- 					{
- 						subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
- 					}
- 				}
+				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
 				
 				//printObject("subDoc:", subDoc);
@@ -5321,10 +5599,6 @@ public class DocController extends BaseController{
             {
             	subDocList.addAll(parentDocListForAdd);
             }
-            
-            //排序不会影响zTree的展示，问题在于前端获取后端subDocList的时候，没有处理path和name
-            //sortDocListWithDocId(subDocList);
-            
         } catch (IOException e) {
            e.printStackTrace();
         }finally {
@@ -5418,16 +5692,7 @@ public class DocController extends BaseController{
 				ZipEntry entry = entries.nextElement();
 				String subDocPath = rootPath + entry.getName();
 				//System.out.println("subDoc: " + subDocPath);
-				Doc subDoc = null;
-				if (entry.isDirectory()) {
-					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
- 				} else {
- 					subDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDocPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
- 					if(isZipFile(subDoc.getName()))
- 					{
- 						subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
- 					}
- 				}
+				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocList.add(subDoc);
 			}
 		} catch (IOException e) {
@@ -5447,7 +5712,7 @@ public class DocController extends BaseController{
 		
 		return subDocList;
 	}
-	
+
 	/****************   get Zip SubDocList ******************/
 	@RequestMapping("/getZipSubDocList.do")
 	public void getZipSubDocList(Integer reposId, String docPath, String docName, //zip File Info
