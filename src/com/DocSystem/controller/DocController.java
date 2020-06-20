@@ -5167,6 +5167,10 @@ public class DocController extends BaseController{
 		{
 			return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
 		}
+		else if(isTarFile(rootDoc.getName()))
+		{
+			return getSubDocListForTar(repos, rootDoc, path, name, rt);	
+		}
 		else if(isTgzFile(rootDoc.getName()))
 		{
 			return getSubDocListForTgz(repos, rootDoc, path, name, rt);			
@@ -5190,10 +5194,6 @@ public class DocController extends BaseController{
 		else if(isBz2File(rootDoc.getName()))
 		{
 			return getSubDocListForBz2(repos, rootDoc, path, name, rt);	
-		}
-		else if(isTarFile(rootDoc.getName()))
-		{
-			return getSubDocListForTar(repos, rootDoc, path, name, rt);	
 		}
 		return null;
 	}
