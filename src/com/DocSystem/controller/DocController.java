@@ -5414,19 +5414,19 @@ public class DocController extends BaseController{
             tarIn = new TarInputStream(gzipIn, 1024 * 2);
             
             TarEntry entry = null;
-            while((entry = tarIn.getNextEntry()) != null){
+            while(true)
+            {
+                entry = tarIn.getNextEntry();
+                if( entry == null){
+                    break;
+                }
 				String subDocPath = rootPath + entry.getName();
 				System.out.println("subDoc: " + subDocPath);
-            	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
+				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
+				
+				//printObject("subDoc:", subDoc);
 				subDocList.add(subDoc);
-            }
-            
-            //注意由于entryList只包含文件，因此直接生成docList会导致父节点丢失，造成前端目录树混乱，因此需要检查并添加父节点
-            List<Doc> parentDocListForAdd = checkAndGetParentDocListForAdd(subDocList, rootDoc, subDocHashMap);
-            if(parentDocListForAdd.size() > 0)
-            {
-            	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
             e.printStackTrace();
