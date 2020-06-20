@@ -5143,6 +5143,12 @@ public class DocController extends BaseController{
 
 	private List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) 
 	{
+		if(name != null && !name.equals(rootDoc.getName()))
+		{
+			System.out.println("getZipSubDocList() 目前不支持对压缩文件的子目录的文件列表");
+			return null;
+		}
+		
 		if(isZipFile(rootDoc.getName()))
 		{
 			return getSubDocListForZip(repos, rootDoc, path, name, rt);
