@@ -5200,9 +5200,10 @@ public class DocController extends BaseController{
 	
 
 	private List<Doc> getSubDocListForRar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-        System.out.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
-
-        String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
         
@@ -5235,6 +5236,10 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		System.out.println("getSubDocListForBz2() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForBz2() zipFilePath:" + zipFilePath);
+		
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
@@ -5248,6 +5253,10 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForXz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		System.out.println("getSubDocListForXz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForXz() zipFilePath:" + zipFilePath);
+		
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
@@ -5261,6 +5270,10 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForGz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		System.out.println("getSubDocListForGz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForGz() zipFilePath:" + zipFilePath);
+		
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
@@ -5274,9 +5287,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTarBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		System.out.println("getSubDocListForTarBz2() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		System.out.println("getSubDocListForTarBz2() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5331,9 +5344,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTxz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		System.out.println("getSubDocListForTxz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		System.out.println("getSubDocListForTxz() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5393,9 +5406,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTgz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		System.out.println("getSubDocListForTgz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		System.out.println("getSubDocListForTgz() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5455,9 +5468,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListFor7z(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		System.out.println("getSubDocListFor7z() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		System.out.println("getSubDocListFor7z() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5679,9 +5692,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		System.out.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		System.out.println("getSubDocListForZip() zipFilePath:" + zipFilePath);
 
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         ZipFile zipFile = null;
