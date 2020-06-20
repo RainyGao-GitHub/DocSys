@@ -5138,7 +5138,7 @@ public class DocController extends BaseController{
 		docList.add(rootDoc);
 		
 		List <Doc> subDocList = null;
-		subDocList = getZipSubDocList(repos, rootDoc, "", "", rt);
+		subDocList = getZipSubDocList(repos, rootDoc, docPath, docName, rt);
 		if(subDocList != null)
 		{
 			docList.addAll(subDocList);
@@ -5679,9 +5679,10 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-        System.out.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		System.out.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
 
-        String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         ZipFile zipFile = null;
         List <Doc> subDocList = new ArrayList<Doc>();
