@@ -5769,16 +5769,15 @@ public class DocController extends BaseController{
 		{
 			//Build ZipDoc Info
 			Doc zipDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, null, null, null, null);
-			String tmpLocalRootPath = getReposTmpPathForDoc(repos, zipDoc);
-			zipDoc.setLocalRootPath(tmpLocalRootPath);
-			
-			//判断zipDoc是否已经被解压出来了，如果没有的话需要解压到本地
-			//TODO: 目前没有检查是否文件已变更
-			if(isFileExist(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()) == false)
+			if(zipDoc.getDocId().equals(rootDoc.getDocId()))
 			{
-				extractZipFile(repos, rootDoc, zipDoc);
+				zipDoc = rootDoc;
 			}
-			
+			else
+			{
+				//检查zipDoc是否已存在并解压（如果是rootDoc不需要解压，否则需要解压）
+				checkAndExtractZipDoc(repos, rootDoc, zipDoc);
+			}	
 			subDocList = getZipSubDocList(repos, zipDoc, null, null, rt);
 		}	
 		
@@ -5793,18 +5792,11 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private void extractZipFile(Repos repos, Doc rootDoc, Doc zipDoc) 
+	private void checkAndExtractZipDoc(Repos repos, Doc rootDoc, Doc zipDoc) 
 	{
-		System.out.println("extractZipFile() " + zipDoc.getPath() + zipDoc.getName());
-		//printObject("rootDoc", rootDoc);
+		System.out.println("checkAndExtractZipDoc() " + zipDoc.getPath() + zipDoc.getName() + " rootDoc:" + rootDoc.getPath() + rootDoc.getName());
 		
-		Doc parentZipDoc = buildParentZipDoc(repos, zipDoc.getPath());
-		if(parentZipDoc == null)
-		{
-			System.out.println("extractZipFile() " + zipDoc.getPath() + zipDoc.getName() + " is rootDoc");
-			return;
-		}
-		
+		Doc parentZipDoc = getParentZipDoc(repos, rootDoc, zipDoc);
 		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			System.out.println("extractZipFile() parentZipDoc of " + zipDoc.getPath() + zipDoc.getName() + " is rootDoc");
@@ -5815,26 +5807,83 @@ public class DocController extends BaseController{
 		{
 			if(isFileExist(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()) == false)
 			{
-				extractZipFile(repos, rootDoc, parentZipDoc);
+				checkAndExtractZipDoc(repos, rootDoc, parentZipDoc);
 			}
 		}
 		
-		
-		//解压zipDoc
+		//解压zipDoc (parentZipDoc必须已存在)
+		extractEntryFromCompressFile(repos, rootDoc, parentZipDoc, zipDoc);
+	}
+
+	private boolean extractEntryFromCompressFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) {
+		String name = parentZipDoc.getName();
+
+		if(isZipFile(name))
+		{
+			return extractEntryFromZipFile(repos, rootDoc, parentZipDoc, zipDoc);
+		}
+		else if(isRarFile(name))
+		{
+			return extractEntryFromRarFile(repos, rootDoc, parentZipDoc, zipDoc);			
+		}
+		else if(is7zFile(name))
+		{
+			return extractEntryFrom7zFile(repos, rootDoc, parentZipDoc, zipDoc);			
+		}
+		else if(isTarFile(name))
+		{
+			return extractEntryFromTarFile(repos, rootDoc, parentZipDoc, zipDoc);
+		}
+		else if(isTgzFile(name))
+		{
+			return extractEntryFromTgzFile(repos, rootDoc, parentZipDoc, zipDoc);		
+		}
+		else if(isTxzFile(name))
+		{
+			return extractEntryFromTxzFile(repos, rootDoc, parentZipDoc, zipDoc);			
+		}
+		else if(isTarBz2File(name))
+		{
+			return extractEntryFromTarBz2File(repos, rootDoc, parentZipDoc, zipDoc);						
+		}
+		else if(isGzFile(name))
+		{
+			return extractEntryFromGzFile(repos, rootDoc, parentZipDoc, zipDoc);					
+		}
+		else if(isXzFile(name))
+		{
+			return extractEntryFromXzFile(repos, rootDoc, parentZipDoc, zipDoc);	
+		}
+		else if(isBz2File(name))
+		{
+			return extractEntryFromBz2File(repos, rootDoc, parentZipDoc, zipDoc);
+		}
+		return false;
+	}
+
+	private boolean extractEntryFromRarFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean extractEntryFromZipFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) {
+		boolean ret = false;
+
 		String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
 		ZipFile parentZipFile = null;
+		
 		try {
 			parentZipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
 			ZipEntry entry = parentZipFile.getEntry(relativePath + zipDoc.getName());
 			if(entry == null)
 			{
 				System.out.println("extractZipFile() " + relativePath + zipDoc.getName() + " not exists in zipFile:" + parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName());
-				return;
+				return false;
 			}
 			if(entry.isDirectory())
 			{
 				System.out.println("extractZipFile() " + relativePath + zipDoc.getName() + " is Directory in zipFile:" + parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName());
-				return;				
+				return false;			
 			}
 			
 			File zipDocParentDir = new File(zipDoc.getLocalRootPath() + zipDoc.getPath());
@@ -5843,7 +5892,7 @@ public class DocController extends BaseController{
 				zipDocParentDir.mkdirs();
 			}
 			
-			dumpZipEntryToFile(parentZipFile, entry, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+			ret = dumpZipEntryToFile(parentZipFile, entry, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -5857,23 +5906,28 @@ public class DocController extends BaseController{
 					e.printStackTrace();
 				}
 			}
-		}
+		}		
+		return ret;
 	}
 
-	//根据文件路径构造parentZipDocInfo
-	private Doc buildParentZipDoc(Repos repos, String path) {
-		//反向查找path中的第一个.zip的位置
-		int offset = path.lastIndexOf(".zip/");
-		if(offset > 0)
+	//获取doc的parentZipDoc(这里有风险parentZipDoc里面的目录的名字带压缩后缀)
+	private Doc getParentZipDoc(Repos repos, Doc rootDoc, Doc zipDoc) {
+		
+		Doc parentDoc = buildBasicDoc(repos.getId(), null, zipDoc.getPid(), zipDoc.getPath(), "", null, 1, true, null, null, 0L, "");
+		if(parentDoc.getDocId().equals(rootDoc.getDocId()))
 		{
-			String zipPath = path.substring(0,offset + 4);
-			Doc parentZipDoc = buildBasicDoc(repos.getId(), null, null, zipPath, "", null, 1, true, null, null, 0L, "");
-			String tmpLocalRootPath = getReposTmpPathForDoc(repos, parentZipDoc);	
-			parentZipDoc.setLocalRootPath(tmpLocalRootPath);
-			//printObject("getParentZipDoc() ", parentZipDoc);
-			return parentZipDoc;			
+			return rootDoc;
 		}
-		return null;
+		
+		if(isZipFile(parentDoc.getName()) == false)
+		{
+			return getParentZipDoc(repos, rootDoc, parentDoc);
+		}
+		
+		String tmpLocalRootPath = getReposTmpPathForDoc(repos, parentDoc);	
+		parentDoc.setLocalRootPath(tmpLocalRootPath);
+		//printObject("getParentZipDoc() ", parentZipDoc);
+		return parentDoc;			
 	}
 
 	private String getZipRelativePath(String path, String rootPath) {
