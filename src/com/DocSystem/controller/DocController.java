@@ -5664,7 +5664,7 @@ public class DocController extends BaseController{
 		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
 		
 		List <Doc> subDocList = null;
-		if(isZipFile(name) == false)
+		if(isCompressFile(name) == false)
 		{
 			String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
 			System.out.println("getZipSubDocList relativePath: " + relativePath);
