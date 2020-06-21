@@ -2263,7 +2263,7 @@ public class DocController extends BaseController{
 		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
 		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		Doc parentZipDoc = getParentZipDoc(repos, rootDoc, tmpDoc);
+		Doc parentZipDoc = getParentCompressDoc(repos, rootDoc, tmpDoc);
 		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			parentZipDoc = rootDoc;
@@ -2704,7 +2704,7 @@ public class DocController extends BaseController{
 		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
 		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		Doc parentZipDoc = getParentZipDoc(repos, rootDoc, tmpDoc);
+		Doc parentZipDoc = getParentCompressDoc(repos, rootDoc, tmpDoc);
 		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			parentZipDoc = rootDoc;
@@ -5702,7 +5702,7 @@ public class DocController extends BaseController{
 	{
 		System.out.println("checkAndExtractZipDoc() " + zipDoc.getPath() + zipDoc.getName() + " rootDoc:" + rootDoc.getPath() + rootDoc.getName());
 		
-		Doc parentZipDoc = getParentZipDoc(repos, rootDoc, zipDoc);
+		Doc parentZipDoc = getParentCompressDoc(repos, rootDoc, zipDoc);
 		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			System.out.println("extractZipFile() parentZipDoc of " + zipDoc.getPath() + zipDoc.getName() + " is rootDoc");
@@ -6462,22 +6462,22 @@ public class DocController extends BaseController{
 	}
 
 	//获取doc的parentZipDoc(这里有风险parentZipDoc里面的目录的名字带压缩后缀)
-	private Doc getParentZipDoc(Repos repos, Doc rootDoc, Doc zipDoc) {
+	private Doc getParentCompressDoc(Repos repos, Doc rootDoc, Doc doc) {
 		
-		Doc parentDoc = buildBasicDoc(repos.getId(), null, zipDoc.getPid(), zipDoc.getPath(), "", null, 1, true, null, null, 0L, "");
+		Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), doc.getPath(), "", null, 1, true, null, null, 0L, "");
 		if(parentDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			return rootDoc;
 		}
 		
-		if(isZipFile(parentDoc.getName()) == false)
-		{
-			return getParentZipDoc(repos, rootDoc, parentDoc);
-		}
-		
 		String tmpLocalRootPath = getReposTmpPathForDoc(repos, parentDoc);	
 		parentDoc.setLocalRootPath(tmpLocalRootPath);
-		//printObject("getParentZipDoc() ", parentZipDoc);
+		
+		if(isCompressFile(parentDoc.getName()) == false)
+		{
+			return getParentCompressDoc(repos, rootDoc, parentDoc);
+		}
+		
 		return parentDoc;			
 	}
 
