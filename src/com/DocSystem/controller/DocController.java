@@ -2259,104 +2259,58 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
+
+		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
+		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		Doc parentZipDoc = buildParentZipDoc(repos, path);
+		Doc parentZipDoc = getParentZipDoc(repos, rootDoc, tmpDoc);
+		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
+		{
+			parentZipDoc = rootDoc;
+		}
 		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			parentZipDoc = rootDoc;
 		}
 
-		//判断文件在压缩文件中的类型
-		String relativePath = getZipRelativePath(path, parentZipDoc.getPath() + parentZipDoc.getName() + "/");
+		extractEntryFromCompressFile(repos, rootDoc, parentZipDoc, tmpDoc);
 
-		ZipFile zipFile = null;
-		try {
-			zipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
-			ZipEntry entry = zipFile.getEntry(relativePath + name);
-			if(entry == null)
-			{
-				docSysErrorLog("压缩文件中 " + name + " 不存在！", rt);
-				writeJson(rt, response);			
-				return;
-			}
-			if(entry.isDirectory())
-			{
-				docSysErrorLog(name + " 是目录！", rt);
-				writeJson(rt, response);			
-				return;				
-			}
-			
-			//如果压缩文件有变化则解压文件到临时目录
-			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
-			File dir = new File(tmpLocalRootPath + path);
-			if(dir.exists() == false)
-			{
-				dir.mkdirs();
-			}
-			
-			//Dump to localFile
-			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + path + name) == false)
-			{
-				docSysErrorLog("解压文件 " + name + " 失败！", rt);
-				writeJson(rt, response);			
-				return;
-			}
-			
-			//buildDocInfo
-			Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
-			
-			if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
-			{	
-				JSONObject jobj = new JSONObject();
-				String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
-				String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
-				String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
-				jobj.put("fileLink", fileLink);
-				jobj.put("saveFileLink", saveFileLink);
-				jobj.put("userId", reposAccess.getAccessUser().getId());
-				jobj.put("userName", reposAccess.getAccessUser().getName());
+		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
+		{	
+			JSONObject jobj = new JSONObject();
+			String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
+			String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
+			String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
+			jobj.put("fileLink", fileLink);
+			jobj.put("saveFileLink", saveFileLink);
+			jobj.put("userId", reposAccess.getAccessUser().getId());
+			jobj.put("userName", reposAccess.getAccessUser().getName());
 
-				Doc localDoc = docSysGetDoc(repos, tmpDoc);
-				tmpDoc.setSize(localDoc.getSize());
-				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
-				
-				jobj.put("key", buildOfficeEditorKey(tmpDoc));
-				jobj.put("editEn", 0);
-				jobj.put("downloadEn", 0);
-				
-				rt.setData(jobj);
-				rt.setDataEx("office");
-				writeJson(rt, response);
-				return;
-			}
+			Doc localDoc = docSysGetDoc(repos, tmpDoc);
+			tmpDoc.setSize(localDoc.getSize());
+			tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
 			
-			//转换成pdf进行预览
-			String pdfLink = convertOfficeToPdf(repos, tmpDoc, rt);
-			if(pdfLink == null)
-			{
-				System.out.println("getDocOfficeLink() convertOfficeToPdf failed");
-				writeJson(rt, response);	
-				return;
-			}
-			rt.setData(pdfLink);
-			rt.setDataEx("pdf");
+			jobj.put("key", buildOfficeEditorKey(tmpDoc));
+			jobj.put("editEn", 0);
+			jobj.put("downloadEn", 0);
+			
+			rt.setData(jobj);
+			rt.setDataEx("office");
 			writeJson(rt, response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			docSysErrorLog("压缩文件信息获取异常", rt);
-			writeJson(rt, response);
-		} finally {
-			if(zipFile != null)
-			{
-				try {
-					zipFile.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			return;
 		}
+		
+		//转换成pdf进行预览
+		String pdfLink = convertOfficeToPdf(repos, tmpDoc, rt);
+		if(pdfLink == null)
+		{
+			System.out.println("getDocOfficeLink() convertOfficeToPdf failed");
+			writeJson(rt, response);	
+			return;
+		}
+		rt.setData(pdfLink);
+		rt.setDataEx("pdf");
+		writeJson(rt, response);
 	}
 	
 	/**************** getDocOfficeLink ******************/
@@ -2746,100 +2700,51 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc rootDoc = buildBasicDoc(reposId, null, null, rootPath, rootName, null, 1, true, localRootPath, localVRootPath, null, null);
-		Doc parentZipDoc = buildParentZipDoc(repos, path);
+		
+		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
+		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
+		
+		Doc parentZipDoc = getParentZipDoc(repos, rootDoc, tmpDoc);
 		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			parentZipDoc = rootDoc;
 		}
-				
-		//判断文件在压缩文件中的类型
-		String relativePath = getZipRelativePath(path, parentZipDoc.getPath() + parentZipDoc.getName() + "/");
-
-		ZipFile zipFile = null;
-		try {
-			zipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
-			ZipEntry entry = zipFile.getEntry(relativePath + name);
-			if(entry == null)
+		
+		extractEntryFromCompressFile(repos, rootDoc, parentZipDoc, tmpDoc);
+		
+		//根据文件类型获取文件内容或者文件链接			
+		String status = "ok";
+		String content = "";
+		String fileSuffix = getFileSuffix(name);
+		if(isText(fileSuffix))
+		{
+			content = readRealDocContent(repos, tmpDoc);
+		}
+		else if(isOffice(fileSuffix) || isPdf(fileSuffix))
+		{
+			if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
 			{
-				docSysErrorLog("压缩文件中 " + name + " 不存在！", rt);
-				writeJson(rt, response);			
-				return;
+				content = readOfficeContent(repos, tmpDoc);
 			}
-			if(entry.isDirectory())
+		}
+		else
+		{
+			if(isBinaryFile(repos, tmpDoc))
 			{
-				docSysErrorLog(name + " 是目录！", rt);
-				writeJson(rt, response);			
-				return;				
-			}
-			
-			//如果压缩文件有变化则解压文件到临时目录
-			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
-			File dir = new File(tmpLocalRootPath + path);
-			if(dir.exists() == false)
-			{
-				dir.mkdirs();
-			}
-			
-			//Dump to localFile
-			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + path + name) == false)
-			{
-				docSysErrorLog("解压文件 " + name + " 失败！", rt);
-				writeJson(rt, response);			
-				return;
-			}
-			
-			//buildDocInfo
-			Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
-			
-			//根据文件类型获取文件内容或者文件链接			
-			String status = "ok";
-			String content = "";
-			String fileSuffix = getFileSuffix(name);
-			if(isText(fileSuffix))
-			{
-				content = readRealDocContent(repos, tmpDoc);
-			}
-			else if(isOffice(fileSuffix) || isPdf(fileSuffix))
-			{
-				if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
-				{
-					content = readOfficeContent(repos, tmpDoc);
-				}
+				status="isBinary";
 			}
 			else
 			{
-				if(isBinaryFile(repos, tmpDoc))
-				{
-					status="isBinary";
-				}
-				else
-				{
-					content = readRealDocContent(repos, tmpDoc);
-				}
-			}
-			
-			if(content == null)
-			{
-				content = "";
-			}
-			
-			writeText(status+content, response);			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			docSysErrorLog("压缩文件信息获取异常", rt);
-			writeJson(rt, response);
-		} finally {
-			if(zipFile != null)
-			{
-				try {
-					zipFile.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				content = readRealDocContent(repos, tmpDoc);
 			}
 		}
+		
+		if(content == null)
+		{
+			content = "";
+		}
+		
+		writeText(status+content, response);			
 	}
 	
 	private boolean dumpZipEntryToFile(ZipFile zipFile, ZipEntry entry, String filePath) {
