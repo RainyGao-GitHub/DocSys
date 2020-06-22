@@ -2394,6 +2394,11 @@ public class BaseFunction{
 		return pos == name.length();
 	}
 	
+	protected boolean isWarFile(String name) {
+		int pos = name.toLowerCase().lastIndexOf(".war") + 4;
+		return pos == name.length();
+	}
+	
 	protected boolean isCompressFile(String name) {
 		String fileSuffix = getFileSuffix(name);
 		return isZip(fileSuffix);
@@ -2409,6 +2414,7 @@ public class BaseFunction{
 		switch(fileSuffix)
 		{
 		case "zip":
+		case "war":
 		case "rar":
 		case "7z":
 		case "tgz":
