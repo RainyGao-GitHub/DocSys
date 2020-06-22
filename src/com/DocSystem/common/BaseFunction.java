@@ -2404,6 +2404,66 @@ public class BaseFunction{
 		return isZip(fileSuffix);
 	}
 	
+	protected String getCompressFileType(String name)
+	{
+		String fileSuffix = getFileSuffix(name);
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return null;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "zip":
+		case "war":
+		case "rar":
+		case "7z":
+		case "tgz":
+		case "txz":
+		case "tbz2":
+			return fileSuffix;
+		case "gz":
+			int pos = name.toLowerCase().lastIndexOf(".tgz") + 4;
+			if(pos == name.length())
+			{
+				return "tgz";
+			}	
+			pos = name.toLowerCase().lastIndexOf(".tar.gz") + 7;
+			if(pos == name.length())
+			{
+				return "tar.gz";
+			}
+			return fileSuffix;
+		case "xz":
+			int pos1 = name.toLowerCase().lastIndexOf(".txz") + 4;
+			if(pos1 == name.length())
+			{
+				return "txz";
+			}	
+			pos1 = name.toLowerCase().lastIndexOf(".tar.xz") + 7;
+			if(pos1 == name.length())
+			{
+				return "tar.xz";
+			}
+			return fileSuffix;
+		case "bz2":
+			int pos2 = name.toLowerCase().lastIndexOf(".tbz2") + 5;
+			if(pos2 == name.length())
+			{
+				return "tgz";
+			}	
+			pos2 = name.toLowerCase().lastIndexOf(".tar.bz2") + 8;
+			if(pos2 == name.length())
+			{
+				return "tar.bz2";
+			}
+			return fileSuffix;
+		default:
+			return null;
+		}
+	}
+	
 	protected static boolean isZip(String fileSuffix) {
 		if(fileSuffix == null)
 		{
