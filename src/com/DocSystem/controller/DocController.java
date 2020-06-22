@@ -3269,70 +3269,26 @@ public class DocController extends BaseController{
 
 		Doc rootDoc = buildBasicDoc(reposId, null, null, rootPath, rootName, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		//判断文件在压缩文件中的类型
-		String relativePath = getZipRelativePath(path, rootPath + rootName + "/");
-
-		ZipFile zipFile = null;
-		try {
-			zipFile = new ZipFile(new File(localRootPath + rootDoc.getPath() + rootDoc.getName()));
-			ZipEntry entry = zipFile.getEntry(relativePath + name);
-			if(entry == null)
-			{
-				docSysErrorLog("压缩文件中 " + name + " 不存在！", rt);
-				writeJson(rt, response);			
-				return;
-			}
-			if(entry.isDirectory())
-			{
-				docSysErrorLog(name + " 是目录！", rt);
-				writeJson(rt, response);			
-				return;				
-			}
-			
-			//如果压缩文件有变化则解压文件到临时目录
-			String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
-			File dir = new File(tmpLocalRootPath + path);
-			if(dir.exists() == false)
-			{
-				dir.mkdirs();
-			}
-			
-			//Dump to localFile
-			if(dumpZipEntryToFile(zipFile, entry, tmpLocalRootPath + path + name) == false)
-			{
-				docSysErrorLog("解压文件 " + name + " 失败！", rt);
-				writeJson(rt, response);			
-				return;
-			}
-			
-			//buildDocInfo
-			Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
-			
-			String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
-			if(fileLink == null)
-			{
-				System.out.println("getZipDocFileLink() buildDocFileLink failed");
-				return;
-			}
-			
-			rt.setData(fileLink);
-			writeJson(rt, response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			docSysErrorLog("压缩文件信息获取异常", rt);
-			writeJson(rt, response);
-		} finally {
-			if(zipFile != null)
-			{
-				try {
-					zipFile.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+		//build tmpDoc
+		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
+		File dir = new File(tmpLocalRootPath + path);
+		if(dir.exists() == false)
+		{
+			dir.mkdirs();
 		}
+		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
+		
+		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
+		
+		String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
+		if(fileLink == null)
+		{
+			System.out.println("getZipDocFileLink() buildDocFileLink failed");
+			return;
+		}
+			
+		rt.setData(fileLink);
+		writeJson(rt, response);
 	}
 
 	@RequestMapping("/getDocFileLink.do")
@@ -5737,7 +5693,7 @@ public class DocController extends BaseController{
 		return parentCompressDoc;
 	}
 
-	private boolean extractEntryFromCompressFile(Repos repos, Doc rootDoc, Doc parentCompressDoc, Doc zipDoc) 
+	private boolean extractEntryFromCompressFile(Repos repos, Doc rootDoc, Doc parentCompressDoc, Doc doc) 
 	{
 		parentCompressDoc = checkAndGetRealParentCompressDoc(repos, rootDoc, parentCompressDoc);
 		if(parentCompressDoc == null)
@@ -5746,8 +5702,7 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		String name = parentCompressDoc.getName();
-		String compressFileType = getCompressFileType(rootDoc.getName());
+		String compressFileType = getCompressFileType(parentCompressDoc.getName());
 		if(compressFileType == null)
 		{
 			System.out.println("extractEntryFromCompressFile() " + rootDoc.getName() + " 不是压缩文件！");
@@ -5758,28 +5713,28 @@ public class DocController extends BaseController{
 		{
 		case "zip":
 		case "war":
-			return extractEntryFromZipFile(repos, rootDoc, parentCompressDoc, zipDoc);
+			return extractEntryFromZipFile(repos, rootDoc, parentCompressDoc, doc);
 		case "rar":
-			return extractEntryFromRarFile(repos, rootDoc, parentCompressDoc, zipDoc);			
+			return extractEntryFromRarFile(repos, rootDoc, parentCompressDoc, doc);			
 		case "7z":
-			return extractEntryFrom7zFile(repos, rootDoc, parentCompressDoc, zipDoc);			
+			return extractEntryFrom7zFile(repos, rootDoc, parentCompressDoc, doc);			
 		case "tar":
-			return extractEntryFromTarFile(repos, rootDoc, parentCompressDoc, zipDoc);
+			return extractEntryFromTarFile(repos, rootDoc, parentCompressDoc, doc);
 		case "tgz":
 		case "tar.gz":
-			return extractEntryFromTgzFile(repos, rootDoc, parentCompressDoc, zipDoc);		
+			return extractEntryFromTgzFile(repos, rootDoc, parentCompressDoc, doc);		
 		case "txz":
 		case "tar.xz":
-			return extractEntryFromTxzFile(repos, rootDoc, parentCompressDoc, zipDoc);			
+			return extractEntryFromTxzFile(repos, rootDoc, parentCompressDoc, doc);			
 		case "tbz2":
 		case "tar.bz2":
-			return extractEntryFromTarBz2File(repos, rootDoc, parentCompressDoc, zipDoc);					
+			return extractEntryFromTarBz2File(repos, rootDoc, parentCompressDoc, doc);					
 		case "gz":
-			return extractEntryFromGzFile(repos, rootDoc, parentCompressDoc, zipDoc);						
+			return extractEntryFromGzFile(repos, rootDoc, parentCompressDoc, doc);						
 		case "xz":
-			return extractEntryFromXzFile(repos, rootDoc, parentCompressDoc, zipDoc);
+			return extractEntryFromXzFile(repos, rootDoc, parentCompressDoc, doc);
 		case "bz2":
-			return extractEntryFromBz2File(repos, rootDoc, parentCompressDoc, zipDoc);
+			return extractEntryFromBz2File(repos, rootDoc, parentCompressDoc, doc);
 		}
 		return false;
 	}
