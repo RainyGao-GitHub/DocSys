@@ -5647,13 +5647,13 @@ public class DocController extends BaseController{
 	//注意：该接口需要返回真正的parentZipDoc
 	private Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 
 	{
-		System.out.println("checkAndExtractZipDoc() " + doc.getPath() + doc.getName() + " rootDoc:" + rootDoc.getPath() + rootDoc.getName());
+		System.out.println("checkAndExtractEntryFromCompressDoc() " + doc.getPath() + doc.getName() + " rootDoc:" + rootDoc.getPath() + rootDoc.getName());
 		
 		Doc parentCompressDoc = getParentCompressDoc(repos, rootDoc, doc);
 		if(parentCompressDoc.getDocId().equals(rootDoc.getDocId()))
 		{	
 			//如果doc的parentCompressDoc是rootDoc，那么直接从rootDoc解压出doc
-			System.out.println("extractZipFile() parentZipDoc of " + doc.getPath() + doc.getName() + " is rootDoc");
+			System.out.println("checkAndExtractEntryFromCompressDoc() parentZipDoc of " + doc.getPath() + doc.getName() + " is rootDoc");
 			parentCompressDoc = rootDoc;
 		}
 		else
@@ -6111,7 +6111,7 @@ public class DocController extends BaseController{
 		}
 		
 	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
-        String expEntryPath = relativePath + zipDoc.getName();
+        String expEntryPath = "./" + relativePath + zipDoc.getName();
         
         FileInputStream  fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
@@ -6356,8 +6356,8 @@ public class DocController extends BaseController{
 		}
 		
 	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
-        String expEntryPath = relativePath + zipDoc.getName();
-	    
+        String expEntryPath = (relativePath + zipDoc.getName()).replace("/", "\\");
+        
 		Archive archive = null;
         OutputStream outputStream = null;
         try {
