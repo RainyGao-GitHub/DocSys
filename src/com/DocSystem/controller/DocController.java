@@ -6132,8 +6132,10 @@ public class DocController extends BaseController{
             {
             	String subEntryPath = entry.getName();
             	//System.out.println("extractEntryFromTgzFile subEntry:" + subEntryPath);
-            	if(subEntryPath.equals(expEntryPath))
-            	{	                
+            	if(subEntryPath.equals(expEntryPath) || subEntryPath.equals(expEntryPath.substring(2)))
+            	{	  
+            		System.out.println("extractEntryFromTgzFile subEntry:" + subEntryPath);
+            		System.out.println("extractEntryFromTgzFile subEntry:" + doc.getLocalRootPath() + doc.getPath() + doc.getName());
 	            	if(entry.isDirectory())
 	            	{
 	            		createDir(doc.getLocalRootPath() + doc.getPath() + doc.getName()); // 创建子目录
