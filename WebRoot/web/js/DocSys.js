@@ -807,6 +807,7 @@ function isZip(suffix)
 	}
 	var fileTypeMap = {
 			zip : true,
+			war : true,
 			rar : true,
 			"7z" : true,
 			gz : true,
