@@ -5060,7 +5060,7 @@ public class DocController extends BaseController{
 			return null;
 		}
 		
-		if(isZipFile(rootDoc.getName()))
+		if(isZipFile(rootDoc.getName()) || isWarFile(rootDoc.getName()))
 		{
 			return getSubDocListForZip(repos, rootDoc, path, name, rt);
 		}
@@ -5149,7 +5149,7 @@ public class DocController extends BaseController{
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
 		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
-		if(isZipFile(subDoc.getName()))
+		if(isCompressFile(subDoc.getName()))
 		{
 			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
 		}
@@ -5166,7 +5166,7 @@ public class DocController extends BaseController{
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
 		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
-		if(isZipFile(subDoc.getName()))
+		if(isCompressFile(subDoc.getName()))
 		{
 			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
 		}
@@ -5183,7 +5183,7 @@ public class DocController extends BaseController{
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
 		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
-		if(isZipFile(subDoc.getName()))
+		if(isCompressFile(subDoc.getName()))
 		{
 			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
 		}
@@ -5752,7 +5752,7 @@ public class DocController extends BaseController{
 		}
 		
 		String name = parentCompressDoc.getName();
-		if(isZipFile(name))
+		if(isZipFile(name) || isWarFile(name))
 		{
 			return extractEntryFromZipFile(repos, rootDoc, parentCompressDoc, zipDoc);
 		}
