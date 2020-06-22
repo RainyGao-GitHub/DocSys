@@ -5158,7 +5158,7 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForXz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		System.out.println("getSubDocListForXz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		System.out.println("getSubDocListForXz() path:" + path + " name:" + name);
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
 		System.out.println("getSubDocListForXz() zipFilePath:" + zipFilePath);
 		
@@ -5668,7 +5668,7 @@ public class DocController extends BaseController{
 		{
 			String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
 			System.out.println("getZipSubDocList relativePath: " + relativePath);
-			subDocList = getZipSubDocList(repos, rootDoc, relativePath, name, rt);
+			subDocList = getZipSubDocList(repos, rootDoc, path, name, rt);
 		}
 		else
 		{
@@ -5685,7 +5685,7 @@ public class DocController extends BaseController{
 				zipDoc.setLocalRootPath(tmpLocalRootPath);
 				checkAndExtractEntryFromCompressDoc(repos, rootDoc, zipDoc);
 			}	
-			subDocList = getZipSubDocList(repos, zipDoc, null, null, rt);
+			subDocList = getZipSubDocList(repos, zipDoc, path, name, rt);
 		}	
 		
 		if(subDocList == null)
