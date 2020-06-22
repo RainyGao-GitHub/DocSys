@@ -5274,6 +5274,8 @@ public class DocController extends BaseController{
                 }
                 //tgz文件中的name可能带./需要预处理
                 String entryPath = entry.getName();
+                System.out.println("subEntry:" + entryPath);
+                
                 if(entryPath.indexOf("./") == 0)
                 {
                 	if(entryPath.length() == 2)
@@ -5647,13 +5649,13 @@ public class DocController extends BaseController{
 	//注意：该接口需要返回真正的parentZipDoc
 	private Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 
 	{
-		System.out.println("checkAndExtractEntryFromCompressDoc() " + doc.getPath() + doc.getName() + " rootDoc:" + rootDoc.getPath() + rootDoc.getName());
-		
+		System.out.println("checkAndExtractEntryFromCompressDoc() rootDoc:" + rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName());
+		System.out.println("checkAndExtractEntryFromCompressDoc() doc:" + doc.getLocalRootPath() + doc.getPath() + doc.getName());
 		Doc parentCompressDoc = getParentCompressDoc(repos, rootDoc, doc);
 		if(parentCompressDoc.getDocId().equals(rootDoc.getDocId()))
 		{	
 			//如果doc的parentCompressDoc是rootDoc，那么直接从rootDoc解压出doc
-			System.out.println("checkAndExtractEntryFromCompressDoc() parentZipDoc of " + doc.getPath() + doc.getName() + " is rootDoc");
+			System.out.println("checkAndExtractEntryFromCompressDoc() parentCompressDoc:" + parentCompressDoc.getPath() + parentCompressDoc.getName() + " is rootDoc");
 			parentCompressDoc = rootDoc;
 		}
 		else
@@ -6128,11 +6130,9 @@ public class DocController extends BaseController{
             while((entry = tarIn.getNextEntry()) != null)
             {
             	String subEntryPath = entry.getName();
+            	System.out.println("subEntry:" + subEntryPath);
             	if(subEntryPath.equals(expEntryPath))
-            	{
-	            	
-	            	System.out.println("subEntry:" + entry.getName());
-	                
+            	{	                
 	            	if(entry.isDirectory())
 	            	{
 	            		createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
