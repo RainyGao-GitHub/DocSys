@@ -5274,7 +5274,7 @@ public class DocController extends BaseController{
                 }
                 //tgz文件中的name可能带./需要预处理
                 String entryPath = entry.getName();
-                System.out.println("subEntry:" + entryPath);
+                //System.out.println("subEntry:" + entryPath);
                 
                 if(entryPath.indexOf("./") == 0)
                 {
@@ -5285,7 +5285,7 @@ public class DocController extends BaseController{
                 	entryPath = entryPath.substring(2);
                 }
 				String subDocPath = rootPath + entryPath;
-				System.out.println("subDoc: " + subDocPath);
+				//System.out.println("subDoc: " + subDocPath);
 				
 				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
@@ -6065,9 +6065,9 @@ public class DocController extends BaseController{
 	                    }
 	                    out.flush();
 	                }
+	            	ret = true;
+	            	break;
             	}
-            	ret = true;
-            	break;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -6095,25 +6095,26 @@ public class DocController extends BaseController{
         return ret;
 	}
 
-	private boolean extractEntryFromTgzFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
+	private boolean extractEntryFromTgzFile(Repos repos, Doc rootDoc, Doc parentCompressDoc, Doc doc) 
 	{
         boolean ret = false;
-		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		String parentZipFilePath = parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName();
 		
         File file = new File(parentZipFilePath);
 		if(file.exists() == false)
 		{
-			System.out.println("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
+			System.out.println("extractEntryFromTgzFile " + parentZipFilePath + " 不存在！");
 			return ret;
 		}
 		else if(file.isDirectory())
 		{
-			System.out.println("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
+			System.out.println("extractEntryFromTgzFile " + parentZipFilePath + " 是目录！");
 			return ret;
 		}
 		
-	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
-        String expEntryPath = "./" + relativePath + zipDoc.getName();
+	    String relativePath = getZipRelativePath(doc.getPath(), parentCompressDoc.getPath() + parentCompressDoc.getName() + "/");
+        String expEntryPath = "./" + relativePath + doc.getName();
+    	System.out.println("extractEntryFromTgzFile expEntryPath:" + expEntryPath);
         
         FileInputStream  fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
@@ -6130,16 +6131,16 @@ public class DocController extends BaseController{
             while((entry = tarIn.getNextEntry()) != null)
             {
             	String subEntryPath = entry.getName();
-            	System.out.println("subEntry:" + subEntryPath);
+            	System.out.println("extractEntryFromTgzFile subEntry:" + subEntryPath);
             	if(subEntryPath.equals(expEntryPath))
             	{	                
 	            	if(entry.isDirectory())
 	            	{
-	            		createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
+	            		createDir(doc.getLocalRootPath() + doc.getPath() + doc.getName()); // 创建子目录
 	            	}
 	            	else
 	            	{ 
-	            		File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	            		File tempFile = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
 	        			File parent = tempFile.getParentFile();
 	        			if (!parent.exists()) {
 	        				parent.mkdirs();
@@ -6154,9 +6155,9 @@ public class DocController extends BaseController{
 	                    }
 	                    out.flush();
 	                }
+	            	ret = true;
+	            	break;
             	}
-            	ret = true;
-            	break;
             }
         } catch (IOException e) {
             e.printStackTrace();
