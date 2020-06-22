@@ -5681,7 +5681,9 @@ public class DocController extends BaseController{
 			else
 			{
 				//检查zipDoc是否已存在并解压（如果是rootDoc不需要解压，否则需要解压）
-				checkAndExtractZipDoc(repos, rootDoc, zipDoc);
+				String tmpLocalRootPath = getReposTmpPathForDoc(repos, zipDoc);	
+				zipDoc.setLocalRootPath(tmpLocalRootPath);
+				checkAndExtractEntryFromCompressDoc(repos, rootDoc, zipDoc);
 			}	
 			subDocList = getZipSubDocList(repos, zipDoc, null, null, rt);
 		}	
@@ -5698,79 +5700,106 @@ public class DocController extends BaseController{
 	}
 
 	//注意：该接口需要返回真正的parentZipDoc
-	private Doc checkAndExtractZipDoc(Repos repos, Doc rootDoc, Doc zipDoc) 
+	private Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 
 	{
-		System.out.println("checkAndExtractZipDoc() " + zipDoc.getPath() + zipDoc.getName() + " rootDoc:" + rootDoc.getPath() + rootDoc.getName());
+		System.out.println("checkAndExtractZipDoc() " + doc.getPath() + doc.getName() + " rootDoc:" + rootDoc.getPath() + rootDoc.getName());
 		
-		Doc parentZipDoc = getParentCompressDoc(repos, rootDoc, zipDoc);
-		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
-		{
-			System.out.println("extractZipFile() parentZipDoc of " + zipDoc.getPath() + zipDoc.getName() + " is rootDoc");
-			parentZipDoc = rootDoc;
-			//printObject("parentZipDoc", parentZipDoc);
+		Doc parentCompressDoc = getParentCompressDoc(repos, rootDoc, doc);
+		if(parentCompressDoc.getDocId().equals(rootDoc.getDocId()))
+		{	
+			//如果doc的parentCompressDoc是rootDoc，那么直接从rootDoc解压出doc
+			System.out.println("extractZipFile() parentZipDoc of " + doc.getPath() + doc.getName() + " is rootDoc");
+			parentCompressDoc = rootDoc;
 		}
 		else
 		{
-			File parentFile = new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName());
+			//如果doc的parentCompressDoc不存在，那么有两种可能：没有被解压出来，或者是目录（但尾缀是压缩文件尾缀）
+			File parentFile = new File(parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName());
 			if(parentFile.exists() == false)
 			{
-				parentZipDoc = checkAndExtractZipDoc(repos, rootDoc, parentZipDoc);				
+				//此时无法区分该parentCompressDoc是否是目录，只能将其解压出来，然后让extractEntryFromCompressFile来找到真正的parentCompressDoc
+				checkAndExtractEntryFromCompressDoc(repos, rootDoc, parentCompressDoc);				
 			}
 			else if(parentFile.isDirectory())
 			{
-				parentZipDoc = checkAndExtractZipDoc(repos, rootDoc, parentZipDoc);
+				//表明parentCompressDoc是目录，因此需要继续向上找到真正的parentCompressDoc
+				parentCompressDoc = checkAndExtractEntryFromCompressDoc(repos, rootDoc, parentCompressDoc);
 			}
 		}
 		
-		//解压zipDoc (parentZipDoc必须已存在)
-		extractEntryFromCompressFile(repos, rootDoc, parentZipDoc, zipDoc);
-		return parentZipDoc;
+		//解压zipDoc (parentCompressDoc必须已存在，无论是目录还是文件，如果是目录的话则继续向上查找，但此时肯定都存在)
+		extractEntryFromCompressFile(repos, rootDoc, parentCompressDoc, doc);
+		return parentCompressDoc;
 	}
 
-	private boolean extractEntryFromCompressFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) {
-		String name = parentZipDoc.getName();
-
+	private boolean extractEntryFromCompressFile(Repos repos, Doc rootDoc, Doc parentCompressDoc, Doc zipDoc) 
+	{
+		parentCompressDoc = checkAndGetRealParentCompressDoc(repos, rootDoc, parentCompressDoc);
+		if(parentCompressDoc == null)
+		{
+			return false;
+		}
+		
+		String name = parentCompressDoc.getName();
 		if(isZipFile(name))
 		{
-			return extractEntryFromZipFile(repos, rootDoc, parentZipDoc, zipDoc);
+			return extractEntryFromZipFile(repos, rootDoc, parentCompressDoc, zipDoc);
 		}
 		else if(isRarFile(name))
 		{
-			return extractEntryFromRarFile(repos, rootDoc, parentZipDoc, zipDoc);			
+			return extractEntryFromRarFile(repos, rootDoc, parentCompressDoc, zipDoc);			
 		}
 		else if(is7zFile(name))
 		{
-			return extractEntryFrom7zFile(repos, rootDoc, parentZipDoc, zipDoc);			
+			return extractEntryFrom7zFile(repos, rootDoc, parentCompressDoc, zipDoc);			
 		}
 		else if(isTarFile(name))
 		{
-			return extractEntryFromTarFile(repos, rootDoc, parentZipDoc, zipDoc);
+			return extractEntryFromTarFile(repos, rootDoc, parentCompressDoc, zipDoc);
 		}
 		else if(isTgzFile(name))
 		{
-			return extractEntryFromTgzFile(repos, rootDoc, parentZipDoc, zipDoc);		
+			return extractEntryFromTgzFile(repos, rootDoc, parentCompressDoc, zipDoc);		
 		}
 		else if(isTxzFile(name))
 		{
-			return extractEntryFromTxzFile(repos, rootDoc, parentZipDoc, zipDoc);			
+			return extractEntryFromTxzFile(repos, rootDoc, parentCompressDoc, zipDoc);			
 		}
 		else if(isTarBz2File(name))
 		{
-			return extractEntryFromTarBz2File(repos, rootDoc, parentZipDoc, zipDoc);						
+			return extractEntryFromTarBz2File(repos, rootDoc, parentCompressDoc, zipDoc);						
 		}
 		else if(isGzFile(name))
 		{
-			return extractEntryFromGzFile(repos, rootDoc, parentZipDoc, zipDoc);					
+			return extractEntryFromGzFile(repos, rootDoc, parentCompressDoc, zipDoc);					
 		}
 		else if(isXzFile(name))
 		{
-			return extractEntryFromXzFile(repos, rootDoc, parentZipDoc, zipDoc);	
+			return extractEntryFromXzFile(repos, rootDoc, parentCompressDoc, zipDoc);	
 		}
 		else if(isBz2File(name))
 		{
-			return extractEntryFromBz2File(repos, rootDoc, parentZipDoc, zipDoc);
+			return extractEntryFromBz2File(repos, rootDoc, parentCompressDoc, zipDoc);
 		}
 		return false;
+	}
+
+	private Doc checkAndGetRealParentCompressDoc(Repos repos, Doc rootDoc, Doc parentCompressDoc) {
+		File parentFile = new File(parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName());
+		if(parentFile.exists() == false)
+		{
+			System.out.println("extractEntryFromCompressFile() parentCompressDoc 不存在！");
+			printObject("extractEntryFromCompressFile() parentCompressDoc:",parentCompressDoc);
+			return null;
+		}
+		
+		if(parentFile.isDirectory())
+		{
+			System.out.println("extractEntryFromCompressFile() parentCompressDoc 是目录，向上层查找realParentCompressDoc！");
+			Doc parentParentCompressDoc = getParentCompressDoc(repos, rootDoc, parentCompressDoc);
+			return checkAndGetRealParentCompressDoc(repos, rootDoc, parentParentCompressDoc);
+		}
+		return parentCompressDoc;
 	}
 
 	private boolean extractEntryFromBz2File(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
@@ -5994,7 +6023,13 @@ public class DocController extends BaseController{
 	                }
 	                else
 	                {
-	                    fos = new FileOutputStream(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	            		File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	        			File parent = tempFile.getParentFile();
+	        			if (!parent.exists()) {
+	        				parent.mkdirs();
+	        			}
+	        			
+	                    fos = new FileOutputStream(tempFile);
 	                    int count;
 	                    byte data[] = new byte[2048];
 	                    while ((count = tis.read(data)) != -1) {
@@ -6074,9 +6109,13 @@ public class DocController extends BaseController{
 	            	}
 	            	else
 	            	{ 
-	            		// 是文件
-	                    File tempFIle = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-	                    out = new FileOutputStream(tempFIle);
+	            		File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	        			File parent = tempFile.getParentFile();
+	        			if (!parent.exists()) {
+	        				parent.mkdirs();
+	        			}
+	        			
+	                    out = new FileOutputStream(tempFile);
 	                    int len =0;
 	                    byte[] b = new byte[2048];
 	
@@ -6161,9 +6200,13 @@ public class DocController extends BaseController{
 	            	}
 	            	else
 	            	{ 
-	            		// 是文件
-	                    File tempFIle = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-	                    out = new FileOutputStream(tempFIle);
+	            		File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	        			File parent = tempFile.getParentFile();
+	        			if (!parent.exists()) {
+	        				parent.mkdirs();
+	        			}
+	        			
+	                    out = new FileOutputStream(tempFile);
 	                    int len =0;
 	                    byte[] b = new byte[2048];
 	
@@ -6247,7 +6290,13 @@ public class DocController extends BaseController{
 	                }
 	                else
 	                {
-	                    fos = new FileOutputStream(new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()));
+	                	File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	        			File parent = tempFile.getParentFile();
+	        			if (!parent.exists()) {
+	        				parent.mkdirs();
+	        			}
+	        			
+	                    fos = new FileOutputStream(tempFile);
 	                    int count;
 	                    byte data[] = new byte[2048];
 	                    while ((count = tarInputStream.read(data)) != -1) {
@@ -6316,7 +6365,13 @@ public class DocController extends BaseController{
 	                }
 	            	else
 	            	{
-	                    outputStream = new FileOutputStream(new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()));
+	            		File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	        			File parent = tempFile.getParentFile();
+	        			if (!parent.exists()) {
+	        				parent.mkdirs();
+	        			}
+	        			
+	                    outputStream = new FileOutputStream(tempFile);
 	                    int len = 0;
 	                    byte[] b = new byte[2048];
 	                    while((len = sevenZFile.read(b)) != -1){
