@@ -5338,8 +5338,19 @@ public class DocController extends BaseController{
                 if( entry == null){
                     break;
                 }
-				String subDocPath = rootPath + entry.getName();
+                //tgz文件中的name可能带./需要预处理
+                String entryPath = entry.getName();
+                if(entryPath.indexOf("./") == 0)
+                {
+                	if(entryPath.length() == 2)
+                	{
+                		continue;
+                	}
+                	entryPath = entryPath.substring(2);
+                }
+				String subDocPath = rootPath + entryPath;
 				System.out.println("subDoc: " + subDocPath);
+				
 				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
 				
