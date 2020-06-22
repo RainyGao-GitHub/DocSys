@@ -6131,7 +6131,7 @@ public class DocController extends BaseController{
             while((entry = tarIn.getNextEntry()) != null)
             {
             	String subEntryPath = entry.getName();
-            	System.out.println("extractEntryFromTgzFile subEntry:" + subEntryPath);
+            	//System.out.println("extractEntryFromTgzFile subEntry:" + subEntryPath);
             	if(subEntryPath.equals(expEntryPath))
             	{	                
 	            	if(entry.isDirectory())
