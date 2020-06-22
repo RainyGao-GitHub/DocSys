@@ -5060,44 +5060,38 @@ public class DocController extends BaseController{
 			return null;
 		}
 		
-		if(isZipFile(rootDoc.getName()) || isWarFile(rootDoc.getName()))
+		String compressFileType = getCompressFileType(rootDoc.getName());
+		if(compressFileType == null)
 		{
+			System.out.println("getZipSubDocList() " + rootDoc.getName() + " 不是压缩文件！");
+			return null;
+		}
+		
+		switch(compressFileType)
+		{
+		case "zip":
+		case "war":
 			return getSubDocListForZip(repos, rootDoc, path, name, rt);
-		}
-		else if(isRarFile(rootDoc.getName()))
-		{
+		case "rar":
 			return getSubDocListForRar(repos, rootDoc, path, name, rt);			
-		}
-		else if(is7zFile(rootDoc.getName()))
-		{
+		case "7z":
 			return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
-		}
-		else if(isTarFile(rootDoc.getName()))
-		{
+		case "tar":
 			return getSubDocListForTar(repos, rootDoc, path, name, rt);	
-		}
-		else if(isTgzFile(rootDoc.getName()))
-		{
+		case "tgz":
+		case "tar.gz":
 			return getSubDocListForTgz(repos, rootDoc, path, name, rt);			
-		}
-		else if(isTxzFile(rootDoc.getName()))
-		{
+		case "txz":
+		case "tar.xz":
 			return getSubDocListForTxz(repos, rootDoc, path, name, rt);			
-		}
-		else if(isTarBz2File(rootDoc.getName()))
-		{
+		case "tbz2":
+		case "tar.bz2":
 			return getSubDocListForTarBz2(repos, rootDoc, path, name, rt);						
-		}
-		else if(isGzFile(rootDoc.getName()))
-		{
+		case "gz":
 			return getSubDocListForGz(repos, rootDoc, path, name, rt);						
-		}
-		else if(isXzFile(rootDoc.getName()))
-		{
+		case "xz":
 			return getSubDocListForXz(repos, rootDoc, path, name, rt);	
-		}
-		else if(isBz2File(rootDoc.getName()))
-		{
+		case "bz2":
 			return getSubDocListForBz2(repos, rootDoc, path, name, rt);	
 		}
 		return null;
@@ -5748,48 +5742,43 @@ public class DocController extends BaseController{
 		parentCompressDoc = checkAndGetRealParentCompressDoc(repos, rootDoc, parentCompressDoc);
 		if(parentCompressDoc == null)
 		{
+			System.out.println("extractEntryFromCompressFile() " + parentCompressDoc + " is null");
 			return false;
 		}
 		
 		String name = parentCompressDoc.getName();
-		if(isZipFile(name) || isWarFile(name))
+		String compressFileType = getCompressFileType(rootDoc.getName());
+		if(compressFileType == null)
 		{
+			System.out.println("extractEntryFromCompressFile() " + rootDoc.getName() + " 不是压缩文件！");
+			return false;
+		}
+		
+		switch(compressFileType)
+		{
+		case "zip":
+		case "war":
 			return extractEntryFromZipFile(repos, rootDoc, parentCompressDoc, zipDoc);
-		}
-		else if(isRarFile(name))
-		{
+		case "rar":
 			return extractEntryFromRarFile(repos, rootDoc, parentCompressDoc, zipDoc);			
-		}
-		else if(is7zFile(name))
-		{
+		case "7z":
 			return extractEntryFrom7zFile(repos, rootDoc, parentCompressDoc, zipDoc);			
-		}
-		else if(isTarFile(name))
-		{
+		case "tar":
 			return extractEntryFromTarFile(repos, rootDoc, parentCompressDoc, zipDoc);
-		}
-		else if(isTgzFile(name))
-		{
+		case "tgz":
+		case "tar.gz":
 			return extractEntryFromTgzFile(repos, rootDoc, parentCompressDoc, zipDoc);		
-		}
-		else if(isTxzFile(name))
-		{
+		case "txz":
+		case "tar.xz":
 			return extractEntryFromTxzFile(repos, rootDoc, parentCompressDoc, zipDoc);			
-		}
-		else if(isTarBz2File(name))
-		{
-			return extractEntryFromTarBz2File(repos, rootDoc, parentCompressDoc, zipDoc);						
-		}
-		else if(isGzFile(name))
-		{
-			return extractEntryFromGzFile(repos, rootDoc, parentCompressDoc, zipDoc);					
-		}
-		else if(isXzFile(name))
-		{
-			return extractEntryFromXzFile(repos, rootDoc, parentCompressDoc, zipDoc);	
-		}
-		else if(isBz2File(name))
-		{
+		case "tbz2":
+		case "tar.bz2":
+			return extractEntryFromTarBz2File(repos, rootDoc, parentCompressDoc, zipDoc);					
+		case "gz":
+			return extractEntryFromGzFile(repos, rootDoc, parentCompressDoc, zipDoc);						
+		case "xz":
+			return extractEntryFromXzFile(repos, rootDoc, parentCompressDoc, zipDoc);
+		case "bz2":
 			return extractEntryFromBz2File(repos, rootDoc, parentCompressDoc, zipDoc);
 		}
 		return false;
