@@ -2419,6 +2419,7 @@ public class BaseFunction{
 		case "war":
 		case "rar":
 		case "7z":
+		case "tar":
 		case "tgz":
 		case "txz":
 		case "tbz2":
@@ -2477,6 +2478,7 @@ public class BaseFunction{
 		case "war":
 		case "rar":
 		case "7z":
+		case "tar":
 		case "tgz":
 		case "gz":
 		case "txz":
