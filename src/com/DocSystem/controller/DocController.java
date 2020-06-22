@@ -2263,18 +2263,8 @@ public class DocController extends BaseController{
 		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
 		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		Doc parentZipDoc = getParentCompressDoc(repos, rootDoc, tmpDoc);
-		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
-		{
-			parentZipDoc = rootDoc;
-		}
-		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
-		{
-			parentZipDoc = rootDoc;
-		}
-
-		extractEntryFromCompressFile(repos, rootDoc, parentZipDoc, tmpDoc);
-
+		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
+		
 		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
 		{	
 			JSONObject jobj = new JSONObject();
@@ -2704,13 +2694,7 @@ public class DocController extends BaseController{
 		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
 		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		Doc parentZipDoc = getParentCompressDoc(repos, rootDoc, tmpDoc);
-		if(parentZipDoc.getDocId().equals(rootDoc.getDocId()))
-		{
-			parentZipDoc = rootDoc;
-		}
-		
-		extractEntryFromCompressFile(repos, rootDoc, parentZipDoc, tmpDoc);
+		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
 		//根据文件类型获取文件内容或者文件链接			
 		String status = "ok";
