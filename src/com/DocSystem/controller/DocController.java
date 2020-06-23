@@ -1660,7 +1660,7 @@ public class DocController extends BaseController{
 			String authCode, 
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId);
+		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = null;
@@ -1681,6 +1681,7 @@ public class DocController extends BaseController{
 		}
 		if(reposAccess == null)
 		{
+			docSysErrorLog("非法仓库访问！", rt);
 			writeJson(rt, response);
 			return;	
 		}
@@ -1710,7 +1711,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
 		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
 		
@@ -1720,17 +1721,27 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}/{authCode}", method=RequestMethod.GET)
+	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
-			@PathVariable("authCode") String authCode,
+			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode);
+		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
 		ReposAccess reposAccess = null;
-		if(authCode != null && !authCode.equals("0"))
+		//Convert authCode and shareId same with Non Rest Style request
+		if(authCode.equals("0"))
+		{
+			authCode = null;
+		}
+		if(shareId == 0)
+		{
+			shareId = null;
+		}
+	
+		if(authCode != null)
 		{
 			if(checkAuthCode(authCode, null) == false)
 			{
@@ -1742,10 +1753,12 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
 		}
+		
 		if(reposAccess == null)
 		{
+			docSysErrorLog("非法仓库访问！", rt);
 			writeJson(rt, response);
 			return;	
 		}
@@ -1772,7 +1785,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);		
+		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
 		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
 	}
 	
@@ -2343,6 +2356,8 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		doc.setShareId(shareId);
+		
 		path = doc.getPath();
 		name = doc.getName();
 		
@@ -3404,7 +3419,12 @@ public class DocController extends BaseController{
 			{
 				authCode = "0";
 			}
-			fileLink = "/DocSystem/Doc/downloadDoc/" + encTargetPath +  "/" + encTargetName +"/" + authCode;
+			Integer shareId = doc.getShareId();
+			if(shareId == null)
+			{
+				shareId = 0;
+			}
+			fileLink = "/DocSystem/Doc/downloadDoc/" + encTargetPath +  "/" + encTargetName +"/" + authCode + "/" + shareId;
 		}
 		else
 		{
@@ -3412,6 +3432,10 @@ public class DocController extends BaseController{
 			if(authCode != null)
 			{
 				fileLink += "&authCode=" + authCode;
+			}
+			if(doc.getShareId() != null)
+			{
+				fileLink += "&shareId=" + doc.getShareId();				
 			}
 		}
 		return fileLink;

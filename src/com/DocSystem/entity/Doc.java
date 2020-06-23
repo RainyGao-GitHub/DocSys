@@ -59,6 +59,8 @@ public class Doc  implements Comparable<Doc>{
 	
 	private Integer hitType;
 
+	private Integer shareId;
+
     public Integer getId() {
         return id;
     }
@@ -345,4 +347,12 @@ public class Doc  implements Comparable<Doc>{
     public void setHitType(Integer hitType) {
         this.hitType = hitType;
     }
+
+	public Integer getShareId() {
+        return shareId;
+	}
+	
+	public void setShareId(Integer shareId) {
+        this.shareId = shareId;
+	}
 }
