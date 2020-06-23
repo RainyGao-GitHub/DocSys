@@ -169,7 +169,8 @@ var ZipViewer = (function () {
 		var btn = $("#diyBtn_"+treeNode.id);
 		if (btn) btn.bind("click", function(e){
 			console.log("diyBtn onclick for " + treeNode.name);
-			showZipTreeContextMenu(e, -150, 0);
+			curRightClickedTreeNode = treeNode;
+			showZipTreeContextMenu(e, -20, 5);
 		});
 	}
 	
@@ -177,8 +178,8 @@ var ZipViewer = (function () {
 	{
 		$dd = $('#zipTreeContextMenu');
 		$dd.css({
+				left: e.pageX -360 + xoffset,
 				top: e.pageY - 100 + yoffset,
-				left: e.pageX -385 + xoffset,
 			}).fadeIn(100);
 	}
 	
@@ -205,7 +206,6 @@ var ZipViewer = (function () {
 	function zTreeBeforeRightClick(treeId, treeNode) {
 		console.log("zTreeBeforeRightClick treeId:"+ treeId, treeNode);
 		curRightClickedTreeNode = treeNode;
-		
     	return true;	
 	}
 	
@@ -252,14 +252,18 @@ var ZipViewer = (function () {
 	   return docList;
 	}
   	
-  	function openDoc()
+  	function zipOpenDoc()
   	{
-  		
+  		console.log("zipOpenDoc:", curRightClickedTreeNode);
+	  	if(curRightClickedTreeNode && curRightClickedTreeNode != null)
+  		{
+	  		openDoc(curRightClickedTreeNode, false, false, docInfo.shareId);
+  		}
   	}
   	
-  	function downloadDoc()
+  	function zipDownloadDoc()
   	{
-  		openDoc(curRightClickedTreeNode, true, true);
+  		console.log("zipDownloadDoc:", curRightClickedTreeNode);
   	}
 	
 	//开放给外部的调用接口
@@ -268,10 +272,10 @@ var ZipViewer = (function () {
     		zipViewerPageInit(docInfo);
         },
     	openDoc: function(){
-    		openDoc();
+    		zipOpenDoc();
         },
     	downloadDoc: function(){
-    		downloadDoc();
+    		zipDownloadDoc();
         },
     };
 })();
