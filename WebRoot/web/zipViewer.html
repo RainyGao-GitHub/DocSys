@@ -264,7 +264,14 @@ var ZipViewer = (function () {
   	function zipDownloadDoc()
   	{
   		console.log("zipDownloadDoc:", curRightClickedTreeNode);
+  		getDocFileLink(curRightClickedTreeNode, doDownloadDoc, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
   	}
+	   	
+	function doDownloadDoc(fileLink)
+	{   	
+	 	console.log("doDownloadDoc fileLink: " + fileLink);
+	   	window.location.href = fileLink;
+	}
 	
 	//开放给外部的调用接口
     return {
