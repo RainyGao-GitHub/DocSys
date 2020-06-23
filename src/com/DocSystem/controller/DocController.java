@@ -3329,6 +3329,7 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		doc.setShareId(shareId);
 		path = doc.getPath();
 		name = doc.getName();
 		
