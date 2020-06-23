@@ -119,33 +119,37 @@ var context = context || (function () {
 		$dd = $('#dropdown-' + id);
 		$dd.removeClass('offset');
 		
+		var x = e.pageX + 10;
+		var y = 0;
 		if (typeof options.above == 'boolean' && options.above) {
-			$dd.addClass('dropdown-context-up').css({
-				top: e.pageY - 20 - $('#dropdown-' + id).height(),
-				left: e.pageX - 13
-			}).fadeIn(options.fadeSpeed);
+			y = e.pageY - 20 - $('#dropdown-' + id).height();
 		} else if (typeof options.above == 'string' && options.above == 'auto') {
-			$dd.removeClass('dropdown-context-up');
 			$dd.removeClass('offset');
-
 			var autoH = $dd.height() + 12;
-			
-			if ((e.pageY + autoH) > $('html').height()) {
-				$dd.addClass('dropdown-context-up').css({
-					top: e.pageY - 20 - autoH,
-					left: e.pageX - 13
-				}).fadeIn(options.fadeSpeed);
-			} else {
-				$dd.css({
-					top: e.pageY + 10,
-					left: e.pageX - 13
-				}).fadeIn(options.fadeSpeed);
+			y = e.pageY - 20 - autoH;
+			if ((e.pageY + autoH) > $('html').height()) 
+			{
+			} 
+			else 
+			{
+				y = e.pageY + 10;
 			}
 		}
+		console.log("y" + y);
+		if(y < 0)
+		{
+			y = 0;
+		}
+		
+		$dd.css({
+			top: y,
+			left: x
+		}).fadeIn(options.fadeSpeed);
 	}
 	
 	function showMenuOffset(id,e,xOffset)
 	{
+		
 		var top = e.pageY;
 		var left = e.pageX + xOffset;
 		
@@ -155,30 +159,33 @@ var context = context || (function () {
 		$dd.addClass('offset');
 		
 		var obj;
+		var x = left  + 10;
+		var y = 0;
 		if (typeof options.above == 'boolean' && options.above) {
-			$dd.addClass('dropdown-context-up').css({
-				top: top - 20 - $('#dropdown-' + id).height(),
-				left: left - 13
-			}).fadeIn(options.fadeSpeed);			
+			y = top - 20 - $('#dropdown-' + id).height();
 		} else if (typeof options.above == 'string' && options.above == 'auto') {
-			$dd.removeClass('dropdown-context-up');
-			
 			var autoH = $dd.height() + 12;
-			
-			if ((top + autoH) > $('html').height()) {
-				obj = $dd.addClass('dropdown-context-up').css({
-					top: top - 20 - autoH,
-					left: left - 13
-				});
-				obj.fadeIn(options.fadeSpeed);
-			} else {
-				obj = $dd.css({
-					top: top + 10,
-					left: left - 13
-				});
-				obj.fadeIn(options.fadeSpeed);
+			y = top - 20 - autoH;
+			if ((top + autoH) > $('html').height()) 
+			{
+			} 
+			else 
+			{
+				y = top + 10;
 			}
 		}
+		
+		console.log("y" + y);
+		if(y < 0)
+		{
+			y = 0;
+		}
+		
+		obj = $dd.css({
+			top: y,
+			left: x
+		});
+		obj.fadeIn(options.fadeSpeed);
 	}
 	
 	function show(selector,e,xOffset) {
