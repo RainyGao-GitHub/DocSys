@@ -159,7 +159,7 @@ class UnzipTest
         Archive archive = null;
         OutputStream outputStream = null;
         try {
-            archive = new Archive(file);
+            archive = new Archive(new FileInputStream(file));
             FileHeader fileHeader;
             // 创建输出目录
             createDirectory(targetPath, null);
