@@ -311,11 +311,11 @@ public class BaseController  extends BaseFunction{
 	    		if(file.isDirectory())
 	    		{
 	    			type = 2;
-	    			getFileOrDirSize(file, false);
+	    			size = getFileOrDirSize(file, false);
 	    		}
 	    		else
 	    		{
-	    			getFileOrDirSize(file, true);	    			
+	    			size = getFileOrDirSize(file, true);	    			
 	    		}
 	    		String name = file.getName();
 	    		//System.out.println("getLocalEntryList subFile:" + name);
