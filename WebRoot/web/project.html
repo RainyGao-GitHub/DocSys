@@ -285,13 +285,13 @@
  		                    </li>
  		                    <li><a  href="#">列表</a>
  		                    </li>
- 		                    <li><a  href="#" onclick="sortDocList('createTime')">创建时间</a>
+ 		                    <li><a  href="#" onclick="sortDocList('createTimeR')">创建时间</a>
  		                    </li>
- 		                    <li><a  href="#" onclick="sortDocList('modifyTime')">修改时间</a>
+ 		                    <li><a  href="#" onclick="sortDocList('modifyTimeR')">修改时间</a>
  		                    </li>
  		                    <li><a  href="#" onclick="sortDocList('name')">文件名称</a>
  		                    </li>
- 		                    <li><a  href="#" onclick="sortDocList('size')">文件大小</a>
+ 		                    <li><a  href="#" onclick="sortDocList('sizeR')">文件大小</a>
  		                    </li>
  		                </ul>
          		</div>
@@ -3019,7 +3019,7 @@
  		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
  	}
 	
- 	var gSortType = "type";
+ 	var gSortType = "";
  	function sortDocList(sortType)
  	{
  		gSortType = sortType;
@@ -3065,7 +3065,7 @@
                 path: path,
                 name: name,
                 shareId: gShareId,
-                sort: gSort,
+                sort: gSortType,
             },
             success : function (ret) {
          		console.log("showDocList ret:", ret)
