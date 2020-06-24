@@ -1201,13 +1201,14 @@ public class BaseFunction{
 						for(int i=0; i< sortMap.size(); i++)
 						{
 							String sortType = sortMap.get(i);
+							System.out.println("sortType:" + sortType);
 							if(sortType != null)
 							{
 								diff = getSortDiffBySortType(u1, u2, sortType);
-							}
-							if(diff != 0)
-							{
-								return diff;
+								if(diff != 0)
+								{
+									return diff;
+								}
 							}
 						}
 						return diff;
@@ -1242,11 +1243,12 @@ public class BaseFunction{
 					
 					private HashMap<Integer, String> buildSortMap(String sort) 
 					{
-						String [] sortStrs = sort.split("|");
+						String [] sortStrs = sort.split(" ");
 						HashMap<Integer, String> sortMap = new HashMap<Integer, String>();
 						for(int i=0 ; i< sortStrs.length; i++)
 						{
 							String sortStr = sortStrs[i];
+							System.out.println("sortStr:" + sortStr);
 							if(sortStr != null && !sortStr.isEmpty())
 							{
 								sortMap.put(i, sortStr);
