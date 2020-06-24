@@ -311,17 +311,16 @@ public class BaseController  extends BaseFunction{
 	    		if(file.isDirectory())
 	    		{
 	    			type = 2;
-	    			size = getFileOrDirSize(file, false);
+	    			getFileOrDirSize(file, false);
 	    		}
 	    		else
 	    		{
-	    			size = getFileOrDirSize(file, true);	    			
+	    			getFileOrDirSize(file, true);	    			
 	    		}
 	    		String name = file.getName();
 	    		//System.out.println("getLocalEntryList subFile:" + name);
 	
-	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, file.length(), "");
-	    		subDoc.setSize(file.length());
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "");
 	    		subDoc.setLatestEditTime(file.lastModified());
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryList.add(subDoc);
