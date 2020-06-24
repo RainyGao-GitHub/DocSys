@@ -5396,11 +5396,11 @@ public class DocController extends BaseController{
 		Doc subDoc = null;
 		if (entry.isDirectory()) 
 		{
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 		}
 		else 
 		{
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 			if(isCompressFile(subDoc.getName()))
 			{
 				subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5428,9 +5428,9 @@ public class DocController extends BaseController{
 	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, TarEntry entry) {
 		Doc subDoc = null;
 		if (entry.isDirectory()) {
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 			} else {
-				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 				if(isCompressFile(subDoc.getName()))
 				{
 					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5442,9 +5442,9 @@ public class DocController extends BaseController{
 	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, SevenZArchiveEntry entry) {
 		Doc subDoc = null;
 		if (entry.isDirectory()) {
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 			} else {
-				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 				if(isCompressFile(subDoc.getName()))
 				{
 					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
