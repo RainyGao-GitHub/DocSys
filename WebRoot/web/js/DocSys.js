@@ -986,6 +986,37 @@ function getDocumentType(fileType)
 	return type;
 }
 
+//显示文件详情
+function showDocDetail(node)
+{
+	console.log("showDocDetail node:",node);
+
+	if(!node || node == null)
+	{
+		showErrorMessage("请选择文件！");
+		return;
+	}
+	
+	showDocDetailPanel(node);
+}
+
+function showDocDetailPanel(node)
+{
+	console.log("showDocDetailPanel()");
+	bootstrapQ.dialog({
+			id: 'docDetail',
+			url: 'docDetail.html',
+			title: '详细信息',
+			msg: '页面正在加载，请稍等...',
+            okbtn: "确定",
+              callback: function () {
+            	  docDetailPageInit(node);
+              }
+        },function(){
+        	return true;
+        });	
+}
+
 //弹出对话框操作接口
 function closeBootstrapDialog(id){ 
 	$("#"+id + "div").remove();	//删除全屏遮罩
