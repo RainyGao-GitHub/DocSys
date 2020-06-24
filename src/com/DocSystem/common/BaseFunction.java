@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.hslf.extractor.PowerPointExtractor;
@@ -2129,7 +2130,20 @@ public class BaseFunction{
         	return true;
         }
     }
-    
+	
+    protected long getFileOrDirSize(File file, boolean isFile) {
+		if(isFile)
+		{
+			return file.length();
+		}
+		
+		return getFolderSize(file);
+	}
+
+    protected long getFolderSize(File file) {
+		return FileUtils.sizeOfDirectory(file);
+	}
+	
     //Create Directory
     public boolean createDir(String path){
         File dir=new File(path);
