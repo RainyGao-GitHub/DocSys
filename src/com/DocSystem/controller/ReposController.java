@@ -701,7 +701,7 @@ public class ReposController extends BaseController{
 			String sort,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId);
+		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -752,6 +752,10 @@ public class ReposController extends BaseController{
 					rootDoc.setType(1);
 				}
 				
+				if(sort != null && !sort.isEmpty())
+				{
+					docList = sortDocList(docList, sort);
+				}
 				rt.setData(docList);
 				writeJson(rt, response);			
 				return;				
@@ -793,6 +797,11 @@ public class ReposController extends BaseController{
 		{
 			System.out.println("getSubDocList() [" + doc.getPath() + doc.getName() + "] 是文件");
 			docList.add(tmpDoc);
+			
+			if(sort != null && !sort.isEmpty())
+			{
+				docList = sortDocList(docList, sort);
+			}
 			rt.setData(docList);
 			writeJson(rt, response);			
 			return;			
