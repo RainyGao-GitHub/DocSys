@@ -1228,10 +1228,14 @@ public class BaseFunction{
 							return u1.getSize() - u2.getSize();
 						case "sizeR":
 							return u2.getSize() - u1.getSize();
-						case "date":
+						case "modifyTime":
 							return u1.getLatestEditTime() - u2.getLatestEditTime();
-						case "dateR":
+						case "modifyTimeR":
 							return u2.getLatestEditTime() - u1.getLatestEditTime();
+						case "createTime":
+							return u1.getCreateTime() - u2.getCreateTime();
+						case "createTimeR":
+							return u2.getCreateTime() - u1.getCreateTime();
 						}
 						return 0;
 					}
