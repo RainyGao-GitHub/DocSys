@@ -2,6 +2,8 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -696,6 +698,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getSubDocList.do")
 	public void getSubDocList(Integer vid, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			Integer shareId,
+			String sort,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId);
@@ -816,6 +819,10 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
+			if(sort != null && !sort.isEmpty())
+			{
+				docList = sortDocList(docList, sort);
+			}
 			rt.setData(docList);	
 		}
 		System.out.println("getSubDocList() docList ready");
@@ -832,7 +839,6 @@ public class ReposController extends BaseController{
 			}
 		}).start();
 	}
-	
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,Long docId, Long pid, String path, String name, Integer level, Integer type, 
