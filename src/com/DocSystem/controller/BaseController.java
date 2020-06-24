@@ -34,6 +34,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
+import org.apache.commons.io.FileUtils;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -305,7 +306,17 @@ public class BaseController  extends BaseFunction{
 	    	{
 	    		File file = localFileList[i];
 	    		
-	    		int type = file.isDirectory()? 2:1;
+	    		int type = 1;
+	    		long size = 0;
+	    		if(file.isDirectory())
+	    		{
+	    			type = 2;
+	    			size = getFileOrDirSize(file, false);
+	    		}
+	    		else
+	    		{
+	    			size = getFileOrDirSize(file, true);	    			
+	    		}
 	    		String name = file.getName();
 	    		//System.out.println("getLocalEntryList subFile:" + name);
 	
@@ -322,7 +333,6 @@ public class BaseController  extends BaseFunction{
     		return null;
     	}
 	}
-    	
 
 	protected Integer getSubDocLevel(Doc doc) {
 		if(doc.getLevel() == null)
