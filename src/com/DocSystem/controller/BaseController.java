@@ -307,16 +307,15 @@ public class BaseController  extends BaseFunction{
 	    		File file = localFileList[i];
 	    		
 	    		int type = 1;
-	    		long size = 0;
 	    		if(file.isDirectory())
 	    		{
 	    			type = 2;
-	    			size = getFileOrDirSize(file, false);
 	    		}
-	    		else
-	    		{
-	    			size = getFileOrDirSize(file, true);	    			
-	    		}
+	    		
+	    		//getDirSize的性能太低下，不建议使用
+	    		//long size = getFileOrDirSize(file, file.isFile());
+	    		long size = file.length();
+	    				
 	    		String name = file.getName();
 	    		//System.out.println("getLocalEntryList subFile:" + name);
 	
