@@ -5,6 +5,8 @@
 	<ul id="zipTreeContextMenu" style="display:none" class='dropdown-menu dropdown-context' role='menu'>
 		<li><a onclick='ZipViewer.openDoc()'>打开</a></li> 
 		<li><a onclick='ZipViewer.downloadDoc()'>下载</a></li>
+		<li class="divider"></li>
+		<li><a onclick='ZipViewer.showDocDetail()'>详细信息</a></li>
 	</ul>
 </div>
 
@@ -266,6 +268,12 @@ var ZipViewer = (function () {
   		console.log("zipDownloadDoc:", curRightClickedTreeNode);
   		getDocFileLink(curRightClickedTreeNode, doDownloadDoc, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
   	}
+  	
+  	function zipShowDocDetail()
+  	{
+  		console.log("zipShowDocDetail:", curRightClickedTreeNode);
+  		showDocDetail(curRightClickedTreeNode); 		
+  	}
 	   	
 	function doDownloadDoc(fileLink)
 	{   	
@@ -284,6 +292,10 @@ var ZipViewer = (function () {
     	downloadDoc: function(){
     		zipDownloadDoc();
         },
+        showDocDetail: function()
+        {
+        	zipShowDocDetail();
+        }
     };
 })();
 </script>
