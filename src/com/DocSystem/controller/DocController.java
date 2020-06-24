@@ -5075,7 +5075,7 @@ public class DocController extends BaseController{
         OutputStream outputStream = null;
         List <Doc> subDocList = new ArrayList<Doc>();
         try {
-            archive = new Archive(file);
+            archive = new Archive(new FileInputStream(file));
             FileHeader entry;
             while( (entry = archive.nextFileHeader()) != null){
             	String subDocPath = rootPath + entry.getFileNameW().replace("\\", "/");
@@ -6392,7 +6392,7 @@ public class DocController extends BaseController{
 		Archive archive = null;
         OutputStream outputStream = null;
         try {
-            archive = new Archive(file);
+            archive = new Archive(new FileInputStream(file));
             
             FileHeader fileHeader;
             while( (fileHeader = archive.nextFileHeader()) != null){
