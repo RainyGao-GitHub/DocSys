@@ -16,6 +16,8 @@ import java.net.InetAddress;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1174,6 +1176,86 @@ public class BaseFunction{
 	    return cookieMap;
 	}
 	
+	/***************************文件排序接口*****************************/
+	protected List<Doc> sortDocList(List<Doc> docList, String sort) 
+	{
+		Collections.sort(docList,
+				new Comparator<Doc>() {
+					HashMap<Integer,String> sortMap = buildSortMap(sort);
+			
+					public int compare(Doc u1, Doc u2) {
+						long diff = getSortDiff(u1, u2, sortMap);	//
+						if (diff > 0) 
+						{
+							return 1;
+						}
+						else if (diff < 0) 
+						{
+							return -1;
+						}
+						return 0;
+					}
+
+					private long getSortDiff(Doc u1, Doc u2, HashMap<Integer, String> sortMap) {
+						long diff = 0;
+						for(int i=0; i< sortMap.size(); i++)
+						{
+							String sortType = sortMap.get(i);
+							if(sortType != null)
+							{
+								diff = getSortDiffBySortType(u1, u2, sortType);
+							}
+							if(diff != 0)
+							{
+								return diff;
+							}
+						}
+						return diff;
+					}
+
+					private long getSortDiffBySortType(Doc u1, Doc u2, String sortType) {
+						switch(sortType)
+						{
+						case "type":
+							return u1.getType() - u2.getType();
+						case "typeR":
+							return u2.getType() - u1.getType();
+						case "name":
+							return u1.getName().compareTo(u2.getName());
+						case "nameR":
+							return u2.getName().compareTo(u1.getName());
+						case "size":
+							return u1.getSize() - u2.getSize();
+						case "sizeR":
+							return u2.getSize() - u1.getSize();
+						case "date":
+							return u1.getLatestEditTime() - u2.getLatestEditTime();
+						case "dateR":
+							return u2.getLatestEditTime() - u1.getLatestEditTime();
+						}
+						return 0;
+					}
+					
+					private HashMap<Integer, String> buildSortMap(String sort) 
+					{
+						String [] sortStrs = sort.split("|");
+						HashMap<Integer, String> sortMap = new HashMap<Integer, String>();
+						for(int i=0 ; i< sortStrs.length; i++)
+						{
+							String sortStr = sortStrs[i];
+							if(sortStr != null && !sortStr.isEmpty())
+							{
+								sortMap.put(i, sortStr);
+							}
+						}
+						
+						return sortMap;
+					}
+				}
+		);
+		
+		return docList;
+	}
 	
 	/***************************图片上传相关接口*****************************/
 	protected static String[] IMGALLOWDTYPES = {"JPG","JPEG","PNG","GIF","BMP"};
