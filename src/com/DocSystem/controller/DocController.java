@@ -2413,7 +2413,8 @@ public class DocController extends BaseController{
 				verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 			}
 			
-			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
+			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);
+			tmpDoc.setShareId(shareId);
 		}
 		
 		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
@@ -2610,6 +2611,7 @@ public class DocController extends BaseController{
 		}
 		
 		Doc previewDoc = buildBasicDoc(repos.getId(), null, null, "", previewFileName, null, 1, true, preivewTmpPath, null, null, null);
+		previewDoc.setShareId(doc.getShareId());
 		String fileLink = buildDocFileLink(previewDoc, null, "REST", rt);
 		if(fileLink == null)
 		{
