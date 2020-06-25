@@ -1353,7 +1353,7 @@ public class ReposController extends BaseController{
 			DocAuth docAuth = new DocAuth();
 			if(type == 2)
 			{
-				docAuth.setUserId(groupId);		
+				docAuth.setGroupId(groupId);		
 			}
 			else
 			{
