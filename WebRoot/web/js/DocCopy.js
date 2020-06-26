@@ -400,6 +400,8 @@
 			    	var dstName =  $("#dialog-copyConflictDialog input[name='newDocName']").val();
 			    	console.log("copyConflictConfirm newName:",dstName);
 			    	SubContext.dstName = dstName;
+			    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
+            		closeBootstrapDialog("copyConflictConfirm");
 					copyDoc();
 			    	return true;
 		        });	
