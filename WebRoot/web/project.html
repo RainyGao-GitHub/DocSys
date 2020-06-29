@@ -277,6 +277,11 @@
          		<div class="content">
          			<i class="glyphicon glyphicon-search icon" onclick="searchDoc();"></i>
          			<input placeholder="搜索..." type="text" id="searchWord"/>
+         			<span class="caret  pull-right  dropdown-toggle" data-toggle="dropdown" aria-expanded="false" style="margin-right:-9px;margin-top:-15px;"></span>
+         			<ul class="dropdown-menu" style="left:160px">
+         			        <li><a href="#" onclick="setSearchFolder('currentFolder')">当前目录</a></li>
+ 		                    <li><a  href="#" onclick="setSearchFolder('all')">全部文件</a></li>
+ 		            </ul>
          		</div>
          		<div class="dropdown">
          			<a class="selecticon glyphicon glyphicon-align-justify dropdown-toggle" data-toggle="dropdown" aria-expanded="false"></a>
@@ -3014,7 +3019,14 @@
  		
  		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
  	}
-	
+ 	
+ 	var gSearchFolder = "";
+ 	function setSearchFolder(searchFolder)
+ 	{
+ 		gSearchFolder = searchFolder;
+ 		searchDoc();
+ 	}
+ 	
  	var gSortType = "";
  	function sortDocList(sortType)
  	{
@@ -3163,20 +3175,25 @@
 	function searchDoc()
 	{
 		var searchWord = $("#searchWord").val();
-		var sort = "";
-	
-		var pDocId = 0;
-		var parentPath = "";
-		var node = getParentNodeByNodeId(gDocInfo.docId);
-		if(node != null)
+		if(searchWord == "")
 		{
-			pDocId = node.id;
-			parentPath = node.path + node.name;
+			return;
 		}
 		
-		//当前默认总是根目录下
-		pDocId = 0;
-		parentPath = "";
+		var sort = "";
+
+		var parentPath = "";
+		if(gSearchFolder == "currentFolder")
+		{
+			if(gDocInfo.type == 2)
+			{
+				parentPath = gDocInfo.path + gDocInfo.name;
+			}
+			else
+			{
+				parentPath = gDocInfo.path;				
+			}
+		}
 		
        	$.ajax({
                url : "/DocSystem/Doc/searchDoc.do",
@@ -3186,7 +3203,7 @@
                    searchWord:searchWord,
                    sort:sort,
                    reposId: gReposInfo.id,
-                   pid: pDocId,
+                   //pid: pDocId,
          		   path: parentPath,
    	               shareId: gShareId,
                },
