@@ -9223,36 +9223,57 @@ public class BaseController  extends BaseFunction{
 	}
 
 	/**************************** Tomcat控制接口 *********************************/
-    public static boolean restartTomcat(String tomcatPath) {
-        if(shutdownTomcat(tomcatPath))
+    public static boolean restartTomcat(String tomcatPath, String javaHome) {
+        if(javaHome == null)
         {
-        	return startupTomcat(tomcatPath);
+        	javaHome = tomcatPath + "Java/jre1.8.0_162";
         }
-        return false;
-    }
-    public static boolean shutdownTomcat(String tomcatPath) {
-    	String cmd = buildTomcatControlCmd(tomcatPath, "shutdown");
-    	return run(cmd, null, null) != null;
-    }
- 
-    public static boolean startupTomcat(String tomcatPath) {
-    	String cmd = buildTomcatControlCmd(tomcatPath, "startup");
-    	return run(cmd, null, null) != null;
+        //对tomcatPath和javaHome进行格式转换
+        tomcatPath = tomcatPath.replace("/", File.separator);
+        javaHome = javaHome.replace("/", File.separator);
+              
+    	String scriptPath = generateTomcatRestartScript(tomcatPath, javaHome);
+       
+		if(scriptPath == null)
+		{
+			System.out.println("restartTomcat() generateTomcatRestartScript failed");
+			return false;
+		}
+        String cmd = buildScriptRunCmd(scriptPath);
+        return run(cmd, null, null) != null;
     }
     
-    protected static String buildTomcatControlCmd(String tomcatPath, String shName) {
-        String shellScriptPath = tomcatPath + File.separator + "bin" + File.separator + shName;               	
+    private static String generateTomcatRestartScript(String tomcatPath, String javaHome) {
+    	String scriptName = "tomcat_restart.sh";
+    	String os = System.getProperty("os.name");
+        if (os.startsWith("Windows")) {
+        	scriptName = "tomcat_restart.bat";
+        }
+
+        String ScriptTemplatePath = docSysWebPath + "WEB-INF/classes/script/"; //脚本模板
+    	String content = readDocContentFromFile(ScriptTemplatePath, scriptName, false);
+		content = content.replace("tomcatPath", tomcatPath);
+		content = content.replace("javaHome", javaHome);
+		if(saveDocContentToFile(content, tomcatPath, scriptName, null) == true)
+		{
+			return tomcatPath + scriptName;
+		}
+		System.out.println("generateTomcatRestartScript() saveDocContentToFile failed");
+    	return null;
+	}
+
+	protected static String buildScriptRunCmd(String shellScriptPath) {
         String os = System.getProperty("os.name");
         String cmd = null;
         if (os.startsWith("Windows")) {
-        	cmd = "cmd /c " + shellScriptPath + ".bat";
+        	cmd = "cmd /c " + shellScriptPath;
         }
         else
         {
-        	cmd = "sh " + shellScriptPath + ".sh";
+        	cmd = "sh " + shellScriptPath;
         }
         return cmd;
-    }    
+    }   
     
     protected static String run(String command, String[] envp, File dir) {
         String result = null;
