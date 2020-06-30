@@ -9223,42 +9223,87 @@ public class BaseController  extends BaseFunction{
 	}
 
 	/**************************** Tomcat控制接口 *********************************/
-    public static boolean restartTomcat(String tomcatPath, String javaHome) {
-        if(javaHome == null)
-        {
-        	javaHome = tomcatPath + "Java/jre1.8.0_162";
-        }
-        //对tomcatPath和javaHome进行格式转换
-        tomcatPath = tomcatPath.replace("/", File.separator);
-        javaHome = javaHome.replace("/", File.separator);
-              
-    	String scriptPath = generateTomcatRestartScript(tomcatPath, javaHome);
-       
-		if(scriptPath == null)
+    public static boolean restartTomcat(String tomcatPath, String javaHome) {              
+    	String stopScriptPath = generateTomcatStopScript(tomcatPath, javaHome);
+    	if(stopScriptPath == null)
 		{
-			System.out.println("restartTomcat() generateTomcatRestartScript failed");
+			System.out.println("restartTomcat() generateTomcatStopScript failed");
 			return false;
 		}
-        String cmd = buildScriptRunCmd(scriptPath);
-        return run(cmd, null, null) != null;
+    	String startScriptPath = generateTomcatStartScript(tomcatPath, javaHome);
+    	if(startScriptPath == null)
+		{
+			System.out.println("restartTomcat() generateTomcatStartScript failed");
+			return false;
+		}
+		
+    	System.out.println("restartTomcat() stopScriptPath:" + stopScriptPath);
+    	System.out.println("restartTomcat() startScriptPath:" + startScriptPath);
+    	
+        String stopCmd = buildScriptRunCmd(stopScriptPath);
+        String startCmd = buildScriptRunCmd(startScriptPath);
+        
+        run(stopCmd, null, null);
+        return run(startCmd, null, null) != null;
     }
     
-    private static String generateTomcatRestartScript(String tomcatPath, String javaHome) {
-    	String scriptName = "tomcat_restart.sh";
+    private static String generateTomcatStopScript(String tomcatPath, String javaHome) {
+		tomcatPath = localDirPathFormat(tomcatPath);
+		if(javaHome == null)
+        {
+        	javaHome = tomcatPath + "Java/jre1.8.0_162/";
+        }
+        javaHome = localDirPathFormat(javaHome);
+    	
+        //对tomcatPath和javaHome进行格式转换
+        String tomcatPathForReplace = tomcatPath.substring(0,tomcatPath.length()-1).replace("/", File.separator);
+        String javaHomePathForReplace = javaHome.substring(0,javaHome.length()-1).replace("/", File.separator);
+    	
+    	String scriptName = "tomcat_stop.sh";
     	String os = System.getProperty("os.name");
         if (os.startsWith("Windows")) {
-        	scriptName = "tomcat_restart.bat";
+        	scriptName = "tomcat_stop.bat";
         }
 
         String ScriptTemplatePath = docSysWebPath + "WEB-INF/classes/script/"; //脚本模板
     	String content = readDocContentFromFile(ScriptTemplatePath, scriptName, false);
-		content = content.replace("tomcatPath", tomcatPath);
-		content = content.replace("javaHome", javaHome);
+		content = content.replace("tomcatPath", tomcatPathForReplace);
+		content = content.replace("javaHome", javaHomePathForReplace);
 		if(saveDocContentToFile(content, tomcatPath, scriptName, null) == true)
 		{
 			return tomcatPath + scriptName;
 		}
-		System.out.println("generateTomcatRestartScript() saveDocContentToFile failed");
+		System.out.println("generateTomcatStopScript() saveDocContentToFile failed");
+    	return null;
+	}
+    
+    private static String generateTomcatStartScript(String tomcatPath, String javaHome) {
+		tomcatPath = localDirPathFormat(tomcatPath);
+		if(javaHome == null)
+        {
+        	javaHome = tomcatPath + "Java/jre1.8.0_162/";
+        }
+        javaHome = localDirPathFormat(javaHome);
+    	
+        //对tomcatPath和javaHome进行格式转换
+        String tomcatPathForReplace = tomcatPath.substring(0,tomcatPath.length()-1).replace("/", File.separator);
+        String javaHomePathForReplace = javaHome.substring(0,javaHome.length()-1).replace("/", File.separator);
+    	
+    	String scriptName = "tomcat_start.sh";
+    	String os = System.getProperty("os.name");
+        if (os.startsWith("Windows")) {
+        	scriptName = "tomcat_start.bat";
+        }
+
+        String ScriptTemplatePath = docSysWebPath + "WEB-INF/classes/script/"; //脚本模板
+    	String content = readDocContentFromFile(ScriptTemplatePath, scriptName, false);
+		content = content.replace("tomcatPath", tomcatPathForReplace);
+		content = content.replace("javaHome", javaHomePathForReplace);
+		if(saveDocContentToFile(content, tomcatPath, scriptName, null) == true)
+		{
+			return tomcatPath + scriptName;
+		}
+		System.out.println("generateTomcatStartScript() saveDocContentToFile failed");
     	return null;
 	}
 
