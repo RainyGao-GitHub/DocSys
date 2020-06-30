@@ -605,7 +605,7 @@ public class BaseFunction{
 
 	//格式化本地路径
 	protected static String localDirPathFormat(String path) {
-		if(path.isEmpty())
+		if(path == null || path.isEmpty())
 		{
 			return path;
 		}
@@ -1670,7 +1670,7 @@ public class BaseFunction{
 			//关闭输出流
 			out.close();
 		} catch (IOException e) {
-			System.out.println("saveVirtualDocContent() out.write exception");
+			System.out.println("saveDocContentToFile() out.write exception");
 			e.printStackTrace();
 			return false;
 		}		
