@@ -968,6 +968,7 @@
 	var systemInfo = {
 			version: "",
 			tomcatPath: "",
+			javaHome: "",
 			openOfficePath:"",
 			officeEditorApi:"",
 	}
@@ -976,10 +977,12 @@
 		$("#btnCancelSystemInfoSet").show();
 		$("#btnSaveSystemInfoSet").show();
 		$("#tomcatPath").val(systemInfo.tomcatPath);
+		$("#javaHome").val(systemInfo.javaHome);
 		$("#openOfficePath").val(systemInfo.openOfficePath);
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 		
 		$("#tomcatPath").attr('disabled',false);
+		$("#javaHome").attr('disabled',false);
 		$("#openOfficePath").attr('disabled',false);
 		$("#officeEditorApi").attr('disabled',false);
 	}
@@ -990,10 +993,12 @@
 		$("#btnSaveSystemInfoSet").hide();
 		//revert the value
 		$("#tomcatPath").attr('disabled',true);
+		$("#javaHome").attr('disabled',true);
 		$("#openOfficePath").attr('disabled',true);
 		$("#officeEditorApi").attr('disabled',true);
 
 		$("#tomcatPath").val(systemInfo.tomcatPath);
+		$("#javaHome").val(systemInfo.javaHome);
 		$("#openOfficePath").val(systemInfo.openOfficePath);
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 	}
@@ -1004,23 +1009,26 @@
 		$("#btnSaveSystemInfoSet").hide();
 		//revert the value
 		$("#tomcatPath").attr('disabled',true);
+		$("#javaHome").attr('disabled',true);
 		$("#openOfficePath").attr('disabled',true);
 		$("#officeEditorApi").attr('disabled',true);
 
 		var tomcatPath = $("#tomcatPath").val();
+		var javaHome = $("#javaHome").val();
 		var openOfficePath = $("#openOfficePath").val();
 		var officeEditorApi = $("#officeEditorApi").val();
 		
-		updateSystemInfo(tomcatPath, openOfficePath, officeEditorApi);
+		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi);
 	}
 	
-	function updateSystemInfo(tomcatPath, openOfficePath, officeEditorApi){
+	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
 	        	tomcatPath: tomcatPath,
+	        	javaHome: javaHome,
 	        	openOfficePath: openOfficePath,
 	        	officeEditorApi: officeEditorApi,
 	        },
@@ -1029,6 +1037,7 @@
 	            if( "ok" == ret.status )
 	            {	        		
 	        		systemInfo.tomcatPath = tomcatPath;
+	        		systemInfo.javaHome = javaHome;
 	        		systemInfo.openOfficePath = openOfficePath;
 	        		systemInfo.officeEditorApi = officeEditorApi;
 	        		showErrorMessage("更新成功！");
@@ -1039,6 +1048,7 @@
 	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
 	        		//restore the setting
 	        		$("#tomcatPath").val(systemInfo.tomcatPath);
+	        		$("#javaHome").val(systemInfo.javaHome);
 	        		$("#openOfficePath").val(systemInfo.openOfficePath);
 	        		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 		        }
@@ -1047,6 +1057,7 @@
 	        	showErrorMessage("更新数据库配置信息失败:服务器异常");
         		//restore the setting
         		$("#tomcatPath").val(systemInfo.tomcatPath);
+        		$("#javaHome").val(systemInfo.javaHome);
         		$("#openOfficePath").val(systemInfo.openOfficePath);
         		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 	        }
@@ -1066,6 +1077,7 @@
 	            	var config = ret.data; 	
 	            	systemInfo.version = config.version;
 	            	systemInfo.tomcatPath = config.tomcatPath;
+	            	systemInfo.javaHome = config.javaHome;
 	            	systemInfo.openOfficePath = config.openOfficePath;
 	            	systemInfo.officeEditorApi = config.officeEditorApi;
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
@@ -1094,7 +1106,8 @@
 		    	//alert("点击了确定");
 				//开始上传
 				var tomcatPath = $("#tomcatPath").val();
-				doRestartTomcat(tomcatPath);
+				var javaHome = $("#javaHome").val();
+				doRestartTomcat(tomcatPath, javaHome);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
@@ -1104,15 +1117,16 @@
 	    );
 	}
 	
-	function doRestartTomcat(tomcatPath)
+	function doRestartTomcat(tomcatPath, javaHome)
 	{
-		console.log("doRestartTomcat tomcatPath:" + tomcatPath);
+		console.log("doRestartTomcat tomcatPath:" + tomcatPath + " javaHome:" + javaHome);
 		$.ajax({
 	        url : "/DocSystem/Manage/restartServer.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
 	        	tomcatPath: tomcatPath,
+	        	javaHome: javaHome,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )

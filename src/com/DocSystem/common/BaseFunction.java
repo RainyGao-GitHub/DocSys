@@ -515,6 +515,18 @@ public class BaseFunction{
 		return path;
 	}
 	
+	
+	//获取JavaHome
+    public String getJavaHome() {
+    	String path = null;
+        path = ReadProperties.read("docSysConfig.properties", "javaHome");
+        if(path != null && !path.isEmpty())
+        {
+        	return localDirPathFormat(path);
+        }
+        return null;
+    }
+	
 	//获取Tomcat的安装路径
     public String getTomcatPath() {
     	//get Tomcat Path From Config File

@@ -619,12 +619,14 @@ public class ManageController extends BaseController{
 		}
 		
 		String tomcatPath = getTomcatPath();
+		String javaHome = getJavaHome();
 		String openOfficePath = getOpenOfficePath();
 		String officeEditorApi = getOfficeEditorApi();
 
 		JSONObject config = new JSONObject();
 		config.put("version", version);
 		config.put("tomcatPath", tomcatPath);
+		config.put("javaHome", javaHome);
 		config.put("openOfficePath", openOfficePath);
 		config.put("officeEditorApi", officeEditorApi);
 		rt.setData(config);
@@ -635,11 +637,12 @@ public class ManageController extends BaseController{
 	@RequestMapping("/setSystemInfo.do")
 	public void setSystemInfo(String authCode, 
 			String tomcatPath, 
+			String javaHome,
 			String openOfficePath, 
 			String officeEditorApi,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi);
+		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome + " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -647,7 +650,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(tomcatPath == null && openOfficePath == null)
+		if(tomcatPath == null && openOfficePath == null && javaHome == null)
 		{
 			docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
@@ -677,6 +680,10 @@ public class ManageController extends BaseController{
 		if(tomcatPath != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "tomcatPath", tomcatPath);
+		}
+		if(javaHome != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "javaHome", javaHome);
 		}
 		if(openOfficePath != null)
 		{
