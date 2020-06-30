@@ -5,7 +5,7 @@ set "JAVA_HOME=javaHome"
 set "JRE_HOME=javaHome"
 
 echo [DocSys]: Start Tomcat
-"%CATALINA_HOME%\bin\catalina.bat" run
+"%CATALINA_HOME%\bin\catalina.bat" start
 
 echo done.
 pause
