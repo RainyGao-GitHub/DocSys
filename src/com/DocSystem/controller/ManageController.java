@@ -751,7 +751,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/restartServer.do")
-	public void restartTomcat(String authCode, String tomcatPath,
+	public void restartTomcat(String authCode, String tomcatPath, String javaHome,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		System.out.println("restartTomcat() tomcatPath:" + tomcatPath);
@@ -772,7 +772,7 @@ public class ManageController extends BaseController{
 		}
 		
 		//开始重启
-		if(restartTomcat(tomcatPath) == false)
+		if(restartTomcat(tomcatPath, javaHome) == false)
 		{
 			System.out.println("restartTomcat() 重启服务失败");
 			docSysErrorLog("重启服务失败", rt);
