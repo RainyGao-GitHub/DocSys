@@ -222,7 +222,7 @@
 							<ul class="dropdown-menu" role="menu">
 								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
 								<li><a href="/DocSystem/web/shareManager.html">我的分享</a></li>
-								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
+								<li><a onclick="showReposManagerPage()">仓库管理</a></li>
 								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
 							</ul>
 					</li>
@@ -393,6 +393,12 @@
 	//Repos Info
 	var gInitReposInfo = {};
 	var gReposInfo = {};
+	
+	function showReposManagerPage(){
+		//open reposManager in current page
+		//window.open("/DocSystem/web/reposManager.html?vid=" + gReposInfo.id);
+		window.location.href = "/DocSystem/web/reposManager.html?vid=" + gReposInfo.id;
+	}
 	
 	//DocShare Info
 	var gShareId;

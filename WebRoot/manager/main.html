@@ -1581,6 +1581,11 @@
 		});
 	}
 	
+	function showReposManagerPage(e, reposId){
+		//open reposManager in new page
+		window.open("/DocSystem/web/reposManager.html?vid=" + reposId);
+	}
+	
 	//用户组管理
 	function showGroupList(){
 		$.ajax({
