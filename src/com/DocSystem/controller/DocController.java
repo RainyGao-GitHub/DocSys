@@ -2307,7 +2307,7 @@ public class DocController extends BaseController{
 		String pdfLink = convertOfficeToPdf(repos, tmpDoc, rt);
 		if(pdfLink == null)
 		{
-			System.out.println("getDocOfficeLink() convertOfficeToPdf failed");
+			System.out.println("getZipDocOfficeLink() convertOfficeToPdf failed");
 			writeJson(rt, response);	
 			return;
 		}
@@ -2362,7 +2362,7 @@ public class DocController extends BaseController{
 		name = doc.getName();
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), doc, null, rt) == false)
+		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), doc,  reposAccess.getAuthMask(), rt) == false)
 		{
 			System.out.println("getDocOfficeLink() you have no access right on doc:" + doc.getName());
 			writeJson(rt, response);	
@@ -2435,7 +2435,7 @@ public class DocController extends BaseController{
 				tmpDoc.setLatestEditTime(localDoc.getLatestEditTime());
 				
 				//检查用户是否有文件编辑权限
-				DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, null);
+				DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc,  reposAccess.getAuthMask());
 				if(docUserAuth.getDownloadEn() != null || docUserAuth.getDownloadEn() == 1)
 				{
 					jobj.put("downloadEn", 1);
@@ -2445,7 +2445,7 @@ public class DocController extends BaseController{
 					jobj.put("downloadEn", 0);				
 				}
 				
-				if(docUserAuth.getEditEn() != null || docUserAuth.getEditEn() == 1)
+				if(docUserAuth.getEditEn() != null && docUserAuth.getEditEn() == 1)
 				{
 					jobj.put("key", buildOfficeEditorKey(tmpDoc));			
 					jobj.put("editEn", 1);
