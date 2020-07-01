@@ -545,6 +545,60 @@ public class ReposController extends BaseController{
 		repos.setLocalSvnPath(localSvnPath);
 		repos.setLocalSvnPath1(localSvnPath1);
 	}
+	
+	/****************   clear Repository File Cache ******************/
+	@RequestMapping("/clearReposCache.do")
+	public void clearReposCache(Integer reposId, String path,String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("clearReposCache reposId:" + reposId + " path: " + path + " name: " + name);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查是否是超级管理员或者仓库owner
+		if(login_user.getType() != 2)	//超级管理员 或 仓库的拥有者可以清除仓库缓存
+		{
+			//getRepos
+			Repos repos = new Repos();
+			repos.setId(reposId);
+			repos.setOwner(login_user.getId());	//拥有人
+			List <Repos> list = reposService.getReposList(repos);
+			if(list == null || list.size() != 1)	//仓库拥有人
+			{
+				rt.setError("您无权进行该操作!");				
+				writeJson(rt, response);	
+				return;
+			}
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(clearReposFileCache(repos, rt) == false)
+		{
+			docSysErrorLog("清除仓库文件缓存失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		writeJson(rt, response);		
+	}
+
+	private boolean clearReposFileCache(Repos repos, ReturnAjax rt) {
+		String reposTmpPath = getReposTmpPath(repos);
+		return clearDir(reposTmpPath);
+	}
 
 	/****************   get Repository Menu so that we can touch the docId******************/
 	@RequestMapping("/getReposInitMenu.do")
