@@ -748,6 +748,12 @@ public class BaseFunction{
 		return hashId;
 	}
 	
+	//仓库文件缓存根目录
+	protected String getReposTmpPath(Repos repos) {
+		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/";
+		return tmpDir;
+	}
+	
 	//历史文件缓存目录，需要区分RDoc和VDoc
 	protected String getReposTmpPathForHistory(Repos repos, String commitId, boolean isRealDoc) {
 		if(isRealDoc)

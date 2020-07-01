@@ -176,9 +176,6 @@
 
 
 <script type="text/javascript">
-
-
-
     var events = $("body");
     var catalog = null;
     /**
@@ -744,7 +741,6 @@
 		
 		//zTree上的右键管理菜单
 		context.attach('#tree', [
-			{divider: true},
 			{text: '仓库设置', action: function(e){
 					e.preventDefault();
 					var treeObj = $.fn.zTree.getZTreeObj("doctree");
@@ -755,17 +751,13 @@
 					}
 				}
 			},
-			/*{text: '高级设置', action: function(e){
+			{divider: true},
+			{text: '清除缓存', action: function(e){
 					e.preventDefault();
-					var treeObj = $.fn.zTree.getZTreeObj("doctree");
-					if(curRightClickedTreeNode !== null)
-					{
-						console.log("高级设置：" + curRightClickedTreeNode.id);	
-						showReposSettingPanel();
-					}
+					//显示清除缓存确认
+					clearReposCacheConfirm(curRightClickedTreeNode);
 				}
 			},
-			*/
 			{divider: true},
 			{text: '设置密码', action: function(e){
 						e.preventDefault();
@@ -797,6 +789,58 @@
 </SCRIPT>
 
 <script>
+function clearReposCacheConfirm(node)
+{
+   	console.log("clearReposCacheConfirm()");
+		qiao.bs.confirm({
+ 	    	id: 'clearReposCacheConfirm',
+ 	        msg: "是否清除仓库缓存?",
+ 	        close: false,		
+ 	        okbtn: "清除",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	//alert("点击了确定");
+ 	    	clearReposCache(node);
+ 	    	return true;   
+ 	    },function(){
+ 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+
+function clearReposCache(node)
+{
+	console.log("clearReposCache()");
+    $.ajax({
+        url : "/DocSystem/Repos/clearReposCache.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId : gReposId,
+        	path: node.path,
+        	name: node.name,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	// 普通消息提示条
+				bootstrapQ.msg({
+						msg : '清除成功！',
+						type : 'success',
+						time : 2000,
+					    });
+            }
+            else
+            {
+            	showErrorMessage("清除失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+           	showErrorMessage('清除失败:服务器异常！');
+        }
+});
+}
+
 //显示curDoc对应的用户权限列表
 function showAuthList()
 {
