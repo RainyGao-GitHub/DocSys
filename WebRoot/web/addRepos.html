@@ -88,11 +88,11 @@
             var defaultLocalVerReposStorePath =  defaultReposStorePath + "DocSysVerReposes/";
 
             $("#dialog-new-repos input[name='path']").val(gDocSysConfig.defaultReposStorePath);
-            if(login_user.type == 2) //超级管理员，可以设置仓库路径
-            {
+            //if(login_user.type == 2) //超级管理员，可以设置仓库路径
+            //{
             	$("#dialog-new-repos input[name='path']").attr("disabled",false);
-            }
-            
+            //}
+           
             doSelectFS(); 
             
             
