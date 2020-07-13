@@ -788,7 +788,10 @@ function isText(suffix)
 			bat : true,
 			msg : true,
 			cmake : true,
-		};
+			cmake : true,
+			yaml : true,
+			yml : true,
+	};
 	
 	var type = fileTypeMap[suffix];
 	if ( undefined == type )
