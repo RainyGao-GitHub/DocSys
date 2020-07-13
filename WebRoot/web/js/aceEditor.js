@@ -102,6 +102,7 @@ function getFileShowMode(name, suffix)
     		cabal		:	"haskell_cabal",
     		hx			:	"haxe",
     		hjson		:	"hjson",
+    		log			:   "javascript",
     		html		:	"html",
     		htm			:	"html",
     		xhtml		:	"html",
