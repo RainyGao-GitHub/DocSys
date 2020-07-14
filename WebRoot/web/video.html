@@ -19,7 +19,8 @@
 	    var fileLink = getQueryString("fileLink");	    
 	    if(!fileLink || fileLink != null)
 	    {
-		    var docInfo = getDocInfoFromRequestParamStr();	    
+		    var docInfo = getDocInfoFromRequestParamStr();
+		    docInfo.fileSuffix = getFileSuffix(docInfo.name);
 	    	getDocFileLink(docInfo, showVideo, showErrorMessage);    	
 	    }
 	    else
@@ -69,7 +70,7 @@
 				  sources:[ // 视频源
 				      {
 				          src: fileLink,
-				          type: 'video/mp4',
+				          type: 'video/'+docInfo.fileSuffix,
 				          poster: fileLink,
 				      }
 				  ]
