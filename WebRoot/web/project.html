@@ -36,6 +36,7 @@
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
 	<link rel="stylesheet" type="text/css" href="css/style.css">
  	<link href="static/video-js/video-js.min.css" rel="stylesheet">
+ 	
      <style type="text/css">
      	html {
 			overflow-x: hidden;
@@ -160,6 +161,7 @@
 	<script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
 	
 	<script src="static/video-js/video.min.js"></script>
+	<script src="static/DPlayer/DPlayer.min.js"></script>
     
 	<!-- DocSys class -->
 	<script type="text/javascript" src="js/common.js"></script>
@@ -326,8 +328,9 @@
                 		<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:60%; max-height:60%;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileImgErrHandler();"></img>
                 		<!-- 
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
-                		 -->
                 		<video id="videoPreview" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
+                		-->
+                		<div id="videoPreview"></div>
                 	</div>
 	            </div>
                 <div class="article-body editor-content"  id="vdocPreview" style="min-height: 650px;">
@@ -1717,8 +1720,9 @@
 			console.log("showVideoPreview() docLink:" + docLink);
 			//$("#videoPreview").attr('src', docLink);
 			$("#videoPreview").show();
-			var type = 'video/'+ gDocInfo.fileSuffix;
-			showVideoWithVideojs('videoPreview', docLink, type);
+			//var type = 'video/'+ gDocInfo.fileSuffix;
+			//showVideoWithVideojs('videoPreview', docLink, type);
+			showVideoWithDPlayer('videoPreview', docLink);
  		}
 	}
 	
