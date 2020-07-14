@@ -1253,6 +1253,19 @@ function showVideo(docInfo, openInNewPage)
 	}
 }
 
+function showVideoWithDPlayer(objId, fileLink)
+{
+	const dp = new DPlayer({
+	    container: document.getElementById(objId),
+	    screenshot: true,
+	    video: {
+	        url: fileLink,
+	        pic: fileLink,
+	        thumbnails: fileLink,
+	    },
+	});
+}
+
 function showVideoWithVideojs(objId, fileLink, type)
 {
 	var player = videojs(document.getElementById(objId), {
