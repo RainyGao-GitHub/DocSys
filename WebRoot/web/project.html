@@ -1698,7 +1698,6 @@
 	{		
 		if(showFlag == false)
 		{
-			$("#videoPreview").attr('src', "");
 			$("#videoPreview").hide();
 			return;
 		}
@@ -1752,7 +1751,7 @@
 				  sources:[ // 视频源
 				      {
 				          src: docLink,
-				          type: 'video/mp4',
+				          type: 'video/' + gDocInfo.fileSuffix,
 				          poster: docLink,
 				      }
 				  ]
