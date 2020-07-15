@@ -1,8 +1,9 @@
 <div align=center style="margin-top:20px" >
-	<!--  
+   	<!--
+   	<div id="videoPlayer"></div>	
 	<video id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
    	-->
-   	<div id="videoPlayer"></div>	
+   	<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none; width:100%;"></video>
 </div>  
 
 <script type="text/javascript">
@@ -34,9 +35,13 @@ var VideoViewer = (function () {
 	function showVideo(fileLink)
 	{	
 		$("#videoPlayer").show();
-		//var type = 'video/'+docInfo.fileSuffix;
+		$("#videoPlayer").attr('src', fileLink);	
+		//Videojs Mode
+		//var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);
 		//showVideoWithVideojs('videoPlayer', fileLink, type);
-		showVideoWithDPlayer('videoPlayer', fileLink);
+		
+		//DPlayer Mode
+		//showVideoWithDPlayer('videoPlayer', fileLink);
 	}
 	
     return {

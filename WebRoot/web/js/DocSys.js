@@ -1266,6 +1266,25 @@ function showVideoWithDPlayer(objId, fileLink)
 	});
 }
 
+function getVideoTypeByFileSuffix(suffix)
+{
+	if(!suffix || suffix == "")
+	{
+		return "video/mp4";
+	}
+		
+	var fileTypeMap = {
+	        mp4 : "video/mp4",
+	        mov : "video/mp4",
+	};
+	var type = fileTypeMap[suffix];
+	if ( undefined == type )
+	{
+		return "video/" + suffix;
+	}
+		
+	return type;
+}
 function showVideoWithVideojs(objId, fileLink, type)
 {
 	var player = videojs(document.getElementById(objId), {

@@ -35,7 +35,11 @@
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
 	<link rel="stylesheet" type="text/css" href="css/style.css">
- 	<link href="static/video-js/video-js.min.css" rel="stylesheet">
+	
+	<!-- Video --> 
+	<!--
+	<link href="static/video-js/video-js.min.css" rel="stylesheet">
+ 	-->
  	
      <style type="text/css">
      	html {
@@ -160,8 +164,11 @@
 	<script type="text/javascript" src="js/base64.js"></script>
 	<script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
 	
-	<script src="static/video-js/video.min.js"></script>
+	<!-- Video -->
+	<!-- 
+	<script src="static/video-js/video.js"></script>
 	<script src="static/DPlayer/DPlayer.min.js"></script>
+    -->
     
 	<!-- DocSys class -->
 	<script type="text/javascript" src="js/common.js"></script>
@@ -326,11 +333,16 @@
                 	<div align=center style="margin-top:20px" >
                 		<img id="fileLogo" name="fileLogo" src="" style="display:none; width:128px; height:128px;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileLogoErrHandler();"></img>
                 		<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:60%; max-height:60%;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileImgErrHandler();"></img>
-                		<!-- 
+                		<!-- HTML5 Default Mode --> 
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+                		<!-- VideoJs Mode  -->
+                		<!-- 
                 		<video id="videoPreview" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
                 		-->
-                		<div id="videoPreview"></div>
+                		<!-- DPlayer Mode -->
+                		<!-- 
+                		<div id="videoPreview"></div> 
+                		-->
                 	</div>
 	            </div>
                 <div class="article-body editor-content"  id="vdocPreview" style="min-height: 650px;">
@@ -1703,7 +1715,7 @@
 	{		
 		if(showFlag == false)
 		{
-			//$("#videoPreview").attr('src', "");
+			$("#videoPreview").attr('src', "");
 			$("#videoPreview").hide();
 			return;
 		}
@@ -1712,17 +1724,17 @@
  		if(docLink == null)
  		{
  			console.log("showVideoPreview() docLink is null");
- 			//$("#videoPreview").attr('src', "");
+ 			$("#videoPreview").attr('src', "");
  			$("#videoPreview").hide();
  		}
  		else
  		{
 			console.log("showVideoPreview() docLink:" + docLink);
-			//$("#videoPreview").attr('src', docLink);
+			$("#videoPreview").attr('src', docLink);
 			$("#videoPreview").show();
-			//var type = 'video/'+ gDocInfo.fileSuffix;
+			//var type = getVideoTypeByFileSuffix(gDocInfo.fileSuffix);
 			//showVideoWithVideojs('videoPreview', docLink, type);
-			showVideoWithDPlayer('videoPreview', docLink);
+			//showVideoWithDPlayer('videoPreview', docLink);
  		}
 	}
 	

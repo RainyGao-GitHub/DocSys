@@ -8,8 +8,10 @@
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
     
+    <!-- 
     <script src="static/DPlayer/DPlayer.min.js"></script>
-    <!--  
+    -->
+    <!--
     <script src="static/video-js/video.min.js"></script>
     <link href="static/video-js/video-js.min.css" rel="stylesheet">
     -->
@@ -17,9 +19,10 @@
 <body style="height: 100%; margin: 0;">
     <div align=center style="margin-top:20px" >
 		<!--  
-		<video id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
-    	-->
-    	<div id="videoPlayer"></div>	
+		<div id="videoPlayer"></div>	
+		<video id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid"></video>
+		-->
+		<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none;max-width:100%; max-height:100%;"></video>
     </div>   
 	<script type="text/javascript">
 	    var fileLink = getQueryString("fileLink");	    
@@ -37,9 +40,10 @@
 	    function showVideo(fileLink)
 	   	{
 			$("#videoPlayer").show();
-			//var type = 'video/'+docInfo.fileSuffix;
+			$("#videoPlayer").attr('src', fileLink);	
+			//var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);;
 			//showVideoWithVideojs('videoPlayer', fileLink, type);	
-			showVideoWithDPlayer('videoPlayer', fileLink);
+			//showVideoWithDPlayer('videoPlayer', fileLink);
 
 	   	}
     </script>
