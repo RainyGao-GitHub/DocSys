@@ -971,6 +971,7 @@
 			javaHome: "",
 			openOfficePath:"",
 			officeEditorApi:"",
+			defaultReposStorePath:"",
 	}
 	function enableSystemInfoSet(){
 		$("#btnEnableSystemInfoSet").hide();
@@ -980,11 +981,13 @@
 		$("#javaHome").val(systemInfo.javaHome);
 		$("#openOfficePath").val(systemInfo.openOfficePath);
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
+		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 		
 		$("#tomcatPath").attr('disabled',false);
 		$("#javaHome").attr('disabled',false);
 		$("#openOfficePath").attr('disabled',false);
 		$("#officeEditorApi").attr('disabled',false);
+		$("#defaultReposStorePath").attr('disabled',false);
 	}
 	
 	function cancelSystemInfoSet(){
@@ -996,11 +999,13 @@
 		$("#javaHome").attr('disabled',true);
 		$("#openOfficePath").attr('disabled',true);
 		$("#officeEditorApi").attr('disabled',true);
+		$("#defaultReposStorePath").attr('disabled',true);
 
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#javaHome").val(systemInfo.javaHome);
 		$("#openOfficePath").val(systemInfo.openOfficePath);
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
+		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 	}
 	
 	function saveSystemInfoSet(){
@@ -1012,16 +1017,18 @@
 		$("#javaHome").attr('disabled',true);
 		$("#openOfficePath").attr('disabled',true);
 		$("#officeEditorApi").attr('disabled',true);
+		$("#defaultReposStorePath").attr('disabled',true);
 
 		var tomcatPath = $("#tomcatPath").val();
 		var javaHome = $("#javaHome").val();
 		var openOfficePath = $("#openOfficePath").val();
 		var officeEditorApi = $("#officeEditorApi").val();
+		var defaultReposStorePath = $("#defaultReposStorePath").val();
 		
-		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi);
+		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath);
 	}
 	
-	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi){
+	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
 	        type : "post",
@@ -1031,6 +1038,7 @@
 	        	javaHome: javaHome,
 	        	openOfficePath: openOfficePath,
 	        	officeEditorApi: officeEditorApi,
+	        	defaultReposStorePath: defaultReposStorePath,
 	        },
 	        success : function (ret) {
 	        	console.log("setSystemInfo ret:",ret);
@@ -1040,6 +1048,7 @@
 	        		systemInfo.javaHome = javaHome;
 	        		systemInfo.openOfficePath = openOfficePath;
 	        		systemInfo.officeEditorApi = officeEditorApi;
+	        		systemInfo.defaultReposStorePath = defaultReposStorePath;
 	        		showErrorMessage("更新成功！");
 	            }
 	            else 
@@ -1051,6 +1060,7 @@
 	        		$("#javaHome").val(systemInfo.javaHome);
 	        		$("#openOfficePath").val(systemInfo.openOfficePath);
 	        		$("#officeEditorApi").val(systemInfo.officeEditorApi);
+	        		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 		        }
 	        },
 	        error : function () {
@@ -1060,6 +1070,7 @@
         		$("#javaHome").val(systemInfo.javaHome);
         		$("#openOfficePath").val(systemInfo.openOfficePath);
         		$("#officeEditorApi").val(systemInfo.officeEditorApi);
+        		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 	        }
 	    });
 	}
@@ -1075,11 +1086,7 @@
 	        	if( "ok" == ret.status )
 	            {
 	            	var config = ret.data; 	
-	            	systemInfo.version = config.version;
-	            	systemInfo.tomcatPath = config.tomcatPath;
-	            	systemInfo.javaHome = config.javaHome;
-	            	systemInfo.openOfficePath = config.openOfficePath;
-	            	systemInfo.officeEditorApi = config.officeEditorApi;
+	            	systemInfo = config;
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
 	            else 
