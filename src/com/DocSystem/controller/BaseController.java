@@ -217,7 +217,7 @@ public class BaseController  extends BaseFunction{
 	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
-		List<Doc> tmpDocList = docSysGetSubDocList(repos, doc);
+		List<Doc> tmpDocList = docSysGetDocList(repos, doc);
 
 		if(tmpDocList != null)
     	{
@@ -2242,7 +2242,7 @@ public class BaseController  extends BaseFunction{
 	{	
 		if(deleteSubDocs == true)
 		{
-			List<Doc> subDocList = docSysGetSubDocList(repos, doc);
+			List<Doc> subDocList = docSysGetDocList(repos, doc);
 			if(subDocList != null)
 			{
 				for(int i=0; i<subDocList.size(); i++)
@@ -2264,21 +2264,6 @@ public class BaseController  extends BaseFunction{
 		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.DELETE, DocType.VIRTURALDOC,, null);
 		//Insert delete action for VDoc Index
 		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX,  Action.DELETE, DocType.VIRTURALDOC, null, null);
-	}
-	
-	private List<Doc> docSysGetSubDocList(Repos repos, Doc doc) 
-	{
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-			return getLocalEntryList(repos, doc);
-		case 3:
-		case 4:
-			return getRemoteEntryList(repos, doc);
-		}
-		
-		return null;
 	}
 
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
@@ -2627,13 +2612,17 @@ public class BaseController  extends BaseFunction{
 			realDocSyncResult = true;
 		}
 		
+		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
+		return realDocSyncResult;
+	}
+	
+	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNC)
 		{
 			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
-	
 				if(doc.getDocId() == 0)
 				{
 					//Delete All Index Lib
@@ -2666,12 +2655,37 @@ public class BaseController  extends BaseFunction{
 				System.out.println("**************************** syncupForDocChange() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			}
 		}
-		return realDocSyncResult;
 	}
-	
+
+	private void refreshIndexForRemoteRepos(Repos repos, Doc doc, Integer subDocSyncupFlag, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(getRemoteEntryList(repos, doc) == null)
+		{
+			return;
+		}
+		
+		if(doc.getDocId() == 0)
+		{
+			//Delete All Index Lib
+			deleteDocNameIndexLib(repos);
+			deleteRDocIndexLib(repos);
+			deleteVDocIndexLib(repos);
+			//Build All Index For Doc
+			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+		}
+		else
+		{
+			//deleteAllIndexUnderDoc
+			deleteAllIndexForDoc(repos, doc, 2);
+			//buildAllIndexForDoc
+			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+		}
+	}
+
 	private boolean docDetect(Repos repos, Doc doc) {
 		System.out.println("docDetect()");
-		if(getLocalEntryList(repos, doc) != null)
+		List<Doc> entryList =  docSysGetDocList(repos, doc);
+		if(entryList != null)
 		{
 			return true;
 		}
@@ -2715,17 +2729,16 @@ public class BaseController  extends BaseFunction{
 			subDocSyncupFlag = 0;
 		}
 		
-		List<Doc> localEntryList = getLocalEntryList(repos, doc);
-		//printObject("SyncUpSubDocs_FSM() localEntryList:", localEntryList);
-    	if(localEntryList == null)
+		List<Doc> entryList = docSysGetDocList(repos, doc);		
+		if(entryList == null)
     	{
-    		System.out.println("buildIndexForDoc() localEntryList 获取异常:");
+    		System.out.println("buildIndexForDoc() entryList 获取异常:");
         	return false;
     	}
     	
-    	for(int i=0; i< localEntryList.size(); i++)
+    	for(int i=0; i< entryList.size(); i++)
     	{
-    		Doc subDoc = localEntryList.get(i);
+    		Doc subDoc = entryList.get(i);
     		buildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
     	}
 		return true;
@@ -2824,17 +2837,16 @@ public class BaseController  extends BaseFunction{
 			subDocSyncupFlag = 0;
 		}
 		
-		List<Doc> localEntryList = getLocalEntryList(repos, doc);
-		//printObject("SyncUpSubDocs_FSM() localEntryList:", localEntryList);
-    	if(localEntryList == null)
+		List<Doc> entryList = docSysGetDocList(repos, doc);
+		if(entryList == null)
     	{
     		System.out.println("refreshIndexForDoc() localEntryList 获取异常:");
         	return false;
     	}
     	
-    	for(int i=0; i< localEntryList.size(); i++)
+    	for(int i=0; i< entryList.size(); i++)
     	{
-    		Doc subDoc = localEntryList.get(i);
+    		Doc subDoc = entryList.get(i);
     		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, force);
     	}
 		return true;
@@ -4002,16 +4014,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(addSubDocs)
 		{
-			List<Doc> subDocList = null;
-			if(repos.getType() == 1 || repos.getType() == 2)
-			{
-				subDocList = getLocalEntryList(repos, doc);	
-			}
-			else
-			{
-				subDocList = getRemoteEntryList(repos, doc);	
-			}
-			
+			List<Doc> subDocList = docSysGetDocList(repos, doc);			
 			if(subDocList != null)
 			{
 				for(int i=0; i<subDocList.size(); i++)
