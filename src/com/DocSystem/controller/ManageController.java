@@ -622,6 +622,7 @@ public class ManageController extends BaseController{
 		String javaHome = getJavaHome();
 		String openOfficePath = getOpenOfficePath();
 		String officeEditorApi = getOfficeEditorApi();
+		String defaultReposStorePath = getDefaultReposRootPath();
 
 		JSONObject config = new JSONObject();
 		config.put("version", version);
@@ -629,6 +630,7 @@ public class ManageController extends BaseController{
 		config.put("javaHome", javaHome);
 		config.put("openOfficePath", openOfficePath);
 		config.put("officeEditorApi", officeEditorApi);
+		config.put("defaultReposStorePath", defaultReposStorePath);
 		rt.setData(config);
 		writeJson(rt, response);
 	}
@@ -640,9 +642,10 @@ public class ManageController extends BaseController{
 			String javaHome,
 			String openOfficePath, 
 			String officeEditorApi,
+			String defaultReposStorePath,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome + " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi);
+		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome + " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi + " defaultReposStorePath:" + defaultReposStorePath);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -695,6 +698,12 @@ public class ManageController extends BaseController{
 			officeEditorApi.replace("\\", "/");
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "officeEditorApi", officeEditorApi);
 			setOfficeEditor(officeEditorApi);
+		}
+		
+		if(defaultReposStorePath != null)
+		{
+			defaultReposStorePath = localDirPathFormat(defaultReposStorePath);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "defaultReposStorePath", defaultReposStorePath);
 		}
 		
 		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
