@@ -2555,54 +2555,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(repos.getType() == 1)	
 		{	
-			Doc localEntry = fsGetDoc(repos, doc);
-			if(localEntry == null)
-			{
-				System.out.println("syncupForDocChange() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
-				return false;
-			}
-			Doc remoteEntry = verReposGetDoc(repos, doc, null);
-			if(remoteEntry == null)
-			{
-				System.out.println("syncupForDocChange() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
-				return false;
-			}
-			
-			Doc dbDoc = dbGetDoc(repos, doc, false);
-			
-			boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
-	
-			System.out.println("syncupForDocChange() syncupScanForDoc_FSM ret:" + ret);
-			if(remoteChanges.size() == 0)
-			{
-				System.out.println("syncupForDocChange() 远程没有改动");
-			}
-			else
-			{
-				//Do Remote SyncUp
-				syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
-			}
-			
-			if(localChanges.size() == 0)
-			{
-				System.out.println("syncupForDocChange() 本地没有改动");
-				realDocSyncResult = true;
-			}
-			else
-			{
-				if(action.getAction() == Action.UNDEFINED)
-				{
-					System.out.println("syncupForDocChange() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
-					realDocSyncResult = true;
-				}	
-				else
-				{
-					//Do local SyncUp
-					realDocSyncResult =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
-				}
-			}
+			realDocSyncResult = syncUpLocalAndRemote(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, login_user, rt);
 			System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
 		}
 		else
@@ -2616,6 +2569,60 @@ public class BaseController  extends BaseFunction{
 		return realDocSyncResult;
 	}
 	
+	private boolean syncUpLocalAndRemote(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, User login_user, ReturnAjax rt) {
+		if(repos.getType() != 1)
+		{
+			System.out.println("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
+			System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			return true;
+		}
+		
+		//对本地文件和版本仓库进行同步
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry == null)
+		{
+			System.out.println("syncupForDocChange() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			return false;
+		}
+		Doc remoteEntry = verReposGetDoc(repos, doc, null);
+		if(remoteEntry == null)
+		{
+			System.out.println("syncupForDocChange() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			return false;
+		}
+		
+		Doc dbDoc = dbGetDoc(repos, doc, false);
+		
+		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
+
+		System.out.println("syncupForDocChange() syncupScanForDoc_FSM ret:" + ret);
+		if(remoteChanges.size() == 0)
+		{
+			System.out.println("syncupForDocChange() 远程没有改动");
+		}
+		else
+		{
+			//Do Remote SyncUp
+			syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
+		}
+		
+		if(localChanges.size() == 0)
+		{
+			System.out.println("syncupForDocChange() 本地没有改动");
+			return true;
+		}
+		
+		if(action.getAction() == Action.UNDEFINED)
+		{
+			System.out.println("syncupForDocChange() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
+			return true;
+		}
+		
+		return syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+	}
+
 	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNC)
@@ -2654,31 +2661,6 @@ public class BaseController  extends BaseFunction{
 				}
 				System.out.println("**************************** syncupForDocChange() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			}
-		}
-	}
-
-	private void refreshIndexForRemoteRepos(Repos repos, Doc doc, Integer subDocSyncupFlag, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		if(getRemoteEntryList(repos, doc) == null)
-		{
-			return;
-		}
-		
-		if(doc.getDocId() == 0)
-		{
-			//Delete All Index Lib
-			deleteDocNameIndexLib(repos);
-			deleteRDocIndexLib(repos);
-			deleteVDocIndexLib(repos);
-			//Build All Index For Doc
-			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
-		}
-		else
-		{
-			//deleteAllIndexUnderDoc
-			deleteAllIndexForDoc(repos, doc, 2);
-			//buildAllIndexForDoc
-			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
 		}
 	}
 
