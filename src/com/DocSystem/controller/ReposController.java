@@ -2,8 +2,6 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
 import com.DocSystem.entity.DocAuth;
-import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
+import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.CommonAction;
-import com.DocSystem.common.DocSysConfig;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.controller.BaseController;
@@ -42,24 +39,16 @@ Something you need to know
 public class ReposController extends BaseController{
 	
 	/****------ Ajax Interfaces For Repository Controller ------------------***/ 
-	/****************** get Repository List **************/
+	/****************** get DocSysConfig **************/
 	@RequestMapping("/getDocSysConfig.do")
 	public void getDocSysConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocSysConfig");
-		ReturnAjax rt = new ReturnAjax();
-				
-		DocSysConfig docSysConfig = getDocSysConfig();
-		printObject("getDocSysConfig() docSysConfig",docSysConfig);
-		rt.setData(docSysConfig);
+		ReturnAjax rt = new ReturnAjax();		
+		
+		JSONObject config = new JSONObject();
+		config.put("defaultReposStorePath", getDefaultReposRootPath());
+		rt.setData(config);
 		writeJson(rt, response);
-	}
-	
-	private DocSysConfig getDocSysConfig() {
-		DocSysConfig config = new DocSysConfig();
-		
-		config.setDefaultReposStorePath(getDefaultReposRootPath());
-		
-		return config;
 	}
 
 	/****************** get Repository List **************/
