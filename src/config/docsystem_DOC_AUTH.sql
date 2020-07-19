@@ -43,8 +43,8 @@ CREATE TABLE `doc_auth` (
   `DELETE_EN` int(1) DEFAULT NULL,
   `DOWNLOAD_EN` int(1) DEFAULT NULL,
   `HERITABLE` int(1) NOT NULL DEFAULT '0' COMMENT '0:不可继承  1:可继承',
-  `DOC_PATH` varchar(2000) DEFAULT NULL COMMENT 'doc path',
-  `DOC_NAME` varchar(200) DEFAULT NULL COMMENT 'doc name'
+  `DOC_PATH` varchar(6000) DEFAULT NULL COMMENT 'doc path',
+  `DOC_NAME` varchar(300) DEFAULT NULL COMMENT 'doc name'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------

@@ -31,8 +31,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `doc_share` (
   `ID` int(11) NOT NULL,
   `SHARE_ID` int(11) NOT NULL COMMENT '分享ID',
-  `NAME` varchar(200) DEFAULT NULL COMMENT '分享的文件或目录名称',
-  `PATH` varchar(2000) NOT NULL DEFAULT '' COMMENT '基于仓库目录的相对路径',
+  `NAME` varchar(300) DEFAULT NULL COMMENT '分享的文件或目录名称',
+  `PATH` varchar(6000) NOT NULL DEFAULT '' COMMENT '基于仓库目录的相对路径',
   `DOC_ID` bigint(20) DEFAULT NULL COMMENT 'Doc Node id',
   `VID` int(11) DEFAULT NULL COMMENT '所属仓库id',
   `SHARE_AUTH` varchar(2000) DEFAULT NULL COMMENT '分享权限',
