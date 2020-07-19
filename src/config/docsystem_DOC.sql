@@ -30,13 +30,13 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `doc` (
   `ID` int(11) NOT NULL,
-  `NAME` varchar(200) DEFAULT NULL COMMENT '文件或目录名称',
+  `NAME` varchar(300) DEFAULT NULL COMMENT '文件或目录名称',
   `TYPE` int(10) DEFAULT NULL COMMENT '1：目录 2：文件',
   `SIZE` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT '文件大小',
   `CHECK_SUM` varchar(32) DEFAULT NULL COMMENT '文件的MD5校验值',
   `REVISION` varchar(100) DEFAULT NULL COMMENT 'RealDoc Revision',
   `CONTENT` longtext COMMENT 'doc''s virtual content',
-  `PATH` varchar(2000) NOT NULL DEFAULT '' COMMENT '基于仓库目录的相对路径',
+  `PATH` varchar(6000) NOT NULL DEFAULT '' COMMENT '基于仓库目录的相对路径',
   `DOC_ID` bigint(20) DEFAULT NULL COMMENT 'Doc Node id',
   `PID` bigint(20) NOT NULL DEFAULT '0' COMMENT 'Parent Node id',
   `VID` int(11) DEFAULT NULL COMMENT '所属仓库id',
