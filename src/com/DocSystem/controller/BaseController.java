@@ -8591,7 +8591,7 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
-		else if(oldVersion < 20180)
+		else if(oldVersion < 20181)
 		{
 			//update DB for Doc Name and Path Expand
 			dbTabList.add(DOCSYS_DOC);
