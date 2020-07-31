@@ -1455,10 +1455,6 @@ public class DocController extends BaseController{
 		}
 				
 		String targetName = doc.getName();
-		if(doc.getDocId() == 0)
-		{
-			targetName = repos.getName() + ".zip";
-		}
 		String targetPath = getReposTmpPathForDownload(repos,accessUser);
 				
 		//Do checkout to local
@@ -1486,7 +1482,12 @@ public class DocController extends BaseController{
 			}
 				
 			//doCompressDir and save the zip File under userTmpDir
-			targetName = doc.getName() + ".zip";		
+			targetName = doc.getName() + ".zip";
+			if(doc.getDocId() == 0)
+			{
+				targetName = repos.getName() + ".zip";
+			}
+			
 			if(doCompressDir(targetPath, doc.getName(), targetPath, targetName, rt) == false)
 			{
 				rt.setError("压缩远程目录失败！");
@@ -1522,10 +1523,6 @@ public class DocController extends BaseController{
 //		}
 		
 		String targetName = doc.getName();
-		if(doc.getDocId() == 0)
-		{
-			targetName = repos.getName() + ".zip";
-		}
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
@@ -1546,11 +1543,12 @@ public class DocController extends BaseController{
 			}
 			
 			//doCompressDir and save the zip File under userTmpDir
-			targetName = doc.getName() + ".zip";		
+			targetName = doc.getName() + ".zip";	
 			if(doc.getDocId() == 0)
 			{
-				targetName = repos.getName();
+				targetName = repos.getName() + ".zip";
 			}
+
 			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), doc.getName(), targetPath, targetName, rt) == false)
 			{
 				docSysErrorLog("压缩本地目录失败！", rt);
