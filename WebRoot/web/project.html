@@ -425,10 +425,10 @@
 	
 	//RootDoc Inof
 	var gRootDoc = {
-			//docId : 0,
-			//path : "",
-			//name : "",
-			//type : 2,
+			docId : 0,
+			path : "",
+			name : "",
+			type : 2,
 			//showName: "仓库名",
 	};
 	
@@ -754,7 +754,11 @@
 		if(needConfirm)
 		{
 			var fileName = treeNodes[0].name;
-		    console.log("firstFile:"+fileName);
+			if(treeNodes[0].docId == 0)
+			{
+				fileName = gReposInfo.name;
+			}
+			console.log("firstFile:"+fileName);
 		  	
 		  	var downloadDispInfo = fileName;
 		  	if(treeNodes.length > 1)
@@ -3938,6 +3942,14 @@
 					}
 				},	
 				]
+			},
+			{divider: true},
+			{text: '下载', action: function(e){
+						e.preventDefault();
+						var treeNodes = [];
+						treeNodes.push(gRootDoc);
+						downloadDoc(treeNodes,true,1);
+					}
 			},
 			{divider: true},
 			{text: '粘贴', action: function(e){
