@@ -1597,6 +1597,7 @@ public class BaseController  extends BaseFunction{
 	
 	Doc buildDownloadDocInfo(String targetPath, String targetName)
 	{
+		System.out.println("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
 		String encTargetName = base64EncodeURLSafe(targetName);
 		if(encTargetName == null)
 		{
