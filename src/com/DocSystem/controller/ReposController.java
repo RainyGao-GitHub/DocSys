@@ -724,9 +724,12 @@ public class ReposController extends BaseController{
 			subDocList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt);
 		}
 		
-		docList.addAll(subDocList);
+		if(subDocList != null)
+		{
+			docList.addAll(subDocList);
+		}
+		
 		//printObject("getReposInitMenu() docList:", docList);
-
 
 		rt.setData(docList);	
 		writeJson(rt, response);
