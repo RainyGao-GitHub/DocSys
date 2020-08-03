@@ -3598,6 +3598,9 @@
                 	var docShare = ret.data;
                 	
                 	gRootDoc.showName = docShare.name;
+                	gRootDoc.name = docShare.name;
+                	gRootDoc.path = docShare.path;
+                	gRootDoc.docId = docShare.docId;                	
                 	$("#projectName").text(gRootDoc.showName);
             		
                 	//成功后台回调
