@@ -56,7 +56,7 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 
 ### 4、访问
 
-本机访问：http://localhost:8080/DocSystem
+本机访问：http://localhost:8080/DocSystem   系统管理员/密码： Admin/Admin
 
 远程访问：将localhost改为IP地址即可
 
@@ -94,7 +94,7 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 
 ### 5、访问
 
-本机访问：http://localhost:8080/DocSystem
+本机访问：http://localhost:8080/DocSystem  系统管理员/密码： Admin/Admin
 
 远程访问：将localhost改为IP地址即可
 
