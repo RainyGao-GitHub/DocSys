@@ -5582,7 +5582,7 @@ public class DocController extends BaseController{
         ZipFile zipFile = null;
         List <Doc> subDocList = new ArrayList<Doc>();
 		try {
-			zipFile = new ZipFile(new File(zipFilePath));
+			zipFile = new ZipFile(new File(zipFilePath), "UTF-8");
 			
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
@@ -6446,7 +6446,7 @@ public class DocController extends BaseController{
 
 		ZipFile parentZipFile = null;
 		try {
-			parentZipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()));
+			parentZipFile = new ZipFile(new File(parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName()), "UTF-8");
 			
 			String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
 			ZipEntry entry = parentZipFile.getEntry(relativePath + zipDoc.getName());
