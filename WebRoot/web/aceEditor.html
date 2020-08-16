@@ -49,10 +49,14 @@
 <script type="text/javascript">
 //获取窗口的高度并设置高度
 var height =  window.screen.height;
+var width = window.screen.width;
 console.log("window height=" + height)
-height *= 0.95;
+height *= 0.9;
+width *= 0.9;
 console.log("dialog height=" + height)
 document.getElementById('textEditor').style.height = height + "px";
+document.getElementById('textEditor').style.width = width + "px";
+
 
 var editor = ace.edit("editor");
 editor.setTheme("ace/theme/twilight");

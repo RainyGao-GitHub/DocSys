@@ -1367,8 +1367,8 @@ function showText(docInfo, openInNewPage)
 	}
 	else
 	{
-		//showTextInArtDialog(docInfo);
-		showTextInDialog(docInfo);
+		showTextInArtDialog(docInfo);
+		//showTextInDialog(docInfo);
 	}
 }
 
@@ -1571,6 +1571,39 @@ function showTextInDialog(docInfo, openType)
 				TextEditor.textEditorPageInit(docInfo);
 			},
 		});
+	}
+}
+
+function showTextInArtDialog(docInfo, openType)
+{
+	console.log("showTextInArtDialog docInfo.docId:" + docInfo.docId);
+	if(openType && openType == "textViewer")
+	{
+		dialog({
+			id: "textViewer",
+			title: docInfo.name,
+			url: 'textViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			callback: function(){
+				TextViewer.textViewerPageInit(docInfo);
+			},
+		}).show();
+	}
+	else
+	{
+		dialog({
+			id: "AceEditor",
+			title: docInfo.name,
+			url: 'aceEditor.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			callback: function(){
+				TextEditor.textEditorPageInit(docInfo);
+			},
+		}).show();
 	}
 }
 
