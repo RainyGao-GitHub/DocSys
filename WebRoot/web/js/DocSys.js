@@ -1586,8 +1586,10 @@ function showTextInArtDialog(docInfo, openType)
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
-			callback: function(){
-				TextViewer.textViewerPageInit(docInfo);
+			onshow: function(){
+				setTimeout(function () {
+					TextViewer.textViewerPageInit(docInfo);
+				}, 2000);
 			},
 		}).show();
 	}
@@ -1600,8 +1602,10 @@ function showTextInArtDialog(docInfo, openType)
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
-			callback: function(){
-				TextEditor.textEditorPageInit(docInfo);
+			onshow: function(){
+				setTimeout(function () {
+					TextEditor.textEditorPageInit(docInfo);
+				}, 2000);
 			},
 		}).show();
 	}
