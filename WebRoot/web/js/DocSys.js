@@ -1367,6 +1367,7 @@ function showText(docInfo, openInNewPage)
 	}
 	else
 	{
+		//showTextInArtDialog(docInfo);
 		showTextInDialog(docInfo);
 	}
 }
