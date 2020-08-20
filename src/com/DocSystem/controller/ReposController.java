@@ -1160,14 +1160,21 @@ public class ReposController extends BaseController{
 			return;
 		}
 
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//检查是否是仓库的管理员
-		if(isAdminOfRepos(login_user,reposId) == false)
+		if(isAdminOfRepos(login_user,reposId) == false && isAdminOfRootDoc(repos, login_user) == false)
 		{
 			rt.setError("您没有该仓库的管理权限，无法添加用户 ！");
 			writeJson(rt, response);			
 			return;
 		}
-		
 		
 		//Confirm the ReposAuth Type and Priority
 		Integer type = getAuthType(userId,groupId);
@@ -1236,6 +1243,63 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);			
 	}
+	
+	/****************   delete User or Group or anyUser ReposAuth ******************/
+	@RequestMapping("/deleteReposAuth.do")
+	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+
+		//检查当前用户的权限
+		if(isAdminOfRepos(login_user,reposId) == false && isAdminOfRootDoc(repos, login_user) == false)
+		{
+			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(reposService.deleteReposAuth(reposAuthId) == 0)
+		{
+			rt.setError("用户仓库权限删除失败！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//删除该用户在该仓库的所有的目录权限设置
+		Integer type = getAuthType(userId,groupId);
+		if(type != null)
+		{
+			DocAuth docAuth = new DocAuth();
+			if(type == 2)
+			{
+				docAuth.setGroupId(groupId);		
+			}
+			else
+			{
+				docAuth.setUserId(userId);
+			}
+			docAuth.setReposId(reposId);
+			reposService.deleteDocAuthSelective(docAuth);
+		}
+		writeJson(rt, response);
+	}		
 	
 	/****************  Config User or Group or anyUser DocAuth ******************/
 	@RequestMapping("/configDocAuth.do")
@@ -1362,55 +1426,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	/****************   delete User or Group or anyUser ReposAuth ******************/
-	@RequestMapping("/deleteReposAuth.do")
-	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-
-		//检查当前用户的权限
-		if(isAdminOfRepos(login_user,reposId) == false)
-		{
-			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(reposService.deleteReposAuth(reposAuthId) == 0)
-		{
-			rt.setError("用户仓库权限删除失败！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//删除该用户在该仓库的所有的目录权限设置
-		Integer type = getAuthType(userId,groupId);
-		if(type != null)
-		{
-			DocAuth docAuth = new DocAuth();
-			if(type == 2)
-			{
-				docAuth.setGroupId(groupId);		
-			}
-			else
-			{
-				docAuth.setUserId(userId);
-			}
-			docAuth.setReposId(reposId);
-			reposService.deleteDocAuthSelective(docAuth);
-		}
-		writeJson(rt, response);
-	}
-		
 	/****************   delete User or Group or anyUser  DocAuth ******************/
 	@RequestMapping("/deleteDocAuth.do")
 	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Long docId, Long pid, String path, String name, Integer level, Integer type,
