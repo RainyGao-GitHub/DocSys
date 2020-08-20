@@ -1367,8 +1367,8 @@ function showText(docInfo, openInNewPage)
 	}
 	else
 	{
-		showTextInArtDialog(docInfo);
-		//showTextInDialog(docInfo);
+		//showTextInArtDialog(docInfo);
+		showTextInDialog(docInfo);
 	}
 }
 
