@@ -57,6 +57,7 @@
 	<url-pattern>*.properties</url-pattern>
 	<url-pattern>*.map</url-pattern>
 	<url-pattern>*.ico</url-pattern>
+	<url-pattern>*.bcmap</url-pattern>	
 </servlet-mapping>
 <filter>  
     <description>字符集过滤器</description>  
