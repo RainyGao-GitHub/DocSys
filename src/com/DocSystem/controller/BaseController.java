@@ -5594,6 +5594,23 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	protected boolean isAdminOfRootDoc(Repos repos, User login_user) 
+	{
+		Doc doc = buildRootDoc(repos, null, null);
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			return true;
+		}
+		
+		DocAuth userDocAuth = getUserDocAuth(repos, login_user.getId(), doc);
+		if(userDocAuth != null && userDocAuth.getIsAdmin() != null && userDocAuth.getIsAdmin() == 1)
+		{
+			return true;
+		}
+		return false;
+	}
+	
 	protected boolean isAdminOfRepos(User login_user,Integer reposId) {
 		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
 		{
@@ -5605,7 +5622,8 @@ public class BaseController  extends BaseFunction{
 		if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
 		{
 			return true;
-		}			
+		}
+				
 		return false;
 	}
 	
