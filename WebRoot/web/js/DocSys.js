@@ -1577,6 +1577,16 @@ function showTextInDialog(docInfo, openType)
 function showTextInArtDialog(docInfo, openType)
 {
 	console.log("showTextInArtDialog docInfo.docId:" + docInfo.docId);
+	//获取窗口的高度并设置高度
+	var height =  window.screen.height;
+	var width = window.screen.width;
+	console.log("window height=" + height);
+	console.log("window width=" + width);
+	height *= 0.7;
+	width *= 0.9;
+	console.log("dialog height=" + height);
+	console.log("dialog width=" + width);
+	
 	if(openType && openType == "textViewer")
 	{
 		dialog({
@@ -1586,6 +1596,8 @@ function showTextInArtDialog(docInfo, openType)
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
+			width: width,
+			height: height,
 			onshow: function(){
 				setTimeout(function () {
 					TextViewer.textViewerPageInit(docInfo);
@@ -1602,6 +1614,8 @@ function showTextInArtDialog(docInfo, openType)
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
+			width: width,
+			height: height,
 			onshow: function(){
 				setTimeout(function () {
 					TextEditor.textEditorPageInit(docInfo);
