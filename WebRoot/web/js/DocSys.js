@@ -1367,8 +1367,8 @@ function showText(docInfo, openInNewPage)
 	}
 	else
 	{
-		//showTextInArtDialog(docInfo);
-		showTextInDialog(docInfo);
+		showTextInArtDialog(docInfo);
+		//showTextInDialog(docInfo);
 	}
 }
 
@@ -1582,8 +1582,8 @@ function showTextInArtDialog(docInfo, openType)
 	var width = window.screen.width;
 	console.log("window height=" + height);
 	console.log("window width=" + width);
-	height *= 0.7;
-	width *= 0.9;
+	height *= 0.5;
+	width *= 0.5;
 	console.log("dialog height=" + height);
 	console.log("dialog width=" + width);
 	
@@ -1592,12 +1592,15 @@ function showTextInArtDialog(docInfo, openType)
 		dialog({
 			id: "textViewer",
 			title: docInfo.name,
-			url: 'textViewer.html',
+			url: 'textViewerForArt.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
 			width: width,
 			height: height,
+			resize: true,
+			drag: true,
+			data: docInfo,
 			onshow: function(){
 				setTimeout(function () {
 					TextViewer.textViewerPageInit(docInfo);
@@ -1610,16 +1613,20 @@ function showTextInArtDialog(docInfo, openType)
 		dialog({
 			id: "AceEditor",
 			title: docInfo.name,
-			url: 'aceEditor.html',
+			url: 'aceEidtorForArt.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
 			width: width,
 			height: height,
+			resize: true,
+			drag: true,
+			data: docInfo,
 			onshow: function(){
-				setTimeout(function () {
-					TextEditor.textEditorPageInit(docInfo);
-				}, 2000);
+				console.log('onshow');
+			},
+			oniframeload: function () {
+				console.log('oniframeload');
 			},
 		}).show();
 	}
