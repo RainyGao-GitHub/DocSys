@@ -27,7 +27,7 @@
 		<div class="editormd-toolbar" style="display: block;">
 			<div class="editormd-toolbar-container">
 				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
-					<li><a href="javascript:;" onclick="TextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
+					<li><a href="javascript:;" onclick="saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
 					<li class="divider" unselectable="on">|</li>
 					<li><a href="javascript:;" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
 					<li><a href="javascript:;" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
@@ -35,12 +35,12 @@
 				</ul>
 				<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
 					<li id="textEditorCloseBtn" style="display:none;">
-						<a href="javascript:;" onclick="TextEditor.exitEdit()" title="退出编辑" unselectable="on">
+						<a href="javascript:;" onclick="exitEdit()" title="退出编辑" unselectable="on">
 							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
 						</a>
 					</li>
 					<li id="textEditorEditBtn" style="display:none;">
-						<a href="javascript:;" onclick="TextEditor.enableEdit()" title="编辑" unselectable="on">
+						<a href="javascript:;" onclick="enableEdit()" title="编辑" unselectable="on">
 							<i class="fa fa-edit" name="edit" unselectable="on"></i>
 						</a>
 					</li>
@@ -62,273 +62,250 @@ editor.setTheme("ace/theme/twilight");
 editor.session.setMode("ace/mode/text");
 editor.setReadOnly(true); // false to make it editable
 
+//获取artDialog父窗口传递过来的参数
+var dialog = top.dialog.get(window);
+var docInfo = dialog.data; // 获取对话框传递过来的数据
+console.log("docInfo:",docInfo)
+
+var docText = "";
+var tmpSavedDocText = "";
+var isContentChanged = false;
+
 //页面加载完成处理函数    
 $(document).ready(function()
 {
-	//获取artDialog父窗口传递过来的参数
-	var dialog = top.dialog.get(window);
-	var data = dialog.data; // 获取对话框传递过来的数据
-	console.log("dialog.data:", data);
-	TextEditor.textEditorPageInit(data);
+	if(!docInfo.fileSuffix)
+	{
+		docInfo.fileSuffix = getFileSuffix(docInfo.name);
+	}
+	getDocText(docInfo, showText, showErrorMessage);
 });	
-
-var TextEditor = (function () {
-    var docInfo = {};
-	var docText = "";
-	var tmpSavedDocText = "";
-	var isContentChanged = false;
+			
+function showText(docText, tmpSavedDocText)
+{
+	checkAndSetFileShowMode(docInfo);
+	checkAndSetEditBtn(docInfo);	
 	
-	function textEditorPageInit(Input_doc)
-	{
-		console.log("textEditorPageInit InputDoc:", Input_doc);
-		//console.log("textEditorPageInit Input_docText:", Input_docText);
-		docInfo = Input_doc;		
-	
-		getDocText(docInfo, showText, showErrorMessage);	  	
-  	}
-
-	function showText(docText, tmpSavedDocText)
-	{
-		checkAndSetFileShowMode(docInfo);
-		checkAndSetEditBtn(docInfo);	
-		
-		editor.setValue(docText);
-		editor.getSession().on('change', function(e) {
-			isContentChanged = true;
-		});
-	}
-	    
-    function saveDoc()
-	{
-    	console.log("saveDoc docInfo.docId:" + docInfo.docId);
-		
-    	if(isContentChanged == false)
-    	{
-    	   	console.log("saveDoc there is no change");
-    		return;
-    	}
-    	
-		var content = editor.getValue();
-		$.ajax({
-            url : "/DocSystem/Doc/updateDocContent.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposId: docInfo.vid,
-            	docId : docInfo.docId,
-            	path: docInfo.path,
-                name: docInfo.name,
-            	content : content,
-            	docType: 1, //RealDoc
-                shareId: docInfo.shareId,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
-                    docText = content;
-                    isContentChanged = false;
-
-                    bootstrapQ.msg({
-								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
-								type : 'success',
-								time : 1000,
-					});
-				}else {
-                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
-                }
-            },
-            error : function () {
-                bootstrapQ.alert("保存失败:服务器异常");
-            }
-        });
-    }
-
-    function enableEdit()
-    {
-		console.log("enableEdit()");
-		if(!docInfo.docId || docInfo.docId == 0)
-		{
-			showErrorMessage("请选择文件!");
-			return;
-		}
-
-		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 3, //LockType: Online Edit
-				reposId : docInfo.vid, 
-				docId : docInfo.docId,
-				path: docInfo.path,
-				name: docInfo.name,
-				docType: 1,
-                shareId: docInfo.shareId,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status)
-				{
-					console.log("enableEdit() ret.data",ret.data);
-					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
-
-					//显示工具条和退出编辑按键
-					switchEditMode(true);
-					return;
- 				}
-				else
-				{
-					showErrorMessage("lockDoc Error:" + ret.msgInfo);
-					return;
-				}
-			},
-			error : function () 
-			{
-				showErrorMessage("lockDoc 异常");
-				return;
-			}
-		});
-    }
+	editor.setValue(docText);
+	editor.getSession().on('change', function(e) {
+		isContentChanged = true;
+	});
+}
     
-	//退出文件编辑状态
-    function exitEdit() {   	
-		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
-		if(!docInfo.docId || docInfo.docId == 0)
-		{
-			showErrorMessage("文件不存在");
-			switchEditMode(false);
-			return;
-		}
-		
-		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 0, //unlock the doc
-				reposId : docInfo.vid, 
-				docId : docInfo.docId,
-				path: docInfo.path,
-				name: docInfo.name,
-				docType: 1,
-                shareId: docInfo.shareId,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status)
-				{
-					console.log("exitEdit() ret:",ret.data);
-					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
-					switchEditMode(false);
-					return;
- 				}
-				else
-				{
-					showErrorMessage("exitEdit() unlockDoc Error:" + ret.msgInfo);
-					return;
-				}
-			},
-			error : function () 
+function saveDoc()
+{
+	console.log("saveDoc docInfo.docId:" + docInfo.docId);
+	
+	if(isContentChanged == false)
+	{
+	   	console.log("saveDoc there is no change");
+		return;
+	}
+	
+	var content = editor.getValue();
+	$.ajax({
+        url : "/DocSystem/Doc/updateDocContent.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId: docInfo.vid,
+        	docId : docInfo.docId,
+        	path: docInfo.path,
+            name: docInfo.name,
+        	content : content,
+        	docType: 1, //RealDoc
+            shareId: docInfo.shareId,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+                console.log("保存成功 : " , (new Date()).toLocaleDateString());
+                docText = content;
+                isContentChanged = false;
+
+                bootstrapQ.msg({
+							msg : "保存成功 :" + (new Date()).toLocaleDateString(),
+							type : 'success',
+							time : 1000,
+				});
+			}else {
+                bootstrapQ.alert("保存失败:"+ret.msgInfo);
+            }
+        },
+        error : function () {
+            bootstrapQ.alert("保存失败:服务器异常");
+        }
+    });
+}
+
+function enableEdit()
+{
+	console.log("enableEdit()");
+	if(!docInfo.docId || docInfo.docId == 0)
+	{
+		showErrorMessage("请选择文件!");
+		return;
+	}
+
+	$.ajax({
+		url : "/DocSystem/Doc/lockDoc.do",
+		type : "post",
+		dataType : "json",
+		data : {
+			lockType : 3, //LockType: Online Edit
+			reposId : docInfo.vid, 
+			docId : docInfo.docId,
+			path: docInfo.path,
+			name: docInfo.name,
+			docType: 1,
+            shareId: docInfo.shareId,
+		},
+		success : function (ret) {
+			if( "ok" == ret.status)
 			{
-				showErrorMessage("exitEdit() unlockDoc 异常");
+				console.log("enableEdit() ret.data",ret.data);
+				$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
+
+				//显示工具条和退出编辑按键
+				switchEditMode(true);
+				return;
+				}
+			else
+			{
+				showErrorMessage("lockDoc Error:" + ret.msgInfo);
 				return;
 			}
-		});
-	}
+		},
+		error : function () 
+		{
+			showErrorMessage("lockDoc 异常");
+			return;
+		}
+	});
+}
 
-	function switchEditMode(edit)
+//退出文件编辑状态
+function exitEdit() {   	
+	console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
+	if(!docInfo.docId || docInfo.docId == 0)
 	{
-		if(edit == true)
-		{
-			//显示工具条
-			$("#toolBarMenu").show();
-			
-			//显示退出编辑按键
-			$("#textEditorCloseBtn").show();
-			
-			//隐藏编辑按键
-			$("#textEditorEditBtn").hide();
-
-			//Enable Edit
-			editor.setReadOnly(false);
-		}
-		else
-		{
-			//隐藏工具条
-			$("#toolBarMenu").hide();
-			
-			//隐藏退出编辑按键
-			$("#textEditorCloseBtn").hide();
-		
-			//显示编辑按键
-			$("#textEditorEditBtn").show();			
-			
-			//Disable Edit
-			editor.setReadOnly(true);
-		}
+		showErrorMessage("文件不存在");
+		switchEditMode(false);
+		return;
 	}
 	
-	function checkAndSetEditBtn(docInfo)
-	{
-		if(docInfo.isZip && docInfo.isZip == 1)
-		{
-			return;
-		}
-		if(docInfo.isHistory && docInfo.isHistory == 1)
-		{
-			return;
-		}
-		
-		if(docInfo.fileSuffix)
-		{
-			switch(docInfo.fileSuffix)
+	$.ajax({
+		url : "/DocSystem/Doc/lockDoc.do",
+		type : "post",
+		dataType : "json",
+		data : {
+			lockType : 0, //unlock the doc
+			reposId : docInfo.vid, 
+        	docId : docInfo.docId,
+			path: docInfo.path,
+			name: docInfo.name,
+			docType: 1,
+            shareId: docInfo.shareId,
+		},
+		success : function (ret) {
+			if( "ok" == ret.status)
 			{
-			case "md":
-	    	case "cpp":
-	    	case "hpp":
-	    	case "c":
-	    	case "h":
-	    	case "java":
-	    	case "py":
-	    	case "go":
-	    	case "js":
-	    	case "css":
-	    	case "html":
-	    	case "json":
-	    	case "sql":
-	    	case "xml":
-	    	case "php":
-	    	case "sh":
-	    	case "txt":
-	    	case "yaml":
-	    	case "yml":
-				$("#textEditorEditBtn").show();
-	    		break;
+				console.log("exitEdit() ret:",ret.data);
+				$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
+				switchEditMode(false);
+				return;
+				}
+			else
+			{
+				showErrorMessage("exitEdit() unlockDoc Error:" + ret.msgInfo);
+				return;
 			}
+		},
+		error : function () 
+		{
+			showErrorMessage("exitEdit() unlockDoc 异常");
+			return;
 		}
+	});
+}
+
+function switchEditMode(edit)
+{
+	if(edit == true)
+	{
+		//显示工具条
+		$("#toolBarMenu").show();
+		
+		//显示退出编辑按键
+		$("#textEditorCloseBtn").show();
+		
+		//隐藏编辑按键
+		$("#textEditorEditBtn").hide();
+
+		//Enable Edit
+		editor.setReadOnly(false);
+	}
+	else
+	{
+		//隐藏工具条
+		$("#toolBarMenu").hide();
+		
+		//隐藏退出编辑按键
+		$("#textEditorCloseBtn").hide();
+	
+		//显示编辑按键
+		$("#textEditorEditBtn").show();			
+		
+		//Disable Edit
+		editor.setReadOnly(true);
+	}
+}
+
+function checkAndSetEditBtn(docInfo)
+{
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		return;
+	}
+	if(docInfo.isHistory && docInfo.isHistory == 1)
+	{
+		return;
 	}
 	
-	function checkAndSetFileShowMode(docInfo)
+	if(docInfo.fileSuffix)
 	{
-		var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
-		console.log("checkAndSetFileShowMode() showMode:" + showMode);
-		editor.session.setMode("ace/mode/" + showMode);
+		switch(docInfo.fileSuffix)
+		{
+		case "md":
+    	case "cpp":
+    	case "hpp":
+    	case "c":
+    	case "h":
+    	case "java":
+    	case "py":
+    	case "go":
+    	case "js":
+    	case "css":
+    	case "html":
+    	case "json":
+    	case "sql":
+    	case "xml":
+    	case "php":
+    	case "sh":
+    	case "txt":
+    	case "yaml":
+    	case "yml":
+    		$("#textEditorEditBtn").show();
+    		break;
+		}
 	}
+}
 
-    //开放给外部的接口
-    return {
-        textEditorPageInit: function(docInfo){
-        	textEditorPageInit(docInfo);
-        },
-        saveDoc: function(){
-        	saveDoc();
-        },
-        enableEdit: function(){
-        	enableEdit();
-        },
-        exitEdit: function(){
-        	exitEdit();
-        },
-    };
-})();
+function checkAndSetFileShowMode(docInfo)
+{
+	var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
+	console.log("checkAndSetFileShowMode() showMode:" + showMode);
+	editor.session.setMode("ace/mode/" + showMode);
+}
 
 </script>
 
