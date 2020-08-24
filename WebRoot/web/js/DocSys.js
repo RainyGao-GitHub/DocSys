@@ -1590,7 +1590,7 @@ function showTextInArtDialog(docInfo, openType)
 	if(openType && openType == "textViewer")
 	{
 		dialog({
-			id: "textViewer",
+			id: "textViewer"  + docInfo.docId,
 			title: docInfo.name,
 			url: 'textViewerForArt.html',
 			msg: '页面正在加载，请稍等...',
@@ -1611,7 +1611,7 @@ function showTextInArtDialog(docInfo, openType)
 	else
 	{
 		dialog({
-			id: "AceEditor",
+			id: "AceEditor"  + docInfo.docId,
 			title: docInfo.name,
 			url: 'aceEditorForArt.html',
 			msg: '页面正在加载，请稍等...',
