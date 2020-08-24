@@ -1,7 +1,13 @@
 <script src="static/scripts/jquery.min.js"></script>
+<link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<link href="static/markdown/css/editormd.min.css" rel="stylesheet">
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
-<script src="static/ace-builds/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
 <script type="text/javascript" src="js/aceEditor.js"></script>
+<script src="static/ace-builds/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
 <style type="text/css" media="screen">
   body {
       overflow: hidden;
@@ -56,13 +62,15 @@ editor.setTheme("ace/theme/twilight");
 editor.session.setMode("ace/mode/text");
 editor.setReadOnly(true); // false to make it editable
 
-//获取artDialog父窗口传递过来的参数
-var dialog = top.dialog.get(window);
-var data = dialog.data; // 获取对话框传递过来的数据
-console.log("dialog.data:", data);
-
-TextEditor.textEditorPageInit(data);
-	
+//页面加载完成处理函数    
+$(document).ready(function()
+{
+	//获取artDialog父窗口传递过来的参数
+	var dialog = top.dialog.get(window);
+	var data = dialog.data; // 获取对话框传递过来的数据
+	console.log("dialog.data:", data);
+	TextEditor.textEditorPageInit(data);
+});	
 
 var TextEditor = (function () {
     var docInfo = {};
