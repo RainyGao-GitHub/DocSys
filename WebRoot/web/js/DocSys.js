@@ -1367,8 +1367,14 @@ function showText(docInfo, openInNewPage)
 	}
 	else
 	{
-		showTextInArtDialog(docInfo);
-		//showTextInDialog(docInfo);
+		if(gIsPC)
+		{			
+			showTextInArtDialog(docInfo);
+		}
+		else
+		{
+			showTextInDialog(docInfo);
+		}
 	}
 }
 
