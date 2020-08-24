@@ -1613,7 +1613,7 @@ function showTextInArtDialog(docInfo, openType)
 		dialog({
 			id: "AceEditor",
 			title: docInfo.name,
-			url: 'aceEidtorForArt.html',
+			url: 'aceEditorForArt.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
