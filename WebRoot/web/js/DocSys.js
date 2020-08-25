@@ -1256,7 +1256,14 @@ function showVideo(docInfo, openInNewPage)
 	}
 	else
 	{
-		showVideoInDialog(docInfo);
+		if(gIsPC)
+		{			
+			showVideoInArtDialog(docInfo);
+		}
+		else
+		{
+			showVideoInDialog(docInfo);
+		}
 	}
 }
 
@@ -1565,6 +1572,64 @@ function showVideoInDialog(docInfo){
 			VideoViewer.videoViewerPageInit(docInfo);
 		},
 	});
+}
+
+function showVideoInArtDialog(docInfo)
+{
+	console.log("showVideoInArtDialog docInfo:", docInfo);
+	//获取窗口的高度并设置高度
+	var height =  window.screen.height/2;
+	var width = window.screen.width/2;	
+	var d = dialog({
+		id: "VideoViewer"  + docInfo.docId,
+		title: docInfo.name,
+		url: 'videoViewerForArt.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		padding: 0,
+		width: width,
+		height: height,
+		resize: true,
+		drag: true,
+		data: docInfo,
+		onshow: function(){
+			console.log('onshow');
+		},
+		oniframeload: function () {
+			console.log('oniframeload');
+		},
+	});
+	d.show();
+
+	//等待页面加载好了再获取
+	setTimeout(function (){
+		var isMax = false;
+		
+		var oDiv = document.getElementById("title:VideoViewer"  + docInfo.docId);
+		oDiv.ondblclick=function(ev){
+	    	console.log("DB Clicked on " +"VideoViewer"  + docInfo.docId);
+			if(isMax)
+			{
+				var height =  window.screen.height/2;
+				var width = window.screen.width/2;
+				
+				isMax = false;
+				d.width(width);
+				d.height(height);	
+			}
+			else
+			{
+				//最大化
+				var height =  getWinHeight()-50;
+				var width = getWinWidth();
+				isMax = true;
+				d.width(width);
+				d.height(height);		
+			}	
+		}
+	}, 100);
+	
 }
 
 function showZipInDialog(docInfo)
