@@ -1357,7 +1357,14 @@ function showZip(docInfo, openInNewPage)
 	}
 	else
 	{
-		showZipInDialog(docInfo);
+		if(gIsPC)
+		{			
+			showZipInArtDialog(docInfo);
+		}
+		else
+		{
+			showZipInDialog(docInfo);
+		}
 	}
 }
 
@@ -1640,7 +1647,7 @@ function showVideoInArtDialog(docInfo)
 }
 
 function showZipInDialog(docInfo)
-	{
+{
 	bootstrapQ.dialog({
 		id: "ZipViewer",
 		title: docInfo.name,
@@ -1653,7 +1660,63 @@ function showZipInDialog(docInfo)
 			ZipViewer.zipViewerPageInit(docInfo);
 		},
 	});
-	}
+}
+
+function showZipInArtDialog(docInfo)
+{	
+	//获取窗口的高度并设置高度
+	var height =  window.screen.height/2;
+	var width = window.screen.width/2;	
+	var d = dialog({
+		id: "ZipViewer"  + docInfo.docId,
+		title: docInfo.name,
+		url: 'zipViewerForArt.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		padding: 0,
+		width: width,
+		height: height,
+		resize: true,
+		drag: true,
+		data: docInfo,
+		onshow: function(){
+			console.log('onshow');
+		},
+		oniframeload: function () {
+			console.log('oniframeload');
+		},
+	});
+	d.show();
+
+	//等待页面加载好了再获取
+	setTimeout(function (){
+		var isMax = false;
+		
+		var oDiv = document.getElementById("title:ZipViewer"  + docInfo.docId);
+		oDiv.ondblclick=function(ev){
+	    	console.log("DB Clicked on " +"ZipViewer"  + docInfo.docId);
+			if(isMax)
+			{
+				var height =  window.screen.height/2;
+				var width = window.screen.width/2;
+				
+				isMax = false;
+				d.width(width);
+				d.height(height);	
+			}
+			else
+			{
+				//最大化
+				var height =  getWinHeight()-50;
+				var width = getWinWidth();
+				isMax = true;
+				d.width(width);
+				d.height(height);		
+			}	
+		}
+	}, 100);
+}
 
 function showPdfInDialog(docInfo)
 {
