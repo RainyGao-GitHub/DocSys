@@ -1065,15 +1065,6 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 		showUnknownFile = false;
 	}
 	
-	if(openInNewPage && (openInNewPage == true || openInNewPage == "openInNewPage"))
-	{
-		openInNewPage = true;
-	}
-	else
-	{
-		openInNewPage = false;
-	}
-	
 	if(isPicture(docInfo.fileSuffix))
 	{
 		showImage(docInfo, openInNewPage);
@@ -1208,7 +1199,7 @@ function openOffice(docInfo, openInNewPage, preview)
                 }
             	else
                 {
-            		if(openInNewPage == false)
+            		if(openInNewPage != "openInNewPage")
             		{
             			docInfo.fileLink = ret.data;
             		}
@@ -1231,13 +1222,13 @@ function openOffice(docInfo, openInNewPage, preview)
 
 function showImage(docInfo, openInNewPage)
 {
-	if(openInNewPage)
+	if(openInNewPage == "openInNewPage")
 	{
 		showImgInNewPage(docInfo);
 	}
 	else
 	{
-		if(gIsPC)
+		if(gIsPC && openInNewPage == "openInArtDialog")
 		{			
 			showImgInArtDialog(docInfo);
 		}
@@ -1250,13 +1241,13 @@ function showImage(docInfo, openInNewPage)
 
 function showVideo(docInfo, openInNewPage)
 {
-	if(openInNewPage)
+	if(openInNewPage == "openInNewPage")
 	{
 		showVideoInNewPage(docInfo);
 	}
 	else
 	{
-		if(gIsPC)
+		if(gIsPC && openInNewPage == "openInArtDialog")
 		{			
 			showVideoInArtDialog(docInfo);
 		}
@@ -1351,13 +1342,13 @@ function showVideoWithVideojs(objId, fileLink, type)
 
 function showZip(docInfo, openInNewPage)
 {
-	if(openInNewPage)
+	if(openInNewPage == "openInNewPage")
 	{
 		showZipInNewPage(docInfo);
 	}
 	else
 	{
-		if(gIsPC)
+		if(gIsPC && openInNewPage == "openInArtDialog")
 		{			
 			showZipInArtDialog(docInfo);
 		}
@@ -1370,13 +1361,13 @@ function showZip(docInfo, openInNewPage)
 
 function showPdf(docInfo, openInNewPage)
 {
-	if(openInNewPage)
+	if(openInNewPage == "openInNewPage")
 	{
 		showPdfInNewPage(docInfo);
 	}
 	else
 	{
-		if(gIsPC)
+		if(gIsPC && openInNewPage == "openInArtDialog")
 		{			
 			showPdfInArtDialog(docInfo);
 		}
@@ -1389,13 +1380,13 @@ function showPdf(docInfo, openInNewPage)
 
 function showText(docInfo, openInNewPage)
 {
-	if(openInNewPage)
+	if(openInNewPage == "openInNewPage")
 	{
 		showTextInNewPage(docInfo);
 	}
 	else
 	{
-		if(gIsPC)
+		if(gIsPC && openInNewPage == "openInArtDialog")
 		{			
 			showTextInArtDialog(docInfo);
 		}
@@ -1408,13 +1399,13 @@ function showText(docInfo, openInNewPage)
 
 function showOffice(docInfo, openInNewPage)
 {
-	if(openInNewPage)
+	if(openInNewPage == "openInNewPage")
 	{
 		showOfficeInNewPage(docInfo);
 	}
 	else
 	{
-		if(gIsPC)
+		if(gIsPC && openInNewPage == "openInArtDialog")
 		{			
 			showOfficeInArtDialog(docInfo);
 		}

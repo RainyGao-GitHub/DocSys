@@ -1612,7 +1612,7 @@
     	if(gDocInfo.openMode == 2)
     	{
 			//Open Doc in Dialog
-			openDoc(gDocInfo, false, false);
+			openDoc(gDocInfo, false, "openInArtDialog");
 		}
     }
 	
@@ -1646,7 +1646,7 @@
 		if(gDocInfo.type == 1)
 		{
 	    	//open doc in dialog
-	    	openDoc(gDocInfo, true, false);
+	    	openDoc(gDocInfo, true, "openInArtDialog");
 		}
 		else
 		{
@@ -2265,7 +2265,7 @@
     	  
     	  if(gDocInfo.docId == treeNode.id)
     	  {
-    		  openDoc(gDocInfo, false, false);
+    		  openDoc(gDocInfo, false, "openInArtDialog");
     		  return;
     	  }
     	  
@@ -4045,12 +4045,12 @@
 			{divider: true},
 			{text: '预览', action: function(e){
 					e.preventDefault();
-					openDoc(curRightClickedTreeNode, true, false, "pdf");  
+					openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf");  
 				}
 			},
 			{text: '打开', action: function(e){
 					e.preventDefault();
-					openDoc(curRightClickedTreeNode, true, true);  
+					openDoc(curRightClickedTreeNode, true, "openInNewPage");  
 				}
 			},
 			{text: '下载', action: function(e){
@@ -4299,12 +4299,12 @@
 			context.attach('#secondList', [
 				{text: '预览', action: function(e){
 						e.preventDefault();
-						openDoc(curRightClickedTreeNode, true, false, "pdf");  
+						openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf");  
 					}
 				},
 				{text: '打开', action: function(e){
 						e.preventDefault();
-						openDoc(curRightClickedTreeNode, true, true);  
+						openDoc(curRightClickedTreeNode, true, "openInNewPage");  
 					}
 				},
 				{text: '下载', action: function(e){
@@ -4424,12 +4424,12 @@
 				{divider: true},
 				{text: '预览', action: function(e){
 							e.preventDefault();
-							openDoc(curRightClickedDocListNode, true, false, "pdf");    
+							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf");    
 						}
 				},
 				{text: '打开', action: function(e){
 							e.preventDefault();
-							openDoc(curRightClickedDocListNode, true, true);    
+							openDoc(curRightClickedDocListNode, true, "openInNewPage");    
 						}
 				},
 				{text: '下载', action: function(e){
