@@ -1595,13 +1595,14 @@ function showTextInArtDialog(docInfo, openType)
 	
 	if(openType && openType == "textViewer")
 	{
-		dialog({
+		var d = dialog({
 			id: "textViewer"  + docInfo.docId,
 			title: docInfo.name,
 			url: 'textViewerForArt.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
+			padding: 0,
 			width: width,
 			height: height,
 			resize: true,
@@ -1612,17 +1613,19 @@ function showTextInArtDialog(docInfo, openType)
 					TextViewer.textViewerPageInit(docInfo);
 				}, 2000);
 			},
-		}).show();
+		});
+		d.show();
 	}
 	else
 	{
-		dialog({
+		var d = dialog({
 			id: "AceEditor"  + docInfo.docId,
 			title: docInfo.name,
 			url: 'aceEditorForArt.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
+			padding: 0,
 			width: width,
 			height: height,
 			resize: true,
@@ -1634,7 +1637,12 @@ function showTextInArtDialog(docInfo, openType)
 			oniframeload: function () {
 				console.log('oniframeload');
 			},
-		}).show();
+		});
+		d.show();
+		
+		//添加标题双击事件处理函数
+		//d.width(width*2);
+		//d.height(height*2);
 	}
 }
 
