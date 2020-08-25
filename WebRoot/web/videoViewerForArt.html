@@ -1,0 +1,30 @@
+<script src="static/scripts/jquery.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
+<script type="text/javascript" src="js/DocSys.js"></script>
+<div align=center style="margin-top:20px" >
+   	<!--
+   	<div id="videoPlayer"></div>	
+	<video id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
+   	-->
+   	<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none; width:100%;"></video>
+</div>  
+
+<script type="text/javascript">
+	var dialog = top.dialog.get(window);
+	var docInfo = dialog.data;
+	console.log("docInfo:",docInfo);
+	
+	docInfo.fileSuffix = getFileSuffix(docInfo.name);
+    getDocFileLink(docInfo, showVideo, showErrorMessage);    	
+    
+    function showVideo(fileLink)
+   	{
+		$("#videoPlayer").show();
+		$("#videoPlayer").attr('src', fileLink);	
+		//var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);;
+		//showVideoWithVideojs('videoPlayer', fileLink, type);	
+		//showVideoWithDPlayer('videoPlayer', fileLink);
+
+   	}
+   </script>
