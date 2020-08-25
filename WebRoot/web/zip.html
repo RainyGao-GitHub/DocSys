@@ -23,10 +23,6 @@
     <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
     <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
-    <!-- contextMenu -->
-	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
-	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
-	<script type="text/javascript" src="static/ContextJS/js/context.js"></script>
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
@@ -38,15 +34,7 @@
 <body style="height: 100%; margin: 0;">
     <div align=center style="margin-top:20px" >
 		<ul id="zipPlayer" class="ztree" style="margin-bottom: 120px;"></ul>
-    </div> 
-    <div >
-		<ul id="zipTreeContextMenu" style="display:none" class='dropdown-menu dropdown-context' role='menu'>
-			<li><a onclick='openDoc()'>打开</a></li> 
-			<li><a onclick='downloadDoc()'>下载</a></li>
-			<li class="divider"></li>
-			<li><a onclick='showDocDetail()'>详细信息</a></li>
-		</ul>
-	</div>  
+    </div>   
 	<script type="text/javascript">
 		var docInfo = getDocInfoFromRequestParamStr();
 		var gShareId = docInfo.shareId;
@@ -164,7 +152,7 @@
 		            onClick: zTreeOnClick,
 		            onDblClick: zTreeOnDbClick,
 		            beforeRightClick: zTreeBeforeRightClick
-		            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
+		            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 		    },
 		    view: {
 	        	//showLine: false,	//不显示文件下面的下划线
@@ -204,10 +192,12 @@
     		openDoc(treeNode, false, false, docInfo.shareId);
 	    }
 		
-		function zTreeOnRightClick(event, treeId, treeNode) {
-			//alert(treeNode ? treeNode.tId + ", " + treeNode.name : "isRoot");
-			showZipTreeContextMenu(event, 0, 0);
-		}
+	      //This function was used to get the rightClick treeNode,it will be used for contextjs
+		function zTreeBeforeRightClick(treeId, treeNode) {
+			
+			curRightClickedTreeNode = treeNode;
+	    	return true;	
+		};
 	      
 	    function zTreeBeforeAsync(treeId, treeNode) {  
 	      	console.log("zTreeBeforeAsync treeId:"+ treeId, treeNode);
@@ -246,15 +236,6 @@
 	       }
 	       console.log(docList);
 		   return docList;
-		}
-	  	
-		function showZipTreeContextMenu(e, xoffset, yoffset)
-		{
-			$dd = $('#zipTreeContextMenu');
-			$dd.css({
-					left: e.pageX -360 + xoffset,
-					top: e.pageY - 100 + yoffset,
-				}).fadeIn(100);
 		}
     </script>
 </body>
