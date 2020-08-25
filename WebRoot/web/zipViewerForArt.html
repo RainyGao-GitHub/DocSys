@@ -11,8 +11,8 @@
       .ztree li .caret {
           margin-top: 8px !important;
       }
-  </style>
-<script type="text/javascript" src="static/scripts/jquery.min.js"></script>
+</style>
+<script src="static/artDialog/lib/jquery-1.10.2.js" type="text/javascript"></script>
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
@@ -24,16 +24,15 @@
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
 
-
 <div id="zipViewer" style="overflow:auto;">
 	<ul id="zipPlayer" class="ztree" style="margin-bottom: 120px; width: 95%"></ul>
 </div>
 <div>
 	<ul id="zipTreeContextMenu" style="display:none" class='dropdown-menu dropdown-context' role='menu'>
-		<li><a onclick='openDoc()'>打开</a></li> 
-		<li><a onclick='downloadDoc()'>下载</a></li>
+		<li><a onclick='zipOpenDoc()'>打开</a></li> 
+		<li><a onclick='zipDownloadDoc()'>下载</a></li>
 		<li class="divider"></li>
-		<li><a onclick='showDocDetail()'>详细信息</a></li>
+		<li><a onclick='zipShowDocDetail()'>详细信息</a></li>
 	</ul>
 </div>
 
@@ -41,9 +40,13 @@
 	var dialog = top.dialog.get(window);
 	var docInfo = dialog.data;
 	console.log("docInfo:",docInfo);
+	var gShareId = docInfo.shareId;
 	
 	var curRightClickedTreeNode = null;
-	getAndShowZipInitMenu(docInfo);
+	$(document).ready(function()
+	{
+		getAndShowZipInitMenu(docInfo);
+	});
 		
 	function getAndShowZipInitMenu(docInfo) 
 	{
@@ -215,7 +218,7 @@
     function zTreeOnDbClick(event, treeId, treeNode) 
     {
     	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
-		openDoc(treeNode, false, false, docInfo.shareId);
+		openDoc(treeNode, false, "openInDialog", docInfo.shareId);
     }
 	
       //This function was used to get the rightClick treeNode,it will be used for contextjs
@@ -273,7 +276,7 @@
   		console.log("zipOpenDoc:", curRightClickedTreeNode);
 	  	if(curRightClickedTreeNode && curRightClickedTreeNode != null)
   		{
-	  		openDoc(curRightClickedTreeNode, false, false, docInfo.shareId);
+	  		openDoc(curRightClickedTreeNode, false, "openInDialog", docInfo.shareId);
   		}
   	}
   	
@@ -294,4 +297,16 @@
 	 	console.log("doDownloadDoc fileLink: " + fileLink);
 	   	window.location.href = fileLink;
 	}
+	
+ 	function formatTime(time){
+ 		var now = new Date(time);
+ 		var year=now.getFullYear(); 
+ 		var month=now.getMonth()+1;
+ 		var date=now.getDate(); 
+ 		var hh=now.getHours(); 
+ 		var mm=now.getMinutes(); 
+ 		var ss=now.getSeconds(); 
+ 		
+ 		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
+ 	}
 </script>
