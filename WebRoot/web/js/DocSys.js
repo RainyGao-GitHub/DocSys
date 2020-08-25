@@ -1584,15 +1584,8 @@ function showTextInArtDialog(docInfo, openType)
 {
 	console.log("showTextInArtDialog docInfo.docId:" + docInfo.docId);
 	//获取窗口的高度并设置高度
-	var height =  window.screen.height;
-	var width = window.screen.width;
-	console.log("window height=" + height);
-	console.log("window width=" + width);
-	height *= 0.5;
-	width *= 0.5;
-	console.log("dialog height=" + height);
-	console.log("dialog width=" + width);
-	
+	var height =  window.screen.height/2;
+	var width = window.screen.width/2;	
 	if(openType && openType == "textViewer")
 	{
 		var d = dialog({
@@ -1640,9 +1633,33 @@ function showTextInArtDialog(docInfo, openType)
 		});
 		d.show();
 		
-		//添加标题双击事件处理函数
-		//d.width(width*2);
-		//d.height(height*2);
+		//等待页面加载好了再获取
+		setTimeout(function (){
+			var isMax = false;
+			
+			var oDiv = document.getElementById("title:AceEditor"  + docInfo.docId);
+			oDiv.ondblclick=function(ev){
+		    	console.log("DB Clicked on " +"AceEditor"  + docInfo.docId);
+				if(isMax)
+				{
+					var height =  window.screen.height/2;
+					var width = window.screen.width/2;
+					
+					isMax = false;
+					d.width(width);
+					d.height(height);	
+				}
+				else
+				{
+					//最大化
+					var height =  window.screen.height;
+					var width = window.screen.width;
+					isMax = true;
+					d.width(width);
+					d.height(height);		
+				}	
+			}
+		}, 100);
 	}
 }
 
