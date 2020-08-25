@@ -1652,8 +1652,8 @@ function showTextInArtDialog(docInfo, openType)
 				else
 				{
 					//最大化
-					var height =  window.screen.height;
-					var width = window.screen.width;
+					var height =  getWinHeight()-50;
+					var width = getWinWidth();
 					isMax = true;
 					d.width(width);
 					d.height(height);		
@@ -1661,6 +1661,25 @@ function showTextInArtDialog(docInfo, openType)
 			}
 		}, 100);
 	}
+}
+
+//获取窗口宽度
+function getWinWidth()
+{
+	if (window.innerWidth)
+	winWidth = window.innerWidth;
+	else if ((document.body) && (document.body.clientWidth))
+	winWidth = document.body.clientWidth;
+	return winWidth;
+}
+
+function getWinHeight()
+{
+	if (window.innerHeight)
+	winHeight = window.innerHeight;
+	else if ((document.body) && (document.body.clientHeight))
+	winHeight = document.body.clientHeight;
+	return winHeight;
 }
 
 function showOfficeInDialog(docInfo)
