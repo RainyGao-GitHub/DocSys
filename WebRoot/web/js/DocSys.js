@@ -1228,7 +1228,7 @@ function showImage(docInfo, openInNewPage)
 	}
 	else
 	{
-		if(gIsPC && openInNewPage == "openInArtDialog")
+		if(openInNewPage == "openInArtDialog")
 		{			
 			showImgInArtDialog(docInfo);
 		}
@@ -1247,7 +1247,7 @@ function showVideo(docInfo, openInNewPage)
 	}
 	else
 	{
-		if(gIsPC && openInNewPage == "openInArtDialog")
+		if(openInNewPage == "openInArtDialog")
 		{			
 			showVideoInArtDialog(docInfo);
 		}
@@ -1348,7 +1348,7 @@ function showZip(docInfo, openInNewPage)
 	}
 	else
 	{
-		if(gIsPC && openInNewPage == "openInArtDialog")
+		if(openInNewPage == "openInArtDialog")
 		{			
 			showZipInArtDialog(docInfo);
 		}
@@ -1367,7 +1367,7 @@ function showPdf(docInfo, openInNewPage)
 	}
 	else
 	{
-		if(gIsPC && openInNewPage == "openInArtDialog")
+		if(openInNewPage == "openInArtDialog")
 		{			
 			showPdfInArtDialog(docInfo);
 		}
@@ -1386,7 +1386,7 @@ function showText(docInfo, openInNewPage)
 	}
 	else
 	{
-		if(gIsPC && openInNewPage == "openInArtDialog")
+		if(openInNewPage == "openInArtDialog")
 		{			
 			showTextInArtDialog(docInfo);
 		}
@@ -1405,7 +1405,7 @@ function showOffice(docInfo, openInNewPage)
 	}
 	else
 	{
-		if(gIsPC && openInNewPage == "openInArtDialog")
+		if(openInNewPage == "openInArtDialog")
 		{			
 			showOfficeInArtDialog(docInfo);
 		}
@@ -1509,8 +1509,8 @@ function showImgInArtDialog(docInfo)
 {
 	console.log("showImgInArtDialog docInfo:", docInfo);
 	//获取窗口的高度并设置高度
-	var height =  window.screen.height/2;
-	var width = window.screen.width/2;	
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();	
 	var d = dialog({
 		id: "ImgViewer"  + docInfo.docId,
 		title: docInfo.name,
@@ -1542,8 +1542,8 @@ function showImgInArtDialog(docInfo)
 	    	console.log("DB Clicked on " +"ImgViewer"  + docInfo.docId);
 			if(isMax)
 			{
-				var height =  window.screen.height/2;
-				var width = window.screen.width/2;
+				var height =  getArtDialogInitHeight();
+				var width = getArtDialogInitWidth();
 				
 				isMax = false;
 				d.width(width);
@@ -1552,8 +1552,8 @@ function showImgInArtDialog(docInfo)
 			else
 			{
 				//最大化
-				var height =  getWinHeight()-50;
-				var width = getWinWidth();
+				var height =  getArtDialogMaxHeight();
+				var width = getArtDialogMaxWidth();
 				isMax = true;
 				d.width(width);
 				d.height(height);		
@@ -1583,8 +1583,8 @@ function showVideoInArtDialog(docInfo)
 {
 	console.log("showVideoInArtDialog docInfo:", docInfo);
 	//获取窗口的高度并设置高度
-	var height =  window.screen.height/2;
-	var width = window.screen.width/2;	
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();	
 	var d = dialog({
 		id: "VideoViewer"  + docInfo.docId,
 		title: docInfo.name,
@@ -1616,8 +1616,8 @@ function showVideoInArtDialog(docInfo)
 	    	console.log("DB Clicked on " +"VideoViewer"  + docInfo.docId);
 			if(isMax)
 			{
-				var height =  window.screen.height/2;
-				var width = window.screen.width/2;
+				var height =  getArtDialogInitHeight();
+				var width = getArtDialogInitWidth();
 				
 				isMax = false;
 				d.width(width);
@@ -1626,8 +1626,8 @@ function showVideoInArtDialog(docInfo)
 			else
 			{
 				//最大化
-				var height =  getWinHeight()-50;
-				var width = getWinWidth();
+				var height =  getArtDialogMaxHeight();
+				var width = getArtDialogMaxWidth();
 				isMax = true;
 				d.width(width);
 				d.height(height);		
@@ -1656,8 +1656,8 @@ function showZipInDialog(docInfo)
 function showZipInArtDialog(docInfo)
 {	
 	//获取窗口的高度并设置高度
-	var height =  window.screen.height/2;
-	var width = window.screen.width/2;	
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();	
 	var d = dialog({
 		id: "ZipViewer"  + docInfo.docId,
 		title: docInfo.name,
@@ -1689,8 +1689,8 @@ function showZipInArtDialog(docInfo)
 	    	console.log("DB Clicked on " +"ZipViewer"  + docInfo.docId);
 			if(isMax)
 			{
-				var height =  window.screen.height/2;
-				var width = window.screen.width/2;
+				var height =  getArtDialogInitHeight();
+				var width = getArtDialogInitWidth();
 				
 				isMax = false;
 				d.width(width);
@@ -1699,8 +1699,8 @@ function showZipInArtDialog(docInfo)
 			else
 			{
 				//最大化
-				var height =  getWinHeight()-50;
-				var width = getWinWidth();
+				var height =  getArtDialogMaxHeight();
+				var width = getArtDialogMaxWidth();
 				isMax = true;
 				d.width(width);
 				d.height(height);		
@@ -1728,8 +1728,8 @@ function showPdfInDialog(docInfo)
 function showPdfInArtDialog(docInfo)
 {	
 	//获取窗口的高度并设置高度
-	var height =  window.screen.height/2;
-	var width = window.screen.width/2;	
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();	
 	var d = dialog({
 		id: "PdfViewer"  + docInfo.docId,
 		title: docInfo.name,
@@ -1761,8 +1761,8 @@ function showPdfInArtDialog(docInfo)
 	    	console.log("DB Clicked on " +"PdfViewer"  + docInfo.docId);
 			if(isMax)
 			{
-				var height =  window.screen.height/2;
-				var width = window.screen.width/2;
+				var height =  getArtDialogInitHeight();
+				var width = getArtDialogInitWidth();
 				
 				isMax = false;
 				d.width(width);
@@ -1771,8 +1771,8 @@ function showPdfInArtDialog(docInfo)
 			else
 			{
 				//最大化
-				var height =  getWinHeight()-50;
-				var width = getWinWidth();
+				var height =  getArtDialogMaxHeight();
+				var width = getArtDialogMaxWidth();
 				isMax = true;
 				d.width(width);
 				d.height(height);		
@@ -1854,8 +1854,8 @@ function showTextInArtDialog(docInfo, openType)
 {
 	console.log("showTextInArtDialog docInfo.docId:" + docInfo.docId);
 	//获取窗口的高度并设置高度
-	var height =  window.screen.height/2;
-	var width = window.screen.width/2;	
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();	
 	if(openType && openType == "textViewer")
 	{
 		var d = dialog({
@@ -1912,8 +1912,8 @@ function showTextInArtDialog(docInfo, openType)
 		    	console.log("DB Clicked on " +"AceEditor"  + docInfo.docId);
 				if(isMax)
 				{
-					var height =  window.screen.height/2;
-					var width = window.screen.width/2;
+					var height = getArtDialogInitHeight();
+					var width = getArtDialogInitWidth();
 					
 					isMax = false;
 					d.width(width);
@@ -1922,8 +1922,8 @@ function showTextInArtDialog(docInfo, openType)
 				else
 				{
 					//最大化
-					var height =  getWinHeight()-50;
-					var width = getWinWidth();
+					var height =  getArtDialogMaxHeight();
+					var width = getArtDialogMaxWidth();
 					isMax = true;
 					d.width(width);
 					d.height(height);		
@@ -1931,6 +1931,40 @@ function showTextInArtDialog(docInfo, openType)
 			}
 		}, 100);
 	}
+}
+
+function getArtDialogInitWidth()
+{
+	if(gIsPC)
+	{
+		return window.screen.width/2;
+	}
+	else
+	{
+		return window.screen.width*0.98;
+	}
+}
+
+function getArtDialogInitHeight()
+{
+	if(gIsPC)
+	{
+		return window.screen.height/2;	
+	}
+	else
+	{
+		return window.screen.height*0.9;
+	}	
+}
+
+function getArtDialogMaxWidth()
+{
+	return getWinWidth();
+}
+
+function getArtDialogMaxHeight()
+{
+	return getWinHeight() - 50;
 }
 
 //获取窗口宽度
@@ -1972,8 +2006,8 @@ function showOfficeInDialog(docInfo)
 function showOfficeInArtDialog(docInfo)
 {	
 	//获取窗口的高度并设置高度
-	var height =  window.screen.height/2;
-	var width = window.screen.width/2;	
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();	
 	var d = dialog({
 		id: "OfficeEditor"  + docInfo.docId,
 		title: docInfo.name,
@@ -2005,8 +2039,8 @@ function showOfficeInArtDialog(docInfo)
 	    	console.log("DB Clicked on " +"OfficeEditor"  + docInfo.docId);
 			if(isMax)
 			{
-				var height =  window.screen.height/2;
-				var width = window.screen.width/2;
+				var height =  getArtDialogInitHeight();
+				var width = getArtDialogInitWidth();
 				
 				isMax = false;
 				d.width(width);
@@ -2015,8 +2049,8 @@ function showOfficeInArtDialog(docInfo)
 			else
 			{
 				//最大化
-				var height =  getWinHeight()-50;
-				var width = getWinWidth();
+				var height =  getArtDialogMaxHeight();
+				var width = getArtDialogMaxWidth();
 				isMax = true;
 				d.width(width);
 				d.height(height);		
