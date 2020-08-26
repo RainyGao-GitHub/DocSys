@@ -16,24 +16,17 @@
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
-<!-- contextMenu -->
-<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
-<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
-<script type="text/javascript" src="static/ContextJS/js/context.js"></script>
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
+<!-- contextMenu -->
+<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
+<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
+<link rel="stylesheet" type="text/css" href="css/zjp-css.css">
+<script type="text/javascript" src="static/ContextJS/js/context.js"></script>
 
 <div id="zipViewer" style="overflow:auto;">
 	<ul id="zipPlayer" class="ztree" style="margin-bottom: 120px; width: 95%"></ul>
-</div>
-<div>
-	<ul id="zipTreeContextMenu" style="display:none" class='dropdown-menu dropdown-context' role='menu'>
-		<li><a onclick='zipOpenDoc()'>打开</a></li> 
-		<li><a onclick='zipDownloadDoc()'>下载</a></li>
-		<li class="divider"></li>
-		<li><a onclick='zipShowDocDetail()'>详细信息</a></li>
-	</ul>
 </div>
 
 <script type="text/javascript">
@@ -41,8 +34,10 @@
 	var docInfo = dialog.data;
 	console.log("docInfo:",docInfo);
 	var gShareId = docInfo.shareId;
-	
 	var curRightClickedTreeNode = null;
+	
+	contextMenuInit();
+	
 	$(document).ready(function()
 	{
 		getAndShowZipInitMenu(docInfo);
@@ -169,7 +164,7 @@
 	            onClick: zTreeOnClick,
 	            onDblClick: zTreeOnDbClick,
 	            beforeRightClick: zTreeBeforeRightClick,
-	            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
+	            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 	    },
 	    view: {
         	//showLine: false,	//不显示文件下面的下划线
@@ -183,23 +178,8 @@
 		var aObj = $("#" + treeNode.tId + "_a");
 		if ($("#diyBtn_"+treeNode.id).length>0) return;
 		var editStr = "<span class='caret pull-right' id='diyBtn_" + treeNode.id
-			+ "' title='"+treeNode.name+"' onfocus='this.blur();'></span>";
+			+ "' title='"+treeNode.name+"' onfocus='this.blur();' onclick='showContextMenu(this,event);'></span>";
 		aObj.append(editStr);
-		var btn = $("#diyBtn_"+treeNode.id);
-		if (btn) btn.bind("click", function(e){
-			console.log("diyBtn onclick for " + treeNode.name);
-			curRightClickedTreeNode = treeNode;
-			showZipTreeContextMenu(e, -100, 0);
-		});
-	}
-	
-	function showZipTreeContextMenu(e, xoffset, yoffset)
-	{
-		$dd = $('#zipTreeContextMenu');
-		$dd.css({
-				left: e.pageX + xoffset,
-				top: e.pageY + yoffset,
-			}).fadeIn(100);
 	}
 	
 	function removeHoverDom(treeId, treeNode) {
@@ -211,7 +191,8 @@
     function zTreeOnClick(event, treeId, treeNode) 
     {
     	console.log("zTreeOnClick treeId:"+ treeId, treeNode);
-    	//手机端上点击则打开
+    	
+    	//手机端上点击则打开   	
     }
       
       //Double Click 对于文件应该是编辑，对于目录应该是打开
@@ -309,4 +290,48 @@
  		
  		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
  	}
+ 	
+ 	function showContextMenu(obj,event){
+ 		event.stopPropagation();
+ 		context.show('#zipPlayer',event, -150);
+ 	}
+ 	
+    function contextMenuInit()
+    {
+		//右键菜单实现：contextMenu Start
+		context.init({preventDoubleContext: true});
+		
+		//zTree上的右键菜单
+		context.attach('#zipPlayer', [
+			{text: '打开', action: function(e){
+					e.preventDefault();
+					zipOpenDoc();
+				}
+			},
+			{text: '下载', action: function(e){
+						e.preventDefault();
+						zipDownloadDoc();
+					}
+			},
+			{divider: true},
+			{text: '详细信息', action: function(e){
+					e.preventDefault();
+					zipShowDocDetail();
+				}
+			},
+		]);
+		
+		context.settings({compress: true});
+		
+		$(document).on('mouseover', '.me-codesta', function(){
+			$('.finale h1:first').css({opacity:0});
+			$('.finale h1:last').css({opacity:1});
+			});
+		
+		$(document).on('mouseout', '.me-codesta', function(){
+			$('.finale h1:last').css({opacity:0});
+			$('.finale h1:first').css({opacity:1});
+		});
+		//右键菜单实现：contextMenu End
+    }
 </script>
