@@ -30,11 +30,24 @@
 	<link rel="stylesheet" href="static/artDialog/css/ui-dialog.css">
 	<script src="static/artDialog/dist/dialog-min.js"></script>
 	<script src="static/artDialog/dist/dialog-plus-min.js"></script>
+	<!-- contextMenu -->
+	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
+	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
+	<link rel="stylesheet" type="text/css" href="css/zjp-css.css">
+	<script type="text/javascript" src="static/ContextJS/js/context.js"></script>
 </head>
-<body style="height: 100%; margin: 0;">
+<body style="overflow: hidden;">
     <div align=center style="margin-top:20px" >
 		<ul id="zipPlayer" class="ztree" style="margin-bottom: 120px;"></ul>
     </div>   
+    <div>
+		<ul id="zipTreeContextMenu" style="display:none" class='dropdown-menu dropdown-context' role='menu'>
+			<li><a onclick='zipOpenDoc()'>打开</a></li> 
+			<li><a onclick='zipDownloadDoc()'>下载</a></li>
+			<li class="divider"></li>
+			<li><a onclick='zipShowDocDetail()'>详细信息</a></li>
+		</ul>
+	</div>
 	<script type="text/javascript">
 		var docInfo = getDocInfoFromRequestParamStr();
 		var gShareId = docInfo.shareId;
@@ -112,6 +125,20 @@
 		
 		function zTreeInit(data) {
 		    console.log("zTreeInit");
+		    var async = {  
+	    		enable : true,//设置 zTree 是否开启异步加载模式  
+	            url : "/DocSystem/Doc/getZipSubDocList.do",
+	            type : "post",
+	    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
+	    		otherParam:{
+	    			"reposId": docInfo.vid,
+			    	"docPath": docInfo.path, //zipFile的路径
+			    	"docName": docInfo.name, //zipFile的名字
+	                "shareId": docInfo.shareId,
+	    		},
+	    		dataFilter: asyncDataFilter,
+		    };
+	    	setting.async = async;
 		    var doctree = $.fn.zTree.init($("#zipPlayer"), setting, data);
 		}
 		
@@ -151,8 +178,8 @@
 	                onAsyncSuccess: zTreeOnAsyncSuccess, //异步加载完成后的回调
 		            onClick: zTreeOnClick,
 		            onDblClick: zTreeOnDbClick,
-		            beforeRightClick: zTreeBeforeRightClick
-		            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
+		            beforeRightClick: zTreeBeforeRightClick,
+		            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 		    },
 		    view: {
 	        	//showLine: false,	//不显示文件下面的下划线
@@ -169,8 +196,10 @@
 				+ "' title='"+treeNode.name+"' onfocus='this.blur();'></span>";
 			aObj.append(editStr);
 			var btn = $("#diyBtn_"+treeNode.id);
-			if (btn) btn.bind("click", function(){
+			if (btn) btn.bind("click", function(e){
 				console.log("diyBtn onclick for " + treeNode.name);
+				curRightClickedTreeNode = treeNode;
+				showZipTreeContextMenu(e, -100, 0);
 			});
 		}
 		
@@ -198,6 +227,11 @@
 			curRightClickedTreeNode = treeNode;
 	    	return true;	
 		};
+		
+		function zTreeOnRightClick(event, treeId, treeNode) {
+			//alert(treeNode ? treeNode.tId + ", " + treeNode.name : "isRoot");
+			showZipTreeContextMenu(event, 0, 0);
+		}
 	      
 	    function zTreeBeforeAsync(treeId, treeNode) {  
 	      	console.log("zTreeBeforeAsync treeId:"+ treeId, treeNode);
@@ -236,6 +270,15 @@
 	       }
 	       console.log(docList);
 		   return docList;
+		}
+	  	
+		function showZipTreeContextMenu(e, xoffset, yoffset)
+		{
+			$dd = $('#zipTreeContextMenu');
+			$dd.css({
+					left: e.pageX + xoffset,
+					top: e.pageY + yoffset,
+				}).fadeIn(100);
 		}
     </script>
 </body>
