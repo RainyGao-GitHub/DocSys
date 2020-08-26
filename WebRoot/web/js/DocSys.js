@@ -1676,6 +1676,7 @@ function showZipInArtDialog(docInfo)
 		},
 		oniframeload: function () {
 			console.log('oniframeload');
+			$(".ui-dialog-content").find("iframe").attr("scrolling", "auto");
 		},
 	});
 	d.show();
