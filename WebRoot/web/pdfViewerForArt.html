@@ -36,7 +36,15 @@
     
    	function viewDoc()
    	{
-	    getDocFileLink(docInfo, showPDF, showErrorMessage, "REST"); //RESTFUL URL    	
+	    var fileLink = docInfo.fileLink;	    
+	    if(!fileLink || fileLink == null || fileLink == "")
+	    {
+	    	getDocFileLink(docInfo, showPDF, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink    	
+	    }
+	    else
+	    {
+	    	showPDF(fileLink);
+	    }
    	}   
     
     function showPDF(url)
