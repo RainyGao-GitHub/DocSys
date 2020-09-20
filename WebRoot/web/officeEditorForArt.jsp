@@ -20,8 +20,11 @@ String officeEditorApi = BaseController.getOfficeEditor();
     var title = docInfo.name;
     var key = docInfo.docId + "";
     
-    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
-    	    
+    $(document).ready(function()
+    {
+    	getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
+    });
+    
     function showOffice(data)
    	{
 		var fileLink = buildFullLink(data.fileLink);
