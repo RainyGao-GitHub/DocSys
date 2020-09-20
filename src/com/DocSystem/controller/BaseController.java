@@ -7423,6 +7423,10 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		}
+		else
+		{
+			officeEditor = "/DocSystem/web/static/officeEditor/web-apps/apps/api/documents/api.js";
+		}
 		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
 		return officeEditor;
 	}
