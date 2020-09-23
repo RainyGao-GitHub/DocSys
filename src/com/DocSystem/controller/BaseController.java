@@ -7408,7 +7408,7 @@ public class BaseController  extends BaseFunction{
 	public static String getOfficeEditor(HttpServletRequest request)
 	{
 		String officeEditor = officeEditorApi;
-		if(officeEditor == null || !officeEditor.isEmpty())
+		if(officeEditor == null || officeEditor.isEmpty())
 		{
 			System.out.println("getOfficeEditor() host:" + request.getRemoteHost());
 			System.out.println("getOfficeEditor() port:" + request.getRemotePort());
