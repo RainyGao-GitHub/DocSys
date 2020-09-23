@@ -2288,7 +2288,7 @@ public class DocController extends BaseController{
 		
 		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
-		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
+		if((preview == null && isOfficeEditorApiConfiged(request)) || (preview != null && preview.equals("office")))
 		{	
 			JSONObject jobj = new JSONObject();
 			String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
@@ -2427,7 +2427,7 @@ public class DocController extends BaseController{
 			tmpDoc.setShareId(shareId);
 		}
 		
-		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
+		if((preview == null && isOfficeEditorApiConfiged(request)) || (preview != null && preview.equals("office")))
 		{	
 			JSONObject jobj = new JSONObject();
 			String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
@@ -2517,9 +2517,9 @@ public class DocController extends BaseController{
 		return officeEditAuthCode;
 	}
 
-	private boolean isOfficeEditorApiConfiged() {
+	private boolean isOfficeEditorApiConfiged(HttpServletRequest request) {
 		System.out.println("isOfficeEditorApiConfiged() officeEditorApi:" + officeEditorApi);
-		String officeEditor = getOfficeEditor();
+		String officeEditor = getOfficeEditor(request);
 		if(officeEditor == null)
 		{
 			return false;

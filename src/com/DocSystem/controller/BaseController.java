@@ -7405,28 +7405,28 @@ public class BaseController  extends BaseFunction{
 		return docSysIniState;
 	}
 	
-	public static String getOfficeEditor()
+	public static String getOfficeEditor(HttpServletRequest request)
 	{
 		String officeEditor = officeEditorApi;
 		if(officeEditor != null && !officeEditor.isEmpty())
 		{
-			if(testUrlWithTimeOut(officeEditor,3000) == false)
-			{				
-				if(officeEditorApi.indexOf("localhost") >= 0)
+			officeEditor = request.getRemoteHost() + request.getRemotePort() + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";	
+		}	
+		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
+		
+		if(testUrlWithTimeOut(officeEditor,3000) == false)
+		{				
+			if(officeEditorApi.indexOf("localhost") >= 0)
+			{
+				String serverIP = getIpAddress();
+				officeEditor = officeEditorApi.replace("localhost", serverIP);
+				if(testUrlWithTimeOut(officeEditor,3000) == false)
 				{
-					String serverIP = getIpAddress();
-					officeEditor = officeEditorApi.replace("localhost", serverIP);
-					if(testUrlWithTimeOut(officeEditor,3000) == false)
-					{
-						officeEditor = null;
-					}
+					officeEditor = null;
 				}
 			}
 		}
-		else
-		{
-			officeEditor = "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";
-		}
+		
 		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
 		return officeEditor;
 	}
