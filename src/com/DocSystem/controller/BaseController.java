@@ -7408,9 +7408,11 @@ public class BaseController  extends BaseFunction{
 	public static String getOfficeEditor(HttpServletRequest request)
 	{
 		String officeEditor = officeEditorApi;
-		if(officeEditor != null && !officeEditor.isEmpty())
+		if(officeEditor == null || !officeEditor.isEmpty())
 		{
-			officeEditor = request.getRemoteHost() + request.getRemotePort() + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";	
+			System.out.println("getOfficeEditor() host:" + request.getRemoteHost());
+			System.out.println("getOfficeEditor() port:" + request.getRemotePort());
+			officeEditor = request.getRemoteHost()  + ":" + request.getRemotePort() + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";	
 		}	
 		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
 		
