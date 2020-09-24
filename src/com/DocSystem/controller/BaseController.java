@@ -7410,9 +7410,9 @@ public class BaseController  extends BaseFunction{
 		String officeEditor = officeEditorApi;
 		if(officeEditor == null || officeEditor.isEmpty())
 		{
-			System.out.println("getOfficeEditor() host:" + request.getRemoteHost());
-			System.out.println("getOfficeEditor() port:" + request.getRemotePort());
-			officeEditor = request.getRemoteHost()  + ":" + request.getRemotePort() + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";	
+			System.out.println("getOfficeEditor() url:" + request.getRequestURL());
+			String url = getHostAndPortFromUrl(request.getRequestURL());
+			officeEditor = url + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";	
 		}	
 		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
 		
@@ -7433,6 +7433,10 @@ public class BaseController  extends BaseFunction{
 		return officeEditor;
 	}
 	
+	private static String getHostAndPortFromUrl(StringBuffer requestURL) {
+		return requestURL.substring(0, requestURL.indexOf("/DocSystem"));
+	}
+
 	public void setOfficeEditor(String editor) {
 		officeEditorApi = editor;
 	}
