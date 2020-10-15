@@ -20,7 +20,7 @@ public class OfficeController extends BaseController{
 		
 		System.out.println("getInfo key:" + key);
 		JSONObject jobj = new JSONObject();
-		jobj.put("howebsocketst", true);
+		jobj.put("websocket", true);
 		jobj.put("origins", "*:*");
 		jobj.put("cookie_needed", false);
 		jobj.put("entropy", "2782586626");
