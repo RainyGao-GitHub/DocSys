@@ -1,19 +1,17 @@
 package com.DocSystem.controller;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 @Controller
-@RequestMapping("/web/static/doc")
+@RequestMapping("/web/static/office-editor/doc")
 public class OfficeController extends BaseController{
 	// get请求
 	@RequestMapping(value="/{key}/c/info", method=RequestMethod.GET, produces="application/json;charset=UTF-8")
@@ -21,9 +19,13 @@ public class OfficeController extends BaseController{
 	public void getInfo(@PathVariable("key") String key, HttpServletResponse response) {
 		
 		System.out.println("getInfo key:" + key);
-		String ret = "{\"websocket\":true,\"origins\":[\"*:*\"],\"cookie_needed\":false,\"entropy\":2782586626}";
-		JSONObject jobj = JSON.parseObject(ret);
+		JSONObject jobj = new JSONObject();
+		jobj.put("howebsocketst", true);
+		jobj.put("origins", "*:*");
+		jobj.put("cookie_needed", false);
+		jobj.put("entropy", "2782586626");
 		writeJson(jobj, response);
+		//{"websocket":true,"origins":["*:*"],"cookie_needed":false,"entropy":3999383772} //前端期望的返回		
     }
 	
 //	// post请求
