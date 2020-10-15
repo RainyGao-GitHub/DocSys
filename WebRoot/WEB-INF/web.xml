@@ -59,6 +59,7 @@
 	<url-pattern>*.ico</url-pattern>
 	<url-pattern>*.bcmap</url-pattern>	
 	<url-pattern>*.less</url-pattern>	
+	<url-pattern>/DocSystem/web/static/office-editor/*</url-pattern>	
 </servlet-mapping>
 <filter>  
     <description>字符集过滤器</description>  
