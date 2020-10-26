@@ -416,8 +416,8 @@
 </div>
 
 <script type="text/javascript">
-	//var webSocket = new WebSocket("ws://localhost:8090/DocSystem/web/static/ws/sockjs");
-	var webSocket = new WebSocket("wss://echo.websocket.org");
+	var webSocket = new WebSocket("ws://localhost:8090/DocSystem/web/static/ws");
+	//var webSocket = new WebSocket("wss://echo.websocket.org");
 	webSocket.onopen = function(event){
 	    console.log("连接成功");
 	    console.log(event);
