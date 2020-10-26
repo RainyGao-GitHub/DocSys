@@ -35,16 +35,12 @@ public class MyWebSocketHandler implements WebSocketHandler{
 
         if(webSocketMessage.getPayloadLength()==0)return;
 
-        //得到Socket通道中的数据并转化为Message对象
-        Message msg=new Gson().fromJson(webSocketMessage.getPayload().toString(),Message.class);
+        String msg= webSocketMessage.getPayload().toString();
+        Integer uid = (Integer) webSocketSession.getAttributes().get("uid");
 
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-        msg.setMessageDate(now);
-        //将信息保存至数据库
-        youandmeService.addMessage(msg.getFromId(),msg.getFromName(),msg.getToId(),msg.getMessageText(),msg.getMessageDate());
-
+        Timestamp now = new Timestamp(System.currentTimeMillis());        
         //发送Socket信息
-        sendMessageToUser(msg.getToId(), new TextMessage(new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJson(msg)));
+        sendMessageToUser(uid, new TextMessage(new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJson(msg)));
     }
 
     public void handleTransportError(WebSocketSession webSocketSession, Throwable throwable) throws Exception {
