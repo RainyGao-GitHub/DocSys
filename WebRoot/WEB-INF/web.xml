@@ -35,6 +35,7 @@
 		<param-value>classpath:spring-mvc.xml</param-value>
 	</init-param>
     <load-on-startup>1</load-on-startup>  
+    <async-supported>true</async-supported>
 </servlet>
 <servlet-mapping>
 	<servlet-name>springMvc</servlet-name>
@@ -62,6 +63,7 @@
 	<url-pattern>*.bcmap</url-pattern>	
 	<url-pattern>*.less</url-pattern>	
 	<url-pattern>/DocSystem/web/static/office-editor/*</url-pattern>	
+	<url-pattern>/DocSystem/web/static/ws/*</url-pattern>	
 </servlet-mapping>
 <filter>  
     <description>字符集过滤器</description>  
