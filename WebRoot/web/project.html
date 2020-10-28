@@ -416,7 +416,9 @@
 </div>
 
 <script type="text/javascript">
-	var webSocket = new WebSocket("ws://localhost:8090/DocSystem/web/static/office-editor/ws");
+	var token='dcvuahsdnfajw12kjfasfsdf34';
+	var webSocket = new WebSocket("ws://localhost:8090/DocSystem/websocket",[token]);
+	//var webSocket = new WebSocket("ws://echo.websocket.org");
 	//var webSocket = new WebSocket("wss://echo.websocket.org");
 	webSocket.onopen = function(event){
 	    console.log("连接成功");
