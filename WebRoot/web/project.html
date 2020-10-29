@@ -1853,23 +1853,16 @@
 
 <script type="text/javascript">
 	/********************* 文件编辑接口 *********************************************/
-	function unlockDoc(docId)
+	function lockDoc(node, lockType)
 	{
-		console.log("unlockDoc()  docId:" + docId);
-		
-		if(!docId)
-		{
-			showErrorMessage("文件不存在");
-			return;
-		}
-		
-		var node = getNodeById(docId);
+		console.log("lockDoc() lockType:" + lockType, node);
 		if(!node || node == null)
 		{
-			showErrorMessage("文件不存在");
+			showErrorMessage("请选择文件！");
 			return;
 		}
 		
+		var docId = node.docId;
 		var pid = node.pid;
 		var path = node.path;
 		var name = node.name;
@@ -1880,31 +1873,37 @@
 			type : "post",
 			dataType : "json",
 			data : {
-				lockType : 0, //unlock the doc
+				lockType : lockType, //lockType: CheckOut
 				reposId : gReposInfo.id, 
 				docId : docId,
 				pid: pid,
 				path: path,
 				name: name,
 				type: type,
-	            shareId: gShareId,
+                shareId: gShareId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
-					
-					$("[dataId='"+ docId +"']").children("div:first-child").css("color","black");
+					if(lockType != 0)
+					{
+						$("[dataId='"+ docId +"']").children("div:first-child").css("color","red");
+					}
+					else
+					{
+						$("[dataId='"+ docId +"']").children("div:first-child").css("color","black");
+					}
 				    return;
  				}
 				else
 				{
-					showErrorMessage("unlockDoc Error:" + ret.msgInfo);
+					showErrorMessage("LockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function () 
 			{
-				showErrorMessage("unlockDoc 异常");
+				showErrorMessage("LockDoc 异常");
 				return;
 			}
 		});
@@ -3509,13 +3508,13 @@
  				}
 				else
 				{
-					showErrorMessage("checkOut Error:" + ret.msgInfo);
+					showErrorMessage("LockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function () 
 			{
-				showErrorMessage("checkOut 异常");
+				showErrorMessage("LockDoc 异常");
 				return;
 			}
 		});
@@ -4171,18 +4170,22 @@
 								}
 						},
 						{divider: true},
-						{text: 'CheckOut', action: function(e){
+						{text: '锁定', action: function(e){
 								e.preventDefault();
 								var docType = curRightClickedTreeNode.type;
 								if(docType == 1)
 								{							
-									checkOut(curRightClickedTreeNode);
+									lockDoc(curRightClickedTreeNode, 1);
 								}
 							}
 						},
-						{text: 'CheckIn', action: function(e){
+						{text: '解锁', action: function(e){
 								e.preventDefault();
-					 			checkIn(curRightClickedTreeNode);
+								var docType = curRightClickedTreeNode.type;
+								if(docType == 1)
+								{
+									lockDoc(curRightClickedTreeNode, 0);
+								}
 							}
 						},
 						{divider: true},
@@ -4550,18 +4553,22 @@
 								}
 							},
 							{divider: true},
-							{text: 'CheckOut', action: function(e){
+							{text: '锁定', action: function(e){
 									e.preventDefault();
 									var docType = curRightClickedDocListNode.type;
 									if(docType == 1)
 									{							
-										checkOut(curRightClickedDocListNode);
+										lockDoc(curRightClickedDocListNode, 1);
 									}
 								}
 							},
-							{text: 'CheckIn', action: function(e){
+							{text: '解锁', action: function(e){
 									e.preventDefault();
-						 			checkIn(curRightClickedDocListNode);
+									var docType = curRightClickedDocListNode.type;
+									if(docType == 1)
+									{
+										lockDoc(curRightClickedDocListNode, 0);
+									}
 								}
 							},
 							{divider: true},
