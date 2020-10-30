@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
@@ -745,6 +746,7 @@ public class ReposController extends BaseController{
 	public void getSubDocList(Integer vid, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			Integer shareId,
 			String sort,
+			Integer needLockState,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort);
@@ -800,7 +802,7 @@ public class ReposController extends BaseController{
 				
 				if(sort != null && !sort.isEmpty())
 				{
-					docList = sortDocList(docList, sort);
+					docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 				}
 				rt.setData(docList);
 				writeJson(rt, response);			
@@ -846,7 +848,7 @@ public class ReposController extends BaseController{
 			
 			if(sort != null && !sort.isEmpty())
 			{
-				docList = sortDocList(docList, sort);
+				docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 			}
 			rt.setData(docList);
 			writeJson(rt, response);			
@@ -876,7 +878,7 @@ public class ReposController extends BaseController{
 		{
 			if(sort != null && !sort.isEmpty())
 			{
-				docList = sortDocList(docList, sort);
+				docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 			}
 			rt.setData(docList);	
 		}
@@ -894,6 +896,31 @@ public class ReposController extends BaseController{
 			}
 		}).start();
 	}
+	
+	List<Doc> updateLockStateAndsortDocList(List<Doc> docList, String sort, Integer needLockState) 
+	{
+		if(needLockState != null)
+		{
+			getAndSetDocLockState(docList);
+		}
+		docList = sortDocList(docList, sort);
+		return docList;
+	}
+	void getAndSetDocLockState(List<Doc> docList)
+	{
+		for(Doc doc: docList)
+		{
+			if(doc.getType() == 1)
+			{
+				DocLock docLock = getDocLock(doc);
+				doc.setState(docLock.getState());
+				doc.setLocker(docLock.getLocker());
+				doc.setLockBy(docLock.getLockBy());
+				doc.setLockTime(docLock.getLockTime());		
+			}
+		}
+	}
+	
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,Long docId, Long pid, String path, String name, Integer level, Integer type, 
