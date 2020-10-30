@@ -5218,7 +5218,7 @@ public class BaseController  extends BaseFunction{
 		return docLock;
 	}
 	
-	private DocLock getDocLock(Doc doc) {
+	protected DocLock getDocLock(Doc doc) {
 		DocLock qDocLock = new DocLock();
 		qDocLock.setVid(doc.getVid());
 		qDocLock.setPath(doc.getPath());
