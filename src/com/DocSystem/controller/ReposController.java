@@ -906,16 +906,13 @@ public class ReposController extends BaseController{
 	{
 		for(Doc doc: docList)
 		{
-			if(doc.getType() == 1)
+			DocLock docLock = getDocLock(doc);
+			if(docLock != null)
 			{
-				DocLock docLock = getDocLock(doc);
-				if(docLock != null)
-				{
-					doc.setState(docLock.getState());
-					doc.setLocker(docLock.getLocker());
-					doc.setLockBy(docLock.getLockBy());
-					doc.setLockTime(docLock.getLockTime());	
-				}
+				doc.setState(docLock.getState());
+				doc.setLocker(docLock.getLocker());
+				doc.setLockBy(docLock.getLockBy());
+				doc.setLockTime(docLock.getLockTime());	
 			}
 		}
 	}
