@@ -2610,7 +2610,7 @@
 	   				+' createTime=' + node.createTime
 	   				+' latestEditTime=' + node.latestEditTime;     	        				
        			
-       			if(node.state && node.state != 0)
+       			if(node.state && node.state == 1) //1: 文件锁定  3:备注锁定  2:强制锁定（后台控制）  
        			{
        				if(node.type == 2)
        				{
