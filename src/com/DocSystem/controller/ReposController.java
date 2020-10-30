@@ -749,7 +749,7 @@ public class ReposController extends BaseController{
 			Integer needLockState,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort);
+		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort + " needLockState:" +  needLockState);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -800,10 +800,7 @@ public class ReposController extends BaseController{
 					rootDoc.setType(1);
 				}
 				
-				if(sort != null && !sort.isEmpty())
-				{
-					docList = updateLockStateAndsortDocList(docList, sort, needLockState);
-				}
+				docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 				rt.setData(docList);
 				writeJson(rt, response);			
 				return;				
@@ -846,10 +843,7 @@ public class ReposController extends BaseController{
 			System.out.println("getSubDocList() [" + doc.getPath() + doc.getName() + "] 是文件");
 			docList.add(tmpDoc);
 			
-			if(sort != null && !sort.isEmpty())
-			{
-				docList = updateLockStateAndsortDocList(docList, sort, needLockState);
-			}
+			docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 			rt.setData(docList);
 			writeJson(rt, response);			
 			return;			
@@ -876,10 +870,7 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			if(sort != null && !sort.isEmpty())
-			{
-				docList = updateLockStateAndsortDocList(docList, sort, needLockState);
-			}
+			docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 			rt.setData(docList);	
 		}
 		System.out.println("getSubDocList() docList ready");
@@ -903,9 +894,14 @@ public class ReposController extends BaseController{
 		{
 			getAndSetDocLockState(docList);
 		}
-		docList = sortDocList(docList, sort);
+		
+		if(sort != null && !sort.isEmpty())
+		{
+			docList = sortDocList(docList, sort);
+		}
 		return docList;
 	}
+	
 	void getAndSetDocLockState(List<Doc> docList)
 	{
 		for(Doc doc: docList)
