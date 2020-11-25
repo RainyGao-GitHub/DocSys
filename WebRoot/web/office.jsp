@@ -1,6 +1,6 @@
 <%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%
-String officeEditorApi = BaseController.getOfficeEditor();
+String officeEditorApi = BaseController.getOfficeEditor(request);
 %>
 
 <!DOCTYPE html>
