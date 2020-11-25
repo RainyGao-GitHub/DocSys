@@ -453,13 +453,14 @@ public class BaseController  extends BaseFunction{
 		//dbDoc不存在，无发确认本地是否修改，因此总是认为有修改
 		if(dbDoc == null)
 		{
+			System.out.println("isDocLocalChanged() dbDoc is null"); 			
 			return true;
 		}
 		
 		//文件大小变化了则一定是变化了
 		if(!dbDoc.getSize().equals(localEntry.getSize()))
 		{
-			//System.out.println("isDocLocalChanged() local changed: dbDoc.size:" + dbDoc.getSize() + " localEntry.size:" + localEntry.getSize()); 
+			System.out.println("isDocLocalChanged() local changed: dbDoc.size:" + dbDoc.getSize() + " localEntry.size:" + localEntry.getSize()); 
 			return true;			
 		}
 				
@@ -467,7 +468,7 @@ public class BaseController  extends BaseFunction{
 		if(!dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
 		{
 			
-			//System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + dbDoc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
+			System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + dbDoc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
 			return true;
 		}
 		
@@ -476,7 +477,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty())
 			{
-				//System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
+				System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
 				return true;
 			}
 		}
@@ -3334,7 +3335,7 @@ public class BaseController  extends BaseFunction{
 			if(isDocLocalChanged(repos, dbDoc, localEntry))
 			{
 				//本地文件 内容修改
-				//System.out.println("getDocChangeType_FSM() 本地文件修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc和localEntry是文件");
+				System.out.println("getDocChangeType_FSM() 本地文件修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc和localEntry是文件");
 				return DocChangeType.LOCALCHANGE;
 			}
 			
@@ -4670,7 +4671,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 	
-				System.out.println("updateDoc() lockDoc " + doc.getName() +" Failed！");
+				System.out.println("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
 				return false;
 			}
 			unlock(); //线程锁
@@ -4684,7 +4685,7 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(doc,login_user,docLock);
 
-			System.out.println("updateDoc() saveFile " + doc.getName() +" Failed, unlockDoc Ok");
+			System.out.println("updateDoc_FSM() saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return false;
 		}
@@ -4700,7 +4701,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 		if(revision == null)
 		{
-			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+			docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
 			docSysWarningLog("verReposRealDocCommit Failed", rt);	
 		}
 		else
@@ -4709,7 +4710,7 @@ public class BaseController  extends BaseFunction{
 			doc.setRevision(revision);
 			if(dbUpdateDoc(repos, doc, true) == false)
 			{
-				docSysWarningLog("updateDoc() updateDocInfo Failed", rt);
+				docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
 			}
 			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 			//Insert Push Action
@@ -4851,7 +4852,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 		
-				System.out.println("copyDoc lock srcDoc " + srcDoc.getName() + " Failed");
+				System.out.println("copyDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed");
 				return false;
 			}
 			
@@ -4859,7 +4860,7 @@ public class BaseController  extends BaseFunction{
 			if(dstDocLock == null)
 			{
 				unlock(); //线程锁
-				System.out.println("copyDoc lock dstcDoc " + dstDoc.getName() + " Failed");
+				System.out.println("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");
 				
 				unlockDoc(srcDoc, login_user, srcDocLock);
 				
@@ -4875,7 +4876,7 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(srcDoc,login_user,null);
 			unlockDoc(dstDoc,login_user,null);
 
-			System.out.println("copy " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败");
+			System.out.println("copyDoc_FSM() copy " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败");
 			rt.setError("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed");
 			return false;
 		}
@@ -4884,14 +4885,14 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 		if(revision == null)
 		{
-			docSysWarningLog("copyDoc() verReposRealDocCopy failed", rt);
+			docSysWarningLog("copyDoc_FSM() verReposRealDocCopy failed", rt);
 		}
 		else
 		{
 			dstDoc.setRevision(revision);
 			if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
 			{
-				docSysWarningLog("copyDoc() dbCopyDoc failed", rt);			
+				docSysWarningLog("copyDoc_FSM() dbCopyDoc failed", rt);			
 			}
 			dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 		}
@@ -4919,7 +4920,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 	
-				System.out.println("updateDocContent() lockDoc Failed");
+				System.out.println("updateRealDocContent() lockDoc Failed");
 				return false;
 			}
 			unlock(); //线程锁
@@ -4936,15 +4937,40 @@ public class BaseController  extends BaseFunction{
 	private boolean updateRealDocContent_FSM(Repos repos, Doc doc,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
+		//get RealDoc Full ParentPath
+		String reposRPath =  getReposRealPath(repos);	
+		
 		if(saveRealDocContent(repos, doc, rt) == true)
 		{
-			verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2, null);
+			doc.setLatestEditor(login_user.getId());
+			doc.setLatestEditorName(login_user.getName());
+			
+			//Get latestEditTime
+			Doc fsDoc = fsGetDoc(repos, doc);
+			doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
-			//Insert Push Action
-			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
-
-			//Insert index add action for VDoc
-			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.REALDOC, null, login_user);
+			//需要将文件Commit到版本仓库上去
+			String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2, null);
+			if(revision == null)
+			{
+				docSysDebugLog("updateRealDocContent_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+				docSysWarningLog("verReposRealDocCommit Failed", rt);	
+			}
+			else
+			{
+				//updateDoc Info
+				doc.setRevision(revision);
+				if(dbUpdateDoc(repos, doc, true) == false)
+				{
+					docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
+				}
+				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+				//Insert Push Action
+				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
+			}
+			
+			//Build DocUpdate action
+			BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
 			return true;
 		}
 		return false;
@@ -4962,7 +4988,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 	
-				System.out.println("updateDocContent() lockDoc Failed");
+				System.out.println("updateVirualDocContent() lockDoc Failed");
 				return false;
 			}
 			unlock(); //线程锁
