@@ -1748,7 +1748,7 @@ public class DocController extends BaseController{
 	}
 	
 	@RequestMapping(value="/downloadDoc/{reposPath}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
-	public void downloadDoc(@PathVariable("targetPath") String reposPath, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+	public void downloadDoc(@PathVariable("reposPath") String reposPath, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
