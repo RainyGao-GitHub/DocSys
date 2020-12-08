@@ -303,7 +303,7 @@ public class GITUtil  extends BaseController{
         if(type ==  0) 
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(),doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    	remoteEntry.setRevision(revision);
 	    	return remoteEntry;
 		}
@@ -311,7 +311,7 @@ public class GITUtil  extends BaseController{
         if(revision != null) 
 		{
         	//If revision already set, no need to get revision
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    	remoteEntry.setRevision(revision);
 	    	return remoteEntry;
 		}
@@ -329,7 +329,7 @@ public class GITUtil  extends BaseController{
 	    long commitTime = convertCommitTime(commit.getCommitTime());
 	            
 	    //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-        Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+        Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 		remoteDoc.setRevision(commitId);
         remoteDoc.setCreatorName(author);
         remoteDoc.setLatestEditorName(commitUser);
@@ -1060,7 +1060,7 @@ public class GITUtil  extends BaseController{
 					//注意: checkOut时必须使用相同的revision，successList中的可以是实际的，在获取子文件时绝对不能修改revision，那样就引起的时间切面不一致
 					//这个问题导致了，自动同步出现问题（远程同步用的就是getEntry接口），导致远程同步后的dbDoc与实际的revision不一致
 					//String subEntryRevision = revision;	//绝对不能用这个，只要保证revision不被修改就会一直是同一个值
-					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
 					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,revision, force, downloadList);
 					if(subSuccessList != null && subSuccessList.size() > 0)
 					{
@@ -2341,7 +2341,7 @@ public class GITUtil  extends BaseController{
 				while(treeWalk.next())
 				{
 					int subDocType = getEntryType(treeWalk.getFileMode());
-				    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+				    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
 		        	//System.out.println("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
 
 				    docHashMap.put(subDoc.getName(), subDoc);
@@ -2361,7 +2361,7 @@ public class GITUtil  extends BaseController{
         {
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
         	//System.out.println("scanForSubDocCommit() local subDoc:" + subDoc.getName());
 
         	if(docHashMap.get(subDoc.getName()) == null)
@@ -2384,7 +2384,7 @@ public class GITUtil  extends BaseController{
         System.out.println("doAutoCommitParent() parentPath:" + parentPath);
     	if(parentPath.isEmpty())
     	{
-    		Doc rootDoc = buildBasicDoc(doc.getVid(), 0L, -1L, "", "", 0, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+    		Doc rootDoc = buildBasicDoc(doc.getVid(), 0L, -1L, doc.getReposPath(), "", "", 0, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 			if(commitActionList == null)
 			{	
 				commitActionList = new ArrayList<CommitAction>();
@@ -2442,7 +2442,7 @@ public class GITUtil  extends BaseController{
 	    		
 	    		if(type == 0)
 	    		{
-	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, doc.getReposPath(), path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2, commitActionList);
 	    		}
 	    		path = path + name + "/";  		
