@@ -462,9 +462,10 @@ public class ReposController extends BaseController{
 			{
 				//Add doc for AutoSync
 				List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
+				String reposPath = getReposPath(repos);
 				String localRootPath = getReposRealPath(repos);
 				String localVRootPath = getReposVirtualPath(repos);			
-				Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
+				Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, reposPath, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
 				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNC, login_user, "自动同步：版本仓库类型变更 " + reposInfo.getVerCtrl() + ":" + newReposInfo.getVerCtrl());
 				executeUniqueCommonActionList(actionList, rt);
 			}
@@ -617,10 +618,11 @@ public class ReposController extends BaseController{
 		}
 		//printObject("getReposInitMenu() repos:", repos);
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc rootDoc = buildBasicDoc(reposId, null, null, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
 		//printObject("getReposInitMenu() rootDoc:", rootDoc);
 		
 		//get the rootDocAuth
@@ -689,7 +691,7 @@ public class ReposController extends BaseController{
 		Doc doc = null;
 		if(path != null && name != null)
 		{
-			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+			doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 			if(doc.getDocId() == rootDoc.getDocId())
 			{
 				doc = null;
@@ -769,6 +771,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
@@ -777,7 +780,7 @@ public class ReposController extends BaseController{
 		Doc doc = null;
 		if(path == null)
 		{
-			Doc rootDoc = buildBasicDoc(vid, null, null, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
+			Doc rootDoc = buildBasicDoc(vid, null, null, reposPath, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
 			//printObject("getReposInitMenu() rootDoc:", rootDoc);
 			
 			if(rootDoc.getDocId() != 0) //不是仓库根目录
@@ -810,7 +813,7 @@ public class ReposController extends BaseController{
 		
 		if(doc == null)
 		{
-			doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2, true, localRootPath, localVRootPath, null, null);
+			doc = buildBasicDoc(repos.getId(), docId, null, reposPath, path, name, null,2, true, localRootPath, localVRootPath, null, null);
 		}
 		
 		Integer reposId = repos.getId();
@@ -940,6 +943,7 @@ public class ReposController extends BaseController{
 		Repos repos = reposService.getRepos(vid);
 		
 		//Build rootDoc
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
@@ -977,7 +981,7 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+			Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 			
 			//获取用户可访问文件列表(From Root to Doc)
 			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, null, docAuthHashMap, rt);
@@ -1084,10 +1088,11 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -1352,10 +1357,11 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -1475,10 +1481,11 @@ public class ReposController extends BaseController{
 			return;
 		}
 
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -1579,10 +1586,11 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		//检查该用户是否设置了目录权限
 		DocAuth docAuth = getUserDispDocAuth(repos, reposAccess.getAccessUser().getId(), doc); 
