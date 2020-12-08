@@ -276,15 +276,17 @@
                    if( "ok" == ret.status )
                    {          
                 	    console.log("downloadDocPrepare Ok:",ret);                	                	   		
-            	   		var targetName = ret.data.name;
+            	   		var reposPath = ret.data.reposPath;
+                	    var targetName = ret.data.name;
                 	    var targetPath = ret.data.path;
                 	    var deleteFlag = ret.msgData;
             	   		
                 	    //targetName = encodeURI(Base64.encode(targetName));
             		   	//targetPath = encodeURI(Base64.encode(targetPath));
+                	    reposPath = encodeURI(reposPath);
                 	    targetName = encodeURI(targetName);
             		   	targetPath = encodeURI(targetPath);
-            		   	var url = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
+            		   	var url = "/DocSystem/Doc/downloadDoc.do?reposPath=" + reposPath + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
             		   	if(gShareId)
             		   	{
             		   		url += "&shareId=" + gShareId;
