@@ -268,6 +268,7 @@ public class BaseController  extends BaseFunction{
 	{
 		//System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
+    		String reposPath = getReposPath(repos);
 			String localRootPath = getReposRealPath(repos);
 			String localVRootPath = getReposVirtualPath(repos);
 			
@@ -319,7 +320,7 @@ public class BaseController  extends BaseFunction{
 	    		String name = file.getName();
 	    		//System.out.println("getLocalEntryList subFile:" + name);
 	
-	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "");
 	    		subDoc.setLatestEditTime(file.lastModified());
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryList.add(subDoc);
@@ -584,7 +585,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}	
 			
-			Doc tempDoc = buildBasicDoc(reposId, null, pid, pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, doc.getReposPath(), pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt);
@@ -1596,9 +1597,15 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
-	Doc buildDownloadDocInfo(String targetPath, String targetName)
+	Doc buildDownloadDocInfo(String reposPath, String targetPath, String targetName)
 	{
 		System.out.println("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
+		String encReposPath = base64EncodeURLSafe(reposPath);
+		if(reposPath == null)
+		{
+			return null;			
+		}	
+		
 		String encTargetName = base64EncodeURLSafe(targetName);
 		if(encTargetName == null)
 		{
@@ -1613,6 +1620,7 @@ public class BaseController  extends BaseFunction{
 		Doc doc = new Doc();
 		doc.setPath(encTargetPath);
 		doc.setName(encTargetName);
+		doc.setReposPath(encReposPath);
 		return doc;
 	}
 	
@@ -2088,7 +2096,7 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("checkAddUpdateParentDoc pid:" + doc.getPid());
 		
-		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), 0L, "");
+		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), 0L, "");
 		parentDoc.setRevision(doc.getRevision());
 
 		printObject("checkAddUpdateParentDoc parentDoc:", parentDoc);
@@ -2335,11 +2343,11 @@ public class BaseController  extends BaseFunction{
 	    		String name = file.getName();
 	    		System.out.println("BuildMultiActionListForDocCopy subFile:" + name);
 
-	    		Doc dstSubDoc = buildBasicDoc(repos.getId(), null, dstDoc.getDocId(), dstSubDocParentPath, name, dstSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		Doc dstSubDoc = buildBasicDoc(repos.getId(), null, dstDoc.getDocId(), dstDoc.getReposPath(), dstSubDocParentPath, name, dstSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
 	    		dstSubDoc.setCreateTime(dstLocalEntry.lastModified());
 	    		dstSubDoc.setLatestEditTime(dstLocalEntry.lastModified());
 	    		
-	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcDoc.getReposPath(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
 	    		BuildMultiActionListForDocCopy(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser, isMove);
 	    	}
 		}		
@@ -9366,7 +9374,7 @@ public class BaseController  extends BaseFunction{
         return cmd;
     }   
     
-    protected static String run(String command, String[] envp, File dir) {
+    public static String run(String command, String[] envp, File dir) {
         String result = null;
 
     	Runtime rt = Runtime.getRuntime();

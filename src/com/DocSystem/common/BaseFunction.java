@@ -263,7 +263,7 @@ public class BaseFunction{
 	    {
 	    	File localEntry = tmp[i];
 	    	int subDocType = localEntry.isFile()? 1: 2;
-	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "");
+	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "");
 	    	if(localEntry.isDirectory())
 	    	{	
 	    		insertAddDirAction(subActionList,subDoc,true, isGit);
@@ -330,9 +330,14 @@ public class BaseFunction{
 	/******************************* 路径相关接口  
 	 * @param isRealDoc 
 	 * @param localRootPath *******************************/
-	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
 	{
 		//Format path and name
+		if(reposPath == null)
+		{
+			reposPath = "";
+		}
+		
 		if(path == null)
 		{
 			path = "";
@@ -369,6 +374,7 @@ public class BaseFunction{
 		
 		Doc doc = new Doc();
 		doc.setVid(reposId);
+		doc.setReposPath(reposPath);
 		doc.setPath(path);
 		doc.setName(name);
 		doc.setLevel(level);
@@ -409,7 +415,7 @@ public class BaseFunction{
 	{
 		//String localRootPath = getReposRealPath(repos);
 		//String localVRootPath = getReposVirtualPath(repos);
-		return buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
+		return buildBasicDoc(repos.getId(), 0L, -1L, repos.getPath() + repos.getId() + "/", "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
 	}
 	
 	//VirtualDoc 的vid docId pid level都是和RealDoc一样的
@@ -417,7 +423,7 @@ public class BaseFunction{
 	{
 		if(doc.getIsRealDoc())
 		{
-			Doc vDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), "", getVDocName(doc), 0, 2, false, doc.getLocalVRootPath(), doc.getLocalVRootPath(), null, null); 
+			Doc vDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), "", "", getVDocName(doc), 0, 2, false, doc.getLocalVRootPath(), doc.getLocalVRootPath(), null, null); 
 			vDoc.setContent(doc.getContent());
 			return vDoc;
 		}
@@ -860,7 +866,7 @@ public class BaseFunction{
 	}
 	
 	//WebPath was 
-	protected static String getWebPath() {
+	public static String getWebPath() {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         
         String webPath =  wac.getServletContext().getRealPath("/");
@@ -1439,7 +1445,7 @@ public class BaseFunction{
 		}		
 	}
 	
-	protected String base64EncodeURLSafe(String str) 
+	public String base64EncodeURLSafe(String str) 
 	{
 		if(str == null || str.isEmpty())
 		{
@@ -1458,7 +1464,7 @@ public class BaseFunction{
 		}		
 	}
 	
-	protected String base64Decode(String base64Str) 
+	public String base64Decode(String base64Str) 
 	{
 		//misc库
 		//BASE64Decoder decoder = new BASE64Decoder();
