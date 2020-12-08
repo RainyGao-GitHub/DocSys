@@ -3772,6 +3772,7 @@ public class BaseController  extends BaseFunction{
 		localDoc.setVid(repos.getId());
 		localDoc.setDocId(doc.getDocId());
 		localDoc.setPid(doc.getPid());
+		localDoc.setReposPath(doc.getReposPath());
 		localDoc.setPath(doc.getPath());
 		localDoc.setName(doc.getName());
 		localDoc.setType(0);	//不存在
