@@ -140,9 +140,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath,localVRootPath, 0L, "");
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath,localVRootPath, 0L, "");
 		doc.setContent(content);
 				
 		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
@@ -222,9 +223,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);		
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, level, type, true, localRootPath, localVRootPath, 0L, "");
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, level, type, true, localRootPath, localVRootPath, 0L, "");
 		doc.setContent(content);
 		
 		String commitMsg = "用户反馈 " + path + name;
@@ -288,9 +290,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 
 		if(commitMsg == null)
 		{
@@ -344,9 +347,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
@@ -411,9 +415,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
@@ -433,8 +438,8 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, null, type, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc srcDoc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, pid, reposPath, path, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
@@ -488,16 +493,17 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, srcPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, reposPath, srcPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), srcParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 
-		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
@@ -514,8 +520,8 @@ public class DocController extends BaseController{
 			commitMsg = "移动 " + srcPath + srcName + " 至 " + dstPath + dstName;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
@@ -562,10 +568,11 @@ public class DocController extends BaseController{
 		}
 				
 		//检查用户是否有目标目录权限新增文件
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
@@ -582,8 +589,8 @@ public class DocController extends BaseController{
 			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
@@ -628,9 +635,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
 		//repos是本地服务器的目录（远程的暂不支持）
 		String ret = localExecuteDoc(repos, doc, cmdLine, reposAccess.getAccessUser());
@@ -701,10 +709,11 @@ public class DocController extends BaseController{
 		}
 				
 		//检查登录用户的权限
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		DocAuth UserDocAuth = getUserDocAuth(repos, reposAccess.getAccessUser().getId(), parentDoc);
 		if(UserDocAuth == null)
 		{
@@ -737,7 +746,7 @@ public class DocController extends BaseController{
 		}
 		
 		//是否可以秒传检查(文件是否已存在且校验码一致或者文件不存在但系统中存在相同校验码的文件)
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 
 		Doc fsDoc = fsGetDoc(repos, doc);
 		if(fsDoc != null && fsDoc.getType() != 0)
@@ -958,6 +967,7 @@ public class DocController extends BaseController{
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				
 				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+				String reposPath = getReposPath(repos);
 				String localRootPath = getReposRealPath(repos);
 				String localVRootPath = getReposVirtualPath(repos);
 
@@ -968,7 +978,7 @@ public class DocController extends BaseController{
 					localParentDir.mkdirs();
 				}
 				
-				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
+				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 				
 				Doc dbDoc = docSysGetDoc(repos, doc);
 				if(dbDoc == null || dbDoc.getType() == 0)
@@ -1032,6 +1042,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
@@ -1042,12 +1053,12 @@ public class DocController extends BaseController{
 			localParentDir.mkdirs();
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
 		
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
-			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 			if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 			{
 				writeJson(rt, response);	
@@ -1178,9 +1189,10 @@ public class DocController extends BaseController{
 		}
 		System.out.println("uploadMarkdownPic path:" + path +" name:"+ name);
 
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc curDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc curDoc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 
 		if(file == null) 
 		{
@@ -1216,9 +1228,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String encReposPath = base64EncodeURLSafe(reposPath);
 		String encTargetName = base64EncodeURLSafe(fileName);
 		String encTargetPath = base64EncodeURLSafe(localParentPath);
-		res.put("url", "/DocSystem/Doc/downloadDoc.do?targetPath="+encTargetPath+"&targetName="+encTargetName);
+		res.put("url", "/DocSystem/Doc/downloadDoc.do?reposPath=" + encReposPath + "&targetPath="+encTargetPath+"&targetName="+encTargetName);
 		res.put("success", 1);
 		res.put("message", "upload success!");
 		writeJson(res,response);
@@ -1252,10 +1265,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);		
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
@@ -1363,9 +1377,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		doc.setContent(content);
 		
 		if(docType == 1)
@@ -1411,10 +1426,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		
 		//检查用户是否有权限下载文件
 		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
@@ -1467,7 +1483,7 @@ public class DocController extends BaseController{
 				
 		if(dbDoc.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1494,7 +1510,7 @@ public class DocController extends BaseController{
 				return;
 			}
 					
-			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1526,7 +1542,7 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(0);	//下载完成后不能删除下载的文件
 			docSysDebugLog("本地文件: 原始路径下载", rt);
@@ -1555,7 +1571,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
@@ -1589,7 +1605,7 @@ public class DocController extends BaseController{
 				
 			if(remoteEntry.getType() == 1)
 			{
-				Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+				Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
 				rt.setData(downloadDoc);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
 				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1610,7 +1626,7 @@ public class DocController extends BaseController{
 				return;
 			}
 				
-			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1655,7 +1671,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+		Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
 		docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1664,13 +1680,13 @@ public class DocController extends BaseController{
 	
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc.do")
-	public void downloadDoc(String targetPath, String targetName, 
+	public void downloadDoc(String reposPath, String targetPath, String targetName, 
 			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
 			Integer shareId,
-			String authCode, 
+			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode);
+		System.out.println("downloadDoc  reposPath:" + reposPath + "targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = null;
@@ -1731,12 +1747,12 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
-	public void downloadDoc(@PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+	@RequestMapping(value="/downloadDoc/{reposPath}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
+	public void downloadDoc(@PathVariable("targetPath") String reposPath, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
+		System.out.println("downloadDoc reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -1862,9 +1878,10 @@ public class DocController extends BaseController{
 				return;
 			}
 			
+			String reposPath = getReposPath(repos);
 			String localRootPath = getReposRealPath(repos);
 			String localVRootPath = getReposVirtualPath(repos);
-			Doc doc = buildBasicDoc(reposId, null, null, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
+			Doc doc = buildBasicDoc(reposId, null, null, reposPath, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
 
 			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 			String localParentPath = localRootPath + doc.getPath();
@@ -1878,7 +1895,7 @@ public class DocController extends BaseController{
 			Doc localDoc = docSysGetDoc(repos, doc);
 			if(localDoc == null || localDoc.getType() == 0)	//0: add  1: update
 			{
-				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
+				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
 				if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 				{
 					docSysErrorLog("用户没有新增权限", rt);
@@ -2047,9 +2064,10 @@ public class DocController extends BaseController{
 				return;
 			}
 			
+			String reposPath = getReposPath(repos);
 			String localRootPath = getReposRealPath(repos);
 			String localVRootPath = getReposVirtualPath(repos);
-			Doc doc = buildBasicDoc(reposId, null, null, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
+			Doc doc = buildBasicDoc(reposId, null, null, reposPath, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
 
 			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 			String localParentPath = localRootPath + doc.getPath();
@@ -2064,7 +2082,7 @@ public class DocController extends BaseController{
 			Doc localDoc = docSysGetDoc(repos, doc);
 			if(localDoc == null || localDoc.getType() == 0)	//0: add  1: update
 			{
-				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
+				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
 				if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 				{
 					docSysErrorLog("用户没有新增权限", rt);
@@ -2270,10 +2288,11 @@ public class DocController extends BaseController{
 			return;
 		}
 
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc rootDoc = buildBasicDoc(reposId, docId, pid, rootPath, rootName, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, docId, pid, reposPath, rootPath, rootName, level, type, true, localRootPath, localVRootPath, null, null);
 
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), rootDoc, null, rt) == false)
@@ -2284,7 +2303,7 @@ public class DocController extends BaseController{
 		}
 
 		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
-		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
+		Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
 		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
@@ -2363,9 +2382,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		doc.setShareId(shareId);
 		
 		path = doc.getPath();
@@ -2423,7 +2443,7 @@ public class DocController extends BaseController{
 				verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 			}
 			
-			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);
+			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);
 			tmpDoc.setShareId(shareId);
 		}
 		
@@ -2620,7 +2640,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		Doc previewDoc = buildBasicDoc(repos.getId(), null, null, "", previewFileName, null, 1, true, preivewTmpPath, null, null, null);
+		Doc previewDoc = buildBasicDoc(repos.getId(), null, null, doc.getReposPath(), "", previewFileName, null, 1, true, preivewTmpPath, null, null, null);
 		previewDoc.setShareId(doc.getShareId());
 		String fileLink = buildDocFileLink(previewDoc, null, "REST", rt);
 		if(fileLink == null)
@@ -2713,13 +2733,14 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc rootDoc = buildBasicDoc(reposId, null, null, rootPath, rootName, null, 1, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, rootPath, rootName, null, 1, true, localRootPath, localVRootPath, null, null);
 		
 		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
-		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
+		Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
 		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
@@ -2835,9 +2856,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		path = doc.getPath();
 		name = doc.getName();
 		
@@ -2895,7 +2917,7 @@ public class DocController extends BaseController{
 				{
 					verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 				}
-				tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
+				tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
 			}
 			
 			String fileSuffix = getFileSuffix(name);
@@ -2941,7 +2963,7 @@ public class DocController extends BaseController{
 					verReposCheckOut(repos, true, doc, tempLocalRootPath + path, name, commitId, true, true, null);
 				}
 
-				Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
+				Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
 				content = readRealDocContent(repos, tmpDoc);
 			}
 		}
@@ -3032,10 +3054,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		String content = "";
 		if(docType == null)
@@ -3085,9 +3108,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		
 		if(docType == 1)
 		{
@@ -3158,10 +3182,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
@@ -3201,7 +3226,7 @@ public class DocController extends BaseController{
 			String fileSuffix = getFileSuffix(name);
 			//if(isPicture(fileSuffix) || isVideo(fileSuffix))
 			//{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			Doc downloadDoc = buildDownloadDocInfo(reposPath, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 			rt.setDataEx(downloadDoc);
 			//}
 			
@@ -3275,10 +3300,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc rootDoc = buildBasicDoc(reposId, null, null, rootPath, rootName, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, rootPath, rootName, null, null, true, localRootPath, localVRootPath, null, null);
 		
 		//build tmpDoc
 		String tmpLocalRootPath = getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
@@ -3287,7 +3313,7 @@ public class DocController extends BaseController{
 		{
 			dir.mkdirs();
 		}
-		Doc tmpDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
+		Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
 		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
@@ -3338,9 +3364,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		doc.setShareId(shareId);
 		path = doc.getPath();
 		name = doc.getName();
@@ -3397,7 +3424,7 @@ public class DocController extends BaseController{
 				verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 			}
 			
-			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
+			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
 		}
 		
 		String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
@@ -3412,6 +3439,13 @@ public class DocController extends BaseController{
 	}
 	
 	private String buildDocFileLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
+		String encReposPath = base64EncodeURLSafe(doc.getReposPath());
+		if(encReposPath == null)
+		{
+			docSysErrorLog("buildDocFileLink() get encReposPath Failed", rt);
+			return null;
+		}
+
 		String encTargetName = base64EncodeURLSafe(doc.getName());
 		if(encTargetName == null)
 		{
@@ -3423,7 +3457,7 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("buildDocFileLink() get encTargetPath Failed", rt);
 			return null;
-		}	
+		}
 		
 		String fileLink = null;
 		if(urlStyle != null && urlStyle.equals("REST"))
@@ -3437,11 +3471,11 @@ public class DocController extends BaseController{
 			{
 				shareId = 0;
 			}
-			fileLink = "/DocSystem/Doc/downloadDoc/" + encTargetPath +  "/" + encTargetName +"/" + authCode + "/" + shareId;
+			fileLink = "/DocSystem/Doc/downloadDoc/" + encReposPath +  "/" + encTargetPath +  "/" + encTargetName +"/" + authCode + "/" + shareId;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;	
+			fileLink = "/DocSystem/Doc/downloadDoc.do?reposPath="+ encReposPath + "&targetPath=" + encTargetPath + "&targetName="+encTargetName;	
 			if(authCode != null)
 			{
 				fileLink += "&authCode=" + authCode;
@@ -3514,10 +3548,11 @@ public class DocController extends BaseController{
 			return;
 		}
 	
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		
 		//检查用户是否有权限编辑文件
 		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
@@ -3583,9 +3618,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc inputDoc = doc;
 		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
@@ -3639,10 +3675,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc inputDoc = doc;
 		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
@@ -3700,6 +3737,7 @@ public class DocController extends BaseController{
 			name = "";
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
@@ -3722,11 +3760,11 @@ public class DocController extends BaseController{
 		{
 			if(entryPath == null)
 			{
-				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+				doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
 			else
 			{
-				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
+				doc = buildBasicDoc(reposId, null, null, reposPath, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
 
 			if(doc.getName().isEmpty())
@@ -3764,7 +3802,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
+			doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
 			
 			if(entryPath == null)
 			{
@@ -3772,7 +3810,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+				vDoc = buildBasicDoc(reposId, docId, pid, reposPath, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
 			}
 			
 			if(vDoc.getName().isEmpty())
@@ -3836,7 +3874,7 @@ public class DocController extends BaseController{
 		
 		System.out.println("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
 		
-		Doc downloadDoc = buildDownloadDocInfo(userTmpDir, targetName);		
+		Doc downloadDoc = buildDownloadDocInfo(reposPath, userTmpDir, targetName);		
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);
 		writeJson(rt, response);			
@@ -3904,6 +3942,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
@@ -3922,7 +3961,7 @@ public class DocController extends BaseController{
 		{
 			if(entryPath == null)
 			{
-				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+				doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
 			else
 			{
@@ -3932,20 +3971,20 @@ public class DocController extends BaseController{
 				{
 					entryPath = entryPath.substring(1);
 				}
-				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
+				doc = buildBasicDoc(reposId, null, null, reposPath, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
 		}
 		else
 		{
 			//For vDoc the doc is for lock and unlock
-			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+			doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
 			if(entryPath == null)
 			{
 				vDoc = docConvert(doc, true);
 			}
 			else
 			{
-				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+				vDoc = buildBasicDoc(reposId, docId, pid, reposPath, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
 			}
 		}
 						
@@ -4085,9 +4124,10 @@ public class DocController extends BaseController{
 			return;
 		}
 
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
 
 		//获取并检查用户权限
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
@@ -4154,9 +4194,10 @@ public class DocController extends BaseController{
 			return;
 		}
 
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
 
 		//设置文件密码
 		if(verifyDocPwd(repos, doc, pwd) == false)
@@ -4401,9 +4442,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
 		
 		DocShare docShare = new DocShare();
 		docShare.setVid(doc.getVid());
@@ -4762,6 +4804,7 @@ public class DocController extends BaseController{
 
 	//通过路径搜索的话，只查找本地的目录，避免远程仓库链接不上或者时间太长
 	private Doc getHitDoc(Repos repos, String path, String searchWord) {
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
@@ -4776,7 +4819,7 @@ public class DocController extends BaseController{
 			}
 			docPath = docPath.replace('\\','/');
 		}
-		Doc doc = buildBasicDoc(repos.getId(), null, null, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
 		Doc hitDoc = fsGetDoc(repos, doc);
 		return hitDoc;
 	}
@@ -5011,12 +5054,13 @@ public class DocController extends BaseController{
 		}
 		//printObject("getReposInitMenu() repos:", repos);
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 				
 		List <Doc> docList = new ArrayList<Doc>();
 		
-		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
 		docList.add(rootDoc);
 		
 		List <Doc> subDocList = null;
@@ -5119,7 +5163,7 @@ public class DocController extends BaseController{
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
-		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
 		if(isCompressFile(subDoc.getName()))
 		{
 			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5136,7 +5180,7 @@ public class DocController extends BaseController{
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
-		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
 		if(isCompressFile(subDoc.getName()))
 		{
 			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5153,7 +5197,7 @@ public class DocController extends BaseController{
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
 		String subDocName = name.substring(0,name.lastIndexOf("."));
-		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		Doc subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), path + name + "/", subDocName, null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
 		if(isCompressFile(subDoc.getName()))
 		{
 			subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5408,11 +5452,11 @@ public class DocController extends BaseController{
 		Doc subDoc = null;
 		if (entry.isDirectory()) 
 		{
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 		}
 		else 
 		{
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 			if(isCompressFile(subDoc.getName()))
 			{
 				subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5425,9 +5469,9 @@ public class DocController extends BaseController{
 	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, FileHeader entry) {
 		Doc subDoc = null;
 		if (entry.isDirectory()) {
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getFullUnpackSize(), null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getFullUnpackSize(), null);
 			} else {
-				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getFullUnpackSize(), null);
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getFullUnpackSize(), null);
 				if(isCompressFile(subDoc.getName()))
 				{
 					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5440,9 +5484,9 @@ public class DocController extends BaseController{
 	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, TarEntry entry) {
 		Doc subDoc = null;
 		if (entry.isDirectory()) {
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 			} else {
-				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 				if(isCompressFile(subDoc.getName()))
 				{
 					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5454,9 +5498,9 @@ public class DocController extends BaseController{
 	private Doc buildBasicDocFromZipEntry(Doc rootDoc, String docPath, SevenZArchiveEntry entry) {
 		Doc subDoc = null;
 		if (entry.isDirectory()) {
-			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 			} else {
-				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+				subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
 				if(isCompressFile(subDoc.getName()))
 				{
 					subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
@@ -5570,7 +5614,7 @@ public class DocController extends BaseController{
 
 	private void addParentDocs(Doc subDoc, Doc rootDoc, HashMap<Long, Doc> subDocHashMap, List<Doc> addedParentDocList) 
 	{
-		Doc parentDoc = buildBasicDoc(rootDoc.getVid(), null, null, subDoc.getPath(),"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
+		Doc parentDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), subDoc.getPath(),"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), null, null);
 		addedParentDocList.add(parentDoc);
 		subDocHashMap.put(parentDoc.getDocId(), parentDoc);
 		if(!parentDoc.getPid().equals(rootDoc.getDocId())) //rootDoc不需要添加，因此不检查
@@ -5646,9 +5690,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String reposPath = getReposPath(repos);
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
 		
 		List <Doc> subDocList = null;
 		if(isCompressFile(name) == false)
@@ -5660,7 +5705,7 @@ public class DocController extends BaseController{
 		else
 		{
 			//Build ZipDoc Info
-			Doc zipDoc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, null, null, null, null);
+			Doc zipDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, null, null, null, null);
 			if(zipDoc.getDocId().equals(rootDoc.getDocId()))
 			{
 				zipDoc = rootDoc;
@@ -6501,7 +6546,7 @@ public class DocController extends BaseController{
 	//获取doc的parentZipDoc(这里有风险parentZipDoc里面的目录的名字带压缩后缀)
 	private Doc getParentCompressDoc(Repos repos, Doc rootDoc, Doc doc) {
 		
-		Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), doc.getPath(), "", null, 1, true, null, null, 0L, "");
+		Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), rootDoc.getReposPath(), doc.getPath(), "", null, 1, true, null, null, 0L, "");
 		if(parentDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			return rootDoc;
