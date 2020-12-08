@@ -228,7 +228,7 @@ public class SVNUtil  extends BaseController{
         if(type ==  0) 
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    	remoteEntry.setRevision(commitId);
 	    	return remoteEntry;
 		}
@@ -236,7 +236,7 @@ public class SVNUtil  extends BaseController{
         if(commitId != null) 
 		{
         	//If revision already set, no need to get revision
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    	remoteEntry.setRevision(commitId);
 	    	return remoteEntry;
 		}
@@ -257,7 +257,7 @@ public class SVNUtil  extends BaseController{
         		return null;
         	}
 
-        	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+        	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
         	remoteEntry.setRevision(latestRevision);
         	return remoteEntry;
         }
@@ -289,7 +289,7 @@ public class SVNUtil  extends BaseController{
 		    	}
 	    		
 	    		Long lastChangeTime = subEntry.getDate().getTime();
-	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    		remoteEntry.setSize(subEntry.getSize());
 	    		remoteEntry.setCreateTime(lastChangeTime);
 	    		remoteEntry.setLatestEditTime(lastChangeTime);
@@ -776,7 +776,7 @@ public class SVNUtil  extends BaseController{
 	    		
 	    		if(type == 0)
 	    		{
-	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null,  doc.getReposPath(), path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2, commitActionList);
 	    		}
 	    		path = path + name + "/";  		
@@ -1127,7 +1127,7 @@ public class SVNUtil  extends BaseController{
 	        {
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
-	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.getSize(), "");
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.getSize(), "");
 	            //System.out.println("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
 	            
 	            docHashMap.put(subDoc.getName(), subDoc);
@@ -1143,7 +1143,7 @@ public class SVNUtil  extends BaseController{
         {
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
         	//System.out.println("scanForSubDocCommit() local subDoc:" + subDoc.getName());
         	
         	if(docHashMap.get(subDoc.getName()) == null)
@@ -1583,7 +1583,7 @@ public class SVNUtil  extends BaseController{
 			
 	    	String subEntryName = subEntry.getName();
 	    	Long lastChangeTime = subEntry.getDate().getTime();
-	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "");
+	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "");
 	    	subDoc.setSize(subEntry.getSize());
 	    	subDoc.setCreateTime(lastChangeTime);
 	    	subDoc.setLatestEditTime(lastChangeTime);
@@ -1810,7 +1810,7 @@ public class SVNUtil  extends BaseController{
 				//注意: checkOut时必须使用相同的revision，successList中的可以是实际的，在获取子文件时绝对不能修改revision，那样就引起的时间切面不一致
 				//这个问题导致了，自动同步出现问题（远程同步用的就是getEntry接口），导致远程同步后的dbDoc与实际的revision不一致
 				//Long subEntryRevision = subEntry.getRevision();
-				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
 				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName, commitId, force, downloadList);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{

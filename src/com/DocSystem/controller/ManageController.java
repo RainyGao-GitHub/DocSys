@@ -553,7 +553,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+		Doc downloadDoc = buildDownloadDocInfo("",targetPath, targetName);
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
 		writeJson(rt, response);
