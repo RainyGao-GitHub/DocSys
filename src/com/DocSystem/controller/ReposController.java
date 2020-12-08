@@ -781,7 +781,7 @@ public class ReposController extends BaseController{
 		if(path == null)
 		{
 			Doc rootDoc = buildBasicDoc(vid, null, null, reposPath, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
-			//printObject("getReposInitMenu() rootDoc:", rootDoc);
+			printObject("getReposInitMenu() rootDoc:", rootDoc);
 			
 			if(rootDoc.getDocId() != 0) //不是仓库根目录
 			{
