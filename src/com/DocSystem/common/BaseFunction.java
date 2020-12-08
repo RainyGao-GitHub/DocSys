@@ -2259,7 +2259,7 @@ public class BaseFunction{
 	}
 	
     //Create Directory
-    public boolean createDir(String path){
+    public static boolean createDir(String path){
         File dir=new File(path);
         if(!dir.exists())
         {
