@@ -55,7 +55,9 @@ public class Doc  implements Comparable<Doc>{
     
     private String charset;
 
-	private String reposName;
+    private String reposPath;
+    
+    private String reposName;
 	
 	private Integer hitType;
 
@@ -337,6 +339,14 @@ public class Doc  implements Comparable<Doc>{
     public void setLatestEditorName(String latestEditorName) {
         this.latestEditorName = latestEditorName == null ? null : latestEditorName.trim();
     }
+
+	public void setReposPath(String reposPath) {
+		this.reposPath = reposPath;
+	}
+	
+	public String getReposPath() {
+		return reposPath;
+	}
 
 	public void setReposName(String reposName) {
 		this.reposName = reposName;
