@@ -67,7 +67,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Doc/revertDocHistory",
 		"Doc/searchDoc",
 		"Doc/refreshDoc",
-		"web/static/doc",
+		"web/static/office-editor",
 	};
 	
 	
@@ -102,12 +102,11 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 			HttpServletResponse response, Object handler) throws Exception {
 		
 		String uri = request.getRequestURI();
-		String params = request.getQueryString();
-		User user;
+		System.out.println("preHandle uri:" + uri);
 		
+		String params = request.getQueryString();
 		HttpSession session = request.getSession();
-		System.out.println(uri);
-		user = (User) session.getAttribute("login_user");
+		User user = (User) session.getAttribute("login_user");
 		
 		if(isAjaxRequest(request)){
 			return true;
