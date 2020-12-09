@@ -73,7 +73,7 @@ public class ManageController extends BaseController{
 			break;
 		default:
 			docSysIniState = -2;
-			docSysErrorLog("系统初始化失败:" + ret, rt);
+			docSysErrorLog(ret, rt);
 			break;
 		}
 		rt.setData(ret);
@@ -400,6 +400,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		docSysIniState = 1; //needRestart
 		writeJson(rt, response);
 	}
 	
