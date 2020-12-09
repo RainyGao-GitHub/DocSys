@@ -54,15 +54,29 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
-		if(docSysInit(true) == true)
+
+		if(docSysIniState == 1)
 		{
+			rt.setData("needRestart");
+			writeJson(rt, response);
+			return;
+		}
+				
+		String ret = docSysInit(true);
+		switch(ret)
+		{
+		case "ok":
 			docSysIniState = 0;
+			break;
+		case "needRestart":
+			docSysIniState = 1;
+			break;
+		default:
+			docSysIniState = -2;
+			docSysErrorLog("系统初始化失败:" + ret, rt);
+			break;
 		}
-		else
-		{
-			docSysErrorLog("系统初始化失败，请检查数据库配置是否正确？", rt);
-		}
+		rt.setData(ret);
 		writeJson(rt, response);
 	}
 	

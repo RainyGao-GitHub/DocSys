@@ -251,8 +251,15 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	//进入系统主页
-	            	window.location.href='/DocSystem/web/index.html';            	
+	            	if(ret.data && ret.data == "needRestart")
+	            	{
+	            		showErrorMessage("数据库配置有变更，请先重启服务！");	
+	            	}
+	            	else
+	            	{
+	            		//进入系统主页
+	            		window.location.href='/DocSystem/web/index.html';
+	            	}
 	            }
 	            else
 	            {
@@ -525,7 +532,7 @@
 	            	systemDbSetting.url = url;
 	        		systemDbSetting.user = user;
 	        		systemDbSetting.pwd = pwd;
-	        		showSuccessMsg("更新成功")
+	        		showSuccessMsg("数据库配置设置成功，请重启服务！");
 	            }
 	            else 
 	            {
