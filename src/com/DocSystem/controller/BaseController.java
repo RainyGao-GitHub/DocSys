@@ -7578,14 +7578,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//数据库已存在
-		String ret = checkAndUpdateDB(true);
-		if("ok" != ret)
-		{
-			System.out.println("docSysInit() checkAndUpdateDB failed");
-			return "ERROR_checkAndUpdateDBFailed";
-		}
-		System.out.println("docSysInit() 数据库升级成功");
-		return "ok";
+		return checkAndUpdateDB(true);
 	}
 	
 	protected void collectDocSysInstallationInfo(String serverIP, HttpServletRequest request) 
@@ -7677,29 +7670,13 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
-		if(DBUpgrade(oldVersion, newVersion, DB_TYPE, DB_URL, DB_USER, DB_PASS, skipDocTab) == true)
+		if(DBUpgrade(oldVersion, newVersion, DB_TYPE, DB_URL, DB_USER, DB_PASS, skipDocTab) == false)
 		{
 			return "ERROR_DBUpgradeFailed";
 		}
 		
 		//更新版本号，避免重复升级数据库
 		copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
-			
-		//更新数据库配置
-		String userJDBCSettingPath = docSysIniPath + "jdbc.properties";
-		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
-		if(isFileExist(userJDBCSettingPath))
-		{
-			copyFile(userJDBCSettingPath, defaultJDBCSettingPath, true);
-		}
-			
-		//更新 docSysConfig
-		String userSystemSettingPath = docSysIniPath + "docSysConfig.properties";
-		String defaultSystemSettingPath = docSysWebPath + "WEB-INF/classes/docSysConfig.properties";
-		if(isFileExist(userSystemSettingPath))
-		{
-			copyFile(userSystemSettingPath, defaultSystemSettingPath, true);
-		}
 		return "ok";
 	}
 	
