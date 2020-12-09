@@ -7486,7 +7486,7 @@ public class BaseController  extends BaseFunction{
 		return docSysInitAuthCode;
 	}
 	
-	protected static boolean docSysInit(boolean force) 
+	protected static String docSysInit(boolean force) 
 	{	
 		if(docSysWebPath == null)
 		{
@@ -7506,16 +7506,16 @@ public class BaseController  extends BaseFunction{
 		String UserJDBCSettingPath = docSysIniPath + "jdbc.properties";
 		if(isFileExist(UserJDBCSettingPath))
 		{
-			//检查UserJDBCSettingPath是否与JDBCSettingPath一致，如果不一致则直接退出，等待用户重启服务器
 			String checkSum1 = getFileCheckSum(UserJDBCSettingPath);
 			String checkSum2 = getFileCheckSum(JDBCSettingPath);
+			//检查UserJDBCSettingPath是否与JDBCSettingPath是否一致，如果不一致则更新应用的数据库配置，等待用户重启服务器
 			if(checkSum1 == null || checkSum2 == null || !checkSum1.equals(checkSum2))
 			{
 				System.out.println("docSysInit() 用户自定义数据库配置文件与系统数据库配置文件不一致，等待重启生效！");
 				//如果之前的版本号低于V2.0.47则需要更新数据库的驱动和链接
 				UserJDBCSettingUpgrade(UserJDBCSettingPath);
 				copyFile(UserJDBCSettingPath, JDBCSettingPath, true);
-				return false;
+				return "needRestart";
 			}
 		}
 		
@@ -7534,7 +7534,6 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 				
-		
 		getAndSetDBInfoFromFile(JDBCSettingPath);
 		
 		//Get dbName from the DB URL
@@ -7550,7 +7549,7 @@ public class BaseController  extends BaseFunction{
 		if(initObjMemberListMap() == false)
 		{
 			System.out.println("docSysInit() initObjMemberListMap Faield!");
-			return false;			
+			return "ERROR_initObjMemberListMapFailed";			
 		}
 		
 		//测试数据库连接
@@ -7559,7 +7558,7 @@ public class BaseController  extends BaseFunction{
 			if(force == false)
 			{
 				System.out.println("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");				
-				return false;
+				return "ERROR_DBNotExists";
 			}
 			else
 			{
@@ -7568,39 +7567,25 @@ public class BaseController  extends BaseFunction{
 				if(initDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
 				{
 					System.out.println("docSysInit() initDB failed");
-					return false;
+					return "ERROR_intiDBFailed";
 				}
 				System.out.println("docSysInit() initDB success");
-				
-				if(checkAndAddFirstUser() == false)
-				{
-					System.out.println("docSysInit() checkAndAddFirstUser failed");
-					return false;
-				}
-				
+								
 				//更新版本号
 				copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
-				return true;
+				return "ok";
 			}
 		}
 		
-		//有些情况下这个接口未必会成功，因此不进行错误检查
-		if(checkAndAddFirstUser() == false)
-		{
-			System.out.println("docSysInit() checkAndAddFirstUser failed");
-			return false;
-		}
-			
-		if(checkAndUpdateDB(true) == false)
+		//数据库已存在
+		String ret = checkAndUpdateDB(true);
+		if("ok" != ret)
 		{
 			System.out.println("docSysInit() checkAndUpdateDB failed");
-			return false;
+			return "ERROR_checkAndUpdateDBFailed";
 		}
-		else
-		{
-			System.out.println("docSysInit() 数据库升级成功");
-			return true;
-		}
+		System.out.println("docSysInit() 数据库升级成功");
+		return "ok";
 	}
 	
 	protected void collectDocSysInstallationInfo(String serverIP, HttpServletRequest request) 
@@ -7667,14 +7652,14 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private static boolean checkAndUpdateDB(boolean skipDocTab) {
+	private static String checkAndUpdateDB(boolean skipDocTab) {
 		//根据里面的版本号信息更新数据库
 		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
 		System.out.println("checkAndUpdateDB() newVersion:" + newVersion);
 		if(newVersion == null)
 		{
 			System.out.println("checkAndUpdateDB() newVersion is null");
-			return false;
+			return "ERROR_newVersionIsNull";
 		}
 		
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
@@ -7688,34 +7673,34 @@ public class BaseController  extends BaseFunction{
 		if(newVersion.equals(oldVersion))
 		{
 			System.out.println("checkAndUpdateDB() newVersion is same with oldVersion");
-			return true;		
+			return "ok";		
 		}
 		
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
 		if(DBUpgrade(oldVersion, newVersion, DB_TYPE, DB_URL, DB_USER, DB_PASS, skipDocTab) == true)
 		{
-			//更新版本号，避免重复升级数据库
-			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
-			
-			//更新数据库配置
-			String userJDBCSettingPath = docSysIniPath + "jdbc.properties";
-			String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
-			if(isFileExist(userJDBCSettingPath))
-			{
-				copyFile(userJDBCSettingPath, defaultJDBCSettingPath, true);
-			}
-			
-			//更新 docSysConfig
-			String userSystemSettingPath = docSysIniPath + "docSysConfig.properties";
-			String defaultSystemSettingPath = docSysWebPath + "WEB-INF/classes/docSysConfig.properties";
-			if(isFileExist(userSystemSettingPath))
-			{
-				copyFile(userSystemSettingPath, defaultSystemSettingPath, true);
-			}
-
-			return true;
+			return "ERROR_DBUpgradeFailed";
 		}
-		return false;
+		
+		//更新版本号，避免重复升级数据库
+		copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
+			
+		//更新数据库配置
+		String userJDBCSettingPath = docSysIniPath + "jdbc.properties";
+		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
+		if(isFileExist(userJDBCSettingPath))
+		{
+			copyFile(userJDBCSettingPath, defaultJDBCSettingPath, true);
+		}
+			
+		//更新 docSysConfig
+		String userSystemSettingPath = docSysIniPath + "docSysConfig.properties";
+		String defaultSystemSettingPath = docSysWebPath + "WEB-INF/classes/docSysConfig.properties";
+		if(isFileExist(userSystemSettingPath))
+		{
+			copyFile(userSystemSettingPath, defaultSystemSettingPath, true);
+		}
+		return "ok";
 	}
 	
     protected static boolean executeSqlScript(String filePath, String type, String url, String user, String pwd) 
