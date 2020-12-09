@@ -1445,7 +1445,7 @@ public class BaseFunction{
 		}		
 	}
 	
-	public String base64EncodeURLSafe(String str) 
+	public static String base64EncodeURLSafe(String str) 
 	{
 		if(str == null || str.isEmpty())
 		{
