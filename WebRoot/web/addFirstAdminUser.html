@@ -48,7 +48,9 @@
 	}
 	
 	function closeAddFirstAdminUser(){
-		closeBootstrapDialog("addFirstAdminUser");
+		console.log("closeAddFirstAdminUser");
+		$("#addFirstAdminUserdiv").remove();	//删除全屏遮罩
+		$("#addFirstAdminUser").remove();	//删除对话框
 	}
 	
 	//回车键监听函数
