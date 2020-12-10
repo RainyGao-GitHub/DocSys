@@ -947,13 +947,6 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		
-		if(verifyTelAndEmail(user, rt) == false)
-		{
-			System.out.println("手机和邮箱验证失败!");			
-			writeJson(rt, response);
-			return;		
-		}
-		
 		user.setCreateType(0);	//用户为首次添加
 		user.setType(2); //系统管理员
 		//set createTime
@@ -1034,13 +1027,6 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;			
 		}
-		
-		if(verifyTelAndEmail(user, rt) == false)
-		{
-			System.out.println("手机和邮箱验证失败!");			
-			writeJson(rt, response);
-			return;		
-		}	
 				
 		user.setCreateType(2);	//用户为管理员添加
 		//set createTime
@@ -1115,13 +1101,6 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;			
 		}
-		
-		if(verifyTelAndEmail(user, rt) == false)
-		{
-			System.out.println("手机和邮箱验证失败!");			
-			writeJson(rt, response);
-			return;		
-		}	
 		
 		if(userService.editUser(user) == 0)
 		{

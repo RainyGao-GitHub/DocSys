@@ -2012,7 +2012,7 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean verifyTelephone(String tel) {
 		ReturnAjax rt = new ReturnAjax();
-		return smsService.sendSms(rt, tel, 1341175l, "手机验证", null, null);
+		return smsService.sendSms(rt, tel, 1341175l, "Verify", null, null);
 	}
 
 	
