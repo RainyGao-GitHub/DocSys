@@ -79,16 +79,17 @@ public class EmailService {
 			}
 			else
 			{
-				rt.setError("danger#发送系统邮件失败！");
+				rt.setError("发送系统邮件失败！");
 				return false;
 			}	
 			
 			Transport transport = mailSession.getTransport("smtp");
 			transport.send(message, message.getRecipients(RecipientType.TO));
-			rt.setMsgInfo("success#发送系统邮件成功！");
+			rt.setMsgInfo("发送系统邮件成功！");
+			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
-			rt.setError("danger#发送系统邮件失败！");
+			rt.setError("发送系统邮件失败！");
 		}
 		return false;		
 	}
