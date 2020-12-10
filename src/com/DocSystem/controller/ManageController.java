@@ -934,6 +934,26 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		
+		if(user.getEmail() != null)
+		{
+			if(verifyEmail(user.getEmail()) == false)
+			{
+				docSysErrorLog("邮箱验证失败", rt);
+				writeJson(rt, response);
+				return;			
+			}
+		}
+		
+		if(user.getTel() != null)
+		{
+			if(verifyTelephone(user.getTel()) == false)
+			{
+				docSysErrorLog("手机验证失败", rt);
+				writeJson(rt, response);
+				return;			
+			}
+		}	
+		
 		user.setCreateType(0);	//用户为首次添加
 		user.setType(2); //系统管理员
 		//set createTime

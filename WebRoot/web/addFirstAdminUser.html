@@ -1,0 +1,122 @@
+<div class="form-horizontal">
+	<div class="form-group" id="userIdDiv">
+		<label class="col-sm-2 control-label">用户名</label>
+		<div class="col-sm-10">
+            <input type="text" id="userName" name="userName" class="form-control"  maxlength="40" />
+		</div>
+	</div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">密 码</label>
+        <div class="col-sm-10">
+            <input type="password" id="pwd" name="pwd" needvalicate="true" valicate="_required _minlen=6" class="form-control" placeholder="6-18位，可由数字字母特殊字符组成"/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">确认密码</label>
+        <div class="col-sm-10">
+            <input type="password" id="pwd2" name="pwd2" needvalicate="true" valicate="_required _minlen=6 _equals=pwdForReg" class="form-control" placeholder="请确认密码"/>
+        </div>
+    </div>
+	<div class="form-group" id="userIdDiv">
+		<label class="col-sm-2 control-label">手机</label>
+		<div class="col-sm-10">
+            <input type="text" id="tel" name="tel" class="form-control"  maxlength="40" needvalicate="true" valicate="_required _emailOR_tel _minlen=6" placeholder="请填写您的有效手机，以便找回密码以及验证" />
+		</div>
+	</div>
+	<div class="form-group" id="userIdDiv">
+		<label class="col-sm-2 control-label">邮箱</label>
+		<div class="col-sm-10">
+            <input type="text" id="email" name="email" class="form-control"  maxlength="80" needvalicate="true" valicate="_required _emailOR_tel _minlen=6" placeholder="请填写您的有效邮箱，以便找回密码以及验证" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="col-sm-12 text-center">
+			<input id="submitBtn" type="submit" class="hidden"/>
+				<button  id="submit" type="button" class="btn btnPrimary" onclick="addFirstAdminUser();" style="width: 288px;height: 42px;">添加</button>
+		</div>
+	</div>
+</div>
+                    
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function AddFirstAdminUserPageInit()
+	{
+		//console.log($.cookie("dsuser"));
+		//回车键监听函数
+		EnterKeyListenerForAddFirstAdminUser();
+	}
+	
+	function showAddFirstAdminUser(text){
+		$("#addFirstAdminUserModal").fadeIn("slow");
+		$("#realName").focus();
+	}
+	
+	function closeAddFirstAdminUser(){
+		$("#addFirstAdminUserModal").fadeOut("slow");
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForAddFirstAdminUser(){
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		addFirstAdminUser();
+	 	}  
+	}
+		
+	//登录按键处理函数
+	function addFirstAdminUser(){
+		console.log("addFirstAdminUser");
+        var name = $('input[name="userName"]').val();
+        if(name == "")
+        {
+        	alert("用户名不能为空");
+        	return;
+        }
+        var pwd = $('input[name="pwd"]').val();
+    	if(pwd == "")
+    	{
+    		alert("密码不能为空");
+        	return;
+    	}
+        var pwd2 = $('input[name="pwd2"]').val();
+        if(pwd != pwd2)
+        {
+    		alert("两次密码输入不一致!");        	
+        	return;
+        }
+		
+        $.ajax({
+            url : "/DocSystem/Manage/addFirstAdminUser.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 name : $('input[name="userName"]').val(),
+                 pwd : MD5($('input[name="pwd"]').val()),
+                 pwd2: MD5($('input[name="pwd2"]').val()),
+                 tel : $('input[name="tel"]').val(),
+                 email : $('input[name="email"]').val(),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	closeAddFirstAdminUser();
+                	//弹出登录对话框
+                	showLoginPanel();
+                	loginUser =  $('input[name="userName"]').val();
+                }else {
+                	alert("添加系统管理员失败：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:添加系统管理员失败");
+            }
+        });
+    }
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("addFirstAdminUser Page init");
+		AddFirstAdminUserPageInit();
+		$("#userName").click().focus();
+	});
+</script>
