@@ -927,6 +927,22 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		String name = user.getName();
+		if(name == null || "".equals(name))
+		{
+			docSysErrorLog("用户名不能为空！", rt);
+			writeJson(rt, response);	
+			return;
+		}
+		
+		String pwd = user.getPwd();
+		if(pwd == null || "".equals(pwd))
+		{
+			docSysErrorLog("密码不能为空！", rt);
+			writeJson(rt, response);	
+			return;
+		}
+		
 		if(userCheck(user, rt) == false)
 		{
 			System.out.println("用户检查失败!");			
@@ -996,6 +1012,13 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("danger#账号不能为空！", rt);
 			writeJson(rt, response);
+			return;
+		}
+		
+		if(pwd == null || "".equals(pwd))
+		{
+			docSysErrorLog("密码不能为空！", rt);
+			writeJson(rt, response);	
 			return;
 		}
 				

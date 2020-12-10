@@ -1918,13 +1918,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		//检查密码是否为空
-		if(pwd == null || "".equals(pwd))
-		{
-			docSysErrorLog("密码不能为空！", rt);
-			return false;
-		}
-		
 		//用户是否已存在
 		if(isUserNameUsed(userName) == true)
 		{
