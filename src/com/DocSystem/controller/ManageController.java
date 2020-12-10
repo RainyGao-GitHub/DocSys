@@ -32,6 +32,7 @@ import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.DocSystem.common.AuthCode;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -401,7 +402,24 @@ public class ManageController extends BaseController{
 		}
 		
 		docSysIniState = 1; //needRestart
+		addDocSysInitAuthCode();
+		
 		writeJson(rt, response);
+	}
+	
+	static void addDocSysInitAuthCode() {
+		//add authCode to authCodeMap
+		AuthCode authCode = new AuthCode();
+		String usage = "docSysInit";
+		Long curTime = new Date().getTime();
+		Long expTime = curTime + 7*24*60*60*1000;
+		String codeStr = usage + curTime;
+		docSysInitAuthCode = "" + codeStr.hashCode();
+		authCode.setUsage(usage);
+		authCode.setCode(docSysInitAuthCode);
+		authCode.setExpTime(expTime);
+		authCode.setRemainCount(1000);
+		authCodeMap.put(docSysInitAuthCode, authCode);
 	}
 	
 	@RequestMapping("/testDatabase.do")
