@@ -1934,7 +1934,7 @@ public class BaseController  extends BaseFunction{
 
 		if(tel != null && !tel.isEmpty())
 		{
-			if(RegularUtil.IsTelephone(tel) == false)
+			if(RegularUtil.IsMobliePhone(tel) == false)
 			{
 				docSysErrorLog("手机格式错误！", rt);
 				return false;
