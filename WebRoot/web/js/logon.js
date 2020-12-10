@@ -62,7 +62,7 @@
 	//This  function
 	function ShowUserInfo(user)
 	{
-		console.log("id:" + user.id + " name:" + user.name + " img:" + user.img);
+		console.log("ShowUserInfo user:", user);
 		if((typeof(user.img)=="undefined") || (user.img == ""))
 		{
 			//使用默认图片
