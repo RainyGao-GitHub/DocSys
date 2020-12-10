@@ -240,8 +240,17 @@
                 }
                 else 
                 {
-                    console.log(ret.msgInfo);
-                    showLoginPanel();
+                	console.log("pageInit() 获取用户信息失败:" + ret.msgInfo);
+                	if(ret.data && ret.data == "needAddFirstAdmin")
+                    {
+                		showAddFirstAdminUserPanel();
+                    }
+                	else
+                	{
+	                	console.log(ret.msgInfo);
+	                    //showLoginPanel();
+	                	showErrorMessage("获取用户信息失败:" + ret.msgInfo);
+                	}
                 }
             },
             error : function () {

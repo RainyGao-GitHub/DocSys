@@ -43,6 +43,7 @@ import org.tmatesoft.svn.core.SVNDirEntry;
 
 import util.DateFormat;
 import util.ReadProperties;
+import util.RegularUtil;
 import util.ReturnAjax;
 import util.Encrypt.MD5;
 
@@ -57,6 +58,8 @@ import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.DocChange.DocChangeType;
+import com.DocSystem.commonService.EmailService;
+import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -86,6 +89,10 @@ public class BaseController  extends BaseFunction{
 	protected ReposServiceImpl reposService;
 	@Autowired
 	protected UserServiceImpl userService;
+	@Autowired
+	private SmsService smsService;
+	@Autowired
+	private EmailService emailService;
 	
 	protected static User buildAdminUser() {
 		User user = new User();
@@ -1859,16 +1866,116 @@ public class BaseController  extends BaseFunction{
 		return uList;
 	}
 	
-	public boolean isUserRegistered(String name)
+	public boolean isUserNameUsed(String name)
 	{
-		List <User> uList = getUserList(name,null);
+		User qUser = new User();
+		qUser.setName(name);
+		List <User> uList =  userService.getUserListByUserInfo(qUser);
 		if(uList == null || uList.size() == 0)
 		{
 			return false;
 		}
-		
 		return true;
 	}
+	
+	public boolean isTelUsed(String tel)
+	{
+		User qUser = new User();
+		qUser.setTel(tel);
+		List <User> uList =  userService.getUserListByUserInfo(qUser);
+		if(uList == null || uList.size() == 0)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean isEmailUsed(String email)
+	{
+		User qUser = new User();
+		qUser.setEmail(email);
+		List <User> uList =  userService.getUserListByUserInfo(qUser);
+		if(uList == null || uList.size() == 0)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	protected boolean userCheck(User user, ReturnAjax rt) {
+		String userName = user.getName();
+		String pwd = user.getPwd();
+		String tel = user.getTel();
+		String email = user.getEmail();
+		Integer type = user.getType();
+		
+		System.out.println("userName:"+userName + " pwd:"+pwd + " type:" + type + " tel:" + user.getTel() + " email:" + user.getEmail());
+		
+		//检查用户名是否为空
+		if(userName ==null||"".equals(userName))
+		{
+			docSysErrorLog("用户名不能为空！", rt);
+			return false;
+		}
+		
+		//检查密码是否为空
+		if(pwd == null || "".equals(pwd))
+		{
+			docSysErrorLog("密码不能为空！", rt);
+			return false;
+		}
+		
+		//用户是否已存在
+		if(isUserNameUsed(userName) == true)
+		{
+			docSysErrorLog("该用户已存在！", rt);
+			return false;
+		}
+
+		if(tel != null && !tel.isEmpty())
+		{
+			if(RegularUtil.IsTelephone(tel) == false)
+			{
+				docSysErrorLog("手机格式错误！", rt);
+				return false;
+			}
+			
+			if(isTelUsed(tel) == true)
+			{
+				docSysErrorLog("该手机已被使用！", rt);
+				return false;				
+			}
+			user.setTelValid(1);
+		}
+		
+		if(email != null && !email.isEmpty())
+		{
+			if(RegularUtil.isEmail(email) == false)
+			{
+				docSysErrorLog("邮箱格式错误！", rt);
+				return false;
+			}
+			
+			if(isEmailUsed(email) == true)
+			{
+				docSysErrorLog("该邮箱已被使用！", rt);
+				return false;				
+			}
+			user.setEmailValid(1);
+		}
+		return true;
+	}
+
+	protected boolean verifyEmail(String email) {
+		ReturnAjax rt = new ReturnAjax();
+		return emailService.sendEmail(rt, email , "邮箱验证");
+	}
+
+	protected boolean verifyTelephone(String tel) {
+		ReturnAjax rt = new ReturnAjax();
+		return smsService.sendSms(rt, tel, 1341175l, "手机验证", null, null);
+	}
+
 	
 	/********************************** Functions For Application Layer 
 	 * @param downloadList ****************************************/
