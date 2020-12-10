@@ -143,9 +143,6 @@ public class UserController extends BaseController {
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User user = new User();
-		user.setName(userName);
-		
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
@@ -154,6 +151,8 @@ public class UserController extends BaseController {
 			return;
 		}
 		
+		User user = new User();
+		user.setName(userName);
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
 			user.setEmail(userName);			
