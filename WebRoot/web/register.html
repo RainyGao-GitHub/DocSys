@@ -80,7 +80,7 @@
 		console.log("register");
 		
 		//关闭按键点击避免连续点击
-		$("#submit").attr('disabled',true);
+		$("#submit").attr("disabled","disabled");
 		
         $.ajax({
             url : "/DocSystem/User/register.do",
@@ -93,7 +93,7 @@
                  verifyCode : $('input[name="verifyCode"]').val(),
             },
             success : function (ret) {
-        		$("#submit").attr('disabled',false);
+        		$("#submit").removeAttr("disabled");
                 if( "ok" == ret.status ){
                 	//window.location.href = "index.html";	//跳转到主页
 
@@ -108,7 +108,7 @@
                 }
             },
             error : function () {
-        		$("#submit").attr('disabled',false);
+            	$("#submit").removeAttr("disabled");
             	showErrorMessage("服务器异常:注册失败");
             }
         });
