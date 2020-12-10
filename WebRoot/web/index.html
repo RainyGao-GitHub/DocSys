@@ -401,11 +401,13 @@
                 else 
                 {
                 	console.log("pageInit() 获取用户信息失败:" + ret.msgInfo);
+                    loginBtnCtrl();
+                    
                 	if(ret.data && ret.data == "needAddFirstAdmin")
                     {
                 		showAddFirstAdminUserPanel();
                     }
-                    loginBtnCtrl();
+
                 }
             },
             error : function () {

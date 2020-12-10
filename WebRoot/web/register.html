@@ -51,13 +51,8 @@
 		EnterKeyListenerForRegister();
 	}
 	
-	function showRegister(text){
-		$("#registerModal").fadeIn("slow");
-		$("#realName").focus();
-	}
-	
 	function closeRegister(){
-		$("#registerModal").fadeOut("slow");
+		closeBootstrapDialog("register");
 	}
 	
 	//回车键监听函数
@@ -95,9 +90,13 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	//window.location.href = "index.html";	//跳转到主页
+
+                	loginUser =  $('input[name="userName"]').val();
+                	
+                	//关闭注册对话框
+                	closeRegister();
                 	//弹出登录对话框
                 	showLoginPanel();
-                	loginUser =  $('input[name="userName"]').val();
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
                 }
