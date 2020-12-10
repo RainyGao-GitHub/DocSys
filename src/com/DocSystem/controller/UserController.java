@@ -181,7 +181,6 @@ public class UserController extends BaseController {
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User user = new User();
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
@@ -189,7 +188,9 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
-		
+
+		User user = new User();
+		user.setName(userName);
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
 			user.setEmail(userName);
@@ -237,7 +238,6 @@ public class UserController extends BaseController {
 			return;
 		}
 		user.setPwd(pwd);
-		user.setName(userName);	//默认用户名就用注册的名字
 		user.setCreateType(1);	//用户为自主注册
 		//set createTime
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
