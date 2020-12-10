@@ -83,7 +83,7 @@
         	return;
         }
 		
-        $("#submit").attr('disabled',true);
+        $("#submit").attr("disabled","disabled");
         
         $.ajax({
             url : "/DocSystem/Manage/addFirstAdminUser.do",
@@ -97,7 +97,7 @@
                  email : $('input[name="email"]').val(),
             },
             success : function (ret) {
-            	$("#submit").attr('disabled',false);
+            	$("#submit").removeAttr("disabled");
                 
                 if( "ok" == ret.status ){
                 	closeAddFirstAdminUser();
@@ -109,7 +109,7 @@
                 }
             },
             error : function () {
-            	$("#submit").attr('disabled',false);
+            	$("#submit").removeAttr("disabled");
             	showErrorMessage("服务器异常:添加系统管理员失败");
             }
         });
