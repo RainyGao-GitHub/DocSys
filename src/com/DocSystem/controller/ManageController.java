@@ -917,12 +917,9 @@ public class ManageController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		
 		//查询系统中是否存在超级管理员
-		User qUser = new User();
-		qUser.setType(2); //超级管理员
-		List<User> uList = userService.getUserListByUserInfo(qUser);
-		if(uList != null && uList.size() > 0)
+		if(isFirstAdminUserExists() == true)
 		{
-			System.out.println("系统管理员已存在!");
+			docSysErrorLog("系统管理员已存在!", rt);
 			writeJson(rt, response);	
 			return;
 		}

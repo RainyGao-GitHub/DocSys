@@ -1848,6 +1848,28 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	public boolean isFirstUserExists()
+	{
+		List<User> uList = userService.geAllUsers();
+		if(uList == null || uList.size() == 0)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean isFirstAdminUserExists()
+	{
+		User qUser = new User();
+		qUser.setType(2); //超级管理员
+		List<User> uList = userService.getUserListByUserInfo(qUser);
+		if(uList == null || uList.size() == 0)
+		{
+			return false;
+		}
+		return true;
+	}
+	
 	public List<User> getUserList(String userName,String pwd) {
 		User tmp_user = new User();
 		//检查用户名是否为空
