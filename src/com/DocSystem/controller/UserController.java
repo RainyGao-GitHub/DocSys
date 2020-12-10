@@ -243,7 +243,7 @@ public class UserController extends BaseController {
 		String createTime = df.format(new Date());// new Date()为获取当前系统时间
 		user.setCreateTime(createTime);	//设置川剧时间
 		user.setType(0);
-		if(isFirstUser() == true)
+		if(isFirstAdminUserExists() == false)
 		{
 			user.setType(2);
 		}
@@ -253,16 +253,6 @@ public class UserController extends BaseController {
 		rt.setData(user);
 		writeJson(rt, response);
 		return;
-	}
-	
-	public boolean isFirstUser()
-	{
-		List<User> uList = userService.geAllUsers();
-		if(uList == null || uList.size() == 0)
-		{
-			return true;
-		}
-		return false;
 	}
 	
 	public User getUserByName(String name)
