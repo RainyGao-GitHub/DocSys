@@ -70,19 +70,19 @@
         var name = $('input[name="userName"]').val();
         if(name == "")
         {
-        	alert("用户名不能为空");
+        	showErrorMessage("用户名不能为空");
         	return;
         }
         var pwd = $('input[name="pwd"]').val();
     	if(pwd == "")
     	{
-    		alert("密码不能为空");
+    		showErrorMessage("密码不能为空");
         	return;
     	}
         var pwd2 = $('input[name="pwd2"]').val();
         if(pwd != pwd2)
         {
-    		alert("两次密码输入不一致!");        	
+        	showErrorMessage("两次密码输入不一致!");        	
         	return;
         }
 		
@@ -104,11 +104,11 @@
                 	showLoginPanel();
                 	loginUser =  $('input[name="userName"]').val();
                 }else {
-                	alert("添加系统管理员失败：" + ret.msgInfo);
+                	showErrorMessage("添加系统管理员失败：" + ret.msgInfo);
                 }
             },
             error : function () {
-            	alert("服务器异常:添加系统管理员失败");
+            	showErrorMessage("服务器异常:添加系统管理员失败");
             }
         });
     }
