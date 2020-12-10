@@ -47,13 +47,8 @@
 		EnterKeyListenerForAddFirstAdminUser();
 	}
 	
-	function showAddFirstAdminUser(text){
-		$("#addFirstAdminUserModal").fadeIn("slow");
-		$("#realName").focus();
-	}
-	
 	function closeAddFirstAdminUser(){
-		$("#addFirstAdminUserModal").fadeOut("slow");
+		closeBootstrapDialog("addFirstAdminUser");
 	}
 	
 	//回车键监听函数
