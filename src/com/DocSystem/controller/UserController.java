@@ -52,19 +52,6 @@ public class UserController extends BaseController {
 		System.out.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
 		ReturnAjax rt = new ReturnAjax();
-		
-		List<User> uList = userService.geAllUsers();
-		if(uList == null || uList.size() == 0)
-		{
-			//Add a default user(Admin)
-			if(addAdminUser() == false)
-			{
-				System.out.println("系统管理员创建失败,请检查数据库设置!");
-				writeJson(rt, response);	
-				return;
-			}
-		}
-
 		//tmp_user is used for store the query condition
 		User tmp_user = new User();
 		tmp_user.setName(userName);
@@ -103,9 +90,24 @@ public class UserController extends BaseController {
 		System.out.println("getLoginUser SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
+		
+		//查询系统中是否存在超级管理员
+		User qUser = new User();
+		qUser.setType(2); //超级管理员
+		List<User> uList = userService.getUserListByUserInfo(qUser);
+		if(uList == null || uList.size() == 0)
+		{
+			System.out.println("系统管理员不存在!");
+			rt.setError("系统管理员不存在!");
+			rt.setData("needAddFirstAdmin");
+			writeJson(rt, response);	
+			return;
+		}
+		
 		User user = getLoginUser(session, request, response, rt);
 		if(user == null)
-		{
+		{	
+			//用户未登录
 			writeJson(rt, response);
 			return;
 		}
@@ -141,6 +143,9 @@ public class UserController extends BaseController {
 		
 		ReturnAjax rt = new ReturnAjax();
 		
+		User user = new User();
+		user.setName(userName);
+		
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
@@ -151,22 +156,11 @@ public class UserController extends BaseController {
 		
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("该邮箱已注册！");
-			}
-			writeJson(rt, response);
-			return;
-			
+			user.setEmail(userName);			
 		}
 		else if(RegularUtil.IsMobliePhone(userName))
 		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("该手机已注册！");
-			}
-			writeJson(rt, response);
-			return;
+			user.setTel(userName);
 		}
 		else
 		{
@@ -174,6 +168,9 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
+		
+		userCheck(user, rt);
+		writeJson(rt, response);
 	}
 	
 	//注册接口
@@ -195,31 +192,24 @@ public class UserController extends BaseController {
 		
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("该邮箱已注册！");
-				writeJson(rt, response);
-				return;
-			}
 			user.setEmail(userName);
-			user.setEmailValid(1);
 		}
 		else if(RegularUtil.IsMobliePhone(userName))
 		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("该手机已注册！");
-				writeJson(rt, response);
-				return;
-			}
 			user.setTel(userName);
-			user.setTelValid(1);			
 		}
 		else
 		{
 			rt.setError("账号格式不正确！");
 			writeJson(rt, response);
 			return;
+		}
+		
+		if(userCheck(user, rt) == false)
+		{
+			System.out.println("用户检查失败!");			
+			writeJson(rt, response);
+			return;			
 		}
 		
 		//检查验证码是否正确

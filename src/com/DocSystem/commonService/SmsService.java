@@ -50,11 +50,11 @@ public class SmsService {
 	{
 		if(phone!=null&&!"".equals(phone)){
 			if(!RegularUtil.IsMobliePhone(phone)){
-				rt.setError("danger#您的手机号格式不对,请重新检查。");
+				rt.setError("您的手机号格式不对,请重新检查。");
 				return false;
 			}
 		}else{
-			rt.setError("danger#手机号不能为空，请重新检查。");
+			rt.setError("手机号不能为空，请重新检查。");
 			return false;
 		}
 		
@@ -78,13 +78,13 @@ public class SmsService {
 			Map<String, Object> rtObj = GsonUtils.getObject(rtJson, Map.class);
 			double rtCode = (Double) rtObj.get("code");
 			if(rtCode<0){
-				rt.setError("danger#发送短信失败！");
+				rt.setError("发送短信失败！");
 			}else{
 				return true;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			rt.setError("danger#发送短信失败！");
+			rt.setError("发送短信失败！");
 		}
 		return false;		
 	}

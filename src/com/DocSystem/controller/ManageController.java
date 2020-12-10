@@ -33,6 +33,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.AuthCode;
+import com.DocSystem.commonService.EmailService;
+import com.DocSystem.commonService.SmsService;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -43,6 +45,7 @@ public class ManageController extends BaseController{
 
 	@Autowired
 	private ReposServiceImpl reposService;
+
 	
 	/********** 系统初始化 ***************/
 	@RequestMapping("/docSysInit.do")
@@ -907,6 +910,47 @@ public class ManageController extends BaseController{
 		return param;
 	}
 	
+	@RequestMapping(value="addFirstAdminUser")
+	public void addFirstAdminUser(User user, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("addFirstAdminUser");
+		ReturnAjax rt = new ReturnAjax();
+		
+		//查询系统中是否存在超级管理员
+		User qUser = new User();
+		qUser.setType(2); //超级管理员
+		List<User> uList = userService.getUserListByUserInfo(qUser);
+		if(uList != null && uList.size() > 0)
+		{
+			System.out.println("系统管理员已存在!");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(userCheck(user, rt) == false)
+		{
+			System.out.println("用户检查失败!");			
+			writeJson(rt, response);
+			return;			
+		}
+		
+		user.setCreateType(0);	//用户为首次添加
+		user.setType(2); //系统管理员
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		user.setCreateTime(createTime);	//设置创建时间
+
+		if(userService.addUser(user) == 0)
+		{
+			docSysErrorLog("Failed to add new User in DB", rt);
+		}
+		
+		writeJson(rt, response);
+		return;
+	}
+	
+
 	@RequestMapping(value="addUser")
 	public void addUser(User user, HttpSession session,HttpServletResponse response)
 	{
@@ -948,44 +992,43 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
-		
+				
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
-			if(isUserRegistered(userName) == true)
-			{
-				docSysErrorLog("error#该邮箱已注册！", rt);
-				writeJson(rt, response);
-				return;
-			}
+			user.setEmail(userName);
 		}
 		else if(RegularUtil.IsMobliePhone(userName))
 		{
-			if(isUserRegistered(userName) == true)
-			{
-				docSysErrorLog("error#该手机已注册！", rt);
-				writeJson(rt, response);
-				return;
-			}
-		}
-		else
-		{
-			if(isUserRegistered(userName) == true)
-			{
-				docSysErrorLog("error#该用户名已注册！", rt);
-				writeJson(rt, response);
-				return;
-			}
+			user.setTel(userName);
 		}
 		
-		//检查密码是否为空
-		if(pwd==null||"".equals(pwd))
+		if(userCheck(user, rt) == false)
 		{
-			docSysErrorLog("danger#密码不能为空！", rt);
+			System.out.println("用户检查失败!");			
 			writeJson(rt, response);
-			return;
+			return;			
 		}
 		
+		if(user.getEmail() != null)
+		{
+			if(verifyEmail(user.getEmail()) == false)
+			{
+				docSysErrorLog("邮箱验证失败", rt);
+				writeJson(rt, response);
+				return;			
+			}
+		}
+		
+		if(user.getTel() != null)
+		{
+			if(verifyTelephone(user.getTel()) == false)
+			{
+				docSysErrorLog("手机验证失败", rt);
+				writeJson(rt, response);
+				return;			
+			}
+		}		
+				
 		user.setCreateType(2);	//用户为管理员添加
 		//set createTime
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
@@ -1051,6 +1094,34 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		
+		
+		if(userCheck(user, rt) == false)
+		{
+			System.out.println("用户检查失败!");			
+			writeJson(rt, response);
+			return;			
+		}
+		
+		if(user.getEmail() != null)
+		{
+			if(verifyEmail(user.getEmail()) == false)
+			{
+				docSysErrorLog("邮箱验证失败", rt);
+				writeJson(rt, response);
+				return;			
+			}
+		}
+		
+		if(user.getTel() != null)
+		{
+			if(verifyTelephone(user.getTel()) == false)
+			{
+				docSysErrorLog("手机验证失败", rt);
+				writeJson(rt, response);
+				return;			
+			}
+		}	
 		
 		if(userService.editUser(user) == 0)
 		{

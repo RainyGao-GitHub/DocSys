@@ -1,5 +1,5 @@
 	function showLoginPanel(){
-		//alert("showLoginPanel");
+		console.log("showLoginPanel");
 		bootstrapQ.dialog({
 			id: "login",
 			title: '登录',
@@ -11,11 +11,23 @@
 	}
 	
 	function showRegisterPanel(){
-		//alert("showRegisterPanel");
+		console.log("showRegisterPanel");
 		bootstrapQ.dialog({
 			id: "register",
 			url: 'register.html',
 			title: '注册',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
+	function showAddFirstAdminUserPanel(){
+		console.log("showAddFirstAdminUserPanel");
+		bootstrapQ.dialog({
+			id: "addFirstAdminUser",
+			url: 'addFirstAdminUser.html',
+			title: '添加系统管理员',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: false
