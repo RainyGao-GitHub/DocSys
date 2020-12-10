@@ -1966,6 +1966,30 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
+	protected boolean verifyTelAndEmail(User user, ReturnAjax rt) {
+		
+		String email = user.getEmail();
+		if(email != null && !email.isEmpty())
+		{
+			if(verifyEmail(email) == false)
+			{
+				docSysErrorLog("邮箱验证失败", rt);
+				return false;			
+			}
+		}
+		
+		String tel = user.getTel();
+		if(tel != null && !tel.isEmpty())
+		{
+			if(verifyTelephone(tel) == false)
+			{
+				docSysErrorLog("手机验证失败", rt);
+				return false;			
+			}
+		}	
+		return true;
+	}
+	
 	protected boolean verifyEmail(String email) {
 		ReturnAjax rt = new ReturnAjax();
 		return emailService.sendEmail(rt, email , "邮箱验证");
