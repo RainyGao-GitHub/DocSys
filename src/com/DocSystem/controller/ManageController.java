@@ -940,6 +940,15 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		if(RegularUtil.isEmail(name))	//邮箱注册
+		{
+			user.setEmail(name);
+		}
+		else if(RegularUtil.IsMobliePhone(name))
+		{
+			user.setTel(name);
+		}
+		
 		if(userCheck(user, rt) == false)
 		{
 			System.out.println("用户检查失败!");			
