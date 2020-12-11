@@ -5115,6 +5115,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//updateDoc Info
 				doc.setRevision(revision);
+				doc.setContent(null); //实体文件的内容不能放入数据库
 				if(dbUpdateDoc(repos, doc, true) == false)
 				{
 					docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
