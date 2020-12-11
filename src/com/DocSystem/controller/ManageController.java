@@ -1094,6 +1094,14 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		if(RegularUtil.isEmail(userName))
+		{
+			user.setEmail(userName);
+		}
+		else if(RegularUtil.IsMobliePhone(userName))
+		{
+			user.setTel(userName);
+		}
 		
 		if(userCheck(user, rt) == false)
 		{
