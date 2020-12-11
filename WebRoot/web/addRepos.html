@@ -283,7 +283,7 @@
 	function doSelectVerCtrl()
 	{
 		console.log("doSelectVerCtrl ");
-		var type = $("#dialog-new-repos select[name='type']").val();
+		var type = $("#dialog-new-repos select[name='type']").val();	
 		console.log("doSelectVerCtrl fsType:" + type);
 		var verCtrlEnable = 1;
 		if(type == 1)
@@ -298,7 +298,10 @@
 			else
 			{
 				$("#dialog-new-repos div[name='verCtrlDiv']").show();
-				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+				if($("#dialog-new-repos select[name='verCtrl']").val() == 0)
+				{
+					$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+				}
 			}
 		}
 		else if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
