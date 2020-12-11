@@ -2463,7 +2463,8 @@
 		
 		if(gShareId)
 		{
-    		getReposInfo(gInitReposInfo.id,InitMenuAndDoc);			
+			
+    		getReposInfo(gInitReposInfo.id,InitMenuAndDoc);	
 		}
 		else
 		{
@@ -3716,6 +3717,10 @@
 		if(shareId)
 		{
 			gShareId = shareId;
+			//不允许登录
+			$('#loginBtn').hide();
+        	$('#logoutBtn').hide();
+           	$('#modeSwitchBtn').hide();
 		}
     }
 
@@ -4705,6 +4710,12 @@
     }
     
  	function shareDoc(node){
+ 		if(gShareId)
+ 		{
+ 			showErrorMessage("当前为分享链接，无法再次分享！");
+ 			return;
+ 		}
+ 		
  		var path = node.path;
    	 	var name = node.name;
    	 	if(path == null)
