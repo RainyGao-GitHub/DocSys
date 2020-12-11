@@ -18,8 +18,13 @@
 		        <label>文件存储位置</label>
 				<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 			</div>
-			<div name="verCtrlDiv">
-	            <label>版本管理 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
+			
+			<div name="verCtrlEnablelDiv" style="margin-top:10px">
+	            <label>版本管理 <span style="margin-left:5px"><input type="checkbox" name="verCtrlEnable" value="0" onclick="doSelectVerCtrl()"></span></label>
+			</div>
+			
+			<div name="verCtrlDiv" style="margin-top:10px">
+	            <label>版本仓库类型 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 	            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 	            	<option value="0">无</option>   
 	            	<option value="1">SVN</option>   
@@ -216,8 +221,9 @@
 		
 		if(type == 1)
 		{
-			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").show();
 			//RealDoc verCtrl
+			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',false);
 			
@@ -229,6 +235,7 @@
 		}
 		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
 		{
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();
 			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
 			
@@ -240,8 +247,10 @@
 		}
 		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
 		{
-			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();
+			
 			//RealDoc verCtrl
+			$("#dialog-new-repos div[name='verCtrlDiv']").show();
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=1;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
 
@@ -253,8 +262,10 @@
 		}
 		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
 		{
-			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();
+			
 			//RealDoc verCtrl
+			$("#dialog-new-repos div[name='verCtrlDiv']").show();
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
 			
@@ -271,7 +282,36 @@
 	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
 	{
-		console.log("doSelectVerCtrl");
+		console.log("doSelectVerCtrl ");
+		var type = $("#dialog-new-repos select[name='type']").val();
+		console.log("doSelectVerCtrl fsType:" + type);
+		var verCtrlEnable = 1;
+		if(type == 1)
+		{
+			verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
+			console.log("doSelectVerCtrl verCtrlEnable:" + verCtrlEnable);
+			if(verCtrlEnable == 0)
+			{
+				$("#dialog-new-repos div[name='verCtrlDiv']").hide();
+				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
+			}
+			else
+			{
+				$("#dialog-new-repos div[name='verCtrlDiv']").show();
+				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+			}
+		}
+		else if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
+		{
+			verCtrlEnable = 0;
+			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
+		}
+		else
+		{
+			verCtrlEnable = 1;
+			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+		}
+		
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
 		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
 		
