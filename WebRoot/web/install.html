@@ -489,6 +489,7 @@
 	        	authCode: authCode,
 	        },
 	        success : function (ret) {
+	        	console.log("getSystemDbConfig ret:", ret);
 	            if( "ok" == ret.status )
 	            {
 					var config = ret.data;
@@ -503,8 +504,12 @@
 	            }
 	            else 
 	            {
-		        	showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
 	            	console.log(ret.msgInfo);
+	        		showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
+	            	if(ret.data == "invalidAuthCode")
+	            	{
+	                	window.location.href='/DocSystem';                	            		
+	            	}
 	            }
 	        },
 	        error : function () {
