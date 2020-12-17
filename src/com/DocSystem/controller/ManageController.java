@@ -304,6 +304,7 @@ public class ManageController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
+			rt.setData("invalidAuthCode");
 			writeJson(rt, response);			
 			return;
 		}
