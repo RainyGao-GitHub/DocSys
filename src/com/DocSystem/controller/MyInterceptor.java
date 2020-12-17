@@ -102,7 +102,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 			HttpServletResponse response, Object handler) throws Exception {
 		
 		String uri = request.getRequestURI();
-		System.out.println("preHandle uri:" + uri);
+		//System.out.println("MyInterceptor preHandle uri:" + uri);
 		
 		String params = request.getQueryString();
 		HttpSession session = request.getSession();
