@@ -1,6 +1,10 @@
 package com.DocSystem.controller;
 
+import java.util.Enumeration;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -78,6 +82,31 @@ public class OfficeController extends BaseController{
 		jobj.put("entropy", "2782586626");
 		writeJson(jobj, response);
     }
+	
+    // post请求
+	@RequestMapping(value="/downloadas/{key}", method=RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public void downloadas(@PathVariable("key") String key, 
+		HttpSession session, HttpServletRequest request, HttpServletResponse response) {
+		System.out.println("downloadas key:" + key);
+		printRequestParams(request);
+		
+		JSONObject jobj = new JSONObject();
+		jobj.put("websocket", true);
+		jobj.put("origins", "*:*");
+		jobj.put("cookie_needed", false);
+		jobj.put("entropy", "2782586626");
+		writeJson(jobj, response);
+    }
+
+	private void printRequestParams(HttpServletRequest request) {
+		//Print All request params
+		System.out.println("printRequestParams request params:");  
+		Enumeration<String> enu=request.getParameterNames();  
+		while(enu.hasMoreElements()){  
+			String paraName=(String)enu.nextElement();  
+			System.out.println(paraName+": "+request.getParameter(paraName));  
+		}
+	}
 	
 //	@RequestMapping(value="/restfulUser", method=RequestMethod.POST, produces="application/json;charset=UTF-8")
 //	public String postUser(String name, Integer age) {
