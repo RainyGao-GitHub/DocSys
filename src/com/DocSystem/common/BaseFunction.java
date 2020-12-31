@@ -1650,7 +1650,7 @@ public class BaseFunction{
         return false;
     }
     
-	protected static boolean saveDocContentToFile(String content, String path, String name,  String encode)
+	public static boolean saveDocContentToFile(String content, String path, String name,  String encode)
 	{	
 		if(content == null)
 		{
@@ -1704,7 +1704,7 @@ public class BaseFunction{
 		
 	}
 	
-	protected static String readDocContentFromFile(String path, String name, boolean encodeDetectEnable) 
+	public static String readDocContentFromFile(String path, String name, boolean encodeDetectEnable) 
 	{	
 		String filePath = path + name;
 		try 

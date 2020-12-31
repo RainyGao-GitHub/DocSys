@@ -67,6 +67,9 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
 import util.ReadProperties;
 import util.FileUtil.FileUtils2;
@@ -100,6 +103,177 @@ public class LuceneUtil2   extends BaseFunction
     {
     	return delFileOrDir(indexLib);
     }
+	
+	public static JSONArray getDocumentChanges(String dockey, Integer startIndex, Integer endIndex, String indexLib)
+	{
+		JSONArray changes = new JSONArray();
+		//查询startIndex 到 endIndex的所有changes
+		Directory directory = null;
+    	DirectoryReader ireader = null;
+    	
+    	try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("getDocumentChanges() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+    		directory = FSDirectory.open(file);
+
+	    	ireader = DirectoryReader.open(directory);
+	        IndexSearcher isearcher = new IndexSearcher(ireader);
+	
+	        Query query =NumericRangeQuery.newIntRange("change_id", startIndex, endIndex, true,true);
+
+	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+			System.out.println("getDocumentChanges() hitCount:" + hits.length);
+
+	        for (int i = 0; i < hits.length; i++) 
+	        {
+	            Document hitDocument = isearcher.doc(hits[i].doc);
+	    		String strChanges = hitDocument.get("change");
+	        	changes.add(strChanges);
+	        }
+		} catch (Exception e) {
+			System.out.println("getDocumentChanges() 异常");
+			e.printStackTrace();
+		} finally {
+	        if(ireader != null)
+	        {
+				try {
+					ireader.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+	        }
+	        
+	        if(directory != null)
+	        {
+		        try {
+					directory.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+	        }
+		}
+		return changes;
+	}
+	
+    
+    public static boolean addChangeIndex(Integer change_id, JSONObject docChange, String indexLib)
+    {	
+    	System.out.println("addChangeIndex() chang_id:" + change_id + " docChange:" + docChange.getString("change") + " indexLib:"+indexLib);    	
+    	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = buildDocumentForChange(change_id, docChange);
+	        indexWriter.addDocument(document);
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+	        //System.out.println("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
+			Date date2 = new Date();
+	        //System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        System.out.println("addIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+    
+    public static boolean deleteChangeIndex(Integer change_id, String indexLib)
+    {
+    	//System.out.println("deleteIndex() docId:" + doc.getDocId() + " indexLib:"+indexLib);
+    	Analyzer analyzer = null;
+    	Directory directory = null;
+    	IndexWriter indexWriter = null;
+    	
+		try {
+			Date date1 = new Date();
+			directory = FSDirectory.open(new File(indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        indexWriter = new IndexWriter(directory, config);
+	        
+	        Query query =NumericRangeQuery.newIntRange("change_id", change_id, change_id, true,true);
+	        indexWriter.deleteDocuments(query);
+	        indexWriter.commit();
+
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        
+	        Date date2 = new Date();
+	        //System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+			e.printStackTrace();
+			return false;
+		}
+    }  
+    
+    public static boolean deleteChangeIndexEx(Integer deleteStartIndex, Integer deleteEndIndex, String indexLib)
+    {
+    	//System.out.println("deleteIndex() docId:" + doc.getDocId() + " indexLib:"+indexLib);
+    	Analyzer analyzer = null;
+    	Directory directory = null;
+    	IndexWriter indexWriter = null;
+    	
+		try {
+			Date date1 = new Date();
+			directory = FSDirectory.open(new File(indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        indexWriter = new IndexWriter(directory, config);
+	        
+	        Query query =NumericRangeQuery.newIntRange("change_id", deleteStartIndex, deleteEndIndex, true,true);
+	        indexWriter.deleteDocuments(query);
+	        indexWriter.commit();
+
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        
+	        Date date2 = new Date();
+	        //System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+			e.printStackTrace();
+			return false;
+		}
+    }  
+    
+	private static Document buildDocumentForChange(Integer change_id, JSONObject docChange) {
+		Document document = new Document();			
+		document.add(new IntField("change_id", change_id, Store.YES));
+        document.add(new TextField("change", JSON.toJSONString(docChange), Store.YES));	
+        return document;
+	}
+    
     
     /**
 	 *
