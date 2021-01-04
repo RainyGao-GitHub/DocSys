@@ -132,8 +132,13 @@ public class LuceneUtil2   extends BaseFunction
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
-	    		String strChanges = hitDocument.get("change");
-	        	changes.add(strChanges);
+	    		JSONObject docChange = new JSONObject();
+		        docChange.put("docId", hitDocument.get("docId"));
+		        docChange.put("change", hitDocument.get("change"));
+		        docChange.put("time", Long.parseLong(hitDocument.get("time")));
+		        docChange.put("user", hitDocument.get("user"));
+		        docChange.put("useridoriginal", hitDocument.get("useridoriginal"));
+	            changes.add(docChange);
 	        }
 		} catch (Exception e) {
 			System.out.println("getDocumentChanges() 异常");
@@ -270,8 +275,13 @@ public class LuceneUtil2   extends BaseFunction
 	private static Document buildDocumentForChange(Integer change_id, JSONObject docChange) {
 		Document document = new Document();			
 		document.add(new IntField("change_id", change_id, Store.YES));
-        document.add(new TextField("change", JSON.toJSONString(docChange), Store.YES));	
-        return document;
+        //document.add(new TextField("change", JSON.toJSONString(docChange), Store.YES));	
+		document.add(new TextField("change", docChange.getString("change"), Store.YES));	
+		document.add(new TextField("docId", docChange.getString("docId"), Store.YES));	
+		document.add(new LongField("time", docChange.getLong("time"), Store.YES));	
+		document.add(new TextField("user", docChange.getString("user"), Store.YES));	
+		document.add(new TextField("useridoriginal", docChange.getString("useridoriginal"), Store.YES));	        
+		return document;
 	}
     
     
