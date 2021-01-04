@@ -132,9 +132,13 @@ public class LuceneUtil2   extends BaseFunction
 	    		JSONObject docChange = new JSONObject();
 		        docChange.put("docId", hitDocument.get("docId"));
 		        docChange.put("change", hitDocument.get("change"));
-		        docChange.put("time", Long.parseLong(hitDocument.get("time")));
 		        docChange.put("user", hitDocument.get("user"));
 		        docChange.put("useridoriginal", hitDocument.get("useridoriginal"));
+		        String timeStr = hitDocument.get("time");
+		        if(timeStr != null)
+		        {
+			        docChange.put("time", Long.parseLong(timeStr));		        	
+		        }
 	            changes.add(docChange);
 	        }
 		} catch (Exception e) {
