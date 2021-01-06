@@ -107,6 +107,8 @@ public class LuceneUtil2   extends BaseFunction
 		//System.out.println("buildDocumentForChange() change_id:" + change_id + " change:" + docChange.getString("change"));
 		Document document = new Document();			
 		document.add(new IntField("change_id", change_id, Store.YES));
+		
+		//docChange字段是为了能够快速获取已组成的docChangeStr
 		String docChangStr = "{\\\"docId\\\":\\\"" + docChange.get("docId") + "\\\","
 				+ "\\\"change\\\":\\\"\\\\\\\"" + docChange.get("change") + "\\\\\\\"\\\","
 				+ "\\\"time\\\":" + docChange.get("time") + ","
@@ -114,11 +116,12 @@ public class LuceneUtil2   extends BaseFunction
 				+ "\\\"useridoriginal\\\":\\\"" + docChange.get("useridoriginal") + "\\\"}";
 		document.add(new Field("docChange", docChangStr, Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
 		
-		//document.add(new Field("change", docChange.getString("change"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		//document.add(new Field("docId", docChange.getString("docId"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		//document.add(new Field("time", docChange.getString("time"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		//document.add(new Field("user", docChange.getString("user"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		//document.add(new Field("useridoriginal", docChange.getString("useridoriginal"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		//以下字段是给业务逻辑使用的
+		document.add(new Field("change", docChange.getString("change"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new Field("docId", docChange.getString("docId"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new Field("time", docChange.getString("time"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new Field("user", docChange.getString("user"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new Field("useridoriginal", docChange.getString("useridoriginal"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
 		return document;
 	}
 	
@@ -219,7 +222,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-    public static boolean addChangesIndex(Integer startIndex, JSONArray changes, String indexLib)
+    public static boolean addChangesIndex(Integer startIndex, JSONArray changes, int offset, String indexLib)
     {	
     	System.out.println("addChangeIndex() startIndex:" + startIndex + " indexLib:"+indexLib);    	
     	
@@ -235,7 +238,7 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        indexWriter = new IndexWriter(directory, config);
 	
-	        for(int i=0; i< changes.size(); i++)
+	        for(int i=offset; i< changes.size(); i++)
 	        {
 	        	JSONObject docChange = (JSONObject) changes.get(i);
 		        Document document = buildDocumentForChange(startIndex + i, docChange);
