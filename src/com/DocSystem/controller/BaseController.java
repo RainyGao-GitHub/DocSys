@@ -4145,11 +4145,15 @@ public class BaseController  extends BaseFunction{
 		doc.setSize(localEntry.length());
 		doc.setCreateTime(localEntry.lastModified());
 		doc.setLatestEditTime(localEntry.lastModified());
+
+    	Date date1 = new Date();
 		if(reposService.addDoc(doc) == 0)
 		{
 			System.out.println("dbAddDoc() addDoc to db failed");		
 			return false;
 		}
+    	Date date2 = new Date();
+        System.out.println("增加文件节点耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 		
 		if(addSubDocs)
 		{
