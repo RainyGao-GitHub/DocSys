@@ -66,6 +66,7 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
@@ -101,6 +102,26 @@ public class LuceneUtil2   extends BaseFunction
     	return delFileOrDir(indexLib);
     }
 	
+    
+	private static Document buildDocumentForChange(Integer change_id, JSONObject docChange) {
+		//System.out.println("buildDocumentForChange() change_id:" + change_id + " change:" + docChange.getString("change"));
+		Document document = new Document();			
+		document.add(new IntField("change_id", change_id, Store.YES));
+		String docChangStr = "{\\\"docId\\\":\\\"" + docChange.get("docId") + "\\\","
+				+ "\\\"change\\\":\\\"\\\\\\\"" + docChange.get("change") + "\\\\\\\"\\\","
+				+ "\\\"time\\\":" + docChange.get("time") + ","
+				+ "\\\"user\\\":\\\"" + docChange.get("user") + "\\\","
+				+ "\\\"useridoriginal\\\":\\\"" + docChange.get("useridoriginal") + "\\\"}";
+		document.add(new Field("docChange", docChangStr, Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		
+		//document.add(new Field("change", docChange.getString("change"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		//document.add(new Field("docId", docChange.getString("docId"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		//document.add(new Field("time", docChange.getString("time"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		//document.add(new Field("user", docChange.getString("user"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		//document.add(new Field("useridoriginal", docChange.getString("useridoriginal"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		return document;
+	}
+	
 	public static JSONArray getDocumentChanges(String dockey, Integer startIndex, Integer endIndex, String indexLib)
 	{
 		JSONArray changes = new JSONArray();
@@ -129,16 +150,8 @@ public class LuceneUtil2   extends BaseFunction
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
-	    		JSONObject docChange = new JSONObject();
-		        docChange.put("docId", hitDocument.get("docId"));
-		        docChange.put("change", hitDocument.get("change"));
-		        docChange.put("user", hitDocument.get("user"));
-		        docChange.put("useridoriginal", hitDocument.get("useridoriginal"));
-		        String timeStr = hitDocument.get("time");
-		        if(timeStr != null)
-		        {
-			        docChange.put("time", Long.parseLong(timeStr));		        	
-		        }
+	            JSONObject docChange = new JSONObject();
+		        docChange.put("docChange", hitDocument.get("docChange"));
 	            changes.add(docChange);
 	        }
 		} catch (Exception e) {
@@ -184,7 +197,50 @@ public class LuceneUtil2   extends BaseFunction
 	        indexWriter = new IndexWriter(directory, config);
 	
 	        Document document = buildDocumentForChange(change_id, docChange);
-	        indexWriter.addDocument(document);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        System.out.println("addChangeIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        System.out.println("addIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+    
+    public static boolean addChangesIndex(Integer startIndex, JSONArray changes, String indexLib)
+    {	
+    	System.out.println("addChangeIndex() startIndex:" + startIndex + " indexLib:"+indexLib);    	
+    	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        for(int i=0; i< changes.size(); i++)
+	        {
+	        	JSONObject docChange = (JSONObject) changes.get(i);
+		        Document document = buildDocumentForChange(startIndex + i, docChange);
+		        indexWriter.addDocument(document);	        
+	        }
 	        
 	        indexWriter.commit();
 	        
@@ -271,19 +327,6 @@ public class LuceneUtil2   extends BaseFunction
 			return false;
 		}
     }  
-    
-	private static Document buildDocumentForChange(Integer change_id, JSONObject docChange) {
-		Document document = new Document();			
-		document.add(new IntField("change_id", change_id, Store.YES));
-        //document.add(new TextField("change", JSON.toJSONString(docChange), Store.YES));	
-		document.add(new TextField("change", docChange.getString("change"), Store.YES));	
-		document.add(new TextField("docId", docChange.getString("docId"), Store.YES));	
-		document.add(new LongField("time", docChange.getLong("time"), Store.YES));	
-		document.add(new TextField("user", docChange.getString("user"), Store.YES));	
-		document.add(new TextField("useridoriginal", docChange.getString("useridoriginal"), Store.YES));	        
-		return document;
-	}
-    
     
     /**
 	 *
