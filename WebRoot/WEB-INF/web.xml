@@ -13,6 +13,11 @@
     <param-name>contextConfigLocation</param-name>  
     <param-value>classpath:spring-mybatis.xml</param-value>  
 </context-param>  
+ 
+<context-param>
+    <param-name>org.apache.tomcat.websocket.textBufferSize</param-name>
+    <param-value>5242800</param-value>
+</context-param> 
   
 <listener>  
     <description>spring监听器</description>  
