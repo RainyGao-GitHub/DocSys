@@ -109,11 +109,14 @@ public class LuceneUtil2   extends BaseFunction
 		document.add(new IntField("change_id", change_id, Store.YES));
 		
 		//docChange字段是为了能够快速获取已组成的docChangeStr
-		String docChangStr = "{\\\"docId\\\":\\\"" + docChange.get("docId") + "\\\","
+		String docChangStr = "{" 
+				+ "\\\"changeIndex\\\":\\\"" + change_id + "\\\","
+				+ "\\\"docId\\\":\\\"" + docChange.get("docId") + "\\\"," 
 				+ "\\\"change\\\":\\\"\\\\\\\"" + docChange.get("change") + "\\\\\\\"\\\","
 				+ "\\\"time\\\":" + docChange.get("time") + ","
 				+ "\\\"user\\\":\\\"" + docChange.get("user") + "\\\","
-				+ "\\\"useridoriginal\\\":\\\"" + docChange.get("useridoriginal") + "\\\"}";
+				+ "\\\"useridoriginal\\\":\\\"" + docChange.get("useridoriginal") + "\\\""
+				+ "}";
 		document.add(new Field("docChange", docChangStr, Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
 		
 		//以下字段是给业务逻辑使用的
@@ -154,7 +157,9 @@ public class LuceneUtil2   extends BaseFunction
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
 	            JSONObject docChange = new JSONObject();
+	            
 		        docChange.put("docChange", hitDocument.get("docChange"));
+				System.out.println("getDocumentChanges() index:" + (startIndex + i) + " docChange:" + docChange.get("docChange"));
 	            changes.add(docChange);
 	        }
 		} catch (Exception e) {
@@ -222,14 +227,15 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-    public static boolean addChangesIndex(Integer startIndex, JSONArray changes, int offset, String indexLib)
+    public static Integer addChangesIndex(Integer startIndex, JSONArray changes, int offset, String indexLib)
     {	
     	System.out.println("addChangeIndex() startIndex:" + startIndex + " indexLib:"+indexLib);    	
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
 		IndexWriter indexWriter = null;
-    	
+
+		int count = 0;
 		try {
 	    	Date date1 = new Date();
 	    	analyzer = new IKAnalyzer();
@@ -241,7 +247,8 @@ public class LuceneUtil2   extends BaseFunction
 	        for(int i=offset; i< changes.size(); i++)
 	        {
 	        	JSONObject docChange = (JSONObject) changes.get(i);
-		        Document document = buildDocumentForChange(startIndex + i, docChange);
+		        Document document = buildDocumentForChange(startIndex + count, docChange);
+		        count++;
 		        indexWriter.addDocument(document);	        
 	        }
 	        
@@ -256,12 +263,12 @@ public class LuceneUtil2   extends BaseFunction
 	        
 			Date date2 = new Date();
 	        System.out.println("addChangeIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-	    	return true;
+	    	return count;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        System.out.println("addIndex() 异常");
 			e.printStackTrace();
-			return false;
+			return null;
 		}
     }
     
