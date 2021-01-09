@@ -23,9 +23,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Properties;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -39,6 +43,7 @@ import org.apache.ibatis.jdbc.ScriptRunner;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.socket.WebSocketSession;
 import org.tmatesoft.svn.core.SVNDirEntry;
 
 import util.DateFormat;
@@ -76,6 +81,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.websocket.OfficeEditorData;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -5226,6 +5232,8 @@ public class BaseController  extends BaseFunction{
 		{
 			Doc doc = new Doc();
 			doc.setVid(reposId);
+			doc.setPath("");
+			doc.setName("");
 			doc.setDocId((long) 0);
 			if(isSubDocLocked(doc,login_user, rt) == true)
 			{
@@ -5399,7 +5407,12 @@ public class BaseController  extends BaseFunction{
 		//	rt.setError("lock Doc [" + doc.getName() +"]  failed");
 		//	return null;
 		//}
-		docLocksMap.put(getDocLockId(doc), docLock);
+		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			reposDocLocskMap = new HashMap<String, DocLock>();
+		}
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 
 	protected DocLock getDocLock(Doc doc) {
@@ -5413,7 +5426,40 @@ public class BaseController  extends BaseFunction{
 		//	return null;
 		//}
 		//return list.get(0);
-		return docLocksMap.get(getDocLockId(doc));
+		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			return null;
+		}
+		return reposDocLocskMap.get(getDocLockId(doc));
+	}
+	
+	private void deleteDocLock(Doc doc) {
+		//if(reposService.deleteDocLock(curDocLock) == 0)
+		//{
+		//	System.out.println("unlockDoc() deleteDocLock Failed!");
+		//	return false;
+		//}
+		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			return;
+		}
+		reposDocLocskMap.remove(getDocLockId(doc));
+	}
+
+	private void updateDocLock(Doc doc, DocLock docLock) {
+		//if(reposService.updateDocLock(preDocLock) == 0)
+		//{
+		//	System.out.println("unlockDoc() updateDocLock Failed!");
+		//	return false;
+		//}
+		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			reposDocLocskMap = new HashMap<String, DocLock>();
+		}
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 
 	private String getDocLockId(Doc doc) {
@@ -5533,50 +5579,38 @@ public class BaseController  extends BaseFunction{
 	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy/delete the Directory
 	private boolean isSubDocLocked(Doc doc, User login_user, ReturnAjax rt)
 	{
-		Integer reposId = doc.getVid();
-		
-		//Set the query condition to get the SubDocList of DocId
-		List<DocLock> SubDocLockList = getSubDocLockList(doc);
-
-		for(int i=0;i<SubDocLockList.size();i++)
+		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
-			DocLock subDocLock =SubDocLockList.get(i);
-			if(isDocLocked(subDocLock, login_user, rt))
-			{
-				rt.setError("subDoc [" +  subDocLock.getName() + "] is locked:" + subDocLock.getState());
-				System.out.println("isSubDocLocked() " + subDocLock.getName() + " is locked!");
-				return true;
-			}
-			
-			//If SubDocLock is for directory or unknown type, need to check its subDocLocks
-			if(subDocLock.getType() == null || subDocLock.getType() == 2)
-			{
-				Doc subDoc = new Doc();
-				subDoc.setVid(reposId);
-				subDoc.setPath(subDocLock.getPath());
-				subDoc.setName(subDocLock.getName());
-				if(isSubDocLocked(subDoc, login_user, rt))
-				{
-					return true;
-				}
-			}
+			return false;
 		}
+		
+		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
+		//遍历所有docLocks
+        System.out.println("isSubDocLocked() reposDocLocskMap size:" + reposDocLocskMap.size());
+		Iterator<Entry<String, DocLock>> iterator = reposDocLocskMap.entrySet().iterator();
+    	while (iterator.hasNext()) 
+        {
+        	Entry<String, DocLock> entry = iterator.next();
+            if(entry != null)
+        	{
+            	System.out.println("isSubDocLocked reposDocLocskMap entry:" + entry.getKey());
+            	DocLock docLock = entry.getValue();
+            	if(isSudDocLock(docLock, parentDocPath)) {
+            		if(isDocLocked(docLock, login_user, rt))
+        			{
+        				rt.setError("subDoc [" +  docLock.getName() + "] is locked:" + docLock.getState());
+        				System.out.println("isSubDocLocked() " + docLock.getName() + " is locked!");
+        				return true;
+        			}
+            	}
+        	}
+        }
 		return false;
 	}
-	
-	private List<DocLock> getSubDocLockList(Doc doc) {
-		//DocLock qDocLock = new DocLock();
-		//qDocLock.setVid(doc.getVid());
-		//qDocLock.setPath(doc.getPath() + doc.getName() + "/");
-		//List<DocLock> SubDocLockList = reposService.getDocLockList(qDocLock);
-		//return SubDocLockList;
-		DocLock docLock = getDocLock(doc);
-		if(docLock != null)
-		{
-			return docLock.subDocLockList;
-		}
-		return null;
-		
+
+	private boolean isSudDocLock(DocLock docLock, String parentDocPath) {
+		return parentDocPath.length() == 0 || (docLock.getPath().length() >= parentDocPath.length() && docLock.getPath().indexOf(parentDocPath) == 0);
 	}
 
 	//Unlock Doc
@@ -5604,24 +5638,6 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("unlockDoc() success:" + doc.getName());
 		return true;
-	}
-	
-	private void deleteDocLock(Doc doc) {
-		//if(reposService.deleteDocLock(curDocLock) == 0)
-		//{
-		//	System.out.println("unlockDoc() deleteDocLock Failed!");
-		//	return false;
-		//}
-		docLocksMap.remove(getDocLockId(doc));		
-	}
-
-	private void updateDocLock(Doc doc, DocLock preDocLock) {
-		//if(reposService.updateDocLock(preDocLock) == 0)
-		//{
-		//	System.out.println("unlockDoc() updateDocLock Failed!");
-		//	return false;
-		//}
-		docLocksMap.put(getDocLockId(doc), preDocLock);
 	}
 
 	/********************* DocSys权限相关接口 ****************************/
