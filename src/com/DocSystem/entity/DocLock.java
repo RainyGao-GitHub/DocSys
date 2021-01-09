@@ -24,8 +24,6 @@ public class DocLock {
     private Integer lockBy;
 
     private Long lockTime;
-
-	public List<DocLock> subDocLockList;
     
     public Integer getId() {
         return id;
