@@ -67,6 +67,7 @@ import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.commonService.ProxyThread;
 import com.DocSystem.commonService.ShareThread;
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
@@ -81,6 +82,7 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 public class BaseFunction{	
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
+	protected static Map<String, DocLock> docLocksMap = new HashMap<String, DocLock>();
 
 	/******************************** 获取服务器、访问者IP地址 *************************************/
 	protected static String getIpAddress() {
