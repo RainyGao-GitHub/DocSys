@@ -82,7 +82,7 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 public class BaseFunction{	
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
-	protected static Map<String, DocLock> docLocksMap = new HashMap<String, DocLock>();
+	protected static Map<Integer, HashMap<String, DocLock>> docLocksMap = new HashMap<Integer, HashMap<String, DocLock>>();
 
 	/******************************** 获取服务器、访问者IP地址 *************************************/
 	protected static String getIpAddress() {
