@@ -1,5 +1,7 @@
 package com.DocSystem.entity;
 
+import java.util.List;
+
 public class DocLock {
     private Integer id;
 
@@ -23,6 +25,8 @@ public class DocLock {
 
     private Long lockTime;
 
+	public List<DocLock> subDocLockList;
+    
     public Integer getId() {
         return id;
     }

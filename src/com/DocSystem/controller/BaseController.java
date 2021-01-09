@@ -5376,47 +5376,48 @@ public class BaseController  extends BaseFunction{
 			docLock.setLocker(login_user.getName());
 			docLock.setLockBy(login_user.getId());
 			docLock.setLockTime(lockTime);	//Set lockTime
-			if(reposService.addDocLock(docLock) == 0)
-			{
-				rt.setError("lock Doc [" + doc.getName() +"]  failed");
-				return null;
-			}
-			
 			//Set LockState = 0, which will be used for unlockDoc
 			docLock.setState(0);
+			addDocLock(doc, docLock);			
 		}
 		else
 		{
-			DocLock newDocLock = new DocLock();
-			newDocLock.setId(docLock.getId());
-			newDocLock.setState(lockType);	//doc的状态为不可用
-			newDocLock.setLocker(login_user.getName());
-			newDocLock.setLockBy(login_user.getId());
-			newDocLock.setLockTime(lockTime);	//Set lockTime
-			if(reposService.updateDocLock(newDocLock) == 0)
-			{
-				rt.setError("lock Doc [" + doc.getName() +"]  failed");
-				return null;
-			}
+			docLock.setId(docLock.getId());
+			docLock.setState(lockType);	//doc的状态为不可用
+			docLock.setLocker(login_user.getName());
+			docLock.setLockBy(login_user.getId());
+			docLock.setLockTime(lockTime);	//Set lockTime
 		}
 		
 		System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 		return docLock;
 	}
 	
+	private void addDocLock(Doc doc, DocLock docLock) {
+		//if(reposService.addDocLock(docLock) == 0)
+		//{
+		//	rt.setError("lock Doc [" + doc.getName() +"]  failed");
+		//	return null;
+		//}
+		docLocksMap.put(getDocLockId(doc), docLock);
+	}
+
 	protected DocLock getDocLock(Doc doc) {
-		DocLock qDocLock = new DocLock();
-		qDocLock.setVid(doc.getVid());
-		qDocLock.setPath(doc.getPath());
-		qDocLock.setName(doc.getName());
-		
-		List<DocLock> list = reposService.getDocLockList(qDocLock);
-		if(list == null || list.size() == 0)
-		{
-			return null;
-		}
-		
-		return list.get(0);
+		//DocLock qDocLock = new DocLock();
+		//qDocLock.setVid(doc.getVid());
+		//qDocLock.setPath(doc.getPath());
+		//qDocLock.setName(doc.getName());
+		//List<DocLock> list = reposService.getDocLockList(qDocLock);
+		//if(list == null || list.size() == 0)
+		//{
+		//	return null;
+		//}
+		//return list.get(0);
+		return docLocksMap.get(getDocLockId(doc));
+	}
+
+	private String getDocLockId(Doc doc) {
+		return doc.getVid() + "_" + doc.getPath() + doc.getName();
 	}
 
 	private User getLocker(Integer userId) {
@@ -5535,10 +5536,7 @@ public class BaseController  extends BaseFunction{
 		Integer reposId = doc.getVid();
 		
 		//Set the query condition to get the SubDocList of DocId
-		DocLock qDocLock = new DocLock();
-		qDocLock.setVid(doc.getVid());
-		qDocLock.setPath(doc.getPath() + doc.getName() + "/");
-		List<DocLock> SubDocLockList = reposService.getDocLockList(qDocLock);
+		List<DocLock> SubDocLockList = getSubDocLockList(doc);
 
 		for(int i=0;i<SubDocLockList.size();i++)
 		{
@@ -5566,6 +5564,21 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private List<DocLock> getSubDocLockList(Doc doc) {
+		//DocLock qDocLock = new DocLock();
+		//qDocLock.setVid(doc.getVid());
+		//qDocLock.setPath(doc.getPath() + doc.getName() + "/");
+		//List<DocLock> SubDocLockList = reposService.getDocLockList(qDocLock);
+		//return SubDocLockList;
+		DocLock docLock = getDocLock(doc);
+		if(docLock != null)
+		{
+			return docLock.subDocLockList;
+		}
+		return null;
+		
+	}
+
 	//Unlock Doc
 	protected boolean unlockDoc(Doc doc, User login_user, DocLock preDocLock) 
 	{
@@ -5584,22 +5597,33 @@ public class BaseController  extends BaseFunction{
 		
 		if(preDocLock != null && preDocLock.getState() != 0)	//Revert to preDocLock
 		{
-			if(reposService.updateDocLock(preDocLock) == 0)
-			{
-				System.out.println("unlockDoc() updateDocLock Failed!");
-				return false;
-			}
+			updateDocLock(doc, preDocLock);
 		}
 		
-		if(reposService.deleteDocLock(curDocLock) == 0)
-		{
-			System.out.println("unlockDoc() deleteDocLock Failed!");
-			return false;
-		}
+		deleteDocLock(doc);
 		
 		System.out.println("unlockDoc() success:" + doc.getName());
 		return true;
-	}	
+	}
+	
+	private void deleteDocLock(Doc doc) {
+		//if(reposService.deleteDocLock(curDocLock) == 0)
+		//{
+		//	System.out.println("unlockDoc() deleteDocLock Failed!");
+		//	return false;
+		//}
+		docLocksMap.remove(getDocLockId(doc));		
+	}
+
+	private void updateDocLock(Doc doc, DocLock preDocLock) {
+		//if(reposService.updateDocLock(preDocLock) == 0)
+		//{
+		//	System.out.println("unlockDoc() updateDocLock Failed!");
+		//	return false;
+		//}
+		docLocksMap.put(getDocLockId(doc), preDocLock);
+	}
+
 	/********************* DocSys权限相关接口 ****************************/
 	//检查用户的新增权限
 	protected boolean checkUserAddRight(Repos repos, Integer userId, Doc doc,  DocAuth authMask, ReturnAjax rt) 
