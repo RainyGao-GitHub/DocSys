@@ -5221,105 +5221,113 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
+		DocLock reposLock = lockRepos(repos, lockType, lockDuration, login_user, rt, docLockCheckFlag);
+		
 		//Check if repos was locked
-		if(isReposLocked(repos, login_user,rt))
+		if(reposLock == null)
 		{
 			System.out.println("lockRepos() Repos:" + repos.getId() +" was locked！");				
 			return null;			
 		}
+				
+		//lockTime is the time to release lock 
+		System.out.println("lockRepos() success reposId:" + reposId + " lockType:" + lockType + " by " + login_user.getName());
+		return repos;	
+	}
+
+	//Lock Doc
+	protected DocLock lockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) {
+		System.out.println("lockRepos() Repos:" + repos.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
+
+		DocLock reposLock = getReposLock(repos);
+		if(reposLock != null && isDocLocked(reposLock,login_user,rt))
+		{
+			System.out.println("lockRepos() Repos " + repos.getName() +" was locked");
+			return null;
+		}
 		
+		//Check If SubDoc was locked
 		if(docLockCheckFlag)
 		{
 			Doc doc = new Doc();
-			doc.setVid(reposId);
+			doc.setVid(repos.getId());
 			doc.setPath("");
 			doc.setName("");
 			doc.setDocId((long) 0);
 			if(isSubDocLocked(doc,login_user, rt) == true)
 			{
-				System.out.println("lockRepos() doc was locked！");
+				System.out.println("lockRepos() subDoc of " + doc.getName() +" was locked！");
 				return null;
 			}
 		}
 		
+		//Do Lock
 		//lockTime is the time to release lock 
-		Repos lockRepos= new Repos();
-		lockRepos.setId(reposId);
-		lockRepos.setState(lockType);
-		lockRepos.setLockBy(login_user.getId());
-		long lockTime = new Date().getTime() + lockDuration; //24*60*60*1000;
-		lockRepos.setLockTime(lockTime);	//Set lockTime
-		if(reposService.updateRepos(lockRepos) == 0)
+		long lockTime = new Date().getTime() + lockDuration;
+		if(reposLock == null)
 		{
-			rt.setError("lock Repos:" + reposId +"[" + repos.getName() +"]  failed");
-			return null;
+			reposLock = new DocLock();
+			reposLock.setVid(repos.getId());
+			reposLock.setState(lockType);	//doc的状态为不可用
+			reposLock.setLocker(login_user.getName());
+			reposLock.setLockBy(login_user.getId());
+			reposLock.setLockTime(lockTime);	//Set lockTime
+			//Set LockState = 0, which will be used for unlockDoc
+			reposLock.setState(0);
+			addReposLock(repos, reposLock);			
 		}
-		System.out.println("lockRepos() success reposId:" + reposId + " lockType:" + lockType + " by " + login_user.getName());
-		return repos;	
-	}
-	
-
-	//确定仓库是否被锁定
-	private boolean isReposLocked(Repos repos, User login_user, ReturnAjax rt) {
-		int lockState = repos.getState();	//0: not locked  1: locked	
-		if(lockState != 0)
+		else
 		{
-			if(isLockOutOfDate(repos.getLockTime()) == false)
-			{	
-				User lockBy = getLocker(repos.getLockBy());
-				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(repos.getLockTime());
-				
-				rt.setError("仓库 " + repos.getName() +" was locked by [" + repos.getLockBy() + "] "+ lockBy.getName() + " till " + lockTime);
-				System.out.println("Repos " + repos.getId()+ "[" + repos.getName() +"] was locked by " + repos.getLockBy() + " lockState:"+ repos.getState());;
-				return true;						
-			}
-			else 
-			{
-				System.out.println("Repos " + repos.getId()+ " " + repos.getName()  +" lock was out of date！");
-				return false;
-			}
-		}
-		return false;
-	}
-	
-	//Unlock Doc
-	protected boolean unlockRepos(Integer reposId, User login_user, Repos preLockInfo) {
-		Repos curRepos = reposService.getRepos(reposId);
-		if(curRepos == null)
-		{
-			System.out.println("unlockRepos() curRepos is null " + reposId);
-			return false;
+			reposLock.setState(lockType);	//doc的状态为不可用
+			reposLock.setLocker(login_user.getName());
+			reposLock.setLockBy(login_user.getId());
+			reposLock.setLockTime(lockTime);	//Set lockTime
 		}
 		
-		if(curRepos.getState() == 0)
+		System.out.println("lockRepos() " + repos.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+		return reposLock;
+	}
+	
+	private void addReposLock(Repos repos, DocLock reposLock) {
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void deleteReposLock(Repos repos) {
+		reposLocksMap.remove(repos.getId());
+	}
+
+	private DocLock getReposLock(Repos repos) {
+		DocLock reposLock = reposLocksMap.get(repos.getId());
+		return reposLock;
+	}
+
+	//Unlock Doc
+	protected boolean unlockRepos(Repos repos, User login_user, DocLock preLockInfo) {
+		DocLock reposLock = reposLocksMap.get(repos.getId());
+		
+		if(reposLock == null)
 		{
-			System.out.println("unlockRepos() repos was not locked:" + curRepos.getState());			
 			return true;
 		}
 		
-		Integer lockBy = curRepos.getLockBy();
+		if(reposLock.getState() == 0)
+		{
+			System.out.println("unlockRepos() repos was not locked:" + reposLock.getState());			
+			return true;
+		}
+		
+		Integer lockBy = reposLock.getLockBy();
 		if(lockBy != null && lockBy == login_user.getId())
 		{
-			Repos revertRepos = new Repos();
-			revertRepos.setId(reposId);	
-			
 			if(preLockInfo == null)	//Unlock
 			{
-				revertRepos.setState(0);	//
-				revertRepos.setLockBy(0);	//
-				revertRepos.setLockTime((long)0);	//Set lockTime
+				deleteReposLock(repos);
 			}
 			else	//Revert to preLockState
 			{
-				revertRepos.setState(preLockInfo.getState());	//
-				revertRepos.setLockBy(preLockInfo.getLockBy());	//
-				revertRepos.setLockTime(preLockInfo.getLockTime());	//Set lockTime
-			}
-			
-			if(reposService.updateRepos(revertRepos) == 0)
-			{
-				System.out.println("unlockRepos() updateRepos Failed!");
-				return false;
+				reposLock.setState(preLockInfo.getState());	//
+				reposLock.setLockBy(preLockInfo.getLockBy());	//
+				reposLock.setLockTime(preLockInfo.getLockTime());	//Set lockTime
 			}
 		}
 		else
@@ -5328,7 +5336,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		System.out.println("unlockRepos() success:" + reposId);
+		System.out.println("unlockRepos() success:" + repos.getName());
 		return true;
 	}
 	
