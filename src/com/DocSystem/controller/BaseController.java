@@ -5392,8 +5392,6 @@ public class BaseController  extends BaseFunction{
 			docLock.setLocker(login_user.getName());
 			docLock.setLockBy(login_user.getId());
 			docLock.setLockTime(lockTime);	//Set lockTime
-			//Set LockState = 0, which will be used for unlockDoc
-			docLock.setState(0);
 			addDocLock(doc, docLock);			
 		}
 		else
