@@ -200,11 +200,6 @@ public class ReposController extends BaseController{
 		repos.setSvnPath1(svnPath1);
 		repos.setSvnUser1(svnUser1);
 		repos.setSvnPwd1(svnPwd1);
-		//Lock the repos
-		repos.setState(1);
-		repos.setLockBy(login_user.getId());
-		long lockTime = nowTimeStamp + 4*60*60*1000;
-		repos.setLockTime(lockTime);
 		
 		//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 		if(checkReposInfoForAdd(repos, rt) == false)
@@ -222,6 +217,19 @@ public class ReposController extends BaseController{
 		}
 		Integer reposId = repos.getId();
 		System.out.println("new ReposId" + reposId);
+		//Lock the repos
+		long lockTime = nowTimeStamp + 4*60*60*1000;
+		synchronized(syncLock)
+		{	
+			DocLock reposLock = lockRepos(repos, 1, lockTime, login_user, rt, false); 
+			if(reposLock == null)
+			{
+				rt.setError("锁定仓库失败！");
+				writeJson(rt, response);		
+				return;				
+			}
+			unlock();
+		}
 		
 		if(createReposLocalDir(repos,rt) == false)
 		{
@@ -247,20 +255,12 @@ public class ReposController extends BaseController{
 		}
 
 		InitReposAuthInfo(repos,login_user,rt);		
-		
-		//UnLock Repos
-		Repos tempRepos = new Repos();
-		tempRepos.setId(reposId);
-		tempRepos.setState(0);	//
-		tempRepos.setLockBy(0);	//
-		tempRepos.setLockTime((long)0);	//Set lockTime	
-		if(reposService.updateRepos(tempRepos) == 0)
-		{
-			rt.setError("更新仓库记录失败");
-			writeJson(rt, response);		
-			return;
+
+		synchronized(syncLock)
+		{	
+			unlockRepos(repos, login_user, null); 
+			unlock();
 		}
-		
 		writeJson(rt, response);	
 	}
 	
