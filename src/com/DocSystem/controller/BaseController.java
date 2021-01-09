@@ -5419,6 +5419,7 @@ public class BaseController  extends BaseFunction{
 		if(reposDocLocskMap == null)
 		{
 			reposDocLocskMap = new HashMap<String, DocLock>();
+			docLocksMap.put(doc.getVid(), reposDocLocskMap);
 		}
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
@@ -5466,6 +5467,7 @@ public class BaseController  extends BaseFunction{
 		if(reposDocLocskMap == null)
 		{
 			reposDocLocskMap = new HashMap<String, DocLock>();
+			docLocksMap.put(doc.getVid(), reposDocLocskMap);
 		}
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
