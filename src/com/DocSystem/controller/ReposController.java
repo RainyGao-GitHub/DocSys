@@ -909,8 +909,8 @@ public class ReposController extends BaseController{
 	{
 		for(Doc doc: docList)
 		{
-			if(doc.getType() == 1)
-			{
+//			if(doc.getType() == 1)
+//			{
 				DocLock docLock = getDocLock(doc);
 				if(docLock != null)
 				{
@@ -920,7 +920,7 @@ public class ReposController extends BaseController{
 					doc.setLockTime(docLock.getLockTime());	
 				}
 			}
-		}
+//		}
 	}
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
