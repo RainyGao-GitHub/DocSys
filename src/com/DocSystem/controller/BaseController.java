@@ -5419,7 +5419,10 @@ public class BaseController  extends BaseFunction{
 			System.out.println("getDocLock() reposDocLocskMap for " + doc.getVid() + " is null");
 			return null;
 		}
-		return reposDocLocskMap.get(getDocLockId(doc));
+		
+		String docLockId = getDocLockId(doc);
+		System.out.println("getDocLock() docLockId:" + docLockId);
+		return reposDocLocskMap.get(docLockId);
 	}
 	
 	private void deleteDocLock(Doc doc) {
