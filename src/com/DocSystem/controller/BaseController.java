@@ -25,10 +25,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Properties;
-import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.servlet.http.Cookie;
@@ -38,12 +36,10 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
-import org.apache.commons.io.FileUtils;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.socket.WebSocketSession;
 import org.tmatesoft.svn.core.SVNDirEntry;
 
 import util.DateFormat;
@@ -81,7 +77,6 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
-import com.DocSystem.websocket.OfficeEditorData;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -5408,11 +5403,6 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void addDocLock(Doc doc, DocLock docLock) {
-		//if(reposService.addDocLock(docLock) == 0)
-		//{
-		//	rt.setError("lock Doc [" + doc.getName() +"]  failed");
-		//	return null;
-		//}
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
@@ -5423,30 +5413,16 @@ public class BaseController  extends BaseFunction{
 	}
 
 	public static DocLock getDocLock(Doc doc) {
-		//DocLock qDocLock = new DocLock();
-		//qDocLock.setVid(doc.getVid());
-		//qDocLock.setPath(doc.getPath());
-		//qDocLock.setName(doc.getName());
-		//List<DocLock> list = reposService.getDocLockList(qDocLock);
-		//if(list == null || list.size() == 0)
-		//{
-		//	return null;
-		//}
-		//return list.get(0);
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
+			System.out.println("getDocLock() reposDocLocskMap for " + doc.getVid() + " is null");
 			return null;
 		}
 		return reposDocLocskMap.get(getDocLockId(doc));
 	}
 	
 	private void deleteDocLock(Doc doc) {
-		//if(reposService.deleteDocLock(curDocLock) == 0)
-		//{
-		//	System.out.println("unlockDoc() deleteDocLock Failed!");
-		//	return false;
-		//}
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
@@ -5456,11 +5432,6 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void updateDocLock(Doc doc, DocLock docLock) {
-		//if(reposService.updateDocLock(preDocLock) == 0)
-		//{
-		//	System.out.println("unlockDoc() updateDocLock Failed!");
-		//	return false;
-		//}
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
@@ -6601,7 +6572,6 @@ public class BaseController  extends BaseFunction{
 				try {
 					in.close();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
