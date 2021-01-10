@@ -5593,6 +5593,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		List<String> outdatedDocLockIds = new ArrayList<String>();
 		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
 		//遍历所有docLocks
         System.out.println("isSubDocLocked() reposDocLocskMap size:" + reposDocLocskMap.size());
@@ -5604,17 +5605,33 @@ public class BaseController  extends BaseFunction{
         	{
             	System.out.println("isSubDocLocked reposDocLocskMap entry:" + entry.getKey());
             	DocLock docLock = entry.getValue();
-            	if(isSudDocLock(docLock, parentDocPath)) {
-            		if(isDocLocked(docLock, login_user, rt))
-        			{
-        				rt.setError("subDoc [" +  docLock.getName() + "] is locked:" + docLock.getState());
-        				System.out.println("isSubDocLocked() " + docLock.getName() + " is locked!");
-        				return true;
-        			}
-            	}
+    			if(docLock.getLockTime() == null || isLockOutOfDate(docLock.getLockTime()))
+    			{	
+    				outdatedDocLockIds.add(entry.getKey());
+    			}
+    			else	//只检查没过期的docLock
+    			{
+	            	if(isSudDocLock(docLock, parentDocPath)) {
+	            		if(isDocLocked(docLock, login_user, rt))
+	        			{
+	        				rt.setError("subDoc [" +  docLock.getName() + "] is locked:" + docLock.getState());
+	        				System.out.println("isSubDocLocked() " + docLock.getName() + " is locked!");
+	        				deleteDocLocks(reposDocLocskMap, outdatedDocLockIds);
+	        				return true;
+	        			}
+	            	}
+    			}
         	}
         }
+		deleteDocLocks(reposDocLocskMap, outdatedDocLockIds);
 		return false;
+	}
+
+	private void deleteDocLocks(HashMap<String, DocLock> reposDocLocskMap, List<String> outdatedDocLockIds) {
+		for(String docLockId : outdatedDocLockIds)
+		{
+			reposDocLocskMap.remove(docLockId);
+		}
 	}
 
 	private boolean isSudDocLock(DocLock docLock, String parentDocPath) {
