@@ -5442,7 +5442,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static String getDocLockId(Doc doc) {
-		return doc.getVid() + "_" + doc.getPath() + doc.getName();
+		return doc.getVid() + "_" + doc.getLocalRootPath() + doc.getPath() + doc.getName();
 	}
 
 	private User getLocker(Integer userId) {
@@ -5516,6 +5516,7 @@ public class BaseController  extends BaseFunction{
 		Integer reposId = doc.getVid();
 		Doc tempDoc = new Doc();
 		tempDoc.setVid(reposId);
+		tempDoc.setLocalRootPath(doc.getLocalRootPath());
 		tempDoc.setPath("");
 		tempDoc.setName("");
 		DocLock lock = getDocLock(doc);
