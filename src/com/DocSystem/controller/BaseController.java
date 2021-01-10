@@ -5413,10 +5413,10 @@ public class BaseController  extends BaseFunction{
 		//	rt.setError("lock Doc [" + doc.getName() +"]  failed");
 		//	return null;
 		//}
-		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
-			reposDocLocskMap = new HashMap<String, DocLock>();
+			reposDocLocskMap = new ConcurrentHashMap<String, DocLock>();
 			docLocksMap.put(doc.getVid(), reposDocLocskMap);
 		}
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
@@ -5433,7 +5433,7 @@ public class BaseController  extends BaseFunction{
 		//	return null;
 		//}
 		//return list.get(0);
-		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
 			return null;
@@ -5447,7 +5447,7 @@ public class BaseController  extends BaseFunction{
 		//	System.out.println("unlockDoc() deleteDocLock Failed!");
 		//	return false;
 		//}
-		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
 			return;
@@ -5461,10 +5461,10 @@ public class BaseController  extends BaseFunction{
 		//	System.out.println("unlockDoc() updateDocLock Failed!");
 		//	return false;
 		//}
-		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
-			reposDocLocskMap = new HashMap<String, DocLock>();
+			reposDocLocskMap = new ConcurrentHashMap<String, DocLock>();
 			docLocksMap.put(doc.getVid(), reposDocLocskMap);
 		}
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
@@ -5587,7 +5587,7 @@ public class BaseController  extends BaseFunction{
 	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy/delete the Directory
 	private boolean isSubDocLocked(Doc doc, User login_user, ReturnAjax rt)
 	{
-		HashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
 			return false;
@@ -5627,7 +5627,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private void deleteDocLocks(HashMap<String, DocLock> reposDocLocskMap, List<String> outdatedDocLockIds) {
+	private void deleteDocLocks(ConcurrentHashMap<String, DocLock> reposDocLocskMap, List<String> outdatedDocLockIds) {
 		for(String docLockId : outdatedDocLockIds)
 		{
 			reposDocLocskMap.remove(docLockId);
