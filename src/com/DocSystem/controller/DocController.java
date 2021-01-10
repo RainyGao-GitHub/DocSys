@@ -1231,7 +1231,7 @@ public class DocController extends BaseController{
 		String encReposPath = base64EncodeURLSafe(reposPath);
 		String encTargetName = base64EncodeURLSafe(fileName);
 		String encTargetPath = base64EncodeURLSafe(localParentPath);
-		res.put("url", "/DocSystem/Doc/downloadDoc.do?reposPath=" + encReposPath + "&targetPath="+encTargetPath+"&targetName="+encTargetName);
+		res.put("url", "/DocSystem/Doc/downloadDoc.do?vid=" + reposId + "&reposPath=" + encReposPath + "&targetPath="+encTargetPath+"&targetName="+encTargetName);
 		res.put("success", 1);
 		res.put("message", "upload success!");
 		writeJson(res,response);
@@ -1747,7 +1747,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	@RequestMapping(value="/downloadDoc/{reposPath}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
+	@RequestMapping(value="/downloadDoc/{vid}/{reposPath}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("reposPath") String reposPath, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
@@ -3471,11 +3471,11 @@ public class DocController extends BaseController{
 			{
 				shareId = 0;
 			}
-			fileLink = "/DocSystem/Doc/downloadDoc/" + encReposPath +  "/" + encTargetPath +  "/" + encTargetName +"/" + authCode + "/" + shareId;
+			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + encReposPath +  "/" + encTargetPath +  "/" + encTargetName +"/" + authCode + "/" + shareId;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/downloadDoc.do?reposPath="+ encReposPath + "&targetPath=" + encTargetPath + "&targetName="+encTargetName;	
+			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&reposPath="+ encReposPath + "&targetPath=" + encTargetPath + "&targetName="+encTargetName;	
 			if(authCode != null)
 			{
 				fileLink += "&authCode=" + authCode;
