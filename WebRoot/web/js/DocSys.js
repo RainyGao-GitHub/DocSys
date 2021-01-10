@@ -626,10 +626,10 @@ function getDocDownloadLink(docInfo, urlStyle)
    	reposPath = encodeURI(reposPath);
    	if(urlStyle && urlStyle == "REST")
    	{
-   		return "/DocSystem/Doc/downloadDoc/"+ reposPath + "/" +targetPath+ "/"+targetName;   		
+   		return "/DocSystem/Doc/downloadDoc/" + docInfo.vid + "/" + reposPath + "/" +targetPath+ "/"+targetName;   		
    	}
    	
-	var docLink = "/DocSystem/Doc/downloadDoc.do?repposPath=" + reposPath + "&targetPath=" + targetPath + "&targetName=" + targetName;
+	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + docInfo.vid + "&repposPath=" + reposPath + "&targetPath=" + targetPath + "&targetName=" + targetName;
 	if(docInfo.shareId)
 	{
 		docLink += "&shareId="+docInfo.shareId;

@@ -92,7 +92,7 @@ import util.SvnUtil.SVNUtil;
 
 public class BaseController  extends BaseFunction{
 	@Autowired
-	protected static ReposServiceImpl reposService;
+	protected ReposServiceImpl reposService;
 	@Autowired
 	protected UserServiceImpl userService;
 	@Autowired
@@ -4375,7 +4375,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	public static DocShare getDocShare(Integer shareId) {
+	public DocShare getDocShare(Integer shareId) {
 		DocShare qDocShare = new DocShare();
 		qDocShare.setShareId(shareId);
 		List<DocShare> results = reposService.getDocShareList(qDocShare);
