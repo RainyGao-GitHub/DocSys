@@ -1,7 +1,5 @@
 package com.DocSystem.entity;
 
-import java.util.List;
-
 public class DocLock {
     private Integer id;
 

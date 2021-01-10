@@ -92,7 +92,7 @@ import util.SvnUtil.SVNUtil;
 
 public class BaseController  extends BaseFunction{
 	@Autowired
-	protected ReposServiceImpl reposService;
+	protected static ReposServiceImpl reposService;
 	@Autowired
 	protected UserServiceImpl userService;
 	@Autowired
@@ -123,7 +123,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
+	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
 	protected boolean checkAuthCode(String code, String expUsage) {
 		System.out.println("checkAuthCode() authCode:" + code);
 		AuthCode authCode = authCodeMap.get(code);
@@ -4375,7 +4375,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected DocShare getDocShare(Integer shareId) {
+	public static DocShare getDocShare(Integer shareId) {
 		DocShare qDocShare = new DocShare();
 		qDocShare.setShareId(shareId);
 		List<DocShare> results = reposService.getDocShareList(qDocShare);
@@ -5422,7 +5422,7 @@ public class BaseController  extends BaseFunction{
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 
-	protected DocLock getDocLock(Doc doc) {
+	public static DocLock getDocLock(Doc doc) {
 		//DocLock qDocLock = new DocLock();
 		//qDocLock.setVid(doc.getVid());
 		//qDocLock.setPath(doc.getPath());
@@ -5470,7 +5470,7 @@ public class BaseController  extends BaseFunction{
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 
-	private String getDocLockId(Doc doc) {
+	private static String getDocLockId(Doc doc) {
 		return doc.getVid() + "_" + doc.getPath() + doc.getName();
 	}
 
@@ -5488,7 +5488,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//确定当前doc是否被锁定
-	private boolean isDocLocked(DocLock docLock,User login_user,ReturnAjax rt) {
+	public static boolean isDocLocked(DocLock docLock,User login_user,ReturnAjax rt) {
 		if(docLock == null)
 		{
 			return false;
@@ -5525,7 +5525,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean isLockOutOfDate(long lockTime) {
+	private static boolean isLockOutOfDate(long lockTime) {
 		//check if the lock was out of date
 		long curTime = new Date().getTime();
 		//System.out.println("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);
