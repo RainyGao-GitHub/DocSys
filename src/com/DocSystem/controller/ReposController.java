@@ -803,6 +803,7 @@ public class ReposController extends BaseController{
 					rootDoc.setType(1);
 				}
 				
+				printObject("getSubDocList() docList:", docList);
 				docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 				rt.setData(docList);
 				writeJson(rt, response);			
