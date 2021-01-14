@@ -128,6 +128,17 @@ public class LuceneUtil2   extends BaseFunction
 		return document;
 	}
 	
+	private static JSONObject buildChangeForDocument(Document document) {
+		JSONObject docChange = new JSONObject();
+        docChange.put("change_id", document.get("change_id"));
+        docChange.put("change", document.get("change"));
+        docChange.put("time", document.get("time"));
+        docChange.put("user", document.get("user"));
+        docChange.put("useridoriginal", document.get("useridoriginal"));
+        docChange.put("docChange", document.get("docChange"));
+		return docChange;
+	}
+	
 	public static JSONArray getDocumentChanges(String dockey, Integer startIndex, Integer endIndex, String indexLib)
 	{
 		JSONArray changes = new JSONArray();
@@ -156,9 +167,7 @@ public class LuceneUtil2   extends BaseFunction
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
-	            JSONObject docChange = new JSONObject();
-	            
-		        docChange.put("docChange", hitDocument.get("docChange"));
+	            JSONObject docChange = buildChangeForDocument(hitDocument);
 				System.out.println("getDocumentChanges() index:" + (startIndex + i) + " docChange:" + docChange.get("docChange"));
 	            changes.add(docChange);
 	        }
