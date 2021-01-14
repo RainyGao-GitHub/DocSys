@@ -5501,7 +5501,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private static boolean isLockOutOfDate(long lockTime) {
+	public static boolean isLockOutOfDate(long lockTime) {
 		//check if the lock was out of date
 		long curTime = new Date().getTime();
 		//System.out.println("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);

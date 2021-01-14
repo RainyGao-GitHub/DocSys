@@ -94,8 +94,9 @@ Something you need to know
 （2）锁定状态：
 	0：未锁定
 	2：绝对锁定，自己无法解锁，锁过期时间2天
-	1：RealDoc CheckOut，对自己无效，锁过期时间2天
-	3：VirtualDoc Online Edit，对自己无效，锁过期时间2天
+	1：RealDoc 编辑锁定，锁过期时间2天，自己可解锁，解锁时需要确定是否处于协同编辑模式，如处于协同编辑模式，需要将锁改为协同编辑锁
+	4：RealDoc 协同编辑锁定，锁过期时间2天，不可解锁，但自己可以将其改为编辑锁定，被改为编辑锁定后其他用户将无法编辑和保存
+	3：VirtualDoc 编辑锁定，锁过期时间2天，自己可解锁
 （3）LockDoc(docId,subDocCheckFlag)的实现
 	subDocCheckFlag是true的时候表示需要检查docId节点的子目录下是否有锁定文件，由于delete\move\rename会影响subDocs,copy对subDocs有依赖，这四个接口需要将标志设置为true
 4、路径定义规则
