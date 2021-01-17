@@ -714,13 +714,13 @@ public class BaseFunction{
 		return name;
 	}
 	
-	protected static String getReposPath(Repos repos) {
+	public static String getReposPath(Repos repos) {
 		String path = repos.getPath();
 		return path + repos.getId() + "/";
 	}
 	
 	//获取仓库的实文件的本地存储根路径
-	protected static String getReposRealPath(Repos repos)
+	public static String getReposRealPath(Repos repos)
 	{
 		String reposRPath =  repos.getRealDocPath();
 		if(reposRPath == null || reposRPath.isEmpty())

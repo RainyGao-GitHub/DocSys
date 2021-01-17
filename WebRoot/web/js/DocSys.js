@@ -618,18 +618,17 @@ function getDocDownloadLink(docInfo, urlStyle)
 		return null;
 	}
 	
-	var reposPath = docDataEx.reposPath;
-	var targetName = docDataEx.name;
-	var targetPath = docDataEx.path;
-    targetName = encodeURI(targetName);
-   	targetPath = encodeURI(targetPath);
+	var name = encodeURI(docDataEx.name);
+   	var path = encodeURI(docDataEx.path);
+   	var targetName = encodeURI(docDataEx.targetName);
+   	var targetPath = encodeURI(docDataEx.targetPath);
    	reposPath = encodeURI(reposPath);
    	if(urlStyle && urlStyle == "REST")
    	{
-   		return "/DocSystem/Doc/downloadDoc/" + docInfo.vid + "/" + reposPath + "/" +targetPath+ "/"+targetName;   		
+   		return "/DocSystem/Doc/downloadDoc/" + docInfo.vid + "/" + path + + "/" + name + "/" +targetPath+ "/"+targetName;   		
    	}
    	
-	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + docInfo.vid + "&repposPath=" + reposPath + "&targetPath=" + targetPath + "&targetName=" + targetName;
+	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + docInfo.vid + "&path=" + path + " &name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName;
 	if(docInfo.shareId)
 	{
 		docLink += "&shareId="+docInfo.shareId;
