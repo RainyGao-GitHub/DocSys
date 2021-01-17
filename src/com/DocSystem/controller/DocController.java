@@ -1229,10 +1229,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String encReposPath = base64EncodeURLSafe(reposPath);
+		String encPath = base64EncodeURLSafe(path);
+		String encName = base64EncodeURLSafe(name);
 		String encTargetName = base64EncodeURLSafe(fileName);
 		String encTargetPath = base64EncodeURLSafe(localParentPath);
-		res.put("url", "/DocSystem/Doc/downloadDoc.do?vid=" + reposId + "&reposPath=" + encReposPath + "&targetPath="+encTargetPath+"&targetName="+encTargetName);
+		res.put("url", "/DocSystem/Doc/downloadDoc.do?vid=" + reposId + "&path=" + encPath + "&name=" + encName + "&targetPath="+encTargetPath+"&targetName="+encTargetName);
 		res.put("success", 1);
 		res.put("message", "upload success!");
 		writeJson(res,response);
@@ -1484,7 +1485,7 @@ public class DocController extends BaseController{
 				
 		if(dbDoc.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1511,7 +1512,7 @@ public class DocController extends BaseController{
 				return;
 			}
 					
-			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1543,7 +1544,7 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(0);	//下载完成后不能删除下载的文件
 			docSysDebugLog("本地文件: 原始路径下载", rt);
@@ -1572,7 +1573,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
@@ -1606,7 +1607,7 @@ public class DocController extends BaseController{
 				
 			if(remoteEntry.getType() == 1)
 			{
-				Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
+				Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
 				rt.setData(downloadDoc);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
 				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1627,7 +1628,7 @@ public class DocController extends BaseController{
 				return;
 			}
 				
-			Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1672,7 +1673,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc downloadDoc = buildDownloadDocInfo(doc.getReposPath(), targetPath, targetName);
+		Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
 		docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1748,12 +1749,12 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	@RequestMapping(value="/downloadDoc/{vid}/{reposPath}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
-	public void downloadDoc(@PathVariable("reposPath") String reposPath, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+	@RequestMapping(value="/downloadDoc/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
+	public void downloadDoc(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
+		System.out.println("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2312,7 +2313,7 @@ public class DocController extends BaseController{
 		{	
 			JSONObject jobj = new JSONObject();
 			String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
-			String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
+			String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, rt);
 			String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
 			jobj.put("fileLink", fileLink);
 			jobj.put("saveFileLink", saveFileLink);
@@ -2452,7 +2453,7 @@ public class DocController extends BaseController{
 		{	
 			JSONObject jobj = new JSONObject();
 			String authCode = getAuthCodeForOfficeEditor(tmpDoc, reposAccess);
-			String fileLink = buildDocFileLink(tmpDoc, authCode, urlStyle, rt);
+			String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, rt);
 			String saveFileLink = buildSaveDocLink(tmpDoc, authCode, urlStyle, rt);
 			jobj.put("fileLink", fileLink);
 			jobj.put("saveFileLink", saveFileLink);
@@ -2605,7 +2606,7 @@ public class DocController extends BaseController{
 		if(isPdf(fileSuffix))
 		{
 			//直接返回预览地址
-			String fileLink = buildDocFileLink(doc, null, "REST", rt);
+			String fileLink = buildDownloadDocLink(doc, null, "REST", rt);
 			if(fileLink == null)
 			{
 				docSysErrorLog("buildDocFileLink failed", rt);
@@ -2643,7 +2644,7 @@ public class DocController extends BaseController{
 		
 		Doc previewDoc = buildBasicDoc(repos.getId(), null, null, doc.getReposPath(), "", previewFileName, null, 1, true, preivewTmpPath, null, null, null);
 		previewDoc.setShareId(doc.getShareId());
-		String fileLink = buildDocFileLink(previewDoc, null, "REST", rt);
+		String fileLink = buildDownloadDocLink(previewDoc, null, "REST", rt);
 		if(fileLink == null)
 		{
 			docSysErrorLog("buildDocFileLink failed", rt);
@@ -3227,7 +3228,7 @@ public class DocController extends BaseController{
 			String fileSuffix = getFileSuffix(name);
 			//if(isPicture(fileSuffix) || isVideo(fileSuffix))
 			//{
-			Doc downloadDoc = buildDownloadDocInfo(reposPath, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
 			rt.setDataEx(downloadDoc);
 			//}
 			
@@ -3318,7 +3319,7 @@ public class DocController extends BaseController{
 		
 		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
-		String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
+		String fileLink = buildDownloadDocLink(tmpDoc, null, urlStyle, rt);
 		if(fileLink == null)
 		{
 			System.out.println("getZipDocFileLink() buildDocFileLink failed");
@@ -3428,7 +3429,7 @@ public class DocController extends BaseController{
 			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
 		}
 		
-		String fileLink = buildDocFileLink(tmpDoc, null, urlStyle, rt);
+		String fileLink = buildDownloadDocLink(tmpDoc, null, urlStyle, rt);
 		if(fileLink == null)
 		{
 			System.out.println("getDocFileLink() buildDocFileLink failed");
@@ -3438,29 +3439,18 @@ public class DocController extends BaseController{
 		rt.setData(fileLink);
 		writeJson(rt, response);
 	}
+		
 	
-	private String buildDocFileLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		String encReposPath = base64EncodeURLSafe(doc.getReposPath());
-		if(encReposPath == null)
+	private String buildDocFileLink(String usage, Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
+		
+		Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		if(downloadDoc == null)
 		{
-			docSysErrorLog("buildDocFileLink() get encReposPath Failed", rt);
-			return null;
-		}
-
-		String encTargetName = base64EncodeURLSafe(doc.getName());
-		if(encTargetName == null)
-		{
-			docSysErrorLog("buildDocFileLink() get encTargetName Failed", rt);
-			return null;
-		}	
-		String encTargetPath = base64EncodeURLSafe(doc.getLocalRootPath() + doc.getPath());
-		if(encTargetPath == null)
-		{
-			docSysErrorLog("buildDocFileLink() get encTargetPath Failed", rt);
+			System.out.println("buildDocFileLink() buildDownloadDocInfo failed");
 			return null;
 		}
 		
-		String fileLink = null;
+		String fileLink  = null;
 		if(urlStyle != null && urlStyle.equals("REST"))
 		{
 			if(authCode == null)
@@ -3472,11 +3462,11 @@ public class DocController extends BaseController{
 			{
 				shareId = 0;
 			}
-			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + encReposPath +  "/" + encTargetPath +  "/" + encTargetName +"/" + authCode + "/" + shareId;
+			fileLink = "/DocSystem/Doc/" + usage + "/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&reposPath="+ encReposPath + "&targetPath=" + encTargetPath + "&targetName="+encTargetName;	
+			fileLink = "/DocSystem/Doc/" + usage + ".do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;	
 			if(authCode != null)
 			{
 				fileLink += "&authCode=" + authCode;
@@ -3490,31 +3480,11 @@ public class DocController extends BaseController{
 	}
 	
 	private String buildSaveDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		String encFilePath = base64EncodeURLSafe(doc.getPath() + doc.getName());
-		if(encFilePath == null)
-		{
-			docSysErrorLog("buildSaveDocLink() get encFilePath Failed", rt);
-			return null;
-		}	
-		
-		String fileLink = null;
-		if(urlStyle != null && urlStyle.equals("REST"))
-		{
-			if(authCode == null)
-			{
-				authCode = "0";
-			}
-			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encFilePath + "/" + authCode;;
-		}
-		else
-		{
-			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&filePath=" + encFilePath;		
-			if(authCode != null)
-			{
-				fileLink += "&authCode=" + authCode;
-			}
-		}
-		return fileLink;
+		return buildDocFileLink("saveDoc", doc, authCode, urlStyle, rt);
+	}
+	
+	private String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
+		return buildDocFileLink("downloadDoc", doc, authCode, urlStyle, rt);
 	}
 
 	/****************   lock a Doc ******************/
@@ -3875,7 +3845,7 @@ public class DocController extends BaseController{
 		
 		System.out.println("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
 		
-		Doc downloadDoc = buildDownloadDocInfo(reposPath, userTmpDir, targetName);		
+		Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), userTmpDir, targetName);		
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);
 		writeJson(rt, response);			
