@@ -275,18 +275,19 @@
                 success : function (ret) {
                    if( "ok" == ret.status )
                    {          
-                	    console.log("downloadDocPrepare Ok:",ret);                	                	   		
-            	   		var reposPath = ret.data.reposPath;
-                	    var targetName = ret.data.name;
-                	    var targetPath = ret.data.path;
+                	    console.log("downloadDocPrepare Ok:",ret);        
+                	    var vid =  SubContext.vid;
+            	   		var path = ret.data.path;
+            	   		var name = ret.data.name;
+            	   		var targetName = ret.data.targetName;
+                	    var targetPath = ret.data.targetPath;
                 	    var deleteFlag = ret.msgData;
             	   		
-                	    //targetName = encodeURI(Base64.encode(targetName));
-            		   	//targetPath = encodeURI(Base64.encode(targetPath));
-                	    reposPath = encodeURI(reposPath);
+                	    path = encodeURI(path);
+                	    name = encodeURI(name);
                 	    targetName = encodeURI(targetName);
             		   	targetPath = encodeURI(targetPath);
-            		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&reposPath=" + reposPath + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
+            		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
             		   	if(gShareId)
             		   	{
             		   		url += "&shareId=" + gShareId;
