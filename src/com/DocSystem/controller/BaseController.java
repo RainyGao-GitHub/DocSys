@@ -2507,7 +2507,7 @@ public class BaseController  extends BaseFunction{
 		}		
 	}
 		
-	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	public boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
 		if(actionList == null || actionList.size() == 0)
 		{
@@ -4806,7 +4806,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层updateDoc接口
-	protected boolean updateDoc(Repos repos, Doc doc,
+	public boolean updateDoc(Repos repos, Doc doc,
 								MultipartFile uploadFile,
 								Integer chunkNum, Long chunkSize, String chunkParentPath, 
 								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
@@ -6541,7 +6541,7 @@ public class BaseController  extends BaseFunction{
 		}        
 	}
 	
-	protected void deleteChunks(String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath) {
+	public void deleteChunks(String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath) {
 		System.out.println("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath);
 		
 		if(null == chunkIndex || chunkIndex < (chunkNum-1))
@@ -6848,7 +6848,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//删除预览文件
-	protected void deletePreviewFile(Doc doc) 
+	public void deletePreviewFile(Doc doc) 
 	{
 		if(doc == null || doc.getCheckSum() == null)
 		{

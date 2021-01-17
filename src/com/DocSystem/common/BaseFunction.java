@@ -333,7 +333,7 @@ public class BaseFunction{
 	/******************************* 路径相关接口  
 	 * @param isRealDoc 
 	 * @param localRootPath *******************************/
-	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
+	public static Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
 	{
 		//Format path and name
 		if(reposPath == null)
@@ -447,7 +447,7 @@ public class BaseFunction{
 		return paths.length;
 	}
 
-	protected int seperatePathAndName(String entryPath, String [] result) {
+	protected static int seperatePathAndName(String entryPath, String [] result) {
 		if(entryPath.isEmpty())
 		{
 			//It it rootDoc
@@ -732,7 +732,7 @@ public class BaseFunction{
 	}
 	
 	//获取仓库的虚拟文件的本地存储根路径
-	protected static String getReposVirtualPath(Repos repos)
+	public static String getReposVirtualPath(Repos repos)
 	{
 		String reposVPath = getReposPath(repos) + "data/vdata/";	//实文件系统的存储数据放在data目录下 
 		//System.out.println("getReposVirtualPath() " + reposVPath);
