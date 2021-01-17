@@ -622,7 +622,6 @@ function getDocDownloadLink(docInfo, urlStyle)
    	var path = encodeURI(docDataEx.path);
    	var targetName = encodeURI(docDataEx.targetName);
    	var targetPath = encodeURI(docDataEx.targetPath);
-   	reposPath = encodeURI(reposPath);
    	if(urlStyle && urlStyle == "REST")
    	{
    		return "/DocSystem/Doc/downloadDoc/" + docInfo.vid + "/" + path + + "/" + name + "/" +targetPath+ "/"+targetName;   		
