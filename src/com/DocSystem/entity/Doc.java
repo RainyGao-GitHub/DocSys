@@ -63,11 +63,16 @@ public class Doc  implements Comparable<Doc>{
 
 	private Integer shareId;
 
-	//文件锁定信息
+	
+	//文件锁定信息(用于前台显示)
     private Integer state;
     private String locker;
     private Integer lockBy;
     private Long lockTime;
+    
+    //文件本地信息
+    public String targetPath;
+    public String targetName;
     
     public Integer getId() {
         return id;

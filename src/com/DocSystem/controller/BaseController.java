@@ -1605,11 +1605,17 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
-	Doc buildDownloadDocInfo(String reposPath, String targetPath, String targetName)
+	Doc buildDownloadDocInfo(String path, String name, String targetPath, String targetName)
 	{
 		System.out.println("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
-		String encReposPath = base64EncodeURLSafe(reposPath);
-		if(reposPath == null)
+		String encPath = base64EncodeURLSafe(path);
+		if(encPath == null)
+		{
+			return null;			
+		}	
+		
+		String encName = base64EncodeURLSafe(name);
+		if(encName == null)
 		{
 			return null;			
 		}	
@@ -1626,9 +1632,10 @@ public class BaseController  extends BaseFunction{
 		}	
 		
 		Doc doc = new Doc();
-		doc.setPath(encTargetPath);
-		doc.setName(encTargetName);
-		doc.setReposPath(encReposPath);
+		doc.targetPath = encTargetPath;
+		doc.targetName = encTargetName;
+		doc.setPath(encPath);
+		doc.setName(encName);
 		return doc;
 	}
 	
