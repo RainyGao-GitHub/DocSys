@@ -1819,35 +1819,30 @@ public class DocController extends BaseController{
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
 	@RequestMapping("/saveDoc.do")
-	protected void saveDoc(Integer reposId, String filePath, 
+	protected void saveDoc(Integer vid, String path, String name, String targetPath, String targetName, 
 			Integer shareId,
 			String authCode,		
 			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
 
-		System.out.println("saveDoc reposId:" + reposId + " filePath:" + filePath + " shareId:" + shareId +" authCode:" + authCode);
+		System.out.println("saveDoc reposId:" + vid + " path:" + path +  " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " shareId:" + shareId +" authCode:" + authCode);
 
+		Integer reposId = vid;
+		
 		PrintWriter writer = null;
 		try {
 			writer = response.getWriter();
 			ReturnAjax rt = new ReturnAjax();
 			
-			//Decode Path and Name
-			if(filePath == null)
-			{
-				docSysErrorLog("文件路径未设置！", rt);
-				writer.write("文件路径未设置");
-				return;
-			}
+			//Decode Path and Name targetPath and targetName
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+			path = base64Decode(path);
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+			name = base64Decode(name);
+			targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+			targetPath = base64Decode(targetPath);
+			targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+			targetName = base64Decode(targetName);
 			
-			filePath = new String(filePath.getBytes("ISO8859-1"),"UTF-8");	
-			filePath = base64Decode(filePath);
-			if(filePath == null)
-			{
-				docSysErrorLog("文件路径解码失败！", rt);
-				writer.write("文件路径解码失败");			
-				return;
-			}			
-		
 			//Check authCode or reposAccess
 			ReposAccess reposAccess = null;
 			if(authCode != null)
@@ -1883,7 +1878,7 @@ public class DocController extends BaseController{
 			String reposPath = getReposPath(repos);
 			String localRootPath = getReposRealPath(repos);
 			String localVRootPath = getReposVirtualPath(repos);
-			Doc doc = buildBasicDoc(reposId, null, null, reposPath, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
+			Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, null, null);
 
 			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 			String localParentPath = localRootPath + doc.getPath();
@@ -1959,7 +1954,7 @@ public class DocController extends BaseController{
 	            System.out.println("saveDoc() chunkSize:" + chunkSize);
 	            doc.setSize(chunkSize); //设置docSize避免addDoc和updateDoc的检查报错
 
-				String commitMsg = "保存 " + filePath;
+				String commitMsg = "协同编辑保存:" + doc.getPath() + doc.getName();
 				String commitUser = reposAccess.getAccessUser().getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				if(localDoc == null || localDoc.getType() == 0)
