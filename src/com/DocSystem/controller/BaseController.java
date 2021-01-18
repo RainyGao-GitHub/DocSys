@@ -6479,7 +6479,12 @@ public class BaseController  extends BaseFunction{
 			}
 			else if(chunkNum == 1)	//单个文件直接复制
 			{
-				if(copyFile(chunkParentPath+name+"_0", localDocParentPath+name, true) == false)
+				String chunk0Path = chunkParentPath + name + "_0";
+				if(new File(chunk0Path).exists() == false)
+				{
+					chunk0Path =  chunkParentPath + name;
+				}
+				if(copyFile(chunk0Path, localDocParentPath+name, true) == false)
 				{
 					return false;
 				}
