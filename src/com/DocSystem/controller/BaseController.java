@@ -1612,7 +1612,7 @@ public class BaseController  extends BaseFunction{
 		if(encPath == null)
 		{
 			return null;			
-		}	
+		}
 		
 		String encName = base64EncodeURLSafe(name);
 		if(encName == null)
@@ -9682,5 +9682,9 @@ public class BaseController  extends BaseFunction{
       }  
      }  
      return url;  
-  }  
+  }
+
+	public Repos getRepos(Integer reposId) {
+		return reposService.getRepos(reposId);
+	}  
 }

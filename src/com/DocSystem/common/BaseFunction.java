@@ -1450,9 +1450,14 @@ public class BaseFunction{
 	
 	public static String base64EncodeURLSafe(String str) 
 	{
-		if(str == null || str.isEmpty())
+		if(str == null)
 		{
-			return str;
+			return null;
+		}
+		
+		if(str.isEmpty())
+		{
+			return "0"; //代表空
 		}
 		
 		try {
@@ -1469,6 +1474,11 @@ public class BaseFunction{
 	
 	public String base64Decode(String base64Str) 
 	{
+		if(base64Str.length() <= 1)
+		{
+			return "";
+		}
+		
 		//misc库
 		//BASE64Decoder decoder = new BASE64Decoder();
 		//return new String(decoder.decodeBuffer(base64Str),"UTF-8");
