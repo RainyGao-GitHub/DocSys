@@ -323,6 +323,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** deleteDoc ****************");
 		System.out.println("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
