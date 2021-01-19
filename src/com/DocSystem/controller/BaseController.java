@@ -5364,10 +5364,7 @@ public class BaseController  extends BaseFunction{
 	//Lock Doc
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
-		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
 		DocLock docLock = getDocLock(doc);
-		long expTime = new Date().getTime() + lockDuration;	//过期时间
-		Integer lockState = getLockState(lockType);
 		if(docLock == null)
 		{
 			docLock = new DocLock();
@@ -5380,10 +5377,10 @@ public class BaseController  extends BaseFunction{
 			docLock.setType(doc.getType());
 			
 			//设置锁状态
-			docLock.setState(lockState);
+			docLock.setState(getLockState(lockType));
 			docLock.locker[lockType] = login_user.getName();
 			docLock.lockBy[lockType] = login_user.getId();
-			docLock.lockTime[lockType] = expTime;	//Set lockTime
+			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime
 			addDocLock(doc, docLock);
 			System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
@@ -5414,10 +5411,10 @@ public class BaseController  extends BaseFunction{
 		
 		//Do Lock
 		int curLockState = docLock.getState();
-		docLock.setState(curLockState | lockState);
+		docLock.setState(curLockState | getLockState(lockType));
 		docLock.locker[lockType] = login_user.getName();
 		docLock.lockBy[lockType] = login_user.getId();
-		docLock.lockTime[lockType] = expTime;	//Set lockTime		
+		docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime		
 		System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 		return docLock;
 	}
@@ -5459,7 +5456,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static String getDocLockId(Doc doc) {
-		return doc.getVid() + "_" + doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		return doc.getVid() + "_" + doc.getPath() + doc.getName();
 	}
 	
 	public static boolean isDocForceLocked(DocLock docLock, User login_user,ReturnAjax rt) {
