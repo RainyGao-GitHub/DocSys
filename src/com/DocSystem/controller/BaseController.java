@@ -206,37 +206,6 @@ public class BaseController  extends BaseFunction{
 		}		
 		return docList;
 	}
-	
-	protected boolean checkDocLocked(Integer reposId, Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag) 
-	{	
-		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
-		DocLock docLock = getDocLock(doc);
-		ReturnAjax rt = new ReturnAjax();
-		if(isDocLocked(docLock, lockType, login_user,rt ))
-		{
-			System.out.println("lockDoc() Doc " + doc.getName() +" was locked");
-			return true;
-		}
-		
-		//检查其父节点是否强制锁定
-		if(isParentDocForceLocked(doc,login_user,rt))
-		{
-			System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
-			return true;
-		}
-		
-		//Check If SubDoc was locked
-		if(subDocCheckFlag)
-		{
-			if(isSubDocLocked(doc,login_user, rt) == true)
-			{
-				System.out.println("lockDoc() subDoc of " + doc.getName() +" was locked！");
-				return true;
-			}
-		}
-		
-		return false;
-	}
 
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
 	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
@@ -5377,21 +5346,29 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 			
-			//检查其父节点是否强制锁定
-			if(isParentDocForceLocked(doc,login_user,rt))
+			//备注文件时平面结构，不需要检查父节点和子节点
+			switch(lockType)
 			{
-				System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
-				return null;
-			}
-			
-			//Check If SubDoc was locked
-			if(subDocCheckFlag)
-			{
-				if(isSubDocLocked(doc, login_user, rt) == true)
+			case DocLock.LOCK_TYPE_FORCE:
+			case DocLock.LOCK_TYPE_EDIT:
+			case DocLock.LOCK_TYPE_COEDIT:
+				//检查其父节点是否强制锁定
+				if(isParentDocForceLocked(doc,login_user,rt))
 				{
-					System.out.println("lockDoc() subDoc of " + doc.getName() +" was locked！");
+					System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
 					return null;
 				}
+				
+				//Check If SubDoc was locked
+				if(subDocCheckFlag)
+				{
+					if(isSubDocLocked(doc, login_user, rt) == true)
+					{
+						System.out.println("lockDoc() subDoc of " + doc.getName() +" was locked！");
+						return null;
+					}
+				}
+				break;
 			}
 		}
 			
@@ -5428,6 +5405,53 @@ public class BaseController  extends BaseFunction{
 			System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
+	}
+	
+	protected boolean checkDocLocked(Integer reposId, Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag) 
+	{	
+		DocLock docLock = null;
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			return false;
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		String docLockId = getDocLockId(doc);
+		docLock = reposDocLocskMap.get(docLockId);
+		if(isDocLocked(docLock, lockType, login_user,rt ))
+		{
+			System.out.println("lockDoc() Doc " + doc.getPath() + doc.getName() +" was locked");
+			return true;
+		}
+		
+		//备注文件时平面结构，不需要检查父节点和子节点
+		switch(lockType)
+		{
+		case DocLock.LOCK_TYPE_FORCE:
+		case DocLock.LOCK_TYPE_EDIT:
+		case DocLock.LOCK_TYPE_COEDIT:
+			//检查其父节点是否强制锁定
+			if(isParentDocForceLocked(doc,login_user,rt))
+			{
+				System.out.println("lockDoc() Parent Doc of " + doc.getPath() + doc.getName() +" was locked！");				
+				return true;
+			}
+			
+			//Check If SubDoc was locked
+			if(subDocCheckFlag)
+			{
+				if(isSubDocLocked(doc,login_user, rt) == true)
+				{
+					System.out.println("lockDoc() subDoc of " + doc.getPath() + doc.getName() +" was locked！");
+					return true;
+				}
+			}
+			break;
+		}
+		
+		return false;
 	}
 	
 	protected static Integer getLockState(Integer lockType) {
