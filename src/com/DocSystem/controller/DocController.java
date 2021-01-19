@@ -3523,13 +3523,15 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			boolean subDocCheckFlag = false;
+			int lockDuration = 86400000;
 			if(lockType == DocLock.LOCK_TYPE_FORCE)	//If want to force lock, must check all subDocs not locked
 			{
 				subDocCheckFlag = true;
+				lockDuration  =  60*60*1000; //强制锁定无法解锁，因此只能锁定一个小时
 			}
 				
 			//Try to lock the Doc
-			DocLock docLock = lockDoc(doc,lockType,86400000,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
+			DocLock docLock = lockDoc(doc,lockType,lockDuration,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
 			if(docLock == null)
 			{
 				unlock(); //线程锁
