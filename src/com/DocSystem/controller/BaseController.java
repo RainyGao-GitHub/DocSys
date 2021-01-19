@@ -5557,7 +5557,7 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError(docLock.getName() +" was focrce locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		rt.setError(docLock.getPath() + docLock.getName() +" was focrce locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
 		System.out.println("Doc [" + docLock.getName() +"] was force locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
 		return true;	
 	}
@@ -5581,7 +5581,7 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError(docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		rt.setError(docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
 		System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
 		return true;	
 	}
@@ -5675,7 +5675,6 @@ public class BaseController  extends BaseFunction{
     				//检查所有的锁
 	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt))
 	        		{
-	        			rt.setError("subDoc [" +  docLock.getName() + "] is locked:" + docLock.getState());
 	        			System.out.println("isSubDocLocked() " + docLock.getName() + " is locked!");
 	        			return true;
 	        		}
