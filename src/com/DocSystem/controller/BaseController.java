@@ -5456,7 +5456,9 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static String getDocLockId(Doc doc) {
-		return doc.getVid() + "_" + doc.getPath() + doc.getName();
+		String lockId = doc.getVid() + "_" + doc.getPath() + doc.getName();
+		System.out.println("getDocLockId docLockId:" + lockId);
+		return lockId;
 	}
 	
 	public static boolean isDocForceLocked(DocLock docLock, User login_user,ReturnAjax rt) {
