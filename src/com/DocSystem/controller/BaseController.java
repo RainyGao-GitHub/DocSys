@@ -95,6 +95,24 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	private EmailService emailService;
 	
+	//系统默认用户
+    protected static User coEditUser = null;
+    protected static User autoSyncUser = null;
+    static {
+    	initSystemUsers();
+    }
+	private static void initSystemUsers() {
+		//自动同步用户
+		autoSyncUser = new User();
+		coEditUser.setId(0);
+		coEditUser.setName("AutoSync");		
+		
+		//协同编辑用户
+		coEditUser = new User();
+		coEditUser.setId(-1);
+		coEditUser.setName("CoEditUser");		
+	}
+	
 	protected static User buildAdminUser() {
 		User user = new User();
 		user.setName("Admin");
@@ -108,7 +126,8 @@ public class BaseController  extends BaseFunction{
 		user.setType(2);
 		return user;
 	}
-	
+
+
 	protected boolean addAdminUser() {
 		User user = buildAdminUser();
 		if(userService.addUser(user) == 0)
@@ -190,19 +209,19 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 	
-	protected boolean checkDocLocked(Integer reposId, Doc doc, User login_user, boolean subDocCheckFlag) 
+	protected boolean checkDocLocked(Integer reposId, Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag) 
 	{	
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
 		DocLock docLock = getDocLock(doc);
 		ReturnAjax rt = new ReturnAjax();
-		if(docLock != null && isDocLocked(docLock,login_user,rt ))
+		if(docLock != null && isDocLocked(docLock, lockType, login_user,rt ))
 		{
 			System.out.println("lockDoc() Doc " + doc.getName() +" was locked");
 			return true;
 		}
 		
 		//检查其父节点是否强制锁定
-		if(isParentDocLocked(doc,login_user,rt))
+		if(isParentDocForceLocked(doc,login_user,rt))
 		{
 			System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
 			return true;
@@ -641,7 +660,7 @@ public class BaseController  extends BaseFunction{
 			user.setName("AutoSync");
 		}
 		
-		if(false == checkDocLocked(repos.getId(), doc, user, false))
+		if(false == checkDocLocked(repos.getId(), doc, DocLock.LOCK_TYPE_FORCE, user, false))
 		{
 			insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AUTOSYNCUP, syncType, DocType.REALDOC, null, user);
 		}
@@ -2113,10 +2132,11 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditorName(login_user.getName());
 		
 		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
 			//LockDoc
-			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -2130,7 +2150,7 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localDocPath);
 		if(localEntry.exists())
 		{	
-			unlockDoc(doc, login_user, docLock);
+			unlockDoc(doc, lockType, login_user);
 			docSysDebugLog("addDoc() " +localDocPath + "　已存在！", rt);
 		}
 		
@@ -2139,8 +2159,7 @@ public class BaseController  extends BaseFunction{
 			//File must not exists
 			if(createRealDoc(repos, doc, rt) == false)
 			{	
-				unlockDoc(doc, login_user, docLock);
-				
+				unlockDoc(doc, lockType, login_user);
 				String MsgInfo = "createRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
@@ -2151,8 +2170,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
-				unlockDoc(doc, login_user, null);
-				
+				unlockDoc(doc, lockType, login_user);
 				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("updateRealDoc Failed");
@@ -2194,10 +2212,7 @@ public class BaseController  extends BaseFunction{
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
-		if(unlockDoc(doc,login_user,null) == false)
-		{
-			docSysWarningLog("unlockDoc Failed", rt);
-		}
+		unlockDoc(doc, lockType, login_user);
 		
 		rt.setData(doc);
 		rt.setMsgData("isNewNode");
@@ -2320,6 +2335,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{							
 			//Try to lock the Doc
@@ -2341,7 +2357,7 @@ public class BaseController  extends BaseFunction{
 		//get RealDoc Full ParentPath
 		if(deleteRealDoc(repos,doc,rt) == false)
 		{
-			unlockDoc(doc,login_user,docLock);
+			unlockDoc(doc, lockType, login_user);
 			
 			docSysDebugLog("deleteDoc_FSM() deleteRealDoc Failed", rt);
 			docSysErrorLog(doc.getName() + " 删除失败！", rt);
@@ -2370,7 +2386,7 @@ public class BaseController  extends BaseFunction{
 			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
 		}
 		
-		unlockDoc(doc,login_user,null);
+		unlockDoc(doc, lockType, login_user);
 		
 		rt.setData(doc);
 		return revision;
@@ -3092,10 +3108,11 @@ public class BaseController  extends BaseFunction{
 		
 		//LockDoc
 		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
 			//Try to lock the Doc
-			docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -3111,7 +3128,7 @@ public class BaseController  extends BaseFunction{
 		if(revision == null)
 		{
 			System.out.println("syncupLocalChanges_FSM() 本地改动Commit失败:" + revision);
-			unlockDoc(doc, login_user, docLock);
+			unlockDoc(doc, lockType, login_user);
 			return false;
 		}
 		//推送到远程仓库
@@ -3150,7 +3167,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
-		unlockDoc(doc, login_user, docLock);
+		unlockDoc(doc, lockType, login_user);
 		
 		return true;	
 	}
@@ -3175,10 +3192,11 @@ public class BaseController  extends BaseFunction{
 		{
 			//LockDoc
 			DocLock docLock = null;
+			int lockType = DocLock.LOCK_TYPE_FORCE;
 			synchronized(syncLock)
 			{
 				//Try to lock the Doc
-				docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+				docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
 				if(docLock == null)
 				{
 					unlock(); //线程锁
@@ -3188,7 +3206,7 @@ public class BaseController  extends BaseFunction{
 				unlock(); //线程锁
 			}
 			boolean ret = syncUpForRemoteChange_NoFS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
-			unlockDoc(doc, login_user, docLock);
+			unlockDoc(doc, lockType, login_user);
 			return ret;
 		}
 		
@@ -4832,10 +4850,11 @@ public class BaseController  extends BaseFunction{
 				List<CommonAction> actionList) 
 	{	
 		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
 			//Try to lock the doc
-			docLock = lockDoc(doc, 1, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
+			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -4852,7 +4871,7 @@ public class BaseController  extends BaseFunction{
 		//保存文件信息
 		if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
-			unlockDoc(doc,login_user,docLock);
+			unlockDoc(doc, lockType, login_user);
 
 			System.out.println("updateDoc_FSM() saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
@@ -4889,7 +4908,7 @@ public class BaseController  extends BaseFunction{
 		//Build DocUpdate action
 		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
 		
-		unlockDoc(doc,login_user,docLock);
+		unlockDoc(doc, lockType, login_user);
 		
 		return true;
 	}
@@ -4924,10 +4943,11 @@ public class BaseController  extends BaseFunction{
 	{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
 			//Try to lock the srcDoc
-			srcDocLock = lockDoc(srcDoc,1, 2*60*60*1000,login_user,rt,true);
+			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(srcDocLock == null)
 			{
 				unlock(); //线程锁
@@ -4936,13 +4956,13 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
-			dstDocLock = lockDoc(dstDoc,1, 2*60*60*1000,login_user,rt,true);
+			dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(dstDocLock == null)
 			{
 				unlock(); //线程锁
 				docSysErrorLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
 
-				unlockDoc(srcDoc, login_user, srcDocLock);
+				unlockDoc(srcDoc, lockType, login_user);
 				return false;
 			}
 			
@@ -4951,8 +4971,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
 		{
-			unlockDoc(srcDoc, login_user, srcDocLock);
-			unlockDoc(dstDoc, login_user, dstDocLock);
+			unlockDoc(srcDoc, lockType, login_user);
+			unlockDoc(dstDoc, lockType, login_user);
 
 			docSysErrorLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
 			return false;
@@ -4976,8 +4996,8 @@ public class BaseController  extends BaseFunction{
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, true);
 		
-		unlockDoc(srcDoc,login_user,srcDocLock);
-		unlockDoc(dstDoc,login_user,dstDocLock);
+		unlockDoc(srcDoc, lockType, login_user);
+		unlockDoc(dstDoc, lockType, login_user);
 		
 		Doc fsDoc = fsGetDoc(repos, dstDoc);
 		dstDoc.setLatestEditTime(fsDoc.getLatestEditTime());
@@ -5013,10 +5033,11 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
 			//Try to lock the srcDoc
-			srcDocLock = lockDoc(srcDoc,1, 2*60*60*1000,login_user,rt,true);
+			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(srcDocLock == null)
 			{
 				unlock(); //线程锁
@@ -5031,7 +5052,7 @@ public class BaseController  extends BaseFunction{
 				unlock(); //线程锁
 				System.out.println("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");
 				
-				unlockDoc(srcDoc, login_user, srcDocLock);
+				unlockDoc(srcDoc, lockType, login_user);
 				
 				return false;
 			}
@@ -5042,8 +5063,8 @@ public class BaseController  extends BaseFunction{
 		//复制文件或目录
 		if(copyRealDoc(repos, srcDoc, dstDoc, rt) == false)
 		{
-			unlockDoc(srcDoc,login_user,null);
-			unlockDoc(dstDoc,login_user,null);
+			unlockDoc(srcDoc, lockType, login_user);
+			unlockDoc(dstDoc, lockType, login_user);
 
 			System.out.println("copyDoc_FSM() copy " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败");
 			rt.setError("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed");
@@ -5069,8 +5090,8 @@ public class BaseController  extends BaseFunction{
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
 		
-		unlockDoc(srcDoc,login_user,srcDocLock);
-		unlockDoc(dstDoc,login_user,dstDocLock);
+		unlockDoc(srcDoc, lockType, login_user);
+		unlockDoc(dstDoc, lockType, login_user);
 		
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
@@ -5081,10 +5102,11 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
 	{		
 		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			docLock = lockDoc(doc,2, 1*60*60*1000, login_user,rt,false);
+			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -5098,7 +5120,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		
 		//revert the lockStatus
-		unlockDoc(doc, login_user, docLock);
+		unlockDoc(doc, lockType, login_user);
 				
 		return ret;
 	}
@@ -5150,10 +5172,11 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
 	{		
 		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_VFORCE;
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			docLock = lockDoc(doc,2, 1*60*60*1000, login_user,rt,false);
+			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -5167,7 +5190,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = updateVirualDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		
 		//revert the lockStatus
-		unlockDoc(doc, login_user, docLock);
+		unlockDoc(doc, lockType, login_user);
 				
 		return ret;
 	}
@@ -5244,7 +5267,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("lockRepos() Repos:" + repos.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
 
 		DocLock reposLock = getReposLock(repos);
-		if(reposLock != null && isDocLocked(reposLock,login_user,rt))
+		if(reposLock != null && isDocLocked(reposLock, lockType, login_user,rt))
 		{
 			System.out.println("lockRepos() Repos " + repos.getName() +" was locked");
 			return null;
@@ -5258,7 +5281,7 @@ public class BaseController  extends BaseFunction{
 			doc.setPath("");
 			doc.setName("");
 			doc.setDocId((long) 0);
-			if(isSubDocLocked(doc,login_user, rt) == true)
+			if(isSubDocLocked(doc, login_user, rt) == true)
 			{
 				System.out.println("lockRepos() subDoc of " + doc.getName() +" was locked！");
 				return null;
@@ -5268,24 +5291,26 @@ public class BaseController  extends BaseFunction{
 		//Do Lock
 		//lockTime is the time to release lock 
 		long lockTime = new Date().getTime() + lockDuration;
+		int lockState = getLockState(lockType);
 		if(reposLock == null)
 		{
 			reposLock = new DocLock();
 			reposLock.setVid(repos.getId());
-			reposLock.setState(lockType);	//doc的状态为不可用
-			reposLock.setLocker(login_user.getName());
-			reposLock.setLockBy(login_user.getId());
-			reposLock.setLockTime(lockTime);	//Set lockTime
+			reposLock.setState(lockState);
+			reposLock.locker[lockType] = login_user.getName();
+			reposLock.lockBy[lockType] = login_user.getId();
+			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
 			//Set LockState = 0, which will be used for unlockDoc
 			reposLock.setState(0);
 			addReposLock(repos, reposLock);			
 		}
 		else
 		{
-			reposLock.setState(lockType);	//doc的状态为不可用
-			reposLock.setLocker(login_user.getName());
-			reposLock.setLockBy(login_user.getId());
-			reposLock.setLockTime(lockTime);	//Set lockTime
+			int curLockState = reposLock.getState();
+			reposLock.setState(curLockState | lockState);
+			reposLock.locker[lockType] = login_user.getName();
+			reposLock.lockBy[lockType] = login_user.getId();
+			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
 		}
 		
 		System.out.println("lockRepos() " + repos.getName() + " success lockType:" + lockType + " by " + login_user.getName());
@@ -5306,7 +5331,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Unlock Doc
-	protected boolean unlockRepos(Repos repos, User login_user, DocLock preLockInfo) {
+	protected boolean unlockRepos(Repos repos, Integer lockType, User login_user) {
 		DocLock reposLock = reposLocksMap.get(repos.getId());
 		
 		if(reposLock == null)
@@ -5320,26 +5345,20 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		Integer lockBy = reposLock.getLockBy();
-		if(lockBy != null && lockBy == login_user.getId())
-		{
-			if(preLockInfo == null)	//Unlock
-			{
-				deleteReposLock(repos);
-			}
-			else	//Revert to preLockState
-			{
-				reposLock.setState(preLockInfo.getState());	//
-				reposLock.setLockBy(preLockInfo.getLockBy());	//
-				reposLock.setLockTime(preLockInfo.getLockTime());	//Set lockTime
-			}
-		}
-		else
+		Integer lockBy = reposLock.lockBy[lockType];
+		Integer curLockState = reposLock.getState();
+		Integer lockState = getLockState(lockType);
+		if(lockBy != null && lockBy != login_user.getId())
 		{
 			System.out.println("unlockRepos() repos was not locked by " + login_user.getName());
 			return false;
 		}
-		
+
+		Integer newLockState = curLockState & (~lockState);
+		if(newLockState == 0)
+		{
+			deleteReposLock(repos);
+		}
 		System.out.println("unlockRepos() success:" + repos.getName());
 		return true;
 	}
@@ -5347,22 +5366,39 @@ public class BaseController  extends BaseFunction{
 	//Lock Doc
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
-
-		if(doc.getType() == null)
-		{
-			System.out.println("lockDoc() Doc type is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() );				
-		}
-		
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
 		DocLock docLock = getDocLock(doc);
-		if(docLock != null && isDocLocked(docLock,login_user,rt))
+		long expTime = new Date().getTime() + lockDuration;	//过期时间
+		Integer lockState = getLockState(lockType);
+		if(docLock == null)
 		{
-			System.out.println("lockDoc() Doc " + doc.getName() +" was locked");
+			docLock = new DocLock();
+			//设置基本信息
+			docLock.setVid(doc.getVid());
+			docLock.setPid(doc.getPid());			
+			docLock.setDocId(doc.getDocId());
+			docLock.setPath(doc.getPath());			
+			docLock.setName(doc.getName());			
+			docLock.setType(doc.getType());
+			
+			//设置锁状态
+			docLock.setState(lockState);
+			docLock.locker[lockType] = login_user.getName();
+			docLock.lockBy[lockType] = login_user.getId();
+			docLock.lockTime[lockType] = expTime;	//Set lockTime
+			addDocLock(doc, docLock);
+			System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+			return docLock;
+		}
+		
+		//检查文件是否锁定
+		if(isDocLocked(docLock, lockType, login_user, rt))
+		{
 			return null;
 		}
 		
 		//检查其父节点是否强制锁定
-		if(isParentDocLocked(doc,login_user,rt))
+		if(isParentDocForceLocked(doc,login_user,rt))
 		{
 			System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
 			return null;
@@ -5371,7 +5407,7 @@ public class BaseController  extends BaseFunction{
 		//Check If SubDoc was locked
 		if(subDocCheckFlag)
 		{
-			if(isSubDocLocked(doc,login_user, rt) == true)
+			if(isSubDocLocked(doc, login_user, rt) == true)
 			{
 				System.out.println("lockDoc() subDoc of " + doc.getName() +" was locked！");
 				return null;
@@ -5379,38 +5415,19 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Do Lock
-		//lockTime is the time to release lock 
-		long lockTime = new Date().getTime() + lockDuration;
-		
-		if(docLock == null)
-		{
-			docLock = new DocLock();
-			docLock.setVid(doc.getVid());
-			docLock.setPid(doc.getPid());			
-			docLock.setDocId(doc.getDocId());
-			docLock.setPath(doc.getPath());			
-			docLock.setName(doc.getName());			
-			docLock.setType(doc.getType());
-			
-			docLock.setState(lockType);	//doc的状态为不可用
-			docLock.setLocker(login_user.getName());
-			docLock.setLockBy(login_user.getId());
-			docLock.setLockTime(lockTime);	//Set lockTime
-			addDocLock(doc, docLock);			
-		}
-		else
-		{
-			docLock.setId(docLock.getId());
-			docLock.setState(lockType);	//doc的状态为不可用
-			docLock.setLocker(login_user.getName());
-			docLock.setLockBy(login_user.getId());
-			docLock.setLockTime(lockTime);	//Set lockTime
-		}
-		
+		int curLockState = docLock.getState();
+		docLock.setState(curLockState | lockState);
+		docLock.locker[lockType] = login_user.getName();
+		docLock.lockBy[lockType] = login_user.getId();
+		docLock.lockTime[lockType] = expTime;	//Set lockTime		
 		System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 		return docLock;
 	}
 	
+	private static Integer getLockState(Integer lockType) {
+		return DocLock.lockStateMap[lockType];
+	}
+
 	private void addDocLock(Doc doc, DocLock docLock) {
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
@@ -5443,69 +5460,123 @@ public class BaseController  extends BaseFunction{
 		reposDocLocskMap.remove(getDocLockId(doc));
 	}
 
-	private void updateDocLock(Doc doc, DocLock docLock) {
-		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap == null)
-		{
-			reposDocLocskMap = new ConcurrentHashMap<String, DocLock>();
-			docLocksMap.put(doc.getVid(), reposDocLocskMap);
-		}
-		reposDocLocskMap.put(getDocLockId(doc), docLock);
-	}
-
 	private static String getDocLockId(Doc doc) {
 		return doc.getVid() + "_" + doc.getLocalRootPath() + doc.getPath() + doc.getName();
 	}
-
-	private User getLocker(Integer userId) {
-		User user = new User();
-		if(userId == 0)	//AutoSync
-		{
-			user.setId(0);
-			user.setName("AutoSync");
-			return user;
-		}
-
-		user = userService.getUser(userId);
-		return user;
-	}
-
-	//确定当前doc是否被锁定
-	public static boolean isDocLocked(DocLock docLock,User login_user,ReturnAjax rt) {
+	
+	public static boolean isDocForceLocked(DocLock docLock, User login_user,ReturnAjax rt) {
 		if(docLock == null)
 		{
 			return false;
 		}
 		
-		int lockState = docLock.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
-		if(lockState != 0)
+		int curLockState = docLock.getState();
+		if(curLockState == 0)
 		{
-			//Not force locked (user can access it by himself)
-			if(lockState != 2)
-			{
-				if(docLock.getLockBy() == login_user.getId())	//locked by login_user
-				{
-					System.out.println("Doc: " + docLock.getName() +" was locked by user:" + docLock.getLockBy() +" login_user:" + login_user.getId());
-					return false;
-				}
-			}
-			
-			if(isLockOutOfDate(docLock.getLockTime()) == false)
-			{	
-				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.getLockTime());
-
-				rt.setError(docLock.getName() +" was locked by [" + docLock.getLockBy() + "] " +docLock.getLocker() + " till " + lockTime);
-				
-				System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.getLocker() + " lockState:"+ docLock.getState());
-				return true;						
-			}
-			else 
-			{
-				System.out.println("doc " + docLock.getId()+ " " + docLock.getName()  +" lock was out of date！");
-				return false;
-			}
+			return false;
 		}
-		return false;
+		
+		return isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt);
+	}
+	
+	public static boolean isDocLocked(DocLock docLock, Integer lockType, User login_user,ReturnAjax rt) {
+		int curLockState = docLock.getState();
+		if(curLockState == 0)
+		{
+			return false;
+		}
+		
+		boolean ret = false;
+		switch(lockType)
+		{
+		//RealDoc Lock
+		case DocLock.LOCK_TYPE_FORCE:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_EDIT, DocLock.LOCK_STATE_EDIT, login_user, rt) ||	//检查文件是否上了单人编辑锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_COEDIT, DocLock.LOCK_STATE_COEDIT, login_user, rt))	//检查文件是否上了多人编辑锁
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_EDIT:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_EDIT, DocLock.LOCK_STATE_EDIT, login_user, rt))		//检查文件是否上了单人编辑锁
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_COEDIT:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt))	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）		
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_VFORCE:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VEDIT, DocLock.LOCK_STATE_VEDIT, login_user, rt) ||	//检查文件是否上了单人编辑锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VCOEDIT, DocLock.LOCK_STATE_VCOEDIT, login_user, rt))	//检查文件是否上了多人编辑锁
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_VEDIT:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VEDIT, DocLock.LOCK_STATE_VEDIT, login_user, rt))		//检查文件是否上了单人编辑锁
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_VCOEDIT:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt))	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）		
+			{
+				ret = true;
+			}
+			break;
+		}
+		return ret;
+	}
+	
+	public static boolean isDocForceLocked(DocLock docLock, Integer lockType, Integer lockState, User login_user,ReturnAjax rt) {
+		int curLockState = docLock.getState();	
+		if((curLockState & lockState) == 0) 
+		{
+			return false;
+		}
+		
+		if(isLockOutOfDate(docLock.lockTime[lockType]))
+		{
+			docLock.setState(curLockState & (~lockState)); //锁已过期，删除锁			
+			return false;
+		}
+			
+		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
+		rt.setError(docLock.getName() +" was focrce locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		System.out.println("Doc [" + docLock.getName() +"] was force locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
+		return true;	
+	}
+	
+	public static boolean isDocLocked(DocLock docLock, Integer lockType, Integer lockState, User login_user,ReturnAjax rt) {
+		int curLockState = docLock.getState();	
+		if((curLockState & lockState) == 0) 
+		{
+			return false;
+		}
+		
+		if(isLockOutOfDate(docLock.lockTime[lockType]))
+		{
+			docLock.setState(curLockState & (~lockState)); //锁已过期，删除锁			
+			return false;
+		}
+		
+		if(docLock.lockBy[lockType] == login_user.getId())
+		{
+			return false;
+		}
+			
+		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
+		rt.setError(docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
+		return true;	
 	}
 
 	public static boolean isLockOutOfDate(long lockTime) {
@@ -5522,7 +5593,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//确定parentDoc is Force Locked
-	private boolean isParentDocLocked(Doc doc, User login_user,ReturnAjax rt) 
+	private boolean isParentDocForceLocked(Doc doc, User login_user,ReturnAjax rt) 
 	{
 		//Check if the rootDoc locked
 		Integer reposId = doc.getVid();
@@ -5532,7 +5603,7 @@ public class BaseController  extends BaseFunction{
 		tempDoc.setPath("");
 		tempDoc.setName("");
 		DocLock lock = getDocLock(doc);
-		if(isDocLocked(lock, login_user, rt))
+		if(isDocForceLocked(lock, login_user, rt))
 		{
 			return true;
 		}
@@ -5558,7 +5629,7 @@ public class BaseController  extends BaseFunction{
 			tempDoc.setPath(path);
 			tempDoc.setName(name);
 			lock = getDocLock(doc);
-			if(isDocLocked(lock, login_user, rt))
+			if(isDocForceLocked(lock, login_user, rt))
 			{
 				return true;
 			}
@@ -5577,7 +5648,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		List<String> outdatedDocLockIds = new ArrayList<String>();
 		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
 		//遍历所有docLocks
         System.out.println("isSubDocLocked() reposDocLocskMap size:" + reposDocLocskMap.size());
@@ -5589,25 +5659,18 @@ public class BaseController  extends BaseFunction{
         	{
             	System.out.println("isSubDocLocked reposDocLocskMap entry:" + entry.getKey());
             	DocLock docLock = entry.getValue();
-    			if(docLock.getLockTime() == null || isLockOutOfDate(docLock.getLockTime()))
-    			{	
-    				outdatedDocLockIds.add(entry.getKey());
-    			}
-    			else	//只检查没过期的docLock
+    			if(isSudDocLock(docLock, parentDocPath))
     			{
-	            	if(isSudDocLock(docLock, parentDocPath)) {
-	            		if(isDocLocked(docLock, login_user, rt))
-	        			{
-	        				rt.setError("subDoc [" +  docLock.getName() + "] is locked:" + docLock.getState());
-	        				System.out.println("isSubDocLocked() " + docLock.getName() + " is locked!");
-	        				deleteDocLocks(reposDocLocskMap, outdatedDocLockIds);
-	        				return true;
-	        			}
-	            	}
-    			}
+    				//检查所有的锁
+	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt) || isDocLocked(docLock, DocLock.LOCK_TYPE_VFORCE, login_user, rt))
+	        		{
+	        			rt.setError("subDoc [" +  docLock.getName() + "] is locked:" + docLock.getState());
+	        			System.out.println("isSubDocLocked() " + docLock.getName() + " is locked!");
+	        			return true;
+	        		}
+	            }
         	}
         }
-		deleteDocLocks(reposDocLocskMap, outdatedDocLockIds);
 		return false;
 	}
 
@@ -5623,7 +5686,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Unlock Doc
-	protected boolean unlockDoc(Doc doc, User login_user, DocLock preDocLock) 
+	protected boolean unlockDoc(Doc doc, Integer lockState, User login_user) 
 	{
 		DocLock curDocLock = getDocLock(doc);
 		if(curDocLock == null)
@@ -5632,19 +5695,22 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(curDocLock.getState() == 0)
+		Integer curLockState = curDocLock.getState();
+		if(curLockState == 0)
 		{
+			deleteDocLock(doc);
 			System.out.println("unlockDoc() doc was not locked:" + curDocLock.getState());			
 			return true;
 		}
 		
-		if(preDocLock != null && preDocLock.getState() != 0)	//Revert to preDocLock
+		Integer newLockState = curLockState & (~lockState);
+		if(newLockState == 0)
 		{
-			updateDocLock(doc, preDocLock);
+			deleteDocLock(doc);
+			System.out.println("unlockDoc() success:" + doc.getName());
+			return true;
 		}
-		
-		deleteDocLock(doc);
-		
+		curDocLock.setState(newLockState);
 		System.out.println("unlockDoc() success:" + doc.getName());
 		return true;
 	}

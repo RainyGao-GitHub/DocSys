@@ -3,16 +3,11 @@ package com.DocSystem.controller;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,12 +18,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
@@ -59,7 +52,6 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
-import com.alibaba.druid.support.json.JSONParser;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
@@ -92,11 +84,12 @@ Something you need to know
 3、文件节点的锁定
 （1）文件节点底层操作接口需要调用LockDoc接口来锁定该文件节点，以避免该接口在操作过程中不被影响
 （2）锁定状态：
-	0：未锁定
-	2：绝对锁定，自己无法解锁，锁过期时间2天
-	1：RealDoc 编辑锁定，锁过期时间2天，自己可解锁，解锁时需要确定是否处于协同编辑模式，如处于协同编辑模式，需要将锁改为协同编辑锁
-	4：RealDoc 协同编辑锁定，锁过期时间2天，不可解锁，但自己可以将其改为编辑锁定，被改为编辑锁定后其他用户将无法编辑和保存
-	3：VirtualDoc 编辑锁定，锁过期时间2天，自己可解锁
+		//0：未锁定
+		//1：RealDoc 编辑锁定，锁过期时间2天，自己可解锁
+		//2：绝对锁定，自己无法解锁，锁过期时间2天
+		//3：VirtualDoc 编辑锁定，锁过期时间2天，自己可解锁
+		//4：RealDoc 协同编辑锁定，锁过期时间2天，不可解锁
+		//5：VirtualDoc 协同编辑锁定，锁过期时间2天，不可解锁
 （3）LockDoc(docId,subDocCheckFlag)的实现
 	subDocCheckFlag是true的时候表示需要检查docId节点的子目录下是否有锁定文件，由于delete\move\rename会影响subDocs,copy对subDocs有依赖，这四个接口需要将标志设置为true
 4、路径定义规则
@@ -301,7 +294,7 @@ public class DocController extends BaseController{
 			commitMsg = "同步 " + doc.getPath() + doc.getName();
 		}
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		if(false == checkDocLocked(repos.getId(), doc, reposAccess.getAccessUser(), false))
+		if(false == checkDocLocked(repos.getId(), doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
 		{
 			if(force != null && force == 1)
 			{
@@ -3956,10 +3949,12 @@ public class DocController extends BaseController{
 						
 		//lockDoc
 		DocLock docLock = null;
+		
+		int lockType = isRealDoc? DocLock.LOCK_STATE_FORCE : DocLock.LOCK_STATE_VFORCE;
 		synchronized(syncLock)
 		{
 			//LockDoc
-			docLock = lockDoc(doc, 2,  2*60*60*1000, reposAccess.getAccessUser(), rt, false);
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false);
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -3982,7 +3977,7 @@ public class DocController extends BaseController{
 				if(localEntry == null)
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
-					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;				
 				}
@@ -3991,7 +3986,7 @@ public class DocController extends BaseController{
 				if(remoteEntry == null)
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
-					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;				
 				}
@@ -4004,7 +3999,7 @@ public class DocController extends BaseController{
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
 					System.out.println("revertDocHistory() syncupScanForDoc_FSM!");	
-					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;
 				}
@@ -4015,7 +4010,7 @@ public class DocController extends BaseController{
 					String localChangeInfo = buildChangeInfo(localChanges);
 					
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
-					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;
 				}
@@ -4025,7 +4020,7 @@ public class DocController extends BaseController{
 					System.out.println("revertDocHistory() 远程有改动！");
 					String remoteChangeInfo = buildChangeInfo(remoteChanges);				
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 远程有改动!" + "</br></br>"+ remoteChangeInfo,rt);
-					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;
 				}
@@ -4036,7 +4031,7 @@ public class DocController extends BaseController{
 					{
 						System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
 						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-						unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+						unlockDoc(doc, lockType, reposAccess.getAccessUser());
 						writeJson(rt, response);
 						return;
 					}
@@ -4054,7 +4049,7 @@ public class DocController extends BaseController{
 				{
 					System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
 					docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
-					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;				
 				}
@@ -4062,7 +4057,7 @@ public class DocController extends BaseController{
 			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
 		}
 		
-		unlockDoc(doc,reposAccess.getAccessUser(),docLock);
+		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		writeJson(rt, response);
 	}
 	
