@@ -4232,11 +4232,6 @@
 								}
 							}
 						},
-						{text: '强制锁定', action: function(e){
-								e.preventDefault();
-								lockDoc(curRightClickedTreeNode, 2);
-							}
-						},
 						{text: '解锁', action: function(e){
 								e.preventDefault();
 								var docType = curRightClickedTreeNode.type;
@@ -4244,6 +4239,11 @@
 								{
 									unlockDoc(curRightClickedTreeNode, 1);
 								}
+							}
+						},
+						{text: '强制锁定', action: function(e){
+								e.preventDefault();
+								lockDoc(curRightClickedTreeNode, 2);
 							}
 						},
 						{divider: true},
@@ -4627,6 +4627,11 @@
 									{
 										unlockDoc(curRightClickedDocListNode, 1);
 									}
+								}
+							},
+							{text: '强制锁定', action: function(e){
+									e.preventDefault();
+									lockDoc(curRightClickedDocListNode, 2);
 								}
 							},
 							{divider: true},
