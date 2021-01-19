@@ -3545,6 +3545,72 @@ public class DocController extends BaseController{
 		writeJson(rt, response);	
 	}
 	
+	/****************   unlock a Doc ******************/
+	@RequestMapping("/unlockDoc.do")  //unlock Doc主要用于用户解锁doc
+	public void unlockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+			Integer lockType, Integer docType,
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("unlockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		if(docId == null)
+		{
+			docSysErrorLog("unlockDoc docId is null", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		String reposPath = getReposPath(repos);
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		
+		//检查用户是否有权限编辑文件
+		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
+		synchronized(syncLock)
+		{
+			DocLock docLock = getDocLock(doc);
+			if(docLock != null)
+			{
+				if(isDocLocked(docLock, lockType, reposAccess.getAccessUser(), rt))
+				{
+					unlock(); //线程锁
+					writeJson(rt, response);
+					return;
+				}				
+				unlockDoc(doc, lockType, reposAccess.getAccessUser());
+			}
+			unlock(); //线程锁
+		}
+		
+		System.out.println("unlockDoc : " + doc.getName() + " success");
+		rt.setData(doc);
+		writeJson(rt, response);	
+	}
+	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
 	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 

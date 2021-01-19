@@ -1887,15 +1887,8 @@
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
-					if(lockType != 0)
-					{
-						$("[dataId='"+ docId +"']").children("div:first-child").css("color","red");
-					}
-					else
-					{
-						$("[dataId='"+ docId +"']").children("div:first-child").css("color","black");
-					}
-				    return;
+					$("[dataId='"+ docId +"']").children("div:first-child").css("color","red");
+					return;
  				}
 				else
 				{
@@ -1906,6 +1899,55 @@
 			error : function () 
 			{
 				showErrorMessage("LockDoc 异常");
+				return;
+			}
+		});
+	}
+	
+	function unlockDoc(node, lockType)
+	{
+		console.log("unlockDoc() lockType:" + lockType, node);
+		if(!node || node == null)
+		{
+			showErrorMessage("请选择文件！");
+			return;
+		}
+		
+		var docId = node.docId;
+		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
+		var type = node.type;
+		
+		$.ajax({
+			url : "/DocSystem/Doc/unlockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : lockType, //lockType: Edit
+				reposId : gReposInfo.id, 
+				docId : docId,
+				pid: pid,
+				path: path,
+				name: name,
+				type: type,
+                shareId: gShareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status){
+					console.log(ret.data);
+					$("[dataId='"+ docId +"']").children("div:first-child").css("color","black");
+				    return;
+ 				}
+				else
+				{
+					showErrorMessage("UnlockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("UnlockDoc 异常");
 				return;
 			}
 		});
@@ -3530,7 +3572,10 @@
 	{
 		console.log("checkIn()", node);
 		curCheckInDoc.id = node.docId;
+		curCheckInDoc.pid = node.pid;
+		curCheckInDoc.path = node.path;
 		curCheckInDoc.name = node.name;
+		curCheckInDoc.type = node.type;
 		
 		gParentNodeForUpload = getParentNodeByNodeId(node.docId);
 		checkInFile();
@@ -4187,12 +4232,17 @@
 								}
 							}
 						},
+						{text: '强制锁定', action: function(e){
+								e.preventDefault();
+								lockDoc(curRightClickedTreeNode, 2);
+							}
+						},
 						{text: '解锁', action: function(e){
 								e.preventDefault();
 								var docType = curRightClickedTreeNode.type;
 								if(docType == 1)
 								{
-									lockDoc(curRightClickedTreeNode, 0);
+									unlockDoc(curRightClickedTreeNode, 1);
 								}
 							}
 						},
@@ -4575,7 +4625,7 @@
 									var docType = curRightClickedDocListNode.type;
 									if(docType == 1)
 									{
-										lockDoc(curRightClickedDocListNode, 0);
+										lockDoc(curRightClickedDocListNode, 1);
 									}
 								}
 							},
