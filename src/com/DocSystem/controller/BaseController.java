@@ -96,19 +96,17 @@ public class BaseController  extends BaseFunction{
 	private EmailService emailService;
 	
 	//系统默认用户
-    protected static User coEditUser = null;
-    protected static User autoSyncUser = null;
+    protected static User coEditUser = new User();
+    protected static User autoSyncUser = new User();
     static {
     	initSystemUsers();
     }
 	private static void initSystemUsers() {
 		//自动同步用户
-		autoSyncUser = new User();
-		coEditUser.setId(0);
-		coEditUser.setName("AutoSync");		
+		autoSyncUser.setId(0);
+		autoSyncUser.setName("AutoSync");		
 		
 		//协同编辑用户
-		coEditUser = new User();
 		coEditUser.setId(-1);
 		coEditUser.setName("CoEditUser");		
 	}
