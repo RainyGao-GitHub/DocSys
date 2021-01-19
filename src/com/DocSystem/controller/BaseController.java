@@ -5557,7 +5557,8 @@ public class BaseController  extends BaseFunction{
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
 		rt.setError(docLock.getPath() + docLock.getName() +" was force locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
-		System.out.println("Doc [" + docLock.getPath() + docLock.getName() +"] was force locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
+		System.out.println("isDocForceLocked() " + docLock.getPath() + docLock.getName() +" was force locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+
 		return true;	
 	}
 	
@@ -5581,7 +5582,7 @@ public class BaseController  extends BaseFunction{
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
 		rt.setError(docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
-		System.out.println("Doc [" + docLock.getPath() + docLock.getName() +"] was locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
+		System.out.println("isDocLocked() " + docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
 		return true;	
 	}
 
