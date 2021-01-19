@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletContextEvent;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -61,7 +60,6 @@ import util.ReturnAjax;
 import util.Encrypt.Base64File;
 import util.Encrypt.MD5;
 import util.FileUtil.CompressPic;
-import util.FileUtil.FileUtils2;
 
 import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.commonService.ProxyThread;

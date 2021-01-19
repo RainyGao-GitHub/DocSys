@@ -1,7 +1,33 @@
 package com.DocSystem.entity;
 
 public class DocLock {
-    private Integer id;
+	public static final int LOCK_STATE_NONE 	= 0b00000000;
+	public final static int LOCK_STATE_FORCE 	= 0b00000001;
+	public final static int LOCK_STATE_EDIT 	= 0b00000010;
+	public final static int LOCK_STATE_COEDIT 	= 0b00000100;
+	public final static int LOCK_STATE_VFORCE 	= 0b00010000;
+	public final static int LOCK_STATE_VEDIT 	= 0b00100000;
+	public final static int LOCK_STATE_VCOEDIT 	= 0b01000000;
+	public final static int LOCK_STATE_ALL 		= 0b11111111;
+
+	public static final int LOCK_TYPE_EDIT 		= 1;
+	public static final int LOCK_TYPE_FORCE 	= 2;
+	public static final int LOCK_TYPE_VEDIT 	= 3;
+	public static final int LOCK_TYPE_COEDIT 	= 4;
+	public static final int LOCK_TYPE_VCOEDIT 	= 5;
+	public static final int LOCK_TYPE_VFORCE 	= 6;
+	
+	public static int lockStateMap[] = {
+			DocLock.LOCK_STATE_NONE,
+			DocLock.LOCK_STATE_EDIT,
+			DocLock.LOCK_STATE_FORCE,
+			DocLock.LOCK_STATE_VEDIT,
+			DocLock.LOCK_STATE_COEDIT,
+			DocLock.LOCK_STATE_VCOEDIT,	
+			DocLock.LOCK_STATE_VFORCE	
+	};
+	
+	private Integer id;
 
     private Integer type;
 
@@ -15,13 +41,13 @@ public class DocLock {
 
     private Integer vid;
 
-    private Integer state;
+    private Integer state; 
 
-    private String locker;
+    public String[] locker = {null, null, null, null, null, null, null};
 
-    private Integer lockBy;
+    public Integer[] lockBy = {null, null, null, null, null, null, null};
 
-    private Long lockTime;
+    public Long[] lockTime = {null, null, null, null, null, null, null};
     
     public Integer getId() {
         return id;
@@ -85,29 +111,5 @@ public class DocLock {
 
     public void setState(Integer state) {
         this.state = state;
-    }
-
-    public String getLocker() {
-        return locker;
-    }
-
-    public void setLocker(String locker) {
-        this.locker = locker == null ? null : locker.trim();
-    }
-
-    public Integer getLockBy() {
-        return lockBy;
-    }
-
-    public void setLockBy(Integer lockBy) {
-        this.lockBy = lockBy;
-    }
-
-    public Long getLockTime() {
-        return lockTime;
-    }
-
-    public void setLockTime(Long lockTime) {
-        this.lockTime = lockTime;
     }
 }

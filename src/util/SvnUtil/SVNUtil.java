@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
@@ -35,7 +34,6 @@ import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import com.DocSystem.common.CommitAction;
-import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
