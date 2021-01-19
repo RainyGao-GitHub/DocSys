@@ -212,7 +212,7 @@ public class BaseController  extends BaseFunction{
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
 		DocLock docLock = getDocLock(doc);
 		ReturnAjax rt = new ReturnAjax();
-		if(docLock != null && isDocLocked(docLock, lockType, login_user,rt ))
+		if(isDocLocked(docLock, lockType, login_user,rt ))
 		{
 			System.out.println("lockDoc() Doc " + doc.getName() +" was locked");
 			return true;
@@ -2337,7 +2337,7 @@ public class BaseController  extends BaseFunction{
 		synchronized(syncLock)
 		{							
 			//Try to lock the Doc
-			docLock = lockDoc(doc,2, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
+			docLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -5365,26 +5365,6 @@ public class BaseController  extends BaseFunction{
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
 		DocLock docLock = getDocLock(doc);
-		if(docLock == null)
-		{
-			docLock = new DocLock();
-			//设置基本信息
-			docLock.setVid(doc.getVid());
-			docLock.setPid(doc.getPid());			
-			docLock.setDocId(doc.getDocId());
-			docLock.setPath(doc.getPath());			
-			docLock.setName(doc.getName());			
-			docLock.setType(doc.getType());
-			
-			//设置锁状态
-			docLock.setState(getLockState(lockType));
-			docLock.locker[lockType] = login_user.getName();
-			docLock.lockBy[lockType] = login_user.getId();
-			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime
-			addDocLock(doc, docLock);
-			System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
-			return docLock;
-		}
 		
 		//检查文件是否锁定
 		if(isDocLocked(docLock, lockType, login_user, rt))
@@ -5410,13 +5390,38 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Do Lock
-		int curLockState = docLock.getState();
-		docLock.setState(curLockState | getLockState(lockType));
-		docLock.locker[lockType] = login_user.getName();
-		docLock.lockBy[lockType] = login_user.getId();
-		docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime		
-		System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
-		return docLock;
+		if(docLock == null)
+		{
+			System.out.println("lockDoc() docLock is null");
+			docLock = new DocLock();
+			//设置基本信息
+			docLock.setVid(doc.getVid());
+			docLock.setPid(doc.getPid());			
+			docLock.setDocId(doc.getDocId());
+			docLock.setPath(doc.getPath());			
+			docLock.setName(doc.getName());			
+			docLock.setType(doc.getType());
+			
+			//设置锁状态
+			docLock.setState(getLockState(lockType));
+			docLock.locker[lockType] = login_user.getName();
+			docLock.lockBy[lockType] = login_user.getId();
+			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime
+			addDocLock(doc, docLock);
+			System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+			return docLock;
+		}
+		else
+		{
+			printObject("lockDoc() docLock:", docLock);
+			int curLockState = docLock.getState();
+			docLock.setState(curLockState | getLockState(lockType));
+			docLock.locker[lockType] = login_user.getName();
+			docLock.lockBy[lockType] = login_user.getId();
+			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime		
+			System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+			return docLock;
+		}
 	}
 	
 	protected static Integer getLockState(Integer lockType) {
@@ -5442,7 +5447,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String docLockId = getDocLockId(doc);
-		System.out.println("getDocLock() docLockId:" + docLockId);
 		return reposDocLocskMap.get(docLockId);
 	}
 	
@@ -5477,6 +5481,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	public static boolean isDocLocked(DocLock docLock, Integer lockType, User login_user,ReturnAjax rt) {
+		System.out.println("isDocLocked() lockType:" + lockType);
+		if(docLock == null)
+		{
+			return false;
+		}
+		
 		int curLockState = docLock.getState();
 		if(curLockState == 0)
 		{
@@ -5592,6 +5602,8 @@ public class BaseController  extends BaseFunction{
 	//确定parentDoc is Force Locked
 	private boolean isParentDocForceLocked(Doc doc, User login_user,ReturnAjax rt) 
 	{
+		printObject("isParentDocForceLocked() doc:", doc);
+		
 		//Check if the rootDoc locked
 		Integer reposId = doc.getVid();
 		Doc tempDoc = new Doc();
@@ -5639,6 +5651,8 @@ public class BaseController  extends BaseFunction{
 	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy/delete the Directory
 	private boolean isSubDocLocked(Doc doc, User login_user, ReturnAjax rt)
 	{
+		printObject("isSubDocLocked() doc:", doc);
+
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
@@ -5659,7 +5673,7 @@ public class BaseController  extends BaseFunction{
     			if(isSudDocLock(docLock, parentDocPath))
     			{
     				//检查所有的锁
-	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt) || isDocLocked(docLock, DocLock.LOCK_TYPE_VFORCE, login_user, rt))
+	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt))
 	        		{
 	        			rt.setError("subDoc [" +  docLock.getName() + "] is locked:" + docLock.getState());
 	        			System.out.println("isSubDocLocked() " + docLock.getName() + " is locked!");
@@ -5669,13 +5683,6 @@ public class BaseController  extends BaseFunction{
         	}
         }
 		return false;
-	}
-
-	private void deleteDocLocks(ConcurrentHashMap<String, DocLock> reposDocLocskMap, List<String> outdatedDocLockIds) {
-		for(String docLockId : outdatedDocLockIds)
-		{
-			reposDocLocskMap.remove(docLockId);
-		}
 	}
 
 	private boolean isSudDocLock(DocLock docLock, String parentDocPath) {
