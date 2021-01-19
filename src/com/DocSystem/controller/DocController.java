@@ -3523,7 +3523,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			boolean subDocCheckFlag = false;
-			if(lockType == 2)	//If want to force lock, must check all subDocs not locked
+			if(lockType == DocLock.LOCK_TYPE_FORCE)	//If want to force lock, must check all subDocs not locked
 			{
 				subDocCheckFlag = true;
 			}
