@@ -4950,7 +4950,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 		
-				docSysErrorLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
+				docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
 				return false;
 			}
 			
@@ -4958,8 +4958,7 @@ public class BaseController  extends BaseFunction{
 			if(dstDocLock == null)
 			{
 				unlock(); //线程锁
-				docSysErrorLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
-
+				docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
 				unlockDoc(srcDoc, lockType, login_user);
 				return false;
 			}
@@ -5557,8 +5556,8 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError(docLock.getPath() + docLock.getName() +" was focrce locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
-		System.out.println("Doc [" + docLock.getName() +"] was force locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
+		rt.setError(docLock.getPath() + docLock.getName() +" was force locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		System.out.println("Doc [" + docLock.getPath() + docLock.getName() +"] was force locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
 		return true;	
 	}
 	
@@ -5582,7 +5581,7 @@ public class BaseController  extends BaseFunction{
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
 		rt.setError(docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
-		System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
+		System.out.println("Doc [" + docLock.getPath() + docLock.getName() +"] was locked by " + docLock.locker[lockType] + docLock.locker[lockType] + " till " + lockTime);
 		return true;	
 	}
 
