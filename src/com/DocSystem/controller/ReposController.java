@@ -217,11 +217,14 @@ public class ReposController extends BaseController{
 		}
 		Integer reposId = repos.getId();
 		System.out.println("new ReposId" + reposId);
+
 		//Lock the repos
-		long lockTime = nowTimeStamp + 4*60*60*1000;
+		DocLock reposLock = null;
+		int lockType = DocLock.LOCK_STATE_FORCE;
 		synchronized(syncLock)
 		{	
-			DocLock reposLock = lockRepos(repos, 1, lockTime, login_user, rt, false); 
+			long lockTime = nowTimeStamp + 4*60*60*1000;
+			reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false); 
 			if(reposLock == null)
 			{
 				rt.setError("锁定仓库失败！");
@@ -258,7 +261,7 @@ public class ReposController extends BaseController{
 
 		synchronized(syncLock)
 		{	
-			unlockRepos(repos, login_user, null); 
+			unlockRepos(repos, lockType, login_user); 
 			unlock();
 		}
 		writeJson(rt, response);	
@@ -910,18 +913,16 @@ public class ReposController extends BaseController{
 	{
 		for(Doc doc: docList)
 		{
-//			if(doc.getType() == 1)
-//			{
-				DocLock docLock = getDocLock(doc);
-				if(docLock != null)
-				{
-					doc.setState(docLock.getState());
-					doc.setLocker(docLock.getLocker());
-					doc.setLockBy(docLock.getLockBy());
-					doc.setLockTime(docLock.getLockTime());	
-				}
+			DocLock docLock = getDocLock(doc);
+			if(docLock != null)
+			{
+				int curLockState = docLock.getState();
+				doc.setState(curLockState);
+				doc.locker = docLock.locker;
+				doc.lockBy = docLock.lockBy;
+				doc.lockTime = docLock.lockTime;	
 			}
-//		}
+		}
 	}
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/

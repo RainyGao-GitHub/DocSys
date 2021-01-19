@@ -66,9 +66,9 @@ public class Doc  implements Comparable<Doc>{
 	
 	//文件锁定信息(用于前台显示)
     private Integer state;
-    private String locker;
-    private Integer lockBy;
-    private Long lockTime;
+    public String[] locker = null;
+    public Integer[] lockBy = null;
+    public Long[] lockTime = null;
     
     //文件本地信息
     public String targetPath;
@@ -383,29 +383,5 @@ public class Doc  implements Comparable<Doc>{
 
     public void setState(Integer state) {
         this.state = state;
-    }
-
-    public String getLocker() {
-        return locker;
-    }
-
-    public void setLocker(String locker) {
-        this.locker = locker == null ? null : locker.trim();
-    }
-
-    public Integer getLockBy() {
-        return lockBy;
-    }
-
-    public void setLockBy(Integer lockBy) {
-        this.lockBy = lockBy;
-    }
-
-    public Long getLockTime() {
-        return lockTime;
-    }
-
-    public void setLockTime(Long lockTime) {
-        this.lockTime = lockTime;
     }
 }
