@@ -115,6 +115,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** addDoc ****************");
 		System.out.println("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
 		//System.out.println(Charset.defaultCharset());
 		
@@ -180,6 +181,7 @@ public class DocController extends BaseController{
 			String content, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** feeback ****************");
 		System.out.println("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -266,6 +268,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** refreshDoc ****************");
 		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -377,6 +380,7 @@ public class DocController extends BaseController{
 							Integer shareId,
 							HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** renameDoc ****************");
 		System.out.println("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName+ " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -461,6 +465,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** moveDoc ****************");
 		System.out.println("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 
 		if(srcPath == null)
@@ -544,6 +549,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** copyDoc ****************");
 		System.out.println("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -612,6 +618,7 @@ public class DocController extends BaseController{
 			String cmdLine,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** executeDoc ****************");
 		System.out.println("executeDoc reposId:" + reposId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -684,6 +691,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** checkDocInfo ****************");
 		System.out.println("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -908,6 +916,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
+		System.out.println("\n************** checkChunkUploaded ****************");
 		System.out.println("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 			
@@ -1017,6 +1026,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
+		System.out.println("\n************** uploadDoc ****************");
 		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
@@ -1144,6 +1154,7 @@ public class DocController extends BaseController{
 			@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception
 	{
+		System.out.println("\n************** uploadMarkdownPic ****************");
 		System.out.println("uploadMarkdownPic reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name + " imgName:" + imgName);
 		
 		JSONObject res = new JSONObject();
@@ -1241,6 +1252,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** updateDocContent ****************");
 		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 		//System.out.println("updateDocContent content:[" + content + "]");
 		//System.out.println("content size: " + content.length());
@@ -1354,6 +1366,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** tmpSaveDocContent ****************");
 		System.out.println("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		//System.out.println("tmpSaveVirtualDocContent content:[" + content + "]");
 		
@@ -1403,6 +1416,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
+		System.out.println("\n************** downloadDocPrepare ****************");
 		System.out.println("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1682,6 +1696,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
+		System.out.println("\n************** downloadDoc ****************");
 		System.out.println("downloadDoc  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1748,6 +1763,7 @@ public class DocController extends BaseController{
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
+		System.out.println("\n************** downloadDoc ****************");
 		System.out.println("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1818,6 +1834,7 @@ public class DocController extends BaseController{
 			String authCode,		
 			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
 
+		System.out.println("\n************** saveDoc ****************");
 		System.out.println("saveDoc reposId:" + vid + " path:" + path +  " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " shareId:" + shareId +" authCode:" + authCode);
 
 		Integer reposId = vid;
@@ -1993,39 +2010,36 @@ public class DocController extends BaseController{
     }
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
-	@RequestMapping("/saveDoc/{reposId}/{filePath}/{authCode}")
-	protected void saveDoc(@PathVariable("reposId") Integer reposId, @PathVariable("filePath") String filePath,
+	@RequestMapping("/saveDoc/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}")
+	protected void saveDoc(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name,
+			@PathVariable("targetPath") String targetPath, @PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode,
+			@PathVariable("shareId") Integer shareId,
 			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
 
-		System.out.println("saveDoc reposId:" + reposId + " path:" + filePath +" authCode:" + authCode);
+		System.out.println("\n************** saveDoc ****************");
+		System.out.println("saveDoc reposId:" + vid + " path:" + path +  " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " shareId:" + shareId +" authCode:" + authCode);
 
+		Integer reposId = vid;
+		
 		PrintWriter writer = null;
 		try {
 			writer = response.getWriter();
 			ReturnAjax rt = new ReturnAjax();
 			
-			//Decode Path and Name
-			if(filePath == null)
-			{
-				docSysErrorLog("文件路径未设置！", rt);
-				writer.write("文件路径未设置");
-				return;
-			}
+			//Decode Path and Name targetPath and targetName
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+			path = base64Decode(path);
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+			name = base64Decode(name);
+			targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+			targetPath = base64Decode(targetPath);
+			targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+			targetName = base64Decode(targetName);
 			
-			filePath = new String(filePath.getBytes("ISO8859-1"),"UTF-8");	
-			filePath = base64Decode(filePath);
-			if(filePath == null)
-			{
-				docSysErrorLog("文件路径解码失败！", rt);
-				writer.write("文件路径解码失败");			
-				return;
-			}	
-		
-
 			//Check authCode or reposAccess
 			ReposAccess reposAccess = null;
-			if(authCode != null && !authCode.equals("0"))
+			if(authCode != null)
 			{
 				if(checkAuthCode(authCode, null) == false)
 				{
@@ -2037,7 +2051,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+				reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
 			}
 			if(reposAccess == null)
 			{
@@ -2058,7 +2072,7 @@ public class DocController extends BaseController{
 			String reposPath = getReposPath(repos);
 			String localRootPath = getReposRealPath(repos);
 			String localVRootPath = getReposVirtualPath(repos);
-			Doc doc = buildBasicDoc(reposId, null, null, reposPath, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
+			Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, null, null);
 
 			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 			String localParentPath = localRootPath + doc.getPath();
@@ -2068,12 +2082,11 @@ public class DocController extends BaseController{
 				localParentDir.mkdirs();
 			}
 			
-			
 			//Check user permission
 			Doc localDoc = docSysGetDoc(repos, doc);
 			if(localDoc == null || localDoc.getType() == 0)	//0: add  1: update
 			{
-				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
+				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
 				if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 				{
 					docSysErrorLog("用户没有新增权限", rt);
@@ -2092,7 +2105,6 @@ public class DocController extends BaseController{
 			}
 			
 			//Check and getDownloadDoc
-
             String body = "";
             try
             {
@@ -2135,8 +2147,8 @@ public class DocController extends BaseController{
 	            Long chunkSize = new File(chunkParentPath + chunkName).length();
 	            System.out.println("saveDoc() chunkSize:" + chunkSize);
 	            doc.setSize(chunkSize); //设置docSize避免addDoc和updateDoc的检查报错
-	            
-				String commitMsg = "保存 " + filePath;
+
+				String commitMsg = "协同编辑保存:" + doc.getPath() + doc.getName();
 				String commitUser = reposAccess.getAccessUser().getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				if(localDoc == null || localDoc.getType() == 0)
