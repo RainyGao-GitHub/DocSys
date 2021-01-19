@@ -5422,7 +5422,7 @@ public class BaseController  extends BaseFunction{
 		return docLock;
 	}
 	
-	private static Integer getLockState(Integer lockType) {
+	protected static Integer getLockState(Integer lockType) {
 		return DocLock.lockStateMap[lockType];
 	}
 
@@ -5684,7 +5684,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Unlock Doc
-	protected boolean unlockDoc(Doc doc, Integer lockState, User login_user) 
+	protected boolean unlockDoc(Doc doc, Integer lockType, User login_user) 
 	{
 		DocLock curDocLock = getDocLock(doc);
 		if(curDocLock == null)
@@ -5701,6 +5701,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
+		int lockState = getLockState(lockType);
 		Integer newLockState = curLockState & (~lockState);
 		if(newLockState == 0)
 		{

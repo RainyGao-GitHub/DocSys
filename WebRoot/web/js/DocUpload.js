@@ -793,7 +793,7 @@
           	if(curCheckInDoc.id && curCheckInDoc.id > -1)
           	{
           		//CheckIn ok, do unlock the doc
-          		unlockDoc(curCheckInDoc.id);
+          		unlockDoc(curCheckInDoc, 1);
           		curCheckInDoc.id = -1;
           	}
           		
@@ -822,7 +822,7 @@
           	if(curCheckInDoc.id && curCheckInDoc.id > -1)
           	{
           		//CheckIn ok, do unlock the doc
-          		unlockDoc(curCheckInDoc.id);
+          		unlockDoc(curCheckInDoc, 1);
           		curCheckInDoc.id = -1;
           	}
           		
@@ -927,7 +927,7 @@
       		if(curCheckInDoc.id && curCheckInDoc.id > -1)
       		{
       			//CheckIn ok, do unlock the doc
-      			unlockDoc(curCheckInDoc.id);
+      			unlockDoc(curCheckInDoc, 1);
       			curCheckInDoc.id = -1;
       		}
       		
