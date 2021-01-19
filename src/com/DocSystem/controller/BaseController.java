@@ -5611,7 +5611,7 @@ public class BaseController  extends BaseFunction{
 		tempDoc.setLocalRootPath(doc.getLocalRootPath());
 		tempDoc.setPath("");
 		tempDoc.setName("");
-		DocLock lock = getDocLock(doc);
+		DocLock lock = getDocLock(tempDoc);
 		if(isDocForceLocked(lock, login_user, rt))
 		{
 			return true;
@@ -5637,7 +5637,7 @@ public class BaseController  extends BaseFunction{
 			
 			tempDoc.setPath(path);
 			tempDoc.setName(name);
-			lock = getDocLock(doc);
+			lock = getDocLock(tempDoc);
 			if(isDocForceLocked(lock, login_user, rt))
 			{
 				return true;
