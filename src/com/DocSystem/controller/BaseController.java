@@ -627,7 +627,7 @@ public class BaseController  extends BaseFunction{
 			user.setName("AutoSync");
 		}
 		
-		if(false == checkDocLocked(repos.getId(), doc, DocLock.LOCK_TYPE_FORCE, user, false))
+		if(false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
 		{
 			insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AUTOSYNCUP, syncType, DocType.REALDOC, null, user);
 		}
@@ -5350,10 +5350,10 @@ public class BaseController  extends BaseFunction{
 			switch(lockType)
 			{
 			case DocLock.LOCK_TYPE_FORCE:
-			case DocLock.LOCK_TYPE_EDIT:
+			case DocLock.LOCK_TYPE_NORMAL:
 			case DocLock.LOCK_TYPE_COEDIT:
 				//检查其父节点是否强制锁定
-				if(isParentDocForceLocked(doc,login_user,rt))
+				if(isParentDocLocked(doc,login_user,rt))
 				{
 					System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
 					return null;
@@ -5407,7 +5407,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	protected boolean checkDocLocked(Integer reposId, Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag) 
+	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag) 
 	{	
 		DocLock docLock = null;
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
@@ -5430,10 +5430,10 @@ public class BaseController  extends BaseFunction{
 		switch(lockType)
 		{
 		case DocLock.LOCK_TYPE_FORCE:
-		case DocLock.LOCK_TYPE_EDIT:
+		case DocLock.LOCK_TYPE_NORMAL:
 		case DocLock.LOCK_TYPE_COEDIT:
 			//检查其父节点是否强制锁定
-			if(isParentDocForceLocked(doc,login_user,rt))
+			if(isParentDocLocked(doc,login_user,rt))
 			{
 				System.out.println("lockDoc() Parent Doc of " + doc.getPath() + doc.getName() +" was locked！");				
 				return true;
@@ -5529,15 +5529,15 @@ public class BaseController  extends BaseFunction{
 		//RealDoc Lock
 		case DocLock.LOCK_TYPE_FORCE:
 			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
-					isDocLocked(docLock, DocLock.LOCK_TYPE_EDIT, DocLock.LOCK_STATE_EDIT, login_user, rt) ||	//检查文件是否上了单人编辑锁
-					isDocLocked(docLock, DocLock.LOCK_TYPE_COEDIT, DocLock.LOCK_STATE_COEDIT, login_user, rt))	//检查文件是否上了多人编辑锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt) ||	//检查文件是否上了普通锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_COEDIT, DocLock.LOCK_STATE_COEDIT, login_user, rt))	//检查文件是否上了协同编辑锁
 			{
 				ret = true;
 			}
 			break;
-		case DocLock.LOCK_TYPE_EDIT:
+		case DocLock.LOCK_TYPE_NORMAL:
 			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
-					isDocLocked(docLock, DocLock.LOCK_TYPE_EDIT, DocLock.LOCK_STATE_EDIT, login_user, rt))		//检查文件是否上了单人编辑锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
 			{
 				ret = true;
 			}
@@ -5550,15 +5550,15 @@ public class BaseController  extends BaseFunction{
 			break;
 		case DocLock.LOCK_TYPE_VFORCE:
 			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
-					isDocLocked(docLock, DocLock.LOCK_TYPE_VEDIT, DocLock.LOCK_STATE_VEDIT, login_user, rt) ||	//检查文件是否上了单人编辑锁
-					isDocLocked(docLock, DocLock.LOCK_TYPE_VCOEDIT, DocLock.LOCK_STATE_VCOEDIT, login_user, rt))	//检查文件是否上了多人编辑锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VNORMAL, DocLock.LOCK_STATE_VNORMAL, login_user, rt) ||	//检查文件是否上了普通锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VCOEDIT, DocLock.LOCK_STATE_VCOEDIT, login_user, rt))	//检查文件是否上了协同编辑锁
 			{
 				ret = true;
 			}
 			break;
-		case DocLock.LOCK_TYPE_VEDIT:
+		case DocLock.LOCK_TYPE_VNORMAL:
 			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
-					isDocLocked(docLock, DocLock.LOCK_TYPE_VEDIT, DocLock.LOCK_STATE_VEDIT, login_user, rt))		//检查文件是否上了单人编辑锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VNORMAL, DocLock.LOCK_STATE_VNORMAL, login_user, rt))		//检查文件是否上了普通锁			
 			{
 				ret = true;
 			}
@@ -5630,10 +5630,19 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	//确定parentDoc is Force Locked
-	private boolean isParentDocForceLocked(Doc doc, User login_user,ReturnAjax rt) 
+	//确定parentDoc is Locked
+	private boolean isParentDocLocked(Doc doc, User login_user,ReturnAjax rt) 
 	{
-		printObject("isParentDocForceLocked() doc:", doc);
+		printObject("isParentDocLocked() doc:", doc);
+		
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			System.out.println("getDocLock() reposDocLocskMap for " + doc.getVid() + " is null");
+			return false;
+		}
+		
+		DocLock docLock = null;
 		
 		//Check if the rootDoc locked
 		Integer reposId = doc.getVid();
@@ -5642,8 +5651,9 @@ public class BaseController  extends BaseFunction{
 		tempDoc.setLocalRootPath(doc.getLocalRootPath());
 		tempDoc.setPath("");
 		tempDoc.setName("");
-		DocLock lock = getDocLock(tempDoc);
-		if(isDocForceLocked(lock, login_user, rt))
+		docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+		if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+				isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
 		{
 			return true;
 		}
@@ -5668,8 +5678,9 @@ public class BaseController  extends BaseFunction{
 			
 			tempDoc.setPath(path);
 			tempDoc.setName(name);
-			lock = getDocLock(tempDoc);
-			if(isDocForceLocked(lock, login_user, rt))
+			docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
 			{
 				return true;
 			}
