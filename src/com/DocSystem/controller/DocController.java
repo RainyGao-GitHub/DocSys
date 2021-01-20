@@ -3607,7 +3607,8 @@ public class DocController extends BaseController{
 		
 		synchronized(syncLock)
 		{
-			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), true, rt))
+			//解锁不需要检查子目录的锁定，因为不会影响子目录
+			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
 			{
 				unlock(); //线程锁
 				writeJson(rt, response);
