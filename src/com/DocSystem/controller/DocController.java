@@ -3607,17 +3607,13 @@ public class DocController extends BaseController{
 		
 		synchronized(syncLock)
 		{
-			DocLock docLock = getDocLock(doc);
-			if(docLock != null)
+			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), true, rt))
 			{
-				if(isDocLocked(docLock, lockType, reposAccess.getAccessUser(), rt))
-				{
-					unlock(); //线程锁
-					writeJson(rt, response);
-					return;
-				}				
-				unlockDoc(doc, lockType, reposAccess.getAccessUser());
-			}
+				unlock(); //线程锁
+				writeJson(rt, response);
+				return;
+			}				
+			unlockDoc(doc, lockType, reposAccess.getAccessUser());
 			unlock(); //线程锁
 		}
 		
