@@ -5201,37 +5201,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/************************ DocSys仓库与文件锁定接口 *******************************/
-	//Lock Repos
-	protected Repos lockRepos(Integer reposId,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) 
-	{
-		System.out.println("lockRepos() reposId:" + reposId + " lockType:" + lockType + " by " + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
-		//确定Repos是否可用
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
-		{
-			rt.setError("repos " + reposId +" 不存在！");
-			System.out.println("lockRepos() Repos: " + reposId +" 不存在！");
-			return null;
-		}
-		
-		DocLock reposLock = lockRepos(repos, lockType, lockDuration, login_user, rt, docLockCheckFlag);
-		
-		//Check if repos was locked
-		if(reposLock == null)
-		{
-			System.out.println("lockRepos() Repos:" + repos.getId() +" was locked！");				
-			return null;			
-		}
-				
-		//lockTime is the time to release lock 
-		System.out.println("lockRepos() success reposId:" + reposId + " lockType:" + lockType + " by " + login_user.getName());
-		return repos;	
-	}
-
 	//Lock Doc
 	protected DocLock lockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) {
 		System.out.println("lockRepos() Repos:" + repos.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
 
+		//仓库锁使用了和DocLock相同的数据结构，因此借用了docLock的接口
 		DocLock reposLock = getReposLock(repos);
 		if(reposLock != null && isDocLocked(reposLock, lockType, login_user,rt))
 		{
@@ -5239,17 +5213,15 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		//Check If SubDoc was locked
+		//检查仓库是否有文件锁定
 		if(docLockCheckFlag)
 		{
-			Doc doc = new Doc();
-			doc.setVid(repos.getId());
-			doc.setPath("");
-			doc.setName("");
-			doc.setDocId((long) 0);
-			if(isSubDocLocked(doc, login_user, rt) == true)
+			Doc rootDoc = new Doc();
+			rootDoc.setVid(repos.getId());
+			rootDoc.setPath("");
+			rootDoc.setName("");
+			if(checkDocLocked(rootDoc, DocLock.LOCK_TYPE_FORCE, login_user, true) == true)
 			{
-				System.out.println("lockRepos() subDoc of " + doc.getName() +" was locked！");
 				return null;
 			}
 		}
@@ -5266,8 +5238,6 @@ public class BaseController  extends BaseFunction{
 			reposLock.locker[lockType] = login_user.getName();
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
-			//Set LockState = 0, which will be used for unlockDoc
-			reposLock.setState(0);
 			addReposLock(repos, reposLock);			
 		}
 		else
@@ -5409,14 +5379,18 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag) 
 	{	
+		ReturnAjax rt = new ReturnAjax();
+		return checkDocLocked(doc, lockType, login_user, subDocCheckFlag, rt);
+	}
+	
+	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag, ReturnAjax rt) 
+	{	
 		DocLock docLock = null;
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
 			return false;
 		}
-		
-		ReturnAjax rt = new ReturnAjax();
 		
 		String docLockId = getDocLockId(doc);
 		docLock = reposDocLocskMap.get(docLockId);
