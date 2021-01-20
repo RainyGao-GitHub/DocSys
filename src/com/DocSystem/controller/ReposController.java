@@ -225,13 +225,14 @@ public class ReposController extends BaseController{
 		{	
 			long lockTime = nowTimeStamp + 4*60*60*1000;
 			reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false); 
-			if(reposLock == null)
-			{
-				rt.setError("锁定仓库失败！");
-				writeJson(rt, response);		
-				return;				
-			}
 			unlock();
+		}	
+		
+		if(reposLock == null)
+		{
+			rt.setError("锁定仓库失败！");
+			writeJson(rt, response);		
+			return;				
 		}
 		
 		if(createReposLocalDir(repos,rt) == false)
