@@ -5548,7 +5548,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	public static boolean isDocForceLocked(DocLock docLock, Integer lockType, Integer lockState, User login_user,ReturnAjax rt) {
-		int curLockState = docLock.getState();	
+		if(docLock == null)
+		{
+			return false;
+		}
+		
+		Integer curLockState = docLock.getState();	
 		if((curLockState & lockState) == 0) 
 		{
 			return false;
@@ -5568,6 +5573,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	public static boolean isDocLocked(DocLock docLock, Integer lockType, Integer lockState, User login_user,ReturnAjax rt) {
+		if(docLock == null)
+		{
+			return false;
+		}
+		
 		int curLockState = docLock.getState();	
 		if((curLockState & lockState) == 0) 
 		{
