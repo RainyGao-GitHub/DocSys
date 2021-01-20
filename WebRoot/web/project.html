@@ -4225,20 +4225,12 @@
 						{divider: true},
 						{text: '锁定', action: function(e){
 								e.preventDefault();
-								var docType = curRightClickedTreeNode.type;
-								if(docType == 1)
-								{							
-									lockDoc(curRightClickedTreeNode, 1);
-								}
+								lockDoc(curRightClickedTreeNode, 1);
 							}
 						},
 						{text: '解锁', action: function(e){
 								e.preventDefault();
-								var docType = curRightClickedTreeNode.type;
-								if(docType == 1)
-								{
-									unlockDoc(curRightClickedTreeNode, 1);
-								}
+								unlockDoc(curRightClickedTreeNode, 1);
 							}
 						},
 						{text: '强制锁定', action: function(e){
@@ -4613,20 +4605,12 @@
 							{divider: true},
 							{text: '锁定', action: function(e){
 									e.preventDefault();
-									var docType = curRightClickedDocListNode.type;
-									if(docType == 1)
-									{							
-										lockDoc(curRightClickedDocListNode, 1);
-									}
+									lockDoc(curRightClickedDocListNode, 1);
 								}
 							},
 							{text: '解锁', action: function(e){
 									e.preventDefault();
-									var docType = curRightClickedDocListNode.type;
-									if(docType == 1)
-									{
-										unlockDoc(curRightClickedDocListNode, 1);
-									}
+									unlockDoc(curRightClickedDocListNode, 1);
 								}
 							},
 							{text: '强制锁定', action: function(e){

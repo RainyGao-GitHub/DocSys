@@ -458,11 +458,11 @@
 			//}
 			
 			$.ajax({
-				url : "/DocSystem/Doc/lockDoc.do",
+				url : "/DocSystem/Doc/unlockDoc.do",
 				type : "post",
 				dataType : "json",
 				data : {
-					lockType : 0, //unlock the doc
+					lockType : 3, //unlock the doc
 					reposId : gReposInfo.id, 
 					docId : gDocInfo.docId,
 					path: gDocInfo.path,
