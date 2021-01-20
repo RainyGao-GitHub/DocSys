@@ -297,7 +297,7 @@ public class DocController extends BaseController{
 			commitMsg = "同步 " + doc.getPath() + doc.getName();
 		}
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		if(false == checkDocLocked(repos.getId(), doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
+		if(false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
 		{
 			if(force != null && force == 1)
 			{
