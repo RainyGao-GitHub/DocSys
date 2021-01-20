@@ -622,9 +622,7 @@ public class BaseController  extends BaseFunction{
 		printObject("addDocToSyncUpList() syncType:" + syncType + " doc:", doc);
 		if(user == null)
 		{
-			user = new User();
-			user.setId(0);
-			user.setName("AutoSync");
+			user = autoSyncUser;
 		}
 		
 		if(false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
@@ -2674,9 +2672,7 @@ public class BaseController  extends BaseFunction{
 		User login_user = action.getUser();
 		if(login_user == null)
 		{
-			login_user = new User();
-			login_user.setId(0); //系统自动同步用户 AutoSync
-			login_user.setName("AutoSync");
+			login_user = autoSyncUser;
 		}
 		
 		//文件管理系统
