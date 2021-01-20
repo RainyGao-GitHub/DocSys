@@ -5298,47 +5298,14 @@ public class BaseController  extends BaseFunction{
 	//Lock Doc
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
-		DocLock docLock = null;
-		
-		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap != null)
+
+		if(checkDocLocked(doc, lockType, login_user, subDocCheckFlag, rt))
 		{
-			String docLockId = getDocLockId(doc);
-			docLock = reposDocLocskMap.get(docLockId);
-		
-			//检查文件是否锁定
-			if(isDocLocked(docLock, lockType, login_user, rt))
-			{
-				return null;
-			}
-			
-			//备注文件时平面结构，不需要检查父节点和子节点
-			switch(lockType)
-			{
-			case DocLock.LOCK_TYPE_FORCE:
-			case DocLock.LOCK_TYPE_NORMAL:
-			case DocLock.LOCK_TYPE_COEDIT:
-				//检查其父节点是否强制锁定
-				if(isParentDocLocked(doc,login_user,rt))
-				{
-					System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
-					return null;
-				}
-				
-				//Check If SubDoc was locked
-				if(subDocCheckFlag)
-				{
-					if(isSubDocLocked(doc, login_user, rt) == true)
-					{
-						System.out.println("lockDoc() subDoc of " + doc.getName() +" was locked！");
-						return null;
-					}
-				}
-				break;
-			}
+			return null;
 		}
-			
+		
 		//Do Lock
+		DocLock docLock = getDocLock(doc);
 		if(docLock == null)
 		{
 			System.out.println("lockDoc() docLock is null");
@@ -5390,6 +5357,13 @@ public class BaseController  extends BaseFunction{
 		
 		String docLockId = getDocLockId(doc);
 		docLock = reposDocLocskMap.get(docLockId);
+		
+		//协同编辑用户强制锁定：检查当前节点和父节点是否强制锁定即可
+		if(lockType == DocLock.LOCK_TYPE_FORCE && login_user.getId() == coEditUser.getId())
+		{
+			return (isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || isParentDocForceLocked(doc,login_user,rt));
+		}
+		
 		if(isDocLocked(docLock, lockType, login_user,rt ))
 		{
 			System.out.println("lockDoc() Doc " + doc.getPath() + doc.getName() +" was locked");
@@ -5618,7 +5592,7 @@ public class BaseController  extends BaseFunction{
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
-			System.out.println("getDocLock() reposDocLocskMap for " + doc.getVid() + " is null");
+			System.out.println("isParentDocLocked() reposDocLocskMap for " + doc.getVid() + " is null");
 			return false;
 		}
 		
@@ -5661,6 +5635,63 @@ public class BaseController  extends BaseFunction{
 			docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
 			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
 					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
+			{
+				return true;
+			}
+			path = path + name +"/";
+		}
+		return false;
+	}
+	
+	//确定parentDoc is Locked
+	private boolean isParentDocForceLocked(Doc doc, User login_user,ReturnAjax rt) 
+	{
+		printObject("isParentDocForceLocked() doc:", doc);
+		
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			System.out.println("isParentDocForceLocked() reposDocLocskMap for " + doc.getVid() + " is null");
+			return false;
+		}
+		
+		DocLock docLock = null;
+		
+		//Check if the rootDoc locked
+		Integer reposId = doc.getVid();
+		Doc tempDoc = new Doc();
+		tempDoc.setVid(reposId);
+		tempDoc.setLocalRootPath(doc.getLocalRootPath());
+		tempDoc.setPath("");
+		tempDoc.setName("");
+		docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+		if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt)) 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+		{
+			return true;
+		}
+		
+		//Check parentDoc locked
+		String parentPath = doc.getPath();
+		if(parentPath == null || parentPath.isEmpty())
+		{
+			return false;
+		}
+				
+		String [] paths = parentPath.split("/");
+
+		String path = "";		
+		for(int i=0; i< paths.length; i++)
+		{
+			String name = paths[i];
+			if(name.isEmpty())
+			{
+				continue;
+			}
+			
+			tempDoc.setPath(path);
+			tempDoc.setName(name);
+			docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt)) 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
 			{
 				return true;
 			}
