@@ -3,25 +3,25 @@ package com.DocSystem.entity;
 public class DocLock {
 	public static final int LOCK_STATE_NONE 	= 0b00000000;
 	public final static int LOCK_STATE_FORCE 	= 0b00000001;
-	public final static int LOCK_STATE_EDIT 	= 0b00000010;
+	public final static int LOCK_STATE_NORMAL 	= 0b00000010;
 	public final static int LOCK_STATE_COEDIT 	= 0b00000100;
 	public final static int LOCK_STATE_VFORCE 	= 0b00010000;
-	public final static int LOCK_STATE_VEDIT 	= 0b00100000;
+	public final static int LOCK_STATE_VNORMAL 	= 0b00100000;
 	public final static int LOCK_STATE_VCOEDIT 	= 0b01000000;
 	public final static int LOCK_STATE_ALL 		= 0b11111111;
 
-	public static final int LOCK_TYPE_EDIT 		= 1;
+	public static final int LOCK_TYPE_NORMAL 	= 1;
 	public static final int LOCK_TYPE_FORCE 	= 2;
-	public static final int LOCK_TYPE_VEDIT 	= 3;
+	public static final int LOCK_TYPE_VNORMAL 	= 3;
 	public static final int LOCK_TYPE_COEDIT 	= 4;
 	public static final int LOCK_TYPE_VCOEDIT 	= 5;
 	public static final int LOCK_TYPE_VFORCE 	= 6;
 	
 	public static int lockStateMap[] = {
 			DocLock.LOCK_STATE_NONE,
-			DocLock.LOCK_STATE_EDIT,
+			DocLock.LOCK_STATE_NORMAL,
 			DocLock.LOCK_STATE_FORCE,
-			DocLock.LOCK_STATE_VEDIT,
+			DocLock.LOCK_STATE_VNORMAL,
 			DocLock.LOCK_STATE_COEDIT,
 			DocLock.LOCK_STATE_VCOEDIT,	
 			DocLock.LOCK_STATE_VFORCE	
