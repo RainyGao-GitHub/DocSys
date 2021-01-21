@@ -5348,10 +5348,12 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag, ReturnAjax rt) 
 	{	
+		System.out.println("checkDocLocked() repos:" + doc.getVid() + " doc:" + doc.getPath() + doc.getName() + " lockType:" + lockType + " user:" + login_user.getId() + "_" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
 		DocLock docLock = null;
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
+			System.out.println("checkDocLocked() reposDocLocskMap is null");
 			return false;
 		}
 		
@@ -5361,6 +5363,7 @@ public class BaseController  extends BaseFunction{
 		//协同编辑只需要检查当前和父节点是否强制锁定即可
 		if(login_user.getId() == coEditUser.getId())
 		{
+			System.out.println("checkDocLocked() is coEditUser");
 			return (isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || isParentDocForceLocked(doc,login_user,rt));
 		}
 		
