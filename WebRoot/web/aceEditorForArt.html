@@ -151,7 +151,7 @@ function enableEdit()
 		type : "post",
 		dataType : "json",
 		data : {
-			lockType : 3, //LockType: Online Edit
+			lockType : 1, //LockType: Normal Lock
 			reposId : docInfo.vid, 
 			docId : docInfo.docId,
 			path: docInfo.path,
@@ -194,11 +194,11 @@ function exitEdit() {
 	}
 	
 	$.ajax({
-		url : "/DocSystem/Doc/lockDoc.do",
+		url : "/DocSystem/Doc/unlockDoc.do",
 		type : "post",
 		dataType : "json",
 		data : {
-			lockType : 0, //unlock the doc
+			lockType : 1, //unlock the doc
 			reposId : docInfo.vid, 
         	docId : docInfo.docId,
 			path: docInfo.path,

@@ -156,7 +156,7 @@
 				type : "post",
 				dataType : "json",
 				data : {
-					lockType : 3, //LockType: Online Edit
+					lockType : 1, //LockType: Online Edit
 					reposId : docInfo.vid, 
 					docId : docInfo.docId,
 					path: docInfo.path,
@@ -199,11 +199,11 @@
 			}
 			
 			$.ajax({
-				url : "/DocSystem/Doc/lockDoc.do",
+				url : "/DocSystem/Doc/unlockDoc.do",
 				type : "post",
 				dataType : "json",
 				data : {
-					lockType : 0, //unlock the doc
+					lockType : 1, //unlock the doc
 					reposId : docInfo.vid, 
 	            	docId : docInfo.docId,
 					path: docInfo.path,

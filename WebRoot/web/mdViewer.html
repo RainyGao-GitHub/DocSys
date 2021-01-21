@@ -354,7 +354,7 @@ var MdViewer = (function () {
 			type : "post",
 			dataType : "json",
 			data : {
-				lockType : 3, //LockType: Online Edit
+				lockType : 1, //LockType: Online Edit
 				reposId : gReposInfo.id, 
 				docId : docInfo.docId,
 				path: docInfo.path,
@@ -443,11 +443,11 @@ var MdViewer = (function () {
 		}
 		
 		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
+			url : "/DocSystem/Doc/unlockDoc.do",
 			type : "post",
 			dataType : "json",
 			data : {
-				lockType : 0, //unlock the doc
+				lockType : 1, //unlock the doc
 				reposId : gReposInfo.id, 
 				docId : docInfo.docId,
 				path: docInfo.path,
