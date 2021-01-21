@@ -5358,8 +5358,8 @@ public class BaseController  extends BaseFunction{
 		String docLockId = getDocLockId(doc);
 		docLock = reposDocLocskMap.get(docLockId);
 		
-		//协同编辑用户强制锁定：检查当前节点和父节点是否强制锁定即可
-		if(lockType == DocLock.LOCK_TYPE_FORCE && login_user.getId() == coEditUser.getId())
+		//协同编辑只需要检查当前和父节点是否强制锁定即可
+		if(login_user.getId() == coEditUser.getId())
 		{
 			return (isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || isParentDocForceLocked(doc,login_user,rt));
 		}
@@ -5375,7 +5375,6 @@ public class BaseController  extends BaseFunction{
 		{
 		case DocLock.LOCK_TYPE_FORCE:
 		case DocLock.LOCK_TYPE_NORMAL:
-		case DocLock.LOCK_TYPE_COEDIT:
 			//检查其父节点是否强制锁定
 			if(isParentDocLocked(doc,login_user,rt))
 			{
