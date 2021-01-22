@@ -4064,13 +4064,13 @@
 						{text: '查看仓库历史', action: function(e){
 									e.preventDefault();
 									curRightClickedTreeNode = null; 
-				        			showDocHistory(null,0);
+				        			showDocHistory(gRootDoc,0);
 								}
 						},
 						{text: '查看备注历史', action: function(e){
 							e.preventDefault();
 							curRightClickedTreeNode = null; 
-		        			showDocHistory(null, 1);
+		        			showDocHistory(gRootDoc, 1);
 		        			}
 						},
 						{divider: true},
@@ -4371,6 +4371,25 @@
 								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 			        			showDocHistory(parentNode, 1);
 		        			}
+						},
+						{divider: true},
+						{text: '锁定', action: function(e){
+								e.preventDefault();
+								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+								lockDoc(parentNode, 1);
+							}
+						},
+						{text: '解锁', action: function(e){
+								e.preventDefault();
+								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+								unlockDoc(parentNode, 1);
+							}
+						},
+						{text: '强制锁定', action: function(e){
+								e.preventDefault();
+								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+								lockDoc(parentNode, 2);
+							}
 						},
 						//{divider: true},
 						//{text: '强制刷新', action: function(e){
