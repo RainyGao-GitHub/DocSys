@@ -3117,12 +3117,7 @@ public class BaseFunction{
 	}
 	/****************** 线程锁接口 *********************************************/
 	protected static final Object syncLock = new Object(); 
-	//释放线程锁
-	protected void unlock() {
-		unlockSyncLock(syncLock);
-	}
-	
-	protected void unlockSyncLock(Object syncLock) {
+	protected void unlock(Object syncLock) {
 		syncLock.notifyAll();//唤醒等待线程
 		//下面这段代码是因为参考了网上的一个Demo说wait是释放锁，我勒了个区去，留着作纪念
 		//try {
