@@ -125,10 +125,10 @@ var context = context || (function () {
 			y = e.pageY - 20 - $('#dropdown-' + id).height();
 		} else if (typeof options.above == 'string' && options.above == 'auto') {
 			$dd.removeClass('offset');
-			var autoH = $dd.height() + 12;
-			y = e.pageY - 20 - autoH;
-			if ((e.pageY + autoH) > $('html').height()) 
+			var autoH = $dd.height() + 120;
+			if ((e.pageY + autoH) > $('html').height()) //如果从当前鼠标+下拉菜单长度超出页面高度，调整坐标起点
 			{
+				y = e.pageY - 20 - autoH;
 			} 
 			else 
 			{
@@ -149,8 +149,6 @@ var context = context || (function () {
 	
 	function showMenuOffset(id,e,xOffset)
 	{
-		
-		var top = e.pageY;
 		var left = e.pageX + xOffset;
 		
 		$('.dropdown-context:not(.dropdown-context-sub)').hide();
@@ -164,14 +162,14 @@ var context = context || (function () {
 		if (typeof options.above == 'boolean' && options.above) {
 			y = top - 20 - $('#dropdown-' + id).height();
 		} else if (typeof options.above == 'string' && options.above == 'auto') {
-			var autoH = $dd.height() + 12;
-			y = top - 20 - autoH;
-			if ((top + autoH) > $('html').height()) 
+			var autoH = $dd.height() + 120;
+			if ((e.pageY + autoH) > $('html').height())  //如果从当前鼠标+下拉菜单长度超出页面高度，调整坐标起点
 			{
+				y = e.pageY - 20 - autoH;
 			} 
 			else 
 			{
-				y = top + 10;
+				y = e.pageY + 10;
 			}
 		}
 		
