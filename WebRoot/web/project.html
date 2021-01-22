@@ -4073,6 +4073,22 @@
 		        			showDocHistory(null, 1);
 		        			}
 						},
+						{divider: true},
+						{text: '锁定', action: function(e){
+								e.preventDefault();
+								lockDoc(gRootDoc, 1);
+							}
+						},
+						{text: '解锁', action: function(e){
+								e.preventDefault();
+								unlockDoc(gRootDoc, 1);
+							}
+						},
+						{text: '强制锁定', action: function(e){
+								e.preventDefault();
+								lockDoc(gRootDoc, 2);
+							}
+						},
 						//{divider: true},
 						//{text: '强制刷新', action: function(e){
 						//	e.preventDefault();
