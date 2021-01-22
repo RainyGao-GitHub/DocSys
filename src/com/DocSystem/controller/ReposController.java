@@ -225,7 +225,7 @@ public class ReposController extends BaseController{
 		{	
 			long lockTime = nowTimeStamp + 4*60*60*1000;
 			reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false); 
-			unlock();
+			unlock(syncLock);
 		}	
 		
 		if(reposLock == null)
@@ -263,7 +263,7 @@ public class ReposController extends BaseController{
 		synchronized(syncLock)
 		{	
 			unlockRepos(repos, lockType, login_user); 
-			unlock();
+			unlock(syncLock);
 		}
 		writeJson(rt, response);	
 	}
