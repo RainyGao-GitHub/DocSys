@@ -3536,7 +3536,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			boolean subDocCheckFlag = false;
-			int lockDuration = 86400000;
+			int lockDuration = 2*60*60*1000;	//文件编辑可以锁定两个小时
 			if(lockType == DocLock.LOCK_TYPE_FORCE)	//If want to force lock, must check all subDocs not locked
 			{
 				subDocCheckFlag = true;
