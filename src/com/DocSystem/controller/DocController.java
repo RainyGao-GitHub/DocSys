@@ -3547,12 +3547,12 @@ public class DocController extends BaseController{
 			DocLock docLock = lockDoc(doc,lockType,lockDuration,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
 			if(docLock == null)
 			{
-				unlock(); //线程锁
+				unlock(syncLock); //线程锁
 				System.out.println("lockDoc() Failed to lock Doc: " + doc.getName());
 				writeJson(rt, response);
 				return;			
 			}
-			unlock(); //线程锁
+			unlock(syncLock); //线程锁
 		}
 		
 		System.out.println("lockDoc : " + doc.getName() + " success");
@@ -3610,12 +3610,12 @@ public class DocController extends BaseController{
 			//解锁不需要检查子目录的锁定，因为不会影响子目录
 			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
 			{
-				unlock(); //线程锁
+				unlock(syncLock); //线程锁
 				writeJson(rt, response);
 				return;
 			}				
 			unlockDoc(doc, lockType, reposAccess.getAccessUser());
-			unlock(); //线程锁
+			unlock(syncLock); //线程锁
 		}
 		
 		System.out.println("unlockDoc : " + doc.getName() + " success");
@@ -4035,11 +4035,12 @@ public class DocController extends BaseController{
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false);
 			if(docLock == null)
 			{
-				unlock(); //线程锁
+				unlock(syncLock); //线程锁
 				docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
 				writeJson(rt, response);
 				return;
 			}
+			unlock(syncLock);
 		}
 
 		if(isRealDoc)
