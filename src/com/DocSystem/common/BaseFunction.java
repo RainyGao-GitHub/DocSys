@@ -1715,6 +1715,51 @@ public class BaseFunction{
 		
 	}
 	
+	public static boolean saveDataToFile(byte[] buff, String path, String name)
+	{	
+		if(buff == null)
+		{
+			System.out.println("saveDataToFile() buff is null");
+			return false;
+		}
+		
+		File folder = new File(path);
+		if(!folder.exists())
+		{
+			if(folder.mkdirs() == false)
+			{
+				System.out.println("saveDataToFile() mkdir path:" + path + " Failed!");
+				return false;
+			}
+		}
+		
+		boolean ret = false;
+		String filePath = path + name;
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(filePath);
+			out.write(buff, 0, buff.length);
+			ret = true;
+			
+			//关闭输出流
+			out.close();
+			out = null;
+		} catch (Exception e) {
+			System.out.println("saveDataToFile() new FileOutputStream failed");
+			e.printStackTrace();
+		} finally {
+			if(out != null)
+			{
+				try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return ret;
+	}
+	
 	public static String readDocContentFromFile(String path, String name, boolean encodeDetectEnable) 
 	{	
 		String filePath = path + name;
