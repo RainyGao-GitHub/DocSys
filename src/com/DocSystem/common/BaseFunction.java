@@ -2499,6 +2499,12 @@ public class BaseFunction{
     	return suffix.toLowerCase();
     }
     
+    public static String getOrgFileSuffix(String filePath)
+    {
+    	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
+    	return suffix;
+    }
+    
 	public static boolean isOfficeFile(String name) 
 	{
 		String fileSuffix = getFileSuffix(name);
