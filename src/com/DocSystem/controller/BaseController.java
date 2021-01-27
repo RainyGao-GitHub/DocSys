@@ -1623,7 +1623,7 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 	
-	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request, boolean deleteEnable) throws Exception 
+	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request, boolean deleteEnable, String disposition) throws Exception 
 	{
 		File localEntry = new File(localParentPath,targetName);
 		if(false == localEntry.exists())
@@ -1645,7 +1645,7 @@ public class BaseController  extends BaseFunction{
 				return;
 			}
 			
-			sendFileToWebPage(tmpDir,zipFileName,rt,response, request); 
+			sendFileToWebPage(tmpDir,zipFileName,rt,response, request, disposition); 
 			
 			//Delete zip file
 			delFile(tmpDir+zipFileName);
@@ -1653,7 +1653,7 @@ public class BaseController  extends BaseFunction{
 		else	//for File
 		{
 			//Send the file to webPage
-			sendFileToWebPage(localParentPath,targetName,rt, response, request); 			
+			sendFileToWebPage(localParentPath,targetName,rt, response, request, disposition); 			
 		}
 		
 		if(deleteEnable)
@@ -1663,7 +1663,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	protected void sendFileToWebPage(String localParentPath, String file_name,  ReturnAjax rt,HttpServletResponse response,HttpServletRequest request) throws Exception{
+	protected void sendFileToWebPage(String localParentPath, String file_name,  ReturnAjax rt,HttpServletResponse response,HttpServletRequest request, String disposition) throws Exception{
 		
 		String dstPath = localParentPath + file_name;
 
@@ -1694,8 +1694,14 @@ public class BaseController  extends BaseFunction{
 		file_name = file_name.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
 		System.out.println("sendFileToWebPage() file_name:" + file_name);
 		
-		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
-
+		if(disposition == null || disposition.isEmpty())
+		{
+			response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+		}
+		else
+		{
+			response.setHeader("content-disposition", disposition + ";filename=\"" + file_name +"\"");			
+		}
 		//读取要下载的文件，保存到文件输入流
 		FileInputStream in = null;
 		//创建输出流
