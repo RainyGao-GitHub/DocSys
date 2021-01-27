@@ -1750,7 +1750,7 @@ public class DocController extends BaseController{
 	
 		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
-		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
 		
 		if(deleteFlag != null && deleteFlag == 1)
 		{
@@ -1761,6 +1761,7 @@ public class DocController extends BaseController{
 	@RequestMapping(value="/downloadDoc/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
+			String disposition,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("\n************** downloadDoc ****************");
@@ -1824,7 +1825,7 @@ public class DocController extends BaseController{
 		}
 	
 		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
-		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, disposition);
 	}
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
@@ -2257,7 +2258,7 @@ public class DocController extends BaseController{
 			localParentPath = userTmpDir + path;
 		}
 		
-		sendFileToWebPage(localParentPath,fileName,rt, response, request); 
+		sendFileToWebPage(localParentPath,fileName,rt, response, request, null); 
 	}
 
 	@RequestMapping("/getZipDocOfficeLink.do")
