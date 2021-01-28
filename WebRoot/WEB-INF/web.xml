@@ -55,6 +55,7 @@
 	<url-pattern>*.gif</url-pattern>
 	<url-pattern>*.js</url-pattern>
 	<url-pattern>*.html</url-pattern>
+	<url-pattern>*.htm</url-pattern>
 	<url-pattern>*.template</url-pattern>
 	<url-pattern>*.json</url-pattern>
 	<url-pattern>*.ttf</url-pattern>
