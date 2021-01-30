@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -9680,25 +9682,52 @@ public class BaseController  extends BaseFunction{
         try {
         	Process ps = rt.exec(command, envp, dir);
             
-        	//printout the command line
-        	InputStream is = ps.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while((line = reader.readLine()) != null) {
-            	result += line;
-            	System.out.println(line);
-            }
-            ps.waitFor();
-            is.close();
-            reader.close();
-            ps.destroy();
-        } catch (Exception var8) {
-            var8.printStackTrace();
+        	result = readProcessOutput(ps);
+
+        	int exitCode = ps.waitFor();    	
+        	if(exitCode == 0)
+        	{
+        		System.out.println("执行成功！");
+        	}
+        	else
+        	{
+        		System.out.println("执行失败:" + exitCode);   
+        		System.out.println("错误日志:" + result);   
+            		
+        	}
+        	ps.destroy();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return result;
     }
     
     
+
+	private static String readProcessOutput(Process ps) throws IOException {
+		// TODO Auto-generated method stub
+		String result = read(ps.getInputStream(), System.out);
+		if(result == null)
+		{
+			result = "";
+		}
+		
+		result += read(ps.getErrorStream(), System.err);
+		return result;
+	}
+
+	private static String read(InputStream inputStream, PrintStream out) throws IOException {
+		String result = "";
+		//printout the command line
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        while((line = reader.readLine()) != null) {
+        	result += line;
+        	out.println(line);
+        }
+        return result;
+	}
 
 	/****************************DocSys其他接口 *********************************/
 	protected Integer getMaxFileSize() {
