@@ -235,7 +235,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-    public static Integer addChangesIndex(Integer startIndex, JSONArray changes, int offset, String indexLib)
+    public static Integer addChangesIndex(Integer startIndex, ArrayList<JSONObject> arrNewDocumentChanges, int offset, String indexLib)
     {	
     	System.out.println("addChangeIndex() startIndex:" + startIndex + " indexLib:"+indexLib);    	
     	
@@ -252,9 +252,9 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        indexWriter = new IndexWriter(directory, config);
 	
-	        for(int i=offset; i< changes.size(); i++)
+	        for(int i=offset; i< arrNewDocumentChanges.size(); i++)
 	        {
-	        	JSONObject docChange = (JSONObject) changes.get(i);
+	        	JSONObject docChange = arrNewDocumentChanges.get(i);
 		        Document document = buildDocumentForChange(startIndex + count, docChange);
 		        count++;
 		        indexWriter.addDocument(document);	        
