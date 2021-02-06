@@ -2069,6 +2069,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//底层addDoc接口
+	//uploadFile: null为新建文件，否则为文件上传（新增）
 	protected boolean addDoc(Repos repos, Doc doc, 
 			MultipartFile uploadFile, //For upload
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
@@ -2112,8 +2113,8 @@ public class BaseController  extends BaseFunction{
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
 			if(docLock == null)
 			{
-				unlock(syncLock); //线程锁
-				System.out.println("addDoc() lockDoc " + doc.getName() + " Failed!");
+				unlock(syncLock);
+				System.out.println("addDoc_FSM() lockDoc " + doc.getName() + " Failed!");
 				return false;
 			}
 		}
@@ -2124,9 +2125,10 @@ public class BaseController  extends BaseFunction{
 		if(localEntry.exists())
 		{	
 			unlockDoc(doc, lockType, login_user);
-			docSysDebugLog("addDoc() " +localDocPath + "　已存在！", rt);
+			docSysDebugLog("addDoc_FSM() " +localDocPath + "　已存在！", rt);
 		}
 		
+		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
 		if(uploadFile == null)
 		{	
 			//File must not exists
@@ -2135,7 +2137,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				String MsgInfo = "createRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
-				System.out.println("createRealDoc Failed");
+				System.out.println("addDoc_FSM() createRealDoc Failed");
 				return false;
 			}
 		}
@@ -2146,7 +2148,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
-				System.out.println("updateRealDoc Failed");
+				System.out.println("addDoc_FSM() updateRealDoc Failed");
 				return false;
 			}
 		}
@@ -2315,11 +2317,11 @@ public class BaseController  extends BaseFunction{
 			docLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 				docSysDebugLog("deleteDoc_FSM() Failed to lock Doc: " + docId, rt);
 				return null;			
 			}
-			unlock(syncLock); //线程锁
+			unlock(syncLock); 
 		}
 		System.out.println("deleteDoc_FSM() " + docId + " " + doc.getName() + " Lock OK");
 		
@@ -3086,12 +3088,12 @@ public class BaseController  extends BaseFunction{
 			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
 			if(docLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 				docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
 				System.out.println("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 				return false;
 			}
-			unlock(syncLock); //线程锁
+			unlock(syncLock); 
 		}
 		
 		List<CommitAction> commitActionList = new ArrayList<CommitAction>();
@@ -3170,11 +3172,11 @@ public class BaseController  extends BaseFunction{
 				docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
 				if(docLock == null)
 				{
-					unlock(syncLock); //线程锁
+					unlock(syncLock); 
 					docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
 					return false;
 				}
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 			}
 			boolean ret = syncUpForRemoteChange_NoFS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
 			unlockDoc(doc, lockType, login_user);
@@ -4828,12 +4830,12 @@ public class BaseController  extends BaseFunction{
 			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 	
 				System.out.println("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
 				return false;
 			}
-			unlock(syncLock); //线程锁
+			unlock(syncLock); 
 		}
 
 		//get RealDoc Full ParentPath
@@ -4921,7 +4923,7 @@ public class BaseController  extends BaseFunction{
 			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(srcDocLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 		
 				docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
 				return false;
@@ -4930,13 +4932,13 @@ public class BaseController  extends BaseFunction{
 			dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(dstDocLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 				docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
 				unlockDoc(srcDoc, lockType, login_user);
 				return false;
 			}
 			
-			unlock(syncLock); //线程锁
+			unlock(syncLock); 
 		}
 		
 		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
@@ -5010,7 +5012,7 @@ public class BaseController  extends BaseFunction{
 			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(srcDocLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 		
 				System.out.println("copyDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed");
 				return false;
@@ -5019,7 +5021,7 @@ public class BaseController  extends BaseFunction{
 			dstDocLock = lockDoc(dstDoc,1, 2*60*60*1000,login_user,rt,true);
 			if(dstDocLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 				System.out.println("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");
 				
 				unlockDoc(srcDoc, lockType, login_user);
@@ -5027,7 +5029,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
-			unlock(syncLock); //线程锁
+			unlock(syncLock); 
 		}
 						
 		//复制文件或目录
@@ -5079,12 +5081,12 @@ public class BaseController  extends BaseFunction{
 			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
 			if(docLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 	
 				System.out.println("updateRealDocContent() lockDoc Failed");
 				return false;
 			}
-			unlock(syncLock); //线程锁
+			unlock(syncLock); 
 		}
 		
 		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
@@ -5149,12 +5151,12 @@ public class BaseController  extends BaseFunction{
 			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
 			if(docLock == null)
 			{
-				unlock(syncLock); //线程锁
+				unlock(syncLock); 
 	
 				System.out.println("updateVirualDocContent() lockDoc Failed");
 				return false;
 			}
-			unlock(syncLock); //线程锁
+			unlock(syncLock); 
 		}
 		
 		boolean ret = updateVirualDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
@@ -6594,6 +6596,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	//Function: updateRealDoc
+	//Pramams:
+	//chunkNum: null:非分片上传(直接用uploadFile存为文件)  1: 单文件或单分片文件  >1:多分片文件（需要进行合并）
 	protected boolean updateRealDoc(Repos repos, Doc doc, MultipartFile uploadFile, Integer chunkNum, Long chunkSize, String chunkParentPath, ReturnAjax rt) 
 	{
 		String parentPath = doc.getPath();
