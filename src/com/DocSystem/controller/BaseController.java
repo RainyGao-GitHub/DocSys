@@ -8917,40 +8917,43 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
+		//注意：版本越旧需要更新的数据库版本越多
+		//下面的代码实际上也是表面从旧版本到该版本哪些数据库结构发生过变化
 		List<Integer> dbTabList = new ArrayList<Integer>();
 		if(oldVersion > newVersion) //系统降级（无法确定修改的表结构，因此需要更新所有表结构）
 		{
-			dbTabList.add(DOCSYS_REPOS);
-			dbTabList.add(DOCSYS_REPOS_AUTH);
-			dbTabList.add(DOCSYS_DOC);
-			dbTabList.add(DOCSYS_DOC_AUTH);			
-			dbTabList.add(DOCSYS_DOC_LOCK);
 			dbTabList.add(DOCSYS_USER);
 			dbTabList.add(DOCSYS_ROLE);
 			dbTabList.add(DOCSYS_USER_GROUP);	
 			dbTabList.add(DOCSYS_GROUP_MEMBER);	
 			dbTabList.add(DOCSYS_SYS_CONFIG);
 			dbTabList.add(DOCSYS_DOC_SHARE);
-		}
-		else if(oldVersion < 20000) //2.00.00版本以下升级到该版本需要更新所有数据库表
-		{
 			dbTabList.add(DOCSYS_REPOS);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
+		}
+		else if(oldVersion < 20000) //2.00.00版本以下升级到该版本需要更新所有数据库表
+		{
 			dbTabList.add(DOCSYS_USER);
 			dbTabList.add(DOCSYS_ROLE);
 			dbTabList.add(DOCSYS_USER_GROUP);	
 			dbTabList.add(DOCSYS_GROUP_MEMBER);	
 			dbTabList.add(DOCSYS_SYS_CONFIG);
 			dbTabList.add(DOCSYS_DOC_SHARE);			
+			dbTabList.add(DOCSYS_REPOS);
+			dbTabList.add(DOCSYS_REPOS_AUTH);
+			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_DOC_AUTH);			
+			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
 		else if(oldVersion < 20120)
 		{
 			dbTabList.add(DOCSYS_DOC_SHARE);
 			dbTabList.add(DOCSYS_REPOS);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
+			dbTabList.add(DOCSYS_DOC);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
@@ -8958,10 +8961,11 @@ public class BaseController  extends BaseFunction{
 		{
 			dbTabList.add(DOCSYS_REPOS);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
+			dbTabList.add(DOCSYS_DOC);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
-		else if(oldVersion < 20181)
+		else if(oldVersion < 20181)	
 		{
 			//update DB for Doc Name and Path Expand
 			dbTabList.add(DOCSYS_DOC);
