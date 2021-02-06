@@ -7965,6 +7965,7 @@ public class BaseController  extends BaseFunction{
 		//ReadProperties.setValue(userJDBCSettingPath, "db.driver", "com.mysql.cj.jdbc.Driver");
 	}
 
+	//目前方案暂时不用自动创建管理员用户，但请勿删除
 	private static boolean checkAndAddFirstUser() {
 		//获取用户列表
 		List<Object> list = dbQuery(null, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS);
