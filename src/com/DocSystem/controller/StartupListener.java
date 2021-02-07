@@ -46,7 +46,7 @@ public class StartupListener  extends BaseController implements ApplicationConte
 		log.info(">>>>>>>>>>>>系统启动完成，onApplicationEvent()<<<<<<<<<<<<");
 		System.out.println(">>>>>>>>>>>>系统启动完成，onApplicationEvent()<<<<<<<<<<<<");
 		
-		System.out.println("docSysInit() Start docSysInitState:" + docSysIniState);
+		System.out.println("onApplicationEvent() docSysInit Start docSysInitState:" + docSysIniState);
 		String ret = docSysInit(false);
 		switch(ret)
 		{
@@ -60,7 +60,7 @@ public class StartupListener  extends BaseController implements ApplicationConte
 			docSysIniState = -1;
 			break;
 		}
-		System.out.println("docSysInit() End docSysInitState:" + docSysIniState);
+		System.out.println("onApplicationEvent() docSysInit() End docSysInitState:" + docSysIniState);
 		
 		if(docSysIniState != 0)
 		{
