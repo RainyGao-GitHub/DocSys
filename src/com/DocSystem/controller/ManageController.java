@@ -51,7 +51,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/docSysInit.do")
 	public void docSysInit(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("docSysInit()");
+		System.out.println("/n****************** docSysInit.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -59,8 +59,10 @@ public class ManageController extends BaseController{
 			return;
 		}
 
+		System.out.println("docSysInit.do docSysInit() Start docSysInitState:" + docSysIniState);
 		if(docSysIniState == 1)
 		{
+			System.out.println("docSysInit.do 用户自定义数据库配置文件与系统数据库配置文件不一致，等待重启生效！");
 			rt.setData("needRestart");
 			writeJson(rt, response);
 			return;
@@ -80,6 +82,9 @@ public class ManageController extends BaseController{
 			docSysErrorLog(ret, rt);
 			break;
 		}
+		
+		System.out.println("docSysInit.do docSysInit() End docSysInitState:" + docSysIniState);
+		
 		rt.setData(ret);
 		writeJson(rt, response);
 	}
