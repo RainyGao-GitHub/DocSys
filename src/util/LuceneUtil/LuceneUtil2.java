@@ -138,9 +138,9 @@ public class LuceneUtil2   extends BaseFunction
 		return docChange;
 	}
 	
-	public static JSONArray getDocumentChanges(String dockey, Integer startIndex, Integer endIndex, String indexLib)
+	public static ArrayList<JSONObject> getDocumentChanges(String dockey, Integer startIndex, Integer endIndex, String indexLib)
 	{
-		JSONArray changes = new JSONArray();
+		ArrayList<JSONObject> changes = new ArrayList<JSONObject>();
 		//查询startIndex 到 endIndex的所有changes
 		Directory directory = null;
     	DirectoryReader ireader = null;

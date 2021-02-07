@@ -7830,17 +7830,23 @@ public class BaseController  extends BaseFunction{
 	
 	protected static String docSysInit(boolean force) 
 	{	
+		System.out.println("\n*************** docSysInit force:" + force + " *****************");
 		if(docSysWebPath == null)
 		{
 			docSysWebPath = getWebPath();
 			docSysIniPath = docSysWebPath + "../docSys.ini/";
 		}
+		System.out.println("docSysInit() docSysIniPath:" + docSysIniPath);
+
 		if(officeEditorApi == null)
 		{
 			officeEditorApi = getOfficeEditorApi();
 		}
+		System.out.println("docSysInit() officeEditorApi:" + officeEditorApi);
+		
 		
 		serverIP = getIpAddress();
+		System.out.println("docSysInit() serverIP:" + serverIP);
 		
 		//Update the value of DB_URL/DB_USER/DB_PASS
 		String JDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
@@ -7877,9 +7883,11 @@ public class BaseController  extends BaseFunction{
 		}
 				
 		getAndSetDBInfoFromFile(JDBCSettingPath);
-		
+		System.out.println("docSysInit() DB_TYPE:" + DB_TYPE + " DB_URL:" + DB_URL);
+				
 		//Get dbName from the DB URL
 		String dbName = getDBNameFromUrl(DB_TYPE, DB_URL);
+		System.out.println("docSysInit() dbName:" + dbName);
 		
 		File docSysIniDir = new File(docSysIniPath);
 		if(docSysIniDir.exists() == false)
@@ -7893,34 +7901,43 @@ public class BaseController  extends BaseFunction{
 			System.out.println("docSysInit() initObjMemberListMap Faield!");
 			return "ERROR_initObjMemberListMapFailed";			
 		}
-		
+		System.out.println("docSysInit() initObjMemberListMap done!");
+				
 		//测试数据库连接
 		if(testDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
+			System.out.println("docSysInit() testDB failed force:" + force);
 			if(force == false)
 			{
+				System.out.println("docSysInit() testDB failed (SytemtStart triggered docSysInit)");
 				//系统启动时的初始化force要设置成false,否则数据库初始化时间过长会导致服务器重启
 				System.out.println("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");				
 				return "ERROR_DBNotExists";
 			}
 			else
 			{
+				System.out.println("docSysInit() testDB failed (User triggered docSysInit)");
+				
 				//自动创建数据库
 				createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
+				System.out.println("docSysInit() createDB done");
+
 				if(initDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
 				{
 					System.out.println("docSysInit() initDB failed");
 					return "ERROR_intiDBFailed";
 				}
-				System.out.println("docSysInit() initDB success");
+				System.out.println("docSysInit() initDB done");
 								
 				//更新版本号
 				copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
+				System.out.println("docSysInit() updateVersion done");
 				return "ok";
 			}
 		}
 		
 		//数据库已存在
+		System.out.println("docSysInit() checkAndUpdateDB start");
 		return checkAndUpdateDB(true);
 	}
 	
@@ -8016,11 +8033,14 @@ public class BaseController  extends BaseFunction{
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
 		if(DBUpgrade(oldVersion, newVersion, DB_TYPE, DB_URL, DB_USER, DB_PASS, skipDocTab) == false)
 		{
+			System.out.println("checkAndUpdateDB() DBUpgrade failed!");					
 			return "ERROR_DBUpgradeFailed";
 		}
+		System.out.println("checkAndUpdateDB() DBUpgrade done!");					
 		
 		//更新版本号，避免重复升级数据库
 		copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
+		System.out.println("checkAndUpdateDB() updateVersion done!");					
 		return "ok";
 	}
 	
