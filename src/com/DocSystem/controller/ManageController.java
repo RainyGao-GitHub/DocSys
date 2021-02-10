@@ -1026,6 +1026,12 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
+		
+		if(checkSystemUsersCount(rt) == false)
+		{
+			writeJson(rt, response);	
+			return;			
+		}
 				
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
@@ -1057,7 +1063,7 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 		return;
 	}
-	
+
 	@RequestMapping(value="editUser")
 	public void editUser(User user, HttpSession session,HttpServletResponse response)
 	{

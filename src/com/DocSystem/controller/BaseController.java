@@ -61,6 +61,7 @@ import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.DocChange.DocChangeType;
+import com.DocSystem.common.License;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
@@ -97,11 +98,15 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	private EmailService emailService;
 	
+    //系统License
+    public static License systemLicenseInfo = null;
+    
 	//系统默认用户
     protected static User coEditUser = new User();
     protected static User autoSyncUser = new User();
     static {
     	initSystemUsers();
+    	initSystemLicenseInfo();
     }
 	private static void initSystemUsers() {
 		//自动同步用户
@@ -113,6 +118,39 @@ public class BaseController  extends BaseFunction{
 		coEditUser.setName("CoEditUser");		
 	}
 	
+	private static void initSystemLicenseInfo() {
+		System.out.println("initSystemLicenseInfo() ");
+		//Default systemLicenseInfo
+		systemLicenseInfo = new License();
+		systemLicenseInfo.type = 0;	//0: 开源版（默认） 1:商业版
+		systemLicenseInfo.usersCount = 50;	//开源版默认50人
+		systemLicenseInfo.expireTime = null; //长期有效
+		systemLicenseInfo.hasLicense = false;
+	}
+	
+	protected boolean checkSystemUsersCount(ReturnAjax rt) {
+		if(systemLicenseInfo.usersCount != null)
+		{
+			List<User> userList = userService.geAllUsers();
+			if(userList.size() > systemLicenseInfo.usersCount)
+			{
+				System.out.println("checkSystemUsersCount() 用户数量已达到上限，请购买商业授权证书！");
+				if(systemLicenseInfo.expireTime != null)
+				{
+					long curTime = new Date().getTime();
+					if(curTime > systemLicenseInfo.expireTime)
+					{
+						rt.setError("证书已到期，请购买商业授权证书！");
+					}
+				}
+				
+				rt.setError("用户数量已达到上限，请购买商业授权证书！");
+				return false;
+			}
+		}
+		return true;
+	}
+
 	protected static User buildAdminUser() {
 		User user = new User();
 		user.setName("Admin");
