@@ -187,6 +187,12 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
+		
+		if(checkSystemUsersCount(rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
 
 		User user = new User();
 		user.setName(userName);
