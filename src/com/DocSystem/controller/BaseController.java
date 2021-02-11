@@ -98,14 +98,20 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	private EmailService emailService;
 	
+	//应用路径
+    protected static String docSysIniPath = null;
+    protected static String docSysWebPath = null;
+    
     //系统License
     public static License systemLicenseInfo = null;
     
 	//系统默认用户
     protected static User coEditUser = new User();
     protected static User autoSyncUser = new User();
-    static {
-    	initSystemUsers();
+    static {		
+    	docSysWebPath = getWebPath();
+		docSysIniPath = docSysWebPath + "../docSys.ini/";
+		initSystemUsers();
     	initSystemLicenseInfo();
     }
 	private static void initSystemUsers() {
@@ -7778,8 +7784,6 @@ public class BaseController  extends BaseFunction{
     static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
     static String DB_USER = "root";
     static String DB_PASS = "";
-    protected static String docSysIniPath = null;
-    protected static String docSysWebPath = null;
     protected static String officeEditorApi = null;
     protected static String serverIP = null;
     
@@ -7869,11 +7873,6 @@ public class BaseController  extends BaseFunction{
 	protected static String docSysInit(boolean force) 
 	{	
 		System.out.println("\n*************** docSysInit force:" + force + " *****************");
-		if(docSysWebPath == null)
-		{
-			docSysWebPath = getWebPath();
-			docSysIniPath = docSysWebPath + "../docSys.ini/";
-		}
 		System.out.println("docSysInit() docSysIniPath:" + docSysIniPath);
 
 		if(officeEditorApi == null)
