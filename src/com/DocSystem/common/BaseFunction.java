@@ -68,6 +68,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.DocData;
 import com.alibaba.fastjson.JSON;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
@@ -78,10 +79,19 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 
 @SuppressWarnings("rawtypes")
 public class BaseFunction{	
-	protected String ROWS_PER_PAGE;// 每页显示的记录数
-	protected String curPage;// 当前第几页
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
+
+	public class OS {
+		public final static int UNKOWN = 0;		
+		public final static int Windows = 1;
+		public final static int Linux = 2;
+		public final static int MacOS = 3;
+	};
+	public static int OSType = OS.UNKOWN; //
+    static {
+    	initOSType();
+    }
 
 	/******************************** 获取服务器、访问者IP地址 *************************************/
 	protected static String getIpAddress() {
@@ -96,6 +106,26 @@ public class BaseFunction{
 		return IP;
 	}
 	
+	private static int initOSType() {
+		String OSName = System.getProperty("os.name"); 
+		System.out.println("OSName:"+ OSName);
+		String os = OSName.toLowerCase();
+		OSType = OS.UNKOWN;
+		if(os.startsWith("win"))
+		{
+			OSType = OS.Windows;
+		}
+		else if(os.startsWith("linux"))
+		{
+			OSType = OS.Linux;
+		}
+		else if(os.startsWith("mac"))
+		{
+			OSType = OS.MacOS;
+		}
+		return OSType;
+	}
+
 	protected String getIpAddress(HttpServletRequest request) {
 		String ip = request.getHeader("x-forwarded-for");
 		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
@@ -542,26 +572,19 @@ public class BaseFunction{
         	return localDirPathFormat(path);
         }
 
-        String osName = System.getProperty("os.name");
-        if (Pattern.matches("Linux.*", osName)) 
+        switch(OSType)
         {
+        case OS.Linux:
         	path = "/var/lib/tomcat7/";
-            return path;
-        } 
-        
-        if (Pattern.matches("Windows.*", osName)) 
-        {
+        	break;
+        case OS.Windows:
         	path = "C:/xampp/tomcat/";
-            return path;
-        } 
-        
-        if (Pattern.matches("Mac.*", osName)) 
-        {
+            break;
+        case OS.MacOS:
         	path = "/Library/tomcat/";
-            return path;
+            break;
         }
-        
-        return null;
+        return path;
     }
 	
 	//获取OpenOffice的安装路径
@@ -574,28 +597,19 @@ public class BaseFunction{
         	return localDirPathFormat(path);
         }
 
-        String osName = System.getProperty("os.name");
-        //System.out.println("操作系统名称:" + osName);
-        
-        if (Pattern.matches("Linux.*", osName)) 
+        switch(OSType)
         {
+        case OS.Linux: 
         	path = "/opt/openoffice.org4/";
-            return path;
-        } 
-        
-        if (Pattern.matches("Windows.*", osName)) 
-        {
+        	break;
+        case OS.Windows:
         	path = "C:/Program Files (x86)/OpenOffice 4/";
-            return path;
-        } 
-        
-        if (Pattern.matches("Mac.*", osName)) 
-        {
+        	break;
+        case OS.MacOS:
         	path = "/Applications/OpenOffice.org.app/Contents/";
-            return path;
+        	break;
         }
-        
-        return null;
+        return path;
     }
     
 	//获取OfficeEditorApi的配置
@@ -3187,9 +3201,7 @@ public class BaseFunction{
 	}
 
 	protected static boolean isWinOS() {
-		String os = System.getProperty("os.name"); 
-		System.out.println("OS:"+ os);  
-		if(os.toLowerCase().startsWith("win")){
+		if(OSType == OS.Windows){
 			return true;
 		}
 		return false;
