@@ -9682,8 +9682,7 @@ public class BaseController  extends BaseFunction{
         String javaHomePathForReplace = javaHome.substring(0,javaHome.length()-1).replace("/", File.separator);
     	
     	String scriptName = "tomcat_stop.sh";
-    	String os = System.getProperty("os.name");
-        if (os.startsWith("Windows")) {
+        if (isWinOS()) {
         	scriptName = "tomcat_stop.bat";
         }
 
@@ -9712,8 +9711,7 @@ public class BaseController  extends BaseFunction{
         String javaHomePathForReplace = javaHome.substring(0,javaHome.length()-1).replace("/", File.separator);
     	
     	String scriptName = "tomcat_start.sh";
-    	String os = System.getProperty("os.name");
-        if (os.startsWith("Windows")) {
+    	if (isWinOS()) {
         	scriptName = "tomcat_start.bat";
         }
 
@@ -9730,9 +9728,8 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected static String buildScriptRunCmd(String shellScriptPath) {
-        String os = System.getProperty("os.name");
         String cmd = null;
-        if (os.startsWith("Windows")) {
+        if (isWinOS()) {
         	cmd = "cmd /c " + shellScriptPath;
         }
         else
