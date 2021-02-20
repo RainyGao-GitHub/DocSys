@@ -79,6 +79,10 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 
 @SuppressWarnings("rawtypes")
 public class BaseFunction{	
+	//应用路径
+    protected static String docSysIniPath = null;
+    protected static String docSysWebPath = null;
+	
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
 
@@ -88,11 +92,14 @@ public class BaseFunction{
 		public final static int Linux = 2;
 		public final static int MacOS = 3;
 	};
+	
 	public static int OSType = OS.UNKOWN; //
     static {
+    	docSysWebPath = getWebPath();
+		docSysIniPath = docSysWebPath + "../docSys.ini/";    
     	initOSType();
     }
-
+    
 	/******************************** 获取服务器、访问者IP地址 *************************************/
 	protected static String getIpAddress() {
 		String IP = null;
@@ -863,10 +870,7 @@ public class BaseFunction{
 	
 	//WebTmpPath was accessable for web
 	protected String getWebUserTmpPath(User login_user) {
-        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        
-        String webUserTmpPath =  wac.getServletContext().getRealPath("/") +  "tmp/" + login_user.getId() + "/";
-        webUserTmpPath = localDirPathFormat(webUserTmpPath);
+        String webUserTmpPath =  docSysWebPath +  "tmp/" + login_user.getId() + "/";
         System.out.println("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
 		return webUserTmpPath;
 	}
@@ -883,7 +887,6 @@ public class BaseFunction{
 	//WebPath was 
 	public static String getWebPath() {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        
         String webPath =  wac.getServletContext().getRealPath("/");
         webPath = localDirPathFormat(webPath);
         System.out.println("getWebPath() webPath:" + webPath);
@@ -892,29 +895,20 @@ public class BaseFunction{
 	
 	//WebTmpPath was 
 	protected String getWebUploadPath() {
-		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-	        
-	    String webTmpPath =  wac.getServletContext().getRealPath("/") +  "uploads/";
-	    webTmpPath = localDirPathFormat(webTmpPath);
+		String webTmpPath =  docSysWebPath +  "uploads/";
 	    System.out.println("getWebUploadPath() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
 	
 	//WebTmpPath was 
 	protected String getWebTmpPath() {
-        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        
-        String webTmpPath =  wac.getServletContext().getRealPath("/") +  "tmp/";
-        webTmpPath = localDirPathFormat(webTmpPath);
+        String webTmpPath =  docSysWebPath +  "tmp/";
         System.out.println("getWebTmpPath() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
 	
 	protected String getWebTmpPathForPreview() {
-        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        
-        String webTmpPath =  wac.getServletContext().getRealPath("/") +  "tmp/preview/";
-        webTmpPath = localDirPathFormat(webTmpPath);
+        String webTmpPath =  docSysWebPath +  "tmp/preview/";
         System.out.println("getWebTmpPathForPreview() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
