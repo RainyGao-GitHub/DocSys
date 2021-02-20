@@ -167,36 +167,6 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	
-	
-	private boolean mamageAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
-		if(authCode != null)
-		{
-			if(checkAuthCode(authCode,"docSysInit") == true)
-			{
-				return true;
-			}
-			docSysErrorLog("无效授权码或授权码已过期！", rt);
-			return false;
-		}
-		else
-		{
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				docSysErrorLog("用户未登录，请先登录！", rt);
-				return false;
-			}
-				
-			if(login_user.getType() < 1)
-			{
-				docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-				return false;
-			}
-			return true;
-		}
-	}
-
 	/********** 设置系统邮件配置 ***************/
 	@RequestMapping("/setSystemEmailConfig.do")
 	public void setSystemEmailConfig(String authCode,String host, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
