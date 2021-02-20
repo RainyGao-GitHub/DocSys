@@ -97,10 +97,6 @@ public class BaseController  extends BaseFunction{
 	private SmsService smsService;
 	@Autowired
 	private EmailService emailService;
-	
-	//应用路径
-    protected static String docSysIniPath = null;
-    protected static String docSysWebPath = null;
     
     //系统License
     public static License systemLicenseInfo = null;
@@ -109,8 +105,6 @@ public class BaseController  extends BaseFunction{
     protected static User coEditUser = new User();
     protected static User autoSyncUser = new User();
     static {		
-    	docSysWebPath = getWebPath();
-		docSysIniPath = docSysWebPath + "../docSys.ini/";
 		initSystemUsers();
     	initSystemLicenseInfo();
     }
@@ -129,7 +123,7 @@ public class BaseController  extends BaseFunction{
 		//Default systemLicenseInfo
 		systemLicenseInfo = new License();
 		systemLicenseInfo.type = 0;	//0: 开源版（默认） 1:商业版
-		systemLicenseInfo.usersCount = 50;	//开源版默认50人
+		systemLicenseInfo.usersCount = null;	//无限制
 		systemLicenseInfo.expireTime = null; //长期有效
 		systemLicenseInfo.hasLicense = false;
 	}
@@ -221,6 +215,35 @@ public class BaseController  extends BaseFunction{
 		//update the remainCount
 		authCode.setRemainCount(remainCount-1);				
 		return true;
+	}
+	
+	/****************************** DocSys manage 页面权限检查接口  **********************************************/
+	protected boolean mamageAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode,"docSysInit") == true)
+			{
+				return true;
+			}
+			docSysErrorLog("无效授权码或授权码已过期！", rt);
+			return false;
+		}
+		else
+		{
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				docSysErrorLog("用户未登录，请先登录！", rt);
+				return false;
+			}
+				
+			if(login_user.getType() < 1)
+			{
+				docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+				return false;
+			}
+			return true;
+		}
 	}
 	
 	/****************************** DocSys 文件访问密码接口 **********************************************/
@@ -1635,7 +1658,7 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
-	Doc buildDownloadDocInfo(String path, String name, String targetPath, String targetName)
+	protected Doc buildDownloadDocInfo(String path, String name, String targetPath, String targetName)
 	{
 		System.out.println("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
 		String encPath = base64EncodeURLSafe(path);
@@ -7816,8 +7839,8 @@ public class BaseController  extends BaseFunction{
 	static JSONArray[] ObjMemberListMap = {null,null,null,null,null,null,null,null,null,null,null};
 	
 	//index.jsp页面将根据该标志来确定	跳转到install还是index.html
-	static Integer docSysIniState = -1;
-	static String docSysInitAuthCode = null;
+	protected static Integer docSysIniState = -1;
+	protected static String docSysInitAuthCode = null;
 	
 	public static Integer getDocSysInitState()
 	{
