@@ -405,7 +405,7 @@ public class BaseController  extends BaseFunction{
 		return doc.getLevel() + 1;
 	}
 
-	private Integer getParentDocLevel(Doc doc) {
+	protected Integer getParentDocLevel(Doc doc) {
 		if(doc.getLevel() == null)
 		{
 			doc.setLevel(getLevelByParentPath(doc.getPath()));
@@ -573,7 +573,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) 
+	protected HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) 
 	{
 		System.out.println("getIndexHashMap() path:" + path); 
 		List<Doc> docList = null;
@@ -8043,7 +8043,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//目前方案暂时不用自动创建管理员用户，但请勿删除
-	private static boolean checkAndAddFirstUser() {
+	protected static boolean checkAndAddFirstUser() {
 		//获取用户列表
 		List<Object> list = dbQuery(null, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS);
 		if(list == null) //数据库异常
@@ -8714,7 +8714,7 @@ public class BaseController  extends BaseFunction{
 		return exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, type, url, user, pwd);
 	}
 
-	private static boolean createDBTab(String tabName, String type, String url, String user, String pwd) {
+	protected static boolean createDBTab(String tabName, String type, String url, String user, String pwd) {
 		boolean ret = false;
 		Connection conn = null;
         Statement stmt = null;

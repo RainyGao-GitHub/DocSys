@@ -33,8 +33,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.AuthCode;
-import com.DocSystem.commonService.EmailService;
-import com.DocSystem.commonService.SmsService;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -1468,7 +1466,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(groupId == null || "".equals(groupId))
+		if(groupId == null)
 		{
 			docSysErrorLog("用户组ID不能为空", rt);
 			writeJson(rt, response);
@@ -1536,7 +1534,7 @@ public class ManageController extends BaseController{
 		}
 		
 		//检查GroupId是否为空
-		if(groupId ==null||"".equals(groupId))
+		if(groupId == null)
 		{
 			docSysErrorLog("组ID不能为空！", rt);
 			writeJson(rt, response);
@@ -1544,7 +1542,7 @@ public class ManageController extends BaseController{
 		}
 		
 		//检查用户ID是否为空
-		if(userId ==null||"".equals(userId))
+		if(userId == null)
 		{
 			docSysErrorLog("用户ID不能为空！", rt);
 			writeJson(rt, response);
