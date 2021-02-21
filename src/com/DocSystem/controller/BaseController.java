@@ -7875,7 +7875,7 @@ public class BaseController  extends BaseFunction{
 		return officeEditor;
 	}
 	
-	private static String getHostAndPortFromUrl(StringBuffer requestURL) {
+	protected static String getHostAndPortFromUrl(StringBuffer requestURL) {
 		return requestURL.substring(0, requestURL.indexOf("/DocSystem"));
 	}
 
