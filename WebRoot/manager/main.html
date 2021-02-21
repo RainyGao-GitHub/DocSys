@@ -180,6 +180,7 @@
 <div style="display:none">
 	<input id="importDBFiles" name="importDBFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
 	<input id="upgradeFiles" name="upgradeFiles" type="file" onchange="upgradeSystemConfirm(event)" multiple="multiple"/>
+	<input id="importLicense" name="importLicense" type="file" onchange="importLicenseConfirm(event)" multiple="multiple"/>
 </div>
 
 <script type="application/javascript">
@@ -349,7 +350,12 @@
 	            title = "仓库管理";
 	            showReposList();
 	            $("#nav li[data-eb-params=repos]>a").addClass("open");
-	            break;    
+	            break;  
+	        case "license":
+	            title = "证书管理";
+	            $("#nav li[data-eb-params=license]>a").addClass("open");
+	            showLicensePage();
+	            break;
 	        case "system":
 	        case "systemEmailConfig":
 	        case "systemSmsConfig":
@@ -1456,6 +1462,44 @@
 			    $("#pwd").val(pwd);
 			}
 		}, null);	
+	}
+	
+	//证书管理
+	function showLicensePage(){
+		var value = {};
+		value.systemLicense = {};
+		value.systemLicense.status = "未安装";
+		value.officeLicense = {};
+		value.officeLicense.status = "未安装";
+		
+     	LicenseListDisplay(value);
+ 	   
+		/*
+		$.ajax({
+	        url : "/DocSystem/Manage/getLicenseList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	LicenseListDisplay(ret.data);
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取证书列表失败");
+	        }
+	    });*/
+	}
+	
+	function LicenseListDisplay(list)
+	{
+		console.log("LicenseListDisplay", list);
+		$Func.render($("#container"),"license",{"value":list});
 	}
 	
 	//仓库管理
