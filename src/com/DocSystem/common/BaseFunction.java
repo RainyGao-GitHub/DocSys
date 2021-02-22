@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -68,7 +67,6 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
-import com.DocSystem.websocket.DocData;
 import com.alibaba.fastjson.JSON;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
