@@ -33,6 +33,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.AuthCode;
+import com.DocSystem.common.License;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -642,6 +643,39 @@ public class ManageController extends BaseController{
 		config.put("officeEditorApi", officeEditorApi);
 		config.put("defaultReposStorePath", defaultReposStorePath);
 		rt.setData(config);
+		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/getLicenseList.do")
+	public void getLicenseList(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getLicenseList()");
+		ReturnAjax rt = new ReturnAjax();
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		JSONObject systemLicense = new JSONObject();
+		systemLicense.put("type", systemLicenseInfo.type);
+		systemLicense.put("usersCount", systemLicenseInfo.usersCount);
+		systemLicense.put("expireTime", systemLicenseInfo.expireTime);
+		systemLicense.put("hasLicense", systemLicenseInfo.hasLicense);
+		systemLicense.put("customer", systemLicenseInfo.customer);
+		systemLicense.put("createTime", systemLicenseInfo.createTime);
+		
+		JSONObject officeLicense = new JSONObject();
+		officeLicense.put("mode", officeLicenseInfo.mode);
+		officeLicense.put("usersCount", officeLicenseInfo.usersCount);
+		officeLicense.put("connections", officeLicenseInfo.connections);
+		officeLicense.put("hasLicense", officeLicenseInfo.hasLicense);
+		
+		
+		JSONObject licenses = new JSONObject();
+		licenses.put("systemLicense", systemLicense);
+		licenses.put("officeLicense", officeLicense);
+		rt.setData(licenses);
 		writeJson(rt, response);
 	}
 	
