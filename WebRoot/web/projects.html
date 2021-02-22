@@ -343,10 +343,11 @@
 	            else
 	            {
 	            	console.log(ret.msgInfo);
+	            	showErrorMessage(ret.msgInfo);
 	            }
             },
             error : function () {
-                alert('服务器异常:获取仓库列表失败');
+            	showErrorMessage('服务器异常:获取仓库列表失败');
             }
         });
     }

@@ -1,0 +1,85 @@
+<div class="form-horizontal">
+  <!-- 类型 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="systemLicenseType">证书类型</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLicenseType" name="systemLicenseType" disabled="disabled">
+    </div>
+  </div>
+  <!-- usersLimit -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="systemLicenseUsersCount">用户限制</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLicenseUsersCount" name="systemLicenseUsersCount" disabled="disabled">
+    </div>
+  </div>
+  <!-- expireTime -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="systemLicenseExpireTime">有效期</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLicenseExpireTime" name="systemLicenseExpireTime" disabled="disabled">
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+	function SystemLicenseInfoPageInit()
+	{
+		console.log("SystemLicenseInfoPageInit()");
+	}
+	
+	function showSystemLicenseInfoModal(text){
+		$(".systemLicenseInfoModal").fadeIn("slow");
+	}
+	
+	function closeSystemLicenseInfoModal(){
+		$(".SystemLicenseInfoModal").fadeOut("slow");
+	}
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("SystemLicenseInfo Page init");
+    	SystemLicenseInfoPageInit();
+	});
+	
+	function SystemLicenseInfoPageCallback(systemLicenseInfo)
+	{
+		console.log("SystemLicenseInfoPageCallback()");
+        
+	    //Page Value Init
+	    var type = "开源版";
+	    if(systemLicenseInfo.type == 1)
+	    {
+	    	if(systemLicenseInfo.hasLicense == false)
+	    	{
+			    type = "试用版";			    				    		
+	    	}
+	    	else
+	    	{
+			    type = "商业版";			    				    					    		
+	    	}
+	    }
+	    $("#systemLicenseType").val(type);	
+	    
+		var usersCount = "不受限";
+		if(systemLicenseInfo.usersCount && systemLicenseInfo.usersCount != null)
+		{
+			usersCount = systemLicenseInfo.usersCount + "人";
+		}
+		$("#systemLicenseUsersCount").val(usersCount);
+
+		var expireTime = "长期";
+		if(systemLicenseInfo.expireTime && systemLicenseInfo.expireTime != null)
+		{
+			if(systemLicenseInfo.expireTime < new Date().getTime())
+			{
+				expireTime = "已过期";
+			}
+			else
+			{
+				expireTime = formatDate(systemLicenseInfo.expireTime);
+			}
+		}
+		$("#systemLicenseExpireTime").val(expireTime);
+	}
+	
+</script>    
