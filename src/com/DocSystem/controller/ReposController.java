@@ -66,13 +66,13 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		long curTime = new Date().getTime();
-		if(systemLicenseInfo.expireTime < curTime)
-		{
-			rt.setError("证书已过期，请购买商业版证书！");
-			writeJson(rt, response);			
-			return;			
-		}
+		//long curTime = new Date().getTime();
+		//if(systemLicenseInfo.expireTime < curTime)
+		//{
+		//	rt.setError("证书已过期，请购买商业版证书！");
+		//	writeJson(rt, response);			
+		//	return;			
+		//}
 		
 		Integer UserId = login_user.getId();
 		System.out.println("UserId:" + UserId);
