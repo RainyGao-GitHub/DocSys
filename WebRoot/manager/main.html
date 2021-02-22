@@ -1384,6 +1384,41 @@
 			big: false
 		});
 	}
+	
+	//showSystemLicensePanel
+	function showSystemLicenseInfoPanel(){
+		console.log("showSystemLicenseInfoPanel");
+		qiao.bs.dialog({
+			id: 'systemLicenseInfo',
+			url: 'systemLicenseInfo.html',
+			title: '系统证书',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+			    console.log("page loaded callback");
+			    SystemLicenseInfoPageCallback(systemLicenseInfo);
+			}
+		});
+	}
+
+	//showOfficeLicenseInfoPanel
+	function showOfficeLicenseInfoPanel(){
+		console.log("showOfficeLicenseInfoPanel");
+		//后台管理页面的对话框都需要指定id
+		qiao.bs.dialog({
+			id: 'officeLicenseInfo',
+			url: 'officeLicenseInfo.html',
+			title: 'OnlyOffice证书',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+			    console.log("page loaded callback");
+			    OfficeLicenseInfoPageCallback(officeLicenseInfo);
+			}
+		});
+	}
 
 	function showEditUserPanel(e, id)
 	{
@@ -1465,6 +1500,8 @@
 	}
 	
 	//证书管理
+	var systemLicenseInfo = {};
+	var officeLicenseInfo = {};
 	function showLicensePage(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getLicenseList.do",
@@ -1499,6 +1536,7 @@
 		{
 			systemLicense.status = "已安装";			
 		}
+		systemLicenseInfo = systemLicense;
 		
 		var officeLicense = licenses.officeLicense;
 		if(officeLicense.hasLicense == false)
@@ -1506,8 +1544,9 @@
 			officeLicense.status = "未安装";
 		}
 		else{
-			systemLicense.status = "已安装";			
+			officeLicense.status = "已安装";			
 		}
+		officeLicenseInfo = officeLicense;
 		
 		$Func.render($("#container"),"license",{"value":licenses});
 	}
@@ -1809,7 +1848,26 @@
             }
         });
 	}
-
+	
+ 	function formatDate(date) {
+ 		var now = new Date(date);
+ 		var year=now.getFullYear(); 
+ 		var month=now.getMonth()+1;
+ 		var date=now.getDate(); 
+ 		return year+"-"+month+"-"+date; 
+ 	}
+ 	
+ 	function formatTime(time){
+ 		var now = new Date(time);
+ 		var year=now.getFullYear(); 
+ 		var month=now.getMonth()+1;
+ 		var date=now.getDate(); 
+ 		var hh=now.getHours(); 
+ 		var mm=now.getMinutes(); 
+ 		var ss=now.getSeconds(); 
+ 		
+ 		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
+ 	}
 </script>
 </body>
 </html>
