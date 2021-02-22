@@ -1466,15 +1466,6 @@
 	
 	//证书管理
 	function showLicensePage(){
-		var value = {};
-		value.systemLicense = {};
-		value.systemLicense.status = "未安装";
-		value.officeLicense = {};
-		value.officeLicense.status = "未安装";
-		
-     	LicenseListDisplay(value);
- 	   
-		/*
 		$.ajax({
 	        url : "/DocSystem/Manage/getLicenseList.do",
 	        type : "post",
@@ -1493,13 +1484,32 @@
 	        error : function () {
 	        	showErrorMessage("服务器异常:获取证书列表失败");
 	        }
-	    });*/
+	    });
 	}
 	
-	function LicenseListDisplay(list)
+	function LicenseListDisplay(licenses)
 	{
-		console.log("LicenseListDisplay", list);
-		$Func.render($("#container"),"license",{"value":list});
+		console.log("LicenseListDisplay", licenses);
+		var systemLicense = licenses.systemLicense;
+		if(systemLicense.hasLicense == false)
+		{
+			systemLicense.status = "未安装";
+		}
+		else
+		{
+			systemLicense.status = "已安装";			
+		}
+		
+		var officeLicense = licenses.officeLicense;
+		if(officeLicense.hasLicense == false)
+		{
+			officeLicense.status = "未安装";
+		}
+		else{
+			systemLicense.status = "已安装";			
+		}
+		
+		$Func.render($("#container"),"license",{"value":licenses});
 	}
 	
 	//仓库管理

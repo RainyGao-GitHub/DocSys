@@ -913,6 +913,10 @@ public class BaseFunction{
 		return webTmpPath;
 	}
 	
+	protected static String getLicensePath() {
+		return docSysIniPath + "license/";
+	}
+	
 	//获取本地仓库默认存储位置（相对于仓库的存储路径）
 	protected String getDefaultLocalVerReposPath(String path) {
 		String localSvnPath = path + "DocSysVerReposes/";

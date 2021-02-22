@@ -61,10 +61,13 @@ import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.DocChange.DocChangeType;
+import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.common.License;
+import com.DocSystem.common.OfficeLicense;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
+import com.DocSystem.common.constants;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -100,6 +103,8 @@ public class BaseController  extends BaseFunction{
     
     //系统License
     public static License systemLicenseInfo = null;
+    //OnlyOffice License
+    public static OfficeLicense officeLicenseInfo = null;
     
 	//系统默认用户
     protected static User coEditUser = new User();
@@ -107,6 +112,7 @@ public class BaseController  extends BaseFunction{
     static {		
 		initSystemUsers();
     	initSystemLicenseInfo();
+    	initOfficeLicenseInfo();
     }
 	private static void initSystemUsers() {
 		//自动同步用户
@@ -126,6 +132,25 @@ public class BaseController  extends BaseFunction{
 		systemLicenseInfo.usersCount = null;	//无限制
 		systemLicenseInfo.expireTime = null; //长期有效
 		systemLicenseInfo.hasLicense = false;
+	}
+	
+	private static void initOfficeLicenseInfo() {
+		//Default licenseInfo
+		officeLicenseInfo = new OfficeLicense();
+		officeLicenseInfo.count =  1;
+		officeLicenseInfo.type = LICENSE_RESULT.Success;
+		officeLicenseInfo.packageType = constants.PACKAGE_TYPE_OS;
+		officeLicenseInfo.mode = constants.LICENSE_MODE.None;
+		officeLicenseInfo.branding = false;
+		officeLicenseInfo.connections = constants.LICENSE_CONNECTIONS;
+		officeLicenseInfo.customization = false;
+		officeLicenseInfo.light = false;
+		officeLicenseInfo.usersCount = 20;
+		officeLicenseInfo.usersExpire = constants.LICENSE_EXPIRE_USERS_ONE_DAY;
+		officeLicenseInfo.hasLicense = false;
+		officeLicenseInfo.plugins= false;
+		//licenseInfo.put("buildDate", oBuildDate);		
+		//licenseInfo.put("endDate", null);	
 	}
 	
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
