@@ -7,4 +7,5 @@ public class License {
 	public Boolean hasLicense; //是否有证书
 	public String customer;
 	public Long createTime; //创建时间	
+	public String id;
 }
