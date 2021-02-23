@@ -93,9 +93,9 @@ public class BaseFunction{
 	
 	public static int OSType = OS.UNKOWN; //
     static {
+    	initOSType();
     	docSysWebPath = getWebPath();
 		docSysIniPath = docSysWebPath + "../docSys.ini/";    
-    	initOSType();
     }
     
 	/******************************** 获取服务器、访问者IP地址 *************************************/
