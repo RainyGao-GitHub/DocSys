@@ -1160,6 +1160,13 @@
 	
 	function deleteSystemLicense(){
 		console.log("deleteSystemLicense()");
+		var systemLicense = licenses.systemLicense;
+		if(systemLicense.hasLicense == false)
+		{
+			return;
+		}
+		
+		deleteSystemLicenseConfirm();
 	}
 	
 	function deleteSystemLicenseConfirm()
@@ -1321,7 +1328,7 @@
 	function updateSystemLicenseInfo(licenseInfo)
 	{
 		var systemLicenseInfo = licenses.systemLicense;
-		systemLicenseInfo.hasLicense = true;	
+		systemLicenseInfo.hasLicense = licenseInfo.hasLicense;
 		systemLicenseInfo.id = licenseInfo.id;
 		systemLicenseInfo.customer = licenseInfo.customer;
 		systemLicenseInfo.usersCount = licenseInfo.usersCount;
