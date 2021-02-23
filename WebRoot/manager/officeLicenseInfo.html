@@ -8,7 +8,7 @@
   </div>
   <!-- usersLimit -->
   <div class="form-group">
-    <label class="control-label col-lg-3" for="officeLicenseUsersCount">用户限制</label>
+    <label class="control-label col-lg-3" for="officeLicenseUsersCount">用户数量</label>
     <div class="col-lg-9">
       <input type="text" class="form-control" id="officeLicenseUsersCount" name="officeLicenseUsersCount" disabled="disabled">
     </div>
@@ -56,7 +56,7 @@
 	    	type = "商业版";
 	    }
 	    $("#officeLicenseType").val(type);	
-	    
+	    	    
 		var usersCount = "不受限";
 		if(officeLicenseInfo.usersCount && officeLicenseInfo.usersCount != null)
 		{
