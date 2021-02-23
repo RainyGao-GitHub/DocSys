@@ -1158,6 +1158,53 @@
 	    });
 	}
 	
+	function deleteSystemLicense(){
+		console.log("deleteSystemLicense()");
+	}
+	
+	function deleteSystemLicenseConfirm()
+	{
+		console.log("deleteSystemLicenseConfirm()");
+	    qiao.bs.confirm({
+	    		id: "deleteSystemLicenseConfirmDialog",
+		        title: "删除证书",
+		        msg: "是否删除证书？",
+		        okbtn: "是",
+		        qubtn: "否",
+	    	},function () {
+				startDeleteSystemLicense();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startDeleteSystemLicense()
+	{
+        $.ajax({
+            url : "/DocSystem/Bussiness/deleteLicense.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+					updateSystemLicenseInfo(ret.data);
+					LicenseListDisplay(licenses);
+                   	showErrorMessage("删除成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("服务器异常:删除失败");
+            }
+        });
+	}
+
+	
 	function installSystemLicense(){
 		console.log("installSystemLicense()");
   		//清除文件控件
