@@ -2,17 +2,17 @@ package com.DocSystem.common;
 
 public class OfficeLicense {
 
-	public int count;
-	public int type;
-	public int packageType;
-	public int mode;
-	public boolean branding;
-	public int connections;
-	public boolean customization;
-	public int usersCount;
-	public int usersExpire;
-	public boolean hasLicense;
-	public boolean plugins;
-	public boolean light;
+	public Integer count;
+	public Integer type;
+	public Integer packageType;
+	public Integer mode;
+	public Boolean branding;
+	public Integer connections;
+	public Boolean customization;
+	public Integer usersCount;
+	public Integer usersExpire;
+	public Boolean hasLicense;
+	public Boolean plugins;
+	public Boolean light;
 	public Long expireTime;
 }
