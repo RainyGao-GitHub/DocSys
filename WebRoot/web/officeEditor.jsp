@@ -1,6 +1,7 @@
 <%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%
 String officeEditorApi = BaseController.getOfficeEditor(request);
+Boolean isBussienss = BaseController.systemLicenseInfo.hasLicense;
 %>
 
 <div id="officePlayer" class="officePlayer" style="width: 100%; height: 1000px;">
@@ -30,7 +31,7 @@ var OfficeEditor = (function () {
 	    documentType = getDocumentType(fileType);
 	    title = docInfo.name;
 	    
-	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
+	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST", <%=isBussienss%>);
 	}
 	
     function showOffice(data)
