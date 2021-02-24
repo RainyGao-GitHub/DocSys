@@ -1102,6 +1102,13 @@ public class ManageController extends BaseController{
 		
 		//不得修改同级别或高级别用户的信息
 		User tempUser  = userService.getUser(userId);
+		if(tempUser == null)
+		{
+			docSysErrorLog("danger#用户不存在！", rt);
+			writeJson(rt, response);
+			return;	
+		}
+		
 		if(tempUser.getType() >= login_user.getType())
 		{
 			docSysErrorLog("danger#越权操作！", rt);
@@ -1116,16 +1123,34 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(RegularUtil.isEmail(userName))
+		//检查用户名是否有改动
+		if(user.getName() != null)
 		{
-			user.setEmail(userName);
-		}
-		else if(RegularUtil.IsMobliePhone(userName))
-		{
-			user.setTel(userName);
+			if(user.getName().equals(tempUser.getName()))
+			{
+				user.setName(null);
+			}
 		}
 		
-		if(userCheck(user, rt) == false)
+		//检查Tel是否改动
+		if(user.getTel() != null)
+		{
+			if(user.getTel().equals(tempUser.getTel()))
+			{
+				user.setTel(null);
+			}
+		}
+
+		//检查Email是否改动
+		if(user.getEmail() != null)
+		{
+			if(user.getEmail().equals(tempUser.getEmail()))
+			{
+				user.setEmail(null);
+			}
+		}
+		
+		if(userEditCheck(user, rt) == false)
 		{
 			System.out.println("用户检查失败!");			
 			writeJson(rt, response);
