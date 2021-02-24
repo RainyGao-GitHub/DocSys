@@ -61,6 +61,7 @@ import util.Encrypt.MD5;
 import util.FileUtil.CompressPic;
 
 import com.DocSystem.common.CommitAction.CommitType;
+import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.commonService.ProxyThread;
 import com.DocSystem.commonService.ShareThread;
 import com.DocSystem.entity.Doc;
@@ -81,6 +82,11 @@ public class BaseFunction{
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;
 	
+    //系统License
+    public static License systemLicenseInfo = null;
+    //OnlyOffice License
+    public static OfficeLicense officeLicenseInfo = null;
+
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
 
@@ -95,8 +101,39 @@ public class BaseFunction{
     static {
     	initOSType();
     	docSysWebPath = getWebPath();
-		docSysIniPath = docSysWebPath + "../docSys.ini/";    
+		docSysIniPath = docSysWebPath + "../docSys.ini/";   
+    	initSystemLicenseInfo();
+    	initOfficeLicenseInfo();
     }
+    
+	private static void initSystemLicenseInfo() {
+		System.out.println("initSystemLicenseInfo() ");
+		//Default systemLicenseInfo
+		systemLicenseInfo = new License();
+		systemLicenseInfo.type = 0;	//0: 开源版（默认） 1:商业版
+		systemLicenseInfo.usersCount = null;	//无限制
+		systemLicenseInfo.expireTime = null; //长期有效
+		systemLicenseInfo.hasLicense = false;
+	}
+	
+	private static void initOfficeLicenseInfo() {
+		//Default licenseInfo
+		officeLicenseInfo = new OfficeLicense();
+		officeLicenseInfo.count =  1;
+		officeLicenseInfo.type = LICENSE_RESULT.Success;
+		officeLicenseInfo.packageType = constants.PACKAGE_TYPE_OS;
+		officeLicenseInfo.mode = constants.LICENSE_MODE.None;
+		officeLicenseInfo.branding = false;
+		officeLicenseInfo.connections = constants.LICENSE_CONNECTIONS;
+		officeLicenseInfo.customization = false;
+		officeLicenseInfo.light = false;
+		officeLicenseInfo.usersCount = 20;
+		officeLicenseInfo.usersExpire = constants.LICENSE_EXPIRE_USERS_ONE_DAY;
+		officeLicenseInfo.hasLicense = false;
+		officeLicenseInfo.plugins= false;
+		//licenseInfo.put("buildDate", oBuildDate);		
+		//licenseInfo.put("endDate", null);	
+	}
     
 	/******************************** 获取服务器、访问者IP地址 *************************************/
 	protected static String getIpAddress() {
@@ -444,6 +481,7 @@ public class BaseFunction{
 
 		doc.setDocId(docId);
 		doc.setPid(pid);
+		doc.isBussiness = systemLicenseInfo.hasLicense;
 		return doc;
 	}
 	
