@@ -286,19 +286,19 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 
 //获取文件链接接口(链接带officeEditorAuthCode)
 
-function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
+function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, isBussiness)
 {
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle);
+		getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, isBussiness);
 	}
 	else
 	{
-		getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle);
+		getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle, isBussiness);
 	}
 }
 
-function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
+function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle, isBussiness)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -311,8 +311,14 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
     	return;
     }
   	
+    var url = "/DocSystem/Doc/getDocOfficeLink.do";
+    if(isBussiness && isBussiness == true)
+    {
+    	url = "/DocSystem/Bussiness/getDocOfficeLink.do"
+    }
+    
 	$.ajax({
-        url : "/DocSystem/Doc/getDocOfficeLink.do",
+        url : url,
         type : "post",
         dataType : "json",
         data : {
@@ -348,7 +354,7 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
 }
 
 //获取压缩文件的文件链接接口(链接带officeEditorAuthCode)
-function getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
+function getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, isBussiness)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -361,8 +367,14 @@ function getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
     	return;
     }
   	
+    var url = "/DocSystem/Doc/getZipDocOfficeLink.do";
+    if(isBussiness && isBussiness == true)
+    {
+    	url = "/DocSystem/Bussiness/getZipDocOfficeLink.do"
+    }
+
 	$.ajax({
-        url : "/DocSystem/Doc/getZipDocOfficeLink.do",
+        url : url,
         type : "post",
         dataType : "json",
         data : {
