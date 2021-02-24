@@ -11034,8 +11034,8 @@ public class BaseController  extends BaseFunction{
 		return fileLink;
 	}
 	
-	protected Object buildOfficeEditorKey(Doc doc) {
-		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode();
+	protected String buildOfficeEditorKey(Doc doc) {
+		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode() + "";
 	}
 	
 	protected String convertOfficeToPdf(Repos repos, Doc doc, ReturnAjax rt) {
