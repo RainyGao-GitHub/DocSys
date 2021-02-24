@@ -57,14 +57,14 @@
 	    }
 	    $("#officeLicenseType").val(type);	
 	    	    
-		var usersCount = "不受限";
+		var usersCount = "不限";
 		if(officeLicenseInfo.usersCount && officeLicenseInfo.usersCount != null)
 		{
 			usersCount = officeLicenseInfo.usersCount + "人";
 		}
 		$("#officeLicenseUsersCount").val(usersCount);
 
-		var connections = "最大连接数";
+		var connections = "不限";
 		if(officeLicenseInfo.connections && officeLicenseInfo.connections != null)
 		{
 			connections = officeLicenseInfo.connections;
