@@ -2072,6 +2072,63 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
+	
+	protected boolean userEditCheck(User user, ReturnAjax rt) {
+		String userName = user.getName();
+		String pwd = user.getPwd();
+		String tel = user.getTel();
+		String email = user.getEmail();
+		Integer type = user.getType();
+		
+		System.out.println("userName:"+userName + " pwd:"+pwd + " type:" + type + " tel:" + user.getTel() + " email:" + user.getEmail());
+		
+		//检查用户名是否为空
+		if(userName ==null||"".equals(userName))
+		{
+			docSysErrorLog("用户名不能为空！", rt);
+			return false;
+		}
+		
+		//用户是否已存在
+		if(isUserNameUsed(userName) == true)
+		{
+			docSysErrorLog("该用户已存在！", rt);
+			return false;
+		}
+
+		if(tel != null && !tel.isEmpty())
+		{
+			if(RegularUtil.IsMobliePhone(tel) == false)
+			{
+				docSysErrorLog("手机格式错误！", rt);
+				return false;
+			}
+			
+			if(isTelUsed(tel) == true)
+			{
+				docSysErrorLog("该手机已被使用！", rt);
+				return false;				
+			}
+			user.setTelValid(1);
+		}
+		
+		if(email != null && !email.isEmpty())
+		{
+			if(RegularUtil.isEmail(email) == false)
+			{
+				docSysErrorLog("邮箱格式错误！", rt);
+				return false;
+			}
+			
+			if(isEmailUsed(email) == true)
+			{
+				docSysErrorLog("该邮箱已被使用！", rt);
+				return false;				
+			}
+			user.setEmailValid(1);
+		}
+		return true;
+	}
 
 	protected boolean verifyTelAndEmail(User user, ReturnAjax rt) {
 		
