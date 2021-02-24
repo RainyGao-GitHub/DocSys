@@ -947,15 +947,6 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(RegularUtil.isEmail(name))	//邮箱注册
-		{
-			user.setEmail(name);
-		}
-		else if(RegularUtil.IsMobliePhone(name))
-		{
-			user.setTel(name);
-		}
-		
 		if(userCheck(user, rt) == false)
 		{
 			System.out.println("用户检查失败!");			
@@ -1032,15 +1023,6 @@ public class ManageController extends BaseController{
 		{
 			writeJson(rt, response);	
 			return;			
-		}
-				
-		if(RegularUtil.isEmail(userName))	//邮箱注册
-		{
-			user.setEmail(userName);
-		}
-		else if(RegularUtil.IsMobliePhone(userName))
-		{
-			user.setTel(userName);
 		}
 		
 		if(userCheck(user, rt) == false)
