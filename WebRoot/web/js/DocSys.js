@@ -288,6 +288,7 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 
 function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, isBussiness)
 {
+	console.log("getDocOfficeLink() isBussiness:" + isBussiness);
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
 		getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, isBussiness);
@@ -1128,7 +1129,8 @@ function copyDocInfo(doc, shareId)
 	if(doc)
 	{
 		var docInfo = {};
-    	if(doc.vid)
+		docInfo.isBussiness = doc.isBussiness;
+		if(doc.vid)
     	{
 			docInfo.vid = doc.vid;
     	}
@@ -1150,7 +1152,7 @@ function copyDocInfo(doc, shareId)
 		{
 			docInfo.docType = 1; //默认是1
 		}
-		
+				
 		docInfo.isZip = doc.isZip;
 		if(docInfo.isZip && docInfo.isZip == 1)
 		{
@@ -1190,8 +1192,14 @@ function copyDocInfo(doc, shareId)
 
 function openOffice(docInfo, openInNewPage, preview)
 {
+	var url = "/DocSystem/Doc/getDocOfficeLink.do";
+	if(docInfo.isBussiness && docInfo.isBussiness == true)
+	{
+		url = "/DocSystem/Bussiness/getDocOfficeLink.do";
+	}
+	
     $.ajax({
-        url : "/DocSystem/Doc/getDocOfficeLink.do",
+        url : url,
         type : "post",
         dataType : "json",
         data : {

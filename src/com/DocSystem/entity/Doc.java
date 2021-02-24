@@ -63,6 +63,7 @@ public class Doc  implements Comparable<Doc>{
 
 	private Integer shareId;
 
+	public Boolean isBussiness;
 	
 	//文件锁定信息(用于前台显示)
     private Integer state;
