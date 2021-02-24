@@ -113,19 +113,12 @@ public class BaseController  extends BaseFunction{
 	private SmsService smsService;
 	@Autowired
 	private EmailService emailService;
-    
-    //系统License
-    public static License systemLicenseInfo = null;
-    //OnlyOffice License
-    public static OfficeLicense officeLicenseInfo = null;
-    
+        
 	//系统默认用户
     protected static User coEditUser = new User();
     protected static User autoSyncUser = new User();
     static {		
 		initSystemUsers();
-    	initSystemLicenseInfo();
-    	initOfficeLicenseInfo();
     }
 	private static void initSystemUsers() {
 		//自动同步用户
@@ -135,35 +128,6 @@ public class BaseController  extends BaseFunction{
 		//协同编辑用户
 		coEditUser.setId(-1);
 		coEditUser.setName("CoEditUser");		
-	}
-	
-	private static void initSystemLicenseInfo() {
-		System.out.println("initSystemLicenseInfo() ");
-		//Default systemLicenseInfo
-		systemLicenseInfo = new License();
-		systemLicenseInfo.type = 0;	//0: 开源版（默认） 1:商业版
-		systemLicenseInfo.usersCount = null;	//无限制
-		systemLicenseInfo.expireTime = null; //长期有效
-		systemLicenseInfo.hasLicense = false;
-	}
-	
-	private static void initOfficeLicenseInfo() {
-		//Default licenseInfo
-		officeLicenseInfo = new OfficeLicense();
-		officeLicenseInfo.count =  1;
-		officeLicenseInfo.type = LICENSE_RESULT.Success;
-		officeLicenseInfo.packageType = constants.PACKAGE_TYPE_OS;
-		officeLicenseInfo.mode = constants.LICENSE_MODE.None;
-		officeLicenseInfo.branding = false;
-		officeLicenseInfo.connections = constants.LICENSE_CONNECTIONS;
-		officeLicenseInfo.customization = false;
-		officeLicenseInfo.light = false;
-		officeLicenseInfo.usersCount = 20;
-		officeLicenseInfo.usersExpire = constants.LICENSE_EXPIRE_USERS_ONE_DAY;
-		officeLicenseInfo.hasLicense = false;
-		officeLicenseInfo.plugins= false;
-		//licenseInfo.put("buildDate", oBuildDate);		
-		//licenseInfo.put("endDate", null);	
 	}
 	
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
