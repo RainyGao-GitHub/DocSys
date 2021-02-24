@@ -14,4 +14,5 @@ public class OfficeLicense {
 	public boolean hasLicense;
 	public boolean plugins;
 	public boolean light;
+	public Long expireTime;
 }
