@@ -2038,6 +2038,26 @@ public class BaseController  extends BaseFunction{
 			docSysErrorLog("该用户已存在！", rt);
 			return false;
 		}
+		
+		//如果用户使用手机号则需要检查手机号
+		if(RegularUtil.IsMobliePhone(userName) == true)
+		{
+			if(isTelUsed(userName) == true)
+			{
+				docSysErrorLog("该手机已被使用！", rt);
+				return false;				
+			}
+		}
+		
+		//如果用户使用邮箱则需要检查邮箱
+		if(RegularUtil.isEmail(userName) == true)
+		{
+			if(isEmailUsed(userName) == true)
+			{
+				docSysErrorLog("该邮箱已被使用！", rt);
+				return false;				
+			}
+		}	
 
 		if(tel != null && !tel.isEmpty())
 		{
