@@ -1126,7 +1126,7 @@ public class ManageController extends BaseController{
 		//检查用户名是否有改动
 		if(user.getName() != null)
 		{
-			if(user.getName().equals(tempUser.getName()))
+			if(tempUser.getName() == null || user.getName().equals(tempUser.getName()))
 			{
 				user.setName(null);
 			}
@@ -1135,7 +1135,7 @@ public class ManageController extends BaseController{
 		//检查Tel是否改动
 		if(user.getTel() != null)
 		{
-			if(user.getTel().equals(tempUser.getTel()))
+			if(tempUser.getTel() == null || user.getTel().equals(tempUser.getTel()))
 			{
 				user.setTel(null);
 			}
@@ -1144,7 +1144,7 @@ public class ManageController extends BaseController{
 		//检查Email是否改动
 		if(user.getEmail() != null)
 		{
-			if(user.getEmail().equals(tempUser.getEmail()))
+			if(tempUser.getEmail() == null || user.getEmail().equals(tempUser.getEmail()))
 			{
 				user.setEmail(null);
 			}

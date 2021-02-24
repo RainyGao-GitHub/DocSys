@@ -2082,20 +2082,36 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("userName:"+userName + " pwd:"+pwd + " type:" + type + " tel:" + user.getTel() + " email:" + user.getEmail());
 		
-		//检查用户名是否为空
-		if(userName ==null||"".equals(userName))
+		//检查用户名是否改动
+		if(userName != null && !userName.isEmpty())
 		{
-			docSysErrorLog("用户名不能为空！", rt);
-			return false;
+			if(isUserNameUsed(userName) == true)
+			{
+				docSysErrorLog("该用户已存在！", rt);
+				return false;
+			}
+			
+			//如果用户使用手机号则需要检查手机号
+			if(RegularUtil.IsMobliePhone(userName) == true)
+			{
+				if(isTelUsed(userName) == true)
+				{
+					docSysErrorLog("该手机已被使用！", rt);
+					return false;				
+				}
+			}
+			
+			//如果用户使用邮箱则需要检查邮箱
+			if(RegularUtil.isEmail(userName) == true)
+			{
+				if(isEmailUsed(userName) == true)
+				{
+					docSysErrorLog("该邮箱已被使用！", rt);
+					return false;				
+				}
+			}			
 		}
 		
-		//用户是否已存在
-		if(isUserNameUsed(userName) == true)
-		{
-			docSysErrorLog("该用户已存在！", rt);
-			return false;
-		}
-
 		if(tel != null && !tel.isEmpty())
 		{
 			if(RegularUtil.IsMobliePhone(tel) == false)
