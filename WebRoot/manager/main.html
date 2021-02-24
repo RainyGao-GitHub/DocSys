@@ -181,6 +181,7 @@
 	<input id="importDBFiles" name="importDBFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
 	<input id="upgradeFiles" name="upgradeFiles" type="file" onchange="upgradeSystemConfirm(event)" multiple="multiple"/>
 	<input id="importLicense" name="importLicense" type="file" onchange="importLicenseConfirm(event)" multiple="multiple"/>
+	<input id="importOfficeLicense" name="importOfficeLicense" type="file" onchange="importOfficeLicenseConfirm(event)" multiple="multiple"/>
 </div>
 
 <script type="application/javascript">
@@ -1334,6 +1335,183 @@
 		systemLicenseInfo.usersCount = licenseInfo.usersCount;
 		systemLicenseInfo.expireTime = licenseInfo.expireTime;
 		systemLicenseInfo.createTime = licenseInfo.createTime;
+	}
+	
+	function deleteOfficeLicense(){
+		console.log("deleteOfficeLicense()");
+		var officeLicense = licenses.officeLicense;
+		if(officeLicense.hasLicense == false)
+		{
+			return;
+		}
+		
+		deleteOfficeLicenseConfirm();
+	}
+	
+	function deleteOfficeLicenseConfirm()
+	{
+		console.log("deleteOfficeLicenseConfirm()");
+	    qiao.bs.confirm({
+	    		id: "deleteOfficeLicenseConfirmDialog",
+		        title: "删除证书",
+		        msg: "是否删除证书？",
+		        okbtn: "是",
+		        qubtn: "否",
+	    	},function () {
+				startDeleteOfficeLicense();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startDeleteOfficeLicense()
+	{
+        $.ajax({
+            url : "/DocSystem/Bussiness/deleteOfficeLicense.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+					updateOfficeLicenseInfo(ret.data);
+					LicenseListDisplay(licenses);
+                   	showErrorMessage("删除成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("服务器异常:删除失败");
+            }
+        });
+	}
+
+	
+	function installOfficeLicense(){
+		console.log("installOfficeLicense()");
+  		//清除文件控件
+		$("#importOfficeLicense").val("");
+	    return $("#importOfficeLicense").click();
+	}
+	
+	
+	function importOfficeLicenseConfirm(e)
+	{
+		console.log("importOfficeLicenseConfirm()");
+	    var files = e.target.files;
+	    var firstFile;
+	    if(files.length > 0)
+	   	{
+	    	console.log("files.length:" + files.length);
+	    	for( var i = 0 ; i < files.length ; i++ )
+	    	{  
+	    		firstFile = files[i];
+	    	   	if(typeof firstFile == 'object')
+	    	   	{
+	    	   		//var relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
+	    	   		//console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
+	    	   		break;
+	    	   	}
+	    	   	else
+	    	   	{
+	    	   		//This is something else 
+	    	   		//console.log("it is not a file");
+	    	   	}
+	    	}
+	    }
+	    else
+	   	{
+	   		showErrorMessage("请选择文件");
+	      	return false;
+	   	}  
+		
+		//var fileName = firstFile.name;
+	    //console.log("firstFile:"+fileName);
+
+	    qiao.bs.confirm({
+	    		id: "importOfficeLicenseConfirmDialog",
+		        title: "安装证书",
+		        msg: "是否安装证书？",
+		        okbtn: "是",
+		        qubtn: "否",
+	    	},function () {
+		    	//alert("点击了确定");
+				//开始上传
+				startImportOfficeLicense(firstFile);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startImportOfficeLicense(file)
+	{
+		//新建文件上传表单
+		var form = new FormData();
+		form.append("uploadFile", file);
+
+		//新建http异步请求
+		var xhr = new XMLHttpRequest();
+		
+		//设置异步上传状态变化回调处a理函数
+		xhr.onreadystatechange = function() {				
+			//文件上传状态
+			console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
+			if(xhr.status == 200) 
+			{
+				if(xhr.readyState != 4)
+				{
+					//文件上传未结束
+					return;
+				}
+				
+				//上传成功！
+				var ret = JSON.parse(xhr.responseText);
+				if("ok" == ret.status){
+					showErrorMessage("安装成功");
+					updateOfficeLicenseInfo(ret.data);
+					LicenseListDisplay(licenses);
+				 }
+				 else	//上传失败
+				 {
+					//上传失败
+					console.log("安装失败：" + ret.msgInfo);
+					showErrorMessage("安装失败:" + ret.msgInfo);
+					return;
+	             }
+			}else{
+				if(xhr.status < 300) 
+				{
+					//不是真正的异常
+					return;
+				}
+				//上传失败
+				console.log("安装失败: " + file.name + " 上传异常！");
+				showErrorMessage("安装失败: 上传异常");
+				return;
+			}
+		};
+		
+		//上传表单			
+		xhr.open("post", "/DocSystem/Bussiness/impportOfficeLicense.do");
+		xhr.send(form);
+	}
+	
+	function updateOfficeLicenseInfo(licenseInfo)
+	{
+		var officeLicenseInfo = licenses.officeLicense;
+		officeLicenseInfo.hasLicense = licenseInfo.hasLicense;
+		officeLicenseInfo.usersCount = licenseInfo.usersCount;
+		officeLicenseInfo.connections = licenseInfo.connections;
+		officeLicenseInfo.mode = licenseInfo.mode;
+		officeLicenseInfo.type = licenseInfo.type;		
 	}
 	
 	function upgradeSystem(){
