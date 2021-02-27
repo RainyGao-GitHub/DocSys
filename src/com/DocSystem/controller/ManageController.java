@@ -563,8 +563,8 @@ public class ManageController extends BaseController{
 		}
 		
 		Doc downloadDoc = buildDownloadDocInfo(0, "","", targetPath, targetName);
-		rt.setData(downloadDoc);
-		rt.setMsgData(1);	//下载完成后删除已下载的文件
+		String downloadLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDoc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;	
+		rt.setData(downloadLink);
 		writeJson(rt, response);
 	}
 	

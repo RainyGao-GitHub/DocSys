@@ -71,8 +71,6 @@
   <script src="./static/js/config.js"></script>
   <script src="./static/js/tmpl.js"></script>
   
-  <script type="text/javascript" src="js/DocSys.js"></script>
-  
   <!-- bootstrapQ based on jquery and bootstrap-->
   <link href="./static/bootstrapQ/qiao.css" rel="stylesheet">
   <script type="text/javascript" src="./static/bootstrapQ/qiao.js"></script>
@@ -834,7 +832,7 @@
 	            {	        		
 	            	//设置成功
             	    console.log("exportDBData Ok:",ret);        	   		
-        	   		window.location.href = getDocDownloadLink(ret.data);
+	            	window.location.href = ret.data;
 	            }
 	            else 
 	            {
