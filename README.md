@@ -37,16 +37,20 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 ### 1、准备工作
 #### 下载DocSystem.war
 下载地址： https://gitee.com/RainyGao/DocSys/releases
+
 #### 下载MxsDoc运行环境
 下载地址(Windows)： https://download.csdn.net/download/highrain/15485920
+
 下载地址(Linux)： https://download.csdn.net/download/highrain/15485966
 
 ### 2、安装
 （1）解压MxsDoc运行环境压缩包
+
 （2）将DocSystem.war拷贝至tomcat/webapps目录，
 
 ### 3、访问
 本机访问：http://localhost:8100/DocSystem
+
 远程访问：将localhost改为IP地址即可
 
 # MxsDoc技术交流群: 953982034
