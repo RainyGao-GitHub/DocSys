@@ -34,74 +34,19 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105813_e858feb3_1558129.png "docsys_管理后台1.png")
 
 # 系统安装
-## 一、Windows系统安装步骤
 ### 1、准备工作
 #### 下载DocSystem.war
 下载地址： https://gitee.com/RainyGao/DocSys/releases
-#### 下载JDK
-下载地址： https://download.csdn.net/download/highrain/12233906
-#### 下载XAMPP
-下载地址： https://download.csdn.net/download/highrain/12233724
-#### 下载OpenOffice(可选)
-下载地址： https://download.csdn.net/download/highrain/12233900
-#### 下载并安装OnlyOffice(用于Office在线编辑)
-下载地址： https://blog.csdn.net/highrain/article/details/105443177
+#### 下载MxsDoc运行环境
+下载地址(Windows)： https://download.csdn.net/download/highrain/15485920
+下载地址(Linux)： https://download.csdn.net/download/highrain/15485966
 
-### 2、安装JDK
-请使用JDK或JRE 1.8版本
+### 2、安装
+（1）解压MxsDoc运行环境压缩包
+（2）将DocSystem.war拷贝至tomcat/webapps目录，
 
-### 3、安装XAMPP（tomcat和mysql）
-（1）安装完成后启动mysql和tomcat
-（2）点击tomcat的config按键，选择“Browser”找到webapps目录，将DocSystem.war放到该目录，点击Start启动
-
-### 4、访问
-
-本机访问：http://localhost:8080/DocSystem   系统管理员/密码： Admin/Admin
-
+### 3、访问
+本机访问：http://localhost:8100/DocSystem
 远程访问：将localhost改为IP地址即可
-
-## 二、Linux系统安装步骤
-### 1、准备工作
-#### 下载DocSystem.war
-下载地址： https://gitee.com/RainyGao/DocSys/releases
-#### 下载JDK
-下载地址： https://www.oracle.com/java/technologies/javase-jdk8-downloads.html
-#### 下载MYSQL
-下载地址： https://www.mysql.com
-#### 下载TOMCAT
-下载地址： https://tomcat.apache.org/download-70.cgi
-#### 下载OpenOffice(可选)
-下载地址： https://download.csdn.net/download/highrain/12233901
-#### 安装OnlyOffice(用于Office在线编辑)
-安装说明：https://helpcenter.onlyoffice.com/server/linux/document/index.aspx
-
-### 2、安装JDK
-请使用JDK或JRE 1.8版本
-
-### 3、安装mysql
-
-（1）下载Linux版本的mysql安装包，将其解压到/usr/local/mysql目录即可
-
-（2）启动mysql服务：service mysql start
-
-### 4、安装tomcat
-
-（1）下载Linux版本的tomcat7安装包，将其解压到以下目录/usr/local/tomcat目录即可
-
-（2）将DocSytem.war复制到tomcat的webapps目录
-
-（3）启动tomcat: service tomcat7 start
-
-### 5、访问
-
-本机访问：http://localhost:8080/DocSystem  系统管理员/密码： Admin/Admin
-
-远程访问：将localhost改为IP地址即可
-
-## 四、在线编辑
-具体详见：[DocSys的Office在线编辑配置](https://blog.csdn.net/highrain/article/details/106696474)
-
-## 五、安装常见问题
-https://blog.csdn.net/highrain/article/details/88946783
 
 # MxsDoc技术交流群: 953982034
