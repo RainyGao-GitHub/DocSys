@@ -101,7 +101,7 @@ public class BaseFunction{
     static {
     	initOSType();
     	docSysWebPath = getWebPath();
-		docSysIniPath = docSysWebPath + "../docSys.ini/";   
+		docSysIniPath = getDocSysWebParentPath(docSysWebPath) + "docSys.ini/";   
     	initSystemLicenseInfo();
     	initOfficeLicenseInfo();
     }
@@ -116,6 +116,11 @@ public class BaseFunction{
 		systemLicenseInfo.hasLicense = false;
 	}
 	
+	private static String getDocSysWebParentPath(String localPath) {
+		int pos = localPath.indexOf("/DocSystem");
+		return localPath.substring(0, pos+1);
+	}
+
 	private static void initOfficeLicenseInfo() {
 		//Default licenseInfo
 		officeLicenseInfo = new OfficeLicense();
