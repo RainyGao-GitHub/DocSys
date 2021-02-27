@@ -1660,9 +1660,10 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
-	protected Doc buildDownloadDocInfo(String path, String name, String targetPath, String targetName)
+	protected Doc buildDownloadDocInfo(Integer vid, String path, String name, String targetPath, String targetName)
 	{
 		System.out.println("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
+		
 		String encPath = base64EncodeURLSafe(path);
 		if(encPath == null)
 		{
@@ -1691,6 +1692,10 @@ public class BaseController  extends BaseFunction{
 		doc.targetName = encTargetName;
 		doc.setPath(encPath);
 		doc.setName(encName);
+		if(vid != null)
+		{
+			doc.setVid(vid);
+		}
 		return doc;
 	}
 	
@@ -10962,7 +10967,7 @@ public class BaseController  extends BaseFunction{
 	
 	private String buildDocFileLink(String usage, Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
 		
-		Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
 		if(downloadDoc == null)
 		{
 			System.out.println("buildDocFileLink() buildDownloadDocInfo failed");

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import util.DateFormat;
 import util.ReadProperties;
-import util.RegularUtil;
 import util.ReturnAjax;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.GroupMember;
@@ -563,7 +562,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		Doc downloadDoc = buildDownloadDocInfo("","", targetPath, targetName);
+		Doc downloadDoc = buildDownloadDocInfo(0, "","", targetPath, targetName);
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
 		writeJson(rt, response);
