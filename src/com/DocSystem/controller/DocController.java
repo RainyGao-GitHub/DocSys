@@ -1493,7 +1493,7 @@ public class DocController extends BaseController{
 				
 		if(dbDoc.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1520,7 +1520,7 @@ public class DocController extends BaseController{
 				return;
 			}
 					
-			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1552,7 +1552,7 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(0);	//下载完成后不能删除下载的文件
 			docSysDebugLog("本地文件: 原始路径下载", rt);
@@ -1581,7 +1581,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
@@ -1615,7 +1615,7 @@ public class DocController extends BaseController{
 				
 			if(remoteEntry.getType() == 1)
 			{
-				Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
+				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 				rt.setData(downloadDoc);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
 				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1636,7 +1636,7 @@ public class DocController extends BaseController{
 				return;
 			}
 				
-			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1681,7 +1681,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), targetPath, targetName);
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
 		docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -3052,7 +3052,7 @@ public class DocController extends BaseController{
 			String fileSuffix = getFileSuffix(name);
 			//if(isPicture(fileSuffix) || isVideo(fileSuffix))
 			//{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
 			rt.setDataEx(downloadDoc);
 			//}
 			
@@ -3687,7 +3687,7 @@ public class DocController extends BaseController{
 		
 		System.out.println("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
 		
-		Doc downloadDoc = buildDownloadDocInfo(doc.getPath(), doc.getName(), userTmpDir, targetName);		
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), userTmpDir, targetName);		
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);
 		writeJson(rt, response);			
