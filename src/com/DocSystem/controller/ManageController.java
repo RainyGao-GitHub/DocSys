@@ -809,31 +809,20 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/restartServer.do")
-	public void restartTomcat(String authCode, String tomcatPath, String javaHome,
+	public void restartServer(String authCode, String tomcatPath, String javaHome,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("restartTomcat() tomcatPath:" + tomcatPath);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
-		}
-		
-		//saveFile to tmpPath
-		if(tomcatPath == null)
-		{
-			System.out.println("restartTomcat() tomcatPath is null");
-			docSysErrorLog("Tomcat安装路径未指定", rt);
-			writeJson(rt, response);
-			return;
-		}
+		}		
 		
 		//开始重启
-		if(restartTomcat(tomcatPath, javaHome) == false)
+		if(restartServer(rt) == false)
 		{
-			System.out.println("restartTomcat() 重启服务失败");
-			docSysErrorLog("重启服务失败", rt);
+			System.out.println("restartServer() 重启服务失败");
 			writeJson(rt, response);
 			return;
 		}
