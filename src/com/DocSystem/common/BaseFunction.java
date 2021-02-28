@@ -909,6 +909,20 @@ public class BaseFunction{
 		return webUserTmpPath;
 	}
 
+	protected String getWebUserTmpPath(User login_user, boolean autoCreate) {
+        String webUserTmpPath =  docSysWebPath +  "tmp/" + login_user.getId() + "/";
+        System.out.println("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
+		if(autoCreate == true)
+		{
+			File dir = new File(webUserTmpPath);
+			if(!dir.exists())
+			{
+				dir.mkdirs();
+			}
+		}
+        return webUserTmpPath;
+	}
+	
 	//根据路径来获取上层路径 
 	protected static String getParentPath(String path) {
 		if(path == null || path.length() < 2)
