@@ -71,6 +71,24 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
+	                  <tr>
+	                    <td>系统密钥</td>
+	                    <td></td>
+	                    <td class="edit">
+	                      	<button onclick="generateRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
+	                      	<button onclick="exportRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
+	                    	<button onclick="deleteRootKey()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+	                    </td>
+	                  </tr>
+	                  <tr>
+	                    <td>证书密钥</td>
+	                    <td></td>
+	                    <td class="edit">
+	                      	<button onclick="generateLicenseKeyPair()" data-id="" class="btn btn-lg btn-success examine_ban">生成</button>
+	                      	<button onclick="exportLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
+	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+	                    </td>
+	                  </tr>
 	                </tbody>
 	          </table>
               <div class="widget-foot">
