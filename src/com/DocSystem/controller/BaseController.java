@@ -9766,9 +9766,37 @@ public class BaseController  extends BaseFunction{
 		sqlValue = sqlValue.replace('"','\"');
 		return sqlValue;
 	}
+	
+	
 
-	/**************************** Tomcat控制接口 *********************************/
-    public static boolean restartTomcat(String tomcatPath, String javaHome) {              
+	/**************************** Tomcat控制接口 
+	 * @param rt *********************************/
+    public static boolean restartServer(ReturnAjax rt) {              
+    	String serverPath = getParentPath(docSysWebPath, 3);
+    	if(serverPath == null)
+		{
+			System.out.println("restartTomcat() Failed to get serverPath");
+			rt.setError("获取服务器路径失败！");
+			return false;
+		}
+    	
+    	String restartScriptPath = serverPath + "restart.sh";
+    	if(isWinOS())
+    	{
+    		restartScriptPath = serverPath + "restart.bat";
+    	}
+    	
+    	File file = new File(restartScriptPath);
+    	if(file.exists() == false){
+    		rt.setError("找不到服务器重启脚本！");
+    		return false;
+    	}
+    	
+    	String restartCmd = buildScriptRunCmd(restartScriptPath);        
+        return run(restartCmd, null, null) != null;
+    }
+    
+	public static boolean restartTomcat(String tomcatPath, String javaHome) {              
     	String stopScriptPath = generateTomcatStopScript(tomcatPath, javaHome);
     	if(stopScriptPath == null)
 		{
@@ -9823,10 +9851,6 @@ public class BaseController  extends BaseFunction{
     
     private static String generateTomcatStartScript(String tomcatPath, String javaHome) {
 		tomcatPath = localDirPathFormat(tomcatPath);
-		if(javaHome == null)
-        {
-        	javaHome = tomcatPath + "Java/jre1.8.0_162/";
-        }
         javaHome = localDirPathFormat(javaHome);
     	
         //对tomcatPath和javaHome进行格式转换
