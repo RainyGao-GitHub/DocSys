@@ -607,7 +607,10 @@ public class BaseFunction{
         {
         	return localDirPathFormat(path);
         }
-        return null;
+        
+        //tomcat目录
+        path = getParentPath(docSysWebPath, 2) + "Java/jdk/";
+        return path;
     }
 	
 	//获取Tomcat的安装路径
@@ -620,18 +623,8 @@ public class BaseFunction{
         	return localDirPathFormat(path);
         }
 
-        switch(OSType)
-        {
-        case OS.Linux:
-        	path = "/var/lib/tomcat7/";
-        	break;
-        case OS.Windows:
-        	path = "C:/xampp/tomcat/";
-            break;
-        case OS.MacOS:
-        	path = "/Library/tomcat/";
-            break;
-        }
+        //tomcat目录
+        path = getParentPath(docSysWebPath, 2);
         return path;
     }
 	
@@ -916,13 +909,35 @@ public class BaseFunction{
 		return webUserTmpPath;
 	}
 
-	//WebPath was 
-	protected String getWebAppPath() {
-		String webPath = getWebPath();
-        webPath = localDirPathFormat(webPath);
-        String webParentPath = webPath + "../";
-        System.out.println("getWebAppPath() webParentPath:" + webParentPath);
-		return webPath;
+	//根据路径来获取上层路径 
+	protected static String getParentPath(String path) {
+		if(path == null || path.length() < 2)
+		{
+			System.out.println("getParentPath() failed to get parentPath for path:" + path);
+			return null;
+		}
+		
+		//反向查找 "/"
+		int pos = path.lastIndexOf("/", path.length() - 2);
+		if(pos == -1)
+		{
+			System.out.println("getParentPath() failed to get parentPath for path:" + path);
+			return null;
+		}
+		String parentPath = path.substring(0, pos+1);
+        System.out.println("getParentPath() parentPath:" + parentPath);
+		return parentPath;
+	}
+	
+	protected static String getParentPath(String path, int n) {
+		path = localDirPathFormat(path); //首先对路径进行统一格式化
+		
+		for(int i=0; i<n; i++)
+		{
+			path = getParentPath(path);
+		}
+		
+		return path;
 	}
 	
 	//WebPath was 
