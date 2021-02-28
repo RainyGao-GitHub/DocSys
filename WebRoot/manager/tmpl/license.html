@@ -18,7 +18,7 @@
                 <tr>
                   <th>#</th>
                   <th>ID</th>
-                  <th>客户信息</th>
+                  <th>客户名称</th>
                   <th>支付信息</th>
                   <th>用户限制</th>
                   <th>过期时间</th>
@@ -30,6 +30,7 @@
 
                 {{each list as value i}}
                   <tr index="{{i}}">
+                  	<td>{{i}}</td>
                     <td>{{value.id}}</td>
                     <td>{{value.customer}}</td>
                     <td>{{value.payInfo}}</td>
@@ -37,8 +38,8 @@
                     <td>{{value.expireTime}}</td>
                     <td>{{value.createTime}}</td>
                     <td class="edit">
-                      <button onclick="delLicenseConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
                       <button onclick="downloadLicenseConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">下载</button>
+                      <button onclick="delLicenseConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
                     </td>
                   </tr>
                 {{/each}}
