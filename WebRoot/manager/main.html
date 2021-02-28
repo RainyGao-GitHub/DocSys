@@ -355,13 +355,14 @@
 	        case "license":
 	            title = "证书管理";
 	            $("#nav li[data-eb-params=license]>a").addClass("open");
-	            showLicensePage();
+	            showLicenseList();
 	            break;
 	        case "system":
 	        case "systemEmailConfig":
 	        case "systemSmsConfig":
 	        case "systemDbConfig":
 	        case "systemUpgrade":
+	        case "systemLicenses":
 	        	title = "系统管理";
 	            $("#nav li[data-eb-params=system]>a").addClass("open");
 	            $("ul.sublist").show();	        	
@@ -394,6 +395,9 @@
         case "systemUpgrade":
             showSystemUpgrade();
         	break;
+        case "systemLicenses":
+            showSystemLicenses();
+        	break;        	
 	    }
     }
 	
@@ -1337,7 +1341,7 @@
 	
 	function deleteSystemLicense(){
 		console.log("deleteSystemLicense()");
-		var systemLicense = licenses.systemLicense;
+		var systemLicense = systemLicenses.systemLicense;
 		if(systemLicense.hasLicense == false)
 		{
 			return;
@@ -1376,7 +1380,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
 					updateSystemLicenseInfo(ret.data);
-					LicenseListDisplay(licenses);
+					LicenseListDisplay(systemLicenses);
                    	showErrorMessage("删除成功");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
@@ -1475,7 +1479,7 @@
 				if("ok" == ret.status){
 					showErrorMessage("安装成功");
 					updateSystemLicenseInfo(ret.data);
-					LicenseListDisplay(licenses);
+					LicenseListDisplay(systemLicenses);
 				 }
 				 else	//上传失败
 				 {
@@ -1504,7 +1508,7 @@
 	
 	function updateSystemLicenseInfo(licenseInfo)
 	{
-		var systemLicenseInfo = licenses.systemLicense;
+		var systemLicenseInfo = systemLicenses.systemLicense;
 		systemLicenseInfo.hasLicense = licenseInfo.hasLicense;
 		systemLicenseInfo.id = licenseInfo.id;
 		systemLicenseInfo.customer = licenseInfo.customer;
@@ -1515,7 +1519,7 @@
 	
 	function deleteOfficeLicense(){
 		console.log("deleteOfficeLicense()");
-		var officeLicense = licenses.officeLicense;
+		var officeLicense = systemLicenses.officeLicense;
 		if(officeLicense.hasLicense == false)
 		{
 			return;
@@ -1554,7 +1558,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
 					updateOfficeLicenseInfo(ret.data);
-					LicenseListDisplay(licenses);
+					LicenseListDisplay(systemLicenses);
                    	showErrorMessage("删除成功");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
@@ -1653,7 +1657,7 @@
 				if("ok" == ret.status){
 					showErrorMessage("安装成功");
 					updateOfficeLicenseInfo(ret.data);
-					LicenseListDisplay(licenses);
+					LicenseListDisplay(systemLicenses);
 				 }
 				 else	//上传失败
 				 {
@@ -1682,7 +1686,7 @@
 	
 	function updateOfficeLicenseInfo(licenseInfo)
 	{
-		var officeLicenseInfo = licenses.officeLicense;
+		var officeLicenseInfo = systemLicenses.officeLicense;
 		officeLicenseInfo.hasLicense = licenseInfo.hasLicense;
 		officeLicenseInfo.usersCount = licenseInfo.usersCount;
 		officeLicenseInfo.connections = licenseInfo.connections;
@@ -1804,6 +1808,69 @@
 		xhr.open("post", "/DocSystem/Manage/upgradeSystem.do");
 		xhr.send(form);
 	}
+	
+	//证书管理
+	function showLicenseList(pageIndex){
+		var searchWord = $("#search-payInfo").val();
+		var pageSize = gPageSize;
+		
+		$.ajax({
+	        url : "/DocSystem/Sales/getLicenseList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            // 新增用户名搜索条件
+	            searchWord: searchWord,
+	        	pageIndex: pageIndex ? pageIndex : 0,
+	        	pageSize: pageSize
+	        },
+	        success : function (ret) {
+	        	console.log("getLicenseList ret",ret);
+	            if( "ok" == ret.status )
+	            {
+	            	LicenseListDisplay(ret.data);
+
+                    // 渲染分页
+                    var total = ret.dataEx;
+                    $("#licenseList-pagination").pagination({
+                        /*当前页码*/
+                        currentPage: pageIndex + 1,
+                        /*总共有多少页*/
+                        totalPage: Math.ceil(total/pageSize),
+                        /*是否显示首页、尾页 true：显示 false：不显示*/
+                        isShow:true,
+                        /*分页条显示可见页码数量*/
+                        count:5,
+                        /*第一页显示文字*/
+                        homePageText:'首页',
+                        /*最后一页显示文字*/
+                        endPageText:'尾页',
+                        /*上一页显示文字*/
+                        prevPageText:'上一页',
+                        /* 下一页显示文字*/
+                        nextPageText:'下一页',
+                        /*点击翻页绑定事件*/
+                        callback: function(newPageIndex) {
+                            // 分页插件的页码从1开始，减1处理
+                            showLicenseList(newPageIndex - 1);
+                        }
+                    });
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("获取证书列表失败:服务器异常");
+	        }
+	    });
+	}
+	
+	function LicenseListDisplay(list)
+    {
+		$Func.render($("#container"),"license",{"list":list});
+    }
 	
 	//成员管理
 	function showUserList(pageIndex){
@@ -1929,7 +1996,7 @@
 			big: false,
 			callback: function(){
 			    console.log("page loaded callback");
-			    var systemLicenseInfo = licenses.systemLicense;
+			    var systemLicenseInfo = systemLicenses.systemLicense;
 			    SystemLicenseInfoPageCallback(systemLicenseInfo);
 			}
 		});
@@ -1948,7 +2015,7 @@
 			big: false,
 			callback: function(){
 			    console.log("page loaded callback");
-			    var officeLicenseInfo = licenses.officeLicense;
+			    var officeLicenseInfo = systemLicenses.officeLicense;
 			    OfficeLicenseInfoPageCallback(officeLicenseInfo);
 			}
 		});
@@ -2033,19 +2100,19 @@
 		}, null);	
 	}
 	
-	//证书管理
-	var licenses = {};
-	function showLicensePage(){
+	//证书安装
+	var systemLicenses = {};
+	function showSystemLicenses(){
 		$.ajax({
-	        url : "/DocSystem/Manage/getLicenseList.do",
+	        url : "/DocSystem/Manage/getSystemLicenses.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {},
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	licenses = ret.data;
-	            	LicenseListDisplay(licenses);
+	            	systemLicenses = ret.data;
+	            	SystemLicensesDisplay(systemLicenses);
 	            }
 	            else 
 	            {
@@ -2058,10 +2125,10 @@
 	    });
 	}
 	
-	function LicenseListDisplay(licenses)
+	function SystemLicensesDisplay(systemLicenses)
 	{
-		console.log("LicenseListDisplay", licenses);
-		var systemLicense = licenses.systemLicense;
+		console.log("SystemLicensesDisplay", systemLicenses);
+		var systemLicense = systemLicenses.systemLicense;
 		if(systemLicense.hasLicense == false)
 		{
 			systemLicense.status = "未安装";
@@ -2071,7 +2138,7 @@
 			systemLicense.status = "已安装";			
 		}
 		
-		var officeLicense = licenses.officeLicense;
+		var officeLicense = systemLicenses.officeLicense;
 		if(officeLicense.hasLicense == false)
 		{
 			officeLicense.status = "未安装";
@@ -2080,7 +2147,7 @@
 			officeLicense.status = "已安装";			
 		}
 		
-		$Func.render($("#container"),"license",{"value":licenses});
+		$Func.render($("#container"),"systemLicenses",{"value":systemLicenses});
 	}
 	
 	//仓库管理

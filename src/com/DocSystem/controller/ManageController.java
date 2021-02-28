@@ -644,10 +644,10 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	@RequestMapping("/getLicenseList.do")
-	public void getLicenseList(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	@RequestMapping("/getSystemLicenses.do")
+	public void getSystemLicenses(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getLicenseList()");
+		System.out.println("getSystemLicenses()");
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
