@@ -1153,6 +1153,140 @@
 	    });
 	}
 	
+	function generateRootKey()
+	{
+        $.ajax({
+            url : "/DocSystem/Sales/generateRootKey.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showErrorMessage("生成密钥成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("生成密钥失败:服务器异常");
+            }
+        });
+	}
+	
+	function exportRootKey(){
+		$.ajax({
+	        url : "/DocSystem/Sales/exportRootKey.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	         	    console.log("exportRootKey Ok:",ret);	   		
+	            	window.location.href = ret.data;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("密钥导出失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("密钥导出失败:服务器异常");
+	        }
+	    });
+	}
+	
+	function deleteRootKey()
+	{
+        $.ajax({
+            url : "/DocSystem/Sales/deleteRootKey.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showErrorMessage("删除密钥成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("删除密钥失败:服务器异常");
+            }
+        });
+	}
+	
+	function generateLicenseKeyPair()
+	{
+        $.ajax({
+            url : "/DocSystem/Sales/generateLicenseKeyPair.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showErrorMessage("生成密钥成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("生成密钥失败:服务器异常");
+            }
+        });
+	}
+	
+	function exportLicenseKeyPair(){
+		$.ajax({
+	        url : "/DocSystem/Sales/exportLicenseKeyPair.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	         	    console.log("exportLicenseKeyPair Ok:",ret);	   		
+	            	window.location.href = ret.data;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("密钥导出失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("密钥导出失败:服务器异常");
+	        }
+	    });
+	}
+	
+	function deleteLicenseKeyPair()
+	{
+        $.ajax({
+            url : "/DocSystem/Sales/deleteLicenseKeyPair.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showErrorMessage("删除密钥成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("删除密钥失败:服务器异常");
+            }
+        });
+	}
+	
 	function deleteSystemLicense(){
 		console.log("deleteSystemLicense()");
 		var systemLicense = licenses.systemLicense;
