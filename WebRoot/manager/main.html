@@ -1201,6 +1201,30 @@
 	
 	function deleteRootKey()
 	{
+		deleteRootKeyConfirm();
+	}
+	
+	function deleteRootKeyConfirm()
+	{
+		console.log("deleteRootKeyConfirm()");
+	    qiao.bs.confirm({
+	    		id: "deleteRootKeyConfirmDialog",
+		        title: "删除密钥",
+		        msg: "是否删除系统密钥？",
+		        okbtn: "是",
+		        qubtn: "否",
+	    	},function () {
+				startDeleteSystemLicense();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startDeleteRootKey()
+	{
         $.ajax({
             url : "/DocSystem/Sales/deleteRootKey.do",
             type : "post",
@@ -1267,6 +1291,30 @@
 	}
 	
 	function deleteLicenseKeyPair()
+	{
+		deleteLicenseKeyPairConfirm();
+	}
+	
+	function deleteLicenseKeyPairConfirm()
+	{
+		console.log("deleteLicenseKeyPairConfirm()");
+	    qiao.bs.confirm({
+	    		id: "deleteLicenseKeyPairConfirm",
+		        title: "删除密钥",
+		        msg: "是否删除证书密钥？",
+		        okbtn: "是",
+		        qubtn: "否",
+	    	},function () {
+				startDeleteLicenseKeyPair();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startDeleteLicenseKeyPair()
 	{
         $.ajax({
             url : "/DocSystem/Sales/deleteLicenseKeyPair.do",
