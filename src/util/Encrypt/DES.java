@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
  
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
@@ -13,6 +14,25 @@ public class DES {
  
     private final static String DES = "DES";
      
+    
+    //生成一个DES密钥
+    public static String getKey(){
+        try {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("DES");
+			keyGenerator.init(56);
+			// 生成一个Key
+			SecretKey generateKey = keyGenerator.generateKey();
+			// 转变为字节数组
+			byte[] encoded = generateKey.getEncoded();
+			// 生成密钥字符串
+            String encodeHexString = Hex.encodeHexString(encoded);
+			return encodeHexString;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }   
+    }
+    
     /**
      * Description 根据键值进行加密
      * @param data 
