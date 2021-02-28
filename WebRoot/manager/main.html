@@ -715,12 +715,12 @@
 		        okbtn: "确认",
 		        qubtn: "取消",
 	    	},function () {
-		    	//alert("点击了确定");
+		    	//showErrorMessage("点击了确定");
 				deleteDatabase();
 		    	return true;   //close dialog
 	    	},function()
 	    	{
-	    		//alert("点击了取消")
+	    		//showErrorMessage("点击了取消")
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -770,12 +770,12 @@
 		        okbtn: "确认",
 		        qubtn: "取消",
 	    	},function () {
-		    	//alert("点击了确定");
+		    	//showErrorMessage("点击了确定");
 				resetDatabase();
 		    	return true;   //close dialog
 	    	},function()
 	    	{
-	    		//alert("点击了取消")
+	    		//showErrorMessage("点击了取消")
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -903,13 +903,13 @@
 		        okbtn: "确认",
 		        qubtn: "取消",
 	    	},function () {
-		    	//alert("点击了确定");
+		    	//showErrorMessage("点击了确定");
 				//开始上传
 				startImportDBData(firstFile, dbType, dbUrl, dbUser, dbPwd);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
-	    		//alert("点击了取消")
+	    		//showErrorMessage("点击了取消")
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -1115,7 +1115,7 @@
 		        okbtn: "确认",
 		        qubtn: "取消",
 	    	},function () {
-		    	//alert("点击了确定");
+		    	//showErrorMessage("点击了确定");
 				//开始上传
 				var tomcatPath = $("#tomcatPath").val();
 				var javaHome = $("#javaHome").val();
@@ -1123,7 +1123,7 @@
 		    	return true;   //close dialog
 	    	},function()
 	    	{
-	    		//alert("点击了取消")
+	    		//showErrorMessage("点击了取消")
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -1441,13 +1441,13 @@
 		        okbtn: "是",
 		        qubtn: "否",
 	    	},function () {
-		    	//alert("点击了确定");
+		    	//showErrorMessage("点击了确定");
 				//开始上传
 				startImportLicense(firstFile);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
-	    		//alert("点击了取消")
+	    		//showErrorMessage("点击了取消")
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -1619,13 +1619,13 @@
 		        okbtn: "是",
 		        qubtn: "否",
 	    	},function () {
-		    	//alert("点击了确定");
+		    	//showErrorMessage("点击了确定");
 				//开始上传
 				startImportOfficeLicense(firstFile);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
-	    		//alert("点击了取消")
+	    		//showErrorMessage("点击了取消")
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -1746,13 +1746,13 @@
 		        okbtn: "确认",
 		        qubtn: "取消",
 	    	},function () {
-		    	//alert("点击了确定");
+		    	//showErrorMessage("点击了确定");
 				//开始上传
 				startUpgradeSystem(firstFile);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
-	    		//alert("点击了取消")
+	    		//showErrorMessage("点击了取消")
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -1872,6 +1872,81 @@
 		$Func.render($("#container"),"license",{"list":list});
     }
 	
+	function downloadLicenseConfirm(id)
+	{	
+		console.log("downloadLicenseConfirm id:", id);
+		qiao.bs.confirm({
+			id: "downloadLicenseConfirm",
+	        title: "下载证书",
+	        msg: "是否下载证书？",
+	        okbtn: "下载",
+	        qubtn: "取消",
+	    },function () {
+	    	downloadLicense(id);
+	    	return true;   
+	    });
+	}
+	
+	function downloadLicense(id){
+        $.ajax({
+            url : "/DocSystem/Sales/exportSystemLicense.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	licenseId : id,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+            	    console.log("downloadLicense Ok:",ret);        	   		
+	            	window.location.href = ret.data;
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("服务器异常:删除失败");
+            }
+        });
+	}
+	
+	function delLicenseConfirm(id)
+	{	
+		console.log("delLicenseConfirm");
+		qiao.bs.confirm({
+			id: "delLicenseConfirm",
+	        title: "删除证书",
+	        msg: "是否删除证书？",
+	        okbtn: "删除",
+	        qubtn: "取消",
+	    },function () {
+	    	delLicense(id);
+	    	return true;   
+	    });
+	}
+	
+	function delLicense(id){
+        $.ajax({
+            url : "/DocSystem/Sales/deleteSystemLicense.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	licenseId : id,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showLicenseList();	//刷新UserList
+                    showErrorMessage("删除成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("服务器异常:删除失败");
+            }
+        });
+	}
+	
+	
 	//成员管理
 	function showUserList(pageIndex){
 		var userName = $("#search-userName").val();
@@ -1961,13 +2036,13 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                    	showUserList();	//刷新UserList
-                    alert("删除成功");
+                    showErrorMessage("删除成功");
                 }else {
-                	alert("错误：" + ret.msgInfo);
+                	showErrorMessage("错误：" + ret.msgInfo);
                 }
             },
             error : function () {
-            	alert("服务器异常:删除失败");
+            	showErrorMessage("服务器异常:删除失败");
             }
         });
 	}
@@ -2231,13 +2306,13 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                    	showReposList();	//刷新ReposList
-                    alert("删除成功");
+                    showErrorMessage("删除成功");
                 }else {
-                	alert("错误：" + ret.msgInfo);
+                	showErrorMessage("错误：" + ret.msgInfo);
                 }
             },
             error : function () {
-            	alert("服务器异常:删除失败");
+            	showErrorMessage("服务器异常:删除失败");
             }
         });
 	}
@@ -2368,13 +2443,13 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                    	showGroupList();	//刷新GroupList
-                    alert("删除成功");
+                    showErrorMessage("删除成功");
                 }else {
-                	alert("错误：" + ret.msgInfo);
+                	showErrorMessage("错误：" + ret.msgInfo);
                 }
             },
             error : function () {
-            	alert("服务器异常:删除失败");
+            	showErrorMessage("服务器异常:删除失败");
             }
         });
 	}
@@ -2454,11 +2529,11 @@
                 	console.log("已退出登录");
                 	window.location.href = "login.html";
                 }else {
-                    alert("错误："+ret.msgInfo);
+                    showErrorMessage("错误："+ret.msgInfo);
                 }
             },
             error : function () {
-                alert("服务器异常:退出登录失败");
+                showErrorMessage("服务器异常:退出登录失败");
             }
         });
 	}
