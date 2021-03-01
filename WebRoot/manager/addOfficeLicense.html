@@ -1,0 +1,128 @@
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function AddOfficeLicensePageInit()
+	{
+		console.log("addOfficeLicensePageInit()");
+		EnterKeyListenerForAddOfficeLicense();
+	}
+	
+	function showAddOfficeLicenseModal(text){
+		$(".addOfficeLicenseModal").fadeIn("slow");
+		$("#name").focus();
+	}
+	
+	function closeAddOfficeLicenseModal(){
+		$(".addOfficeLicenseModal").fadeOut("slow");
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForAddOfficeLicense(){
+		console.log("start enter key listener");
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		addOfficeLicense();
+	 	}  
+	}
+	
+	function addOfficeLicense(obj,event){
+		console.log("addOfficeLicense()");
+		
+		//Disable the obj
+		$(obj).attr("disabled",true);
+		
+		var customer = $("#customer").val();
+	    var payInfo = $("#payInfo").val();
+	    var usersCount =  $("#usersCount").val();
+	    var validMonths =  $("#validMonths").val();
+	    
+	    console.log(customer,payInfo,usersCount,validMonths);
+	    
+        $.ajax({
+            url : "/DocSystem/Sales/generateOfficeLicense.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	customer : customer,
+            	payInfo : payInfo,
+            	usersCount : usersCount,
+            	validMonths : validMonths,
+            },
+            success : function (ret) {
+        		//Enable the obj
+        		$(obj).attr("disabled",false);
+
+                if( "ok" == ret.status ){
+                	showLicenseList();	//刷新LicenseList
+            	    console.log("generateLicense Ok:",ret);        	   		
+	            	window.location.href = ret.data;
+	            	showErrorMessage("新增成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+        		//Enable the obj
+        		$(obj).attr("disabled",false);
+
+        		showErrorMessage("新增失败:服务器异常");
+            }
+        });
+	}
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("addOfficeLicense Page init");
+    	AddOfficeLicensePageInit();
+		$("#customer").click().focus();
+	});
+</script>
+                    
+                  <div class="form-horizontal">
+                    <!-- customer -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="customer">客户信息</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="customer" name="customer">
+                      </div>
+                    </div>
+                    <!-- payInfo -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="payInfo">支付信息</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="payInfo" name="payInfo">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3">用户数量</label>
+                      <div class="col-lg-9">
+                        <select class="form-control" id="usersCount" name="usersCount">
+                          <option value="20">20人</option>
+                          <option value="50">50人</option>
+                          <option value="100">100人</option>
+                          <option value="200">200人</option>
+                          <option value="500">500人</option>
+                          <option value="1000">1000人</option>
+                          <option value="100000">不限</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3">有效时间</label>
+                      <div class="col-lg-9">
+                        <select class="form-control" id="validMonths" name="validMonths">
+                          <option value="12">1年</option>
+                          <option value="24">2年</option>
+                          <option value="36">3年</option>
+                          <option value="240">不限</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="form-group">
+                      <!-- Buttons -->
+                      <div class="col-lg-offset-9 col-lg-2">
+                        <button type="submit" class="btn btn-success" id="btn_addOfficeLicense" onclick="addOfficeLicense(this,event)">添加</button>
+                      </div>
+                    </div>
+                  </div>
