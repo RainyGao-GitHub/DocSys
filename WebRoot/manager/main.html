@@ -1869,6 +1869,16 @@
 	
 	function LicenseListDisplay(list)
     {
+       	for(var i=0; i<list.length; i++)
+ 	    {
+       		var node = list[i];
+			node.createDate = formatDate(node.createTime);
+			node.expireDate = "长期";
+			if(node.expireTime)
+			{
+				node.expireDate = formatDate(node.expireTime);				
+			}
+ 	    }		
 		$Func.render($("#container"),"license",{"list":list});
     }
 	
