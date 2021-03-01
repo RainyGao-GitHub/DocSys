@@ -180,8 +180,8 @@
 <div style="display:none">
 	<input id="importDBFiles" name="importDBFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
 	<input id="upgradeFiles" name="upgradeFiles" type="file" onchange="upgradeSystemConfirm(event)" multiple="multiple"/>
-	<input id="importLicense" name="importLicense" type="file" onchange="importLicenseConfirm(event)" multiple="multiple"/>
-	<input id="importOfficeLicense" name="importOfficeLicense" type="file" onchange="importOfficeLicenseConfirm(event)" multiple="multiple"/>
+	<input id="installSystemLicense" name="installSystemLicense" type="file" onchange="installSystemLicenseConfirm(event)" multiple="multiple"/>
+	<input id="installOfficeLicense" name="installOfficeLicense" type="file" onchange="installOfficeLicenseConfirm(event)" multiple="multiple"/>
 </div>
 
 <script type="application/javascript">
@@ -1372,7 +1372,7 @@
 	function startDeleteSystemLicense()
 	{
         $.ajax({
-            url : "/DocSystem/Bussiness/deleteLicense.do",
+            url : "/DocSystem/Bussiness/deleteSystemLicense.do",
             type : "post",
             dataType : "json",
             data : {
@@ -1380,7 +1380,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
 					updateSystemLicenseInfo(ret.data);
-					LicenseListDisplay(systemLicenses);
+					showSystemLicenses(systemLicenses);
                    	showErrorMessage("删除成功");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
@@ -1396,14 +1396,14 @@
 	function installSystemLicense(){
 		console.log("installSystemLicense()");
   		//清除文件控件
-		$("#importLicense").val("");
-	    return $("#importLicense").click();
+		$("#installSystemLicense").val("");
+	    return $("#installSystemLicense").click();
 	}
 	
 	
-	function importLicenseConfirm(e)
+	function installSystemLicenseConfirm(e)
 	{
-		console.log("importLicenseConfirm()");
+		console.log("installSystemLicenseConfirm()");
 	    var files = e.target.files;
 	    var firstFile;
 	    if(files.length > 0)
@@ -1435,7 +1435,7 @@
 	    //console.log("firstFile:"+fileName);
 
 	    qiao.bs.confirm({
-	    		id: "importLicenseConfirmDialog",
+	    		id: "installSystemLicenseConfirmDialog",
 		        title: "安装证书",
 		        msg: "是否安装证书？",
 		        okbtn: "是",
@@ -1443,7 +1443,7 @@
 	    	},function () {
 		    	//showErrorMessage("点击了确定");
 				//开始上传
-				startImportLicense(firstFile);
+				startInstallSystemLicense(firstFile);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
@@ -1453,7 +1453,7 @@
 	    );
 	}
 	
-	function startImportLicense(file)
+	function startInstallSystemLicense(file)
 	{
 		//新建文件上传表单
 		var form = new FormData();
@@ -1479,7 +1479,7 @@
 				if("ok" == ret.status){
 					showErrorMessage("安装成功");
 					updateSystemLicenseInfo(ret.data);
-					LicenseListDisplay(systemLicenses);
+					showSystemLicenses(systemLicenses);
 				 }
 				 else	//上传失败
 				 {
@@ -1502,7 +1502,7 @@
 		};
 		
 		//上传表单			
-		xhr.open("post", "/DocSystem/Bussiness/impportLicense.do");
+		xhr.open("post", "/DocSystem/Bussiness/installSystemLicense.do");
 		xhr.send(form);
 	}
 	
@@ -1558,7 +1558,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
 					updateOfficeLicenseInfo(ret.data);
-					LicenseListDisplay(systemLicenses);
+					showSystemLicenses(systemLicenses);
                    	showErrorMessage("删除成功");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
@@ -1574,14 +1574,14 @@
 	function installOfficeLicense(){
 		console.log("installOfficeLicense()");
   		//清除文件控件
-		$("#importOfficeLicense").val("");
-	    return $("#importOfficeLicense").click();
+		$("#installOfficeLicense").val("");
+	    return $("#installOfficeLicense").click();
 	}
 	
 	
-	function importOfficeLicenseConfirm(e)
+	function installOfficeLicenseConfirm(e)
 	{
-		console.log("importOfficeLicenseConfirm()");
+		console.log("installOfficeLicenseConfirm()");
 	    var files = e.target.files;
 	    var firstFile;
 	    if(files.length > 0)
@@ -1613,7 +1613,7 @@
 	    //console.log("firstFile:"+fileName);
 
 	    qiao.bs.confirm({
-	    		id: "importOfficeLicenseConfirmDialog",
+	    		id: "installOfficeLicenseConfirmDialog",
 		        title: "安装证书",
 		        msg: "是否安装证书？",
 		        okbtn: "是",
@@ -1657,7 +1657,7 @@
 				if("ok" == ret.status){
 					showErrorMessage("安装成功");
 					updateOfficeLicenseInfo(ret.data);
-					LicenseListDisplay(systemLicenses);
+					showSystemLicenses(systemLicenses);
 				 }
 				 else	//上传失败
 				 {
@@ -1680,7 +1680,7 @@
 		};
 		
 		//上传表单			
-		xhr.open("post", "/DocSystem/Bussiness/impportOfficeLicense.do");
+		xhr.open("post", "/DocSystem/Bussiness/installOfficeLicense.do");
 		xhr.send(form);
 	}
 	
@@ -1899,7 +1899,7 @@
 	
 	function downloadLicense(id){
         $.ajax({
-            url : "/DocSystem/Sales/exportSystemLicense.do",
+            url : "/DocSystem/Sales/downloadLicense.do",
             type : "post",
             dataType : "json",
             data : {
@@ -1936,7 +1936,7 @@
 	
 	function delLicense(id){
         $.ajax({
-            url : "/DocSystem/Sales/deleteSystemLicense.do",
+            url : "/DocSystem/Sales/deleteLicense.do",
             type : "post",
             dataType : "json",
             data : {

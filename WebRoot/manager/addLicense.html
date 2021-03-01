@@ -38,7 +38,7 @@
 	    console.log(customer,payInfo,usersCount,validMonths);
 	    
         $.ajax({
-            url : "/DocSystem/Sales/generateSystemLicense.do",
+            url : "/DocSystem/Sales/generateLicense.do",
             type : "post",
             dataType : "json",
             data : {
@@ -53,7 +53,7 @@
 
                 if( "ok" == ret.status ){
                 	showLicenseList();	//刷新LicenseList
-            	    console.log("generateSystemLicense Ok:",ret);        	   		
+            	    console.log("generateLicense Ok:",ret);        	   		
 	            	window.location.href = ret.data;
 	            	showErrorMessage("新增成功");
                 }else {
