@@ -1,7 +1,5 @@
 package com.DocSystem.controller;
 
-import java.util.Date;
-
 import javax.servlet.ServletContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
@@ -12,8 +10,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.ServletContextAware;
-
-import com.DocSystem.common.AuthCode;
   
 @Service
 public class StartupListener  extends BaseController implements ApplicationContextAware, ServletContextAware, InitializingBean, ApplicationListener<ContextRefreshedEvent> {
