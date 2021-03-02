@@ -44,7 +44,7 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 （1）解压系统安装包至本地目录
 
 （2）运行start脚本启动系统
-### 3、访问
+#### 3、访问
 本机访问：http://localhost:8100/DocSystem
 
 远程访问：将localhost改为IP地址即可
