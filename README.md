@@ -4,6 +4,8 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 
 主要应用场景：文件管理系统、日志管理系统、网页版SVN仓库、网页版GIT仓库、电子书、软件接口管理系统、远程桌面管理、自动备份软件。
 
+### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
+
 | 功能限制 |   社区版  | 商业版 |
 | ------------- | ------------- | ------------- |
 | 价格          | 免费    | 详见价格表 |
@@ -18,36 +20,6 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 | 在文件编辑     | +      | + |
 | Office文件预览 | -      | + |
 | Office文件编辑 | -      | + |
-
-移动端网页支持
-
-存储挂载支持:FTP/阿里云OSS/七牛CDN/腾讯COS等
-
-客户端及APP: Windows,Mac客户端,iOS,Android
-
-webdav支持
-
-支持部门组织架构功能
-
-支持修改程序版权
-
-自定义用户目录、空间大小
-
-Office在线预览、编辑
-
-文档历史记录与追溯
-
-CAD/PSD/AI专业设计文件预览
-
-文档水印/防截屏
-
-支持AD域、企业微信、钉钉(单独购买)
-
-专属客服跟进
-
-
-
-### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
 全平台支持:Linux，Windows，Mac.
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0614/223719_03bd18e1_1558129.png "docsys_首页1.png")
