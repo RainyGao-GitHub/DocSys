@@ -33,24 +33,27 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 后台管理
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105813_e858feb3_1558129.png "docsys_管理后台1.png")
 
-# 系统安装
-### 1、准备工作
-#### 下载DocSystem.war
-下载地址： https://gitee.com/RainyGao/DocSys/releases
+# 系统安装与升级
+### 一、系统安装
+#### 1、下载一键安装包
+社区版： https://github.com/RainyGao-GitHub/DocSysCommnunity/releases
+商业版： https://github.com/RainyGao-GitHub/DocSysBusiness/releases
+#### 2、安装
+（1）解压系统安装包至本地目录
 
-#### 下载MxsDoc运行环境
-下载地址(Windows)： https://download.csdn.net/download/highrain/15485920
-
-下载地址(Linux)： https://download.csdn.net/download/highrain/15485966
-
-### 2、安装
-（1）解压MxsDoc运行环境压缩包
-
-（2）将DocSystem.war拷贝至tomcat/webapps目录，
-
+（2）运行start脚本启动系统
 ### 3、访问
 本机访问：http://localhost:8100/DocSystem
 
 远程访问：将localhost改为IP地址即可
+
+### 二、系统升级
+#### 1、下载DocSystem.war
+社区版： https://github.com/RainyGao-GitHub/DocSysCommnunity/releases
+商业版： https://github.com/RainyGao-GitHub/DocSysBusiness/releases
+#### 2、升级
+（1）将DocSystem.war拷贝至tomcat/webapps目录
+
+（2）运行restart脚本重启系统
 
 # MxsDoc技术交流群: 953982034
