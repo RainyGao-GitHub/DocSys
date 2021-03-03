@@ -35,7 +35,7 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 
 # 系统安装与升级
 ### 一、系统安装
-#### 1、下载![一键安装包](https://github.com/RainyGao-GitHub/DocSys/releases)
+#### 1、下载[一键安装包](https://github.com/RainyGao-GitHub/DocSys/releases)
 
 #### 2、安装
 （1）解压系统安装包至本地目录
@@ -47,7 +47,7 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 远程访问：将localhost改为IP地址即可
 
 ### 二、系统升级
-#### 1、下载![DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
+#### 1、下载[DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
 
 #### 2、升级
 （1）将DocSystem.war拷贝至tomcat/webapps目录
@@ -58,7 +58,7 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 ## 功能限制
 | 功能限制 |   社区版  | 商业版 |
 | ------------- | ------------- | ------------- |
-| 价格          | 免费    | ![详见价格表](## 商业版价格) |
+| 价格          | 免费    | [详见价格表](## 商业版价格) |
 | 文件管理功能   | +      | + |
 | 用户管理功能   | +      | + |
 | 历史版本功能   | +      | + |
