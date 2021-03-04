@@ -253,7 +253,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, false);
+		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, "UTF-8");
 		return docPwd;
 	}
 	
@@ -7033,7 +7033,7 @@ public class BaseController  extends BaseFunction{
 	{
 		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
 		String officeTextFileName = getOfficeTextFileName(doc);
-		return readDocContentFromFile(userTmpDir, officeTextFileName, true);
+		return readDocContentFromFile(userTmpDir, officeTextFileName);
 	}
 	
 	//从OfficeText文本文件中读取文本内容
@@ -7041,44 +7041,66 @@ public class BaseController  extends BaseFunction{
 	{
 		String userTmpDir = getReposTmpPathForOfficeText(repos, doc);
 		String officeTextFileName = getOfficeTextFileName(doc);
-		return readDocContentFromFile(userTmpDir, officeTextFileName, true, offset, size);
+		return readDocContentFromFile(userTmpDir, officeTextFileName, offset, size);
 	}
 	
+	//RealDoc读取采用自动检测的方案，在线编辑时返回给前端时必须全部转换成UTF-8格式
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
+		if(doc.getCharset() == null && doc.autoCharsetDetect)
+		{
+			return saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
+		}
 		return saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset());
 	}
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
-		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), true);
+		if(doc.getCharset() == null && doc.autoCharsetDetect)
+		{
+			return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
+		}
+		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset());
 	}
 	
 	protected String readRealDocContent(Repos repos, Doc doc, int offset, int size) 
 	{
-		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), true, offset, size);
+		if(doc.getCharset() == null  && doc.autoCharsetDetect)
+		{
+			return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), offset, size);
+		}
+		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset(), offset, size);
 	}
 	
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
 		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, true);
+		if(doc.getCharset() == null  && doc.autoCharsetDetect)
+		{
+			return saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName());			
+		}
 		return saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName(), doc.getCharset());
 	}
-	
+
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, true);
-		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName(), true);
+		if(doc.getCharset() == null  && doc.autoCharsetDetect)
+		{		
+			return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName());
+		}
+		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName(), doc.getCharset());
 	}
 	
+	//virtualDoc 使用UTF-8格式字符串
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
-		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md", null);
+		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md", "UTF-8");
 	}
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
 		String docVName = getVDocName(doc);		
-		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", false);
+		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", "UTF-8");
 	}
 	
 	protected String readVirtualDocContent(Repos repos, Doc doc, int offset, int size) 
@@ -7090,20 +7112,20 @@ public class BaseController  extends BaseFunction{
 			localVRootPath = getReposVirtualPath(repos);
 		}
 
-		return readDocContentFromFile(localVRootPath + docVName + "/", "content.md", false, offset, size);
+		return readDocContentFromFile(localVRootPath + docVName + "/", "content.md", "UTF-8", offset, size);
 	}
 
 	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
 		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, false);
-		return saveDocContentToFile(doc.getContent(),  userTmpDir + docVName + "/", "content.md", null);
+		return saveDocContentToFile(doc.getContent(),  userTmpDir + docVName + "/", "content.md", "UTF-8");
 	}
 	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String docVName = getVDocName(doc);		
 		String userTmpDir = getReposTmpPathForTextEdit(repos,login_user, false);
-		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md", false);
+		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md", "UTF-8");
 	}
 	
 	protected boolean deleteVirtualDoc(Repos repos, Doc doc, ReturnAjax rt) {
@@ -8679,7 +8701,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("getVersionFromFile() file:" + path + name);
 
-		String versionStr = readDocContentFromFile(path, name, false);
+		String versionStr = readDocContentFromFile(path, name, "UTF-8");
 		System.out.println("getVersionFromFile() versionStr:" + versionStr);
 
 		if(versionStr == null || versionStr.isEmpty())
@@ -8957,7 +8979,7 @@ public class BaseController  extends BaseFunction{
 			jsonStr += name + ":" + tmpJsonStr + ",\r\n";		
 		}
 		jsonStr += "}";
-		return saveDocContentToFile(jsonStr, filePath, fileName, null);
+		return saveDocContentToFile(jsonStr, filePath, fileName, "UTF-8");
 	}
 
 	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, String type, String url, String user, String pwd)
@@ -8992,7 +9014,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("importDatabaseFromJsonFile() filePath:" + filePath + " fileName:" + fileName);
 
-		String s = readDocContentFromFile(filePath, fileName, false);
+		String s = readDocContentFromFile(filePath, fileName,  "UTF-8");
 		JSONObject jobj = JSON.parseObject(s);
 		
 		for(int i=0; i<importTabList.size(); i++)
@@ -9177,7 +9199,7 @@ public class BaseController  extends BaseFunction{
 	
 	private static JSONArray getListFromJsonFile(String filePath, String fileName, String listName) {
 		System.out.println("getObjMemberListFromFile() filePath:" + filePath + " fileName:" + fileName + " listName:" + listName);
-		String s = readDocContentFromFile(filePath, fileName, false);
+		String s = readDocContentFromFile(filePath, fileName);
 		if(s == null)
 		{
 			return null;
@@ -9834,10 +9856,10 @@ public class BaseController  extends BaseFunction{
         }
 
         String ScriptTemplatePath = docSysWebPath + "WEB-INF/classes/script/"; //脚本模板
-    	String content = readDocContentFromFile(ScriptTemplatePath, scriptName, false);
+    	String content = readDocContentFromFile(ScriptTemplatePath, scriptName);
 		content = content.replace("tomcatPath", tomcatPathForReplace);
 		content = content.replace("javaHome", javaHomePathForReplace);
-		if(saveDocContentToFile(content, tomcatPath, scriptName, null) == true)
+		if(saveDocContentToFile(content, tomcatPath, scriptName,  null) == true)	//自动生成脚本使用本地默认的格式
 		{
 			return tomcatPath + scriptName;
 		}
@@ -9859,7 +9881,7 @@ public class BaseController  extends BaseFunction{
         }
 
         String ScriptTemplatePath = docSysWebPath + "WEB-INF/classes/script/"; //脚本模板
-    	String content = readDocContentFromFile(ScriptTemplatePath, scriptName, false);
+    	String content = readDocContentFromFile(ScriptTemplatePath, scriptName);  //自动检测编码格式
 		content = content.replace("tomcatPath", tomcatPathForReplace);
 		content = content.replace("javaHome", javaHomePathForReplace);
 		if(saveDocContentToFile(content, tomcatPath, scriptName, null) == true)

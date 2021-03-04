@@ -113,7 +113,7 @@ public class ManageController extends BaseController{
 			}
 		}
 		
-		String s = readDocContentFromFile(BannerConfigPath, "bannerConfig.json", false);
+		String s = readDocContentFromFile(BannerConfigPath, "bannerConfig.json");
 		JSONObject jobj = JSON.parseObject(s);
 		if(jobj == null)
 		{
@@ -621,7 +621,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String version = readDocContentFromFile(docSysWebPath, "version", false);
+		String version = readDocContentFromFile(docSysWebPath, "version");
 		if(version == null)
 		{
 			version = "";

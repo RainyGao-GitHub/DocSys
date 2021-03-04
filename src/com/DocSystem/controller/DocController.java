@@ -3979,7 +3979,7 @@ public class DocController extends BaseController{
 		{
 			return delFile(reposPwdPath + pwdFileName);
 		}
-		return saveDocContentToFile(pwd, reposPwdPath, pwdFileName, null);
+		return saveDocContentToFile(pwd, reposPwdPath, pwdFileName, "UTF-8");
 	}
 	
 	/****************   verify  Doc Access PWD ******************/
@@ -4039,7 +4039,7 @@ public class DocController extends BaseController{
 			return true;
 		}
 		
-		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, false);
+		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, "UTF-8");
 		
 		if(docPwd == null || docPwd.isEmpty())
 		{
