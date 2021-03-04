@@ -7110,6 +7110,7 @@ public class BaseController  extends BaseFunction{
 		{
 			encode = "UTF-8";
 		}
+		System.out.println("readVirtualDocContent() encode:" + encode);
 		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", encode);
 	}
 	

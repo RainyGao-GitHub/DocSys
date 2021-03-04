@@ -1761,6 +1761,7 @@ public class BaseFunction{
 	//使用指定或系统默认字符编码
 	public static boolean saveDocContentToFile(String content, String path, String name,  String encode)
 	{	
+		System.out.println("saveDocContentToFile() encode:" + encode);
 		if(content == null)
 		{
 			System.out.println("saveDocContentToFile() content is null");
@@ -1917,6 +1918,8 @@ public class BaseFunction{
 	
 	protected static String readDocContentFromFile(String path, String name, String encode, int offset, int size) 
 	{	
+		
+		System.out.println("readDocContentFromFile() encode:" + encode);
 		String filePath = path + name;
 		try 
 		{			
