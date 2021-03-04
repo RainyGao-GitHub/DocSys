@@ -54,6 +54,7 @@ public class Doc  implements Comparable<Doc>{
     private boolean isRealDoc = true;
     
     private String charset;
+    public boolean autoCharsetDetect = true;
 
     private String reposPath;
     

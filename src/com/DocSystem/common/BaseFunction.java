@@ -1743,6 +1743,14 @@ public class BaseFunction{
         return false;
     }
     
+    //自动检测文件字符编辑
+	protected boolean saveDocContentToFile(String content, String path, String name) {
+		String filePath = path + name;
+		String encode = getCharset(filePath);
+		return  saveDocContentToFile(path, name, encode);
+	}
+    
+	//使用指定或系统默认字符编码
 	public static boolean saveDocContentToFile(String content, String path, String name,  String encode)
 	{	
 		if(content == null)
@@ -1842,7 +1850,14 @@ public class BaseFunction{
 		return ret;
 	}
 	
-	public static String readDocContentFromFile(String path, String name, boolean encodeDetectEnable) 
+	public static String readDocContentFromFile(String path, String name) 
+	{	
+		String filePath = path + name;
+		String encode = getCharset(filePath);
+		return  readDocContentFromFile(path, name, encode);
+	}
+	
+	public static String readDocContentFromFile(String path, String name, String encode) 
 	{	
 		String filePath = path + name;
 		try 
@@ -1861,8 +1876,6 @@ public class BaseFunction{
 				return null;
 			}
 			
-			String encode = null;
-	
 			byte buffer[] = new byte[fileSize];
 			FileInputStream in;
 			in = new FileInputStream(filePath);
@@ -1870,12 +1883,6 @@ public class BaseFunction{
 			in.close();	
 
 			String content = null;
-			if(encodeDetectEnable)
-			{
-				//encode = getEncodeOfBuffer(buffer, fileSize);
-				encode = getCharset(filePath);
-				System.out.println("readDocContentFromFile " +filePath+ " encode:" + encode);
-			}	
 			if(encode == null)
 			{
 				content = new String(buffer);
@@ -1892,7 +1899,15 @@ public class BaseFunction{
 		}
 	}
 	
-	protected static String readDocContentFromFile(String path, String name, boolean encodeDetectEnable, int offset, int size) 
+	protected static String readDocContentFromFile(String path, String name, int offset, int size) 
+	{	
+		String filePath = path + name;
+		String encode = getCharset(filePath);
+		return  readDocContentFromFile(path, name, encode, offset, size);
+	}
+	
+	
+	protected static String readDocContentFromFile(String path, String name, String encode, int offset, int size) 
 	{	
 		String filePath = path + name;
 		try 
@@ -1913,8 +1928,6 @@ public class BaseFunction{
 			
 			int readSize = fileSize > (offset + size) ? size: (fileSize - offset);
 					
-			String encode = null;
-	
 			byte buffer[] = new byte[readSize];
 			FileInputStream in;
 			in = new FileInputStream(filePath);
@@ -1922,12 +1935,6 @@ public class BaseFunction{
 			in.close();	
 
 			String content = null;
-			if(encodeDetectEnable)
-			{
-				//encode = getEncodeOfBuffer(buffer, fileSize);
-				encode = getCharset(filePath);
-				System.out.println("readDocContentFromFile " +filePath+ " encode:" + encode);
-			}	
 			if(encode == null)
 			{
 				content = new String(buffer);
@@ -1943,6 +1950,7 @@ public class BaseFunction{
 			return null;
 		}
 	}
+	
     
     private static String getEncodeOfBuffer(byte[] buffer, int size) {
 		// TODO Auto-generated method stub
