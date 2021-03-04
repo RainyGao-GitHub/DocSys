@@ -7095,12 +7095,22 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
-		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md", "UTF-8");
+		String encode = getCharset(doc.getLocalVRootPath() + docVName + "/" + "content.md");
+		if(encode == null)
+		{
+			encode = "UTF-8";
+		}
+		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md", encode);
 	}
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
 		String docVName = getVDocName(doc);		
-		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", "UTF-8");
+		String encode = getCharset(doc.getLocalVRootPath() + docVName + "/" + "content.md");
+		if(encode == null)
+		{
+			encode = "UTF-8";
+		}
+		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", encode);
 	}
 	
 	protected String readVirtualDocContent(Repos repos, Doc doc, int offset, int size) 
@@ -7112,7 +7122,12 @@ public class BaseController  extends BaseFunction{
 			localVRootPath = getReposVirtualPath(repos);
 		}
 
-		return readDocContentFromFile(localVRootPath + docVName + "/", "content.md", "UTF-8", offset, size);
+		String encode = getCharset(localVRootPath + docVName + "/" + "content.md");
+		if(encode == null)
+		{
+			encode = "UTF-8";
+		}
+		return readDocContentFromFile(localVRootPath + docVName + "/", "content.md", encode, offset, size);
 	}
 
 	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 

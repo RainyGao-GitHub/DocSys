@@ -1658,6 +1658,13 @@ public class BaseFunction{
 	
 	//This interface was supplied by 寞寞柒柒
 	public static String getCharset(String path) {
+		File file = new File(path);
+		if(file.exists() == false)
+		{
+			System.out.println("getCharset() file not exist");
+			return null;
+		}
+		
 		String charset = "GBK";
 		byte[] first3Bytes = new byte[3];
 		try {
@@ -1710,6 +1717,7 @@ public class BaseFunction{
 			bis.close();
 		} catch (Exception e) {
 			e.printStackTrace();
+			charset = null;
 		}
 		System.out.println("charset:" + charset);
 		return charset;
