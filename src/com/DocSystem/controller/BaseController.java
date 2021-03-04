@@ -7024,7 +7024,7 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("目录 " + vDocPath + "/content.md" + " 创建失败！", rt);
 			return false;			
 		}
-		
+		doc.setCharset("UTF-8");
 		return saveVirtualDocContent(repos, doc, rt);
 	}
 	
@@ -7095,22 +7095,30 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
-		String encode = getCharset(doc.getLocalVRootPath() + docVName + "/" + "content.md");
-		if(encode == null)
+		
+		String encode = doc.getCharset();
+		if(encode == null && doc.autoCharsetDetect)
 		{
-			encode = "UTF-8";
+			encode = getCharset(doc.getLocalVRootPath() + docVName + "/" + "content.md");
+			if(encode == null)
+			{
+				encode = "UTF-8";
+			}
 		}
 		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md", encode);
 	}
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
 		String docVName = getVDocName(doc);		
-		String encode = getCharset(doc.getLocalVRootPath() + docVName + "/" + "content.md");
-		if(encode == null)
+		String encode = doc.getCharset();
+		if(encode == null && doc.autoCharsetDetect)
 		{
-			encode = "UTF-8";
+			encode = getCharset(doc.getLocalVRootPath() + docVName + "/" + "content.md");
+			if(encode == null)
+			{
+				encode = "UTF-8";
+			}
 		}
-		System.out.println("readVirtualDocContent() encode:" + encode);
 		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", encode);
 	}
 	
@@ -7123,10 +7131,14 @@ public class BaseController  extends BaseFunction{
 			localVRootPath = getReposVirtualPath(repos);
 		}
 
-		String encode = getCharset(localVRootPath + docVName + "/" + "content.md");
-		if(encode == null)
+		String encode = doc.getCharset();
+		if(encode == null && doc.autoCharsetDetect)
 		{
-			encode = "UTF-8";
+			encode = getCharset(localVRootPath + docVName + "/" + "content.md");
+			if(encode == null)
+			{
+				encode = "UTF-8";
+			}
 		}
 		return readDocContentFromFile(localVRootPath + docVName + "/", "content.md", encode, offset, size);
 	}
