@@ -1755,6 +1755,10 @@ public class BaseFunction{
 	protected boolean saveDocContentToFile(String content, String path, String name) {
 		String filePath = path + name;
 		String encode = getCharset(filePath);
+		if(encode == null)
+		{
+			encode = "UTF-8";
+		}
 		return  saveDocContentToFile(content, path, name, encode);
 	}
     
