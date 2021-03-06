@@ -1,7 +1,5 @@
 package com.DocSystem.common;
 
-import com.DocSystem.entity.User;
-
 public class AuthCode {
 	private String code = null; //hashCode for authCode
 	private String usage = null;	//用途
