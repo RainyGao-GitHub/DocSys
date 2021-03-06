@@ -74,6 +74,7 @@ import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
+import com.DocSystem.common.constants;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -7998,26 +7999,26 @@ public class BaseController  extends BaseFunction{
 		String officeEditor = officeEditorApi;
 		if(officeEditor == null || officeEditor.isEmpty())
 		{
+			if(systemLicenseInfo.type != constants.DocSys_Bussiness_Edition)
+			{
+				System.out.println("getOfficeEditor() officeEditor not cofigured");				
+				return null;
+			}
+			
 			System.out.println("getOfficeEditor() url:" + request.getRequestURL());
 			String url = getHostAndPortFromUrl(request.getRequestURL());
-			officeEditor = url + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";	
-		}	
-		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
-		
-		if(testUrlWithTimeOut(officeEditor,3000) == false)
-		{				
-			if(officeEditorApi.indexOf("localhost") >= 0)
-			{
-				String serverIP = getIpAddress();
-				officeEditor = officeEditorApi.replace("localhost", serverIP);
-				if(testUrlWithTimeOut(officeEditor,3000) == false)
-				{
-					officeEditor = null;
-				}
-			}
+			officeEditor = url + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";
+			//business edition
+			return officeEditor;
 		}
 		
 		System.out.println("getOfficeEditor() officeEditor:" + officeEditor);
+		if(testUrlWithTimeOut(officeEditor,3000) == false)
+		{	
+			System.out.println("getOfficeEditor() test officeEditor connection failed");
+			return null;
+		}		
+		System.out.println("getOfficeEditor() officeEditor is ok");
 		return officeEditor;
 	}
 	
