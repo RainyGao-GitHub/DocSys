@@ -110,7 +110,7 @@ public class BaseFunction{
 		System.out.println("initSystemLicenseInfo() ");
 		//Default systemLicenseInfo
 		systemLicenseInfo = new License();
-		systemLicenseInfo.type = 0;	//0: 开源版（默认） 1:商业版
+		systemLicenseInfo.type = constants.DocSys_Community_Edition;
 		systemLicenseInfo.usersCount = null;	//无限制
 		systemLicenseInfo.expireTime = null; //长期有效
 		systemLicenseInfo.hasLicense = false;

@@ -156,5 +156,8 @@ public class constants {
 	
 	public final static int PACKAGE_TYPE_OS = 0;
 	public final static int PACKAGE_TYPE_I = 1;
-	public final static int PACKAGE_TYPE_D = 2;	
+	public final static int PACKAGE_TYPE_D = 2;
+	
+	public final static int DocSys_Community_Edition = 0;
+	public final static int DocSys_Bussiness_Edition = 1;
 }
