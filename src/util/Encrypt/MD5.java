@@ -1,15 +1,26 @@
 package util.Encrypt;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class MD5 {
 	public static String md5(String text) {
+        return md5(text, null);
+	}
+	
+	public static String md5(String text, String encode) {
         try {
             // Create MessageDigest instance for MD5
             MessageDigest md = MessageDigest.getInstance("MD5");
             //Add password bytes to digest
-            md.update(text.getBytes());
+            if(encode == null)
+            {
+            	md.update(text.getBytes());
+            }
+            else
+            {
+            	md.update(text.getBytes(encode));
+            }
+            
             //Get the hash's bytes 
             byte[] bytes = md.digest();
             //This bytes[] has bytes in decimal format;
@@ -22,7 +33,7 @@ public class MD5 {
             //Get complete hashed password in hex format
             return sb.toString();
         } 
-        catch (NoSuchAlgorithmException e) 
+        catch (Exception e) 
         {
             e.printStackTrace();
         }
