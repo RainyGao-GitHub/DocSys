@@ -49,9 +49,9 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
-import com.DocSystem.common.CommitAction;
-import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.CommitAction.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;

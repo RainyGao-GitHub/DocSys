@@ -22,9 +22,9 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
-import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
+import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.controller.BaseController;
 
 /*

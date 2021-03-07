@@ -56,12 +56,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jzlib.GZIPInputStream;
-import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.QueryCondition;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
+import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.commonService.ProxyThread;
 

@@ -1,21 +1,10 @@
-package com.DocSystem.common;
+package com.DocSystem.common.CommitAction;
 
 import java.util.List;
 
 import com.DocSystem.entity.Doc;
 
 public class CommitAction{
-	public enum CommitType {
-		UNDEFINED,
-		ADD,
-		DELETE,
-		MODIFY,
-		MOVE,
-		COPY,
-		FILETODIR,
-		DIRTOFILE;
-	}
-	
     private CommitType action; //1:add 2:delete 3:modify 4:move 5:copy
     
     private Doc doc;

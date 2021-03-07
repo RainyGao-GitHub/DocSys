@@ -33,8 +33,8 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
-import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
