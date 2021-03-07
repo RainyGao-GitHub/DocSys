@@ -1,4 +1,4 @@
-package com.DocSystem.common;
+package com.DocSystem.common.CommonAction;
 
 import java.util.List;
 
@@ -9,34 +9,6 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 
 public class CommonAction {
-	public enum Action {
-		UNDEFINED,
-		ADD,
-		DELETE,
-		UPDATE,
-		MOVE,
-		COPY,
-		PUSH,
-		SYNC,
-		FORCESYNC;
-	}
-	
-	public enum ActionType {
-		UNDEFINED,
-		FS,
-		VERREPOS,
-		DB,
-		INDEX,
-		AUTOSYNCUP;
-	}
-
-	public enum DocType {
-		UNDEFINED,
-		REALDOC,
-		VIRTURALDOC,
-		DOCNAME;
-	}
-	
     private ActionType type = null; 	//1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 	private Action action = null;	//1:add 2:delete 3:update 4:move 5:copy
     private DocType docType = null; //0:DocName 1:RealDoc 2:VirtualDoc

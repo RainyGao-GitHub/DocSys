@@ -62,12 +62,6 @@ import util.Encrypt.MD5;
 
 import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.BaseFunction;
-import com.DocSystem.common.CommitAction;
-import com.DocSystem.common.CommitAction.CommitType;
-import com.DocSystem.common.CommonAction;
-import com.DocSystem.common.CommonAction.Action;
-import com.DocSystem.common.CommonAction.ActionType;
-import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.DocChange.DocChangeType;
@@ -75,6 +69,12 @@ import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.common.constants;
+import com.DocSystem.common.CommitAction.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
+import com.DocSystem.common.CommonAction.Action;
+import com.DocSystem.common.CommonAction.ActionType;
+import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -685,7 +685,7 @@ public class BaseController  extends BaseFunction{
 		return relativePath;
 	}
 
-	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc, CommonAction.Action syncType, User user, String commitMsg) 
+	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc, Action syncType, User user, String commitMsg) 
 	{
 		printObject("addDocToSyncUpList() syncType:" + syncType + " doc:", doc);
 		if(user == null)
@@ -2588,7 +2588,7 @@ public class BaseController  extends BaseFunction{
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index update action for RDoc
-		insertCommonAction(actionList, repos, doc, null, null, null, CommonAction.ActionType.INDEX, CommonAction.Action.UPDATE, CommonAction.DocType.REALDOC, null, null);
+		insertCommonAction(actionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null);
 	}
 	
 	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove)
@@ -2599,10 +2599,10 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		Action actionId = CommonAction.Action.COPY;
+		Action actionId = com.DocSystem.common.CommonAction.Action.COPY;
 		if(isMove)
 		{
-			actionId = CommonAction.Action.MOVE;
+			actionId = com.DocSystem.common.CommonAction.Action.MOVE;
 		}
 		
 		//Check if dstLocalEntry exists
@@ -2617,20 +2617,20 @@ public class BaseController  extends BaseFunction{
 			//Insert IndexAction For RealDoc Name Copy or Move (对于目录则会进行递归)
 			if(isMove)
 			{
-				insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.UPDATE, CommonAction.DocType.DOCNAME, null, null);
+				insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null);
 			}
 			else	//对于copy操作则新增对该docName的索引
 			{
-				insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.ADD, CommonAction.DocType.DOCNAME, null, null);				
+				insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null);				
 			}
 			
 			//Insert IndexAction For RealDoc Copy or Move (对于目录则会进行递归)
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, actionId, CommonAction.DocType.REALDOC, null, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null);
 			//Copy VDoc (包括VDoc VerRepos and Index)
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.FS, CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.VERREPOS, CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.FS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VERREPOS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
 			//Copy or Move VDoc (包括VDoc VerRepos and Index)
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null, null);
 		}
 		
 		if(dstLocalEntry.isDirectory())
