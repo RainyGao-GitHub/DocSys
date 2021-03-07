@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.DocSystem.common.CommonAction.CommonAction;
+
 public class UniqueAction {
 	private boolean isRunning = false;
     private Long expireTimeStamp = null; 	//超时时间戳
