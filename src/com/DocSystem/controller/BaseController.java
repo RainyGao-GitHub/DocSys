@@ -72,6 +72,7 @@ import com.DocSystem.common.OS;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposAccess;
+import com.DocSystem.common.RunResult;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
@@ -9969,6 +9970,37 @@ public class BaseController  extends BaseFunction{
         return result;
     }
     
+    public static boolean run(String command, String[] envp, File dir, RunResult runResult) {
+    	Integer exitCode = null;
+    	String result = null;
+        boolean ret = false;
+        
+    	Runtime rt = Runtime.getRuntime();
+        try {
+        	Process ps = rt.exec(command, envp, dir);
+            
+        	result = readProcessOutput(ps);
+
+        	exitCode = ps.waitFor();    	
+        	if(exitCode == 0)
+        	{
+        		System.out.println("执行成功！");
+        		ret = true;
+        	}
+        	else
+        	{
+        		System.out.println("执行失败:" + exitCode);   
+        		System.out.println("错误日志:" + result);   
+            		
+        	}
+        	ps.destroy();
+        	runResult.exitCode = exitCode;
+        	runResult.result = result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ret;
+    }
     
 
 	private static String readProcessOutput(Process ps) throws IOException {
