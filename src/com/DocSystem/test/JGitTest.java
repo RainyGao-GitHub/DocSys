@@ -2,6 +2,7 @@ package com.DocSystem.test;
 
 import java.io.File;
 
+import com.DocSystem.common.FileUtil;
 import com.DocSystem.controller.ReposController;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
@@ -19,8 +20,8 @@ class JGitTest extends ReposController{
 		System.out.println("*********** U:/是从Linux系统影射过来的目录，可以使用git命令行进行结果确认 ****************");
 
 		System.out.println("*********** 删除测试GIT仓库 ****************");
-		//delFileOrDir("U:/JGitTestDir/OriginGitRepos/123456_GIT_RRepos");
-		delFileOrDir("U:/JGitTestDir/LocalGitRepos/234567_GIT_RRepos_Remote");
+		//FileUtil.delFileOrDir("U:/JGitTestDir/OriginGitRepos/123456_GIT_RRepos");
+		FileUtil.delFileOrDir("U:/JGitTestDir/LocalGitRepos/234567_GIT_RRepos_Remote");
 		
     	//Origin Repos
     	Repos repos = new Repos();

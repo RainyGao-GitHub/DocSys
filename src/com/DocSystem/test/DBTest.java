@@ -16,6 +16,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.DocSystem.common.Log;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -53,7 +54,7 @@ class DBTest extends BaseController{
     			docAuth.setDocName(doc.getName());
     		}
     	}
-		printObject("main() docAuthList:", docAuthList);
+		Log.printObject("main() docAuthList:", docAuthList);
 		writeToJsonFile(docAuthList,"docAuthList.json");
 		
 		
@@ -143,7 +144,7 @@ class DBTest extends BaseController{
                 docAuth.setDocPath(rs.getString("DOC_PATH"));
                 docAuth.setDocName(rs.getString("DOC_NAME"));
                 
-                printObject("queryDocAuth() docAuth: ", docAuth);
+                Log.printObject("queryDocAuth() docAuth: ", docAuth);
                 docAuthList.add(docAuth);
             }
             	
@@ -202,7 +203,7 @@ class DBTest extends BaseController{
                 doc.setVid(rs.getInt("VID"));
                 doc.setPath(rs.getString("PATH"));
                 doc.setName(rs.getString("NAME"));
-                printObject("getDocInfo() Doc: ", doc);
+                Log.printObject("getDocInfo() Doc: ", doc);
                 break;
             }
             	
