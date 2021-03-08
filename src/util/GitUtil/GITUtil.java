@@ -50,10 +50,11 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
-import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
@@ -76,7 +77,7 @@ public class GITUtil  extends BaseController{
     RevWalk walk = null;
     
 	public boolean Init(Repos repos,boolean isRealDoc, String commitUser) {
-    	String localVerReposPath = getLocalVerReposPath(repos,isRealDoc);
+    	String localVerReposPath = Path.getLocalVerReposPath(repos,isRealDoc);
     	//System.out.println("GITUtil Init() localVerReposPath:" + localVerReposPath); 
 		
 		gitDir = localVerReposPath + ".git/";
@@ -1131,7 +1132,7 @@ public class GITUtil  extends BaseController{
 			else
 			{
 				//检查父节点是否存在，不存在则自动创建
-				Path.checkAddLocalDirectory(localParentPath);
+				FileUtil.checkAddLocalDirectory(localParentPath);
 			}
 		}
 		else	//强行 checkOut
@@ -1149,7 +1150,7 @@ public class GITUtil  extends BaseController{
 			else
 			{
 				//检查父节点是否存在，不存在则自动创建
-				checkAddLocalDirectory(localParentPath);
+				FileUtil.checkAddLocalDirectory(localParentPath);
 			}
 		}
 		
@@ -1275,7 +1276,7 @@ public class GITUtil  extends BaseController{
 		        return getLatestRevision(doc);
 		    }
 
-    		insertDeleteAction(commitActionList,doc, true);
+    		CommitAction.insertDeleteAction(commitActionList,doc, true);
 		}
 		else
 		{		
@@ -1322,13 +1323,13 @@ public class GITUtil  extends BaseController{
 			    if(type == 0)
 			    {
 	        		System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-	    			insertAddFileAction(commitActionList,doc,false, true);
+	    			CommitAction.insertAddFileAction(commitActionList,doc,false, true);
 			    }
 			    else if(type != 1)
 			    {
 			    	System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		    		insertDeleteAction(commitActionList,doc, true);
-	    			insertAddFileAction(commitActionList,doc,false, true);
+		    		CommitAction.insertDeleteAction(commitActionList,doc, true);
+	    			CommitAction.insertAddFileAction(commitActionList,doc,false, true);
 			    }
 			    else
 			    {
@@ -1338,7 +1339,7 @@ public class GITUtil  extends BaseController{
 			            if(modifyEnable)
 			            {
 		            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		            		insertModifyAction(commitActionList,doc, true);
+		            		CommitAction.insertModifyAction(commitActionList,doc, true);
 		            	}
 		    		}
 		    		else
@@ -1349,7 +1350,7 @@ public class GITUtil  extends BaseController{
 		    				if(docChange.getType() == DocChangeType.LOCALCHANGE)
 		    				{
 			            		System.out.println("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			            		insertModifyAction(commitActionList,doc, true);
+			            		CommitAction.insertModifyAction(commitActionList,doc, true);
 		    				}
 		    			}
 		    		}
@@ -1429,7 +1430,7 @@ public class GITUtil  extends BaseController{
 	    if(isMove)
 	    {
 	    	System.out.println("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
-   			insertDeleteAction(commitActionList,srcDoc, true);
+   			CommitAction.insertDeleteAction(commitActionList,srcDoc, true);
 	    }
         else
         {
@@ -1438,11 +1439,11 @@ public class GITUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			insertAddFileAction(commitActionList, dstDoc,false, true);
+			CommitAction.insertAddFileAction(commitActionList, dstDoc,false, true);
 		}
 		else
 		{
-			insertAddDirAction(commitActionList, dstDoc,false, true);
+			CommitAction.insertAddDirAction(commitActionList, dstDoc,false, true);
 		}
 	    
 		Git git = null;
@@ -1532,7 +1533,7 @@ public class GITUtil  extends BaseController{
 	        Status status = pushResult.getRemoteUpdate( "refs/heads/master" ).getStatus();
 
 	        CloseRepos();
-	        printObject("doPush() PushResult:", status);
+	        Log.printObject("doPush() PushResult:", status);
 	       
 	        if(status.name().equals("OK") || status.name().equals("UP_TO_DATE"))
 	        {
@@ -1572,7 +1573,7 @@ public class GITUtil  extends BaseController{
 		
 		try {
 			FetchResult fetchResult = fetchCmd.call();
-		    printObject("doFetch() fetchResult:", fetchResult);
+		    Log.printObject("doFetch() fetchResult:", fetchResult);
 			
 			TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
 			if(refUpdate == null)
@@ -1582,7 +1583,7 @@ public class GITUtil  extends BaseController{
 			else
 			{
 				Result result = refUpdate.getResult();
-			    printObject("doFetch() result:", result);
+			    Log.printObject("doFetch() result:", result);
 			}
 		    CloseRepos();
 		    return true;
@@ -1781,7 +1782,7 @@ public class GITUtil  extends BaseController{
 			return false;
 		}
 		
-		printObject("doPullEx fetchRes:", fetchRes);
+		Log.printObject("doPullEx fetchRes:", fetchRes);
 		
 		Ref r = null;
 		if (fetchRes != null) {
@@ -1820,7 +1821,7 @@ public class GITUtil  extends BaseController{
 		}
 		
 		org.eclipse.jgit.api.RebaseResult.Status status = rebaseRes.getStatus();
-		printObject("doPullEx rebase status:",status);
+		Log.printObject("doPullEx rebase status:",status);
 		if(status.isSuccessful())
 		{
 			System.out.println("doPullEx success: rebase OK");
@@ -1879,11 +1880,11 @@ public class GITUtil  extends BaseController{
 
 	private boolean doFixRebaseConflict(Git git, Repository repo, RebaseResult rebaseRes) {
 		//将冲突的文件更新为当前commit
-		printObject("doFixRebaseConflict rebase rebaseRes.getConflicts():",rebaseRes.getConflicts());
-		printObject("doFixRebaseConflict rebase rebaseRes.getFailingPaths:",rebaseRes.getFailingPaths());
-		printObject("doFixRebaseConflict rebase rebaseRes.getUncommittedChanges():",rebaseRes.getUncommittedChanges());
+		Log.printObject("doFixRebaseConflict rebase rebaseRes.getConflicts():",rebaseRes.getConflicts());
+		Log.printObject("doFixRebaseConflict rebase rebaseRes.getFailingPaths:",rebaseRes.getFailingPaths());
+		Log.printObject("doFixRebaseConflict rebase rebaseRes.getUncommittedChanges():",rebaseRes.getUncommittedChanges());
 		
-		printObject("doFixRebaseConflict rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit().getName());
+		Log.printObject("doFixRebaseConflict rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit().getName());
 		String revision = rebaseRes.getCurrentCommit().getName();
 		
 		RevTree revTree = rebaseRes.getCurrentCommit().getTree();
@@ -2058,7 +2059,7 @@ public class GITUtil  extends BaseController{
 	private boolean executeModifyAction(Git git, CommitAction action) {
 		Doc doc = action.getDoc();
 		
-		//printObject("executeModifyAction:", doc);
+		//Log.printObject("executeModifyAction:", doc);
 		System.out.println("executeModifyAction() " + doc.getPath() + doc.getName());
 		
 		if(!modifyFile(git, doc))
@@ -2072,7 +2073,7 @@ public class GITUtil  extends BaseController{
 	private boolean executeDeleteAction(Git git, CommitAction action) {
 		Doc doc = action.getDoc();
 
-		//printObject("executeDeleteAction:", doc);
+		//Log.printObject("executeDeleteAction:", doc);
 		System.out.println("executeDeleteAction() " + doc.getPath() + doc.getName());
 		if(!deleteEntry(git, doc))
 		{
@@ -2085,7 +2086,7 @@ public class GITUtil  extends BaseController{
 	private boolean executeAddAction(Git git, CommitAction action) {
 		Doc doc = action.getDoc();
 	
-		//printObject("executeAddAction:", doc);
+		//Log.printObject("executeAddAction:", doc);
 		System.out.println("executeAddAction() " + doc.getPath() + doc.getName());
 		
 		//entry is file
@@ -2130,7 +2131,7 @@ public class GITUtil  extends BaseController{
     	String docPath = doc.getLocalRootPath() + entryPath;
 		String wcDocPath = wcDir + entryPath;
     	
-    	if(copyFile(docPath, wcDocPath, true) == false)
+    	if(FileUtil.copyFile(docPath, wcDocPath, true) == false)
 		{
 			System.out.println("modifyFile() copy File to WD error");					
 			return false;
@@ -2175,9 +2176,9 @@ public class GITUtil  extends BaseController{
 		String wcDocPath = wcDir + entryPath;
 		if(doc.getType() == 1)
 		{
-			if(copyFile(docPath, wcDocPath, true) == false)
+			if(FileUtil.copyFile(docPath, wcDocPath, true) == false)
 			{
-				System.out.println("addEntry() copyFile from " + docPath + " to " + wcDocPath + " 失败");		
+				System.out.println("addEntry() FileUtil.copyFile from " + docPath + " to " + wcDocPath + " 失败");		
 				return false;
 			}
 		}
@@ -2241,7 +2242,7 @@ public class GITUtil  extends BaseController{
     			//已同步
     			return;
     		}
-    		insertDeleteAction(actionList,doc, true);
+    		CommitAction.insertDeleteAction(actionList,doc, true);
     		return;
     	}
     	
@@ -2252,14 +2253,14 @@ public class GITUtil  extends BaseController{
     	case 1:	//文件
     		if(type == 0) 	//新增文件
 	    	{
-    			insertAddFileAction(actionList,doc,isSubAction, true);
+    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, true);
 	            return;
     		}
     		
     		if(type != 1)	//文件类型改变
     		{
-    			insertDeleteAction(actionList,doc, true);
-    			insertAddFileAction(actionList,doc,isSubAction, true);
+    			CommitAction.insertDeleteAction(actionList,doc, true);
+    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, true);
 	            return;
     		}
     		
@@ -2269,7 +2270,7 @@ public class GITUtil  extends BaseController{
 	            if(modifyEnable)
 	            {
             		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyAction(actionList,doc, true);
+            		CommitAction.insertModifyAction(actionList,doc, true);
             		return;
             	}
     		}
@@ -2281,7 +2282,7 @@ public class GITUtil  extends BaseController{
     				if(docChange.getType() == DocChangeType.LOCALCHANGE)
     				{
 	        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-	            		insertModifyAction(actionList,doc, true);
+	            		CommitAction.insertModifyAction(actionList,doc, true);
 	            		return;
     				}
     			}
@@ -2291,14 +2292,14 @@ public class GITUtil  extends BaseController{
     		if(type == 0) 	//新增目录
 	    	{
     			//Add Dir
-    			insertAddDirAction(actionList,doc,isSubAction, true);
+    			CommitAction.insertAddDirAction(actionList,doc,isSubAction, true);
 	            return;
     		}
     		
     		if(type != 2)	//文件类型改变
     		{
-    			insertDeleteAction(actionList,doc, true);
-	        	insertAddDirAction(actionList,doc, isSubAction, true);
+    			CommitAction.insertDeleteAction(actionList,doc, true);
+	        	CommitAction.insertAddDirAction(actionList,doc, isSubAction, true);
 	            return;
     		}
     		
@@ -2369,11 +2370,11 @@ public class GITUtil  extends BaseController{
         	{
         		if(localSubEntry.isDirectory())
         		{
-        			insertAddDirAction(actionList, subDoc, isSubAction, true);
+        			CommitAction.insertAddDirAction(actionList, subDoc, isSubAction, true);
         		}
         		else
         		{
-        			insertAddFileAction(actionList, subDoc, isSubAction, true);
+        			CommitAction.insertAddFileAction(actionList, subDoc, isSubAction, true);
         		}
         	}
         }
@@ -2391,7 +2392,7 @@ public class GITUtil  extends BaseController{
 				commitActionList = new ArrayList<CommitAction>();
 			}
 			
-    		insertAddDirAction(commitActionList, rootDoc, false, true);
+    		CommitAction.insertAddDirAction(commitActionList, rootDoc, false, true);
     		
     		Git git = null;
     		try {
