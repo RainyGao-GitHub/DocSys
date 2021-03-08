@@ -4,22 +4,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 
-public class DocChange {	
-	public enum DocChangeType {
-		UNDEFINED,
-		LOCALADD,
-		LOCALDELETE,
-		LOCALCHANGE,
-		LOCALFILETODIR,
-		LOCALDIRTOFILE,
-		REMOTEADD,
-		REMOTEDELETE,
-		REMOTECHANGE,
-		REMOTEFILETODIR,
-		REMOTEDIRTOFILE,
-		NOCHANGE;
-	}
-	
+public class DocChange {		
 	private DocChangeType type = DocChangeType.UNDEFINED;
 	
 	private Repos repos = null;
