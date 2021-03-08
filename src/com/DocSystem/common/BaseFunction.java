@@ -25,7 +25,6 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 
-@SuppressWarnings("rawtypes")
 public class BaseFunction{	
 	//应用路径
     protected static String docSysIniPath = null;
@@ -347,17 +346,6 @@ public class BaseFunction{
 		);
 		
 		return docList;
-	}
-	
-	/************************ session相关接口 **************************************/
-	protected Map session;
-	
-	public Map getSession() {
-		return session;
-	}
-
-	public void setSession(Map session) {
-		this.session = session;
 	}
 	
 	/****************************** 文件操作相关接口 ***********************************/	
