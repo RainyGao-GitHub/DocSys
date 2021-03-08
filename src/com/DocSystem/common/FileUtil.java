@@ -485,7 +485,7 @@ public class FileUtil {
 	    return true;
 	}
     
-	protected boolean checkAddLocalDirectory(String localParentPath) {
+	public static boolean checkAddLocalDirectory(String localParentPath) {
 		File parentDir = new File(localParentPath);
 		if(parentDir.exists() == false)
 		{

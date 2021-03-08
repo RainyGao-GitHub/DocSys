@@ -62,6 +62,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.BaseFunction;
+import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.QueryCondition;
 import com.DocSystem.entity.Doc;
@@ -98,7 +99,7 @@ public class LuceneUtil2   extends BaseFunction
 {    
     public static boolean deleteIndexLib(String indexLib)
     {
-    	return delFileOrDir(indexLib);
+    	return FileUtil.delFileOrDir(indexLib);
     }
 	
     
@@ -846,7 +847,7 @@ public class LuceneUtil2   extends BaseFunction
 		            {
 		            	continue;
 		            }
-		            AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight, hitType);
+		            HitDoc.AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight, hitType);
 	        	}
 	        }
 	        

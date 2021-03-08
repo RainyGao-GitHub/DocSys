@@ -153,7 +153,7 @@ public class Path {
 	}
 	
 	//系统日志所在的目录
-	protected String getSystemLogParentPath(Integer OSType) {
+	public static String getSystemLogParentPath(Integer OSType) {
 		String path = "";		
 		path = ReadProperties.read("docSysConfig.properties", "SystemLogParentPath");
 	    if(path == null || "".equals(path))
@@ -328,7 +328,7 @@ public class Path {
 	}
 	
 	//仓库文件缓存根目录
-	protected String getReposTmpPath(Repos repos) {
+	public static String getReposTmpPath(Repos repos) {
 		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/";
 		return tmpDir;
 	}
@@ -382,7 +382,7 @@ public class Path {
 	}
 	
 	//系统日志的名字，可以是目录或文件
-	protected String getSystemLogFileName() {
+	public static String getSystemLogFileName() {
 		String name = "";
 		
 		name = ReadProperties.read("docSysConfig.properties", "SystemLogFileName");
@@ -415,7 +415,7 @@ public class Path {
 		return "preview_" + file.length() + "_" + file.lastModified() + ".pdf";
 	}
 	
-	protected String getLocalVerReposURI(Repos repos, boolean isRealDoc) {
+	public static String getLocalVerReposURI(Repos repos, boolean isRealDoc) {
 		String localVerReposURI = null;
 
 		Integer verCtrl = null;

@@ -22,8 +22,11 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.ReposAccess;
+import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.controller.BaseController;
@@ -81,7 +84,7 @@ public class ReposController extends BaseController{
 		Integer UserId = login_user.getId();
 		System.out.println("UserId:" + UserId);
 		List <Repos> accessableReposList = getAccessableReposList(UserId);
-		printObject("getReposList() accessableReposList",accessableReposList);
+		Log.printObject("getReposList() accessableReposList",accessableReposList);
 		rt.setData(accessableReposList);
 		writeJson(rt, response);
 	}
@@ -158,23 +161,23 @@ public class ReposController extends BaseController{
 		//格式化参数
 		if((path == null) || path.equals(""))
 		{
-			docSysErrorLog("仓库存储路径不能为空！", rt);
+			Log.docSysErrorLog("仓库存储路径不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
-		path = localDirPathFormat(path);
+		path = Path.localDirPathFormat(path, OSType);
 		
 		if(realDocPath != null && !realDocPath.isEmpty())
 		{
-			realDocPath = localDirPathFormat(realDocPath);
+			realDocPath = Path.localDirPathFormat(realDocPath, OSType);
 		}
 		if(localSvnPath != null && !localSvnPath.isEmpty())
 		{
-			localSvnPath = localDirPathFormat(localSvnPath);
+			localSvnPath = Path.localDirPathFormat(localSvnPath, OSType);
 		}
 		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
 		{
-			localSvnPath1 = localDirPathFormat(localSvnPath1);
+			localSvnPath1 = Path.localDirPathFormat(localSvnPath1, OSType);
 		}
 		
 		//如果去除realDocPath的限制，文件系统前置将具备非常大的灵活性和破坏性（可以查看和删除后台的所有文件）
@@ -237,7 +240,7 @@ public class ReposController extends BaseController{
 		{	
 			long lockTime = nowTimeStamp + 4*60*60*1000;
 			reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false); 
-			unlock(syncLock);
+			SyncLock.unlock(syncLock);
 		}	
 		
 		if(reposLock == null)
@@ -275,7 +278,7 @@ public class ReposController extends BaseController{
 		synchronized(syncLock)
 		{	
 			unlockRepos(repos, lockType, login_user); 
-			unlock(syncLock);
+			SyncLock.unlock(syncLock);
 		}
 		writeJson(rt, response);	
 	}
@@ -478,9 +481,9 @@ public class ReposController extends BaseController{
 			{
 				//Add doc for AutoSync
 				List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-				String reposPath = getReposPath(repos);
-				String localRootPath = getReposRealPath(repos);
-				String localVRootPath = getReposVirtualPath(repos);			
+				String reposPath = Path.getReposPath(repos);
+				String localRootPath = Path.getReposRealPath(repos);
+				String localVRootPath = Path.getReposVirtualPath(repos);			
 				Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, reposPath, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
 				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNC, login_user, "自动同步：版本仓库类型变更 " + reposInfo.getVerCtrl() + ":" + newReposInfo.getVerCtrl());
 				executeUniqueCommonActionList(actionList, rt);
@@ -532,19 +535,19 @@ public class ReposController extends BaseController{
 		//参数格式化
 		if(path != null && !path.isEmpty())
 		{
-			path = localDirPathFormat(path);
+			path = Path.localDirPathFormat(path, OSType);
 		}
 		if(realDocPath != null && !realDocPath.isEmpty())
 		{
-			realDocPath = localDirPathFormat(realDocPath);
+			realDocPath = Path.localDirPathFormat(realDocPath, OSType);
 		}
 		if(localSvnPath != null && !localSvnPath.isEmpty())
 		{
-			localSvnPath = localDirPathFormat(localSvnPath);
+			localSvnPath = Path.localDirPathFormat(localSvnPath, OSType);
 		}
 		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
 		{
-			localSvnPath1 = localDirPathFormat(localSvnPath1);
+			localSvnPath1 = Path.localDirPathFormat(localSvnPath1, OSType);
 		}
 		
 		repos.setPath(path);
@@ -594,7 +597,7 @@ public class ReposController extends BaseController{
 		
 		if(clearReposFileCache(repos, rt) == false)
 		{
-			docSysErrorLog("清除仓库文件缓存失败！", rt);
+			Log.docSysErrorLog("清除仓库文件缓存失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -603,8 +606,8 @@ public class ReposController extends BaseController{
 	}
 
 	private boolean clearReposFileCache(Repos repos, ReturnAjax rt) {
-		String reposTmpPath = getReposTmpPath(repos);
-		return clearDir(reposTmpPath);
+		String reposTmpPath = Path.getReposTmpPath(repos);
+		return FileUtil.clearDir(reposTmpPath);
 	}
 
 	/****************   get Repository Menu so that we can touch the docId******************/
@@ -632,14 +635,14 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		//printObject("getReposInitMenu() repos:", repos);
+		//Log.printObject("getReposInitMenu() repos:", repos);
 		
-		String reposPath = getReposPath(repos);
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
-		//printObject("getReposInitMenu() rootDoc:", rootDoc);
+		//Log.printObject("getReposInitMenu() rootDoc:", rootDoc);
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), rootDoc, reposAccess.getAuthMask());
@@ -651,7 +654,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
+		//Log.printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
 		
 		//不对文件分享的根目录进行密码检查(用户只有在输入了密码后才能分享根目录)
 		if(shareId == null)
@@ -663,7 +666,7 @@ public class ReposController extends BaseController{
 				String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + rootDoc.getDocId());
 				if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 				{
-					docSysErrorLog("访问密码错误！", rt);
+					Log.docSysErrorLog("访问密码错误！", rt);
 					rt.setMsgData("1"); //访问密码错误或未提供
 					rt.setData(rootDoc);
 					writeJson(rt, response);
@@ -679,7 +682,7 @@ public class ReposController extends BaseController{
 			File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
 			if(rootFile.exists() == false)
 			{
-				docSysErrorLog("根目录不存在！",rt);
+				Log.docSysErrorLog("根目录不存在！",rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -701,7 +704,7 @@ public class ReposController extends BaseController{
 		
 		//docAuthHashMap for login_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
-		//printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
+		//Log.printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
 		
 		//getReposInitMenu如果指定了path和name表示要获取从根目录到该doc的文件列表，否则表示获取rootDoc下的子目录即可
 		Doc doc = null;
@@ -714,7 +717,7 @@ public class ReposController extends BaseController{
 			}
 			else
 			{
-				//printObject("getReposInitMenu() doc:", doc);
+				//Log.printObject("getReposInitMenu() doc:", doc);
 				String pwd = getDocPwd(repos, doc);
 				if(pwd != null && !pwd.isEmpty())
 				{
@@ -722,7 +725,7 @@ public class ReposController extends BaseController{
 					String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
 					if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 					{
-						docSysErrorLog("访问密码错误！", rt);
+						Log.docSysErrorLog("访问密码错误！", rt);
 						rt.setMsgData("1"); //访问密码错误或未提供
 						rt.setData(doc);
 						writeJson(rt, response);
@@ -748,7 +751,7 @@ public class ReposController extends BaseController{
 			docList.addAll(subDocList);
 		}
 		
-		//printObject("getReposInitMenu() docList:", docList);
+		//Log.printObject("getReposInitMenu() docList:", docList);
 
 		rt.setData(docList);	
 		writeJson(rt, response);
@@ -787,9 +790,9 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		String reposPath = getReposPath(repos);
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		//getSubDocList如果没有指定path和name表示要获取仓库根目录或者分享根目录（分享的不是仓库根目录，那么总是返回分享的文件或目录）
 		List <Doc> docList = new ArrayList<Doc>();
@@ -797,14 +800,14 @@ public class ReposController extends BaseController{
 		if(path == null)
 		{
 			Doc rootDoc = buildBasicDoc(vid, null, null, reposPath, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
-			printObject("getReposInitMenu() rootDoc:", rootDoc);
+			Log.printObject("getReposInitMenu() rootDoc:", rootDoc);
 			
 			if(rootDoc.getDocId() != 0) //不是仓库根目录
 			{
 				File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
 				if(rootFile.exists() == false)
 				{
-					docSysErrorLog("根目录不存在！",rt);
+					Log.docSysErrorLog("根目录不存在！",rt);
 					writeJson(rt, response);			
 					return;
 				}
@@ -819,7 +822,7 @@ public class ReposController extends BaseController{
 					rootDoc.setType(1);
 				}
 				
-				printObject("getSubDocList() docList:", docList);
+				Log.printObject("getSubDocList() docList:", docList);
 				docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 				rt.setData(docList);
 				writeJson(rt, response);			
@@ -841,7 +844,7 @@ public class ReposController extends BaseController{
 			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
 			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 			{
-				docSysErrorLog("访问密码错误！", rt);
+				Log.docSysErrorLog("访问密码错误！", rt);
 				rt.setMsgData("1"); //访问密码错误或未提供
 				writeJson(rt, response);
 				return;
@@ -958,9 +961,9 @@ public class ReposController extends BaseController{
 		Repos repos = reposService.getRepos(vid);
 		
 		//Build rootDoc
-		String reposPath = getReposPath(repos);
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
 		
 		//获取用户可访问文件列表(From Root to docId)
@@ -1038,7 +1041,7 @@ public class ReposController extends BaseController{
 	private List<ReposAuth> getReposAllUsers(Integer reposId) {
 		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓t库权限），结果实际是reposAuth列表
 		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	
-		printObject("UserList:",UserList);
+		Log.printObject("UserList:",UserList);
 		
 		//获取任意用户的ReposAuth，因为任意用户是虚拟用户在数据库中不存在，因此需要单独获取
 		ReposAuth anyUserReposAuth = getUserReposAuth(0,reposId); //获取任意用户的权限表
@@ -1103,9 +1106,9 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		String reposPath = getReposPath(repos);
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
@@ -1122,7 +1125,7 @@ public class ReposController extends BaseController{
 		//Step1: 获取仓库可访问用户和组列表
 		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
 		System.out.println("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
-		printObject("reposAuthList:", reposAuthList);
+		Log.printObject("reposAuthList:", reposAuthList);
 		
 		//Step2: 获取可访问的用户、组的权限列表
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
@@ -1142,7 +1145,7 @@ public class ReposController extends BaseController{
 			{
 				docAuth = getGroupDispDocAuth(repos, groupId, doc);
 			}
-			printObject("docAuth:", docAuth);
+			Log.printObject("docAuth:", docAuth);
 			
 			if(docAuth !=null)
 			{
@@ -1178,7 +1181,7 @@ public class ReposController extends BaseController{
 				}
 			}
 		}
-		printObject("docAuthList:",docAuthList);
+		Log.printObject("docAuthList:",docAuthList);
 
 		rt.setData(docAuthList);
 		writeJson(rt, response);
@@ -1372,9 +1375,9 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		String reposPath = getReposPath(repos);
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
@@ -1496,9 +1499,9 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		String reposPath = getReposPath(repos);
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
@@ -1601,9 +1604,9 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		String reposPath = getReposPath(repos);
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		

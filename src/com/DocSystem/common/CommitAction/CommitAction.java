@@ -87,7 +87,7 @@ public class CommitAction{
 	
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
-	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
+	public static void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
 		if(isGit && doc.getName().equals(".git"))
 		{
 			return;
@@ -101,7 +101,7 @@ public class CommitAction{
     	actionList.add(action);
 	}
     
-	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction, boolean isGit) 
+	public static void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction, boolean isGit) 
 	{
 		if(isGit && doc.getName().equals(".git"))
 		{
@@ -158,7 +158,7 @@ public class CommitAction{
     	actionList.add(action);    	
 	}
 	
-	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
+	public static void insertDeleteAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
 		if(isGit && doc.getName().equals(".git"))
 		{
 			return;
@@ -174,7 +174,7 @@ public class CommitAction{
     	actionList.add(action);
 	}
     
-	protected void insertModifyAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
+	public static void insertModifyAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
 		if(isGit && doc.getName().equals(".git"))
 		{
 			return;

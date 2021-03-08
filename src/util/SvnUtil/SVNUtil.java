@@ -34,8 +34,10 @@ import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.DocChangeType;
+import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.Path;
 import com.DocSystem.common.CommitAction.CommitAction;
-import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -72,7 +74,7 @@ public class SVNUtil  extends BaseController{
     		}
     		else
     		{
-    			reposURL = getLocalVerReposURI(repos,isRealDoc);
+    			reposURL = Path.getLocalVerReposURI(repos,isRealDoc);
     		}
     	}
     	else
@@ -86,7 +88,7 @@ public class SVNUtil  extends BaseController{
     		}
     		else
     		{
-    			reposURL = getLocalVerReposURI(repos,isRealDoc);
+    			reposURL = Path.getLocalVerReposURI(repos,isRealDoc);
     		}
     	}
 
@@ -619,7 +621,7 @@ public class SVNUtil  extends BaseController{
 		    }
 		    
 		    System.out.println("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			insertDeleteAction(commitActionList,doc, false);
+			CommitAction.insertDeleteAction(commitActionList,doc, false);
 		}
 		else
 		{
@@ -664,13 +666,13 @@ public class SVNUtil  extends BaseController{
 			    if(type == 0)
 			    {
 					System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-					insertAddFileAction(commitActionList,doc,false, false);
+					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else if(type != 1)
 			    {
 					System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			    	insertDeleteAction(commitActionList,doc, false);
-					insertAddFileAction(commitActionList,doc,false, false);
+			    	CommitAction.insertDeleteAction(commitActionList,doc, false);
+					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else
 			    {
@@ -680,7 +682,7 @@ public class SVNUtil  extends BaseController{
 			            if(modifyEnable)
 			            {
 		            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		            		insertModifyAction(commitActionList,doc, false);
+		            		CommitAction.insertModifyAction(commitActionList,doc, false);
 		            	}
 		    		}
 		    		else
@@ -691,7 +693,7 @@ public class SVNUtil  extends BaseController{
 		    				if(docChange.getType() == DocChangeType.LOCALCHANGE)	//要保证commitAction也是修改才commit,因为可能是add
 		    				{
 			            		System.out.println("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			            		insertModifyAction(commitActionList,doc, false);
+			            		CommitAction.insertModifyAction(commitActionList,doc, false);
 		    				}
 		    			}
 		    		}
@@ -1017,7 +1019,7 @@ public class SVNUtil  extends BaseController{
     			return;
     		}
     		//System.out.println("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    		insertDeleteAction(actionList,doc, false);
+    		CommitAction.insertDeleteAction(actionList,doc, false);
     		return;
     	}
     	
@@ -1030,15 +1032,15 @@ public class SVNUtil  extends BaseController{
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
         		//System.out.println("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			insertAddFileAction(actionList,doc,isSubAction, false);
+    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, false);
 	            return;
     		}
     		
     		if(remoteEntryType != 1)	//文件类型改变
     		{
         		//System.out.println("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			insertDeleteAction(actionList,doc, false);
-    			insertAddFileAction(actionList,doc,isSubAction, false);
+    			CommitAction.insertDeleteAction(actionList,doc, false);
+    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, false);
 	            return;
     		}
     		
@@ -1048,7 +1050,7 @@ public class SVNUtil  extends BaseController{
 	            if(modifyEnable)
 	            {
             		//System.out.println("scheduleForCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-            		insertModifyAction(actionList,doc, false);
+            		CommitAction.insertModifyAction(actionList,doc, false);
             		return;
             	}
     		}
@@ -1060,7 +1062,7 @@ public class SVNUtil  extends BaseController{
     				if(docChange.getType() == DocChangeType.LOCALCHANGE)
     				{
 	            		//System.out.println("scheduleForCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-	            		insertModifyAction(actionList,doc, false);
+	            		CommitAction.insertModifyAction(actionList,doc, false);
 	            		return;
     				}
     			}
@@ -1071,15 +1073,15 @@ public class SVNUtil  extends BaseController{
 	    	{
         		//System.out.println("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			//Add Dir
-    			insertAddDirAction(actionList,doc,isSubAction, false);
+    			CommitAction.insertAddDirAction(actionList,doc,isSubAction, false);
 	            return;
     		}
     		
     		if(remoteEntryType != 2)	//文件类型改变
     		{
     			//System.out.println("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			insertDeleteAction(actionList,doc, false);
-	        	insertAddDirAction(actionList,doc, isSubAction, false);
+    			CommitAction.insertDeleteAction(actionList,doc, false);
+	        	CommitAction.insertAddDirAction(actionList,doc, isSubAction, false);
 	            return;
     		}
     		
@@ -1148,11 +1150,11 @@ public class SVNUtil  extends BaseController{
         	{
         		if(localSubEntry.isDirectory())
         		{
-        			insertAddDirAction(actionList, subDoc, isSubAction, false);
+        			CommitAction.insertAddDirAction(actionList, subDoc, isSubAction, false);
         		}
         		else
         		{
-        			insertAddFileAction(actionList, subDoc, isSubAction, false);
+        			CommitAction.insertAddFileAction(actionList, subDoc, isSubAction, false);
         		}
         	}
         }
@@ -1260,7 +1262,7 @@ public class SVNUtil  extends BaseController{
 	    if(isMove)
 	    {
 	       System.out.println("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
-  			insertDeleteAction(commitActionList,srcDoc, false);
+  			CommitAction.insertDeleteAction(commitActionList,srcDoc, false);
 	    }
         else
         {
@@ -1269,11 +1271,11 @@ public class SVNUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			insertAddFileAction(commitActionList, dstDoc,false, false);
+			CommitAction.insertAddFileAction(commitActionList, dstDoc,false, false);
 		}
 		else
 		{
-			insertAddDirAction(commitActionList, dstDoc,false, false);
+			CommitAction.insertAddDirAction(commitActionList, dstDoc,false, false);
 		}
 	    
         ISVNEditor editor = getCommitEditor(commitMsg);
@@ -1752,7 +1754,7 @@ public class SVNUtil  extends BaseController{
 				{
 					if(localEntry.isFile())
 					{	
-						if(delFileOrDir(localParentPath+targetName) == false)
+						if(FileUtil.delFileOrDir(localParentPath+targetName) == false)
 						{
 							return null;
 						}
@@ -1867,7 +1869,7 @@ public class SVNUtil  extends BaseController{
 			else
 			{
 				//检查父节点是否存在，不存在则自动创建
-				checkAddLocalDirectory(localParentPath);
+				FileUtil.checkAddLocalDirectory(localParentPath);
 			}
 		}
 		else	//强行 checkOut
@@ -1876,7 +1878,7 @@ public class SVNUtil  extends BaseController{
 			{
 				if(localEntry.isDirectory())	//本地是目录，如果需要先删除
 				{
-					if(delFileOrDir(localParentPath+targetName) == false)
+					if(FileUtil.delFileOrDir(localParentPath+targetName) == false)
 					{
 						return false;
 					}
@@ -1885,7 +1887,7 @@ public class SVNUtil  extends BaseController{
 			else
 			{
 				//检查父节点是否存在，不存在则自动创建
-				checkAddLocalDirectory(localParentPath);
+				FileUtil.checkAddLocalDirectory(localParentPath);
 			}
 		}
 	
@@ -1928,7 +1930,7 @@ public class SVNUtil  extends BaseController{
 			{
 				if(force)
 				{
-					if(delFileOrDir(localParentPath+targetName) == false)
+					if(FileUtil.delFileOrDir(localParentPath+targetName) == false)
 					{
 						return false;
 					}

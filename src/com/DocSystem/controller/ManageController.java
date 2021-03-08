@@ -32,6 +32,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.AuthCode;
+import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.Log;
+import com.DocSystem.common.Path;
+import com.DocSystem.common.Reflect;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -76,7 +80,7 @@ public class ManageController extends BaseController{
 			break;
 		default:
 			docSysIniState = -2;
-			docSysErrorLog(ret, rt);
+			Log.docSysErrorLog(ret, rt);
 			break;
 		}
 		
@@ -102,22 +106,22 @@ public class ManageController extends BaseController{
 		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
 		
 		String BannerConfigPath = docSysIniPath;
-		if(isFileExist(BannerConfigPath + "bannerConfig.json") == false)
+		if(FileUtil.isFileExist(BannerConfigPath + "bannerConfig.json") == false)
 		{
 			BannerConfigPath = docSysWebPath + "WEB-INF/classes/";
-			if(isFileExist(BannerConfigPath + "bannerConfig.json") == false)
+			if(FileUtil.isFileExist(BannerConfigPath + "bannerConfig.json") == false)
 			{
-				docSysErrorLog("bannerConfig.json文件不存在",rt);
+				Log.docSysErrorLog("bannerConfig.json文件不存在",rt);
 				writeJson(rt, response);
 				return;	
 			}
 		}
 		
-		String s = readDocContentFromFile(BannerConfigPath, "bannerConfig.json");
+		String s = FileUtil.readDocContentFromFile(BannerConfigPath, "bannerConfig.json");
 		JSONObject jobj = JSON.parseObject(s);
 		if(jobj == null)
 		{
-			docSysErrorLog("解析bannerConfig.json文件失败",rt);
+			Log.docSysErrorLog("解析bannerConfig.json文件失败",rt);
 			writeJson(rt, response);
 			return;	
 		}
@@ -178,7 +182,7 @@ public class ManageController extends BaseController{
 		
 		if(email == null && pwd == null)
 		{
-			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			Log.docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -186,7 +190,7 @@ public class ManageController extends BaseController{
 		//checkAndAdd docSys.ini Dir
 		if(checkAndAddDocSysIniDir())
 		{
-			docSysErrorLog("系统初始化目录创建失败！", rt);
+			Log.docSysErrorLog("系统初始化目录创建失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -194,11 +198,11 @@ public class ManageController extends BaseController{
 		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
 		String tmpDocSystemConfigPath = docSysIniPath;
 		String configFileName = "docSysConfig.properties";
-		if(copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
 		{
 			//Failed to copy 
 			System.out.println("setSystemEmailConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
-			docSysErrorLog("创建临时配置文件失败！", rt);
+			Log.docSysErrorLog("创建临时配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -216,10 +220,10 @@ public class ManageController extends BaseController{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "frompwd", pwd);
 		}
 		
-		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
 			System.out.println("setSystemEmailConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
-			docSysErrorLog("写入配置文件失败！", rt);
+			Log.docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -327,7 +331,7 @@ public class ManageController extends BaseController{
 		
 		if(url == null && user == null && pwd == null)
 		{
-			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			Log.docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -335,7 +339,7 @@ public class ManageController extends BaseController{
 		//checkAndAdd docSys.ini Dir
 		if(checkAndAddDocSysIniDir())
 		{
-			docSysErrorLog("系统初始化目录创建失败！", rt);
+			Log.docSysErrorLog("系统初始化目录创建失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -343,11 +347,11 @@ public class ManageController extends BaseController{
 		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
 		String tmpDocSystemConfigPath = docSysIniPath;
 		String configFileName = "jdbc.properties";
-		if(copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
 		{
 			//Failed to copy 
 			System.out.println("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
-			docSysErrorLog("创建临时配置文件失败！", rt);
+			Log.docSysErrorLog("创建临时配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -369,10 +373,10 @@ public class ManageController extends BaseController{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.password", pwd);
 		}
 		
-		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
 			System.out.println("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
-			docSysErrorLog("写入配置文件失败！", rt);
+			Log.docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -412,7 +416,7 @@ public class ManageController extends BaseController{
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
-			docSysErrorLog("连接数据库失败", rt);
+			Log.docSysErrorLog("连接数据库失败", rt);
 		}
 		writeJson(rt, response);
 	}
@@ -432,7 +436,7 @@ public class ManageController extends BaseController{
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("deleteDatabase() 连接数据库:" + url + " 失败");
-			docSysErrorLog("连接数据库失败", rt);
+			Log.docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -444,7 +448,7 @@ public class ManageController extends BaseController{
 		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
 			System.out.println("deleteDatabase() 数据库备份失败!");
-			docSysErrorLog("备份数据库失败", rt);
+			Log.docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}		
@@ -455,7 +459,7 @@ public class ManageController extends BaseController{
 		if(!tmpDbName.contains("docsystem")) //只能删除docsystem相关的数据库
 		{
 			System.out.println("deleteDatabase() 非法删除操作");
-			docSysErrorLog("非法删除操作：" + dbName, rt);
+			Log.docSysErrorLog("非法删除操作：" + dbName, rt);
 			writeJson(rt, response);			
 			return;			
 		}
@@ -463,7 +467,7 @@ public class ManageController extends BaseController{
 		if(deleteDB(type, dbName, url, user, pwd) == false)
 		{
 			System.out.println("deleteDatabase() 删除数据库失败");
-			docSysErrorLog("数据库初始化失败", rt);
+			Log.docSysErrorLog("数据库初始化失败", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -492,7 +496,7 @@ public class ManageController extends BaseController{
 			if(initDB(type, url, user, pwd) == false)
 			{
 				System.out.println("resetDatabase() 新建数据库失败");
-				docSysErrorLog("新建数据库失败", rt);
+				Log.docSysErrorLog("新建数据库失败", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -507,7 +511,7 @@ public class ManageController extends BaseController{
 		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
 			System.out.println("resetDatabase() 数据库备份失败!");
-			docSysErrorLog("备份数据库失败", rt);
+			Log.docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -515,7 +519,7 @@ public class ManageController extends BaseController{
 		if(initDB(type, url, user, pwd) == false)
 		{
 			System.out.println("resetDatabase() reset database failed: initDB error");
-			docSysErrorLog("数据库初始化失败", rt);
+			Log.docSysErrorLog("数据库初始化失败", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -536,7 +540,7 @@ public class ManageController extends BaseController{
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("exportDBData() 连接数据库:" + url + " 失败");
-			docSysErrorLog("连接数据库失败", rt);
+			Log.docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -548,7 +552,7 @@ public class ManageController extends BaseController{
 		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
 			System.out.println("exportDBData() 数据库备份失败!");
-			docSysErrorLog("备份数据库失败", rt);
+			Log.docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -557,7 +561,7 @@ public class ManageController extends BaseController{
 		String targetName = "docsystem_"+backUpTime+".zip";
 		if(doCompressDir(docSysIniPath + "backup/", backUpTime, docSysIniPath + "backup/", targetName, rt) == false)
 		{
-			docSysErrorLog("压缩本地目录失败！", rt);
+			Log.docSysErrorLog("压缩本地目录失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -579,23 +583,23 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//saveFile to tmpPath
+		//FileUtil.saveFile to tmpPath
 		if(uploadFile == null)
 		{
 			System.out.println("importDBData() uploadFile is null");
-			docSysErrorLog("上传文件为空", rt);
+			Log.docSysErrorLog("上传文件为空", rt);
 			writeJson(rt, response);
 			return;
 		}
 		String fileName = uploadFile.getOriginalFilename();
-		String suffix = getFileSuffix(fileName);
+		String suffix = FileUtil.getFileSuffix(fileName);
 		String webTmpPathForImportDBData = getWebTmpPath() + "importDBData/";
-		saveFile(uploadFile, webTmpPathForImportDBData, fileName);
+		FileUtil.saveFile(uploadFile, webTmpPathForImportDBData, fileName);
 		
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("importDBData() 连接数据库:" + url + " 失败");
-			docSysErrorLog("连接数据库失败", rt);
+			Log.docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -603,7 +607,7 @@ public class ManageController extends BaseController{
 		if(importDatabase(null, suffix, webTmpPathForImportDBData, fileName, type, url, user, pwd) == false)
 		{
 			System.out.println("importDBData() 数据库导入失败");
-			docSysErrorLog("数据库导入失败", rt);
+			Log.docSysErrorLog("数据库导入失败", rt);
 			writeJson(rt, response);
 			return;			
 		}
@@ -621,7 +625,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String version = readDocContentFromFile(docSysWebPath, "version");
+		String version = FileUtil.readDocContentFromFile(docSysWebPath, "version");
 		if(version == null)
 		{
 			version = "";
@@ -630,8 +634,8 @@ public class ManageController extends BaseController{
 		String tomcatPath = getTomcatPath();
 		String javaHome = getJavaHome();
 		String openOfficePath = getOpenOfficePath();
-		String officeEditorApi = getOfficeEditorApi();
-		String defaultReposStorePath = getDefaultReposRootPath();
+		String officeEditorApi = Path.getOfficeEditorApi();
+		String defaultReposStorePath = Path.getDefaultReposRootPath(OSType);
 
 		JSONObject config = new JSONObject();
 		config.put("version", version);
@@ -697,7 +701,7 @@ public class ManageController extends BaseController{
 		
 		if(tomcatPath == null && openOfficePath == null && javaHome == null)
 		{
-			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			Log.docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -705,7 +709,7 @@ public class ManageController extends BaseController{
 		//checkAndAdd docSys.ini Dir
 		if(checkAndAddDocSysIniDir())
 		{
-			docSysErrorLog("系统初始化目录创建失败！", rt);
+			Log.docSysErrorLog("系统初始化目录创建失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -713,11 +717,11 @@ public class ManageController extends BaseController{
 		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
 		String tmpDocSystemConfigPath = docSysIniPath;
 		String configFileName = "docSysConfig.properties";
-		if(copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
 		{
 			//Failed to copy 
 			System.out.println("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
-			docSysErrorLog("创建临时配置文件失败！", rt);
+			Log.docSysErrorLog("创建临时配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -744,14 +748,14 @@ public class ManageController extends BaseController{
 		
 		if(defaultReposStorePath != null)
 		{
-			defaultReposStorePath = localDirPathFormat(defaultReposStorePath);
+			defaultReposStorePath = Path.localDirPathFormat(defaultReposStorePath, OSType);
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "defaultReposStorePath", defaultReposStorePath);
 		}
 		
-		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
 			System.out.println("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
-			docSysErrorLog("写入配置文件失败！", rt);
+			Log.docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -772,11 +776,11 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//saveFile to tmpPath
+		//FileUtil.saveFile to tmpPath
 		if(uploadFile == null)
 		{
 			System.out.println("upgradeSystem() uploadFile is null");
-			docSysErrorLog("上传文件为空", rt);
+			Log.docSysErrorLog("上传文件为空", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -784,23 +788,23 @@ public class ManageController extends BaseController{
 		if(!fileName.equals("DocSystem.war"))
 		{
 			System.out.println("upgradeSystem() 非法升级文件");
-			docSysErrorLog("非法升级文件:" + fileName, rt);
+			Log.docSysErrorLog("非法升级文件:" + fileName, rt);
 			writeJson(rt, response);
 			return;
 		}		
-		if(saveFile(uploadFile, docSysIniPath, fileName) == null)
+		if(FileUtil.saveFile(uploadFile, docSysIniPath, fileName) == null)
 		{
 			System.out.println("upgradeSystem() 保存升级文件失败");
-			docSysErrorLog("保存升级文件失败", rt);
+			Log.docSysErrorLog("保存升级文件失败", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		//开始升级
-		if(copyFile(docSysIniPath + fileName, docSysIniPath + "../DocSystem.war", true) == false)
+		if(FileUtil.copyFile(docSysIniPath + fileName, docSysIniPath + "../DocSystem.war", true) == false)
 		{
 			System.out.println("upgradeSystem() 升级系统失败");
-			docSysErrorLog("升级系统失败", rt);
+			Log.docSysErrorLog("升级系统失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -890,7 +894,7 @@ public class ManageController extends BaseController{
               
  			Object value = null;
 			try {
-				value = getFieldValue(obj, name);
+				value = Reflect.getFieldValue(obj, name);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return param;
@@ -914,7 +918,7 @@ public class ManageController extends BaseController{
 		//查询系统中是否存在超级管理员
 		if(isFirstAdminUserExists() == true)
 		{
-			docSysErrorLog("系统管理员已存在!", rt);
+			Log.docSysErrorLog("系统管理员已存在!", rt);
 			writeJson(rt, response);	
 			return;
 		}
@@ -922,7 +926,7 @@ public class ManageController extends BaseController{
 		String name = user.getName();
 		if(name == null || "".equals(name))
 		{
-			docSysErrorLog("用户名不能为空！", rt);
+			Log.docSysErrorLog("用户名不能为空！", rt);
 			writeJson(rt, response);	
 			return;
 		}
@@ -930,7 +934,7 @@ public class ManageController extends BaseController{
 		String pwd = user.getPwd();
 		if(pwd == null || "".equals(pwd))
 		{
-			docSysErrorLog("密码不能为空！", rt);
+			Log.docSysErrorLog("密码不能为空！", rt);
 			writeJson(rt, response);	
 			return;
 		}
@@ -951,7 +955,7 @@ public class ManageController extends BaseController{
 
 		if(userService.addUser(user) == 0)
 		{
-			docSysErrorLog("Failed to add new User in DB", rt);
+			Log.docSysErrorLog("Failed to add new User in DB", rt);
 		}
 		
 		writeJson(rt, response);
@@ -966,14 +970,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -987,7 +991,7 @@ public class ManageController extends BaseController{
 		//检查是否越权设置
 		if(type > login_user.getType())
 		{
-			docSysErrorLog("danger#越权操作！", rt);
+			Log.docSysErrorLog("danger#越权操作！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -995,14 +999,14 @@ public class ManageController extends BaseController{
 		//检查用户名是否为空
 		if(userName ==null||"".equals(userName))
 		{
-			docSysErrorLog("danger#账号不能为空！", rt);
+			Log.docSysErrorLog("danger#账号不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		if(pwd == null || "".equals(pwd))
 		{
-			docSysErrorLog("密码不能为空！", rt);
+			Log.docSysErrorLog("密码不能为空！", rt);
 			writeJson(rt, response);	
 			return;
 		}
@@ -1028,7 +1032,7 @@ public class ManageController extends BaseController{
 
 		if(userService.addUser(user) == 0)
 		{
-			docSysErrorLog("Failed to add new User in DB", rt);
+			Log.docSysErrorLog("Failed to add new User in DB", rt);
 		}
 		
 		writeJson(rt, response);
@@ -1043,14 +1047,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1065,7 +1069,7 @@ public class ManageController extends BaseController{
 		//检查是否越权设置
 		if(type > login_user.getType())
 		{
-			docSysErrorLog("danger#越权操作！", rt);
+			Log.docSysErrorLog("danger#越权操作！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1074,21 +1078,21 @@ public class ManageController extends BaseController{
 		User tempUser  = userService.getUser(userId);
 		if(tempUser == null)
 		{
-			docSysErrorLog("danger#用户不存在！", rt);
+			Log.docSysErrorLog("danger#用户不存在！", rt);
 			writeJson(rt, response);
 			return;	
 		}
 		
 		if(tempUser.getType() >= login_user.getType())
 		{
-			docSysErrorLog("danger#越权操作！", rt);
+			Log.docSysErrorLog("danger#越权操作！", rt);
 			writeJson(rt, response);
 			return;			
 		}
 		
 		if(userId == null)
 		{
-			docSysErrorLog("用户ID不能为空", rt);
+			Log.docSysErrorLog("用户ID不能为空", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1129,7 +1133,7 @@ public class ManageController extends BaseController{
 		
 		if(userService.editUser(user) == 0)
 		{
-			docSysErrorLog("更新数据库失败", rt);
+			Log.docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1146,21 +1150,21 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 2)
 		{
-			docSysErrorLog("您无权进行此操作！", rt);
+			Log.docSysErrorLog("您无权进行此操作！", rt);
 			writeJson(rt, response);
 			return;			
 		}
@@ -1172,7 +1176,7 @@ public class ManageController extends BaseController{
 	
 		if(userId == null)
 		{
-			docSysErrorLog("用户ID不能为空", rt);
+			Log.docSysErrorLog("用户ID不能为空", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1183,7 +1187,7 @@ public class ManageController extends BaseController{
 			User tempUser  = userService.getUser(userId);
 			if(tempUser.getType() >= login_user.getType())
 			{
-				docSysErrorLog("danger#越权操作！", rt);
+				Log.docSysErrorLog("danger#越权操作！", rt);
 				writeJson(rt, response);
 				return;			
 			}
@@ -1192,7 +1196,7 @@ public class ManageController extends BaseController{
 		
 		if(userService.editUser(user) == 0)
 		{
-			docSysErrorLog("更新数据库失败", rt);
+			Log.docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1211,28 +1215,28 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 2)
 		{
-			docSysErrorLog("您无权进行此操作！", rt);
+			Log.docSysErrorLog("您无权进行此操作！", rt);
 			writeJson(rt, response);
 			return;			
 		}
 		
 		if(userService.delUser(userId) == 0)
 		{
-			docSysErrorLog("Failed to delete User in DB", rt);
+			Log.docSysErrorLog("Failed to delete User in DB", rt);
 			writeJson(rt, response);
 			return;		
 		}
@@ -1265,14 +1269,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1297,20 +1301,20 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		List <ReposMember> UserList = userService.getReposAllUsers(reposId);	
-		printObject("UserList:",UserList);
+		Log.printObject("UserList:",UserList);
 		
 		rt.setData(UserList);
 		writeJson(rt, response);
@@ -1325,14 +1329,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1362,14 +1366,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1377,14 +1381,14 @@ public class ManageController extends BaseController{
 		//检查用户名是否为空
 		if(name ==null||"".equals(name))
 		{
-			docSysErrorLog("组名不能为空！", rt);
+			Log.docSysErrorLog("组名不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		if(isGroupExist(name) == true)
 		{
-			docSysErrorLog("用户组 " + name + " 已存在！", rt);
+			Log.docSysErrorLog("用户组 " + name + " 已存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1396,7 +1400,7 @@ public class ManageController extends BaseController{
 
 		if(userService.addGroup(group) == 0)
 		{
-			docSysErrorLog("Failed to add new Group in DB", rt);
+			Log.docSysErrorLog("Failed to add new Group in DB", rt);
 		}
 		
 		writeJson(rt, response);
@@ -1429,21 +1433,21 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(userService.delGroup(id) == 0)
 		{
-			docSysErrorLog("Failed to delete Group from DB", rt);
+			Log.docSysErrorLog("Failed to delete Group from DB", rt);
 			writeJson(rt, response);
 			return;		
 		}
@@ -1482,28 +1486,28 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(groupId == null)
 		{
-			docSysErrorLog("用户组ID不能为空", rt);
+			Log.docSysErrorLog("用户组ID不能为空", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		if(userService.editGroup(group) == 0)
 		{
-			docSysErrorLog("更新数据库失败", rt);
+			Log.docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1521,20 +1525,20 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		List <GroupMember> UserList = userService.getGroupAllUsers(groupId);	
-		printObject("UserList:",UserList);
+		Log.printObject("UserList:",UserList);
 		
 		rt.setData(UserList);
 		writeJson(rt, response);
@@ -1549,14 +1553,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1564,7 +1568,7 @@ public class ManageController extends BaseController{
 		//检查GroupId是否为空
 		if(groupId == null)
 		{
-			docSysErrorLog("组ID不能为空！", rt);
+			Log.docSysErrorLog("组ID不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1572,7 +1576,7 @@ public class ManageController extends BaseController{
 		//检查用户ID是否为空
 		if(userId == null)
 		{
-			docSysErrorLog("用户ID不能为空！", rt);
+			Log.docSysErrorLog("用户ID不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1583,7 +1587,7 @@ public class ManageController extends BaseController{
 		if(isGroupMemberExist(groupMember) == true)
 		{
 			System.out.println("addGroupMember() 用户 " + userId + " 已是该组成员！");
-			docSysErrorLog("用户 " + userId + " 已是该组成员！", rt);
+			Log.docSysErrorLog("用户 " + userId + " 已是该组成员！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1591,7 +1595,7 @@ public class ManageController extends BaseController{
 		if(userService.addGroupMember(groupMember) == 0)
 		{
 			System.out.println("addGroupMember() Failed to add groupMember");
-			docSysErrorLog("Failed to add new GroupMember in DB", rt);
+			Log.docSysErrorLog("Failed to add new GroupMember in DB", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1618,21 +1622,21 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(userService.delGroupMember(id) == 0)
 		{
-			docSysErrorLog("Failed to delete GroupMember from DB", rt);
+			Log.docSysErrorLog("Failed to delete GroupMember from DB", rt);
 		}
 		
 		writeJson(rt, response);
@@ -1646,22 +1650,22 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
-		String localParentPath = getSystemLogParentPath();
+		String localParentPath = Path.getSystemLogParentPath(OSType);
 		if(fileName == null || "".equals(fileName))
 		{
-			fileName = getSystemLogFileName();
+			fileName = Path.getSystemLogFileName();
 		}
 		
 		sendTargetToWebPage(localParentPath,fileName, localParentPath, rt, response, request, false, null);
