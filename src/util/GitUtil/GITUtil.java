@@ -53,6 +53,8 @@ import com.DocSystem.common.DocChange;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.DocChange.DocChangeType;
+import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.Path;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -747,7 +749,7 @@ public class GITUtil  extends BaseController{
 	    		String name = treeWalk.getNameString();            			
 	    		Doc subDoc = new Doc();
 	    		subDoc.setVid(repos.getId());
-	    		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
+	    		subDoc.setDocId(Path.buildDocIdByName(subDocLevel,subDocParentPath,name));
 	    		subDoc.setPid(doc.getDocId());
 	    		subDoc.setPath(subDocParentPath);
 	    		subDoc.setName(name);
@@ -1004,7 +1006,7 @@ public class GITUtil  extends BaseController{
 				{
 					if(localEntry.isFile())
 					{	
-						if(delFileOrDir(localParentPath+targetName) == false)
+						if(FileUtil.delFileOrDir(localParentPath+targetName) == false)
 						{
 							return null;
 						}
@@ -1129,7 +1131,7 @@ public class GITUtil  extends BaseController{
 			else
 			{
 				//检查父节点是否存在，不存在则自动创建
-				checkAddLocalDirectory(localParentPath);
+				Path.checkAddLocalDirectory(localParentPath);
 			}
 		}
 		else	//强行 checkOut
@@ -1138,7 +1140,7 @@ public class GITUtil  extends BaseController{
 			{
 				if(localEntry.isDirectory())	//本地是目录，如果需要先删除
 				{
-					if(delFileOrDir(localParentPath+targetName) == false)
+					if(FileUtil.delFileOrDir(localParentPath+targetName) == false)
 					{
 						return false;
 					}
@@ -2018,7 +2020,7 @@ public class GITUtil  extends BaseController{
     		Doc doc = action.getDoc();
     		if(CommitType.ADD == action.getAction()) //add
     		{
-        		delFileOrDir(wcDir + doc.getPath() + doc.getName());
+        		FileUtil.delFileOrDir(wcDir + doc.getPath() + doc.getName());
     		}
     	}
 	}
@@ -2149,7 +2151,7 @@ public class GITUtil  extends BaseController{
 		//Add to Doc to WorkingDirectory
 		String entryPath = doc.getPath() + doc.getName();
 		String wcDocPath = wcDir + entryPath;
-		if(delFileOrDir(wcDocPath) == false)
+		if(FileUtil.delFileOrDir(wcDocPath) == false)
 		{
 			System.out.println("deleteEntry() delete WD Error");	
 			return false;

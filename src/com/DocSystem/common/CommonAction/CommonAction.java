@@ -189,4 +189,31 @@ public class CommonAction {
 	{
 		return subActionListForFail;
 	}
+	
+	/******************************** Basic Interface for CommonAction *************************************/
+	//CommonAction 主要用于异步行为
+    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+	//ActionType 1:add 2:delete 3:update 4:move 5:copy
+    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+	public static void insertCommonAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser, ActionType actionId, Action actionType, DocType docType, List<CommonAction> subActionList, User user) 
+	{	
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+
+		//System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		
+		action.setRepos(repos);
+		action.setDoc(srcDoc);
+		action.setNewDoc(dstDoc);
+		
+		action.setUser(user);
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		action.setSubActionList(subActionList);
+		
+		actionList.add(action);
+	}
 }
