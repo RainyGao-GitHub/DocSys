@@ -22,6 +22,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.common.Path;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -47,7 +48,7 @@ public class ReposController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();		
 		
 		JSONObject config = new JSONObject();
-		config.put("defaultReposStorePath", getDefaultReposRootPath());
+		config.put("defaultReposStorePath", Path.getDefaultReposRootPath(OSType));
 		rt.setData(config);
 		writeJson(rt, response);
 	}

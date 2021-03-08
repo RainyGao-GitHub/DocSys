@@ -26,6 +26,7 @@ import util.WebUploader.MultipartFileParam;
 import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.controller.BaseController;
+import com.DocSystem.common.FileUtil;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 
@@ -728,7 +729,7 @@ public class UserController extends BaseController {
         String usrImgName =  user.getId()+"_"+ MD5.md5(fileName) + "."  + suffix; 
         String retName = null;
 		try {
-			retName = saveFile(uploadFile, imgDirPath,usrImgName);
+			retName = FileUtil.saveFile(uploadFile, imgDirPath,usrImgName);
 		} catch (Exception e) {
 			System.out.println("saveUserImg() saveFile " + usrImgName +" 异常！");
 			e.printStackTrace();

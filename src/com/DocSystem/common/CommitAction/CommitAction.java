@@ -1,7 +1,10 @@
 package com.DocSystem.common.CommitAction;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.DocSystem.common.DocUtil;
 import com.DocSystem.entity.Doc;
 
 public class CommitAction{
@@ -80,5 +83,124 @@ public class CommitAction{
 	public boolean getResult()
 	{
 		return result;
+	}
+	
+	/******************************** Basic Interface for CommitAction *************************************/
+	//版本仓库底层通用接口
+	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+		//printObject("insertAddFileAction:", doc);
+		
+    	CommitAction action = new CommitAction();
+    	action.setAction(CommitType.ADD);
+    	action.setDoc(doc);
+    	action.isSubAction = isSubAction;
+    	actionList.add(action);
+	}
+    
+	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction, boolean isGit) 
+	{
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+		//printObject("insertAddDirAction:", doc);
+		System.out.println("insertAddDirAction() " + doc.getPath() + doc.getName());
+
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File dir = new File(localParentPath, doc.getName());
+		File[] tmp = dir.listFiles();
+		
+		//there is not subNodes under dir
+		if(tmp == null || tmp.length == 0)
+		{
+	    	CommitAction action = new CommitAction();
+	    	action.setAction(CommitType.ADD);
+	    	action.setDoc(doc);
+	    	action.isSubAction = isSubAction;
+	    	action.setSubActionList(null);
+	    	actionList.add(action);
+	    	return;
+		}
+		
+		//Build subActionList
+    	String subParentPath = doc.getPath() + doc.getName() + "/";
+    	if(doc.getName().isEmpty())
+    	{
+    		subParentPath = doc.getPath();
+    	}
+    	int subDocLevel = doc.getLevel() + 1;
+    	
+		List<CommitAction> subActionList = new ArrayList<CommitAction>();
+	    for(int i=0;i<tmp.length;i++)
+	    {
+	    	File localEntry = tmp[i];
+	    	int subDocType = localEntry.isFile()? 1: 2;
+	    	Doc subDoc = DocUtil.buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "");
+	    	if(localEntry.isDirectory())
+	    	{	
+	    		insertAddDirAction(subActionList,subDoc,true, isGit);
+	    	}
+	    	else
+	    	{
+	    		insertAddFileAction(subActionList,subDoc,true, isGit);
+	    	}
+	 	}
+		
+    	CommitAction action = new CommitAction();
+    	action.setAction(CommitType.ADD);
+    	action.setDoc(doc);
+    	action.isSubAction = isSubAction;
+    	action.setSubActionList(subActionList);
+    	actionList.add(action);    	
+	}
+	
+	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+
+		//printObject("insertDeleteAction:", doc);
+		
+		System.out.println("insertDeleteAction() " + doc.getPath() + doc.getName());
+
+    	CommitAction action = new CommitAction();
+    	action.setAction(CommitType.DELETE);
+    	action.setDoc(doc);
+    	actionList.add(action);
+	}
+    
+	protected void insertModifyAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+
+		//printObject("insertModifyAction:", doc);
+		System.out.println("insertModifyAction() " + doc.getPath() + doc.getName());
+
+		CommitAction action = new CommitAction();
+    	action.setAction(CommitType.MODIFY);
+    	action.setDoc(doc);
+    	actionList.add(action);	
+	}
+	
+	public static void insertAction(List<CommitAction> actionList, Doc doc, CommitType actionType, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+
+		//printObject("insertAction:", doc);
+		System.out.println("insertAction() actionType:" + actionType + " doc:" + doc.getPath() + doc.getName());
+
+		CommitAction action = new CommitAction();
+    	action.setAction(actionType);
+    	action.setDoc(doc);
+    	actionList.add(action);	
 	}
 }
