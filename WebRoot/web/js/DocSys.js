@@ -656,7 +656,7 @@ function buildDocDownloadLink(downloadDocInfo, urlStyle)
 	{
 		docLink += "&shareId="+downloadDocInfo.shareId;
 	}
-	if(deleteFlag)
+	if(downloadDocInfo.deleteFlag)
 	{
 		docLink += "&deleteFlag="+ downloadDocInfo.deleteFlag;	
 	}
