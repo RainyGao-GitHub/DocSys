@@ -618,6 +618,51 @@ function getDocShareLink(reposId, docShare, IpAddress)
  	return url;
 }
 
+function buildDocDownloadLink(downloadDocInfo, urlStyle)
+{	
+	var name = encodeURI(downloadDocInfo.name);
+   	var path = encodeURI(downloadDocInfo.path);
+   	var targetName = encodeURI(downloadDocInfo.targetName);
+   	var targetPath = encodeURI(downloadDocInfo.targetPath);
+   	
+   	if(urlStyle && urlStyle == "REST")
+   	{
+   		var docRestLink =  "/DocSystem/Doc/downloadDoc/" + downloadDocInfo.vid + "/" + path + "/" + name + "/" +targetPath+ "/"+targetName;
+   		if(downloadDocInfo.authCode)
+   		{
+   			docRestLink += "/" + downloadDocInfo.authCode;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";
+   		}
+   		if(downloadDocInfo.shareId)
+   		{
+   			docRestLink +=  "/"  + downloadDocInfo.shareId;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";
+   		}
+   		return docRestLink;
+   	}
+   	
+	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDocInfo.vid + "&path=" + path + " &name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName;
+	if(downloadDocInfo.authCode)
+   	{
+		docLink += "&authCode=" + downloadDocInfo.authCode;
+   	}
+	if(downloadDocInfo.shareId)
+	{
+		docLink += "&shareId="+downloadDocInfo.shareId;
+	}
+	if(deleteFlag)
+	{
+		docLink += "&deleteFlag="+ downloadDocInfo.deleteFlag;	
+	}
+	return docLink;
+}
+
 function getDocDownloadLink(docInfo, urlStyle)
 {
 	if(docInfo.fileLink)
@@ -631,21 +676,8 @@ function getDocDownloadLink(docInfo, urlStyle)
 		return null;
 	}
 	
-	var name = encodeURI(docDataEx.name);
-   	var path = encodeURI(docDataEx.path);
-   	var targetName = encodeURI(docDataEx.targetName);
-   	var targetPath = encodeURI(docDataEx.targetPath);
-   	if(urlStyle && urlStyle == "REST")
-   	{
-   		return "/DocSystem/Doc/downloadDoc/" + docInfo.vid + "/" + path + + "/" + name + "/" +targetPath+ "/"+targetName;   		
-   	}
-   	
-	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + docInfo.vid + "&path=" + path + " &name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName;
-	if(docInfo.shareId)
-	{
-		docLink += "&shareId="+docInfo.shareId;
-	}
-	return docLink;
+	docDataEx.vid = docInfo.vid;
+	return buildDocDownloadLink(docDataEx, urlStyle);
 }
 
 function getDocDownloadFullLink(docInfo, urlStyle)

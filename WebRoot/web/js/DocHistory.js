@@ -113,17 +113,12 @@
                    if( "ok" == ret.status )
                    {          
                 	    console.log("downloadHistoryDocPrepare Ok:",ret);            	   		            	   		
-            	   		var targetName = ret.data.name;
-                	    var targetPath = ret.data.path;
-                	    var deleteFlag = ret.msgData;
-            	   		
-                	    //targetName = encodeURI(Base64.encode(targetName));
-            		   	//targetPath = encodeURI(Base64.encode(targetPath));
-                	    targetName = encodeURI(targetName);
-            		   	targetPath = encodeURI(targetPath);
-            		   	console.log("downloadHistoryDocPrepare targetName:",targetName);            	   		            	   		
-            	   		
-            	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
+                	    var docDownloadInfo = ret.data;
+                	    docDownloadInfo.deleteFlag = ret.msgData;
+
+            		   	var docLink = buildDocDownloadLink(ret.data);
+                	    console.log("downloadHistoryDocPrepare docLink:",docLink);
+            	   		window.location.href = docLink;
                 	   	return;
                    }
                    else	//后台报错，结束下载
