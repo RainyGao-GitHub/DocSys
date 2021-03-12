@@ -39,6 +39,10 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
 	
 	public static int OSType = OS.UNKOWN; //
+	
+	//DocSysType
+    protected static int docSysType = 0;
+
     static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
