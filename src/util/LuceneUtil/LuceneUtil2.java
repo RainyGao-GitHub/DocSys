@@ -107,35 +107,44 @@ public class LuceneUtil2   extends BaseFunction
 		//System.out.println("buildDocumentForChange() change_id:" + change_id + " change:" + docChange.getString("change"));
 		Document document = new Document();			
 		document.add(new IntField("change_id", change_id, Store.YES));
+		//以下字段是给业务逻辑使用的
+		document.add(new Field("docId", docChange.getString("docId"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new Field("time", docChange.getString("time"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new Field("user", docChange.getString("user"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new Field("useridoriginal", docChange.getString("useridoriginal"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
 		
+		//以下字段是存储修改内容的
+		//document.add(new IntField("change", docChange.getString("change"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		document.add(new LongField("offset", docChange.getLongValue("offset"), Store.YES));	//Change在changes.json文件中的起始位置（Change都是用UTF-8格式存入json文件）
+		document.add(new IntField("size", docChange.getIntValue("size"), Store.YES));	//Change在changes.json文件中的起始位置
+
 		//docChange字段是为了能够快速获取已组成的docChangeStr
-		String docChangStr = "{" 
+		/*String docChangStr = "{" 
 				+ "\\\"changeIndex\\\":\\\"" + change_id + "\\\","
 				+ "\\\"docId\\\":\\\"" + docChange.get("docId") + "\\\"," 
 				+ "\\\"change\\\":\\\"\\\\\\\"" + docChange.get("change") + "\\\\\\\"\\\","
 				+ "\\\"time\\\":" + docChange.get("time") + ","
 				+ "\\\"user\\\":\\\"" + docChange.get("user") + "\\\","
 				+ "\\\"useridoriginal\\\":\\\"" + docChange.get("useridoriginal") + "\\\""
-				+ "}";
-		document.add(new Field("docChange", docChangStr, Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+				+ "}";*/
 		
-		//以下字段是给业务逻辑使用的
-		document.add(new Field("change", docChange.getString("change"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		document.add(new Field("docId", docChange.getString("docId"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		document.add(new Field("time", docChange.getString("time"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		document.add(new Field("user", docChange.getString("user"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-		document.add(new Field("useridoriginal", docChange.getString("useridoriginal"), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		//document.add(new Field("docChange", docChangStr, Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+
 		return document;
 	}
 	
 	private static JSONObject buildChangeForDocument(Document document) {
 		JSONObject docChange = new JSONObject();
         docChange.put("change_id", document.get("change_id"));
-        docChange.put("change", document.get("change"));
+        docChange.put("docId", document.get("docId"));
         docChange.put("time", document.get("time"));
         docChange.put("user", document.get("user"));
         docChange.put("useridoriginal", document.get("useridoriginal"));
-        docChange.put("docChange", document.get("docChange"));
+        
+        Long offset = Long.parseLong(document.get("offset"));
+        Integer size = Integer.parseInt(document.get("size"));
+        docChange.put("offset", offset);
+        docChange.put("size", size);
 		return docChange;
 	}
 	
@@ -161,14 +170,14 @@ public class LuceneUtil2   extends BaseFunction
 	
 	        Query query =NumericRangeQuery.newIntRange("change_id", startIndex, endIndex, true,true);
 
-	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+	        ScoreDoc[] hits = isearcher.search(query, null, endIndex - startIndex).scoreDocs;
 			System.out.println("getDocumentChanges() hitCount:" + hits.length);
 
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
 	            JSONObject docChange = buildChangeForDocument(hitDocument);
-				System.out.println("getDocumentChanges() index:" + (startIndex + i) + " docChange:" + docChange.get("docChange"));
+				//System.out.println("getDocumentChanges() index:" + (startIndex + i) + " docChange:" + docChange.get("change"));
 	            changes.add(docChange);
 	        }
 		} catch (Exception e) {
