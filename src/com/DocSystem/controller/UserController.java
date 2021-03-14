@@ -112,6 +112,7 @@ public class UserController extends BaseController {
 		
 		//I not sure if the info in loginUser is lastest, so I need to get the usrInfo from database 
 		user = userService.getUser(user.getId());
+		user.docSysType = docSysType;
 		rt.setData(user);	//返回用户信息
 		writeJson(rt, response);	
 	}
