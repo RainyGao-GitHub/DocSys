@@ -37,6 +37,8 @@ public class User {
 
     private String intro;
 
+    public Integer docSysType;
+    
     public Integer getId() {
         return id;
     }
