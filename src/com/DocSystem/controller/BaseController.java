@@ -227,10 +227,10 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys manage 页面权限检查接口  **********************************************/
 	protected boolean superAdminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
-		return mamageAccessCheck(expUsage, expUsage, 2, session, rt);
+		return mamageAccessCheck(authCode, expUsage, 2, session, rt);
 	}
 	protected boolean adminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
-		return mamageAccessCheck(expUsage, expUsage, 1, session, rt);
+		return mamageAccessCheck(authCode, expUsage, 1, session, rt);
 	}
 
 	
@@ -245,22 +245,22 @@ public class BaseController  extends BaseFunction{
 			Log.docSysErrorLog("无效授权码或授权码已过期！", rt);
 			return false;
 		}
-		else
+		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
 		{
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				Log.docSysErrorLog("用户未登录，请先登录！", rt);
-				return false;
-			}
-				
-			if(login_user.getType() < role)
-			{
-				Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-				return false;
-			}
-			return true;
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
+			return false;
 		}
+				
+		if(login_user.getType() < role)
+		{
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			return false;
+		}
+		
+		return true;
+		
 	}
 	
 	/****************************** DocSys 文件访问密码接口 **********************************************/
