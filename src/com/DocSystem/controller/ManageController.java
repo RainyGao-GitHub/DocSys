@@ -54,7 +54,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("/n****************** docSysInit.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -137,7 +137,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemEmailConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -174,7 +174,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("setSystemEmailConfig() host:" + host + " email:" + email + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -247,7 +247,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemSmsConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -278,7 +278,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemDbConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			rt.setData("invalidAuthCode");
 			writeJson(rt, response);			
@@ -323,7 +323,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("setSystemDBConfig() type:"  + type + " url:" + url + " user:" + user  + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -407,7 +407,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("testDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -427,7 +427,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("deleteDatabase()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -481,7 +481,7 @@ public class ManageController extends BaseController{
 		System.out.println("resetDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -531,7 +531,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("exportDBData()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -577,7 +577,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("importDBData()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -619,7 +619,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemInfo()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -653,7 +653,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemLicenses()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -693,7 +693,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome + " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi + " defaultReposStorePath:" + defaultReposStorePath);
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -770,7 +770,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("upgradeSystem()");
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -817,7 +817,7 @@ public class ManageController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;
@@ -839,7 +839,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getUserList() userName:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		ReturnAjax rt = new ReturnAjax();
-		if(mamageAccessCheck(null, null, session, rt) == false)
+		if(adminAccessCheck(null, null, session, rt) == false)
 		{
 			writeJson(rt, response);			
 			return;

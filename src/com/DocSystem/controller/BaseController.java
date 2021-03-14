@@ -226,7 +226,16 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/****************************** DocSys manage 页面权限检查接口  **********************************************/
-	protected boolean mamageAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
+	protected boolean superAdminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
+		return mamageAccessCheck(expUsage, expUsage, 2, session, rt);
+	}
+	protected boolean adminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
+		return mamageAccessCheck(expUsage, expUsage, 1, session, rt);
+	}
+
+	
+	//role: 0 普通用户、1 管理员、2超级管理员
+	protected boolean mamageAccessCheck(String authCode, String expUsage, int role, HttpSession session, ReturnAjax rt) {
 		if(authCode != null)
 		{
 			if(checkAuthCode(authCode,"docSysInit") == true)
@@ -245,7 +254,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 				
-			if(login_user.getType() < 1)
+			if(login_user.getType() < role)
 			{
 				Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 				return false;
