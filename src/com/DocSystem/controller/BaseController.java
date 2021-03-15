@@ -255,7 +255,7 @@ public class BaseController  extends BaseFunction{
 				
 		if(login_user.getType() < role)
 		{
-			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			Log.docSysErrorLog("您无权进行此操作，请联系统管理员！", rt);
 			return false;
 		}
 		
