@@ -1217,6 +1217,8 @@ function copyDocInfo(doc, shareId)
 			}
 		}
 		
+		docInfo.isBussiness = doc.isBussiness;
+		
 		return docInfo;
 	}
 	return null;
@@ -1225,10 +1227,12 @@ function copyDocInfo(doc, shareId)
 function openOffice(docInfo, openInNewPage, preview)
 {
 	var url = "/DocSystem/Doc/getDocOfficeLink.do";
+	console.log("openOffice isBussiness:" + docInfo.isBussiness);
 	if(docInfo.isBussiness && docInfo.isBussiness == true)
 	{
 		url = "/DocSystem/Bussiness/getDocOfficeLink.do";
 	}
+	console.log("openOffice url:" + url);
 	
     $.ajax({
         url : url,
