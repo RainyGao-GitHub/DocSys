@@ -10209,28 +10209,28 @@ public class BaseController  extends BaseFunction{
 		{
 		case "zip":
 		case "war":
-			return extractEntryFromZipFile(repos, rootDoc, parentCompressDoc, doc);
+			return extractEntryFromZipFile(parentCompressDoc, doc);
 		case "rar":
-			return extractEntryFromRarFile(repos, rootDoc, parentCompressDoc, doc);			
+			return extractEntryFromRarFile(parentCompressDoc, doc);			
 		case "7z":
-			return extractEntryFrom7zFile(repos, rootDoc, parentCompressDoc, doc);			
+			return extractEntryFrom7zFile(parentCompressDoc, doc);			
 		case "tar":
-			return extractEntryFromTarFile(repos, rootDoc, parentCompressDoc, doc);
+			return extractEntryFromTarFile(parentCompressDoc, doc);
 		case "tgz":
 		case "tar.gz":
-			return extractEntryFromTgzFile(repos, rootDoc, parentCompressDoc, doc);		
+			return extractEntryFromTgzFile(parentCompressDoc, doc);		
 		case "txz":
 		case "tar.xz":
-			return extractEntryFromTxzFile(repos, rootDoc, parentCompressDoc, doc);			
+			return extractEntryFromTxzFile(parentCompressDoc, doc);			
 		case "tbz2":
 		case "tar.bz2":
-			return extractEntryFromTarBz2File(repos, rootDoc, parentCompressDoc, doc);					
+			return extractEntryFromTarBz2File(parentCompressDoc, doc);					
 		case "gz":
-			return extractEntryFromGzFile(repos, rootDoc, parentCompressDoc, doc);						
+			return extractEntryFromGzFile(parentCompressDoc, doc);						
 		case "xz":
-			return extractEntryFromXzFile(repos, rootDoc, parentCompressDoc, doc);
+			return extractEntryFromXzFile(parentCompressDoc, doc);
 		case "bz2":
-			return extractEntryFromBz2File(repos, rootDoc, parentCompressDoc, doc);
+			return extractEntryFromBz2File(parentCompressDoc, doc);
 		}
 		return false;
 	}
@@ -10253,7 +10253,7 @@ public class BaseController  extends BaseFunction{
 		return parentCompressDoc;
 	}
 
-	private boolean extractEntryFromBz2File(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
+	private boolean extractEntryFromBz2File(Doc parentZipDoc, Doc zipDoc) 
 	{
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -10312,7 +10312,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private boolean extractEntryFromXzFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
+	private boolean extractEntryFromXzFile(Doc parentZipDoc, Doc zipDoc) 
 	{
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -10372,7 +10372,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private boolean extractEntryFromGzFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
+	private boolean extractEntryFromGzFile(Doc parentZipDoc, Doc zipDoc) 
 	{
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -10431,7 +10431,7 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private boolean extractEntryFromTarBz2File(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
+	private boolean extractEntryFromTarBz2File(Doc parentZipDoc, Doc zipDoc) 
 	{
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -10515,7 +10515,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private boolean extractEntryFromTxzFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
+	private boolean extractEntryFromTxzFile(Doc parentZipDoc, Doc zipDoc) 
 	{
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -10605,7 +10605,7 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private boolean extractEntryFromTgzFile(Repos repos, Doc rootDoc, Doc parentCompressDoc, Doc doc) 
+	private boolean extractEntryFromTgzFile(Doc parentCompressDoc, Doc doc) 
 	{
         boolean ret = false;
 		String parentZipFilePath = parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName();
@@ -10697,7 +10697,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private boolean extractEntryFromTarFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) 
+	private boolean extractEntryFromTarFile(Doc parentZipDoc, Doc zipDoc) 
 	{
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -10781,7 +10781,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private boolean extractEntryFrom7zFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) {
+	private boolean extractEntryFrom7zFile(Doc parentZipDoc, Doc zipDoc) {
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
 		
@@ -10852,7 +10852,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private boolean extractEntryFromRarFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) {
+	private boolean extractEntryFromRarFile(Doc parentZipDoc, Doc zipDoc) {
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
 		
@@ -10921,7 +10921,7 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private boolean extractEntryFromZipFile(Repos repos, Doc rootDoc, Doc parentZipDoc, Doc zipDoc) {
+	private boolean extractEntryFromZipFile(Doc parentZipDoc, Doc zipDoc) {
 		boolean ret = false;
 
 		ZipFile parentZipFile = null;
