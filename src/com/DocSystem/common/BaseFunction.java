@@ -29,6 +29,7 @@ public class BaseFunction{
 	//应用路径
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;
+    protected static String webappsPath = null;
 	
     //系统License
     public static License systemLicenseInfo = null;
@@ -46,7 +47,8 @@ public class BaseFunction{
     static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
-		docSysIniPath = Path.getDocSysWebParentPath(docSysWebPath) + "docSys.ini/";   
+    	webappsPath = Path.getDocSysWebParentPath(docSysWebPath);
+		docSysIniPath = webappsPath + "docSys.ini/";   
     	initSystemLicenseInfo();
     	initOfficeLicenseInfo();
     }
