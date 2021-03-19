@@ -133,6 +133,7 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(vid);
+		repos.isBussiness = systemLicenseInfo.hasLicense;
 		rt.setData(repos);
 		writeJson(rt, response);
 	}
