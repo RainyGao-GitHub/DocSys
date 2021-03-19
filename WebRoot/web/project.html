@@ -2842,6 +2842,7 @@
    		node.size = size;
    		node.createTime = parseInt(createTime);
    		node.latestEditTime = parseInt(latestEditTime);
+   		node.isBussiness = gReposInfo.isBussiness;
    		
    		curRightClickedDocListNode = node;
 	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
@@ -4223,7 +4224,7 @@
 			{text: '更多...', subMenu: [
 						{text: '查看历史版本', action: function(e){
 									e.preventDefault();
-						      			showDocHistory(curRightClickedTreeNode,0);
+						      		showDocHistory(curRightClickedTreeNode,0);
 								}
 						},
 						{text: '查看备注历史', action: function(e){
