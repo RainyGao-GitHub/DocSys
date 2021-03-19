@@ -519,7 +519,47 @@
 	var systemSmsSetting = {
 			server: "",
 			apikey: "",
+			tplid: "",
 	}
+	function enableSystemEmailSet(){
+		$("#btnEnableSystemSmsSet").hide();
+		$("#btnCancelSystemSmsSet").show();
+		$("#btnSaveSystemSmsSet").show();
+		$("#systemSmsServer").val(systemSmsConfig.server);
+		$("#systemSmsApikey").val(systemSmsConfig.apikey);
+		$("#systemSmsTplid").val(systemSmsConfig.tplid);
+		$("#systemSmsServer").attr('disabled',false);
+		$("#systemSmsApikey").attr('disabled',false);
+		$("#systemSmsTplid").attr('disabled',false);
+	}
+	
+	function cancelSystemSmsSet(){
+		$("#btnEnableSystemSmsSet").show();
+		$("#btnCancelSystemSmsSet").hide();
+		$("#btnSaveSystemSmsSet").hide();
+		//revert the value
+		$("#systemSmsServer").attr('disabled',true);
+		$("#systemSmsApikey").attr('disabled',true);
+		$("#systemSmsTplid").attr('disabled',true);
+		$("#systemSmsServer").val(systemSmsConfig.server);
+		$("#systemSmsApikey").val(systemSmsConfig.apikey);
+		$("#systemSmsTplid").val(systemSmsConfig.tplid);
+	}
+	
+	function saveSystemSmsSet(){
+		$("#btnEnableSystemSmsSet").show();
+		$("#btnCancelSystemSmsSet").hide();
+		$("#btnSaveSystemSmsSet").hide();
+		//revert the value
+		$("#systemSmsServer").attr('disabled',true);
+		$("#systemSmsApikey").attr('disabled',true);
+		$("#systemSmsTplid").attr('disabled',true);
+		var host = $("#systemSmsServer").val();
+		var user = $("#systemSmsApikey").val();
+		var pwd = $("#systemSmsTplid").val();
+		updateSystemSmsConfig(host, user, pwd);
+	}
+
 	function showSystemSmsConfig(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getSystemSmsConfig.do",
@@ -529,14 +569,17 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
+	            	//console.log("getSystemSmsConfig ret", ret);
 					var config = ret.data; 	
-					systemSmsSetting.server = config.server;
-	            	systemSmsSetting.apikey = config.apikey;
-	            	$Func.render($("#container"),"systemSmsConfig",{"value":systemSmsSetting});
+					systemSmsConfig.server = config.server;
+	            	systemSmsConfig.apikey = config.apikey;
+	            	systemSmsConfig.tplid = config.tplid;
+	            	console.log("getSystemSmsConfig systemSmsConfig",systemSmsConfig);
+	            	$Func.render($("#container"),"systemSmsConfig",{"value":systemSmsConfig});
 	            }
 	            else 
 	            {
-		        	showErrorMessage("获取短信服务配置信息失败:" + ret.msgInfo);
+	            	showErrorMessage("获取短信服务配置信息失败:" + ret.msgInfo);
 	            	console.log(ret.msgInfo);
 	            }
 	        },
@@ -546,6 +589,44 @@
 	    });
 	}
 	
+	function updateSystemSmsConfig(host, email, pwd){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemSmsConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	server: server,
+	        	apikey: apikey,
+	        	tplid: tplid,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemSmsConfig.server = server;
+	            	systemSmsConfig.apikey = apikey;
+	        		systemSmsConfig.tplid = tplid;
+	        		showErrorMessage("更新短信服务配置成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新短信服务配置失败:" + ret.msgInfo);
+	        		//restore the setting
+	        		$("#systemSmsServer").val(systemSmsConfig.server);
+	        		$("#systemSmsApikey").val(systemSmsConfig.apikey);
+	        		$("#systemSmsTplid").val(systemSmsConfig.tplid);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:更新短信服务配置失败");
+        		//restore the setting
+	        	$("#systemSmsServer").val(systemSmsConfig.server);
+        		$("#systemSmsApikey").val(systemSmsConfig.apikey);
+        		$("#systemSmsTplid").val(systemSmsConfig.tplid);
+	        }
+	    });
+	}
+
 	//系统数据库设置
 	var systemDbSetting = {
 			type: "",
