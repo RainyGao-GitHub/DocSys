@@ -30,6 +30,7 @@
 	                    	<button onclick="deleteSystemLicense()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
 	                    </td>
 	                  </tr>
+	                  {{if value.docSysType == 2}}
 	                  <tr>
 	                    <td>Office证书</td>
 	                    <td>{{value.officeLicense.status}}</td>
@@ -39,6 +40,7 @@
 	                    	<button onclick="deleteOfficeLicense()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
 	                    </td>
 	                  </tr>
+	                  {{/if}}
 	                </tbody>
 	          </table>
               <div class="widget-foot">
