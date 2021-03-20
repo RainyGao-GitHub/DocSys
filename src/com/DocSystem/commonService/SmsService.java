@@ -90,8 +90,8 @@ public class SmsService {
 			}
 			System.out.println(rtJson);
 			Map<String, Object> rtObj = GsonUtils.getObject(rtJson, Map.class);
-			double rtCode = (Double) rtObj.get("code");
-			if(rtCode<0){
+			Double rtCode = (Double) rtObj.get("code");
+			if(rtCode == null || rtCode < 0){
 				rt.setError("发送短信失败！");
 			}else{
 				return true;

@@ -104,12 +104,7 @@ public class JavaSmsApi {
      * @throws IOException
      */
     public static String tplSendSms(String apikey, String tpl_id, String tpl_value, String mobile) throws IOException {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("apikey", apikey);
-        params.put("tpl_id", tpl_id);
-        params.put("tpl_value", tpl_value);
-        params.put("mobile", mobile);
-        return post(URI_TPL_SEND_SMS, params);
+    	return tplSendSms(URI_TPL_SEND_SMS, apikey, tpl_id, tpl_value, mobile);
     }
     
     /**
@@ -124,7 +119,8 @@ public class JavaSmsApi {
      * @throws IOException
      */
     public static String tplSendSms(String url, String apikey, String tpl_id, String tpl_value, String mobile) throws IOException {
-        Map<String, String> params = new HashMap<String, String>();
+    	System.out.println("tplSendSms() uri:" + url + " apikey:" + apikey + " tpl_id:" + tpl_id);
+    	Map<String, String> params = new HashMap<String, String>();
         params.put("apikey", apikey);
         params.put("tpl_id", tpl_id);
         params.put("tpl_value", tpl_value);
