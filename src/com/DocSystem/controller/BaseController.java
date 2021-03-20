@@ -2224,7 +2224,7 @@ public class BaseController  extends BaseFunction{
     }
   
 	protected String getSmsTplid() {
-		String value = ReadProperties.read("docSysConfig.properties", "smsApikey");
+		String value = ReadProperties.read("docSysConfig.properties", "smsTplid");
     	if(value == null || value.isEmpty())
     	{
     		value = "1341175";
