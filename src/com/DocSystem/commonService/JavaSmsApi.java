@@ -54,7 +54,7 @@ public class JavaSmsApi {
 
         /**************** 使用模板接口发短信(不推荐) *****************/
         //设置模板ID，如使用1号模板:【#company#】您的验证码是#code#
-        long tpl_id = 1341175;
+        String tpl_id = "1341175";
         //设置对应的模板变量值
         //如果变量名或者变量值中带有#&=%中的任意一个特殊符号，需要先分别进行urlencode编码
         //如code值是#1234#,需作如下编码转换
@@ -62,8 +62,6 @@ public class JavaSmsApi {
         String tpl_value = "#code#=" + codeValue;// + "&#company#=自由团队";
         //模板发送的调用示例
         System.out.println(JavaSmsApi.tplSendSms(apikey, tpl_id, tpl_value, mobile));
-
-
     }
 
     /**
@@ -105,13 +103,33 @@ public class JavaSmsApi {
      * @return json格式字符串
      * @throws IOException
      */
-    public static String tplSendSms(String apikey, long tpl_id, String tpl_value, String mobile) throws IOException {
+    public static String tplSendSms(String apikey, String tpl_id, String tpl_value, String mobile) throws IOException {
         Map<String, String> params = new HashMap<String, String>();
         params.put("apikey", apikey);
-        params.put("tpl_id", String.valueOf(tpl_id));
+        params.put("tpl_id", tpl_id);
         params.put("tpl_value", tpl_value);
         params.put("mobile", mobile);
         return post(URI_TPL_SEND_SMS, params);
+    }
+    
+    /**
+     * 通过指定的短信发送链接发送短信
+     *
+     * @param server      server
+     * @param apikey      apikey
+     * @param tpl_id      模板id
+     * @param tpl_value 　模板变量值
+     * @param mobile    　接受的手机号
+     * @return json格式字符串
+     * @throws IOException
+     */
+    public static String tplSendSms(String url, String apikey, String tpl_id, String tpl_value, String mobile) throws IOException {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("apikey", apikey);
+        params.put("tpl_id", tpl_id);
+        params.put("tpl_value", tpl_value);
+        params.put("mobile", mobile);
+        return post(url, params);
     }
 
 

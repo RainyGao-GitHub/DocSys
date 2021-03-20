@@ -77,6 +77,7 @@ import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.RunResult;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
+import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.common.constants;
@@ -125,6 +126,7 @@ public class BaseController  extends BaseFunction{
 	//系统默认用户
     protected static User coEditUser = new User();
     protected static User autoSyncUser = new User();
+    
     static {		
 		initSystemUsers();
     }
@@ -2196,9 +2198,39 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean verifyTelephone(String tel) {
 		ReturnAjax rt = new ReturnAjax();
-		return smsService.sendSms(rt, tel, 1341175l, "Verify", null, null);
+		String smsSendUri = getSmsSendUri();
+		String smsApikey = getSmsApikey();
+		String smdTplid = getSmsTplid();
+		
+		return smsService.sendSms(rt, tel, smsSendUri, smsApikey, smdTplid, "Verify", null, null);
 	}
-
+		
+    public String getSmsSendUri() {
+    	String value = ReadProperties.read("docSysConfig.properties", "smsServer");
+    	if(value == null || value.isEmpty())
+    	{
+    		value = JavaSmsApi.URI_TPL_SEND_SMS;
+    	}
+    	return value;
+    }
+    
+    public String getSmsApikey() {
+    	String value = ReadProperties.read("docSysConfig.properties", "smsApikey");
+    	if(value == null || value.isEmpty())
+    	{
+    		value = JavaSmsApi.apikey;
+    	}
+    	return value;
+    }
+  
+	protected String getSmsTplid() {
+		String value = ReadProperties.read("docSysConfig.properties", "smsApikey");
+    	if(value == null || value.isEmpty())
+    	{
+    		value = "1341175l";
+    	}
+    	return value;
+	}
 	
 	/********************************** Functions For Application Layer 
 	 * @param downloadList ****************************************/

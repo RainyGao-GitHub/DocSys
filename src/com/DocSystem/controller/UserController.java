@@ -333,17 +333,22 @@ public class UserController extends BaseController {
 	}
 	
 	private void sendVerifyCodeSMS(ReturnAjax rt, String userName, Integer type, String code) {
+		String smsSendUri = getSmsSendUri();
+		String smsApikey = getSmsApikey();
+		String smdTplid = getSmsTplid();
+		
 		switch(type.intValue())
 		{
 		case 0:
-			smsService.sendSms(rt,userName, 1341175l, code, null, null); //注册短信模板id
+			smsService.sendSms(rt,userName, smsSendUri, smsApikey, smdTplid, code, null, null); //注册短信模板id
 			break;
 		case 1:
-			smsService.sendSms(rt,userName, 1341175l, code, null, null); //忘记密码短信模板id
+			smsService.sendSms(rt,userName, smsSendUri, smsApikey, smdTplid, code, null, null); //忘记密码短信模板id
 			break;
 		default:
-			smsService.sendSms(rt,userName, 1341175l, code, null, null); //注册短信模板id
+			smsService.sendSms(rt,userName, smsSendUri, smsApikey, smdTplid, code, null, null); //注册短信模板id
 		}
+
 	}
 
 	//生成验证码: sessionVarName 保存验证码的session变量名
