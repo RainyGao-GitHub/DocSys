@@ -43,14 +43,20 @@ public class SmsService {
 	@SuppressWarnings("unchecked")
 	@ResponseBody
 	@RequestMapping("/sendSms")
-	public boolean sendSms(ReturnAjax rt,String phone,long tplId,String code,String type,String content)
+	public boolean sendSms(ReturnAjax rt, String phone, 
+			String smsServer, String smsApikey, String smsTplid, 
+			String code, String type, String content)
 	{
-		if(phone!=null&&!"".equals(phone)){
+		//手机号格式检查
+		if(phone!=null && !"".equals(phone))
+		{
 			if(!RegularUtil.IsMobliePhone(phone)){
 				rt.setError("您的手机号格式不对,请重新检查。");
 				return false;
 			}
-		}else{
+		}
+		else
+		{
 			rt.setError("手机号不能为空，请重新检查。");
 			return false;
 		}
@@ -58,19 +64,30 @@ public class SmsService {
 		String rtJson;
 		try {
 			String tpl_value = "";
-			if(code!=null&&!"".equals(code))
+			if(code !=null && !"".equals(code))
 			{	
 				tpl_value = "#code#=" + URLEncoder.encode(code,JavaSmsApi.ENCODING);
 			}
 			
-			if(type!=null&&!"".equals(type)){
+			if(type!=null && !"".equals(type))
+			{
 				tpl_value += (tpl_value.length()>0?"&":"") + "#type#=" + type;
 			}
 			
-			if(content!=null&&!"".equals(content)){
+			if(content!=null && !"".equals(content))
+			{
 				tpl_value += (tpl_value.length()>0?"&":"") + "#content#=" + content;
 			}
-			rtJson = JavaSmsApi.tplSendSms(JavaSmsApi.apikey, tplId, tpl_value, phone);
+			
+			if(smsServer == null || smsServer.isEmpty())
+			{
+				rtJson = JavaSmsApi.tplSendSms(JavaSmsApi.apikey, smsTplid, tpl_value, phone);
+			}
+			else
+			{
+				rtJson = JavaSmsApi.tplSendSms(smsServer, smsApikey, smsTplid, tpl_value, phone);
+				
+			}
 			System.out.println(rtJson);
 			Map<String, Object> rtObj = GsonUtils.getObject(rtJson, Map.class);
 			double rtCode = (Double) rtObj.get("code");
