@@ -773,6 +773,7 @@ public class ManageController extends BaseController{
 		
 		
 		JSONObject licenses = new JSONObject();
+		licenses.put("docSysType", docSysType);
 		licenses.put("systemLicense", systemLicense);
 		licenses.put("officeLicense", officeLicense);
 		rt.setData(licenses);
