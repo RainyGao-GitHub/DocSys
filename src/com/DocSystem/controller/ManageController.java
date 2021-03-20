@@ -273,11 +273,83 @@ public class ManageController extends BaseController{
 			apikey = "";
 		}
 		
+		String tplid = ReadProperties.read("docSysConfig.properties", "smsTplid");
+		if(tplid == null)
+		{
+			tplid = "";
+		}
+		
 		JSONObject config = new JSONObject();
 		config.put("server", server);
 		config.put("apikey", apikey);
+		config.put("tplid", tplid);
 		
 		rt.setData(config);
+		writeJson(rt, response);
+	}
+	
+	/********** 设置系统短信配置 ***************/
+	@RequestMapping("/setSystemSmsConfig.do")
+	public void setSystemSmsConfig(String authCode,String server, String apikey, String tplid, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("/n****************** setSystemSmsConfig.do ***********************");
+		
+		System.out.println("setSystemSmsConfig() server:" + server + " apikey:" + apikey + " tplid:" + tplid);
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(server == null && apikey == null && tplid == null)
+		{
+			Log.docSysErrorLog("没有参数改动，请重新设置！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//checkAndAdd docSys.ini Dir
+		if(checkAndAddDocSysIniDir())
+		{
+			Log.docSysErrorLog("系统初始化目录创建失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
+		String tmpDocSystemConfigPath = docSysIniPath;
+		String configFileName = "docSysConfig.properties";
+		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		{
+			//Failed to copy 
+			System.out.println("setSystemSmsConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			Log.docSysErrorLog("创建临时配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		if(server != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "smsServer", server);
+		}
+		if(apikey != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "smsApikey", apikey);
+		}
+		if(tplid != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "smsTplid", tplid);
+		}
+		
+		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		{
+			System.out.println("setSystemSmsConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			Log.docSysErrorLog("写入配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
 		writeJson(rt, response);
 	}
 	
