@@ -2227,7 +2227,7 @@ public class BaseController  extends BaseFunction{
 		String value = ReadProperties.read("docSysConfig.properties", "smsApikey");
     	if(value == null || value.isEmpty())
     	{
-    		value = "1341175l";
+    		value = "1341175";
     	}
     	return value;
 	}
