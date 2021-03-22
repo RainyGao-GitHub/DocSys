@@ -39,7 +39,7 @@
 	                      	<button onclick="restartTomcat()" data-id="" class="btn btn-lg btn-warning examine_ban">重启服务</button>
 	                    </td>
 	                  </tr>
-	                  <tr>
+	                  <tr style="display:none">
 	                    <td>JavaHome</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="javaHome" name="javaHome" value="{{value.javaHome}}" disabled="disabled" >
@@ -47,7 +47,7 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
-	                  <tr>
+	                  <tr {{if value.docSysType > 0}} style="display:none" {{/if}}>
 	                    <td>OpenOffice</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="openOfficePath" name="openOfficePath" value="{{value.openOfficePath}}" disabled="disabled" >
@@ -71,6 +71,7 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
+	                  {{if value.docSysType == 2}}
 	                  <tr>
 	                    <td>系统密钥</td>
 	                    <td></td>
@@ -89,6 +90,7 @@
 	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
 	                    </td>
 	                  </tr>
+	                  {{/if}}
 	                </tbody>
 	          </table>
               <div class="widget-foot">
