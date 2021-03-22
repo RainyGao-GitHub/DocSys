@@ -729,15 +729,20 @@ public class ManageController extends BaseController{
 		
 		String tomcatPath = getTomcatPath();
 		String javaHome = getJavaHome();
-		String openOfficePath = getOpenOfficePath();
 		String officeEditorApi = Path.getOfficeEditorApi();
 		String defaultReposStorePath = Path.getDefaultReposRootPath(OSType);
 
 		JSONObject config = new JSONObject();
+		config.put("docSysType", docSysType);
+		
 		config.put("version", version);
 		config.put("tomcatPath", tomcatPath);
 		config.put("javaHome", javaHome);
-		config.put("openOfficePath", openOfficePath);
+		if(docSysType < 1)
+		{
+			String openOfficePath = getOpenOfficePath();
+			config.put("openOfficePath", openOfficePath);
+		}
 		config.put("officeEditorApi", officeEditorApi);
 		config.put("defaultReposStorePath", defaultReposStorePath);
 		rt.setData(config);
