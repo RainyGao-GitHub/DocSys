@@ -15,4 +15,10 @@ public class OfficeLicense {
 	public Boolean plugins;
 	public Boolean light;
 	public Long expireTime;
+
+	//purchase info
+	public String customer;
+	public Long createTime;
+	public String payInfo;
+	public String id;
 }
