@@ -180,7 +180,7 @@
 <div style="display:none">
 	<input id="importDBFiles" name="importDBFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
 	<input id="upgradeFiles" name="upgradeFiles" type="file" onchange="upgradeSystemConfirm(event)" multiple="multiple"/>
-	<input id="importLicenseFiles" name="importLicenseFiles" type="file" onchange="importLicneseConfirm(event)" multiple="multiple"/>
+	<input id="importLicenseFiles" name="importLicenseFiles" type="file" onchange="importLicenseConfirm(event)" multiple="multiple"/>
 	<input id="installSystemLicense" name="installSystemLicense" type="file" onchange="installSystemLicenseConfirm(event)" multiple="multiple"/>
 	<input id="installOfficeLicense" name="installOfficeLicense" type="file" onchange="installOfficeLicenseConfirm(event)" multiple="multiple"/>
 </div>
@@ -2247,6 +2247,7 @@
 				//上传成功！
 				var ret = JSON.parse(xhr.responseText);
 				if("ok" == ret.status){
+					showLicenseList();	//刷新LicenseList
 					showErrorMessage("导入成功");
 				 }
 				 else	//上传失败
@@ -2270,7 +2271,7 @@
 		};
 		
 		//上传表单			
-		xhr.open("post", "/DocSystem/Manage/importLicense.do");
+		xhr.open("post", "/DocSystem/Sales/importLicense.do");
 		xhr.send(form);
 	}
 	
