@@ -717,7 +717,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
 		{
-			CommonAction.insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AUTOSYNCUP, syncType, DocType.REALDOC, null, user);
+			CommonAction.insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AUTOSYNCUP, syncType, DocType.REALDOC, null, user, false);
 		}
 	}
 	
@@ -2389,7 +2389,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
+			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 		}
 		
 		//检查dbParentDoc是否已添加
@@ -2476,7 +2476,7 @@ public class BaseController  extends BaseFunction{
 				//Insert Index Add Action For addedParentDoc
 				if(actionList != null)	//异步方式添加Index
 				{
-					CommonAction.insertCommonAction(actionList, repos, parentDoc, null, null, null, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null);
+					CommonAction.insertCommonAction(actionList, repos, parentDoc, null, null, null, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null, false);
 				}
 				else //直接添加Index
 				{
@@ -2574,7 +2574,7 @@ public class BaseController  extends BaseFunction{
 			//dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 			
 			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
+			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 		}
 		
 		unlockDoc(doc, lockType, login_user);
@@ -2586,9 +2586,9 @@ public class BaseController  extends BaseFunction{
 	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		//Insert index add action for RDoc Name
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null, false);
 		//Insert index add action for RDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null, null);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null, null, false);
 		
 		String content = doc.getContent();
 		if(content == null || content.isEmpty())
@@ -2601,12 +2601,12 @@ public class BaseController  extends BaseFunction{
 		List<CommonAction> subActionList = new ArrayList<CommonAction>();
 		if(repos.getVerCtrl1() > 0)
 		{
-			CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.ADD, DocType.VIRTURALDOC, null, null); //verRepos commit
+			CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.ADD, DocType.VIRTURALDOC, null, null, false); //verRepos commit
 		}
-		CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null, null);	//Add Index For VDoc
+		CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null, null, false);	//Add Index For VDoc
 		
 		//Insert add action for VDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.ADD, DocType.VIRTURALDOC, subActionList, null);			
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.ADD, DocType.VIRTURALDOC, subActionList, null, false);			
 	}
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
@@ -2625,22 +2625,22 @@ public class BaseController  extends BaseFunction{
 		}	
 
 		//Insert index delete action for RDoc Name
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.DOCNAME, null, null);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.DOCNAME, null, null, false);
 		//Insert index delete action for RDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.REALDOC, null, null);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.REALDOC, null, null, false);
 
 		//Insert delete action for VDoc
 		//CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.DELETE, DocType.VIRTURALDOC, null);
 		//Insert delete action for VDoc verRepos 
 		//CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.DELETE, DocType.VIRTURALDOC,, null);
 		//Insert delete action for VDoc Index
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX,  Action.DELETE, DocType.VIRTURALDOC, null, null);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX,  Action.DELETE, DocType.VIRTURALDOC, null, null, false);
 	}
 
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index update action for RDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, false);
 	}
 	
 	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove)
@@ -2669,49 +2669,21 @@ public class BaseController  extends BaseFunction{
 			//Insert IndexAction For RealDoc Name Copy or Move (对于目录则会进行递归)
 			if(isMove)
 			{
-				CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null);
+				CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null, true);
 			}
 			else	//对于copy操作则新增对该docName的索引
 			{
-				CommonAction.insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null);				
+				CommonAction.insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null, true);				
 			}
 			
 			//Insert IndexAction For RealDoc Copy or Move (对于目录则会进行递归)
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null);
+			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, true);
 			//Copy VDoc (包括VDoc VerRepos and Index)
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.FS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VERREPOS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
+			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.FS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null, true);
+			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VERREPOS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null, true);
 			//Copy or Move VDoc (包括VDoc VerRepos and Index)
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null, null);
-		}
-		
-		if(dstLocalEntry.isDirectory())
-		{			
-			//遍历本地目录，构建CommonAction
-			String dstSubDocParentPath = dstDoc.getPath() + dstDoc.getName() +"/";
-			String srcSubDocParentPath = srcDoc.getPath() + srcDoc.getName() +"/";
-			int dstSubDocLevel = getSubDocLevel(dstDoc);
-			int srcSubDocLevel = getSubDocLevel(srcDoc);
-			String localRootPath = dstDoc.getLocalRootPath();
-			String localVRootPath = dstDoc.getLocalVRootPath();
-			
-			File[] localFileList = dstLocalEntry.listFiles();
-	    	for(int i=0;i<localFileList.length;i++)
-	    	{
-	    		File file = localFileList[i];
-	    		int type = file.isDirectory()? 2:1;
-	    		long size = file.length();
-	    		String name = file.getName();
-	    		System.out.println("BuildMultiActionListForDocCopy subFile:" + name);
-
-	    		Doc dstSubDoc = buildBasicDoc(repos.getId(), null, dstDoc.getDocId(), dstDoc.getReposPath(), dstSubDocParentPath, name, dstSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
-	    		dstSubDoc.setCreateTime(dstLocalEntry.lastModified());
-	    		dstSubDoc.setLatestEditTime(dstLocalEntry.lastModified());
-	    		
-	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcDoc.getReposPath(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
-	    		BuildMultiActionListForDocCopy(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser, isMove);
-	    	}
-		}		
+			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null, null, true);
+		}	
 	}
 		
 	public boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
@@ -2729,7 +2701,8 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< size; i++)
 		{
 			CommonAction action = actionList.get(i);
-						
+			
+			//根据action的类型确定是否要递归执行
 			if(executeCommonAction(action, rt) == true)
 			{
 				//Execute SubActionList
@@ -2781,7 +2754,77 @@ public class BaseController  extends BaseFunction{
 			break;
 		}
 		
+		if(ret == false)
+		{
+			return ret;
+		}
+		
+		//对子目录执行相同的action
+		if(action.recursion == true)
+		{
+			executeCommonActionForSubDir(action);
+		}
 		return ret;
+	}
+
+	private boolean executeCommonActionForSubDir(CommonAction action) {
+		Repos repos = action.getRepos();
+		Doc doc = action.getDoc(); 
+		Doc newDoc = action.getNewDoc();
+		String commitMsg = action.getCommitMsg();
+		String commitUser = action.getCommitUser();
+		Action actionId = action.getAction();
+		switch(actionId)
+		{
+		case COPY:
+			executeDocCopyCommonActionForSubDir(action, repos, doc, newDoc, commitMsg, commitUser, false);
+			break;
+		case MOVE:
+			executeDocCopyCommonActionForSubDir(action, repos, doc, newDoc, commitMsg, commitUser, true);
+			break;
+		default:
+			break;
+		}
+		
+		return false;
+	}
+
+	private void executeDocCopyCommonActionForSubDir(CommonAction action, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove) {
+
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+
+		String dstLocalEntryPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName(); 
+		File dstLocalEntry = new File(dstLocalEntryPath);
+		if(dstLocalEntry.isDirectory())
+		{			
+			//遍历本地目录，构建CommonAction
+			String dstSubDocParentPath = dstDoc.getPath() + dstDoc.getName() +"/";
+			String srcSubDocParentPath = srcDoc.getPath() + srcDoc.getName() +"/";
+			int dstSubDocLevel = getSubDocLevel(dstDoc);
+			int srcSubDocLevel = getSubDocLevel(srcDoc);
+			String localRootPath = dstDoc.getLocalRootPath();
+			String localVRootPath = dstDoc.getLocalVRootPath();
+			
+			File[] localFileList = dstLocalEntry.listFiles();
+	    	for(int i=0;i<localFileList.length;i++)
+	    	{
+	    		File file = localFileList[i];
+	    		int type = file.isDirectory()? 2:1;
+	    		long size = file.length();
+	    		String name = file.getName();
+	    		System.out.println("executeDocCopyCommonActionForSubDir() BuildMultiActionListForDocCopy subFile:" + name);
+
+	    		Doc dstSubDoc = buildBasicDoc(repos.getId(), null, dstDoc.getDocId(), dstDoc.getReposPath(), dstSubDocParentPath, name, dstSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		dstSubDoc.setCreateTime(dstLocalEntry.lastModified());
+	    		dstSubDoc.setLatestEditTime(dstLocalEntry.lastModified());
+	    		
+	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcDoc.getReposPath(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		BuildMultiActionListForDocCopy(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser, isMove);
+	    	}
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		executeCommonActionList(actionList, rt);
 	}
 
 	protected boolean executeUniqueCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
@@ -5091,7 +5134,7 @@ public class BaseController  extends BaseFunction{
 			}
 			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
+			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 		}
 		
 		//Build DocUpdate action
@@ -5346,7 +5389,7 @@ public class BaseController  extends BaseFunction{
 				}
 				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
 			//Build DocUpdate action
@@ -5395,10 +5438,10 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
 
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 				//Insert index add action for VDoc
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.VIRTURALDOC, null, login_user);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
 				return true;
 			}
 		}
@@ -5411,10 +5454,10 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
 
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 				//Insert index update action for VDoc
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null, login_user);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null, login_user, false);
 				return true;
 			}
 		}
