@@ -35,6 +35,9 @@ public class CommonAction {
     private List<CommonAction> subActionList = null;	//subActionList when action success
 	private List<CommonAction> subActionListForFail = null;	//subActionList when action failed 
     
+	//if true 表示需要对子目录也执行相同的action
+	public boolean recursion = false;
+    
 	public void setAction(Action action) {
 		this.action = action;
 	}
@@ -195,7 +198,7 @@ public class CommonAction {
     //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 	//ActionType 1:add 2:delete 3:update 4:move 5:copy
     //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
-	public static void insertCommonAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser, ActionType actionId, Action actionType, DocType docType, List<CommonAction> subActionList, User user) 
+	public static void insertCommonAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser, ActionType actionId, Action actionType, DocType docType, List<CommonAction> subActionList, User user, boolean recursion) 
 	{	
 		CommonAction action = new CommonAction();
 		action.setType(actionId);		
@@ -213,6 +216,7 @@ public class CommonAction {
 		action.setCommitUser(commitUser);
 		
 		action.setSubActionList(subActionList);
+		action.recursion = recursion;
 		
 		actionList.add(action);
 	}
