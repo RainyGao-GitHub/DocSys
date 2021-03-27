@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +59,7 @@ import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jzlib.GZIPInputStream;
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.FileCharsetDetector;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
@@ -5454,15 +5456,22 @@ public class DocController extends BaseController{
 		System.out.println("getSubDocListForZip() zipFilePath:" + zipFilePath);
 
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
+        
         ZipFile zipFile = null;
         List <Doc> subDocList = new ArrayList<Doc>();
+        
 		try {
-			zipFile = new ZipFile(new File(zipFilePath), "UTF-8");
 			
+			File file = new File(zipFilePath);
+	        
+			String charset = "UTF-8";  //FileCharsetDetector.getFileEncode(file);
+			System.out.println("getSubDocListForZip() charset: " + charset);
+			zipFile = new ZipFile(new File(zipFilePath), charset); // "UTF-8");
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
+				
 				String subDocPath = rootPath + entry.getName();
-				//System.out.println("subDoc: " + subDocPath);
+				System.out.println("getSubDocListForZip() subDoc: " + subDocPath);
 				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocList.add(subDoc);
 			}
@@ -5482,6 +5491,21 @@ public class DocController extends BaseController{
 		}
 		
 		return subDocList;
+	}
+
+	private boolean checkStrEncodeType(String str, String charset) {
+		System.out.println("checkStrEncodeType str:" + str);
+		boolean ret = false;
+		String reEncodeStr = null;
+		try {
+			reEncodeStr = new String(str.getBytes(charset), charset);
+			System.out.println("checkStrEncodeType reEncodeStr:" + reEncodeStr);
+			ret = str.equals(reEncodeStr);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return ret;
 	}
 
 	/****************   get Zip SubDocList ******************/
