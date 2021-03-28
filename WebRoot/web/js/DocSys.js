@@ -201,7 +201,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
     }
   	
 	$.ajax({
-        url : "/DocSystem/Doc/getDocFileLink.do",
+        url : "/DocSystem/Bussiness/getDocFileLink.do",
         type : "post",
         dataType : "json",
         data : {
@@ -249,7 +249,7 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
     }
   	
 	$.ajax({
-        url : "/DocSystem/Doc/getZipDocFileLink.do",
+        url : "/DocSystem/Bussiness/getZipDocFileLink.do",
         type : "post",
         dataType : "json",
         data : {
