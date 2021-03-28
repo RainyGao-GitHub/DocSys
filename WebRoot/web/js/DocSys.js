@@ -179,113 +179,15 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 {
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle);
+		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, true);
 	}
 	else
 	{
-		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle);
+		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, true);
 	}
 }
 
-function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
-{	
-	var fileLink = "";
-	var errorInfo = "";
-	console.log("getDocFileLink()  docInfo:", docInfo);
-    if(!docInfo || docInfo == null || docInfo.id == 0)
-    {
-    	//未定义需要显示的文件
-    	errorInfo = "请选择文件";
-    	errorCallback && errorCallback(errorInfo);
-    	return;
-    }
-  	
-	$.ajax({
-        url : "/DocSystem/Bussiness/getDocFileLink.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	reposId: docInfo.vid,
-            path: docInfo.path,
-            name: docInfo.name,
-            commitId: docInfo.commitId,
-            shareId: docInfo.shareId,
-            urlStyle: urlStyle,
-        },
-        success : function (ret) {
-        	console.log("getDocFileLink ret",ret);
-        	if( "ok" == ret.status )
-        	{
-        		var docLink = ret.data;
-        		var fileLink = buildFullLink(docLink);
-        		successCallback &&successCallback(fileLink);
-            }
-            else 
-            {
-            	console.log(ret.msgInfo);
-            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
-            	errorCallback && errorCallback(errorInfo);
-            }
-        },
-        error : function () {
-        	errorInfo = "获取文件信息失败：服务器异常";
-        	errorCallback && errorCallback(errorInfo);
-        }
-    });
-}
-
-//获取压缩文件的文件链接接口
-function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
-{	
-	var fileLink = "";
-	var errorInfo = "";
-	console.log("getZipDocFileLink()  docInfo:", docInfo);
-    if(!docInfo || docInfo == null || docInfo.id == 0)
-    {
-    	//未定义需要显示的文件
-    	errorInfo = "请选择文件";
-    	errorCallback && errorCallback(errorInfo);
-    	return;
-    }
-  	
-	$.ajax({
-        url : "/DocSystem/Bussiness/getZipDocFileLink.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	reposId: docInfo.vid,
-            path: docInfo.path,
-            name: docInfo.name,
-            isZip: docInfo.isZip,
-            rootPath: docInfo.rootPath,
-            rootName: docInfo.rootName,
-            shareId: docInfo.shareId,
-            urlStyle: urlStyle,
-        },
-        success : function (ret) {
-        	console.log("getZipDocFileLink ret",ret);
-        	if( "ok" == ret.status )
-        	{
-        		var docLink = ret.data;
-        		var fileLink = buildFullLink(docLink);
-        		successCallback &&successCallback(fileLink);
-            }
-            else 
-            {
-            	console.log(ret.msgInfo);
-            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
-            	errorCallback && errorCallback(errorInfo);
-            }
-        },
-        error : function () {
-        	errorInfo = "获取文件信息失败：服务器异常";
-        	errorCallback && errorCallback(errorInfo);
-        }
-    });
-}
-
 //获取文件链接接口(链接带officeEditorAuthCode)
-
 function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, isBussiness)
 {
 	console.log("getDocOfficeLink() isBussiness:" + isBussiness);
@@ -312,13 +214,8 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
     	return;
     }
   	
-    var url = "/DocSystem/Doc/getDocOfficeLink.do";
-    if(isBussiness && isBussiness == true)
-    {
-    	url = "/DocSystem/Bussiness/getDocOfficeLink.do"
-    }
-    
-	$.ajax({
+    var url = "/DocSystem/Bussiness/getDocOfficeLink.do"
+    $.ajax({
         url : url,
         type : "post",
         dataType : "json",
@@ -368,12 +265,7 @@ function getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, 
     	return;
     }
   	
-    var url = "/DocSystem/Doc/getZipDocOfficeLink.do";
-    if(isBussiness && isBussiness == true)
-    {
-    	url = "/DocSystem/Bussiness/getZipDocOfficeLink.do"
-    }
-
+    var url = "/DocSystem/Bussiness/getZipDocOfficeLink.do";
 	$.ajax({
         url : url,
         type : "post",
@@ -1226,15 +1118,8 @@ function copyDocInfo(doc, shareId)
 
 function openOffice(docInfo, openInNewPage, preview)
 {
-	var url = "/DocSystem/Doc/getDocOfficeLink.do";
-	console.log("openOffice isBussiness:" + docInfo.isBussiness);
-	if(docInfo.isBussiness && docInfo.isBussiness == true)
-	{
-		url = "/DocSystem/Bussiness/getDocOfficeLink.do";
-	}
-	console.log("openOffice url:" + url);
-	
-    $.ajax({
+	var url = "/DocSystem/Bussiness/getDocOfficeLink.do";
+	$.ajax({
         url : url,
         type : "post",
         dataType : "json",
