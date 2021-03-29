@@ -1247,7 +1247,7 @@ public class DocController extends BaseController{
 		String encName = Base64Util.base64EncodeURLSafe(name);
 		String encTargetName = Base64Util.base64EncodeURLSafe(fileName);
 		String encTargetPath = Base64Util.base64EncodeURLSafe(localParentPath);
-		res.put("url", "/DocSystem/Doc/downloadDoc.do?vid=" + reposId + "&path=" + encPath + "&name=" + encName + "&targetPath="+encTargetPath+"&targetName="+encTargetName);
+		res.put("url", "/DocSystem/Doc/downloadDocEx.do?vid=" + reposId + "&path=" + encPath + "&name=" + encName + "&targetPath="+encTargetPath+"&targetName="+encTargetName);
 		res.put("success", 1);
 		res.put("message", "upload success!");
 		writeJson(res,response);
@@ -1732,6 +1732,53 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
+		if(targetPath == null || targetName == null)
+		{
+			Log.docSysErrorLog("目标路径不能为空！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = Base64Util.base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			Log.docSysErrorLog("目标路径解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = Base64Util.base64Decode(targetName);
+		if(targetName == null)
+		{
+			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
+		
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+		
+		if(deleteFlag != null && deleteFlag == 1)
+		{
+			FileUtil.delFileOrDir(targetPath+targetName);
+		}
+	}
+	
+	/**************** download Doc Without LoginCheck ******************/
+	@RequestMapping("/downloadDocEx.do")
+	public void downloadDocEx(String reposPath, String targetPath, String targetName, 
+			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
+			Integer shareId,
+			String authCode,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		System.out.println("\n************** downloadDocEx ****************");
+		System.out.println("downloadDocEx  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath);
+		
+		ReturnAjax rt = new ReturnAjax();
 		if(targetPath == null || targetName == null)
 		{
 			Log.docSysErrorLog("目标路径不能为空！", rt);
