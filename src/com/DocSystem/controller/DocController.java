@@ -5241,6 +5241,17 @@ public class DocController extends BaseController{
 
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		System.out.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		List <Doc> subDocList = getSubDocListForZip(repos, rootDoc, path, name, "gbk", true, rt);
+        if(subDocList == null)
+        {
+        	System.out.println("getSubDocListForZip() restart with UTF-8");
+    		subDocList = getSubDocListForZip(repos, rootDoc, path, name, "UTF-8", false, rt);
+        }
+		return subDocList;
+	}
+	
+	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, String charSet, Boolean messCheck, ReturnAjax rt) {
+		System.out.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName() + " charSet:" + charSet);
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
 		System.out.println("getSubDocListForZip() zipFilePath:" + zipFilePath);
 
@@ -5249,54 +5260,38 @@ public class DocController extends BaseController{
         ZipFile zipFile = null;
         List <Doc> subDocList = new ArrayList<Doc>();
 
-        boolean restartWithUTF8 = false;
-		Boolean chineseIsOk = false;
+        Boolean chineseIsOk = false;
         try {
-			zipFile = new ZipFile(new File(zipFilePath), "gbk");
+			zipFile = new ZipFile(new File(zipFilePath), charSet);
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
 				System.out.println("getSubDocListForZip() entry: " + entry.getName());
-				if(chineseIsOk == false) 
+				if(messCheck)
 				{
-					//我们只保证一种编码格式，只要有其中一个带中文的不乱码，就不再检测中文乱码
-					int ret = isMessyCode(entry.getName());
-					if(ret == 1)
+					if(chineseIsOk == false) 
 					{
-						restartWithUTF8 = true;
-						break;
+						//我们只保证一种编码格式，只要有其中一个带中文的不乱码，就不再检测中文乱码
+						int ret = isMessyCode(entry.getName());
+						if(ret == 1)
+						{
+							System.out.println("getSubDocListForZip() chinese is in mess");
+							return null;
+						}
+						else if(ret == 0)
+						{
+							chineseIsOk = true;
+						}
 					}
-					else if(ret == 0)
-					{
-						chineseIsOk = true;
-					}
-				}
-				else
-				{
-					
 				}
 				String subDocPath = rootPath + entry.getName();
 				//System.out.println("getSubDocListForZip() subDoc: " + subDocPath);
 				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocList.add(subDoc);
 			}
-			
-			if(restartWithUTF8)
-			{
-				System.out.println("getSubDocListForZip() restart with UTF-8");
-				subDocList = new ArrayList<Doc>();
-				zipFile = new ZipFile(new File(zipFilePath), "UTF-8");
-				for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
-					ZipEntry entry = entries.nextElement();
-					System.out.println("getSubDocListForZip() entry: " + entry.getName());
-					String subDocPath = rootPath + entry.getName();
-					//System.out.println("getSubDocListForZip() subDoc: " + subDocPath);
-					Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
-					subDocList.add(subDoc);
-				}
-			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			subDocList = null;
 		} finally {
 			if(zipFile != null)
 			{
