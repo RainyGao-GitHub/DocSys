@@ -5248,16 +5248,31 @@ public class DocController extends BaseController{
         
         ZipFile zipFile = null;
         List <Doc> subDocList = new ArrayList<Doc>();
+
         boolean restartWithUTF8 = false;
-		try {
+		Boolean chineseIsOk = false;
+        try {
 			zipFile = new ZipFile(new File(zipFilePath), "gbk");
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
 				System.out.println("getSubDocListForZip() entry: " + entry.getName());
-				if(isMessyCode(entry.getName()) == true)
+				if(chineseIsOk == false) 
 				{
-					restartWithUTF8 = true;
-					break;	
+					//我们只保证一种编码格式，只要有其中一个带中文的不乱码，就不再检测中文乱码
+					Boolean hasChinese = false;
+					if(isMessyCode(entry.getName(), hasChinese) == true)
+					{
+						restartWithUTF8 = true;
+						break;
+					}
+					else if(hasChinese)
+					{
+						chineseIsOk = true;
+					}
+				}
+				else
+				{
+					
 				}
 				String subDocPath = rootPath + entry.getName();
 				//System.out.println("getSubDocListForZip() subDoc: " + subDocPath);
@@ -5310,7 +5325,7 @@ public class DocController extends BaseController{
         return false;
     }
     
-    public static boolean isMessyCode(String strName) {
+    public static boolean isMessyCode(String strName, Boolean hasChinese) {
         Pattern p = Pattern.compile("\\s*|\t*|\r*|\n*");
         Matcher m = p.matcher(strName);
         String after = m.replaceAll("");
@@ -5323,6 +5338,10 @@ public class DocController extends BaseController{
             if (!Character.isLetterOrDigit(c)) {
                 if (!isChinese(c)) {
                     count = count + 1;
+                }
+                else
+                {
+                	hasChinese = true;
                 }
                 chLength++; 
             }
