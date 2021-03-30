@@ -5259,13 +5259,13 @@ public class DocController extends BaseController{
 				if(chineseIsOk == false) 
 				{
 					//我们只保证一种编码格式，只要有其中一个带中文的不乱码，就不再检测中文乱码
-					Boolean hasChinese = false;
-					if(isMessyCode(entry.getName(), hasChinese) == true)
+					int ret = isMessyCode(entry.getName());
+					if(ret == 1)
 					{
 						restartWithUTF8 = true;
 						break;
 					}
-					else if(hasChinese)
+					else if(ret == 0)
 					{
 						chineseIsOk = true;
 					}
@@ -5313,7 +5313,8 @@ public class DocController extends BaseController{
 	}
 
     private static boolean isChinese(char c) {
-        Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
+        System.out.println("isChinese() c:" + c);
+    	Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
         if (ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
                 || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
                 || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
@@ -5325,7 +5326,9 @@ public class DocController extends BaseController{
         return false;
     }
     
-    public static boolean isMessyCode(String strName, Boolean hasChinese) {
+    public static int isMessyCode(String strName) {
+    	Boolean hasChinese = false;
+    	
         Pattern p = Pattern.compile("\\s*|\t*|\r*|\n*");
         Matcher m = p.matcher(strName);
         String after = m.replaceAll("");
@@ -5347,11 +5350,19 @@ public class DocController extends BaseController{
             }
         }
         float result = count / chLength ;
+       	System.out.println("isMessyCode() count:" + count + " chLength:" + chLength + " hasChinese:" + hasChinese);
+        
         if (result > 0.4) {
-            return true;
-        } else {
-            return false;
+           	System.out.println("isMessyCode() is mess");
+        	return 1;
         }
+        
+        if(hasChinese)
+        {
+        	System.out.println("isMessyCode() hasChinese and not mess");
+            return 0;
+        }
+        return -1;
     }
 
 	/****************   get Zip SubDocList ******************/
