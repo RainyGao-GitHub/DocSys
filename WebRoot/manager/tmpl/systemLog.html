@@ -37,7 +37,7 @@
                     <td>{{value.formatedEvent}}</td>
                     <td>{{value.formatedContent}}</td>
                     <td class="edit">
-                      <button onclick="delSystemInfoConfirm('{{value.id}}')" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
+                      <button onclick="delSystemLogConfirm('{{value.id}}','{{value.time}}')" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
                     </td>
                   </tr>
                 {{/each}}
