@@ -3,8 +3,10 @@ package com.DocSystem.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,26 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
+import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import util.ReadProperties;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -26,6 +48,11 @@ import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 
 public class BaseFunction{	
+	protected static final long CONST_HOUR = 60*60*1000;
+	protected static final long CONST_DAY = 24*CONST_HOUR;
+	protected static final long CONST_MONTH = 30*CONST_DAY;
+	protected static final long CONST_YEAR = 12*CONST_MONTH;
+
 	//应用路径
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;
@@ -611,5 +638,247 @@ public class BaseFunction{
         }
         return path;
     }
+    
+	//日志管理	
+	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String content)
+    {
+		SystemLog log = new SystemLog();
+		log.time = new Date().getTime();
+		log.userId = user.getId() + "";
+		log.userName = user.getName();
+		log.event = event;
+		log.subEvent = subEvent;
+		log.content = content;
+		log.id = log.time + "-" +  log.userId + "-" + log.event + "-" + log.subEvent;
+		
+		String indexLib = getIndexLibPathForSystemLog();
+		return addSystemLogIndex(log, indexLib);
+    }
+	
+	protected static boolean addSystemLogIndex(SystemLog log, String indexLib)
+    {	
+    	System.out.println("addSystemLogIndex() id:" + log.id + " indexLib:"+indexLib);    	
+    	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = buildDocumentForSystemLog(log);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        System.out.println("addSystemLogIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        System.out.println("addSystemLogIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+	
+	protected static void closeResource(IndexWriter indexWriter, Directory directory, Analyzer analyzer) {
+		try {
+        	if(indexWriter!=null)
+        	{
+        		indexWriter.close();
+        	}
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		if(directory != null)
+		{
+			try {
+				directory.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		if(analyzer != null)
+		{
+			analyzer.close();
+		}
+	}
+
+	
+	protected static Document buildDocumentForSystemLog(SystemLog log) {
+		Document document = new Document();			
+		
+		document.add(new StringField("id", log.id, Store.YES));	
+		document.add(new LongField("time", log.time, Store.YES));
+		document.add(new StringField("ip", log.ip, Store.YES));
+		document.add(new StringField("userId", log.userId, Store.YES));	
+		document.add(new StringField("userName", log.userName, Store.YES));	
+		document.add(new StringField("event", log.event, Store.YES));	
+		document.add(new StringField("subEvent", log.subEvent, Store.YES));	
+		document.add(new StringField("content", log.content, Store.YES));	
+		return document;
+	}
+	
+	protected static SystemLog buildSystemLogForDocument(Document document) {
+		SystemLog log = new SystemLog();
+		log.id = document.get("id");
+		log.time = Long.parseLong(document.get("time"));
+		log.ip = document.get("ip");
+		log.userId = document.get("userId");
+		log.userName = document.get("userName");
+		log.event = document.get("event");
+		log.subEvent = document.get("subEvent");
+		log.content = document.get("content");
+		return log;
+	}
+	
+	protected boolean deletSystemLogIndex(String logId, Long time)
+	{
+		Date date = new Date(time);
+		String indexLib = getIndexLibPathForSystemLog(date);
+		return deletSystemLogIndex(logId, indexLib);
+	}
+	
+	protected boolean deletSystemLogIndex(String logId, String indexLib)
+	{
+    	System.out.println("deletSystemLogIndex() logId:" + logId + " indexLib:"+indexLib);
+    	Analyzer analyzer = null;
+    	Directory directory = null;
+    	IndexWriter indexWriter = null;
+    	
+		try {
+			Date date1 = new Date();
+			directory = FSDirectory.open(new File(indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        indexWriter = new IndexWriter(directory, config);
+	        
+	        Query query = new TermQuery(new Term("id", logId));
+	        indexWriter.deleteDocuments(query);
+	        indexWriter.commit();
+
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        
+	        Date date2 = new Date();
+	        System.out.println("deletSystemLogIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+			e.printStackTrace();
+			return false;
+		}
+    }  
+	
+	protected static ArrayList<SystemLog> getSystemLogList(SystemLog qLog, String indexLib)
+	{
+		ArrayList<SystemLog> list = new ArrayList<SystemLog>();
+		
+		Directory directory = null;
+    	DirectoryReader ireader = null;
+    	
+    	try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("getSystemLogList() " + indexLib + " 不存在！");
+    			return list;
+    		}
+    		
+    		directory = FSDirectory.open(file);
+
+	    	ireader = DirectoryReader.open(directory);
+	        IndexSearcher isearcher = new IndexSearcher(ireader);
+	
+	        //默认查询最近一个月的证书列表
+	        long curTime = new Date().getTime();
+	        
+	        Query query =NumericRangeQuery.newLongRange("time", curTime - 3*CONST_MONTH, curTime, true,true);
+	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+			System.out.println("getSystemLogList() hitCount:" + hits.length);
+
+	        for (int i = 0; i < hits.length; i++) 
+	        {
+	            Document hitDocument = isearcher.doc(hits[i].doc);
+	            SystemLog log = buildSystemLogForDocument(hitDocument);
+	            list.add(log);
+	        }
+		} catch (Exception e) {
+			System.out.println("getSystemLogList() 异常");
+			e.printStackTrace();
+		} finally {
+	        if(ireader != null)
+	        {
+				try {
+					ireader.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+	        }
+	        
+	        if(directory != null)
+	        {
+		        try {
+					directory.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+	        }
+		}
+		return list;
+	}
+    
+	protected static String getIndexLibPathForSystemLog() 
+	{
+		Date curTime = new Date();
+		return getIndexLibPathForSystemLog(curTime);
+	}
+		
+	protected static String getIndexLibPathForSystemLog(Date date) 
+	{
+		//按月创建Log
+		String indexLibName = "SystemLog-" + date.getYear() + "-" + date.getMonth();
+		String path = getSystemLogStorePath() + indexLibName + "/";
+		return path;
+	}
+		
+	protected static String getSystemLogStorePath() {
+    	String path = null;
+    	path = ReadProperties.read("docSysConfig.properties", "SystemLogStorePath");
+        if(path != null && !path.isEmpty())
+        {
+        	return Path.localDirPathFormat(path, OSType);
+        }
+
+        switch(OSType)
+        {
+        case OS.Windows:
+        	path = "C:/DocSysLog/SystemLog/";
+        	break;
+        case OS.Linux: 
+        	path = "/data/DocSysLog/SystemLog/";
+        	break;
+        case OS.MacOS:
+        	path = "/data/DocSysLog/SystemLog/";
+        	break;
+        }
+        return path;
+    }	
 	
 }
