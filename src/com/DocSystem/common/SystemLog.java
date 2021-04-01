@@ -10,5 +10,7 @@ public class SystemLog {
 	public String event;
 	public String subEvent;
 	public String content;
+	public String action;
+	public String result;
 
 }
