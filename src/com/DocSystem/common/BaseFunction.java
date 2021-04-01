@@ -45,6 +45,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.OfficeChange;
 import com.alibaba.fastjson.JSON;
 
 public class BaseFunction{	
@@ -640,7 +641,7 @@ public class BaseFunction{
     }
     
 	//日志管理	
-	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String content)
+	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, String content)
     {
 		SystemLog log = new SystemLog();
 		log.time = new Date().getTime();
@@ -649,6 +650,8 @@ public class BaseFunction{
 		log.userName = user.getName();
 		log.event = event;
 		log.subEvent = subEvent;
+		log.action = action;
+		log.result = result;
 		log.content = content;
 		log.id = log.userName  + "-" + log.event + "-" + log.subEvent + "-" + log.time;
 		
@@ -730,6 +733,8 @@ public class BaseFunction{
 		document.add(new StringField("userName", log.userName, Store.YES));	
 		document.add(new StringField("event", log.event, Store.YES));	
 		document.add(new StringField("subEvent", log.subEvent, Store.YES));	
+		document.add(new StringField("action", log.action, Store.YES));	
+		document.add(new StringField("result", log.result, Store.YES));	
 		document.add(new StringField("content", log.content, Store.YES));	
 		return document;
 	}
@@ -743,6 +748,8 @@ public class BaseFunction{
 		log.userName = document.get("userName");
 		log.event = document.get("event");
 		log.subEvent = document.get("subEvent");
+		log.action = document.get("action");
+		log.result = document.get("result");
 		log.content = document.get("content");
 		return log;
 	}
@@ -799,6 +806,16 @@ public class BaseFunction{
 			List<SystemLog> list = getSystemLogList(qLog, indexLib);
 			if(list != null)
 			{
+				//对结果先进行排序
+			    Collections.sort(list, new Comparator<SystemLog>() {
+			        public int compare(SystemLog o1, SystemLog o2) {
+			            if(o2.time < o1.time) {
+			                return 1;
+			            }
+			            return -1;
+			        }
+			    });
+				
 				result.addAll(list);
 			}
 		}

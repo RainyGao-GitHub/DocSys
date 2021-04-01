@@ -178,10 +178,10 @@ public class DocController extends BaseController{
 		if(ret == false)
 		{
 			System.out.println("add() add Doc Failed");
-			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "{\"action\":\"新增文件\",\"result\":\"失败\",\"detail\":\"" + path + name + "\",}");
+			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", "" + path + name + "");
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "{\"action\":\"新增文件\",\"result\":\"成功\",\"detail\":\"" + path + name + "\",}");
+		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功", "" + path + name + "");
 		executeCommonActionList(actionList, rt);
 	}
 
@@ -378,11 +378,11 @@ public class DocController extends BaseController{
 		
 		if(ret != null)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "{\"action\":\"删除文件\",\"result\":\"成功\",\"detail\":\"" + path + name + "\",}");
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", "成功", "" + path + name + "");
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "{\"action\":\"删除文件\",\"result\":\"失败\",\"detail\":\"" + path + name + "\",}");
+		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败","" + path + name + "");
 	}
 	
 
@@ -467,11 +467,11 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "{\"action\":\"重命名文件\",\"result\":\"成功\",\"detail\":\"" + "rename " + path + name + " to " + path + dstName + "\",}");			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", "成功", "" + "rename " + path + name + " to " + path + dstName + "");			
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "{\"action\":\"重命名文件\",\"result\":\"失败\",\"detail\":\"" + "rename " + path + name + " to " + path + dstName + "\",}");			
+		addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败", "" + "rename " + path + name + " to " + path + dstName + "");			
 	}
 	
 	/****************   move a Document ******************/
@@ -554,11 +554,11 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "{\"action\":\"移动文件\",\"result\":\"成功\",\"detail\":\"" + "move " + srcPath + srcName + " to " + dstPath + dstName + "\",}");	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "成功", "" + "move " + srcPath + srcName + " to " + dstPath + dstName + "");	
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "{\"action\":\"移动文件\",\"result\":\"失败\",\"detail\":\"" + "move " + srcPath + srcName + " to " + dstPath + dstName + "\",}");	
+		addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", "" + "move " + srcPath + srcName + " to " + dstPath + dstName + "");	
 	}
 
 	/****************   move a Document ******************/
@@ -627,11 +627,11 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "{\"action\":\"复制文件\",\"result\":\"成功\",\"detail\":\"" + "copy " + srcPath + srcName + " to " + dstPath + dstName + "\",}");	
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", "成功", "" + "copy " + srcPath + srcName + " to " + dstPath + dstName + "");	
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "{\"action\":\"复制文件\",\"result\":\"失败\",\"detail\":\"" + "copy " + srcPath + srcName + " to " + dstPath + dstName + "\",}");	
+		addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败", "" + "copy " + srcPath + srcName + " to " + dstPath + dstName + "");	
 	}
 	
 	/****************   execute a Document ******************/
@@ -1774,7 +1774,7 @@ public class DocController extends BaseController{
 		
 		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
 		
-		addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "{\"action\":\"下载文件\",\"result\":\"成功\",\"detail\":\"" + "download " + targetPath + targetName + "\",}");	
+		addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功", "" + "download " + targetPath + targetName + "");	
 		
 		if(deleteFlag != null && deleteFlag == 1)
 		{
@@ -1898,7 +1898,7 @@ public class DocController extends BaseController{
 		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
 		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, disposition);
 		
-		addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "{\"action\":\"下载文件\",\"result\":\"成功\",\"detail\":\"" + "download " + targetPath + targetName + "\",}");	
+		addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功", "" + "download " + targetPath + targetName + "");	
 	}
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
@@ -4068,13 +4068,13 @@ public class DocController extends BaseController{
 		if(reposService.addDocShare(docShare) == 0)
 		{
 			Log.docSysErrorLog("创建文件分享失败！", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "{\"action\":\"分享文件\",\"result\":\"失败\",\"detail\":\"" + "share " + path + name + "\",}");	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "失败", "" + "share " + path + name + "");	
 		}
 		else
 		{
 			rt.setData(docShare);
 			rt.setDataEx(IpAddress);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "{\"action\":\"分享文件\",\"result\":\"成功\",\"detail\":\"" + "share " + path + name + "\",}");	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "成功", "" + "share " + path + name + "");	
 		}
 		writeJson(rt, response);
 	}
