@@ -158,7 +158,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
 
-	private static void closeResource(IndexWriter indexWriter, Directory directory, Analyzer analyzer) {
+	protected static void closeResource(IndexWriter indexWriter, Directory directory, Analyzer analyzer) {
 		try {
         	if(indexWriter!=null)
         	{

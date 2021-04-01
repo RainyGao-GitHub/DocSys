@@ -1962,11 +1962,49 @@
  	    {
        		var node = list[i];
 			node.formatedTime = formatDate(node.time);
-			node.formatedEvent = node.evnet + "-" + node.subEvent;
+			node.formatedEvent = node.event + "-" + node.subEvent;
 			node.formatedContent = node.content;
  	    }		
 		$Func.render($("#container"),"systemLog",{"list":list});
     }
+	
+	function delSystemLogConfirm(id)
+	{	
+		console.log("delSystemLogConfirm");
+		qiao.bs.confirm({
+			id: "delSystemLogConfirm",
+	        title: "删除日志",
+	        msg: "是否删除日志？",
+	        okbtn: "删除",
+	        qubtn: "取消",
+	    },function () {
+	    	delSystemLog(id);
+	    	return true;   
+	    });
+	}
+	
+	function deleteSystemLog(id, time){
+        $.ajax({
+            url : "/DocSystem/Bussiness/deleteSystemLog.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	logId : id,
+            	time : time,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showSystemLogList();	//刷新UserList
+                    showErrorMessage("删除成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("服务器异常:删除失败");
+            }
+        });
+	}
 	
 	//证书管理
 	function showLicenseList(pageIndex){

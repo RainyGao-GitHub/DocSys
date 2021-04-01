@@ -60,7 +60,7 @@ public class UserController extends BaseController {
 		if(ret == false)
 		{
 			System.out.println("登录失败");
-			addSystemLog(request, tmp_user, "login", "", "{\"result\":\"登录失败\"}");
+			addSystemLog(request, tmp_user, "login", "login", "{\"result\":\"登录失败\"}");
 			writeJson(rt, response);	
 			return;
 		}
@@ -79,7 +79,7 @@ public class UserController extends BaseController {
 
 		
 		//Feeback to page
-		addSystemLog(request, uLists.get(0), "login", "", "{\"result\":\"登录成功\"}");		
+		addSystemLog(request, uLists.get(0), "login", "login", "{\"result\":\"登录成功\"}");		
 		
 		rt.setMsgInfo("登录成功！");
 		rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
