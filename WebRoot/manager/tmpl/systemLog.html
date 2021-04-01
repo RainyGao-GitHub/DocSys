@@ -16,11 +16,11 @@
                 <thead>
                 <tr>
                   <th>#</th>
-                  <th>ID</th>
-                  <th>时间</th>
-                  <th>IP地址</th>
                   <th>用户</th>
-                  <th>事件</th>
+                  <th>操作</th>
+                  <th>操作结果</th>
+                  <th>IP地址</th>
+                  <th>时间</th>
                   <th>详情</th>
                   <th>操作</th>
                 </tr>
@@ -30,12 +30,12 @@
                 {{each list as value i}}
                   <tr index="{{i}}">
                   	<td>{{i}}</td>
-                    <td>{{value.id}}</td>
-                    <td>{{value.formatedTime}}</td>
-                    <td>{{value.ip}}</td>
                     <td>{{value.userName}}</td>
-                    <td>{{value.formatedEvent}}</td>
-                    <td>{{value.formatedContent}}</td>
+                    <td>{{value.action}}</td>
+                    <td>{{value.result}}</td>
+                    <td>{{value.ip}}</td>
+                    <td>{{value.formatedTime}}</td>
+                    <td>{{value.content}}</td>
                     <td class="edit">
                       <button onclick="delSystemLogConfirm('{{value.id}}','{{value.time}}')" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
                     </td>

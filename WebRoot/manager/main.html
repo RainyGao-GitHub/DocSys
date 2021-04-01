@@ -1961,9 +1961,7 @@
        	for(var i=0; i<list.length; i++)
  	    {
        		var node = list[i];
-			node.formatedTime = formatDate(node.time);
-			node.formatedEvent = node.event + "-" + node.subEvent;
-			node.formatedContent = node.content;
+			node.formatedTime = formatTime(node.time);
  	    }		
 		$Func.render($("#container"),"systemLog",{"list":list});
     }
