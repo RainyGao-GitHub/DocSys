@@ -1899,7 +1899,7 @@
 	}
 	
 	//证书管理
-	function showSystemInfoList(pageIndex){
+	function showSystemLogList(pageIndex){
 		var searchWord = $("#search-systemLogInfo").val();
 		var pageSize = gPageSize;
 		
@@ -1917,7 +1917,7 @@
 	        	console.log("getSystemLogList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	LicenseListDisplay(ret.data);
+	            	SystemLogListDisplay(ret.data);
 
                     // 渲染分页
                     var total = ret.dataEx;
@@ -1941,7 +1941,7 @@
                         /*点击翻页绑定事件*/
                         callback: function(newPageIndex) {
                             // 分页插件的页码从1开始，减1处理
-                            showLicenseList(newPageIndex - 1);
+                            SystemLogListDisplay(ret.data, newPageIndex - 1);
                         }
                     });
 	            }
@@ -1955,6 +1955,18 @@
 	        }
 	    });
 	}
+	
+	function SystemLogListDisplay(list)
+    {
+       	for(var i=0; i<list.length; i++)
+ 	    {
+       		var node = list[i];
+			node.formatedTime = formatDate(node.time);
+			node.formatedEvent = node.evnet + "-" + node.subEvent;
+			node.formatedContent = node.content;
+ 	    }		
+		$Func.render($("#container"),"systemLog",{"list":list});
+    }
 	
 	//证书管理
 	function showLicenseList(pageIndex){
@@ -1999,7 +2011,7 @@
                         /*点击翻页绑定事件*/
                         callback: function(newPageIndex) {
                             // 分页插件的页码从1开始，减1处理
-                            showLicenseList(newPageIndex - 1);
+                            showLicenseList(ret.data,newPageIndex - 1);
                         }
                     });
 	            }
