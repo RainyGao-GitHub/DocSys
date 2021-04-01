@@ -27,6 +27,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.SystemLog;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 
@@ -59,6 +60,7 @@ public class UserController extends BaseController {
 		if(ret == false)
 		{
 			System.out.println("登录失败");
+			addSystemLog(request, tmp_user, "login", "", "{\"result\":\"登录失败\"}");
 			writeJson(rt, response);	
 			return;
 		}
@@ -67,18 +69,22 @@ public class UserController extends BaseController {
 		System.out.println("登录成功");
 		session.setAttribute("login_user", uLists.get(0));
 		System.out.println("SESSION ID:" + session.getId());
-		
+
 		//如果用户点击了保存密码则保存cookies
 		if(rememberMe!=null&&rememberMe.equals("1")){
 			addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
 			addCookie(response, "dstoken", pwd, 7*24*60*60);
 			System.out.println("用户cookie保存成功");
 		}
+
 		
 		//Feeback to page
+		addSystemLog(request, uLists.get(0), "login", "", "{\"result\":\"登录成功\"}");		
+		
 		rt.setMsgInfo("登录成功！");
 		rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
 		writeJson(rt, response);	
+
 		return;
 	}
 	
