@@ -355,6 +355,11 @@
 	            showReposList();
 	            $("#nav li[data-eb-params=repos]>a").addClass("open");
 	            break;  
+	        case "systemLog":
+	            title = "日志管理";
+	            $("#nav li[data-eb-params=systemLog]>a").addClass("open");
+	            showSystemLogList();
+	            break;
 	        case "license":
 	            title = "证书管理";
 	            $("#nav li[data-eb-params=license]>a").addClass("open");
@@ -1891,6 +1896,64 @@
 		//上传表单			
 		xhr.open("post", "/DocSystem/Manage/upgradeSystem.do");
 		xhr.send(form);
+	}
+	
+	//证书管理
+	function showSystemInfoList(pageIndex){
+		var searchWord = $("#search-systemLogInfo").val();
+		var pageSize = gPageSize;
+		
+		$.ajax({
+	        url : "/DocSystem/Bussiness/getSystemLogList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            // 新增用户名搜索条件
+	            searchWord: searchWord,
+	        	pageIndex: pageIndex ? pageIndex : 0,
+	        	pageSize: pageSize
+	        },
+	        success : function (ret) {
+	        	console.log("getSystemLogList ret",ret);
+	            if( "ok" == ret.status )
+	            {
+	            	LicenseListDisplay(ret.data);
+
+                    // 渲染分页
+                    var total = ret.dataEx;
+                    $("#systemLogList-pagination").pagination({
+                        /*当前页码*/
+                        currentPage: pageIndex + 1,
+                        /*总共有多少页*/
+                        totalPage: Math.ceil(total/pageSize),
+                        /*是否显示首页、尾页 true：显示 false：不显示*/
+                        isShow:true,
+                        /*分页条显示可见页码数量*/
+                        count:5,
+                        /*第一页显示文字*/
+                        homePageText:'首页',
+                        /*最后一页显示文字*/
+                        endPageText:'尾页',
+                        /*上一页显示文字*/
+                        prevPageText:'上一页',
+                        /* 下一页显示文字*/
+                        nextPageText:'下一页',
+                        /*点击翻页绑定事件*/
+                        callback: function(newPageIndex) {
+                            // 分页插件的页码从1开始，减1处理
+                            showLicenseList(newPageIndex - 1);
+                        }
+                    });
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("获取日志列表失败:服务器异常");
+	        }
+	    });
 	}
 	
 	//证书管理

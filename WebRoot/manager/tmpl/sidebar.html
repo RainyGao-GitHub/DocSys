@@ -18,6 +18,11 @@
     	<a href="#"><i class="icon-bar-chart"></i>证书管理</a>
     </li>
     {{/if}}
+    {{if docSysType > 0}}
+	<li data-eb-event="content.refresh" data-eb-params="license">
+    	<a href="#"><i class="icon-bar-chart"></i>日志管理</a>
+    </li>
+    {{/if}}
     {{/if}}
     {{if type == 2}}
     <li data-eb-event="content.refresh" data-eb-params="system" class="has_sublist">

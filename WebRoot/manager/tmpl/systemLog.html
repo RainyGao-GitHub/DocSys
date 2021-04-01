@@ -1,0 +1,57 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">系统日志</div>
+              <div class="widget-icons pull-right">
+                  <div class="form-inline">
+                  </div>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+
+              <table class="table table-striped table-bordered table-hover" id="systemLog_list">
+                <thead>
+                <tr>
+                  <th>#</th>
+                  <th>ID</th>
+                  <th>时间</th>
+                  <th>IP地址</th>
+                  <th>用户</th>
+                  <th>事件</th>
+                  <th>详情</th>
+                  <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {{each list as value i}}
+                  <tr index="{{i}}">
+                  	<td>{{i}}</td>
+                    <td>{{value.id}}</td>
+                    <td>{{value.formatedTime}}</td>
+                    <td>{{value.ip}}</td>
+                    <td>{{value.userName}}</td>
+                    <td>{{value.formatedEvent}}</td>
+                    <td>{{value.formatedContent}}</td>
+                    <td class="edit">
+                      <button onclick="delSystemInfoConfirm('{{value.id}}')" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
+                    </td>
+                  </tr>
+                {{/each}}
+                </tbody>
+              </table>
+
+              <div class="widget-foot">
+                  <!-- 组件footer，渲染分页插件 -->
+                  <div id="systemLogList-pagination" class="l-page"></div>
+
+              </div>
+
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+      </div>
