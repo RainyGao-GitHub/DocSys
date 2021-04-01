@@ -650,7 +650,7 @@ public class BaseFunction{
 		log.event = event;
 		log.subEvent = subEvent;
 		log.content = content;
-		log.id = log.time + "-" +  log.userId + "-" + log.event + "-" + log.subEvent;
+		log.id = log.userName  + "-" + log.event + "-" + log.subEvent + "-" + log.time;
 		
 		String indexLib = getIndexLibPathForSystemLog();
 		return addSystemLogIndex(log, indexLib);
@@ -747,16 +747,16 @@ public class BaseFunction{
 		return log;
 	}
 	
-	protected boolean deletSystemLogIndex(String logId, Long time)
+	protected boolean deleteSystemLogIndex(String logId, Long time)
 	{
 		Date date = new Date(time);
 		String indexLib = getIndexLibPathForSystemLog(date);
-		return deletSystemLogIndex(logId, indexLib);
+		return deleteSystemLogIndex(logId, indexLib);
 	}
 	
-	protected boolean deletSystemLogIndex(String logId, String indexLib)
+	protected boolean deleteSystemLogIndex(String logId, String indexLib)
 	{
-    	System.out.println("deletSystemLogIndex() logId:" + logId + " indexLib:"+indexLib);
+    	System.out.println("deleteSystemLogIndex() logId:" + logId + " indexLib:"+indexLib);
     	Analyzer analyzer = null;
     	Directory directory = null;
     	IndexWriter indexWriter = null;
@@ -778,7 +778,7 @@ public class BaseFunction{
 	        directory = null;
 	        
 	        Date date2 = new Date();
-	        System.out.println("deletSystemLogIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        System.out.println("deleteSystemLogIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
