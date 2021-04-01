@@ -1968,7 +1968,7 @@
 		$Func.render($("#container"),"systemLog",{"list":list});
     }
 	
-	function delSystemLogConfirm(id)
+	function delSystemLogConfirm(id, time)
 	{	
 		console.log("delSystemLogConfirm");
 		qiao.bs.confirm({
@@ -1978,7 +1978,7 @@
 	        okbtn: "删除",
 	        qubtn: "取消",
 	    },function () {
-	    	delSystemLog(id);
+	    	deleteSystemLog(id, time);
 	    	return true;   
 	    });
 	}

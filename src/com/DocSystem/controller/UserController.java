@@ -60,7 +60,7 @@ public class UserController extends BaseController {
 		if(ret == false)
 		{
 			System.out.println("登录失败");
-			addSystemLog(request, tmp_user, "login", "login", "{\"result\":\"登录失败\"}");
+			addSystemLog(request, tmp_user, "login", "login", "{\"action\":\"登录\",\"result\":\"失败\",\"detail\":\"\",}");
 			writeJson(rt, response);	
 			return;
 		}
@@ -79,7 +79,7 @@ public class UserController extends BaseController {
 
 		
 		//Feeback to page
-		addSystemLog(request, uLists.get(0), "login", "login", "{\"result\":\"登录成功\"}");		
+		addSystemLog(request, tmp_user, "login", "login", "{\"action\":\"登录\",\"result\":\"成功\",\"detail\":\"\",}");
 		
 		rt.setMsgInfo("登录成功！");
 		rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
@@ -125,17 +125,21 @@ public class UserController extends BaseController {
 	
 	//登出接口
 	@RequestMapping(value="logout")
-	public void logOut(HttpSession session,HttpServletResponse response,ModelMap model,String type){
+	public void logOut(HttpServletRequest request, HttpSession session,HttpServletResponse response,ModelMap model,String type){
 		System.out.println("Logout SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
+		User loginUser = (User) session.getAttribute("login_user");
+		
 		//删除cookie即将cookie的maxAge设置为0
 		addCookie(response, "dsuser", null, 0);
 		addCookie(response, "dstoken", null, 0);
 		//清除session
 		session.removeAttribute("login_user");
 		rt.setMsgInfo("您已成功退出登陆。");
-		
+
+		addSystemLog(request, loginUser, "logout", "logout", "{\"action\":\"退出登录\",\"result\":\"成功\",\"detail\":\"\",}");
+
 		writeJson(rt, response);	
 	}
 	
@@ -179,7 +183,7 @@ public class UserController extends BaseController {
 	
 	//注册接口
 	@RequestMapping(value="register")
-	public void register(HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
+	public void register(HttpServletRequest request, HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
 		System.out.println("register userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
 		
@@ -260,6 +264,8 @@ public class UserController extends BaseController {
 		}
 		userService.addUser(user);
 		
+		addSystemLog(request, user, "register", "register", "{\"action\":\"用户注册\",\"result\":\"成功\",\"detail\":\"\",}");
+
 		user.setPwd("");	//密码不要返回回去
 		rt.setData(user);
 		writeJson(rt, response);
