@@ -1974,31 +1974,55 @@
 		switch(node.event)
 		{
 		case "addRepos":
+			node.formatedContent = "新建仓库:" + node.reposName;
+			break;
 		case "deleteRepos":
+			node.formatedContent = "删除仓库:" + node.reposName;
+			break;
 		case "updateReposInfo":
+			node.formatedContent = "修改仓库:" + node.reposName;
+			break;
 		case "configReposAuth":
+			node.formatedContent = "设置仓库权限:" + node.reposName;
+			break;
 		case "deleteReposAuth":
-			node.formatedContent = node.reposName;
+			node.formatedContent = "删除仓库权限:" + node.reposName;
 			break;
 		case "addDoc":
+			node.formatedContent = "新增文件:" + node.reposName + "::" + node.path + node.name;
+			break;
 		case "deleteDoc":
+			node.formatedContent = "删除文件:" + node.reposName + "::" + node.path + node.name;
+			break;
 		case "addDocShare":
+			node.formatedContent = "分享文件:" + node.reposName + "::" + node.path + node.name;
+			break;
 		case "configDocAuth":
+			node.formatedContent = "设置文件权限:" + node.reposName + "::" + node.path + node.name;
+			break;
 		case "deleteDocAuth":
-			node.formatedContent = node.reposName + "::" + node.path + node.name;
+			node.formatedContent = "删除文件权限:" + node.reposName + "::" + node.path + node.name;
 			break;
 		case "downloadDoc":
-			node.formatedContent =  node.path + node.name;
-			break;		
+			node.formatedContent = "下载文件:" + node.path + node.name;
+			break;
 		case "copyDoc":
+			node.formatedContent = "复制文件:" + node.path + node.name + " 到 " + node.newPath + node.newName;
+			break;
 		case "moveDoc":
+			node.formatedContent = "移动文件:" + node.path + node.name + " 到 " + node.newPath + node.newName;
+			break;
 		case "renameDoc":
-			node.formatedContent = node.path + node.name + " to " + node.newPath + node.newName;
+			node.formatedContent = "重命名文件:" + node.path + node.name + " 为 " + node.newPath + node.newName;
 			break;
 		case "login":
+			node.formatedContent = "登录系统" + node.content;
+			break;
 		case "logout":
+			node.formatedContent = "退出登录" + node.content;
+			break;
 		case "register":
-			node.formatedContent = node.content;
+			node.formatedContent = "用户注册" + node.content;
 			break;
 		default:
 			node.formatedContent = node.content;
