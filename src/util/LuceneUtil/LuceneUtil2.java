@@ -694,7 +694,7 @@ public class LuceneUtil2   extends BaseFunction
 	}
 	
     
-    private static BooleanQuery buildBooleanQueryWithConditions(List<QueryCondition> conditions) 
+    public static BooleanQuery buildBooleanQueryWithConditions(List<QueryCondition> conditions) 
 	{
 		int count = 0;
 		BooleanQuery builder = new BooleanQuery();
@@ -704,6 +704,7 @@ public class LuceneUtil2   extends BaseFunction
     		QueryCondition condition = conditions.get(i);
     		String field = condition.getField();
     		Object value = condition.getValue();
+    		Object endValue = condition.getEndValue();
     		switch(condition.getFieldType())
     		{
     		case QueryCondition.FIELD_TYPE_Integer:
@@ -711,8 +712,18 @@ public class LuceneUtil2   extends BaseFunction
     			builder.add(query, Occur.MUST);
     			count++;
     	        break;
+    		case QueryCondition.FIELD_TYPE_Integer_Range:
+    	        query = NumericRangeQuery.newIntRange(field, (Integer)value, (Integer)endValue, true,true);
+    			builder.add(query, Occur.MUST);
+    			count++;
+    	        break;
     		case QueryCondition.FIELD_TYPE_Long:
     	        query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)value, true,true);   
+    			builder.add(query, Occur.MUST);
+    			count++;
+    			break;
+    		case QueryCondition.FIELD_TYPE_Long_Range:
+    	        query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)endValue, true,true);   
     			builder.add(query, Occur.MUST);
     			count++;
     			break;
