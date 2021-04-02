@@ -4074,13 +4074,13 @@ public class DocController extends BaseController{
 		if(reposService.addDocShare(docShare) == 0)
 		{
 			Log.docSysErrorLog("创建文件分享失败！", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "失败", null, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "失败", repos, doc, null, "");	
 		}
 		else
 		{
 			rt.setData(docShare);
 			rt.setDataEx(IpAddress);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "成功", null, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "成功", repos, doc, null, "");	
 		}
 		writeJson(rt, response);
 	}
