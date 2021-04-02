@@ -283,7 +283,7 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);	
 		
-		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功","" + path + name + "");
+		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
 	}
 	
 	/****************   delete a Repository ******************/
@@ -351,7 +351,7 @@ public class ReposController extends BaseController{
 		
 		writeJson(rt, response);	
 
-		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","成功","" + repos.getPath()+ repos.getName() + "");
+		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","成功", repos, null, null, "");
 	}
 	
 	/****************   set a Repository ******************/
@@ -477,7 +477,7 @@ public class ReposController extends BaseController{
 		}
 		
 		writeJson(rt, response);
-		addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","成功","" + repos.getPath()+ repos.getName() + "");
+		addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","成功", repos, null, null, "");
 		
 		//如果RealDoc版本仓库的类型变化，那么必须删除所有的doc记录并重新同步
 		if(isReposVerCtrlChanged(newReposInfo, reposInfo))
@@ -1298,7 +1298,7 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);	
 		
-		addSystemLog(request, login_user, "configReposAuth", "configReposAuth", "设置仓库权限","成功","" + repos.getPath() + repos.getName() + "");
+		addSystemLog(request, login_user, "configReposAuth", "configReposAuth", "设置仓库权限","成功", repos, null, null, "");
 	}
 	
 	/****************   delete User or Group or anyUser ReposAuth ******************/
@@ -1357,7 +1357,7 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);
 		
-		addSystemLog(request, login_user, "deleteReposAuth", "deleteReposAuth", "删除仓库权限","成功","" + repos.getPath() + repos.getName() + "");
+		addSystemLog(request, login_user, "deleteReposAuth", "deleteReposAuth", "删除仓库权限","成功", repos, null, null, "");
 	}		
 	
 	/****************  Config User or Group or anyUser DocAuth ******************/
@@ -1485,7 +1485,7 @@ public class ReposController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		addSystemLog(request, login_user, "configDocAuth", "configDocAuth", "设置文件权限","成功","" + path + name + "");
+		addSystemLog(request, login_user, "configDocAuth", "configDocAuth", "设置文件权限","成功", repos, null, null, "");
 
 	}
 
@@ -1535,7 +1535,7 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);		
 		
-		addSystemLog(request, login_user, "deleteDocAuth", "deleteDocAuth", "删除文件权限","成功","" + path + name + "");
+		addSystemLog(request, login_user, "deleteDocAuth", "deleteDocAuth", "删除文件权限","成功", repos, null, null, "");
 	}
 
 	private boolean isUserAuthExpanded(Repos repos, User login_user, Doc doc, 
