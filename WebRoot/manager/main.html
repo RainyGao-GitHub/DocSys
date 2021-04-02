@@ -1962,8 +1962,46 @@
  	    {
        		var node = list[i];
 			node.formatedTime = formatTime(node.time);
+			node.formatedContent = formatSystemLogContent(node);
  	    }		
 		$Func.render($("#container"),"systemLog",{"list":list});
+    }
+	
+	function formatSystemLogContent(node)
+    {
+		switch(node.event)
+		{
+		case "addRepos":
+		case "deleteRepos":
+		case "updateReposInfo":
+		case "configReposAuth":
+		case "deleteReposAuth":
+			node.formatedContent = node.reposName;
+			break;
+		case "addDoc":
+		case "deleteDoc":
+		case "addDocShare":
+		case "configDocAuth":
+		case "deleteDocAuth":
+			node.formatedContent = node.reposName + "::" + node.path + node.name;
+			break;
+		case "downloadDoc":
+			node.formatedContent =  node.path + node.name;
+			break;		
+		case "copyDoc":
+		case "moveDoc":
+		case "renameDoc":
+			node.formatedContent = node.path + node.name + " to " + node.newPath + node.newName;
+			break;
+		case "login":
+		case "logout":
+		case "register":
+			node.formatedContent = node.content;
+			break;
+		default:
+			node.formatedContent = node.content;
+			break;
+		}
     }
 	
 	function delSystemLogConfirm(id, time)

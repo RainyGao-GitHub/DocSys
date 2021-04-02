@@ -3,7 +3,6 @@ package com.DocSystem.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -18,19 +17,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.Field.Store;
-import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.NumericRangeQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -45,7 +36,6 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
-import com.DocSystem.websocket.OfficeChange;
 import com.alibaba.fastjson.JSON;
 
 public class BaseFunction{	
@@ -641,7 +631,7 @@ public class BaseFunction{
     }
     
 	//日志管理	
-	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, String content)
+	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
     {
 		SystemLog log = new SystemLog();
 		log.time = new Date().getTime();
@@ -652,7 +642,27 @@ public class BaseFunction{
 		log.subEvent = subEvent;
 		log.action = action;
 		log.result = result;
+		log.reposName = "";
+		if(repos != null)
+		{
+			log.reposName = repos.getName();
+		}
+		log.path = "";
+		log.name = "";
+		if(doc != null)
+		{
+			log.path = doc.getPath();
+			log.name = doc.getName();			
+		}
+		log.newPath = "";
+		log.newName = "";
+		if(newDoc != null)
+		{
+			log.newPath = newDoc.getPath();
+			log.newName = newDoc.getName();
+		}
 		log.content = content;
+		
 		log.id = log.userName  + "-" + log.event + "-" + log.subEvent + "-" + log.time;
 		
 		String indexLib = getIndexLibPathForSystemLog();
@@ -734,7 +744,14 @@ public class BaseFunction{
 		document.add(new StringField("event", log.event, Store.YES));	
 		document.add(new StringField("subEvent", log.subEvent, Store.YES));	
 		document.add(new StringField("action", log.action, Store.YES));	
-		document.add(new StringField("result", log.result, Store.YES));	
+		document.add(new StringField("result", log.result, Store.YES));
+		
+		document.add(new StringField("reposName", log.reposName, Store.YES));	
+		document.add(new StringField("path", log.path, Store.YES));	
+		document.add(new StringField("name", log.name, Store.YES));	
+		document.add(new StringField("newPath", log.newPath, Store.YES));	
+		document.add(new StringField("newName", log.newName, Store.YES));	
+				
 		document.add(new StringField("content", log.content, Store.YES));	
 		return document;
 	}
@@ -750,6 +767,13 @@ public class BaseFunction{
 		log.subEvent = document.get("subEvent");
 		log.action = document.get("action");
 		log.result = document.get("result");
+		
+		log.reposName = document.get("reposName");
+		log.path = document.get("path");
+		log.name = document.get("name");
+		log.newPath = document.get("newPath");
+		log.newName = document.get("newName");
+		
 		log.content = document.get("content");
 		return log;
 	}
