@@ -1914,7 +1914,7 @@
 	        	pageSize: pageSize
 	        },
 	        success : function (ret) {
-	        	console.log("getSystemLogList ret",ret);
+	        	//console.log("getSystemLogList ret",ret);
 	            if( "ok" == ret.status )
 	            {
 	            	SystemLogListDisplay(ret.data);
@@ -1962,13 +1962,15 @@
  	    {
        		var node = list[i];
 			node.formatedTime = formatTime(node.time);
-			node.formatedContent = formatSystemLogContent(node);
- 	    }		
-		$Func.render($("#container"),"systemLog",{"list":list});
+			formatSystemLogContent(node);
+ 	    }
+       	console.log("SystemLogListDisplay list", list);
+        $Func.render($("#container"),"systemLog",{"list":list});
     }
 	
 	function formatSystemLogContent(node)
     {
+		//console.log("formatSystemLogContent event:" + node.event);
 		switch(node.event)
 		{
 		case "addRepos":
