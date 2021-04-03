@@ -2089,7 +2089,7 @@
 	        	console.log("getLicenseList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	LicenseListDisplay(ret.data);
+	            	LicenseListDisplay(ret.data, pageIndex, pageSize);
 
                     // 渲染分页
                     var total = ret.dataEx;
@@ -2128,12 +2128,16 @@
 	    });
 	}
 	
-	function LicenseListDisplay(list)
+	function LicenseListDisplay(list, pageIndex, pageSize)
     {
+		var index = pageIndex ? pageIndex : 0
+		var offset = index * pageSize;
+		       	
        	for(var i=0; i<list.length; i++)
  	    {
        		var node = list[i];
-			node.createDate = formatDate(node.createTime);
+      		node.index = i + offset;
+    		node.createDate = formatTime(node.createTime);
 			node.expireDate = "长期";
 			if(node.expireTime)
 			{
