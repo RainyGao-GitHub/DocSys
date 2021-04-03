@@ -705,31 +705,32 @@ public class LuceneUtil2   extends BaseFunction
     		String field = condition.getField();
     		Object value = condition.getValue();
     		Object endValue = condition.getEndValue();
+    		Occur occurType = condition.getOccurType();
     		switch(condition.getFieldType())
     		{
     		case QueryCondition.FIELD_TYPE_Integer:
     	        query = NumericRangeQuery.newIntRange(field, (Integer)value, (Integer)value, true,true);
-    			builder.add(query, Occur.MUST);
+    			builder.add(query, occurType);
     			count++;
     	        break;
     		case QueryCondition.FIELD_TYPE_Integer_Range:
     	        query = NumericRangeQuery.newIntRange(field, (Integer)value, (Integer)endValue, true,true);
-    			builder.add(query, Occur.MUST);
+    			builder.add(query, occurType);
     			count++;
     	        break;
     		case QueryCondition.FIELD_TYPE_Long:
     	        query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)value, true,true);   
-    			builder.add(query, Occur.MUST);
+    			builder.add(query, occurType);
     			count++;
     			break;
     		case QueryCondition.FIELD_TYPE_Long_Range:
     	        query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)endValue, true,true);   
-    			builder.add(query, Occur.MUST);
+    			builder.add(query, occurType);
     			count++;
     			break;
     		case QueryCondition.FIELD_TYPE_String:
     			query = buidStringQuery(field, (String)value, condition.getQueryType());
-    			builder.add(query, Occur.MUST);
+    			builder.add(query, occurType);
     			count++;  
     			break;
     		}    		

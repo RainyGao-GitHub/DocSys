@@ -1,5 +1,6 @@
 package com.DocSystem.common;
 
+import org.apache.lucene.search.BooleanClause.Occur;
 
 public class QueryCondition {	
     public final static int FIELD_TYPE_Integer = 1;	//Integer
@@ -22,6 +23,8 @@ public class QueryCondition {
 	private Object endValue = null;
 	private Integer fieldType = FIELD_TYPE_String;
 	private Integer queryType = SEARCH_TYPE_Term;
+	private Occur occurType = Occur.MUST;
+	
 	
 	public void setFieldType(Integer fieldType) {
 		this.fieldType = fieldType;
@@ -67,5 +70,14 @@ public class QueryCondition {
 	public Object getEndValue()
 	{
 		return endValue;
+	}
+	
+	public void setOccurType(Occur occurType) {
+		this.occurType = occurType;
+	}
+	
+	public Occur getOccurType()
+	{
+		return occurType;
 	}	
 }
