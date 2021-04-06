@@ -70,15 +70,9 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		if(systemLicenseInfo.expireTime != null)
-		{	
-			long curTime = new Date().getTime();
-			if(systemLicenseInfo.expireTime < curTime) 
-			{
-				rt.setError("证书已过期，请购买商业版证书！");
-				writeJson(rt, response);			
-				return;	
-			}
+		if(systemLicenseInfoCheck(rt) == false)
+		{
+			writeJson(rt, response);			
 		}
 		
 		Integer UserId = login_user.getId();
@@ -88,7 +82,7 @@ public class ReposController extends BaseController{
 		rt.setData(accessableReposList);
 		writeJson(rt, response);
 	}
-	
+
 	@RequestMapping("/getManagerReposList.do")
 	public void getManagerReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getManagerReposList");
