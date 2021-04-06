@@ -141,21 +141,17 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
+		if(systemLicenseInfoCheck(rt) == false)
+		{
+			return false;
+		}
+		
 		if(systemLicenseInfo.usersCount != null)
 		{
 			List<User> userList = userService.geAllUsers();
 			if(userList.size() > systemLicenseInfo.usersCount)
 			{
 				System.out.println("checkSystemUsersCount() 用户数量已达到上限，请购买商业授权证书！");
-				if(systemLicenseInfo.expireTime != null)
-				{
-					long curTime = new Date().getTime();
-					if(curTime > systemLicenseInfo.expireTime)
-					{
-						rt.setError("证书已到期，请购买商业授权证书！");
-					}
-				}
-				
 				rt.setError("用户数量已达到上限，请购买商业授权证书！");
 				return false;
 			}
