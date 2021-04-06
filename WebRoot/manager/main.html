@@ -2144,9 +2144,12 @@
 				node.expireDate = formatDate(node.expireTime);				
 			}
 			node.formatedState = "正常";
-			if(node.state && node.state == 0)
+			if(node.state != undefined)
 			{
-				node.formatedState = "已作废";	
+				if(node.state == 0)
+				{
+					node.formatedState = "已作废";
+				}
 			}
  	    }		
 		$Func.render($("#container"),"license",{"list":list});
