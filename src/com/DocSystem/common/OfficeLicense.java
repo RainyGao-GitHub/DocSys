@@ -21,4 +21,6 @@ public class OfficeLicense {
 	public Long createTime;
 	public String payInfo;
 	public String id;
+	
+	public Integer state; //证书状态 0:已作废
 }

@@ -11,5 +11,6 @@ public class License {
 	public String customer;
 	public String payInfo;
 	public Long createTime; //创建时间	
-	
+
+	public Integer state; //证书状态 0:已作废
 }

@@ -2143,6 +2143,11 @@
 			{
 				node.expireDate = formatDate(node.expireTime);				
 			}
+			node.formatedState = "正常";
+			if(node.state && node.state == 0)
+			{
+				node.formatedState = "已作废";	
+			}
  	    }		
 		$Func.render($("#container"),"license",{"list":list});
     }
@@ -2217,6 +2222,43 @@
             },
             error : function () {
             	showErrorMessage("服务器异常:删除失败");
+            }
+        });
+	}
+	
+	function deperacateLicenseConfirm(id)
+	{	
+		console.log("deperacateLicenseConfirm");
+		qiao.bs.confirm({
+			id: "deperacateLicenseConfirm",
+	        title: "作废证书",
+	        msg: "是否作废证书？",
+	        okbtn: "作废",
+	        qubtn: "取消",
+	    },function () {
+	    	deperacateLicense(id);
+	    	return true;   
+	    });
+	}
+	
+	function deperacateLicense(id){
+        $.ajax({
+            url : "/DocSystem/Sales/deperacateLicense.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	licenseId : id,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showLicenseList();	//刷新UserList
+                    showErrorMessage("证书已作废");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("操作失败:服务器异常");
             }
         });
 	}

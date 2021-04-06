@@ -37,6 +37,7 @@ import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 public class BaseFunction{	
 	protected static final long CONST_HOUR = 60*60*1000;
@@ -732,6 +733,28 @@ public class BaseFunction{
 		}
 	}
 
+	protected static JSONObject buildJsonObjForSystemLog(SystemLog log) {
+		JSONObject obj = new JSONObject();			
+		
+		obj.put("id", log.id);	
+		obj.put("time", log.time);
+		obj.put("ip", log.ip);
+		obj.put("userId", log.userId);	
+		obj.put("userName", log.userName);	
+		obj.put("event", log.event);	
+		obj.put("subEvent", log.subEvent);	
+		obj.put("action", log.action);	
+		obj.put("result", log.result);
+		
+		obj.put("reposName", log.reposName);	
+		obj.put("path", log.path);	
+		obj.put("name", log.name);	
+		obj.put("newPath", log.newPath);	
+		obj.put("newName", log.newName);	
+				
+		obj.put("content", log.content);	
+		return obj;
+	}
 	
 	protected static Document buildDocumentForSystemLog(SystemLog log) {
 		Document document = new Document();			
