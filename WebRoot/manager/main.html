@@ -2666,7 +2666,14 @@
 		}
 		else
 		{
-			systemLicense.status = "已安装";			
+			systemLicense.status = "已安装";	
+			if(systemLicense.state != undefined)
+			{
+				if(systemLicense.state == 0)
+				{
+					systemLicense.status = "已失效";							
+				}				
+			}
 		}
 		
 		var officeLicense = systemLicenses.officeLicense;
@@ -2675,7 +2682,14 @@
 			officeLicense.status = "未安装";
 		}
 		else{
-			officeLicense.status = "已安装";			
+			officeLicense.status = "已安装";		
+			if(officeLicense.state != undefined)
+			{
+				if(officeLicense.state == 0)
+				{
+					officeLicense.status = "已失效";							
+				}				
+			}
 		}
 		
 		$Func.render($("#container"),"systemLicenses",{"value":systemLicenses});
