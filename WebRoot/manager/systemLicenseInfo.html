@@ -6,6 +6,13 @@
       <input type="text" class="form-control" id="systemLicenseType" name="systemLicenseType" disabled="disabled">
     </div>
   </div>
+  <!-- Customer -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="systemLicenseCustomer">客户</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLicenseCustomer" name="systemLicenseCustomer" disabled="disabled">
+    </div>
+  </div>
   <!-- usersLimit -->
   <div class="form-group">
     <label class="control-label col-lg-3" for="systemLicenseUsersCount">用户数量</label>
@@ -59,6 +66,11 @@
 	    	}
 	    }
 	    $("#systemLicenseType").val(type);	
+
+	    if(systemLicenseInfo.customer != undefined)
+	    {
+	    	$("#systemLicenseCustomer").val(systemLicenseInfo.customer);	
+	    }
 
 		var usersCount = "不限";
 		if(systemLicenseInfo.usersCount && systemLicenseInfo.usersCount != null)
