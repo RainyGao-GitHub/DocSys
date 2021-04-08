@@ -79,12 +79,12 @@ public class OrderInfo {
     /**
      * 支付时间
      */
-    private Date createTime;
+    private Long createTime;
 
     /**
      * 完成时间
      */
-    private Date completeTime;
+    private Long completeTime;
 
     /**
      * 渠道返回码
@@ -197,19 +197,19 @@ public class OrderInfo {
         this.remark = remark;
     }
 
-    public Date getCreateTime() {
+    public long getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(Long createTime) {
         this.createTime = createTime;
     }
 
-    public Date getCompleteTime() {
+    public Long getCompleteTime() {
         return completeTime;
     }
 
-    public void setCompleteTime(Date completeTime) {
+    public void setCompleteTime(Long completeTime) {
         this.completeTime = completeTime;
     }
 
