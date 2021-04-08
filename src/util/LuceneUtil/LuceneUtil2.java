@@ -23,6 +23,7 @@ import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.LongField;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
@@ -66,9 +67,9 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.QueryCondition;
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.OrderInfo;
 import com.DocSystem.entity.Repos;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import java.math.BigDecimal;
 
 import util.FileUtil.FileUtils2;
 
@@ -1397,4 +1398,172 @@ public class LuceneUtil2   extends BaseFunction
 	{
 		return deleteIndex(doc, indexLib);
 	}
+	
+	/**************** 以下是利用反射机制实现的Lucene的通用查询接口 **************/
+	// 使用限制: Ojbect不能被混淆，Object不能使用HashObject例如：JSONObject
+	private static Integer getFieldType(String type) {
+		if(type.endsWith("String"))
+		{
+			return QueryCondition.FIELD_TYPE_String;			
+		}
+		
+		if(type.endsWith("Integer") || type.endsWith("int"))
+		{
+			return QueryCondition.FIELD_TYPE_Integer;
+		}
+		
+		if(type.endsWith("Long") || type.endsWith("long"))
+		{
+			return QueryCondition.FIELD_TYPE_Long;
+		}
+		
+		//浮点数用String表示
+		if(type.endsWith("BigDecimal"))
+		{
+			return QueryCondition.FIELD_TYPE_BigDecimal;	
+		}
+
+		return null;
+	}
+	
+	public static Document buildDocumentForObject(Object obj) {
+		Document document = new Document();	
+		
+		Class userCla = (Class) obj.getClass();
+		java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = getFieldType(type);
+			String fieldName = f.getName();
+			System.out.println("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
+			if(fieldType != null)
+			{
+	            try {
+					Object val = f.get(obj);
+					if(val != null)
+					{
+						switch(fieldType)
+						{
+						case QueryCondition.FIELD_TYPE_String:
+							document.add(new StringField(fieldName, (String)val, Store.YES));
+							break;
+						case QueryCondition.FIELD_TYPE_BigDecimal:	//浮点数用字符串表示
+							document.add(new StringField(fieldName, val+"", Store.YES));
+							break;
+						case QueryCondition.FIELD_TYPE_Integer:
+							document.add(new IntField(fieldName, (Integer)val, Store.YES));
+							break;
+						case QueryCondition.FIELD_TYPE_Long:
+							document.add(new LongField(fieldName, (Long)val, Store.YES));
+							break;				
+						}
+					}
+	            } catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+        }
+		
+		return document;
+	}
+	
+	public static void buildObjectForDocument(Object obj, Document document) {
+    	Class userCla = (Class) obj.getClass();
+    	java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = getFieldType(type);
+			String fieldName = f.getName();
+			System.out.println("buildObjectForDocument() fieldType:" + type + " fieldName:" + fieldName);
+			if(fieldType != null)
+			{
+	            try {
+					String val = document.get(fieldName);
+					if(val != null)
+					{
+						switch(fieldType)
+						{
+						case QueryCondition.FIELD_TYPE_String:
+							f.set(obj, val);
+							break;
+						case QueryCondition.FIELD_TYPE_BigDecimal:	//浮点数用字符串表示
+							f.set(obj, new BigDecimal(val));
+							break;
+						case QueryCondition.FIELD_TYPE_Integer:
+							f.set(obj, Integer.parseInt(val));
+							break;
+						case QueryCondition.FIELD_TYPE_Long:
+							f.set(obj, Long.parseLong(val));
+							break;				
+						}
+					}
+	            } catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+        }
+	}
+	
+	public static List<QueryCondition> buildQueryConditionsForObject(Object obj, Occur occurType, Integer queryType) 
+	{
+		if(obj == null)
+		{
+			return null;
+		}
+
+
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+
+		//Use Reflect to set conditions
+        Class userCla = (Class) obj.getClass();
+        /* 得到类中的所有属性集合 */
+        java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = getFieldType(type);
+			String fieldName = f.getName();
+			System.out.println("buildQueryConditionsForObject() fieldType:" + type + " fieldName:" + fieldName);
+			if(fieldType != null)
+			{
+	            try {
+					Object val = f.get(obj);
+					if(val != null)
+					{
+						QueryCondition condition = new QueryCondition();
+				        condition.setField(fieldName);				 
+				    	condition.setFieldType(fieldType);
+				        condition.setValue(val);
+				        condition.setQueryType(queryType);	        	
+				        condition.setOccurType(occurType);
+				        conditions.add(condition);
+					}
+	            } catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+        }		
+		return conditions;
+	}
+	
 }
