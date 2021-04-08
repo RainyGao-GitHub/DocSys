@@ -265,6 +265,28 @@ public class BaseFunction{
 	}
 	
 	/**
+	 * 向页面返回Html信息
+	 * @param obj
+	 * @param response
+	 */
+
+	protected void writeHtml(String html,HttpServletResponse response) {
+
+		try {
+			response.setCharacterEncoding("UTF-8");
+			PrintWriter pw = response.getWriter();
+			response.setContentType("text/html;charset=UTF-8");
+			pw.write(html);
+			pw.flush();
+			pw.close();
+		} catch (IOException e) {
+			System.out.println("BaseController>writeJson  ERROR!");
+			e.printStackTrace();
+		}
+
+	}
+	
+	/**
 	 * 设置cookie
 	 * @param response
 	 * @param name  cookie名字
