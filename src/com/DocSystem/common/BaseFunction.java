@@ -54,6 +54,8 @@ public class BaseFunction{
 	
     //系统License
     public static License systemLicenseInfo = null;
+	protected static long licenseCheckTimer = 0;
+	
     //OnlyOffice License
     public static OfficeLicense officeLicenseInfo = null;
 
