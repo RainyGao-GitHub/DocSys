@@ -53,7 +53,7 @@ public class OrderBuyerInfo {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private Long createTime;
 
     public Integer getId() {
         return id;
@@ -119,11 +119,11 @@ public class OrderBuyerInfo {
         this.phone = phone;
     }
 
-    public Date getCreateTime() {
+    public Long getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(Long createTime) {
         this.createTime = createTime;
     }
 }
