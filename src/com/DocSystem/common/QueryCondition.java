@@ -8,6 +8,7 @@ public class QueryCondition {
     public final static int FIELD_TYPE_String = 3;	//String
     public final static int FIELD_TYPE_Integer_Range = 4;	//Integer Rang
     public final static int FIELD_TYPE_Long_Range = 5;	//Long Rang
+	public final static int FIELD_TYPE_BigDecimal = 6; //
     
     
 	public final static int SEARCH_TYPE_Term = 1;				//精确
