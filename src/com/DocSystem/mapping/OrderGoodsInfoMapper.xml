@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.DocSystem.dao.OrderGoodsInfoMapper" >
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.OrderGoodsInfo" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="ORDER_NO" property="orderNo" jdbcType="INTEGER" />
+    <result column="GOODS_ID" property="goodsId" jdbcType="INTEGER" />
+    <result column="GOODS_NAME" property="goodsName" jdbcType="VARCHAR" />
+    <result column="SKU_CODE" property="skuCode" jdbcType="INTEGER" />
+    <result column="SKU" property="sku" jdbcType="VARCHAR" />
+    <result column="NUM" property="num" jdbcType="INTEGER" />
+    <result column="CREATE_TIME" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    ID, ORDER_NO, GOODS_ID, GOODS_NAME, SKU_CODE, SKU, NUM, CREATE_TIME
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from order_goods_info
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from order_goods_info
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.OrderGoodsInfo" >
+    insert into order_goods_info (ID, ORDER_NO, GOODS_ID, 
+      GOODS_NAME, SKU_CODE, SKU,
+      NUM, CREATE_TIME)
+    values (#{id,jdbcType=INTEGER}, #{orderNo,jdbcType=INTEGER}, #{goodsId,jdbcType=INTEGER},
+      #{goodsName,jdbcType=VARCHAR}, #{skuCode,jdbcType=VARCHAR}, #{sku,jdbcType=VARCHAR},
+      #{num,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.OrderGoodsInfo" >
+    insert into order_goods_info
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="orderNo != null" >
+        ORDER_NO,
+      </if>
+      <if test="goodsId != null" >
+        GOODS_ID,
+      </if>
+      <if test="goodsName != null" >
+        GOODS_NAME,
+      </if>
+      <if test="skuCode != null" >
+        SKU_CODE,
+      </if>
+      <if test="sku != null" >
+        SKU,
+      </if>
+      <if test="num != null" >
+        NUM,
+      </if>
+      <if test="createTime != null" >
+        CREATE_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="orderNo != null" >
+        #{orderNo,jdbcType=INTEGER},
+      </if>
+      <if test="goodsId != null" >
+        #{goodsId,jdbcType=INTEGER},
+      </if>
+      <if test="goodsName != null" >
+        #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="skuCode != null" >
+        #{skuCode,jdbcType=VARCHAR},
+      </if>
+      <if test="sku != null" >
+        #{sku,jdbcType=VARCHAR},
+      </if>
+      <if test="num != null" >
+        #{num,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.OrderGoodsInfo" >
+    update order_goods_info
+    <set >
+      <if test="orderNo != null" >
+        ORDER_NO = #{orderNo,jdbcType=INTEGER},
+      </if>
+      <if test="goodsId != null" >
+        GOODS_ID = #{goodsId,jdbcType=INTEGER},
+      </if>
+      <if test="goodsName != null" >
+        GOODS_NAME = #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="skuCode != null" >
+        SKU_CODE = #{skuCode,jdbcType=VARCHAR},
+      </if>
+      <if test="sku != null" >
+        SKU = #{sku,jdbcType=VARCHAR},
+      </if>
+      <if test="num != null" >
+        NUM = #{num,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.OrderGoodsInfo" >
+    update order_goods_info
+    set ORDER_NO = #{orderNo,jdbcType=INTEGER},
+      GOODS_ID = #{goodsId,jdbcType=INTEGER},
+      GOODS_NAME = #{goodsName,jdbcType=VARCHAR},
+      SKU_CODE = #{skuCode,jdbcType=VARCHAR},
+      SKU = #{sku,jdbcType=VARCHAR},
+      NUM = #{num,jdbcType=INTEGER},
+      CREATE_TIME = #{createTime,jdbcType=TIMESTAMP}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.DocSystem.dao.OrderInfoMapper" >
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.OrderInfo" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="ORDER_NO" property="orderNo" jdbcType="VARCHAR" />
+    <result column="ORG_ORDER_NO" property="orgOrderNo" jdbcType="VARCHAR" />
+    <result column="USER_ID" property="userId" jdbcType="INTEGER" />
+    <result column="ORDER_BUYER_ID" property="orderBuyerId" jdbcType="INTEGER" />
+    <result column="CURRENCY" property="currency" jdbcType="VARCHAR" />
+    <result column="AMOUNT" property="amount" jdbcType="DECIMAL" />
+    <result column="PAY_CHANNEL" property="payChannel" jdbcType="VARCHAR" />
+    <result column="ORDER_STATUS" property="orderStatus" jdbcType="VARCHAR" />
+    <result column="CHANNEL_ORDER_NO" property="channelOrderNo" jdbcType="VARCHAR" />
+    <result column="PAY_TYPE" property="payType" jdbcType="VARCHAR" />
+    <result column="REMARK" property="remark" jdbcType="VARCHAR" />
+    <result column="CREATE_TIME" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="COMPLETE_TIME" property="completeTime" jdbcType="TIMESTAMP" />
+    <result column="CODE" property="code" jdbcType="VARCHAR" />
+    <result column="MSG" property="msg" jdbcType="VARCHAR" />
+    <result column="DATA" property="data" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    ID, ORDER_NO, ORG_ORDER_NO, USER_ID, ORDER_BUYER_ID, CURRENCY, AMOUNT, PAY_CHANNEL, 
+    ORDER_STATUS, CHANNEL_ORDER_NO, PAY_TYPE, REMARK, CREATE_TIME, COMPLETE_TIME, CODE, MSG, DATA
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from order_info
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+      select <include refid="Base_Column_List"/>
+      from order_info
+      where ORDER_NO = #{orderNo, jdbcType=VARCHAR}
+
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from order_info
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.OrderInfo" >
+    insert into order_info (ID, ORDER_NO, ORG_ORDER_NO, 
+      USER_ID, ORDER_BUYER_ID, CURRENCY, 
+      AMOUNT, PAY_CHANNEL, ORDER_STATUS, 
+      CHANNEL_ORDER_NO, PAY_TYPE, REMARK, 
+      CREATE_TIME, COMPLETE_TIME, CODE, MSG, DATA)
+    values (#{id,jdbcType=INTEGER}, #{orderNo,jdbcType=VARCHAR}, #{orgOrderNo,jdbcType=VARCHAR}, 
+      #{userId,jdbcType=INTEGER}, #{orderBuyerId,jdbcType=INTEGER}, #{currency,jdbcType=VARCHAR}, 
+      #{amount,jdbcType=DECIMAL}, #{payChannel,jdbcType=VARCHAR}, #{orderStatus,jdbcType=VARCHAR}, 
+      #{channelOrderNo,jdbcType=VARCHAR}, #{payType,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{completeTime,jdbcType=TIMESTAMP}, #{code,jdbcType=VARCHAR},
+      #{msg,jdbcType=VARCHAR}, #{data,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.OrderInfo" >
+    insert into order_info
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="orderNo != null" >
+        ORDER_NO,
+      </if>
+      <if test="orgOrderNo != null" >
+        ORG_ORDER_NO,
+      </if>
+      <if test="userId != null" >
+        USER_ID,
+      </if>
+      <if test="orderBuyerId != null" >
+        ORDER_BUYER_ID,
+      </if>
+      <if test="currency != null" >
+        CURRENCY,
+      </if>
+      <if test="amount != null" >
+        AMOUNT,
+      </if>
+      <if test="payChannel != null" >
+        PAY_CHANNEL,
+      </if>
+      <if test="orderStatus != null" >
+        ORDER_STATUS,
+      </if>
+      <if test="channelOrderNo != null" >
+        CHANNEL_ORDER_NO,
+      </if>
+      <if test="payType != null" >
+        PAY_TYPE,
+      </if>
+      <if test="remark != null" >
+        REMARK,
+      </if>
+      <if test="createTime != null" >
+        CREATE_TIME,
+      </if>
+      <if test="completeTime != null" >
+        COMPLETE_TIME,
+      </if>
+      <if test="code != null" >
+        CODE,
+      </if>
+      <if test="msg != null" >
+        MSG,
+      </if>
+      <if test="data != null" >
+        DATA,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="orderNo != null" >
+        #{orderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="orgOrderNo != null" >
+        #{orgOrderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null" >
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="orderBuyerId != null" >
+        #{orderBuyerId,jdbcType=INTEGER},
+      </if>
+      <if test="currency != null" >
+        #{currency,jdbcType=VARCHAR},
+      </if>
+      <if test="amount != null" >
+        #{amount,jdbcType=DECIMAL},
+      </if>
+      <if test="payChannel != null" >
+        #{payChannel,jdbcType=VARCHAR},
+      </if>
+      <if test="orderStatus != null" >
+        #{orderStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="channelOrderNo != null" >
+        #{channelOrderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="payType != null" >
+        #{payType,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="completeTime != null" >
+        #{completeTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="code != null" >
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="msg != null" >
+        #{msg,jdbcType=VARCHAR},
+      </if>
+      <if test="data != null" >
+        #{data,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.OrderInfo" >
+    update order_info
+    <set >
+      <if test="orderNo != null" >
+        ORDER_NO = #{orderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="orgOrderNo != null" >
+        ORG_ORDER_NO = #{orgOrderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null" >
+        USER_ID = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="orderBuyerId != null" >
+        ORDER_BUYER_ID = #{orderBuyerId,jdbcType=INTEGER},
+      </if>
+      <if test="currency != null" >
+        CURRENCY = #{currency,jdbcType=VARCHAR},
+      </if>
+      <if test="amount != null" >
+        AMOUNT = #{amount,jdbcType=DECIMAL},
+      </if>
+      <if test="payChannel != null" >
+        PAY_CHANNEL = #{payChannel,jdbcType=VARCHAR},
+      </if>
+      <if test="orderStatus != null" >
+        ORDER_STATUS = #{orderStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="channelOrderNo != null" >
+        CHANNEL_ORDER_NO = #{channelOrderNo,jdbcType=VARCHAR},
+      </if>
+      <if test="payType != null" >
+        PAY_TYPE = #{payType,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null" >
+        REMARK = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="completeTime != null" >
+        COMPLETE_TIME = #{completeTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="code != null" >
+        CODE = #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="msg != null" >
+        MSG = #{msg,jdbcType=VARCHAR},
+      </if>
+      <if test="data != null" >
+        DATA = #{data,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.OrderInfo" >
+    update order_info
+    set ORDER_NO = #{orderNo,jdbcType=VARCHAR},
+      ORG_ORDER_NO = #{orgOrderNo,jdbcType=VARCHAR},
+      USER_ID = #{userId,jdbcType=INTEGER},
+      ORDER_BUYER_ID = #{orderBuyerId,jdbcType=INTEGER},
+      CURRENCY = #{currency,jdbcType=VARCHAR},
+      AMOUNT = #{amount,jdbcType=DECIMAL},
+      PAY_CHANNEL = #{payChannel,jdbcType=VARCHAR},
+      ORDER_STATUS = #{orderStatus,jdbcType=VARCHAR},
+      CHANNEL_ORDER_NO = #{channelOrderNo,jdbcType=VARCHAR},
+      PAY_TYPE = #{payType,jdbcType=VARCHAR},
+      REMARK = #{remark,jdbcType=VARCHAR},
+      CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      COMPLETE_TIME = #{completeTime,jdbcType=TIMESTAMP},
+      CODE = #{code,jdbcType=VARCHAR},
+      MSG = #{msg,jdbcType=VARCHAR},
+      DATA = #{data,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateOrderStatus" parameterType="com.DocSystem.entity.OrderInfo">
+    update order_info
+    set ORDER_STATUS = #{orderStatus,jdbcType=VARCHAR},
+        CHANNEL_ORDER_NO = #{channelOrderNo,jdbcType=VARCHAR},
+        COMPLETE_TIME = NOW(),
+        CODE = #{code,jdbcType=VARCHAR},
+        MSG = #{msg,jdbcType=VARCHAR},
+        DATA = #{data,jdbcType=VARCHAR}
+    where ORDER_NO = #{orderNo,jdbcType=VARCHAR}
+  </update>
+</mapper>
