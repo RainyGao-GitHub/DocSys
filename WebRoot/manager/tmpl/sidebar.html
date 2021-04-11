@@ -12,18 +12,15 @@
     <li data-eb-event="content.refresh" data-eb-params="repos">
     	<a href="#"><i class="icon-bar-chart"></i>仓库管理</a>
     </li>
+
     {{if type > 0}}
     {{if docSysType > 0}}
 	<li data-eb-event="content.refresh" data-eb-params="systemLog">
     	<a href="#"><i class="icon-bar-chart"></i>日志管理</a>
     </li>
     {{/if}}
-    {{if docSysType == 2}}
-	<li data-eb-event="content.refresh" data-eb-params="license">
-    	<a href="#"><i class="icon-bar-chart"></i>证书管理</a>
-    </li>
     {{/if}}
-    {{/if}}
+
     {{if type == 2}}
     <li data-eb-event="content.refresh" data-eb-params="system" class="has_sublist">
         <a href="#" class=''>
@@ -37,5 +34,16 @@
             <li data-eb-event="content.refresh" data-eb-params="systemLicenses"><a href="#" >证书安装</a></li>
         </ul>
     </li>
+    {{/if}}
+
+    {{if type > 0}}
+    {{if isSalesServer == 1}}
+	<li data-eb-event="content.refresh" data-eb-params="license">
+    	<a href="#"><i class="icon-bar-chart"></i>证书管理</a>
+    </li>
+    <li data-eb-event="content.refresh" data-eb-params="order">
+    	<a href="#"><i class="icon-bar-chart"></i>订单管理</a>
+    </li>
+    {{/if}}
     {{/if}}
 </ul>

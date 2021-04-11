@@ -1755,8 +1755,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected void sendFileToWebPage(String localParentPath, String file_name,  ReturnAjax rt,HttpServletResponse response,HttpServletRequest request, String disposition) throws Exception{
+		sendFileToWebPage(localParentPath, file_name, file_name, rt, response, request, disposition);
+	}
+	
+	protected void sendFileToWebPage(String localParentPath, String fileName, String showName, ReturnAjax rt,HttpServletResponse response,HttpServletRequest request, String disposition) throws Exception{
 		
-		String dstPath = localParentPath + file_name;
+		String dstPath = localParentPath + fileName;
 
 		//检查文件是否存在
 		File file = new File(dstPath);
@@ -1767,31 +1771,31 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		System.out.println("sendFileToWebPage() file_name befor convert:" + file_name);
+		System.out.println("sendFileToWebPage() showName befor convert:" + showName);
 		
 		//解决中文编码问题
 		String userAgent = request.getHeader("User-Agent").toUpperCase();
 		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
 		{  
-			file_name = URLEncoder.encode(file_name, "UTF-8");  
-			System.out.println("sendFileToWebPage() file_name after URL Encode:" + file_name);
+			showName = URLEncoder.encode(showName, "UTF-8");  
+			System.out.println("sendFileToWebPage() showName after URL Encode:" + showName);
 		}else{  
-			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+			showName = new String(showName.getBytes("UTF-8"),"ISO8859-1");  
 			
 			
-			System.out.println("sendFileToWebPage() file_name after convert to ISO8859-1:" + file_name);
+			System.out.println("sendFileToWebPage() showName after convert to ISO8859-1:" + showName);
 		}
 		//解决空格问题（空格变加号和兼容性问题）
-		file_name = file_name.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
-		System.out.println("sendFileToWebPage() file_name:" + file_name);
+		showName = showName.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
+		System.out.println("sendFileToWebPage() showName:" + showName);
 		
 		if(disposition == null || disposition.isEmpty())
 		{
-			response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+			response.setHeader("content-disposition", "attachment;filename=\"" + showName +"\"");
 		}
 		else
 		{
-			response.setHeader("content-disposition", disposition + ";filename=\"" + file_name +"\"");			
+			response.setHeader("content-disposition", disposition + ";filename=\"" + showName +"\"");			
 		}
 		//读取要下载的文件，保存到文件输入流
 		FileInputStream in = null;

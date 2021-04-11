@@ -36,6 +36,7 @@ public class OrderInfo {
      * 买家信息id
      */
     private Integer orderBuyerId;
+    
 
     /**
      * 币种 rmb
