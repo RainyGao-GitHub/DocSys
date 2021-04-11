@@ -360,11 +360,6 @@
 	            $("#nav li[data-eb-params=systemLog]>a").addClass("open");
 	            showSystemLogList();
 	            break;
-	        case "license":
-	            title = "证书管理";
-	            $("#nav li[data-eb-params=license]>a").addClass("open");
-	            showLicenseList();
-	            break;
 	        case "system":
 	        case "systemEmailConfig":
 	        case "systemSmsConfig":
@@ -376,6 +371,16 @@
 	            $("ul.sublist").show();	        	
 	            showSystemPage(curPath);
 	        	break;
+	        case "license":
+	            title = "证书管理";
+	            $("#nav li[data-eb-params=license]>a").addClass("open");
+	            showLicenseList();
+	            break;
+	        case "order":
+	            title = "订单管理";
+	            $("#nav li[data-eb-params=order]>a").addClass("open");
+	            showOrderList();
+	            break;
 	    }
 	    
 	    $Func.render($("#pagehead"),"pagehead",{
@@ -405,7 +410,7 @@
         	break;
         case "systemLicenses":
             showSystemLicenses();
-        	break;        	
+        	break;  
 	    }
     }
 	

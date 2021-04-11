@@ -65,8 +65,10 @@ public class BaseFunction{
 	public static int OSType = OS.UNKOWN; //
 	
 	//DocSysType
-    protected static int docSysType = 0;
-
+    protected static int docSysType = 0; //0: Community Edition 1: Professional Edition 2: Enterprise Edition
+    
+    protected static int isSalesServer = 0;
+    
     static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
