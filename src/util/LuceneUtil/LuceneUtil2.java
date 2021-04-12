@@ -1489,6 +1489,7 @@ public class LuceneUtil2   extends BaseFunction
 			{
 	            try {
 					String val = document.get(fieldName);
+					System.out.println("buildObjectForDocument() fieldVal:" + val);
 					if(val != null)
 					{
 						switch(fieldType)
