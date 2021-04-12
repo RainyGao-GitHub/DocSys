@@ -55,6 +55,8 @@ public class OrderBuyerInfo {
      */
     private Long createTime;
 
+	public String orderNo;
+
     public Integer getId() {
         return id;
     }

@@ -67,7 +67,6 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.QueryCondition;
 import com.DocSystem.entity.Doc;
-import com.DocSystem.entity.OrderInfo;
 import com.DocSystem.entity.Repos;
 import java.math.BigDecimal;
 
@@ -1489,12 +1488,12 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			System.out.println("buildObjectForDocument() fieldType:" + type + " fieldName:" + fieldName);
+			//System.out.println("buildObjectForDocument() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
 					String val = document.get(fieldName);
-					System.out.println("buildObjectForDocument() fieldVal:" + val);
+					//System.out.println("buildObjectForDocument() fieldVal:" + val);
 					if(val != null)
 					{
 						switch(fieldType)
@@ -1545,7 +1544,7 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			System.out.println("buildQueryConditionsForObject() fieldType:" + type + " fieldName:" + fieldName);
+			//System.out.println("buildQueryConditionsForObject() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
