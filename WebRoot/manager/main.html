@@ -2143,9 +2143,27 @@
        		var node = list[i];
       		node.index = i + offset;
     		node.createDate = formatTime(node.createTime);
+    		node.formatedState = formateOrderSatus(node.orderStatus);
+    		
  	    }		
 		$Func.render($("#container"),"order",{"list":list});
     }
+	
+	function formateOrderSatus(status)
+	{
+		switch(status)
+		{
+		case "Processing":
+			return "处理中";
+		case "Paid":
+			return "已支付";
+		case "Success":
+			return "交易完成";
+		case "Failed":
+			return "交易失败";			
+		}
+		return status;
+	}
 	
 	function refundOrderConfirm(orderNo)
 	{	
