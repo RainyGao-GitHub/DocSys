@@ -10,6 +10,19 @@ function getQueryString(name) {
     return null;
 }
 
+//从 url 中获取参数字符串
+function getUrlParamsStr() {
+    var href = window.location.href;
+    
+    var i = href.indexOf("?");
+    if ( i< 0 ){
+    	return "";
+    }
+
+    var str = href.substring(i);
+    return str;
+}
+
 //根据参数列表构造Url请求
 function makeUrl(params) {
     var href = window.location.href;
