@@ -697,6 +697,11 @@ public class LuceneUtil2   extends BaseFunction
     
     public static BooleanQuery buildBooleanQueryWithConditions(List<QueryCondition> conditions) 
 	{
+    	if(conditions == null || conditions.size() == 0)
+    	{
+    		return null;
+    	}
+    	
 		int count = 0;
 		BooleanQuery builder = new BooleanQuery();
 		Query query = null;
