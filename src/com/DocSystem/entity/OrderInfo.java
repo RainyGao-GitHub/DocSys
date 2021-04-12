@@ -102,6 +102,8 @@ public class OrderInfo {
      */
     private String data;
 
+	public String subject;
+
     public Integer getId() {
         return id;
     }

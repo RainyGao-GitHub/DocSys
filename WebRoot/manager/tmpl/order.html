@@ -16,9 +16,8 @@
                 <thead>
                 <tr>
                   <th>#</th>
-                  <th>ID</th>
                   <th>订单号</th>
-                  <th>订单信息</th>
+                  <th>订单详情</th>
                   <th>金额</th>
                   <th>创建时间</th>
                   <th>状态</th>
@@ -31,8 +30,8 @@
                   <tr index="{{i}}">
                   	<td>{{value.index}}</td>
                     <td>{{value.orderNo}}</td>
-                    <td>{{value.orderInfo}}</td>
-                    <td>{{value.totalAmount}}</td>
+                    <td>{{value.subject}}</td>
+                    <td>{{value.amount}}</td>
                     <td>{{value.createDate}}</td>
                     <td>{{value.formatedState}}</td>
                     <td class="edit">
