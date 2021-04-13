@@ -20,6 +20,7 @@
                   <th>订单详情</th>
                   <th>金额</th>
                   <th>创建时间</th>
+                  <th>交易类型</th>
                   <th>状态</th>
                   <th>操作</th>
                 </tr>
@@ -33,9 +34,12 @@
                     <td>{{value.subject}}</td>
                     <td>{{value.amount}}</td>
                     <td>{{value.createDate}}</td>
+                    <td>{{value.formatedPayType}}</td>
                     <td>{{value.formatedState}}</td>
                     <td class="edit">
+                      {{if value.showRefund}}
                       <button onclick="refundOrderConfirm('{{value.orderNo}}')" data-id="{{value.orderNo}}" class="btn btn-lg btn-warning examine_ban">退款</button>
+                      {{/if}}
                     </td>
                   </tr>
                 {{/each}}
