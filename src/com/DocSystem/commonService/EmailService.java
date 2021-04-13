@@ -72,7 +72,7 @@ public class EmailService {
 			message.addRecipient(RecipientType.TO, toAddress);
 
 			message.setSentDate(Calendar.getInstance().getTime());
-			message.setSubject("来自DocSys的邮件");
+			message.setSubject("来自MxsDoc的邮件");
 			if(content!=null&&!"".equals(content)){
 				content = URLDecoder.decode(content, "UTF-8");
 				message.setContent(EmailService.getEmailHtmlByCode(content), messagetype);
@@ -118,7 +118,7 @@ public class EmailService {
 				+"			}"
 				+"		</style>"
 				+"		<div class='email-content'>"
-				+"			<p>您好，亲爱的DocSys用户：</p>"
+				+"			<p>您好，亲爱的MxsDoc用户：</p>"
 				+"			<p class='firstline'>"
 				+	content 
 				//+ "<a href='http://www.gofreeteam.com'>点击进入:DocSys首页</a>"

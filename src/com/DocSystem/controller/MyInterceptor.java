@@ -68,11 +68,16 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Doc/searchDoc",
 		"Doc/refreshDoc",
 		"web/static/office-editor",
+		//For Sales
 		"Sales/checkLicense",
+		//For Payment
 		"pay/queryGoods",
-		"pay/notify",
-		"pay/refund",
 		"pay/initOrder",
+		"pay/getOrderInfo",
+		"pay/notify",
+		"pay/manualNotify",
+		"pay/refund",
+		"pay/downloadLicense",
 	};
 	
 	
