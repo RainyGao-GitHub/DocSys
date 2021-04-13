@@ -93,20 +93,19 @@ public class EmailService {
 		}
 		return false;		
 	}
-	
-	
+
 	public static String getEmailHtmlByCode(String content){
 		String emailContent = "<style type='text/css'>"
 				+"			body{"
-				+"				font-family: '宋体';"
+				+"				font-family: 'arial'; font-size:12px;"
 				+"			}"
 				+"			.email-content{"
 				+"				padding:50px;"
 				+"				width: 80%;"
 				+"			}"
-				+"			p{"
-				+"				color:cornflowerblue;"
-				+"			}"
+				//+"			p{"
+				//+"				color:cornflowerblue;"
+				//+"			}"
 				+"			p.firstline{"
 				+"				padding-left: 24px;"
 				+"			}"
@@ -118,10 +117,9 @@ public class EmailService {
 				+"			}"
 				+"		</style>"
 				+"		<div class='email-content'>"
-				+"			<p>您好，亲爱的MxsDoc用户：</p>"
+				+"			<p>尊敬的MxsDoc用户：</p>"
 				+"			<p class='firstline'>"
-				+	content 
-				//+ "<a href='http://www.gofreeteam.com'>点击进入:DocSys首页</a>"
+				+				content 
 				+"			</p>"
 				+"		</div>";
 		
