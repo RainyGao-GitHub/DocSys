@@ -2143,26 +2143,43 @@
        		var node = list[i];
       		node.index = i + offset;
     		node.createDate = formatTime(node.createTime);
-    		node.formatedState = formateOrderSatus(node.orderStatus);
-    		
+    		node.formatedState = formateOrderSatus(node);
+    		node.formatedPayType = formatePayType(node);
+			node.showRefund = false;
+    		//if(node.payType == "Pay" && (node.orderStatus == "Paid" || node.orderStatus == "Success"))
+    		if(node.payType == "Pay")
+    		{
+    			node.showRefund = true;
+    		}
  	    }		
 		$Func.render($("#container"),"order",{"list":list});
     }
 	
-	function formateOrderSatus(status)
+	function formatePayType(node)
 	{
-		switch(status)
+		switch(node.payType)
+		{
+		case "Pay":
+			return "付款";
+		case "Refund":
+			return "退款";
+		}
+		return node.payType;
+	}
+	
+	function formateOrderSatus(node)
+	{
+		switch(node.orderStatus)
 		{
 		case "Processing":
-			return "处理中";
+				return "未完成";
 		case "Paid":
-			return "已支付";
 		case "Success":
-			return "交易完成";
+				return "完成";
 		case "Failed":
-			return "交易失败";			
+				return "失败";	
 		}
-		return status;
+		return node.orderStatus;
 	}
 	
 	function refundOrderConfirm(orderNo)
@@ -2182,12 +2199,10 @@
 	
 	function refundOrder(orderNo){
         $.ajax({
-            url : "/DocSystem/pay/refund",
+            url : "/DocSystem/pay/refund/" + orderNo,
             type : "post",
             dataType : "json",
-            data : {
-            	orderNo : orderNo,
-            },
+            data : {},
             success : function (ret) {
                 if( "ok" == ret.status ){
                    	showOrderList();	//刷新UserList
@@ -2197,7 +2212,7 @@
                 }
             },
             error : function () {
-            	showErrorMessage("退款失败：删除失败");
+            	showErrorMessage("退款失败：服务器异常");
             }
         });
 	}

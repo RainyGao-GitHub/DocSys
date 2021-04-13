@@ -104,6 +104,12 @@ public class OrderInfo {
 
 	public String subject;
 
+	public String buyerInfo;
+
+	public String goodsInfo;
+
+	public String buyerEmail;
+
     public Integer getId() {
         return id;
     }
