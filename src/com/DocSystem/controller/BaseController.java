@@ -59,7 +59,6 @@ import util.DateFormat;
 import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
-import util.DocConvertUtil.Office2PDF;
 import util.Encrypt.MD5;
 
 import com.DocSystem.common.AuthCode;
@@ -121,7 +120,7 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	private SmsService smsService;
 	@Autowired
-	private EmailService emailService;
+	protected EmailService emailService;
         
 	//系统默认用户
     protected static User coEditUser = new User();
