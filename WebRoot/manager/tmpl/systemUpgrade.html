@@ -71,7 +71,8 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
-	                  {{if value.docSysType == 2}}
+					  {{if value.type == 2}}
+	                  {{if value.isSalesServer == 1}}
 	                  <tr>
 	                    <td>系统密钥</td>
 	                    <td></td>
@@ -90,6 +91,7 @@
 	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
 	                    </td>
 	                  </tr>
+	                  {{/if}}
 	                  {{/if}}
 	                </tbody>
 	          </table>

@@ -734,6 +734,7 @@ public class ManageController extends BaseController{
 
 		JSONObject config = new JSONObject();
 		config.put("docSysType", docSysType);
+		config.put("isSalesServer", isSalesServer);
 		
 		config.put("version", version);
 		config.put("tomcatPath", tomcatPath);
