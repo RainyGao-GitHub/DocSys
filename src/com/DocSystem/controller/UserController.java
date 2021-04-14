@@ -324,7 +324,7 @@ public class UserController extends BaseController {
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{	
 			String code = generateVerifyCode(session,sessionName,userName);
-			String content =  "您收到了来自DocSys的验证码：" + code + ",15分钟内有效，请及时验证。";
+			String content =  "您收到了来自MxsDoc的验证码：" + code + ",15分钟内有效，请及时验证。";
 			emailService.sendEmail(rt,userName,content);
 			writeJson(rt, response);
 			return;	
