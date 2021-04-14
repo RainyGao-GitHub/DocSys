@@ -113,7 +113,7 @@ public class BaseFunction{
 	}
 
     public static String getServerHost() {
-    	String value = ReadProperties.read("docSysConfig.properties", "serverHost");
+    	String value = ReadProperties.getValue(docSysIniPath + "mxsdoc.conf", "serverHost");
         if(value != null && !value.isEmpty())
         {
         	return value;
