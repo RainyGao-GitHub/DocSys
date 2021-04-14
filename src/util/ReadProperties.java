@@ -31,6 +31,10 @@ public class ReadProperties {
 		try {
 			Properties props = new Properties();
 			File config = new File(filePath);
+			if(config.exists() == false)
+			{
+				return null;
+			}
 			InputStream in = new FileInputStream(config);
 			props.load(in);
 			return (String) props.get(key);
