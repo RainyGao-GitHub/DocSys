@@ -2177,14 +2177,14 @@
 		switch(node.orderStatus)
 		{
 		case "Processing":
-				return "待支付";
+				return "处理中";
 		case "Paid":
 		case "Success":
-				return "支付成功";
+				return "成功";
 		case "Failed":
-				return "支付失败";
+				return "失败";
 		case "Refunded":
-			return "已全额退款";			
+				return "已全额退款";		
 		}
 		return node.orderStatus;
 	}
