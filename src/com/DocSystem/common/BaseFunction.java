@@ -68,7 +68,8 @@ public class BaseFunction{
     protected static int docSysType = 0; //0: Community Edition 1: Professional Edition 2: Enterprise Edition
     
     protected static int isSalesServer = 0;
-    
+	protected static String serverHost = null;
+	
     static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
@@ -76,6 +77,7 @@ public class BaseFunction{
 		docSysIniPath = webappsPath + "docSys.ini/";   
     	initSystemLicenseInfo();
     	initOfficeLicenseInfo();
+		serverHost = getServerHost();		
     }
     
 	private static void initSystemLicenseInfo() {
@@ -110,6 +112,16 @@ public class BaseFunction{
 		return true;
 	}
 
+    public static String getServerHost() {
+    	String value = ReadProperties.read("docSysConfig.properties", "serverHost");
+        if(value != null && !value.isEmpty())
+        {
+        	return value;
+        }
+
+        return "http://dw.gofreeteam.com";
+    }
+    
 	private static void initOfficeLicenseInfo() {
 		//Default licenseInfo
 		officeLicenseInfo = new OfficeLicense();
