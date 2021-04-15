@@ -9910,8 +9910,7 @@ public class BaseController  extends BaseFunction{
 	
 	
 
-	/**************************** Tomcat控制接口 
-	 * @param rt *********************************/
+	/**************************** DocSys重启接口 *********************************/
     public static boolean restartServer(ReturnAjax rt) {              
     	String serverPath = Path.getParentPath(docSysWebPath, 3, OSType);
     	if(serverPath == null)
@@ -9921,46 +9920,45 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
     	
-    	String restartScriptPath = serverPath + "restart.sh";
+    	String scriptPath = serverPath + "restart.sh";
     	if(isWinOS())
     	{
-    		restartScriptPath = serverPath + "restart.bat";
+    		scriptPath = serverPath + "restart.bat";
     	}
     	
-    	File file = new File(restartScriptPath);
+    	File file = new File(scriptPath);
     	if(file.exists() == false){
     		rt.setError("找不到服务器重启脚本！");
     		return false;
     	}
     	
-    	String restartCmd = buildScriptRunCmd(restartScriptPath);        
+    	String restartCmd = buildScriptRunCmd(scriptPath);        
         return run(restartCmd, null, null) != null;
     }
     
-	/**************************** Tomcat控制接口 
-	 * @param rt *********************************/
+	/**************************** DocSys升级接口 *********************************/
     public static boolean upgradeServer(ReturnAjax rt) {              
     	String serverPath = Path.getParentPath(docSysWebPath, 3, OSType);
     	if(serverPath == null)
 		{
-			System.out.println("restartTomcat() Failed to get serverPath");
+			System.out.println("upgradeSystem() Failed to get serverPath");
 			rt.setError("获取服务器路径失败！");
 			return false;
 		}
     	
-    	String restartScriptPath = serverPath + "upgrade.sh";
+    	String scriptPath = serverPath + "upgrade.sh";
     	if(isWinOS())
     	{
-    		restartScriptPath = serverPath + "upgrade.bat";
+    		scriptPath = serverPath + "upgrade.bat";
     	}
     	
-    	File file = new File(restartScriptPath);
+    	File file = new File(scriptPath);
     	if(file.exists() == false){
     		rt.setError("找不到服务器升级脚本！");
     		return false;
     	}
     	
-    	String restartCmd = buildScriptRunCmd(restartScriptPath);        
+    	String restartCmd = buildScriptRunCmd(scriptPath);  
         return run(restartCmd, null, null) != null;
     }
     
