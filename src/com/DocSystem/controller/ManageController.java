@@ -922,7 +922,7 @@ public class ManageController extends BaseController{
 		//开始升级
 		if(upgradeServer(rt) == false)
 		{
-			System.out.println("restartServer() 升级系统失败");
+			System.out.println("upgradeSystem() 升级系统失败");
 			writeJson(rt, response);
 			return;
 		}
