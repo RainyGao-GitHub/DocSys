@@ -1165,6 +1165,7 @@ function showReposSelectList(callback)
 function showAddReposUserPanel(){
 	console.log("showAddReposUserPanel");
 	bootstrapQ.dialog({
+		id: 'addReposUser',
 		title: '添加访问用户',
 		url: 'addReposUser.html',
 		msg: '页面正在加载，请稍等...',
@@ -1176,6 +1177,7 @@ function showAddReposUserPanel(){
 function showAddReposGroupPanel(){
 	console.log("showAddReposGroupPanel");
 	bootstrapQ.dialog({
+		id: 'addReposGroup',
 		title: '添加访问组',
 		url: 'addReposGroup.html',
 		msg: '页面正在加载，请稍等...',
@@ -1187,6 +1189,7 @@ function showAddReposGroupPanel(){
 function showReposBasicSettingPanel(){
 	console.log("showReposBasicSettingPanel");
 	bootstrapQ.dialog({
+		id: 'reposBasicSetting',
 		title: '仓库设置',
 		url: 'reposBasicSetting.html',
 		msg: '页面正在加载，请稍等...',
@@ -1198,6 +1201,7 @@ function showReposBasicSettingPanel(){
 function showReposSettingPanel(){
 	console.log("showReposSettingPanel");
 	bootstrapQ.dialog({
+		id: 'reposAdvancedSetting',
 		title: '高级设置',
 		url: 'reposAdvancedSetting.html',
 		msg: '页面正在加载，请稍等...',
