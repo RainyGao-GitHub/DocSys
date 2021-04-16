@@ -330,7 +330,7 @@ h6 {
     left: 0;
     right: 0;
     height: 1px;
-    z-index: 302;
+    z-index: 99;
     background-color: #ddd;
     transition-property: top;
     transition-duration: .3s;
