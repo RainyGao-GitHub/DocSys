@@ -1490,6 +1490,15 @@ public class DocController extends BaseController{
 			}
 		}
 		writeJson(rt, response);
+		
+		if(rt.getStatus().equals("ok"))
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  repos, doc, null, "");	
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, "");				
+		}
 	}
 
 	public void downloadDocPrepare_VRP(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
@@ -1777,7 +1786,7 @@ public class DocController extends BaseController{
 		Doc doc = new Doc();
 		doc.setPath(targetPath);
 		doc.setName(targetName);
-		addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
+		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
 		
 		if(deleteFlag != null && deleteFlag == 1)
 		{
@@ -1904,7 +1913,7 @@ public class DocController extends BaseController{
 		Doc doc = new Doc();
 		doc.setPath(targetPath);
 		doc.setName(targetName);
-		addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
+		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
 	}
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
