@@ -698,9 +698,28 @@ public class BaseFunction{
     {
 		SystemLog log = new SystemLog();
 		log.time = new Date().getTime();
-		log.ip = getRequestIpAddress(request);
-		log.userId = user.getId() + "";
-		log.userName = user.getName();
+		
+		if(request == null)
+		{
+			log.ip = "未知";			
+		}
+		else
+		{
+			log.ip = getRequestIpAddress(request);
+		}
+		
+		
+		if(user == null)
+		{
+			log.userId = "";
+			log.userName = "未知用户";							
+		}
+		else
+		{
+			log.userId = user.getId() + "";
+			log.userName = user.getName();			
+		}
+		
 		log.event = event;
 		log.subEvent = subEvent;
 		log.action = action;
