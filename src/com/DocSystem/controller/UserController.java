@@ -359,8 +359,8 @@ public class UserController extends BaseController {
 			return;
 		}		
 	}
-	
-	private void sendVerifyCodeSMS(ReturnAjax rt, String userName, Integer type, String code) {
+
+	private void sendVerifyCodeSMS(ReturnAjax rt, String phone, Integer type, String code) {
 		String smsSendUri = getSmsSendUri();
 		String smsApikey = getSmsApikey();
 		String smsTplid = getSmsTplid();
@@ -368,13 +368,13 @@ public class UserController extends BaseController {
 		switch(type.intValue())
 		{
 		case 0:
-			smsService.sendSms(rt,userName, smsSendUri, smsApikey, smsTplid, code, null, null); //注册短信模板id
+			smsService.sendSms(rt,phone, smsSendUri, smsApikey, smsTplid, code, null, null); //注册短信模板id
 			break;
 		case 1:
-			smsService.sendSms(rt,userName, smsSendUri, smsApikey, smsTplid, code, null, null); //忘记密码短信模板id
+			smsService.sendSms(rt,phone, smsSendUri, smsApikey, smsTplid, code, null, null); //忘记密码短信模板id
 			break;
 		default:
-			smsService.sendSms(rt,userName, smsSendUri, smsApikey, smsTplid, code, null, null); //注册短信模板id
+			smsService.sendSms(rt,phone, smsSendUri, smsApikey, smsTplid, code, null, null); //注册短信模板id
 		}
 
 	}
