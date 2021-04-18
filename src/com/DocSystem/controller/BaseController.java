@@ -8149,9 +8149,8 @@ public class BaseController  extends BaseFunction{
 		serverIP = IPUtil.getIpAddress();
 		System.out.println("docSysInit() serverIP:" + serverIP);
 		
-		//Update the value of DB_URL/DB_USER/DB_PASS
+		//检查并更新数据库配置文件
 		String JDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
-		
 		String UserJDBCSettingPath = docSysIniPath + "jdbc.properties";
 		if(FileUtil.isFileExist(UserJDBCSettingPath))
 		{
@@ -8168,7 +8167,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		//Update the value of DB_URL/DB_USER/DB_PASS
+		//检查并更新DocSys配置文件
 		String docSysConfigPath = docSysWebPath + "WEB-INF/classes/docSysConfig.properties";
 		String userDocSysConfigPath = docSysIniPath + "docSysConfig.properties";
 		if(FileUtil.isFileExist(userDocSysConfigPath))
