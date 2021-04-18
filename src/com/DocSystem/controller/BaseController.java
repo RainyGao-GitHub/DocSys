@@ -8179,7 +8179,7 @@ public class BaseController  extends BaseFunction{
 			if(checkSum1 == null || checkSum2 == null || !checkSum1.equals(checkSum2))
 			{
 				System.out.println("docSysInit() 用户自定义配置文件与系统默认配置文件不一致，更新文件！");
-				FileUtil.copyFile(UserJDBCSettingPath, JDBCSettingPath, true);
+				FileUtil.copyFile(userDocSysConfigPath, docSysConfigPath, true);
 			}
 		}
 				
