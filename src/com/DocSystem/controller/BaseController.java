@@ -2192,7 +2192,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean verifyEmail(String email) {
 		ReturnAjax rt = new ReturnAjax();
-		return emailService.sendEmail(rt, email , "邮箱验证");
+		return emailService.sendEmail(rt, email , "这是来自MxsDoc的邮箱验证邮件！");
 	}
 
 	protected boolean verifyTelephone(String tel) {

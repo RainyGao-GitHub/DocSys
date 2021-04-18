@@ -324,7 +324,22 @@ public class UserController extends BaseController {
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{	
 			String code = generateVerifyCode(session,sessionName,userName);
-			String content =  "您收到了来自MxsDoc的验证码：" + code + ",15分钟内有效，请及时验证。";
+			String content =  
+			"尊敬的MxsDoc用户："
+			+ "<br>"
+			+ "您收到了来自MxsDoc的验证码：" + code + ",15分钟内有效，请及时验证。"
+			+ "<br>"
+			+ "<br>"
+			+ "如有任何问题，请联系 "
+			+ "<a href='mailto:helper@gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;' rel='noopener' target='_blank'>helper@gofreeteam.com</a>"
+			+ "<br>"
+			+ "<br>"
+			+ "谢谢,"
+			+ "<br>"
+			+ "<strong>MxsDoc团队</strong>"
+			+ "<br>"
+			+ "<a href='dw.gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;'>dw.gofreeteam.com</a>";
+			
 			emailService.sendEmail(rt,userName,content);
 			writeJson(rt, response);
 			return;	

@@ -117,7 +117,7 @@ public class EmailService {
 				+"			}"
 				+"		</style>"
 				+"		<div class='email-content'>"
-				+"			<p>尊敬的MxsDoc用户：</p>"
+//				+"			<p>尊敬的MxsDoc用户：</p>"
 				+"			<p class='firstline'>"
 				+				content 
 				+"			</p>"
