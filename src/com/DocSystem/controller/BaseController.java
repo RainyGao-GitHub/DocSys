@@ -118,7 +118,7 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	protected UserServiceImpl userService;
 	@Autowired
-	private SmsService smsService;
+	protected SmsService smsService;
 	@Autowired
 	protected EmailService emailService;
         
