@@ -277,10 +277,10 @@
       and ID = #{id,jdbcType=INTEGER}
     </if>
     <if test="userId != null">
-      and (USER_ID = #{userId,jdbcType=INTEGER} or (USER_ID = 0 and (GROUP_ID = null or GROUP_ID = 0)))
+      and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0)
     </if>
     <if test="groupId != null">
-      and (GROUP_ID = #{groupId,jdbcType=INTEGER} or (USER_ID = 0 and (GROUP_ID = null or GROUP_ID = 0)))
+      and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
     </if>
     <if test="docId != null">
       and DOC_ID = #{docId,jdbcType=BIGINT}
@@ -353,7 +353,7 @@
 	from doc_auth
     LEFT JOIN user on doc_auth.USER_ID = user.ID
     where REPOS_ID = #{reposId,jdbcType=INTEGER}
-		and (USER_ID = #{userId,jdbcType=INTEGER} or (USER_ID = 0 and (GROUP_ID = null or GROUP_ID = 0)) or GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER}))
+		and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0 or GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER}))
   </select>
   <select id="getDocAuthForGroup" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
@@ -362,13 +362,13 @@
 	from doc_auth
     LEFT JOIN user_group on doc_auth.GROUP_ID = user_group.ID
  	where REPOS_ID = #{reposId,jdbcType=INTEGER}
-		and (GROUP_ID = #{groupId,jdbcType=INTEGER} or (USER_ID = 0 and (GROUP_ID = null or GROUP_ID = 0)))
+		and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
   </select>
   <select id="getDocAuthForAnyUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from doc_auth
     where REPOS_ID = #{reposId,jdbcType=INTEGER}
-		and (USER_ID = 0 and (GROUP_ID = null or GROUP_ID = 0))
+		and USER_ID = 0
   </select>
 </mapper>
