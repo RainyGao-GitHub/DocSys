@@ -1137,13 +1137,13 @@ public class ReposController extends BaseController{
 
 			System.out.println("getDocAuthList() userId:" + userId + " groupId:" + groupId);
 			DocAuth docAuth = null;
-			if(userId!= null)	//It is user
-			{
-				docAuth = getUserDispDocAuth(repos, userId, doc);
-			}
-			else if(groupId != null)
+			if(groupId != null)
 			{
 				docAuth = getGroupDispDocAuth(repos, groupId, doc);
+			}
+			else if(userId!= null)	//It is user
+			{
+				docAuth = getUserDispDocAuth(repos, userId, doc);
 			}
 			Log.printObject("docAuth:", docAuth);
 			
@@ -1169,9 +1169,13 @@ public class ReposController extends BaseController{
 						continue;
 					}
 					
-					if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId() == 0)
+					//非组权限的时候需要判断是否时任意用户权限
+					if(tmpDocAuth.getGroupId() == null)
 					{
-						tmpDocAuth.setUserName("任意用户");
+						if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId() == 0)
+						{
+							tmpDocAuth.setUserName("任意用户");
+						}
 					}
 					
 					if(tmpDocAuth.getDocId() != null && tmpDocAuth.getDocId() != 0)	//过滤掉docId = 0的权限（已经在里面了）
