@@ -169,12 +169,17 @@ public class ReposServiceImpl implements ReposService {
 		return reposAuthDao.selectSelective(reposAuth);
 	}
 	
+	//取出任意用户和用户所在组以及用户的权限
 	public List<DocAuth> getDocAuthForUser(DocAuth docAuth) {
 		return docAuthDao.getDocAuthForUser(docAuth);
 	}
+	
+	//取出任意用户和用户组的权限
 	public List<DocAuth> getDocAuthForGroup(DocAuth docAuth) {
 		return docAuthDao.getDocAuthForGroup(docAuth);
 	}
+	
+	//取出任意用户的权限
 	public List<DocAuth> getDocAuthForAnyUser(DocAuth docAuth) {
 		return docAuthDao.getDocAuthForAnyUser(docAuth);
 	}

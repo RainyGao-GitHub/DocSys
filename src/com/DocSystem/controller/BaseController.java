@@ -6320,16 +6320,22 @@ public class BaseController  extends BaseFunction{
 		
 		DocAuth docAuth = getGroupDocAuth(repos, groupId, doc);	//获取用户真实的权限
 		
-		 String groupName = getGroupName(groupId);
-		 if(groupName == null)
-		 {
-			 System.out.println("getGroupDispDocAuth() groupId:"+groupId + " 不存在");
+		if(groupId == 0)
+		{
+			System.out.println("getGroupDispDocAuth() groupId:"+groupId + " 无效的group权限");
+			return null;
+		}
+		
+		String groupName = getGroupName(groupId);
+		if(groupName == null)
+		{
+			System.out.println("getGroupDispDocAuth() groupId:"+groupId + " 不存在");
 			 //删除无效权限设置
 			DocAuth qDocAuth = new DocAuth();
 			qDocAuth.setGroupId(groupId);		
 			reposService.deleteDocAuthSelective(qDocAuth);
 			return null;
-		 }
+		}
 			 
 		 //转换成可显示的权限
 		if(docAuth == null)
@@ -6797,7 +6803,7 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long,DocAuth> hashMap = new HashMap<Long,DocAuth>();
 		for(int i=0;i<docAuthList.size();i++)
 		{
-			DocAuth docAuth = docAuthList.get(i);
+			DocAuth docAuth = docAuthList.get(i);			
 			Long docId = docAuth.getDocId();
 			DocAuth hashEntry = hashMap.get(docId);
 			if(hashEntry == null)

@@ -1137,7 +1137,7 @@ public class ReposController extends BaseController{
 
 			System.out.println("getDocAuthList() userId:" + userId + " groupId:" + groupId);
 			DocAuth docAuth = null;
-			if(groupId != null)
+			if(groupId != null && groupId != 0)
 			{
 				docAuth = getGroupDispDocAuth(repos, groupId, doc);
 			}
