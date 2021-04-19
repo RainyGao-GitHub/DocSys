@@ -6321,7 +6321,16 @@ public class BaseController  extends BaseFunction{
 		DocAuth docAuth = getGroupDocAuth(repos, groupId, doc);	//获取用户真实的权限
 		
 		 String groupName = getGroupName(groupId);
-		 
+		 if(groupName == null)
+		 {
+			 System.out.println("getGroupDispDocAuth() groupId:"+groupId + " 不存在");
+			 //删除无效权限设置
+			DocAuth qDocAuth = new DocAuth();
+			qDocAuth.setGroupId(groupId);		
+			reposService.deleteDocAuthSelective(qDocAuth);
+			return null;
+		 }
+			 
 		 //转换成可显示的权限
 		if(docAuth == null)
 		{
@@ -6361,6 +6370,15 @@ public class BaseController  extends BaseFunction{
 		
 		//Get UserName
 		String UserName = getUserName(UserID);
+		if(UserName == null)
+		{
+			 System.out.println("getUserDispDocAuth() UserID:"+UserID + " 不存在");
+			 //删除无效权限设置
+			DocAuth qDocAuth = new DocAuth();
+			qDocAuth.setUserId(UserID);		
+			reposService.deleteDocAuthSelective(qDocAuth);
+			return null;
+		}
 		
 		//转换成可显示的权限
 		if(docAuth == null)
