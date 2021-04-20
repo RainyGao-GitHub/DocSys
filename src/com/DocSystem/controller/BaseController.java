@@ -6575,7 +6575,7 @@ public class BaseController  extends BaseFunction{
 		{
 			docAuthList = reposService.getDocAuthForUser(docAuth);
 		}
-		//Log.printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
+		Log.printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
@@ -9747,6 +9747,10 @@ public class BaseController  extends BaseFunction{
 				}
  			}
 		}
+		if(objType == DOCSYS_DOC_AUTH)
+		{
+			obj = correctDocAuth((DocAuth)obj);
+		}	
 		return obj;
 	}
 	
