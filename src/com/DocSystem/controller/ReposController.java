@@ -1410,7 +1410,7 @@ public class ReposController extends BaseController{
 		Integer authType = getAuthType(userId,groupId);
 		if(authType == null)
 		{
-			System.out.println("getAuthType failed");
+			System.out.println("configDocAuth getAuthType failed");
 			rt.setError("getAuthType Failed");
 			writeJson(rt, response);			
 			return;
@@ -1432,6 +1432,7 @@ public class ReposController extends BaseController{
 		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
 		if(docAuth == null)
 		{
+			Log.printObject("configDocAuth qDocAuth", qDocAuth);
 			qDocAuth.setType(authType);
 			qDocAuth.setPriority(priority);
 			qDocAuth.setIsAdmin(isAdmin);
@@ -1459,6 +1460,7 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
+			//Log.printObject("configDocAuth docAuth", docAuth);
 			docAuth.setIsAdmin(isAdmin);
 			docAuth.setAccess(access);
 			docAuth.setEditEn(editEn);
