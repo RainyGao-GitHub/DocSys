@@ -29,4 +29,28 @@ public class Reflect {
 	    }
 	    return null;
 	}
+	
+	public static void PrintObject(Object obj){
+		//Use Reflect to set conditions
+        Class userCla = (Class) obj.getClass();
+        /* 得到类中的所有属性集合 */
+        java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            String fieldName = f.getName();
+			try {
+				Object val = f.get(obj);
+				System.out.println("PrintObject() type:" + type + " fieldName:" + fieldName + " value:" + val);
+			} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+	        } catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+			}
+        }		
+	}
 }
