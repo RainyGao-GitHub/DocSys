@@ -9822,6 +9822,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String dbTabName = getNameByObjType(objType);
+		boolean enableLog = false;
+		if(dbTabName.equals("doc_auth"))
+		{
+			enableLog = true;
+		}	
 		
 		String sql_condition = "";
 		String sql_value="";
@@ -9843,6 +9848,11 @@ public class BaseController  extends BaseFunction{
 			sql_condition += dbField + seperator;	//不带,
 			
 			Object value = Reflect.getFieldValue(obj, field);
+			if(enableLog)
+			{
+				Log.printObject("buildInsertSqlForObject() type:" + type + " field:" + field + " value:", value);
+			}
+			
 			switch(type)
 			{			
 			case "Integer": 
