@@ -6329,11 +6329,18 @@ public class BaseController  extends BaseFunction{
 		String groupName = getGroupName(groupId);
 		if(groupName == null)
 		{
-			System.out.println("getGroupDispDocAuth() groupId:"+groupId + " 不存在");
+			System.out.println("getGroupDispDocAuth() groupId:"+groupId + " 不存在，删除reposAuth和docAuth");
 			 //删除无效权限设置
 			DocAuth qDocAuth = new DocAuth();
 			qDocAuth.setGroupId(groupId);		
+			qDocAuth.setReposId(repos.getId());		
 			reposService.deleteDocAuthSelective(qDocAuth);
+			
+			//删除无效组的所有仓库权限
+			ReposAuth qReposAuth = new ReposAuth();
+			qReposAuth.setGroupId(groupId);		
+			qReposAuth.setReposId(repos.getId());		
+			reposService.deleteReposAuthSelective(qReposAuth);
 			return null;
 		}
 			 
@@ -6378,11 +6385,18 @@ public class BaseController  extends BaseFunction{
 		String UserName = getUserName(UserID);
 		if(UserName == null)
 		{
-			 System.out.println("getUserDispDocAuth() UserID:"+UserID + " 不存在");
-			 //删除无效权限设置
+			System.out.println("getUserDispDocAuth() UserID:"+UserID + " 不存在，删除reposAuth和docAuth");
+			//删除无效用户的所有文件权限
 			DocAuth qDocAuth = new DocAuth();
-			qDocAuth.setUserId(UserID);		
+			qDocAuth.setUserId(UserID);
+			qDocAuth.setReposId(repos.getId());
 			reposService.deleteDocAuthSelective(qDocAuth);
+			
+			//删除无效用户的所有仓库权限
+			ReposAuth qReposAuth = new ReposAuth();
+			qReposAuth.setUserId(UserID);		
+			qReposAuth.setReposId(repos.getId());		
+			reposService.deleteReposAuthSelective(qReposAuth);
 			return null;
 		}
 		
@@ -6563,6 +6577,7 @@ public class BaseController  extends BaseFunction{
 	protected HashMap<Long,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
 	{
 		List <DocAuth> anyUserDocAuthList = getAuthListForAnyUser(reposID);
+		Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] anyUserDocAuthList:", anyUserDocAuthList);
 		
 		List <DocAuth> docAuthList = null;
 		if(UserID != 0)
@@ -6571,9 +6586,10 @@ public class BaseController  extends BaseFunction{
 			docAuth.setUserId(UserID);			
 			docAuth.setReposId(reposID);
 			docAuthList = reposService.getDocAuthForUser(docAuth);
+			Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] docAuthList:", docAuthList);
 		}
 		docAuthList = appendAnyUserAuthList(docAuthList, anyUserDocAuthList);	
-		Log.printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
+		Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] combined docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
@@ -6589,13 +6605,16 @@ public class BaseController  extends BaseFunction{
 	protected HashMap<Long, DocAuth> getGroupDocAuthHashMap(Integer GroupID,Integer reposID) 
 	{
 		List <DocAuth> anyUserDocAuthList = getAuthListForAnyUser(reposID);
+		Log.printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] anyUserDocAuthList:", anyUserDocAuthList);
 
 		DocAuth docAuth = new DocAuth();
 		docAuth.setGroupId(GroupID);
 		docAuth.setReposId(reposID);
 		List <DocAuth> docAuthList = reposService.getDocAuthForGroup(docAuth);
-		docAuthList = appendAnyUserAuthList(docAuthList, anyUserDocAuthList);	
 		Log.printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] docAuthList:", docAuthList);
+
+		docAuthList = appendAnyUserAuthList(docAuthList, anyUserDocAuthList);	
+		Log.printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] combined docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
@@ -6603,7 +6622,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		HashMap<Long, DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
-		Log.printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] hashMap:", hashMap);
+		//Log.printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] hashMap:", hashMap);
 		return hashMap;
 	}
 	
