@@ -6562,19 +6562,17 @@ public class BaseController  extends BaseFunction{
 	
 	protected HashMap<Long,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
 	{
-		DocAuth docAuth = new DocAuth();
-		docAuth.setUserId(UserID);			
-		docAuth.setReposId(reposID);
-	
+		List <DocAuth> anyUserDocAuthList = getAuthListForAnyUser(reposID);
+		
 		List <DocAuth> docAuthList = null;
-		if(UserID == 0)
+		if(UserID != 0)
 		{
-			docAuthList = reposService.getDocAuthForAnyUser(docAuth);
-		}
-		else
-		{
+			DocAuth docAuth = new DocAuth();
+			docAuth.setUserId(UserID);			
+			docAuth.setReposId(reposID);
 			docAuthList = reposService.getDocAuthForUser(docAuth);
 		}
+		docAuthList = appendAnyUserAuthList(docAuthList, anyUserDocAuthList);	
 		Log.printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
@@ -6586,14 +6584,17 @@ public class BaseController  extends BaseFunction{
 		//Log.printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " hashMap:", hashMap);
 		return hashMap;
 	}
-	
+
 	//获取组在仓库上所有doc的权限设置: 仅用于显示group的权限
 	protected HashMap<Long, DocAuth> getGroupDocAuthHashMap(Integer GroupID,Integer reposID) 
 	{
+		List <DocAuth> anyUserDocAuthList = getAuthListForAnyUser(reposID);
+
 		DocAuth docAuth = new DocAuth();
 		docAuth.setGroupId(GroupID);
 		docAuth.setReposId(reposID);
 		List <DocAuth> docAuthList = reposService.getDocAuthForGroup(docAuth);
+		docAuthList = appendAnyUserAuthList(docAuthList, anyUserDocAuthList);	
 		Log.printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
@@ -6604,6 +6605,45 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long, DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
 		Log.printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] hashMap:", hashMap);
 		return hashMap;
+	}
+	
+	
+	private List<DocAuth> appendAnyUserAuthList(List<DocAuth> docAuthList, List<DocAuth> anyUserDocAuthList) {
+		if(anyUserDocAuthList == null || anyUserDocAuthList.size() == 0)
+		{
+			return docAuthList;
+		}
+		
+		if(docAuthList == null)
+		{
+			docAuthList = new ArrayList<DocAuth>();
+		}
+		
+		for(int i=0; i<anyUserDocAuthList.size(); i++)
+		{
+			DocAuth anyUserDocAuth = anyUserDocAuthList.get(i);
+			if(isValidAnyUserDocAuth(anyUserDocAuth))
+			{
+				docAuthList.add(anyUserDocAuth);
+			}
+		}		
+		return docAuthList;
+	}
+
+	private boolean isValidAnyUserDocAuth(DocAuth anyUserDocAuth) {
+		if(anyUserDocAuth.getGroupId() == null || anyUserDocAuth.getGroupId() == 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	private List<DocAuth> getAuthListForAnyUser(Integer reposID) {
+		DocAuth docAuth = new DocAuth();
+		docAuth.setUserId(0);			
+		docAuth.setReposId(reposID);
+		List<DocAuth> list = reposService.getDocAuthForAnyUser(docAuth);
+		return list;
 	}
 	
 	protected Integer getAuthType(Integer userId, Integer groupId) {
