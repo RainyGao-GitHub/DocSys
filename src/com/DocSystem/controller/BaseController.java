@@ -9808,10 +9808,10 @@ public class BaseController  extends BaseFunction{
 
             
  			Object value =  getValueFromResultSet(rs, dbName, type);
- 			if(objType == DOCSYS_DOC_AUTH)
- 			{
- 				System.out.println("convertResultSetToObj() type:" + type + " name:" + name + " value:" + value); 
- 			}
+ 			//if(objType == DOCSYS_DOC_AUTH)
+ 			//{
+ 			//	System.out.println("convertResultSetToObj() type:" + type + " name:" + name + " value:" + value); 
+ 			//}
  			//System.out.println("convertResultSetToObj() type:" + type); 
          	//System.out.println("convertResultSetToObj() name:" + name); 
          	
@@ -9864,13 +9864,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String dbTabName = getNameByObjType(objType);
-		boolean enableLog = false;
-		if(dbTabName.equals("doc_auth"))
-		{
-			enableLog = true;
-			Reflect.PrintObject(obj);
-		}	
-		
 		String sql_condition = "";
 		String sql_value="";
 		List<JSONObject> paramList = buildParamListForObj(obj, objType);
@@ -9891,11 +9884,6 @@ public class BaseController  extends BaseFunction{
 			sql_condition += dbField + seperator;	//不带,
 			
 			Object value = Reflect.getFieldValue(obj, field);
-			if(enableLog)
-			{
-				Log.printObject("buildInsertSqlForObject() type:" + type + " field:" + field + " value:", value);
-			}
-			
 			switch(type)
 			{			
 			case "Integer": 
