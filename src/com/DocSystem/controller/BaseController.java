@@ -6803,7 +6803,8 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long,DocAuth> hashMap = new HashMap<Long,DocAuth>();
 		for(int i=0;i<docAuthList.size();i++)
 		{
-			DocAuth docAuth = docAuthList.get(i);			
+			DocAuth docAuth = docAuthList.get(i);
+
 			Long docId = docAuth.getDocId();
 			DocAuth hashEntry = hashMap.get(docId);
 			if(hashEntry == null)
@@ -6829,7 +6830,6 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 
-	
 	/*************************** DocSys文件操作接口 ***********************************/
 	//create Real Doc
 	protected boolean createRealDoc(Repos repos, Doc doc, ReturnAjax rt) {
@@ -9492,6 +9492,10 @@ public class BaseController  extends BaseFunction{
             // 展开结果集数据库
             while(rs.next()){
                 Object obj = createObject(rs, objType);
+                if(objType == DOCSYS_DOC_AUTH)
+                {
+                	obj = correctDocAuth((DocAuth) obj);
+                }
                 list.add(obj);
             }
             	
@@ -9521,6 +9525,41 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
+
+	private static DocAuth correctDocAuth(DocAuth obj) {
+		//任意用户权限检查
+		if(obj.getUserId() != null && obj.getUserId() == 0)
+		{
+			if(obj.getGroupId() == null)
+			{
+				return obj;
+			}
+			
+			if(obj.getGroupId() == 0)
+			{
+				obj.setGroupId(null);
+				return obj;
+			}
+			
+			obj.setUserId(null);
+			return obj;
+		}
+		
+		//用户权限检查
+		if(obj.getGroupId() == null)
+		{
+			return obj;
+		}
+		
+		//组权限检查
+		if(obj.getGroupId() == 0)
+		{
+			obj.setGroupId(null);
+			return obj;
+		}
+		
+		return obj;
+	}
 
 	public static boolean dbInsert(Object obj, int objType, String type, String url, String user, String pwd)
 	{
@@ -9767,12 +9806,15 @@ public class BaseController  extends BaseFunction{
          	String name = (String) objMember.get("name");
          	String dbName = (String) objMember.get("dbName");
 
-            //System.out.println("convertResultSetToObj() type:" + type); 
+            
+ 			Object value =  getValueFromResultSet(rs, dbName, type);
+ 			if(objType == DOCSYS_DOC_AUTH)
+ 			{
+ 				System.out.println("convertResultSetToObj() type:" + type + " name:" + name + " value:" + value); 
+ 			}
+ 			//System.out.println("convertResultSetToObj() type:" + type); 
          	//System.out.println("convertResultSetToObj() name:" + name); 
          	
- 			Object value =  getValueFromResultSet(rs, dbName, type);
-            //System.out.println("convertResultSetToObj() value:" + value); 
-
  			if(value != null)
  			{
 				if(Reflect.setFieldValue(obj, name, value) == false)
@@ -9826,6 +9868,7 @@ public class BaseController  extends BaseFunction{
 		if(dbTabName.equals("doc_auth"))
 		{
 			enableLog = true;
+			Reflect.PrintObject(obj);
 		}	
 		
 		String sql_condition = "";
