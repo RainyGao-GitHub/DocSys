@@ -1907,6 +1907,7 @@
 	function showSystemLogList(pageIndex){
 		var searchWord = $("#search-systemLogInfo").val();
 		var pageSize = gPageSize;
+		pageIndex = pageIndex ? pageIndex : 0;
 		
 		$.ajax({
 	        url : "/DocSystem/Bussiness/getSystemLogList.do",
@@ -1915,40 +1916,41 @@
 	        data : {
 	            // 新增用户名搜索条件
 	            searchWord: searchWord,
-	        	pageIndex: pageIndex ? pageIndex : 0,
+	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
 	        success : function (ret) {
-	        	//console.log("getSystemLogList ret",ret);
+	        	console.log("getSystemLogList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	SystemLogListDisplay(ret.data, pageIndex, pageSize);
-
-                    // 渲染分页
-                    var total = ret.dataEx;
-                    $("#systemLogList-pagination").pagination({
-                        /*当前页码*/
-                        currentPage: pageIndex + 1,
-                        /*总共有多少页*/
-                        totalPage: Math.ceil(total/pageSize),
-                        /*是否显示首页、尾页 true：显示 false：不显示*/
-                        isShow:true,
-                        /*分页条显示可见页码数量*/
-                        count:5,
-                        /*第一页显示文字*/
-                        homePageText:'首页',
-                        /*最后一页显示文字*/
-                        endPageText:'尾页',
-                        /*上一页显示文字*/
-                        prevPageText:'上一页',
-                        /* 下一页显示文字*/
-                        nextPageText:'下一页',
-                        /*点击翻页绑定事件*/
-                        callback: function(newPageIndex) {
-                            // 分页插件的页码从1开始，减1处理
-                            showSystemLogList(newPageIndex - 1);
-                        }
-                    });
+	            	SystemLogListDisplay(ret.data, pageIndex, pageSize, function(){
+	
+	                    // 渲染分页
+	                    var total = ret.dataEx;
+	                    $("#systemLogList-pagination").pagination({
+	                        /*当前页码*/
+	                        currentPage: pageIndex + 1,
+	                        /*总共有多少页*/
+	                        totalPage: Math.ceil(total/pageSize),
+	                        /*是否显示首页、尾页 true：显示 false：不显示*/
+	                        isShow:true,
+	                        /*分页条显示可见页码数量*/
+	                        count:5,
+	                        /*第一页显示文字*/
+	                        homePageText:'首页',
+	                        /*最后一页显示文字*/
+	                        endPageText:'尾页',
+	                        /*上一页显示文字*/
+	                        prevPageText:'上一页',
+	                        /* 下一页显示文字*/
+	                        nextPageText:'下一页',
+	                        /*点击翻页绑定事件*/
+	                        callback: function(newPageIndex) {
+	                            // 分页插件的页码从1开始，减1处理
+	                            showSystemLogList(newPageIndex - 1);
+	                        }
+	                    });
+	                });
 	            }
 	            else 
 	            {
@@ -1961,7 +1963,7 @@
 	    });
 	}
 	
-	function SystemLogListDisplay(list, pageIndex, pageSize)
+	function SystemLogListDisplay(list, pageIndex, pageSize, callback)
     {
 		var index = pageIndex ? pageIndex : 0
 		var offset = index * pageSize;
@@ -1973,7 +1975,7 @@
 			formatSystemLogContent(node);
  	    }
        	console.log("SystemLogListDisplay list", list);
-        $Func.render($("#container"),"systemLog",{"list":list});
+        $Func.render($("#container"),"systemLog",{"list":list}, callback);
     }
 	
 	function formatSystemLogContent(node)
@@ -2083,47 +2085,49 @@
 	function showOrderList(pageIndex){
 		var searchWord = $("#search-orderInfo").val();
 		var pageSize = gPageSize;
-		
+		pageIndex = pageIndex ? pageIndex : 0;
+
 		$.ajax({
 	        url : "/DocSystem/pay/getOrderList.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
 	            searchWord: searchWord,
-	        	pageIndex: pageIndex ? pageIndex : 0,
+	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
 	        success : function (ret) {
 	        	console.log("getOrderList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	OrderListDisplay(ret.data, pageIndex, pageSize);
-
-                    // 渲染分页
-                    var total = ret.dataEx;
-                    $("#orderList-pagination").pagination({
-                        /*当前页码*/
-                        currentPage: pageIndex + 1,
-                        /*总共有多少页*/
-                        totalPage: Math.ceil(total/pageSize),
-                        /*是否显示首页、尾页 true：显示 false：不显示*/
-                        isShow:true,
-                        /*分页条显示可见页码数量*/
-                        count:5,
-                        /*第一页显示文字*/
-                        homePageText:'首页',
-                        /*最后一页显示文字*/
-                        endPageText:'尾页',
-                        /*上一页显示文字*/
-                        prevPageText:'上一页',
-                        /* 下一页显示文字*/
-                        nextPageText:'下一页',
-                        /*点击翻页绑定事件*/
-                        callback: function(newPageIndex) {
-                            // 分页插件的页码从1开始，减1处理
-                            showOrderList(newPageIndex - 1);
-                        }
-                    });
+	            	OrderListDisplay(ret.data, pageIndex, pageSize, function(){
+	
+	                    // 渲染分页
+	                    var total = ret.dataEx;
+	                    $("#orderList-pagination").pagination({
+	                        /*当前页码*/
+	                        currentPage: pageIndex + 1,
+	                        /*总共有多少页*/
+	                        totalPage: Math.ceil(total/pageSize),
+	                        /*是否显示首页、尾页 true：显示 false：不显示*/
+	                        isShow:true,
+	                        /*分页条显示可见页码数量*/
+	                        count:5,
+	                        /*第一页显示文字*/
+	                        homePageText:'首页',
+	                        /*最后一页显示文字*/
+	                        endPageText:'尾页',
+	                        /*上一页显示文字*/
+	                        prevPageText:'上一页',
+	                        /* 下一页显示文字*/
+	                        nextPageText:'下一页',
+	                        /*点击翻页绑定事件*/
+	                        callback: function(newPageIndex) {
+	                            // 分页插件的页码从1开始，减1处理
+	                            showOrderList(newPageIndex - 1);
+	                        }
+	                    });
+	            	});
 	            }
 	            else 
 	            {
@@ -2136,7 +2140,7 @@
 	    });
 	}
 	
-	function OrderListDisplay(list, pageIndex, pageSize)
+	function OrderListDisplay(list, pageIndex, pageSize, callback)
     {
 		var index = pageIndex ? pageIndex : 0
 		var offset = index * pageSize;
@@ -2150,7 +2154,7 @@
     		node.formatedPayType = formatePayType(node);
 			node.showRefund = needShowRefundBtn(node);
  	    }		
-		$Func.render($("#container"),"order",{"list":list});
+		$Func.render($("#container"),"order",{"list":list}, callback);
     }
 	
 	function needShowRefundBtn(node)
@@ -2231,47 +2235,49 @@
 	function showLicenseList(pageIndex){
 		var searchWord = $("#search-licenseInfo").val();
 		var pageSize = gPageSize;
-		
+		pageIndex = pageIndex ? pageIndex : 0;
+				
 		$.ajax({
 	        url : "/DocSystem/Sales/getLicenseList.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
 	            searchWord: searchWord,
-	        	pageIndex: pageIndex ? pageIndex : 0,
+	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
 	        success : function (ret) {
 	        	console.log("getLicenseList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	LicenseListDisplay(ret.data, pageIndex, pageSize);
-
-                    // 渲染分页
-                    var total = ret.dataEx;
-                    $("#licenseList-pagination").pagination({
-                        /*当前页码*/
-                        currentPage: pageIndex + 1,
-                        /*总共有多少页*/
-                        totalPage: Math.ceil(total/pageSize),
-                        /*是否显示首页、尾页 true：显示 false：不显示*/
-                        isShow:true,
-                        /*分页条显示可见页码数量*/
-                        count:5,
-                        /*第一页显示文字*/
-                        homePageText:'首页',
-                        /*最后一页显示文字*/
-                        endPageText:'尾页',
-                        /*上一页显示文字*/
-                        prevPageText:'上一页',
-                        /* 下一页显示文字*/
-                        nextPageText:'下一页',
-                        /*点击翻页绑定事件*/
-                        callback: function(newPageIndex) {
-                            // 分页插件的页码从1开始，减1处理
-                            showLicenseList(newPageIndex - 1);
-                        }
-                    });
+	            	LicenseListDisplay(ret.data, pageIndex, pageSize, function(){
+	
+	                    // 渲染分页
+	                    var total = ret.dataEx;
+	                    $("#licenseList-pagination").pagination({
+	                        /*当前页码*/
+	                        currentPage: pageIndex + 1,
+	                        /*总共有多少页*/
+	                        totalPage: Math.ceil(total/pageSize),
+	                        /*是否显示首页、尾页 true：显示 false：不显示*/
+	                        isShow:true,
+	                        /*分页条显示可见页码数量*/
+	                        count:5,
+	                        /*第一页显示文字*/
+	                        homePageText:'首页',
+	                        /*最后一页显示文字*/
+	                        endPageText:'尾页',
+	                        /*上一页显示文字*/
+	                        prevPageText:'上一页',
+	                        /* 下一页显示文字*/
+	                        nextPageText:'下一页',
+	                        /*点击翻页绑定事件*/
+	                        callback: function(newPageIndex) {
+	                            // 分页插件的页码从1开始，减1处理
+	                            showLicenseList(newPageIndex - 1);
+	                        }
+	                    });
+	                });
 	            }
 	            else 
 	            {
@@ -2284,7 +2290,7 @@
 	    });
 	}
 	
-	function LicenseListDisplay(list, pageIndex, pageSize)
+	function LicenseListDisplay(list, pageIndex, pageSize, callback)
     {
 		var index = pageIndex ? pageIndex : 0
 		var offset = index * pageSize;
@@ -2308,7 +2314,7 @@
 				}
 			}
  	    }		
-		$Func.render($("#container"),"license",{"list":list});
+		$Func.render($("#container"),"license",{"list":list}, callback);
     }
 	
 	function downloadLicenseConfirm(id)
@@ -2427,7 +2433,8 @@
 	function showUserList(pageIndex){
 		var userName = $("#search-userName").val();
 		var pageSize = gPageSize;
-		
+		pageIndex = pageIndex ? pageIndex : 0
+				
 		$.ajax({
 	        url : "/DocSystem/Manage/getUserList.do",
 	        type : "post",
@@ -2435,40 +2442,40 @@
 	        data : {
 	            // 新增用户名搜索条件
 	            userName: userName,
-	        	pageIndex: pageIndex ? pageIndex : 0,
+	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
 	        success : function (ret) {
 	        	console.log("getUserList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	UserListDisplay(ret.data);
-
-                    // 渲染分页
-                    var total = ret.dataEx;
-                    $("#userList-pagination").pagination({
-                        /*当前页码*/
-                        currentPage: pageIndex + 1,
-                        /*总共有多少页*/
-                        totalPage: Math.ceil(total/pageSize),
-                        /*是否显示首页、尾页 true：显示 false：不显示*/
-                        isShow:true,
-                        /*分页条显示可见页码数量*/
-                        count:5,
-                        /*第一页显示文字*/
-                        homePageText:'首页',
-                        /*最后一页显示文字*/
-                        endPageText:'尾页',
-                        /*上一页显示文字*/
-                        prevPageText:'上一页',
-                        /* 下一页显示文字*/
-                        nextPageText:'下一页',
-                        /*点击翻页绑定事件*/
-                        callback: function(newPageIndex) {
-                            // 分页插件的页码从1开始，减1处理
-                            showUserList(newPageIndex - 1);
-                        }
-                    });
+	            	UserListDisplay(ret.data, function(){
+	                    // 渲染分页
+	                    var total = ret.dataEx;
+	                    $("#userList-pagination").pagination({
+	                        /*当前页码*/
+	                        currentPage: pageIndex + 1,
+	                        /*总共有多少页*/
+	                        totalPage: Math.ceil(total/pageSize),
+	                        /*是否显示首页、尾页 true：显示 false：不显示*/
+	                        isShow:true,
+	                        /*分页条显示可见页码数量*/
+	                        count:5,
+	                        /*第一页显示文字*/
+	                        homePageText:'首页',
+	                        /*最后一页显示文字*/
+	                        endPageText:'尾页',
+	                        /*上一页显示文字*/
+	                        prevPageText:'上一页',
+	                        /* 下一页显示文字*/
+	                        nextPageText:'下一页',
+	                        /*点击翻页绑定事件*/
+	                        callback: function(newPageIndex) {
+	                            // 分页插件的页码从1开始，减1处理
+	                            showUserList(newPageIndex - 1);
+	                        }
+	                    });
+	                });
 	            }
 	            else 
 	            {
@@ -2481,9 +2488,9 @@
 	    });
 	}
 	
-	function UserListDisplay(list)
+	function UserListDisplay(list, callback)
     {
-		$Func.render($("#container"),"user",{"list":list});
+		$Func.render($("#container"),"user",{"list":list}, callback);
     }
 	
 	function delUserConfirm(id)
