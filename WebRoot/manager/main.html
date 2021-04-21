@@ -2478,9 +2478,12 @@
 	
 	//成员管理
 	function showUserList(pageIndex){
+		console.log("showUserList pageIndex:" + pageIndex);
+		
 		var userName = $("#search-userName").val();
 		var pageSize = gPageSize;
-		pageIndex = pageIndex ? pageIndex : 0
+		pageIndex = pageIndex ? pageIndex : 0;
+		gPageIndex = pageIndex; //所有分页都是用的同一个gPageIndex
 				
 		$.ajax({
 	        url : "/DocSystem/Manage/getUserList.do",
@@ -2591,7 +2594,6 @@
 	//showAddUserPanel
 	function showAddUserPanel(){
 		console.log("showAddUserPanel");
-		gPageIndex = Math.floor((gTotal + 1) / gPageSize) - 1;
 		qiao.bs.dialog({
 			id: 'addUser',
 			url: 'addUser.html',
