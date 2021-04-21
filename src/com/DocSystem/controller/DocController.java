@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -4079,7 +4080,8 @@ public class DocController extends BaseController{
 		docShare.setShareId(shareId);
 		
 		String IpAddress = IPUtil.getIpAddress();
-		
+
+		String shareLink = null;
 		if(reposService.addDocShare(docShare) == 0)
 		{
 			Log.docSysErrorLog("创建文件分享失败！", rt);
@@ -4087,11 +4089,72 @@ public class DocController extends BaseController{
 		}
 		else
 		{
+			shareLink = buildShareLink(request, IpAddress, reposId, shareId);
+			docShare.shareLink = shareLink;
 			rt.setData(docShare);
 			rt.setDataEx(IpAddress);
+			
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "成功", repos, doc, null, "");	
 		}
 		writeJson(rt, response);
+	}
+
+	private String buildShareLink(HttpServletRequest request, String ipAddress, Integer reposId, Integer shareId) {
+		URLInfo urlInfo = getUrlInfoFromRequest(request);
+		String host = urlInfo.host;
+	 	if(host.equals("localhost") && ipAddress != null && !ipAddress.isEmpty())
+	 	{
+	 		host = 	ipAddress;
+	 	}
+	 	
+	 	String link = null;
+	 	if(urlInfo.port == null || urlInfo.port.isEmpty())
+	 	{
+	 		link = urlInfo.prefix + host + "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + shareId;        			
+	 	}
+	 	else
+	 	{
+	 		link = urlInfo.prefix + host + ":" + urlInfo.port + "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + shareId;        			
+	 	}
+	 	return link;
+	}
+
+	private URLInfo getUrlInfoFromRequest(HttpServletRequest request) {
+		String url = getUrlFromRequest(request);
+		Log.info("getUrlInfoFromRequest()", "url:" + url);
+		
+		URLInfo urlInfo = new URLInfo();
+		
+	    String subStrs1[] = url.split("://");
+	    if(subStrs1.length < 2)
+	    {
+	    	Log.info("getUrlInfoFromRequest()", "非法URL");
+	    	return null;
+	    }
+	    
+	    //set prefix
+	    urlInfo.prefix = subStrs1[0] + "://";
+	    String hostWithPortAndParams = subStrs1[1];	    
+	    String subStrs2[] = hostWithPortAndParams.split("/");
+	    String hostWithPort = subStrs2[0];
+	    
+	    String subStrs3[] = hostWithPort.split(":");
+	    if(subStrs3.length < 2)
+	    {
+	    	urlInfo.host = subStrs3[0];
+	    }
+	    else
+	    {
+	    	urlInfo.host = subStrs3[0];
+	    	urlInfo.port = subStrs3[1];  	
+	    }
+	    Log.printObject("getUrlInfoFromRequest() urlInfo:", urlInfo);
+		return urlInfo;
+	}
+
+	private String getUrlFromRequest(HttpServletRequest request) {
+        String url = request.getRequestURL().toString();
+        return url;
 	}
 
 	private Integer buildShareId(DocShare docShare) {

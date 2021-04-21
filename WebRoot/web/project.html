@@ -4823,7 +4823,7 @@
             	{
          			var docShare = ret.data;
          			var IpAddress = ret.dataEx;
-         			var url = getDocShareLink(reposId,docShare,IpAddress);
+         			var url = docShare.shareLink; //getDocShareLink(reposId,docShare,IpAddress);
          	 		console.log(url);
          	 		
          	 		showDocSharePanel(docShare, name, url);

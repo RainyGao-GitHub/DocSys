@@ -63,6 +63,6 @@ public class Log {
 	}
 
 	public static void info(String Head, String msg) {
-		System.out.println(Head + msg);
+		System.out.println(Head + " " + msg);
 	}
 }
