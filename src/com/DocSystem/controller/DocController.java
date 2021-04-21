@@ -4072,6 +4072,7 @@ public class DocController extends BaseController{
 		
 		DocShare docShare = new DocShare();
 		docShare.setVid(doc.getVid());
+		docShare.setReposName(repos.getName());
 		docShare.setDocId(doc.getDocId());
 		docShare.setPath(doc.getPath());
 		docShare.setName(doc.getName());
@@ -4291,7 +4292,7 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 		
-		addSystemLog(request, reposAccess.getAccessUser(), "updateDocShare", "updateDocShare", "修改文件分享", "成功", null, null, null, docShare.getReposName() + "::" + docShare.getPath() + docShare.getName());	
+		addSystemLog(request, reposAccess.getAccessUser(), "updateDocShare", "updateDocShare", "修改文件分享", "成功", null, null, null, docShare.getVid() + "::" + docShare.getPath() + docShare.getName());	
 	}
 	
 	/****************   delete a DocShare ******************/
@@ -4316,16 +4317,24 @@ public class DocController extends BaseController{
 			return;				
 		}
 		
-		DocShare docShare = new DocShare();
-		docShare.setShareId(shareId);				
-		if(reposService.deleteDocShare(docShare) == 0)
+		DocShare docShare = getDocShare(shareId);
+		if(docShare == null)
+		{
+			Log.docSysErrorLog("分享信息不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		DocShare qDocShare = new DocShare();
+		qDocShare.setShareId(shareId);				
+		if(reposService.deleteDocShare(qDocShare) == 0)
 		{
 			Log.docSysErrorLog("删除文件分享失败！", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocShare", "deleteDocShare", "删除文件分享", "失败", null, null, null, docShare.getReposName() + "::" + docShare.getPath() + docShare.getName());	
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocShare", "deleteDocShare", "删除文件分享", "失败", null, null, null, docShare.getVid() + "::" + docShare.getPath() + docShare.getName());	
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocShare", "deleteDocShare", "删除文件分享", "成功", null, null, null, docShare.getReposName() + "::" + docShare.getPath() + docShare.getName());	
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocShare", "deleteDocShare", "删除文件分享", "成功", null, null, null, docShare.getVid() + "::" + docShare.getPath() + docShare.getName());	
 		}
 		writeJson(rt, response);
 	}
