@@ -186,10 +186,10 @@
 </div>
 
 <script type="application/javascript">
-	//通用函数接口
-	function showErrorMessage($msg) {
-		qiao.bs.alert($msg);
-	}
+  //通用函数接口
+  function showErrorMessage($msg) {
+	 qiao.bs.alert($msg);
+  }
 	
   function addToUrlParam(key,value,url){
     var ref = "";
@@ -2260,6 +2260,7 @@
                    	showOrderList(pageIndex);
                     showErrorMessage("退款成功");
                 }else {
+                   	showOrderList(pageIndex);
                 	showErrorMessage("退款失败：" + ret.msgInfo);
                 }
             },
@@ -2770,11 +2771,10 @@
 		});
 	}
 
-	function showEditUserPanel(e, id)
+	function showEditUserPanel(e, id, pageIndex, index)
 	{
-		console.log("showEditUserPanel");
-		
-		console.log("showEditUserPanel() " + id);
+		console.log("showEditUserPanel() id:" + id + " pageIndex:" + pageIndex);
+		gPageIndex = pageIndex;
 		//console.log("this", this); //this is not correct, so i get the current item from event
 		//alert($(this).attr("data-id"));
 		//console.log("event", e);
@@ -2822,11 +2822,11 @@
 	  return createPassword;
 	}
 	
-	function showResetPwdPanel(e, id)
+	function showResetPwdPanel(e, id, pageIndex, index)
 	{
-		console.log("showResetPwdPanel");
+		console.log("showResetPwdPanel() id:" + id + " pageIndex:" + pageIndex);
+		gPageIndex = pageIndex;
 		
-		console.log("showResetPwdPanel() " + id);
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
 		var userId = trObj.children("td:eq(0)").text();
