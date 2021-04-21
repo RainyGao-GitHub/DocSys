@@ -4097,6 +4097,57 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "成功", repos, doc, null, "");	
 		}
 		writeJson(rt, response);
+		
+		if(shareLink != null)
+		{
+			sendDocShareNotify(docShare, reposAccess.getAccessUser());
+		}
+	}
+
+	private void sendDocShareNotify(DocShare docShare, User createUser) {
+		
+		User qUser = new User();
+		qUser.setName(createUser.getName());
+		qUser.setId(createUser.getId());
+		List<User> uList = userService.getUserListByUserInfo(qUser);
+		if(uList == null || uList.size() == 0)
+		{
+			Log.info("sendDocShareNotify()", "用户" + createUser.getName() + " 不存在");
+			return;
+		}
+
+		User emailToUser = uList.get(0);
+		String email = emailToUser.getEmail();
+		if(email == null || email.isEmpty())
+		{
+			Log.info("sendDocShareNotify()", "用户邮箱未设置");
+			return;
+		}		
+		
+		String content = 
+				"尊敬的MxsDoc用户："
+				+ "<br>"
+				+ "<br>"
+				+ "[" + createUser.getName() + "]创建了文件分享！"
+				+ "<br>"
+				+ "<br>"
+				+ "<a href='" + docShare.shareLink + "' "
+				+ "style='width:50px; background: #0287c9; border: 10px solid #0287c9; border-left-width:36px; border-right-width:36px; padding: 0 10px; color:#ffffff!important; font-family: Verdana; font-size: 12px; text-align: center; text-decoration: none!important; text-decoration:none; text-transform:uppercase; display: block; font-weight: bold;' class='prods-left-in-cart-button-a' rel='noopener' target='_blank'>"
+				+ "<font color=\"#FFFFFF\">点击链接访问</font></a>"
+				+ "<br>"
+				+ "<br>"
+				+ "如有任何问题，请联系 "
+				+ "<a href='mailto:helper@gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;' rel='noopener' target='_blank'>helper@gofreeteam.com</a>"
+				+ "<br>"
+				+ "<br>"
+				+ "谢谢,"
+				+ "<br>"
+				+ "<strong>MxsDoc团队</strong>"
+				+ "<br>"
+				+ "<a href='dw.gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;'>dw.gofreeteam.com</a>";
+
+		ReturnAjax rt = new ReturnAjax();
+		emailService.sendEmail(rt, email, content);
 	}
 
 	private String buildShareLink(HttpServletRequest request, String ipAddress, Integer reposId, Integer shareId) {
