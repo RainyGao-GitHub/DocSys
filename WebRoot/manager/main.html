@@ -1970,6 +1970,7 @@
        	for(var i=0; i<list.length; i++)
  	    {
        		var node = list[i];
+    	    node.pageIndex = pageIndex;
        		node.index = i + offset;
 			node.formatedTime = formatTime(node.time);
 			formatSystemLogContent(node);
@@ -2073,9 +2074,9 @@
 		}
     }
 	
-	function delSystemLogConfirm(id, time)
+	function delSystemLogConfirm(id, time, pageIndex, index)
 	{	
-		console.log("delSystemLogConfirm");
+		console.log("delSystemLogConfirm pageIndex:" + pageIndex);
 		qiao.bs.confirm({
 			id: "delSystemLogConfirm",
 	        title: "删除日志",
@@ -2083,12 +2084,13 @@
 	        okbtn: "删除",
 	        qubtn: "取消",
 	    },function () {
-	    	deleteSystemLog(id, time);
+	    	deleteSystemLog(id, time, pageIndex, index);
 	    	return true;   
 	    });
 	}
 	
-	function deleteSystemLog(id, time){
+	function deleteSystemLog(id, time, pageIndex, index){
+		console.log("deleteSystemLog pageIndex:" + pageIndex);
         $.ajax({
             url : "/DocSystem/Bussiness/deleteSystemLog.do",
             type : "post",
@@ -2099,7 +2101,11 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                   	showSystemLogList();	//刷新list
+                	//if(index == 0 && pageIndex != 0)
+                	//{
+                	//	pageIndex -= 1;
+                	//}
+                	showSystemLogList(pageIndex);	//刷新list
                     showErrorMessage("删除成功");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
@@ -2178,7 +2184,8 @@
        	for(var i=0; i<list.length; i++)
  	    {
        		var node = list[i];
-      		node.index = i + offset;
+    	    node.pageIndex = pageIndex;
+    	 	node.index = i + offset;
     		node.createDate = formatTime(node.createTime);
     		node.formatedState = formateOrderSatus(node);
     		node.formatedPayType = formatePayType(node);
@@ -2226,9 +2233,9 @@
 		return node.orderStatus;
 	}
 	
-	function refundOrderConfirm(orderNo)
+	function refundOrderConfirm(orderNo, pageIndex, index)
 	{	
-		console.log("refundLicenseConfirm");
+		console.log("refundLicenseConfirm pageIndex:" + pageIndex);
 		qiao.bs.confirm({
 			id: "refundLicenseConfirm",
 	        title: "退款",
@@ -2236,20 +2243,21 @@
 	        okbtn: "退款",
 	        qubtn: "取消",
 	    },function () {
-	    	refundOrder(orderNo);
+	    	refundOrder(orderNo, pageIndex, index);
 	    	return true;   
 	    });
 	}
 	
-	function refundOrder(orderNo){
-        $.ajax({
+	function refundOrder(orderNo, pageIndex, index){
+		console.log("refundOrder pageIndex:" + pageIndex);
+		$.ajax({
             url : "/DocSystem/pay/refund/" + orderNo,
             type : "post",
             dataType : "json",
             data : {},
             success : function (ret) {
                 if( "ok" == ret.status ){
-                   	showOrderList();	//刷新UserList
+                   	showOrderList(pageIndex);
                     showErrorMessage("退款成功");
                 }else {
                 	showErrorMessage("退款失败：" + ret.msgInfo);
@@ -2328,6 +2336,7 @@
        	for(var i=0; i<list.length; i++)
  	    {
        		var node = list[i];
+    	    node.pageIndex = pageIndex;
       		node.index = i + offset;
     		node.createDate = formatTime(node.createTime);
 			node.expireDate = "长期";
@@ -2384,9 +2393,9 @@
         });
 	}
 	
-	function delLicenseConfirm(id)
+	function delLicenseConfirm(id, pageIndex, index)
 	{	
-		console.log("delLicenseConfirm");
+		console.log("delLicenseConfirm pageIndex:" + pageIndex);
 		qiao.bs.confirm({
 			id: "delLicenseConfirm",
 	        title: "删除证书",
@@ -2394,13 +2403,14 @@
 	        okbtn: "删除",
 	        qubtn: "取消",
 	    },function () {
-	    	delLicense(id);
+	    	delLicense(id, pageIndex, index);
 	    	return true;   
 	    });
 	}
 	
-	function delLicense(id){
-        $.ajax({
+	function delLicense(id, pageIndex, index){
+		console.log("delLicense pageIndex:" + pageIndex);
+		$.ajax({
             url : "/DocSystem/Sales/deleteLicense.do",
             type : "post",
             dataType : "json",
@@ -2409,7 +2419,11 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                   	showLicenseList();	//刷新UserList
+                	//if(index == 0 && pageIndex != 0)
+                	//{
+                	//	pageIndex -= 1;
+                	//}
+                   	showLicenseList(pageIndex);
                     showErrorMessage("删除成功");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
@@ -2421,9 +2435,9 @@
         });
 	}
 	
-	function deperacateLicenseConfirm(id)
+	function deperacateLicenseConfirm(id, pageIndex)
 	{	
-		console.log("deperacateLicenseConfirm");
+		console.log("deperacateLicenseConfirm pageIndex:" + pageIndex);
 		qiao.bs.confirm({
 			id: "deperacateLicenseConfirm",
 	        title: "作废证书",
@@ -2431,13 +2445,14 @@
 	        okbtn: "作废",
 	        qubtn: "取消",
 	    },function () {
-	    	deperacateLicense(id);
+	    	deperacateLicense(id, pageIndex);
 	    	return true;   
 	    });
 	}
 	
-	function deperacateLicense(id){
-        $.ajax({
+	function deperacateLicense(id, pageIndex){
+		console.log("deperacateLicense pageIndex:" + pageIndex);
+		$.ajax({
             url : "/DocSystem/Sales/deperacateLicense.do",
             type : "post",
             dataType : "json",
@@ -2446,7 +2461,7 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                   	showLicenseList();	//刷新UserList
+                   	showLicenseList(pageIndex);
                     showErrorMessage("证书已作废");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);
@@ -2479,7 +2494,7 @@
 	        	console.log("getUserList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	UserListDisplay(ret.data, function(){
+	            	UserListDisplay(ret.data, pageIndex, function(){
 	                    // 渲染分页
 	                    var total = ret.dataEx;
 	                    $("#userList-pagination").pagination({
@@ -2518,12 +2533,17 @@
 	    });
 	}
 	
-	function UserListDisplay(list, callback)
+	function UserListDisplay(list, pageIndex, callback)
     {
+	    for(var i=0; i<list.length; i++)
+	 	{
+	    	var node = list[i];
+	       	node.pageIndex = pageIndex;
+	 	}
 		$Func.render($("#container"),"user",{"list":list}, callback);
     }
 	
-	function delUserConfirm(id)
+	function delUserConfirm(id, pageIndex, index)
 	{	
 		console.log("delUserConfirm");
 		qiao.bs.confirm({
@@ -2533,12 +2553,13 @@
 	        okbtn: "删除",
 	        qubtn: "取消",
 	    },function () {
-	    	delUser(id);
+	    	delUser(id, pageIndex, index);
 	    	return true;   
 	    });
 	}
 	
-	function delUser(id){
+	function delUser(id, pageIndex, index){
+		console.log("delUser pageIndex:" + pageIndex);
         $.ajax({
             url : "/DocSystem/Manage/delUser.do",
             type : "post",
@@ -2548,7 +2569,11 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                   	showUserList();	//刷新UserList
+                   	//if(index == 0 && pageIndex != 0)
+                   	//{
+                   	//	pageIndex -= 1;
+                   	//}
+                	showUserList(pageIndex);	//刷新UserList
                     showErrorMessage("删除成功");
                 }else {
                 	showErrorMessage("错误：" + ret.msgInfo);

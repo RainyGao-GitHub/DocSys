@@ -43,8 +43,8 @@
                     <td>{{value.formatedState}}</td>
                     <td class="edit">
                       <button onclick="downloadLicenseConfirm('{{value.id}}')" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">下载</button>
-                      <button onclick="deperacateLicenseConfirm('{{value.id}}')" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">作废</button>
-                      <button onclick="delLicenseConfirm('{{value.id}}')" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
+                      <button onclick="deperacateLicenseConfirm('{{value.id}}',{{value.pageIndex}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">作废</button>
+                      <button onclick="delLicenseConfirm('{{value.id}}',{{value.pageIndex}},{{i}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
                     </td>
                   </tr>
                 {{/each}}
