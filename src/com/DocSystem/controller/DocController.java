@@ -1161,6 +1161,7 @@ public class DocController extends BaseController{
 					deletePreviewFile(doc);
 				}
 			}
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, "");	
 			return;
 		}
 		else
@@ -1168,6 +1169,7 @@ public class DocController extends BaseController{
 			Log.docSysErrorLog("文件上传失败！", rt);
 		}
 		writeJson(rt, response);
+		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, "");	
 	}
 	
 	/****************   Upload a Picture for Markdown ******************/
@@ -1265,6 +1267,8 @@ public class DocController extends BaseController{
 		res.put("success", 1);
 		res.put("message", "upload success!");
 		writeJson(res,response);
+		
+		addSystemLog(request, null, "uploadMarkdownPic", "uploadMarkdownPic", "上传备注图片", "成功",  repos, curDoc, null, "");			
 	}
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
@@ -1341,6 +1345,9 @@ public class DocController extends BaseController{
 			}
 			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 			writeJson(rt, response);
+	
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "成功",  repos, doc, null, "");			
+
 			if(ret)
 			{
 				deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
@@ -1355,7 +1362,9 @@ public class DocController extends BaseController{
 			}
 			ret = updateVirualDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 			writeJson(rt, response);
-			
+
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", "成功",  repos, doc, null, "");			
+
 			if(ret)
 			{
 				deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
@@ -3163,6 +3172,8 @@ public class DocController extends BaseController{
 		System.out.println("lockDoc : " + doc.getName() + " success");
 		rt.setData(doc);
 		writeJson(rt, response);	
+		
+		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件", "成功", repos, doc, null, "");	
 	}
 	
 	/****************   SyncLock.unlock a Doc ******************/
@@ -3226,6 +3237,8 @@ public class DocController extends BaseController{
 		System.out.println("SyncLock.unlockDoc : " + doc.getName() + " success");
 		rt.setData(doc);
 		writeJson(rt, response);	
+
+		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "解锁文件", "成功", repos, doc, null, "");	
 	}
 	
 	/****************   get Document History (logList) ******************/
@@ -3519,7 +3532,9 @@ public class DocController extends BaseController{
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), userTmpDir, targetName);		
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);
-		writeJson(rt, response);			
+		writeJson(rt, response);	
+		
+		addSystemLog(request, reposAccess.getAccessUser(), "downloadHistoryDocPrepare", "downloadHistoryDocPrepare", "下载历史文件", "成功", repos, doc, null, "历史版本:" + commitId);	
 	}
 
 	private void buildDownloadList(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> downloadList) 
@@ -3743,6 +3758,8 @@ public class DocController extends BaseController{
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		writeJson(rt, response);
+		
+		addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, "历史版本:" + commitId);	
 	}
 	
 	/****************   set  Doc Access PWD ******************/
@@ -3798,6 +3815,10 @@ public class DocController extends BaseController{
 		if(setDocPwd(repos, doc, pwd) == false)
 		{
 			rt.setError("您无权访问该文件，请联系管理员");			
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "setDocPwd", "setDocPwd", "设置文件访问密码", "成功", repos, doc, null, "");	
 		}
 		writeJson(rt, response);
 	}
@@ -4269,6 +4290,8 @@ public class DocController extends BaseController{
 			rt.setData(docShare);
 		}
 		writeJson(rt, response);
+		
+		addSystemLog(request, reposAccess.getAccessUser(), "updateDocShare", "updateDocShare", "修改文件分享", "成功", null, null, null, docShare.getReposName() + "::" + docShare.getPath() + docShare.getName());	
 	}
 	
 	/****************   delete a DocShare ******************/
@@ -4298,6 +4321,11 @@ public class DocController extends BaseController{
 		if(reposService.deleteDocShare(docShare) == 0)
 		{
 			Log.docSysErrorLog("删除文件分享失败！", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocShare", "deleteDocShare", "删除文件分享", "失败", null, null, null, docShare.getReposName() + "::" + docShare.getPath() + docShare.getName());	
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocShare", "deleteDocShare", "删除文件分享", "成功", null, null, null, docShare.getReposName() + "::" + docShare.getPath() + docShare.getName());	
 		}
 		writeJson(rt, response);
 	}
