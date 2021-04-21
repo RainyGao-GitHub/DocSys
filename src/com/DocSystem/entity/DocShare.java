@@ -33,6 +33,8 @@ public class DocShare {
 
 	private String serverIp; //服务器IP地址
 
+	public String shareLink;
+
     public Integer getId() {
         return id;
     }
