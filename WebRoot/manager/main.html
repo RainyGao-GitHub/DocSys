@@ -225,6 +225,7 @@
 <script type="application/javascript">
 	var gPageIndex = 0;
 	var gPageSize = 15;
+	var gTotal = 0;
 
 	pageInit();
 	
@@ -2498,6 +2499,7 @@
 	            	UserListDisplay(ret.data, pageIndex, function(){
 	                    // 渲染分页
 	                    var total = ret.dataEx;
+	                    gTotal = total;
 	                    $("#userList-pagination").pagination({
 	                        /*当前页码*/
 	                        currentPage: pageIndex + 1,
@@ -2589,6 +2591,7 @@
 	//showAddUserPanel
 	function showAddUserPanel(){
 		console.log("showAddUserPanel");
+		gPageIndex = Math.floor((gTotal + 1) / gPageSize) - 1;
 		qiao.bs.dialog({
 			id: 'addUser',
 			url: 'addUser.html',
