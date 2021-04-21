@@ -1188,6 +1188,13 @@ public class ManageController extends BaseController{
 		}
 		
 		Integer userId = user.getId();
+		if(userId == null)
+		{
+			Log.docSysErrorLog("用户ID不能为空", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
 		String userName = user.getName();
 		Integer type = user.getType();
 		String pwd = user.getPwd();
@@ -1197,7 +1204,7 @@ public class ManageController extends BaseController{
 		//检查是否越权设置
 		if(type > login_user.getType())
 		{
-			Log.docSysErrorLog("danger#越权操作！", rt);
+			Log.docSysErrorLog("越权操作：您无权设置该用户等级！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1206,25 +1213,25 @@ public class ManageController extends BaseController{
 		User tempUser  = userService.getUser(userId);
 		if(tempUser == null)
 		{
-			Log.docSysErrorLog("danger#用户不存在！", rt);
+			Log.docSysErrorLog("用户不存在！", rt);
 			writeJson(rt, response);
 			return;	
 		}
-		
-		if(tempUser.getType() >= login_user.getType())
+
+		if(tempUser.getType() > login_user.getType())
 		{
-			Log.docSysErrorLog("danger#越权操作！", rt);
+			Log.docSysErrorLog("越权操作：您无权修改高级别用户的设置！", rt);
 			writeJson(rt, response);
 			return;			
 		}
-		
-		if(userId == null)
+
+		if(tempUser.getType() == login_user.getType() && tempUser.getId() != login_user.getId())
 		{
-			Log.docSysErrorLog("用户ID不能为空", rt);
+			Log.docSysErrorLog("越权操作：您无权修改同级别用户的设置！", rt);
 			writeJson(rt, response);
-			return;
+			return;			
 		}
-		
+
 		//检查用户名是否有改动
 		if(user.getName() != null)
 		{
@@ -1311,13 +1318,20 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//不得修改同级别或高级别用户的信息
+		//不得修改同级别或高级别用户的密码
 		if(userId != login_user.getId())
 		{
 			User tempUser  = userService.getUser(userId);
-			if(tempUser.getType() >= login_user.getType())
+			if(tempUser.getType() > login_user.getType())
 			{
-				Log.docSysErrorLog("danger#越权操作！", rt);
+				Log.docSysErrorLog("越权操作：您无权修改高级别用户的密码！", rt);
+				writeJson(rt, response);
+				return;			
+			}
+			
+			if(tempUser.getType() == login_user.getType())
+			{
+				Log.docSysErrorLog("越权操作：您无权修改同级别用户的密码！", rt);
 				writeJson(rt, response);
 				return;			
 			}
@@ -1366,9 +1380,39 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		
+		if(userId == null)
+		{
+			Log.docSysErrorLog("用户ID不能为空", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//不得删除同级别或高级别用户
+		User tempUser  = userService.getUser(userId);
+		if(tempUser == null)
+		{
+			Log.docSysErrorLog("用户不存在！", rt);
+			writeJson(rt, response);
+			return;	
+		}
+
+		if(tempUser.getType() > login_user.getType())
+		{
+			Log.docSysErrorLog("越权操作：您无权删除高级别用户！", rt);
+			writeJson(rt, response);
+			return;			
+		}
+
+		if(tempUser.getType() == login_user.getType() && tempUser.getId() != login_user.getId())
+		{
+			Log.docSysErrorLog("越权操作：您无权删除同级别用户！", rt);
+			writeJson(rt, response);
+			return;			
+		}		
+		
 		if(userService.delUser(userId) == 0)
 		{
-			Log.docSysErrorLog("Failed to delete User in DB", rt);
+			Log.docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
 			return;		
 		}
