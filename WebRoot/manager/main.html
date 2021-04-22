@@ -2502,7 +2502,7 @@
 	        	console.log("getUserList ret",ret);
 	            if( "ok" == ret.status )
 	            {
-	            	UserListDisplay(ret.data, pageIndex, function(){
+	            	UserListDisplay(ret.data, pageIndex, pageSize, function(){
 	                    // 渲染分页
 	                    var total = ret.dataEx;
 	                    gTotal = total;
@@ -2542,12 +2542,16 @@
 	    });
 	}
 	
-	function UserListDisplay(list, pageIndex, callback)
+	function UserListDisplay(list, pageIndex, pageSize, callback)
     {
-	    for(var i=0; i<list.length; i++)
+		var index = pageIndex ? pageIndex : 0
+		var offset = index * pageSize;
+				       	
+		for(var i=0; i<list.length; i++)
 	 	{
 	    	var node = list[i];
 	       	node.pageIndex = pageIndex;
+      		node.index = i + offset;
 	 	}
 		$Func.render($("#container"),"user",{"list":list}, callback);
     }
