@@ -343,6 +343,7 @@
 	    switch ( curPath ){
 	        case "user":
 	            title = "用户管理";
+	            userSearchWord = "";	//清除搜索关键字
 	            showUserList();
 	            $("#nav li[data-eb-params=user]>a").addClass("open");
 	            break;
@@ -359,6 +360,7 @@
 	        case "systemLog":
 	            title = "日志管理";
 	            $("#nav li[data-eb-params=systemLog]>a").addClass("open");
+	            systemLogSearchWord = "";	//清除搜索关键字
 	            showSystemLogList();
 	            break;
 	        case "system":
@@ -1904,9 +1906,14 @@
 		xhr.send(form);
 	}
 	
-	//证书管理
+	var systemLogSearchWord = "";
+	function searchSystemLog()
+	{
+		systemLogSearchWord = $("#search-systemLog").val();
+		showSystemLogList();
+	}
+	
 	function showSystemLogList(pageIndex){
-		var searchWord = $("#search-systemLogInfo").val();
 		var pageSize = gPageSize;
 		pageIndex = pageIndex ? pageIndex : 0;
 		gPageIndex = pageIndex;
@@ -1916,8 +1923,7 @@
 	        type : "post",
 	        dataType : "json",
 	        data : {
-	            // 新增用户名搜索条件
-	            searchWord: searchWord,
+	            searchWord: systemLogSearchWord,
 	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
@@ -2480,10 +2486,16 @@
 	
 	
 	//成员管理
+    var userSearchWord = "";	//清除搜索关键字
+	function searchUser()
+	{
+		userSearchWord = $("#search-userName").val();
+		showUserList();
+	}
+    
 	function showUserList(pageIndex){
 		console.log("showUserList pageIndex:" + pageIndex);
 		
-		var userName = $("#search-userName").val();
 		var pageSize = gPageSize;
 		pageIndex = pageIndex ? pageIndex : 0;
 		gPageIndex = pageIndex; //所有分页都是用的同一个gPageIndex
@@ -2494,7 +2506,7 @@
 	        dataType : "json",
 	        data : {
 	            // 新增用户名搜索条件
-	            userName: userName,
+	            userName: userSearchWord,
 	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
