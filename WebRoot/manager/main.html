@@ -1909,6 +1909,7 @@
 		var searchWord = $("#search-systemLogInfo").val();
 		var pageSize = gPageSize;
 		pageIndex = pageIndex ? pageIndex : 0;
+		gPageIndex = pageIndex;
 		
 		$.ajax({
 	        url : "/DocSystem/Bussiness/getSystemLogList.do",
@@ -2123,6 +2124,7 @@
 		var searchWord = $("#search-orderInfo").val();
 		var pageSize = gPageSize;
 		pageIndex = pageIndex ? pageIndex : 0;
+		gPageIndex = pageIndex;
 
 		$.ajax({
 	        url : "/DocSystem/pay/getOrderList.do",
@@ -2276,7 +2278,8 @@
 		var searchWord = $("#search-licenseInfo").val();
 		var pageSize = gPageSize;
 		pageIndex = pageIndex ? pageIndex : 0;
-				
+		gPageIndex = pageIndex;
+		
 		$.ajax({
 	        url : "/DocSystem/Sales/getLicenseList.do",
 	        type : "post",

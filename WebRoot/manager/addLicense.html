@@ -52,7 +52,7 @@
         		$(obj).attr("disabled",false);
 
                 if( "ok" == ret.status ){
-                	showLicenseList();	//刷新LicenseList
+                	showLicenseList(gPageIndex);	//刷新LicenseList
             	    console.log("generateLicense Ok:",ret);        	   		
 	            	window.location.href = ret.data;
 	            	showErrorMessage("新增成功");
