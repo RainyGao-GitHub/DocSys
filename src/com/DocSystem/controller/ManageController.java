@@ -2,6 +2,7 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
+import util.LuceneUtil.LuceneUtil2;
+
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
@@ -35,6 +39,8 @@ import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.QueryCondition;
+import com.DocSystem.common.QueryResult;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.controller.BaseController;
 
@@ -959,7 +965,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("\n****************** getUserList.do ***********************");
 
-		System.out.println("getUserList() userName:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
+		System.out.println("getUserList() searchWord:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		ReturnAjax rt = new ReturnAjax();
 		if(adminAccessCheck(null, null, session, rt) == false)
 		{
@@ -972,24 +978,43 @@ public class ManageController extends BaseController{
 		{
 			user = new User();
 			user.setName(userName);
+			user.setRealName(userName);
+			user.setNickName(userName);
+			user.setEmail(userName);
+			user.setTel(userName);
 		}
 		
 		//List <User> UserList = userService.geAllUsers();
-		HashMap<String, String> param = buildQueryParamForObj(user, DOCSYS_USER, pageIndex, pageSize);
-		Integer total = userService.getCountWithParam(param);
-		List <User> UserList = userService.getUserListWithParam(param);
-		
-		System.out.println("getUserList() total:" + total);
+		QueryResult queryResult = new QueryResult();
+		List <User> UserList = getUserListOnPage(user, pageIndex, pageSize, queryResult);
 		
 		rt.setData(UserList);
-		rt.setDataEx(total);
+		rt.setDataEx(queryResult.total);
 		writeJson(rt, response);
 	}
 
-	private HashMap<String, String> buildQueryParamForObj(Object obj, int objType, Integer pageIndex, Integer pageSize) {
+	private List<User> getUserListOnPage(User user, Integer pageIndex, Integer pageSize, QueryResult queryResult) {
+		HashMap<String, String> param = buildQueryParamForObj(user, pageIndex, pageSize);
+		
+		List <User> list = null;
+		if(user != null)
+		{
+			Integer total = userService.getCountWithParamLike(param);
+			queryResult.total = total;
+			list = userService.getUserListWithParamLike(param);		
+		}
+		else
+		{
+			Integer total = userService.getCountWithParam(param);
+			queryResult.total = total;
+			list = userService.getUserListWithParam(param);
+		}
+		queryResult.result = list;
+		return list;
+	}
+
+	private HashMap<String, String> buildQueryParamForObj(User obj, Integer pageIndex, Integer pageSize) {
 		HashMap<String, String> param = new HashMap<String,String>();
-		JSONArray ObjMemberList = getObjMemberList(objType);
-		System.out.println("buildQueryParamForObj pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		if(pageIndex != null && pageSize != null)
 		{
 			String start = pageIndex*pageSize + "";
@@ -1004,30 +1029,34 @@ public class ManageController extends BaseController{
 			return param;
 		}
 		
-		if(ObjMemberList == null)
-		{
-			return param;
-		}
-			
-		for(int i=0; i<ObjMemberList.size(); i++)
-		{
-            JSONObject objMember = (JSONObject)ObjMemberList.get(i);
-        	String name = (String) objMember.get("name");
-              
- 			Object value = null;
-			try {
-				value = Reflect.getFieldValue(obj, name);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return param;
-			}
-			
-			if(value != null)
+		//Use Reflect to set conditions
+        Class userCla = (Class) obj.getClass();
+        /* 得到类中的所有属性集合 */
+        java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = LuceneUtil2.getFieldType(type);
+			if(fieldType != null)	//only support the field string\long\int\digital type
 			{
-				param.put(name, value + "");
-			}			
-		}
-		
+	            String fieldName = f.getName();
+				try {
+					Object val = f.get(obj);
+					if(val != null)
+					{
+						param.put(fieldName, val+"");
+					}
+	            } catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+        }
 		return param;
 	}
 	
