@@ -377,11 +377,13 @@
 	        case "license":
 	            title = "证书管理";
 	            $("#nav li[data-eb-params=license]>a").addClass("open");
+	            licenseSearchWord = "";
 	            showLicenseList();
 	            break;
 	        case "order":
 	            title = "订单管理";
 	            $("#nav li[data-eb-params=order]>a").addClass("open");
+	            orderSearchWord = "";
 	            showOrderList();
 	            break;
 	    }
@@ -2125,9 +2127,13 @@
         });
 	}
 	
-	//订单管理
+	var orderSearchWord = "";
+	function searchOrder()
+	{
+		orderSearchWord = $("#search-order").val();		
+		showOrderList();		
+	}
 	function showOrderList(pageIndex){
-		var searchWord = $("#search-orderInfo").val();
 		var pageSize = gPageSize;
 		pageIndex = pageIndex ? pageIndex : 0;
 		gPageIndex = pageIndex;
@@ -2137,7 +2143,7 @@
 	        type : "post",
 	        dataType : "json",
 	        data : {
-	            searchWord: searchWord,
+	            searchWord: orderSearchWord,
 	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
@@ -2279,9 +2285,15 @@
         });
 	}
 	
-	//证书管理
+	var licenseSearchWord = "";
+	function searchLicense()
+	{
+		licenseSearchWord = $("#search-license").val();
+		showLicenseList();
+	}
+	
 	function showLicenseList(pageIndex){
-		var searchWord = $("#search-licenseInfo").val();
+		
 		var pageSize = gPageSize;
 		pageIndex = pageIndex ? pageIndex : 0;
 		gPageIndex = pageIndex;
@@ -2291,7 +2303,7 @@
 	        type : "post",
 	        dataType : "json",
 	        data : {
-	            searchWord: searchWord,
+	            searchWord: licenseSearchWord,
 	        	pageIndex: pageIndex,
 	        	pageSize: pageSize
 	        },
