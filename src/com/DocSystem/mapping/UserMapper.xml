@@ -392,7 +392,8 @@
       <if test="tel != null">
         or TEL like '%${tel}%'
       </if>
-      )   
+      )  
+      ORDER BY NAME ASC, CREATE_TIME DESC
       <if test="start != null">
   	  	limit ${start},${number}
   	  </if>
@@ -511,6 +512,7 @@
       <if test="intro != null">
         and INTRO = #{intro,jdbcType=LONGVARCHAR}
       </if>
+      ORDER BY NAME ASC, CREATE_TIME DESC
       <if test="start != null">
   	  	limit ${start},${number}
   	  </if>
