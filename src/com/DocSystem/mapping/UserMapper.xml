@@ -350,6 +350,54 @@
     from user
   </select>
   
+  <select id = "getCountWithParamLike" parameterType="HashMap" resultType="Integer">
+  	select count(1)
+  	from user
+  	where 1 = 1 and (
+  	  <if test="name != null">
+      	NAME like '%${name}%'
+      </if>
+      <if test="realName != null">
+        or REAL_NAME like '%${realName}%'
+      </if>
+      <if test="nickName != null">
+        or NICK_NAME like '%${nickName}%'
+      </if>
+      <if test="email != null">
+        or EMAIL like '%${email}%'
+      </if>
+      <if test="tel != null">
+        or TEL like '%${tel}%'
+      </if>
+      )
+  </select>
+  
+  <select id="queryUserWithParamLike" parameterType="HashMap" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+    where 1 = 1 and (
+  	  <if test="name != null">
+      	NAME like '%${name}%'
+      </if>
+      <if test="realName != null">
+        or REAL_NAME like '%${realName}%'
+      </if>
+      <if test="nickName != null">
+        or NICK_NAME like '%${nickName}%'
+      </if>
+      <if test="email != null">
+        or EMAIL like '%${email}%'
+      </if>
+      <if test="tel != null">
+        or TEL like '%${tel}%'
+      </if>
+      )   
+      <if test="start != null">
+  	  	limit ${start},${number}
+  	  </if>
+  </select>
+  
   <select id = "getCountWithParam" parameterType="HashMap" resultType="Integer">
   	select count(1)
   	from user

@@ -28,6 +28,11 @@ public interface UserMapper {
 
 	List<User> selectAll();
 	
+	//模糊搜索
+	Integer getCountWithParamLike(HashMap<String, String> param);
+	List<User> queryUserWithParamLike(HashMap<String, String> param);
+	
+	//精确搜索
 	Integer getCountWithParam(HashMap<String, String> param);
 	List<User> queryUserWithParam(HashMap<String, String> param);
 }

@@ -54,6 +54,14 @@ public class UserServiceImpl implements UserService {
 		return userDao.selectAll();
 	}
 
+	public Integer getCountWithParamLike(HashMap<String, String> param) {
+		return userDao.getCountWithParamLike(param);
+	}
+
+	public List<User> getUserListWithParamLike(HashMap<String, String> param) {
+		return userDao.queryUserWithParamLike(param);
+	}
+	
 	public Integer getCountWithParam(HashMap<String, String> param) {
 		return userDao.getCountWithParam(param);
 	}

@@ -1405,7 +1405,7 @@ public class LuceneUtil2   extends BaseFunction
 	
 	/**************** 以下是利用反射机制实现的Lucene的通用查询接口 **************/
 	// 使用限制: Ojbect不能被混淆，Object不能使用HashObject例如：JSONObject
-	private static Integer getFieldType(String type) {
+	public static Integer getFieldType(String type) {
 		if(type.endsWith("String"))
 		{
 			return QueryCondition.FIELD_TYPE_String;			
