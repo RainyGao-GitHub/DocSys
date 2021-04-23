@@ -1501,7 +1501,7 @@ public class ManageController extends BaseController{
 	
 	/********** 获取系统所有用户 ：前台用于给repos添加访问用户，返回的结果实际上是reposMember列表***************/
 	@RequestMapping("/getReposAllUsers.do")
-	public void getReposAllUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getReposAllUsers(String searchWord, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** getReposAllUsers.do ***********************");
 		
@@ -1522,9 +1522,31 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		List <ReposMember> UserList = userService.getReposAllUsers(reposId);	
-		Log.printObject("UserList:",UserList);
 		
+		User user = null;
+		if(searchWord != null && !searchWord.isEmpty())
+		{
+			user = new User();
+			user.setName(searchWord);
+			user.setRealName(searchWord);
+			user.setNickName(searchWord);
+			user.setEmail(searchWord);
+			user.setTel(searchWord);
+		}
+		
+		List<ReposMember> UserList = null;
+		if(user == null)
+		{
+			UserList = userService.getReposAllUsers(reposId);
+		}
+		else
+		{
+			HashMap<String, String> param = buildQueryParamForObj(user, null, null);
+			param.put("reposId", reposId+"");
+			UserList = userService.queryReposMemberWithParamLike(param);				
+		}
+		Log.printObject("UserList:",UserList);
+				
 		rt.setData(UserList);
 		writeJson(rt, response);
 	}

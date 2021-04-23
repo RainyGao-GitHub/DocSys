@@ -154,4 +154,26 @@ public class UserServiceImpl implements UserService {
 		}
 		return list;
 	}
+
+	public List<ReposMember> queryReposMemberWithParamLike(HashMap<String, String> param) {
+		List<ReposAuth> reposAuthList = reposAuthDao.queryReposMemberWithParamLike(param);
+		if(reposAuthList == null)
+		{
+			return null;
+		}
+		
+		List<ReposMember> list = new ArrayList<ReposMember>();
+		for(int i=0; i< reposAuthList.size(); i++)
+		{
+			ReposAuth reposAuth = reposAuthList.get(i);
+			ReposMember reposMember = new ReposMember();
+			reposMember.setId(reposAuth.getId());
+			reposMember.setUserId(reposAuth.getUserId());
+			reposMember.setUserName(reposAuth.getUserName());
+			reposMember.setRealName(reposAuth.getRealName());
+			reposMember.setReposId(reposAuth.getReposId());
+			list.add(reposMember);
+		}
+		return list;
+	}
 }  

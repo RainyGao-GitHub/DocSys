@@ -1,14 +1,22 @@
 <div id="reposMemberContainer"></div>
 
 <script type="text/javascript">
-var reposId;
+var gReposId;
 	
 function manageReposMemberPageInit(reposId)
 {
 	console.log("manageReposMemberPageInit reposId:" + reposId);
-	reposId = reposId;
+	gReposId = reposId;
 		
 	showReposAllUserList(reposId);		
+}
+
+
+var reposMemberSearchWord = "";
+function searchReposMember()
+{
+	reposMemberSearchWord =  $("#search-reposMember").val();
+	showReposAllUserList(gReposId);
 }
 
 function showReposAllUserList(reposId){
@@ -19,6 +27,7 @@ function showReposAllUserList(reposId){
             type : "post",
             dataType : "json",
             data : {
+            	searchWord: reposMemberSearchWord,
             	reposId:reposId,
             },
             success : function (ret) {
