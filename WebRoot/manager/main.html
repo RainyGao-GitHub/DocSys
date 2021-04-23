@@ -3048,16 +3048,16 @@
         });
 	}
 	
-	function showEditReposPanel(e, i)
+	function showEditReposPanel(e, i, type)
 	{
-		console.log("showEditReposPanel() " + i);
+		console.log("showEditReposPanel() " + i + " type:" + type);
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
 		var reposId = trObj.children("td:eq(0)").text();
 		var name = trObj.children("td:eq(1)").text();
 		var info = trObj.children("td:eq(2)").text();		
 		var path = trObj.children("td:eq(3)").text();		
-		var type = trObj.children("td:eq(4)").text();		
+		//var type = trObj.children("td:eq(4)").text();		
 		
 		qiao.bs.dialog({
 			url: 'editRepos.html',
@@ -3072,7 +3072,7 @@
 				$("#name").val(name);
 			    $("#info").val(info);
 				$("#path").val(path);
-			    $("#type").val(type);
+			   	$("#type option[value='"+type+"']").attr("selected","selected");
 			}
 		}, null);	
 	}
