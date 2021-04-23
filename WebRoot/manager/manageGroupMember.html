@@ -1,24 +1,31 @@
 <div id="groupMemberContainer"></div>
 
 <script type="text/javascript">
-var groupId;
+var gGroupId;
 	
 function manageGroupMemberPageInit(groupId)
 {
 	console.log("manageGroupMemberPageInit groupId:" + groupId);
-	groupId = groupId;
-		
+	gGroupId = groupId;
 	showGroupAllUserList(groupId);		
+}
+
+var groupMemberSearchWord = "";
+function searchGroupMember()
+{
+	groupMemberSearchWord =  $("#search-groupMember").val();
+	showGroupAllUserList(gGroupId);
 }
 
 function showGroupAllUserList(groupId){
    	console.log("showGroupAllUserList() groupId:"+groupId);
- 
+
    	$.ajax({
             url : "/DocSystem/Manage/getGroupAllUsers.do",
             type : "post",
             dataType : "json",
             data : {
+            	searchWord: groupMemberSearchWord,
             	groupId:groupId,
             },
             success : function (ret) {

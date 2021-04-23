@@ -108,4 +108,33 @@
     LEFT JOIN group_member ON user.ID = group_member.USER_ID and group_member.GROUP_ID =  #{groupId,jdbcType=INTEGER}
 	LEFT JOIN user_group ON user_group.ID =  #{groupId,jdbcType=INTEGER}
   </select>
+  
+  <select id="queryGroupMemberWithParamLike" parameterType="HashMap" resultType="com.DocSystem.entity.GroupMember">
+    	select 
+		user.ID as userId, user.NAME as userName, user.NICK_NAME as nickName, user.REAL_NAME as realName, 
+		group_member.ID as id, 
+		user_group.ID as groupId, user_group.NAME as groupName
+      from user
+      LEFT JOIN group_member ON user.ID = group_member.USER_ID and group_member.GROUP_ID =  ${groupId}
+	  LEFT JOIN user_group ON user_group.ID =  ${groupId}
+      where 1 = 1
+      and (
+        <if test="name != null">
+      		user.NAME like '%${name}%'
+      	</if>
+      	<if test="realName != null">
+        	or user.REAL_NAME like '%${realName}%'
+      	</if>
+      	<if test="nickName != null">
+        	or user.NICK_NAME like '%${nickName}%'
+      	</if>
+      	<if test="email != null">
+        	or user.EMAIL like '%${email}%'
+      	</if>
+      	<if test="tel != null">
+        	or user.TEL like '%${tel}%'
+      	</if>
+      	)  
+      	ORDER BY user.NAME ASC, user.CREATE_TIME DESC
+  </select>
 </mapper>

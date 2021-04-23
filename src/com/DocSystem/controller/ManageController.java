@@ -1735,11 +1735,11 @@ public class ManageController extends BaseController{
 	
 	/********** 获取系统所有用户 ：前台用于给group添加访问用户，返回的结果实际上是groupMember列表***************/
 	@RequestMapping("/getGroupAllUsers.do")
-	public void getGroupAllUsers(Integer groupId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getGroupAllUsers(String searchWord, Integer groupId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** getGroupAllUsers.do ***********************");
 
-		System.out.println("getGroupAllUsers groupId: " + groupId);
+		System.out.println("getGroupAllUsers searchWord:" + searchWord + " groupId: " + groupId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1756,7 +1756,28 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		List <GroupMember> UserList = userService.getGroupAllUsers(groupId);	
+		User user = null;
+		if(searchWord != null && !searchWord.isEmpty())
+		{
+			user = new User();
+			user.setName(searchWord);
+			user.setRealName(searchWord);
+			user.setNickName(searchWord);
+			user.setEmail(searchWord);
+			user.setTel(searchWord);
+		}
+		
+		List <GroupMember> UserList = null;
+		if(user == null)
+		{
+			UserList = userService.getGroupAllUsers(groupId);	
+		}
+		else
+		{
+			HashMap<String, String> param = buildQueryParamForObj(user, null, null);
+			param.put("groupId",groupId+"");
+			UserList = userService.queryGroupMemberWithParamLike(param);				
+		}
 		Log.printObject("UserList:",UserList);
 		
 		rt.setData(UserList);
