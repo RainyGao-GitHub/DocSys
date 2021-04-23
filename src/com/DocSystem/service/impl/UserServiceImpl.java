@@ -112,6 +112,10 @@ public class UserServiceImpl implements UserService {
 	public List<GroupMember> getGroupAllUsers(Integer groupId) {
 		return groupMemberDao.getGroupAllUsers(groupId);
 	}
+	
+	public List<GroupMember> queryGroupMemberWithParamLike(HashMap<String, String> param) {
+		return groupMemberDao.queryGroupMemberWithParamLike(param);
+	}
 
 	public List<UserGroup> getGroupMemberListByGroupMemberInfo(GroupMember groupMember) {
 		return groupMemberDao.selectSelective(groupMember);

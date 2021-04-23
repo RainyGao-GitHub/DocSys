@@ -80,6 +80,7 @@
       </if>
     </trim>
   </insert>
+  
   <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.UserGroup" >
     update user_group
     <set >
@@ -104,6 +105,7 @@
     </set>
     where ID = #{id,jdbcType=INTEGER}
   </update>
+  
   <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.UserGroup" >
     update user_group
     set NAME = #{name,jdbcType=VARCHAR},
@@ -121,7 +123,7 @@
     from user_group
   </select>
   
-    <select id="selectSelective" parameterType="com.DocSystem.entity.UserGroup" resultMap="BaseResultMap">
+  <select id="selectSelective" parameterType="com.DocSystem.entity.UserGroup" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from user_group
