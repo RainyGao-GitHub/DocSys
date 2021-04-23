@@ -2375,6 +2375,11 @@
 					node.formatedState = "已作废";
 				}
 			}
+			
+			if(node.installedCount)
+			{
+				node.formatedInstallInfo = "已安装" + node.installedCount + "次, [" + node.installedMacList + "]";
+			}
  	    }		
 		$Func.render($("#container"),"license",{"list":list}, callback);
     }

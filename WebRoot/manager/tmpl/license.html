@@ -28,8 +28,10 @@
                   <th>支付信息</th>
                   <th>用户限制</th>
                   <th>过期时间</th>
+                  <th>安装限制</th>
                   <th>创建时间</th>
                   <th>状态</th>
+                  <th>安装信息</th>
                   <th>操作</th>
                 </tr>
                 </thead>
@@ -43,8 +45,10 @@
                     <td>{{value.payInfo}}</td>
                     <td>{{value.usersCount}}</td>
                     <td>{{value.expireDate}}</td>
+                    <td>{{value.count}}</td>
                     <td>{{value.createDate}}</td>
                     <td>{{value.formatedState}}</td>
+                    <td>{{value.formatedInstallInfo}}</td>
                     <td class="edit">
                       <button onclick="downloadLicenseConfirm('{{value.id}}')" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">下载</button>
                       <button onclick="deperacateLicenseConfirm('{{value.id}}',{{value.pageIndex}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">作废</button>
