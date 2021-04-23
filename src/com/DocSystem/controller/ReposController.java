@@ -47,7 +47,7 @@ public class ReposController extends BaseController{
 	/****************** get DocSysConfig **************/
 	@RequestMapping("/getDocSysConfig.do")
 	public void getDocSysConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getDocSysConfig");
+		System.out.println("\n****************** getDocSysConfig.do ***********************");
 		ReturnAjax rt = new ReturnAjax();		
 		
 		JSONObject config = new JSONObject();
@@ -59,7 +59,7 @@ public class ReposController extends BaseController{
 	/****************** get Repository List **************/
 	@RequestMapping("/getReposList.do")
 	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getReposList");
+		System.out.println("\n****************** getReposList.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = getLoginUser(session, request, response, rt);
@@ -85,7 +85,8 @@ public class ReposController extends BaseController{
 
 	@RequestMapping("/getManagerReposList.do")
 	public void getManagerReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getManagerReposList");
+		System.out.println("\n****************** getManagerReposList.do ***********************");
+		
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = getLoginUser(session, request, response, rt);
@@ -116,6 +117,8 @@ public class ReposController extends BaseController{
 	public void getRepos(Integer vid,
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
+
+		System.out.println("\n****************** getRepos.do ***********************");
 		System.out.println("getRepos vid: " + vid + " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -136,6 +139,8 @@ public class ReposController extends BaseController{
 	@RequestMapping("/addRepos.do")
 	public void addRepos(String name,String info, Integer type, String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, Long createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		
+		System.out.println("\n****************** addRepos.do ***********************");
 		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  + " realDocPath: " + realDocPath + " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -283,6 +288,7 @@ public class ReposController extends BaseController{
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("\n****************** deleteRepos.do ***********************");
 		System.out.println("deleteRepos vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -353,6 +359,7 @@ public class ReposController extends BaseController{
 	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** updateReposInfo.do ***********************");
 		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " realDocPath:" + realDocPath +" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -384,6 +391,7 @@ public class ReposController extends BaseController{
 		Repos newReposInfo = new Repos();
 		newReposInfo.setId(reposId);
 		newReposInfo.setName(name);
+		newReposInfo.setType(type);
 		newReposInfo.setInfo(info);
 		newReposInfo.setPath(path);
 		newReposInfo.setRealDocPath(realDocPath);
@@ -404,8 +412,13 @@ public class ReposController extends BaseController{
 		//Get reposInfo (It will be used to revert the reposInfo)
 		Repos reposInfo = reposService.getRepos(reposId);
 		formatReposInfo(reposInfo);
-		
+
+		if(type != null && type != reposInfo.getType())
+		{
+			System.out.println("禁止修改文件系统类型");		
+		}
 		newReposInfo.setType(reposInfo.getType());
+		
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
 		{
 			writeJson(rt, response);	
@@ -498,14 +511,14 @@ public class ReposController extends BaseController{
 	private boolean isReposVerCtrlChanged(Repos newReposInfo, Repos reposInfo) {
 		Integer newVerCtrl = newReposInfo.getVerCtrl();
 		Integer verCtrl = reposInfo.getVerCtrl();
+		if(newVerCtrl == null)
+		{
+			return false;
+		}
 		
 		if(verCtrl == null)
 		{
-			if(newVerCtrl != null)
-			{
-				return true;
-			}
-			return false;
+			return true;
 		}	
 			
 		if(!verCtrl.equals(newVerCtrl))
@@ -560,6 +573,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/clearReposCache.do")
 	public void clearReposCache(Integer reposId, String path,String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** clearReposCache.do ***********************");
 		System.out.println("clearReposCache reposId:" + reposId + " path: " + path + " name: " + name);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -616,6 +630,7 @@ public class ReposController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** getReposInitMenu.do ***********************");
 		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -770,6 +785,7 @@ public class ReposController extends BaseController{
 			Integer needLockState,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** getSubDocList.do ***********************");
 		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort + " needLockState:" +  needLockState);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -944,7 +960,8 @@ public class ReposController extends BaseController{
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,Long docId, Long pid, String path, String name, Integer level, Integer type, 
-			HttpSession session,HttpServletRequest request,HttpServletResponse response){
+			HttpSession session,HttpServletRequest request,HttpServletResponse response){		
+		System.out.println("\n****************** getReposManagerMenu.do ***********************");
 		System.out.println("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1020,6 +1037,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposAllUsers.do")
 	public void getReposAllUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** getReposAllUsers.do ***********************");
 		System.out.println("getReposAllUsers reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1063,6 +1081,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposAllGroups.do")
 	public void getReposAllGroups(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** getReposAllGroups.do ***********************");
 		System.out.println("getReposAllGroups reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1086,6 +1105,7 @@ public class ReposController extends BaseController{
 	public void getDocAuthList(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** getDocAuthList.do ***********************");
 		System.out.println("getDocAuthList reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1203,6 +1223,7 @@ public class ReposController extends BaseController{
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** configReposAuth.do ***********************");
 		System.out.println("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1304,6 +1325,7 @@ public class ReposController extends BaseController{
 	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** deleteReposAuth.do ***********************");
 		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1364,6 +1386,7 @@ public class ReposController extends BaseController{
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer downloadEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** configDocAuth.do ***********************");
 		System.out.println("configDocAuth reposId:" + reposId + " userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " path:" + path + " name:" + name + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:" + downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1494,6 +1517,7 @@ public class ReposController extends BaseController{
 	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** deleteDocAuth.do ***********************");		
 		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1601,6 +1625,7 @@ public class ReposController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n****************** getUserDocAuth.do ***********************");		
 		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
