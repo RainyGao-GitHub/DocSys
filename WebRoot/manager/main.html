@@ -2974,10 +2974,31 @@
 
 	function ReposListDisplay(list)
 	{
+		for(var i=0; i<list.length; i++)
+	 	{
+	    	var node = list[i];
+	       	node.formatedType = formateReposType(node.type);
+     	}
 		console.log("ReposListDisplay", list);
 		$Func.render($("#container"),"repos",{"list":list});
 	}
-	
+
+   	function formateReposType(type)
+   	{
+   		switch(type)
+   		{
+   		case 1:
+   			return "文件管理系统";
+   		case 2:
+   			return "文件系统前置";
+   		case 3:
+   			return "SVN前置";
+   		case 4:
+   			return "GIT前置";
+   		}
+   		return type;
+   	}
+
 	//showAddReposPanel
 	function showAddReposPanel(){
 		console.log("showAddReposPanel");
