@@ -2812,24 +2812,19 @@
 		});
 	}
 
-	function showEditUserPanel(e, id, pageIndex, index)
+	function showEditUserPanel(e, userId, pageIndex, index)
 	{
-		console.log("showEditUserPanel() id:" + id + " pageIndex:" + pageIndex);
+		console.log("showEditUserPanel() userId:" + userId + " pageIndex:" + pageIndex);
 		gPageIndex = pageIndex;
-		//console.log("this", this); //this is not correct, so i get the current item from event
-		//alert($(this).attr("data-id"));
-		//console.log("event", e);
+		//TODO: 以下代码从显示元素里读取仓库信息存在风险,显示内容的顺序和含义修改会导致信息错误
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
-		//var userId = trObj.children("td:eq(0)").text();
-		var userId = id;
 		var name = trObj.children("td:eq(1)").text();
 		var type = trObj.children("td:eq(2)").text();
 		var nickName = trObj.children("td:eq(3)").text();
 		var realName = trObj.children("td:eq(4)").text();
 		var tel = trObj.children("td:eq(5)").text();
 		var email = trObj.children("td:eq(6)").text();
-		
 		
 		qiao.bs.dialog({
 			url: 'editUser.html',
@@ -3054,16 +3049,16 @@
         });
 	}
 	
-	function showEditReposPanel(e, i, type)
+	function showEditReposPanel(e, reposId, type)
 	{
-		console.log("showEditReposPanel() " + i + " type:" + type);
+		console.log("showEditReposPanel() " + reposId + " type:" + type);
+		
+		//TODO: 以下代码从显示元素里读取仓库信息存在风险,显示内容的顺序和含义修改会导致信息错误
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
-		var reposId = trObj.children("td:eq(0)").text();
 		var name = trObj.children("td:eq(1)").text();
 		var info = trObj.children("td:eq(2)").text();		
 		var path = trObj.children("td:eq(3)").text();		
-		//var type = trObj.children("td:eq(4)").text();		
 		
 		qiao.bs.dialog({
 			url: 'editRepos.html',
