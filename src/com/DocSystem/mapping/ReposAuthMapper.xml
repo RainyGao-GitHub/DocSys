@@ -310,6 +310,34 @@
       from user
     LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
+  <select id="queryReposMemberWithParamLike" parameterType="HashMap" resultType="com.DocSystem.entity.ReposAuth">
+	select 
+		user.ID as userId,user.NAME as userName,user.REAL_NAME as realName,
+		repos_auth.ID as id, 
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE
+      from user
+    LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = ${reposId}
+      where 1 = 1
+      and (
+        <if test="name != null">
+      		user.NAME like '%${name}%'
+      	</if>
+      	<if test="realName != null">
+        	or user.REAL_NAME like '%${realName}%'
+      	</if>
+      	<if test="nickName != null">
+        	or user.NICK_NAME like '%${nickName}%'
+      	</if>
+      	<if test="email != null">
+        	or user.EMAIL like '%${email}%'
+      	</if>
+      	<if test="tel != null">
+        	or user.TEL like '%${tel}%'
+      	</if>
+      	)  
+      	ORDER BY user.NAME ASC, user.CREATE_TIME DESC
+  </select>
+  
   <select id="getReposAllGroups" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
 		user_group.ID as groupId,user_group.NAME as groupName,
