@@ -2821,7 +2821,8 @@
 		//console.log("event", e);
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
-		var userId = trObj.children("td:eq(0)").text();
+		//var userId = trObj.children("td:eq(0)").text();
+		var userId = id;
 		var name = trObj.children("td:eq(1)").text();
 		var type = trObj.children("td:eq(2)").text();
 		var nickName = trObj.children("td:eq(3)").text();
