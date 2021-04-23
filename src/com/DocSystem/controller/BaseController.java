@@ -11433,4 +11433,51 @@ public class BaseController  extends BaseFunction{
 	protected String buildOfficeEditorKey(Doc doc) {
 		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode() + "";
 	}
+	
+	protected HashMap<String, String> buildQueryParamForObj(User obj, Integer pageIndex, Integer pageSize) {
+		HashMap<String, String> param = new HashMap<String,String>();
+		if(pageIndex != null && pageSize != null)
+		{
+			String start = pageIndex*pageSize + "";
+			String number =  pageSize+"";
+			System.out.println("buildQueryParamForObj start:" + start + " number:" + number);
+			param.put("start", start);
+			param.put("number", number);
+		}
+		
+		if(obj == null)
+		{
+			return param;
+		}
+		
+		//Use Reflect to set conditions
+        Class userCla = (Class) obj.getClass();
+        /* 得到类中的所有属性集合 */
+        java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = LuceneUtil2.getFieldType(type);
+			if(fieldType != null)	//only support the field string\long\int\digital type
+			{
+	            String fieldName = f.getName();
+				try {
+					Object val = f.get(obj);
+					if(val != null)
+					{
+						param.put(fieldName, val+"");
+					}
+	            } catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+        }
+		return param;
+	}
 }
