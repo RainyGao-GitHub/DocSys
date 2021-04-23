@@ -15,7 +15,7 @@ public class License {
 	public Long createTime; //创建时间	
 
 	public String installedMacList;	//已安装MAC列表
-	public int installedCount; //已安装设备数
+	public Integer installedCount; //已安装设备数
 
 	public Integer state; //证书状态 0:已作废
 }
