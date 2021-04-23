@@ -1035,10 +1035,10 @@ public class ReposController extends BaseController{
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
 	@RequestMapping("/getReposAllUsers.do")
-	public void getReposAllUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getReposAllUsers(String searchWord, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** getReposAllUsers.do ***********************");
-		System.out.println("getReposAllUsers reposId: " + reposId);
+		System.out.println("getReposAllUsers searchWord:" + searchWord + " reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -1048,19 +1048,40 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		User user = null;
+		if(searchWord != null && !searchWord.isEmpty())
+		{
+			user = new User();
+			user.setName(searchWord);
+			user.setRealName(searchWord);
+			user.setNickName(searchWord);
+			user.setEmail(searchWord);
+			user.setTel(searchWord);
+		}
+		
 		//获取All UserList
-		List <ReposAuth> UserList = getReposAllUsers(reposId);
+		List <ReposAuth> UserList = getReposAllUsers(user, reposId);
 		
 		rt.setData(UserList);
 		writeJson(rt, response);
 		
 	}
 	
-	private List<ReposAuth> getReposAllUsers(Integer reposId) {
+	private List<ReposAuth> getReposAllUsers(User user, Integer reposId) {
 		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓t库权限），结果实际是reposAuth列表
-		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	
-		Log.printObject("UserList:",UserList);
-		
+		List<ReposAuth> UserList = null;
+		if(user == null)
+		{
+			UserList = reposService.getReposAllUsers(reposId);
+		}
+		else
+		{
+			HashMap<String, String> param = buildQueryParamForObj(user, null, null);
+			param.put("reposId", reposId+"");
+			UserList = reposService.queryReposMemberWithParamLike(param);				
+		}
+		Log.printObject("UserList:",UserList);	
+				
 		//获取任意用户的ReposAuth，因为任意用户是虚拟用户在数据库中不存在，因此需要单独获取
 		ReposAuth anyUserReposAuth = getUserReposAuth(0,reposId); //获取任意用户的权限表
 		if(anyUserReposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
