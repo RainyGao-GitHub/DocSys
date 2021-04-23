@@ -3,8 +3,12 @@
             <div class="manual-article">
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
+	               		<li style="margin-top: 0px;">
+							<i class="cell username w30"><input type="input" class="form-control" id="search-reposMember" placeholder="请输入关键字"></i>
+							<i class="cell operation w10"><button onclick="searchReposMember()" class="btn btn-md btn-primary" style="margin-left: 5px;">搜索</button></i>						
+						</li>
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell username w15">用户名</i>
+							<i class="cell username w15" >用户名</i>
 							<i class="cell username w15">名字</i>
 							<i class="cell operation w10">操作</i>						
 						</li>
@@ -30,148 +34,154 @@
 		addReposUserPageInit();
 	});
 
+    var reposMemberSearchWord = "";
+    function searchReposMember()
+    {
+    	reposMemberSearchWord =  $("#search-reposMember").val();
+    	showReposAllUserList(gReposId);
+    }
 
-function showReposAllUserList(){
-   	console.log("showReposAllUserList()");
-   	var vid = getQueryString("vid");
+	function showReposAllUserList(){
+	   	console.log("showReposAllUserList()");
+	   	var vid = getQueryString("vid");
+	
+	    $.ajax({
+	            url : "/DocSystem/Repos/getReposAllUsers.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	searchWord: reposMemberSearchWord,
+	                reposId : vid,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status ){
+	                    showUserList(ret.data);
+	                }
+	                else
+	                {
+	                	alert("Error:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	               alert('服务器异常：获取仓库用户列表失败！');
+	            }
+    	});
 
-    $.ajax({
-            url : "/DocSystem/Repos/getReposAllUsers.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposId : vid,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    showUserList(ret.data);
-                }
-                else
-                {
-                	alert("Error:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-               alert('服务器异常：获取仓库用户列表失败！');
-            }
-    });
-
-
-	//根据获取到的目录权限用户列表数据，绘制列表
-	function showUserList(data){
-		console.log(data);
-		var c = $("#reposAllUsers").children();
-		$(c).remove();
-		if(data.length==0){
-			$("#reposAllUsers").append("<p>暂无数据</p>");
-		}
-		
-		for(var i=0;i<data.length;i++){
-			var d = data[i];
-			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
-			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
-			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
+		//根据获取到的目录权限用户列表数据，绘制列表
+		function showUserList(data){
+			console.log(data);
+			var c = $("#reposAllUsers").children();
+			$(c).remove();
+			if(data.length==0){
+				$("#reposAllUsers").append("<p>暂无数据</p>");
 			}
-												
-			var se = "<li value="+ i +">"
-				+"	<i class='cell username w15'>"
-				+"		<span class='name'>"
-				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell realname w15'>"
-				+"		<span class='name'>"
-				+"			<a id='RealName"+i+"' href='javascript:void(0)'>"+d.realName+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell operation w10'>"
-				+		opBtn
-				+"	</i>"
-				+"</li>";
 			
-			$("#reposAllUsers").append(se);
+			for(var i=0;i<data.length;i++){
+				var d = data[i];
+				var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
+				if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
+				{
+					opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
+				}
+													
+				var se = "<li value="+ i +">"
+					+"	<i class='cell username w15'>"
+					+"		<span class='name'>"
+					+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
+					+"		</span>"
+					+"	</i>"
+					+"	<i class='cell realname w15'>"
+					+"		<span class='name'>"
+					+"			<a id='RealName"+i+"' href='javascript:void(0)'>"+d.realName+"</a>"
+					+"		</span>"
+					+"	</i>"
+					+"	<i class='cell operation w10'>"
+					+		opBtn
+					+"	</i>"
+					+"</li>";
+				
+				$("#reposAllUsers").append(se);
+			}
 		}
 	}
-}
 
-function addReposUser(userId)
-{
-   	console.log("addReposUser(" + userId+")");
-   	var vid = getQueryString("vid");
+	function addReposUser(userId)
+	{
+	   	console.log("addReposUser(" + userId+")");
+	   	var vid = getQueryString("vid");
+	
+	    $.ajax({
+	            url : "/DocSystem/Repos/configReposAuth.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	userId: userId,
+	                reposId : vid,
+	                access: 1,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status ){
+	                    showAuthList();		//这个 接口是更新reposManager页面的权限列表用户的
+	                    showReposAllUserList();		//更新显示
+	                }
+	                else
+	                {
+	                	showErrorMessage("Error:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	               showErrorMessage('服务器异常：获取仓库用户列表失败！');
+	            }
+	    });
+	}
 
-    $.ajax({
-            url : "/DocSystem/Repos/configReposAuth.do",
-            type : "post",
-            dataType : "json",
-            data : {
-            	userId: userId,
-                reposId : vid,
-                access: 1,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    showAuthList();		//这个 接口是更新reposManager页面的权限列表用户的
-                    showReposAllUserList();		//更新显示
-                }
-                else
-                {
-                	showErrorMessage("Error:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-               showErrorMessage('服务器异常：获取仓库用户列表失败！');
-            }
-    });
-}
 
-
-function deleteReposAuthConfirm(reposAuthId,userId)
-{
-		qiao.bs.confirm({
- 	    	id: 'deleteReposAuthConfirm',
- 	        msg: "是否删除该用户的仓库权限设置?",
- 	        close: false,		
- 	        okbtn: "删除",
- 	        qubtn: "取消",
- 	    },function () {
- 	    	
- 	    	//alert("点击了确定");
- 	    	deleteReposAuth(reposAuthId,userId);
- 	    	return true;   
- 	    },function(){
- 	    	//alert("点击了取消");
- 	    	return true;
- 	    }); 
-}
-
-function deleteReposAuth(reposAuthId,userId)
-{	
-   	console.log("deleteReposAuth()");
-   	
-   	var vid = getQueryString("vid");
-    $.ajax({
-            url : "/DocSystem/Repos/deleteReposAuth.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposAuthId: reposAuthId,
-                userId: userId,
-                reposId: vid,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    showAuthList();
-                    showReposAllUserList();		//更新显示
-                }
-                else
-                {
-                	showErrorMessage("Error:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-               showErrorMessage('服务器异常：删除用户的仓库权限设置失败！');
-            }
-    });
-}
+	function deleteReposAuthConfirm(reposAuthId,userId)
+	{
+			qiao.bs.confirm({
+	 	    	id: 'deleteReposAuthConfirm',
+	 	        msg: "是否删除该用户的仓库权限设置?",
+	 	        close: false,		
+	 	        okbtn: "删除",
+	 	        qubtn: "取消",
+	 	    },function () {
+	 	    	
+	 	    	//alert("点击了确定");
+	 	    	deleteReposAuth(reposAuthId,userId);
+	 	    	return true;   
+	 	    },function(){
+	 	    	//alert("点击了取消");
+	 	    	return true;
+	 	    }); 
+	}
+	
+	function deleteReposAuth(reposAuthId,userId)
+	{	
+	   	console.log("deleteReposAuth()");
+	   	
+	   	var vid = getQueryString("vid");
+	    $.ajax({
+	            url : "/DocSystem/Repos/deleteReposAuth.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	                reposAuthId: reposAuthId,
+	                userId: userId,
+	                reposId: vid,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status ){
+	                    showAuthList();
+	                    showReposAllUserList();		//更新显示
+	                }
+	                else
+	                {
+	                	showErrorMessage("Error:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	               showErrorMessage('服务器异常：删除用户的仓库权限设置失败！');
+	            }
+	    });
+	}
 </script>

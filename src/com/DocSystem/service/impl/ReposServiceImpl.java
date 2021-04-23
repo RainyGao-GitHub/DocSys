@@ -201,6 +201,10 @@ public class ReposServiceImpl implements ReposService {
 		return reposAuthDao.getReposAllUsers(reposId);		
 	}
 	
+	public List<ReposAuth> queryReposMemberWithParamLike(HashMap<String, String> param) {
+		return reposAuthDao.queryReposMemberWithParamLike(param);	
+	}	
+	
 	//仓库的所有用户组（包括有授权和没授权的）
 	public List<ReposAuth> getReposAllGroups(Integer reposId) {
 		return reposAuthDao.getReposAllGroups(reposId);	
@@ -285,5 +289,5 @@ public class ReposServiceImpl implements ReposService {
     public List<DocShare> getDocShareList(DocShare docShare) {  
         List<DocShare> list = docShareDao.selectSelective(docShare);  
         return list;
-    }	
+    }
 }  
