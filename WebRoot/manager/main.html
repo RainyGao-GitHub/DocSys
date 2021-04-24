@@ -2585,9 +2585,9 @@
 		$Func.render($("#container"),"user",{"list":list}, callback);
     }
 	
-	function delUserConfirm(id, pageIndex, index)
+	function delUserConfirm(userId, pageIndex, index)
 	{	
-		console.log("delUserConfirm");
+		console.log("delUserConfirm userId:" + userId + " pageIndex:" + pageIndex);
 		qiao.bs.confirm({
 			id: "delUserConfirmDialog",
 	        title: "删除用户",
@@ -2595,26 +2595,22 @@
 	        okbtn: "删除",
 	        qubtn: "取消",
 	    },function () {
-	    	delUser(id, pageIndex, index);
+	    	delUser(userId, pageIndex, index);
 	    	return true;   
 	    });
 	}
 	
-	function delUser(id, pageIndex, index){
-		console.log("delUser pageIndex:" + pageIndex);
+	function delUser(userId, pageIndex, index){
+		console.log("delUser userId:" + userId + " pageIndex:" + pageIndex);
         $.ajax({
             url : "/DocSystem/Manage/delUser.do",
             type : "post",
             dataType : "json",
             data : {
-                 userId : id,
+                 userId : userId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                   	//if(index == 0 && pageIndex != 0)
-                   	//{
-                   	//	pageIndex -= 1;
-                   	//}
                 	showUserList(pageIndex);	//刷新UserList
                     showErrorMessage("删除成功");
                 }else {
@@ -2859,15 +2855,14 @@
 	  return createPassword;
 	}
 	
-	function showResetPwdPanel(e, id, pageIndex, index)
+	function showResetPwdPanel(e, userId, pageIndex, index)
 	{
-		console.log("showResetPwdPanel() id:" + id + " pageIndex:" + pageIndex);
+		console.log("showResetPwdPanel() userId:" + userId + " pageIndex:" + pageIndex);
 		gPageIndex = pageIndex;
 		
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
-		var userId = trObj.children("td:eq(0)").text();
-		var name = trObj.children("td:eq(1)").text();
+		var name = trObj.children("td:eq(2)").text();
 		var pwd = randomPassword(8);
 		
 		qiao.bs.dialog({
