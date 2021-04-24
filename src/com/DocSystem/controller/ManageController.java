@@ -1152,7 +1152,8 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("\n****************** editUser.do ***********************");
 
-		System.out.println("editUser");
+		Log.printObject("editUser inputUser:", user);
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1161,6 +1162,8 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
+		Log.printObject("editUser login_user:", login_user);
 		
 		if(login_user.getType() < 1)
 		{
@@ -1184,7 +1187,7 @@ public class ManageController extends BaseController{
 		System.out.println("userId:" + userId + " userName:"+userName + "type:" + type  + " pwd:" + pwd);
 		
 		//检查是否越权设置
-		if(type > login_user.getType())
+		if(login_user.getType() < type)
 		{
 			Log.docSysErrorLog("越权操作：您无权设置该用户等级！", rt);
 			writeJson(rt, response);
@@ -1200,20 +1203,23 @@ public class ManageController extends BaseController{
 			return;	
 		}
 
-		if(tempUser.getType() > login_user.getType())
+		if(tempUser.getId() != login_user.getId())
 		{
-			Log.docSysErrorLog("越权操作：您无权修改高级别用户的设置！", rt);
-			writeJson(rt, response);
-			return;			
-		}
+			if(login_user.getType() < tempUser.getType())
+			{
+				Log.docSysErrorLog("越权操作：您无权修改高级别用户的设置！", rt);
+				writeJson(rt, response);
+				return;			
+			}
 
-		if(tempUser.getType() == login_user.getType() && tempUser.getId() != login_user.getId())
-		{
-			Log.docSysErrorLog("越权操作：您无权修改同级别用户的设置！", rt);
-			writeJson(rt, response);
-			return;			
+			if(login_user.getType() == tempUser.getType())
+			{
+				Log.docSysErrorLog("越权操作：您无权修改同级别用户的设置！", rt);
+				writeJson(rt, response);
+				return;			
+			}
 		}
-
+		
 		//检查用户名是否有改动
 		if(user.getName() != null)
 		{
@@ -1378,19 +1384,22 @@ public class ManageController extends BaseController{
 			return;	
 		}
 
-		if(tempUser.getType() > login_user.getType())
+		if(tempUser.getId() != login_user.getId())
 		{
-			Log.docSysErrorLog("越权操作：您无权删除高级别用户！", rt);
-			writeJson(rt, response);
-			return;			
+			if(tempUser.getType() > login_user.getType())
+			{
+				Log.docSysErrorLog("越权操作：您无权删除高级别用户！", rt);
+				writeJson(rt, response);
+				return;			
+			}
+	
+			if(tempUser.getType() == login_user.getType())
+			{
+				Log.docSysErrorLog("越权操作：您无权删除同级别用户！", rt);
+				writeJson(rt, response);
+				return;			
+			}		
 		}
-
-		if(tempUser.getType() == login_user.getType() && tempUser.getId() != login_user.getId())
-		{
-			Log.docSysErrorLog("越权操作：您无权删除同级别用户！", rt);
-			writeJson(rt, response);
-			return;			
-		}		
 		
 		if(userService.delUser(userId) == 0)
 		{
