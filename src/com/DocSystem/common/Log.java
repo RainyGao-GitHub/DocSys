@@ -38,12 +38,29 @@ public class Log {
 		System.out.println(Head + json);		
 	}
 	
+	public static void printObject(String Head,Object obj, String filePath)
+	{
+		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
+		System.out.println(Head + json);
+		toFile(json, filePath);
+	}	
+	
 	public static void docSysDebugLog(String logStr, ReturnAjax rt) {
 		System.out.println(logStr);
 		if(rt != null)
 		{
 			rt.setDebugLog(logStr);
 		}
+	}
+	
+	public static void docSysDebugLog(String logStr, ReturnAjax rt, String filePath) {
+		System.out.println(logStr);
+		if(rt != null)
+		{
+			rt.setDebugLog(logStr);
+		}
+
+		toFile(logStr, filePath);	
 	}
 
 	public static void docSysWarningLog(String logStr, ReturnAjax rt) {
@@ -53,6 +70,16 @@ public class Log {
 			rt.setWarningMsg(logStr);
 		}
 	}
+	
+	public static void docSysWarningLog(String logStr, ReturnAjax rt, String filePath) {
+		System.err.println(logStr);
+		if(rt != null)
+		{
+			rt.setWarningMsg(logStr);
+		}
+		
+		toFile(logStr, filePath);
+	}
 
 	public static void docSysErrorLog(String logStr, ReturnAjax rt) {
 		System.err.println(logStr);
@@ -61,8 +88,27 @@ public class Log {
 			rt.setError(logStr);
 		}
 	}
+	
+	public static void docSysErrorLog(String logStr, ReturnAjax rt, String filePath) {
+		System.err.println(logStr);
+		if(rt != null)
+		{
+			rt.setError(logStr);
+		}
+		
+		toFile(logStr, filePath);
+	}
 
 	public static void info(String Head, String msg) {
 		System.out.println(Head + " " + msg);
+	}
+	
+	public static void info(String Head, String msg, String filePath) {
+		System.out.println(Head + " " + msg);
+		toFile(Head + " " + msg, filePath);
+	}
+	
+	public static void toFile(String content, String filePath) {
+		FileUtil.appendContentToFile(filePath, content);	
 	}
 }
