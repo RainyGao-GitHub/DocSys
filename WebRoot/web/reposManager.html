@@ -765,6 +765,12 @@
 					}
 			},
 			{divider: true},
+			{text: '全文搜索设置', action: function(e){
+						e.preventDefault();
+	        			showTextSearchSetPanel();
+					}
+			},
+			{divider: true},
 			{text: '删除仓库', action: function(e){
 						var vid = getQueryString("vid");
 						console.log("删除仓库：" + vid);	
@@ -1223,6 +1229,23 @@ function showDocPwdSetPanel()
 		//okbtn: "确定",
 		callback: function(){
 			DocPwdSetPageInit(gReposId, curRightClickedTreeNode);
+		}, 
+	}, null);
+}
+
+function showTextSearchSetPanel()
+{
+	console.log("showTextSearchSetPanel");
+	bootstrapQ.dialog({
+		id: 'reposTextSearchSetting',
+		url: 'reposTextSearchSetting.html',
+		title: '全文搜索设置',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		//okbtn: "确定",
+		callback: function(){
+			reposTextSearchSetPageInit(gReposId, curRightClickedTreeNode);
 		}, 
 	}, null);
 }

@@ -108,6 +108,15 @@ public class Log {
 		toFile(Head + " " + msg, filePath);
 	}
 	
+	public static void println(String content) {
+		System.out.println(content);
+	}
+	
+	public static void println(String content, String filePath) {
+		System.out.println(content);
+		toFile(content + "\n", filePath);		
+	}
+	
 	public static void toFile(String content, String filePath) {
 		FileUtil.appendContentToFile(filePath, content);	
 	}
