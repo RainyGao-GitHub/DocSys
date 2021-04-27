@@ -8024,7 +8024,13 @@ public class BaseController  extends BaseFunction{
 	public boolean updateIndexForVDoc(Repos repos, Doc doc)
 	{
 		System.out.println("updateIndexForVDoc() docId:" +  doc.getDocId() + " parentPath:" +  doc.getPath()  + " name:" + doc.getName() + " repos:" + repos.getName());
-
+		
+		if(isVirtuallDocTextSearchDisabled(repos, doc))
+		{
+			System.out.println("addIndexForRDoc() VirtualDocTextSearchDisabled");
+			return false;
+		}
+		
 		String indexLib = getIndexLibPath(repos,2);
 		
 		String content = doc.getContent();
@@ -8037,11 +8043,28 @@ public class BaseController  extends BaseFunction{
 
 		return LuceneUtil2.addIndex(doc, content.trim(), indexLib);
 	}
+	
+	private static boolean isVirtuallDocTextSearchDisabled(Repos repos, Doc doc) {
+		String parentPath = Path.getReposTextSearchConfigPath(repos);
+		String fileName = doc.getDocId() + ".disableVirtualDocTextSearch";
+		if(FileUtil.isFileExist(parentPath + fileName))
+		{
+			return true;
+		}
+		
+		return false;
+	}
 		
 	//Add Index For RDoc
 	public static boolean addIndexForRDoc(Repos repos, Doc doc)
 	{		
 		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		
+		if(isRealDocTextSearchDisabled(repos, doc))
+		{
+			System.out.println("addIndexForRDoc() RealDocTextSearchDisabled");
+			return false;
+		}
 		
 		String indexLib = getIndexLibPath(repos, 1);
 
@@ -8099,6 +8122,17 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//System.out.println("addIndexForRDoc() 未知文件类型不支持索引");
+		return false;
+	}
+
+	private static boolean isRealDocTextSearchDisabled(Repos repos, Doc doc) {
+		String parentPath = Path.getReposTextSearchConfigPath(repos);
+		String fileName = doc.getDocId() + ".disableRealDocTextSearch";
+		if(FileUtil.isFileExist(parentPath + fileName))
+		{
+			return true;
+		}
+		
 		return false;
 	}
 

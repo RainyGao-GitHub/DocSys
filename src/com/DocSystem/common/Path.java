@@ -548,5 +548,9 @@ public class Path {
 		Long pid = buildDocIdByName(level-1, path, "");
 		return pid;
 	}
-	
+
+	public static String getReposTextSearchConfigPath(Repos repos) {
+		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/";
+		return reposPwdPath;
+	}
 }

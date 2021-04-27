@@ -3762,6 +3762,186 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, "历史版本:" + commitId);	
 	}
 	
+	/****************   updateReposTextSearchSetting ******************/
+	@RequestMapping("/getReposTextSearchSetting.do")
+	public void getReposTextSearchSetting(Integer reposId, String path, String name,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//获取并检查用户权限
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		else
+		{
+			Integer access = docAuth.getAccess();
+			Integer isAdmin = docAuth.getIsAdmin();
+			if(access == null || isAdmin == null || isAdmin.equals(0) || access.equals(0))
+			{
+				rt.setError("您无权访问该文件，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}			
+		}
+		
+		JSONObject textSearchSetting = getDocTextSearch(repos, doc);
+		if(textSearchSetting == null)
+		{
+			rt.setError("获取全文搜索设置失败");			
+		}
+		else
+		{
+			rt.setData(textSearchSetting);
+		}
+		
+		writeJson(rt, response);
+	}
+
+	/****************   updateReposTextSearchSetting ******************/
+	@RequestMapping("/updateReposTextSearchSetting.do")
+	public void updateReposTextSearchSetting(Integer reposId, String path, String name,
+			Integer disableRealDocTextSearch, Integer disableVirtualDocTextSearch,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("updateReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name  + " disableRealDocTextSearch:" + disableRealDocTextSearch + " disableVirtualDocTextSearch:" + disableVirtualDocTextSearch);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//获取并检查用户权限
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		else
+		{
+			Integer access = docAuth.getAccess();
+			Integer isAdmin = docAuth.getIsAdmin();
+			if(access == null || isAdmin == null || isAdmin.equals(0) || access.equals(0))
+			{
+				rt.setError("您无权访问该文件，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}			
+		}
+		
+		if(setDocTextSearch(repos, doc, disableRealDocTextSearch, disableVirtualDocTextSearch) == false)
+		{
+			rt.setError("设置全文搜索失败");			
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "updateReposTextSearchSetting", "updateReposTextSearchSetting", "设置全文搜索", "成功", repos, doc, null, "");	
+		}
+		writeJson(rt, response);
+	}
+	
+	private JSONObject getDocTextSearch(Repos repos, Doc doc) {
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
+		String disableRealDocTextSearchFileName = doc.getDocId() + ".disableRealDocTextSearch";
+		String disableVirtualDocTextSearchFileName = doc.getDocId() + ".disableVirtualDocTextSearch";
+		
+		JSONObject textSearchSetting = new JSONObject();
+		
+		//全文搜索
+		File realDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+		if(realDocTextSearchDisableFile.exists())
+		{
+			textSearchSetting.put("disableRealDocTextSearch", 1);
+		}
+		else
+		{
+			textSearchSetting.put("disableRealDocTextSearch", 0);			
+		}
+		
+		//备注全文搜索
+		File virtualDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableVirtualDocTextSearchFileName);
+		if(virtualDocTextSearchDisableFile.exists())
+		{
+			textSearchSetting.put("disableVirtualDocTextSearch", 1);
+		}
+		else
+		{
+			textSearchSetting.put("disableVirtualDocTextSearch", 0);			
+		}
+		return textSearchSetting;
+	}
+	
+	private boolean setDocTextSearch(Repos repos, Doc doc, Integer disableRealDocTextSearch,
+			Integer disableVirtualDocTextSearch) {
+		
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
+		String disableRealDocTextSearchFileName = doc.getDocId() + ".disableRealDocTextSearch";
+		String disableVirtualDocTextSearchFileName = doc.getDocId() + ".disableVirtualDocTextSearch";
+		
+		//全文搜索
+		if(disableRealDocTextSearch == null || disableRealDocTextSearch == 0)
+		{
+			FileUtil.delFile(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+		}
+		else
+		{
+			FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
+		}
+		
+		//备注全文搜索
+		if(disableVirtualDocTextSearch == null || disableVirtualDocTextSearch == 0)
+		{
+			FileUtil.delFile(reposTextSearchConfigPath + disableVirtualDocTextSearchFileName);
+		}
+		else
+		{
+			FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableVirtualDocTextSearchFileName, "UTF-8");
+		}
+		return true;
+	}
 	/****************   set  Doc Access PWD ******************/
 	@RequestMapping("/setDocPwd.do")
 	public void setDocPwd(Integer reposId, String path, String name,
