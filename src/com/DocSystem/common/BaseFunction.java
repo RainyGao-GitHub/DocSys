@@ -34,6 +34,7 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.commonService.ProxyThread;
 import com.DocSystem.commonService.ShareThread;
+import com.DocSystem.controller.URLInfo;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
@@ -960,6 +961,38 @@ public class BaseFunction{
 	    }
 	    
 	    return ip.equals("0:0:0:0:0:0:0:1")?"127.0.0.1":ip;
+	}
+	
+	protected URLInfo getUrlInfoFromUrl(String url) {
+		Log.info("getUrlInfoFromUrl()", "url:" + url);
+		
+		URLInfo urlInfo = new URLInfo();
+		
+	    String subStrs1[] = url.split("://");
+	    if(subStrs1.length < 2)
+	    {
+	    	Log.info("getUrlInfoFromUrl()", "非法URL");
+	    	return null;
+	    }
+	    
+	    //set prefix
+	    urlInfo.prefix = subStrs1[0] + "://";
+	    String hostWithPortAndParams = subStrs1[1];	    
+	    String subStrs2[] = hostWithPortAndParams.split("/");
+	    String hostWithPort = subStrs2[0];
+	    
+	    String subStrs3[] = hostWithPort.split(":");
+	    if(subStrs3.length < 2)
+	    {
+	    	urlInfo.host = subStrs3[0];
+	    }
+	    else
+	    {
+	    	urlInfo.host = subStrs3[0];
+	    	urlInfo.port = subStrs3[1];  	
+	    }
+	    Log.printObject("getUrlInfoFromUrl() urlInfo:", urlInfo);
+		return urlInfo;
 	}
 	
 }

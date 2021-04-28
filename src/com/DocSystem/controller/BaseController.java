@@ -11419,19 +11419,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected String buildSaveDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		return buildDocFileLink("saveDoc", doc, authCode, urlStyle, rt);
-	}
-	
-	protected String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		return buildDocFileLink("downloadDoc", doc, authCode, urlStyle, rt);
-	}
-	
-	private String buildDocFileLink(String usage, Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
 		if(downloadDoc == null)
 		{
-			System.out.println("buildDocFileLink() buildDownloadDocInfo failed");
+			System.out.println("buildSaveDocLink() buildDownloadDocInfo failed");
 			return null;
 		}
 		
@@ -11447,11 +11438,11 @@ public class BaseController  extends BaseFunction{
 			{
 				shareId = 0;
 			}
-			fileLink = "/DocSystem/Doc/" + usage + "/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId;
+			fileLink = "/DocSystem/Bussiness/saveDoc/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/" + usage + ".do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;	
+			fileLink = "/DocSystem/Bussiness/saveDoc.do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;	
 			if(authCode != null)
 			{
 				fileLink += "&authCode=" + authCode;
@@ -11463,6 +11454,44 @@ public class BaseController  extends BaseFunction{
 		}
 		return fileLink;
 	}
+	
+	protected String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		if(downloadDoc == null)
+		{
+			System.out.println("buildDownloadDocLink() buildDownloadDocInfo failed");
+			return null;
+		}
+		
+		String fileLink  = null;
+		if(urlStyle != null && urlStyle.equals("REST"))
+		{
+			if(authCode == null)
+			{
+				authCode = "0";
+			}
+			Integer shareId = doc.getShareId();
+			if(shareId == null)
+			{
+				shareId = 0;
+			}
+			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId;
+		}
+		else
+		{
+			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;	
+			if(authCode != null)
+			{
+				fileLink += "&authCode=" + authCode;
+			}
+			if(doc.getShareId() != null)
+			{
+				fileLink += "&shareId=" + doc.getShareId();				
+			}
+		}
+		return fileLink;
+	}
+	
 	
 	protected String buildOfficeEditorKey(Doc doc) {
 		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode() + "";
