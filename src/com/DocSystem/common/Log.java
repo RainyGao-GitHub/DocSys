@@ -42,7 +42,7 @@ public class Log {
 	{
 		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
 		System.out.println(Head + json);
-		toFile(json, filePath);
+		toFile(Head + json, filePath);
 	}	
 	
 	public static void docSysDebugLog(String logStr, ReturnAjax rt) {
