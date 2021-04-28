@@ -42,7 +42,7 @@ public class Log {
 	{
 		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
 		System.out.println(Head + json);
-		toFile(Head + json, filePath);
+		toFile(Head + json + "\n", filePath);
 	}	
 	
 	public static void docSysDebugLog(String logStr, ReturnAjax rt) {
@@ -60,7 +60,7 @@ public class Log {
 			rt.setDebugLog(logStr);
 		}
 
-		toFile(logStr, filePath);	
+		toFile(logStr + "\n", filePath);	
 	}
 
 	public static void docSysWarningLog(String logStr, ReturnAjax rt) {
@@ -78,7 +78,7 @@ public class Log {
 			rt.setWarningMsg(logStr);
 		}
 		
-		toFile(logStr, filePath);
+		toFile(logStr + "\n", filePath);
 	}
 
 	public static void docSysErrorLog(String logStr, ReturnAjax rt) {
@@ -96,7 +96,7 @@ public class Log {
 			rt.setError(logStr);
 		}
 		
-		toFile(logStr, filePath);
+		toFile(logStr + "\n", filePath);
 	}
 
 	public static void info(String Head, String msg) {
@@ -105,7 +105,7 @@ public class Log {
 	
 	public static void info(String Head, String msg, String filePath) {
 		System.out.println(Head + " " + msg);
-		toFile(Head + " " + msg, filePath);
+		toFile(Head + " " + msg  + "\n", filePath);
 	}
 	
 	public static void println(String content) {
