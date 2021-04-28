@@ -1,0 +1,166 @@
+<!-- Share Modal -->
+<div id="reposTextSearchSetting">
+        <div class="form-group">
+           	<div style="margin-top:10px">
+	            <label>关闭全文搜索<span style="margin-left:5px"><input type="checkbox" id="disableRealDocTextSearch" value="0"></span></label>
+			</div>
+           	<div style="margin-top:10px">
+	            <label>关闭备注全文搜索<span style="margin-left:5px"><input type="checkbox" id="disableVirtualDocTextSearch" value="0"></span></label>
+			</div>
+        </div>
+        <a href='javascript:void(0)' onclick="saveReposTextSearchSetting();" class='mybtn-primary'>保存</a>
+</div>
+
+<script type="text/javascript">	
+	function reposTextSearchSetPageInit(_reposId,_node)
+	{
+	    console.log("reposTextSearchSetPageInit");
+	    ReposTextSearchSet.init(_reposId,_node);
+	}
+	
+	function saveReposTextSearchSetting()
+	{
+	    console.log("saveReposTextSearchSetting");
+	    ReposTextSearchSet.saveReposTextSearchSetting();		
+	}
+	
+	var ReposTextSearchSet = (function () {
+		var reposId;
+		var node;
+		var path;
+		var name;
+		
+		function init(_reposId,_node)
+		{
+			reposId = _reposId;
+			node = _node;
+			path = node.path;
+			name = node.name;
+			console.log("ReposTextSearchSet.init() " + path + name);
+			getReposTextSearchSetting();
+		}
+		
+		var gReposTextSearchSetting = [];
+		function getReposTextSearchSetting()
+		{
+			console.log("getReposTextSearchSetting");
+		    $.ajax({
+		           url : "/DocSystem/Doc/getReposTextSearchSetting.do",
+		           type : "post",
+		           dataType : "json",
+		           data : {
+		               reposId : reposId,
+		            	path: path,
+		            	name: name,
+		           },
+		           success : function (ret) {
+		               if( "ok" == ret.status ){
+		            	    gReposTextSearchSetting = ret.data;
+		               		console.log(gReposTextSearchSetting);
+		               		showReposTextSearchSetting(gReposTextSearchSetting);
+		               }else {
+							showErrorMessage(ret.msgInfo);
+		               }
+		           },
+		           error : function () {
+		               showErrorMessage("获取全文搜索设置失败:服务器异常");
+		           }
+		    });
+		}
+		
+		function showReposTextSearchSetting(reposTextSearchSetting)
+		{
+			console.log("showReposTextSearchSetting() ", reposTextSearchSetting);
+			if(reposTextSearchSetting.disableRealDocTextSearch == 1)
+			{
+				$('#disableRealDocTextSearch').attr('checked','true');
+			}			
+
+			if(reposTextSearchSetting.disableVirtualDocTextSearch == 1)
+			{
+				$('#disableVirtualDocTextSearch').attr('checked','true');
+			}			
+		}
+
+		function saveReposTextSearchSetting()
+		{
+			console.log("saveReposTextSearchSetting");
+			
+			var disableRealDocTextSearch = $("#disableRealDocTextSearch").is(':checked')? 1: 0;
+			console.log("saveReposTextSearchSetting disableRealDocTextSearch:" + disableRealDocTextSearch);
+			var disableVirtualDocTextSearch = $("#disableVirtualDocTextSearch").is(':checked')? 1: 0;
+			console.log("saveReposTextSearchSetting disableVirtualDocTextSearch:" + disableVirtualDocTextSearch);
+			var newReposTextSearchSetting = {};
+			newReposTextSearchSetting.disableRealDocTextSearch = disableRealDocTextSearch;
+			newReposTextSearchSetting.disableVirtualDocTextSearch = disableVirtualDocTextSearch;
+			
+			if(verifyReposTextSearchSetting(gReposTextSearchSetting, newReposTextSearchSetting) == true)
+			{	
+		   		$.ajax({
+		                url : "/DocSystem/Doc/updateReposTextSearchSetting.do",
+		                type : "post",
+		                dataType : "json",
+		                data : {
+		                	reposId : reposId,
+		                	path: path,
+		                	name: name,
+		                	disableRealDocTextSearch: disableRealDocTextSearch,
+		                	disableVirtualDocTextSearch: disableVirtualDocTextSearch,	                	
+		                },
+		                success : function (ret) {
+		                	if(ret.status == "ok")
+		                	{
+		                		console.log("更新全文搜索设置成功");
+		                		getReposTextSearchSetting();     
+		                		// 普通消息提示条
+								bootstrapQ.msg({
+								msg : '设置完成！',
+								type : 'success',
+								time : 2000,
+							    });
+			                }
+		                    else
+		                    {
+		                    	showErrorMessage(ret.msgInfo);
+		                    }
+		                },
+		                error : function () {
+		                	showErrorMessage('设置失败:服务器异常');
+		                }
+		            });
+		            return true;
+		       }
+		       else
+		       {
+		            return false;
+		       }    
+			
+		   }
+		
+	       function verifyReposTextSearchSetting(oldSetting, newSetting)
+	       {
+	       		if(oldSetting.disableRealDocTextSearch != newSetting.disableRealDocTextSearch)
+	       		{
+	       			return true;
+	       		}
+	       		
+	       		if(oldSetting.disableVirtualDocTextSearch != newSetting.disableVirtualDocTextSearch)
+	       		{
+	       			return true;
+	       		}
+	       		alert("全文搜索设置未变化！");
+	       		return false;
+	       }
+		
+	       //开放给外部的调用接口
+	       return {
+				init: function(_reposId,_node){
+					init(_reposId,_node);
+				},
+				saveReposTextSearchSetting: function(){
+					saveReposTextSearchSetting();
+	            },
+	       };
+	})();
+
+</script>
