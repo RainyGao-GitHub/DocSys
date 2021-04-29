@@ -714,7 +714,7 @@ public class FileUtil {
     }
 	
 	//向文件末尾追加内容
-    public static void appendContentToFile(String filePath, String content) {
+    public static void appendContentToFile(String filePath, String content, String encode) {
         try {
             // 打开一个随机访问文件流，按读写方式
             RandomAccessFile randomFile = new RandomAccessFile(filePath, "rw");
@@ -722,7 +722,18 @@ public class FileUtil {
             long fileLength = randomFile.length();
             //将写文件指针移到文件尾。
             randomFile.seek(fileLength);
-            randomFile.writeBytes(content);
+			
+            byte[] buff;
+			if(encode == null)
+			{
+				buff = content.getBytes();
+			}
+			else
+			{
+				buff = content.getBytes(encode); //将String转成指定charset的字节内容
+			}
+            randomFile.write(buff);
+            
             randomFile.close();
         } catch (IOException e) {
             e.printStackTrace();
