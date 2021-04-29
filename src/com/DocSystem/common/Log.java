@@ -38,10 +38,13 @@ public class Log {
 		System.out.println(Head + json);		
 	}
 	
-	public static void printObject(String Head,Object obj, String filePath)
+	public static void printObject(String Head,Object obj, String filePath, boolean enableConsole)
 	{
 		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
-		System.out.println(Head + json);
+		if(enableConsole)
+		{
+			System.out.println(Head + json);
+		}
 		toFile(Head + json + "\n", filePath);
 	}	
 	
@@ -53,13 +56,16 @@ public class Log {
 		}
 	}
 	
-	public static void docSysDebugLog(String logStr, ReturnAjax rt, String filePath) {
-		System.out.println(logStr);
+	public static void docSysDebugLog(String logStr, ReturnAjax rt, String filePath, boolean enableConsole) {
 		if(rt != null)
 		{
 			rt.setDebugLog(logStr);
 		}
 
+		if(enableConsole)
+		{
+			System.out.println(logStr);
+		}
 		toFile(logStr + "\n", filePath);	
 	}
 
@@ -71,13 +77,16 @@ public class Log {
 		}
 	}
 	
-	public static void docSysWarningLog(String logStr, ReturnAjax rt, String filePath) {
-		System.err.println(logStr);
+	public static void docSysWarningLog(String logStr, ReturnAjax rt, String filePath, boolean enableConsole) {
 		if(rt != null)
 		{
 			rt.setWarningMsg(logStr);
 		}
-		
+
+		if(enableConsole)
+		{
+			System.err.println(logStr);
+		}
 		toFile(logStr + "\n", filePath);
 	}
 
@@ -89,13 +98,16 @@ public class Log {
 		}
 	}
 	
-	public static void docSysErrorLog(String logStr, ReturnAjax rt, String filePath) {
-		System.err.println(logStr);
+	public static void docSysErrorLog(String logStr, ReturnAjax rt, String filePath, boolean enableConsole) {
 		if(rt != null)
 		{
 			rt.setError(logStr);
 		}
 		
+		if(enableConsole)
+		{
+			System.err.println(logStr);			
+		}
 		toFile(logStr + "\n", filePath);
 	}
 
@@ -103,8 +115,11 @@ public class Log {
 		System.out.println(Head + " " + msg);
 	}
 	
-	public static void info(String Head, String msg, String filePath) {
-		System.out.println(Head + " " + msg);
+	public static void info(String Head, String msg, String filePath, boolean enableConsole) {
+		if(enableConsole)
+		{
+			System.out.println(Head + " " + msg);
+		}
 		toFile(Head + " " + msg  + "\n", filePath);
 	}
 	
@@ -112,12 +127,15 @@ public class Log {
 		System.out.println(content);
 	}
 	
-	public static void println(String content, String filePath) {
-		System.out.println(content);
+	public static void println(String content, String filePath, boolean enableConsole) {
+		if(enableConsole)
+		{
+			System.out.println(content);
+		}
 		toFile(content + "\n", filePath);		
 	}
 	
 	public static void toFile(String content, String filePath) {
-		FileUtil.appendContentToFile(filePath, content);	
+		FileUtil.appendContentToFile(filePath, content, "UTF-8");	
 	}
 }

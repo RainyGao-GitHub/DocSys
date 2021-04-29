@@ -8370,7 +8370,7 @@ public class BaseController  extends BaseFunction{
 		accessInfo.put("Time", accessDate.toString());
 		String accessInfoStr = "{" + JSON.toJSONStringWithDateFormat(accessInfo, "yyy-MM-dd HH:mm:ss") + "},\r\n";		
 		String filePath = docSysIniPath + "access.log";
-		FileUtil.appendContentToFile(filePath, accessInfoStr);
+		FileUtil.appendContentToFile(filePath, accessInfoStr, "UTF-8");
 	}
 	
 	private static void UserJDBCSettingUpgrade(String userJDBCSettingPath) 
