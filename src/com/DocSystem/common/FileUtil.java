@@ -1335,7 +1335,7 @@ public class FileUtil {
 			e.printStackTrace();
 			charset = null;
 		}
-		System.out.println("charset:" + charset);
+		System.out.println("getCharset() charset:" + charset);
 		return charset;
 	}
 	
