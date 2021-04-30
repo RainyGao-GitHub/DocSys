@@ -151,7 +151,7 @@ public class FileUtil {
 		return  readDocContentFromFile(path, name, encode);
 	}
 	
-	public static String readDocContentFromFile(String path, String name, String encode) 
+	public static byte[] readBufferFromFile(String path, String name) 
 	{	
 		String filePath = path + name;
 		try 
@@ -175,22 +175,36 @@ public class FileUtil {
 			in = new FileInputStream(filePath);
 			in.read(buffer, 0, fileSize);
 			in.close();	
-
-			String content = null;
-			if(encode == null)
-			{
-				content = new String(buffer);
-			}
-			else
-			{
-				content = new String(buffer, encode);
-			}
-			//System.out.println("content:[" + content + "]");
-			return content;
+			return buffer;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static String readDocContentFromFile(String path, String name, String encode) 
+	{	
+		byte buffer[] = readBufferFromFile(path, name);
+		if(buffer == null)
+		{
+			return null;
+		}
+		
+		String content = null;
+		if(encode == null)
+		{
+			content = new String(buffer);
+		}
+		else
+		{
+			try {
+				content = new String(buffer, encode);
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return content;		
 	}
 	
 	public static String readDocContentFromFile(String path, String name, int offset, int size) 
