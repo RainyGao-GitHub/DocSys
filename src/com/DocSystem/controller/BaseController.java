@@ -5629,7 +5629,7 @@ public class BaseController  extends BaseFunction{
 		docLock = reposDocLocskMap.get(docLockId);
 		
 		//协同编辑只需要检查当前和父节点是否强制锁定即可
-		if(login_user.getId() == coEditUser.getId())
+		if(login_user.getId().equals(coEditUser.getId()))
 		{
 			System.out.println("checkDocLocked() is coEditUser");
 			return (isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || isParentDocForceLocked(doc,login_user,rt));
