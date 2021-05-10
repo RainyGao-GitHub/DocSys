@@ -43,6 +43,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 public class BaseFunction{	
+	protected static final long CONST_SECOND = 1000;
+	protected static final long CONST_MINUTE = 60*1000;
 	protected static final long CONST_HOUR = 60*60*1000;
 	protected static final long CONST_DAY = 24*CONST_HOUR;
 	protected static final long CONST_MONTH = 30*CONST_DAY;
