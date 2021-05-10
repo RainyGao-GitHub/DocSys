@@ -29,6 +29,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import util.ReadProperties;
 import util.ReturnAjax;
+import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
@@ -770,7 +771,7 @@ public class BaseFunction{
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        indexWriter = new IndexWriter(directory, config);
 	
-	        Document document = buildDocumentForSystemLog(log);
+	        Document document = LuceneUtil2.buildDocumentForObject(log);
 	        indexWriter.addDocument(document);	        
 	        
 	        indexWriter.commit();
@@ -815,74 +816,6 @@ public class BaseFunction{
 		{
 			analyzer.close();
 		}
-	}
-
-	protected static JSONObject buildJsonObjForSystemLog(SystemLog log) {
-		JSONObject obj = new JSONObject();			
-		
-		obj.put("id", log.id);	
-		obj.put("time", log.time);
-		obj.put("ip", log.ip);
-		obj.put("userId", log.userId);	
-		obj.put("userName", log.userName);	
-		obj.put("event", log.event);	
-		obj.put("subEvent", log.subEvent);	
-		obj.put("action", log.action);	
-		obj.put("result", log.result);
-		
-		obj.put("reposName", log.reposName);	
-		obj.put("path", log.path);	
-		obj.put("name", log.name);	
-		obj.put("newPath", log.newPath);	
-		obj.put("newName", log.newName);	
-				
-		obj.put("content", log.content);	
-		return obj;
-	}
-	
-	protected static Document buildDocumentForSystemLog(SystemLog log) {
-		Document document = new Document();			
-		
-		document.add(new StringField("id", log.id, Store.YES));	
-		document.add(new LongField("time", log.time, Store.YES));
-		document.add(new StringField("ip", log.ip, Store.YES));
-		document.add(new StringField("userId", log.userId, Store.YES));	
-		document.add(new StringField("userName", log.userName, Store.YES));	
-		document.add(new StringField("event", log.event, Store.YES));	
-		document.add(new StringField("subEvent", log.subEvent, Store.YES));	
-		document.add(new StringField("action", log.action, Store.YES));	
-		document.add(new StringField("result", log.result, Store.YES));
-		
-		document.add(new StringField("reposName", log.reposName, Store.YES));	
-		document.add(new StringField("path", log.path, Store.YES));	
-		document.add(new StringField("name", log.name, Store.YES));	
-		document.add(new StringField("newPath", log.newPath, Store.YES));	
-		document.add(new StringField("newName", log.newName, Store.YES));	
-				
-		document.add(new StringField("content", log.content, Store.YES));	
-		return document;
-	}
-	
-	protected static SystemLog buildSystemLogForDocument(Document document) {
-		SystemLog log = new SystemLog();
-		log.id = document.get("id");
-		log.time = Long.parseLong(document.get("time"));
-		log.ip = document.get("ip");
-		log.userId = document.get("userId");
-		log.userName = document.get("userName");
-		log.event = document.get("event");
-		log.subEvent = document.get("subEvent");
-		log.action = document.get("action");
-		log.result = document.get("result");
-		
-		log.reposName = document.get("reposName");
-		log.path = document.get("path");
-		log.name = document.get("name");
-		log.newPath = document.get("newPath");
-		log.newName = document.get("newName");
-		
-		log.content = document.get("content");
-		return log;
 	}
     
 	protected static String getIndexLibPathForSystemLog() 
