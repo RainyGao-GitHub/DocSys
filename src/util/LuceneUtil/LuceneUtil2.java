@@ -1430,6 +1430,56 @@ public class LuceneUtil2   extends BaseFunction
 		return null;
 	}
 	
+
+	public static String buildCsvStrForObject(Object obj) {
+		StringBuffer sb = new StringBuffer();	
+		
+		Class userCla = (Class) obj.getClass();
+		java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = getFieldType(type);
+			String fieldName = f.getName();
+			System.out.println("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
+			if(fieldType != null)
+			{
+	            try {
+					Object val = f.get(obj);
+					if(val != null)
+					{
+						switch(fieldType)
+						{
+						case QueryCondition.FIELD_TYPE_String:
+						case QueryCondition.FIELD_TYPE_BigDecimal:	//浮点数用字符串表示
+						case QueryCondition.FIELD_TYPE_Integer:
+						case QueryCondition.FIELD_TYPE_Long:
+							sb.append(val + ",");
+							break;
+						default:
+							sb.append(",");
+							break;
+						}
+					}
+					else
+					{
+						sb.append(",");
+					}
+	            } catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+        }
+		
+		return sb.toString();
+	}
+	
 	public static Document buildDocumentForObject(Object obj) {
 		Document document = new Document();	
 		
