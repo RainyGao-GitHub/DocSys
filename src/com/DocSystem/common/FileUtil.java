@@ -728,7 +728,7 @@ public class FileUtil {
     }
 	
 	//向文件末尾追加内容
-    public static void appendContentToFile(String filePath, String content, String encode) {
+    public static boolean appendContentToFile(String filePath, String content, String encode) {
         try {
             // 打开一个随机访问文件流，按读写方式
             RandomAccessFile randomFile = new RandomAccessFile(filePath, "rw");
@@ -749,9 +749,11 @@ public class FileUtil {
             randomFile.write(buff);
             
             randomFile.close();
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
     
     public static String getFileSuffix(String filePath)
