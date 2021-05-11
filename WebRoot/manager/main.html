@@ -2585,6 +2585,52 @@
 		$Func.render($("#container"),"user",{"list":list}, callback);
     }
 	
+	function exportUserConfirm()
+	{
+		console.log("exportUserConfirm userSearchWord:" + userSearchWord);
+		qiao.bs.confirm({
+			id: "exportUserConfirmDialog",
+	        title: "导出用户",
+	        msg: "是否导出用户？",
+	        okbtn: "导出",
+	        qubtn: "取消",
+	    },function () {
+	    	exportUserList(userSearchWord);
+	    	return true;   
+	    });
+	}
+	
+	function exportUserList(userSearchWord){
+		console.log("exportUserList userSearchWord:" + userSearchWord);
+		
+		$.ajax({
+	        url : "/DocSystem/Bussiness/exportUserList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            // 新增用户名搜索条件
+	            searchWord: userSearchWord,
+	        },
+	        success : function (ret) {
+	        	console.log("exportUserList ret",ret);
+	            if( "ok" == ret.status )
+	            {
+            	    console.log("exportUserList Ok");        	   		
+	            	window.location.href = ret.data;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+		        	showErrorMessage("导出用户列表失败：" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("导出用户列表失败：服务器异常");
+	        }
+	    });
+	}
+	
+	
 	function delUserConfirm(userId, pageIndex, index)
 	{	
 		console.log("delUserConfirm userId:" + userId + " pageIndex:" + pageIndex);
