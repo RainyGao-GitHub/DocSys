@@ -68,6 +68,8 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.User;
+
 import java.math.BigDecimal;
 
 import util.FileUtil.FileUtils2;
@@ -1430,6 +1432,43 @@ public class LuceneUtil2   extends BaseFunction
 		return null;
 	}
 	
+	public static String buildCsvTitleStrForObject(Object obj) {
+		StringBuffer sb = new StringBuffer();	
+		
+		Class userCla = (Class) obj.getClass();
+		java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = getFieldType(type);
+			String fieldName = f.getName();
+			System.out.println("buildCsvTitleStrForObject() fieldType:" + type + " fieldName:" + fieldName);
+			if(fieldType != null)
+			{
+	            try {
+					switch(fieldType)
+					{
+					case QueryCondition.FIELD_TYPE_String:
+					case QueryCondition.FIELD_TYPE_BigDecimal:	//浮点数用字符串表示
+					case QueryCondition.FIELD_TYPE_Integer:
+					case QueryCondition.FIELD_TYPE_Long:
+						sb.append(fieldName + ",");
+						break;
+					default:
+						sb.append(",");
+						break;
+					}
+	            } catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+        }
+		
+		return sb.toString();
+	}
 
 	public static String buildCsvStrForObject(Object obj) {
 		StringBuffer sb = new StringBuffer();	
@@ -1443,7 +1482,7 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			System.out.println("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
+			System.out.println("buildCsvStrForObject() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
@@ -1453,6 +1492,8 @@ public class LuceneUtil2   extends BaseFunction
 						switch(fieldType)
 						{
 						case QueryCondition.FIELD_TYPE_String:
+							sb.append(val + "\t,");
+							break;
 						case QueryCondition.FIELD_TYPE_BigDecimal:	//浮点数用字符串表示
 						case QueryCondition.FIELD_TYPE_Integer:
 						case QueryCondition.FIELD_TYPE_Long:
