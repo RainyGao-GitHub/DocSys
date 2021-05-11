@@ -992,26 +992,6 @@ public class ManageController extends BaseController{
 		rt.setDataEx(queryResult.total);
 		writeJson(rt, response);
 	}
-
-	private List<User> getUserListOnPage(User user, Integer pageIndex, Integer pageSize, QueryResult queryResult) {
-		HashMap<String, String> param = buildQueryParamForObj(user, pageIndex, pageSize);
-		
-		List <User> list = null;
-		if(user != null)
-		{
-			Integer total = userService.getCountWithParamLike(param);
-			queryResult.total = total;
-			list = userService.getUserListWithParamLike(param);		
-		}
-		else
-		{
-			Integer total = userService.getCountWithParam(param);
-			queryResult.total = total;
-			list = userService.getUserListWithParam(param);
-		}
-		queryResult.result = list;
-		return list;
-	}
 	
 	@RequestMapping(value="addFirstAdminUser")
 	public void addFirstAdminUser(User user, HttpSession session,HttpServletResponse response)

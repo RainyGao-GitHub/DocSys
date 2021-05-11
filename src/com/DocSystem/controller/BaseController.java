@@ -71,6 +71,7 @@ import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.OS;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.QueryResult;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.RunResult;
@@ -1978,6 +1979,41 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		return uList;
+	}
+	
+	protected List<User> getUserListOnPage(User user, Integer pageIndex, Integer pageSize, QueryResult queryResult) {
+		HashMap<String, String> param = buildQueryParamForObj(user, pageIndex, pageSize);
+		
+		List <User> list = null;
+		if(user != null)
+		{
+			Integer total = userService.getCountWithParamLike(param);
+			queryResult.total = total;
+			list = userService.getUserListWithParamLike(param);		
+		}
+		else
+		{
+			Integer total = userService.getCountWithParam(param);
+			queryResult.total = total;
+			list = userService.getUserListWithParam(param);
+		}
+		queryResult.result = list;
+		return list;
+	}
+	
+	protected List<User> getUserList(User user) {
+		HashMap<String, String> param = buildQueryParamForObj(user, null, null);
+		
+		List <User> list = null;
+		if(user != null)
+		{
+			list = userService.getUserListWithParamLike(param);		
+		}
+		else
+		{
+			list = userService.getUserListWithParam(param);
+		}
+		return list;
 	}
 	
 	public boolean isUserNameUsed(String name)
