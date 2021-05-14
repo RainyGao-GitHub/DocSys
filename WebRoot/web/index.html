@@ -490,6 +490,10 @@
 	function showFeebackPanel()
 	{
 		console.log("showFeebackPanel");
+		var href = "https://gitee.com/RainyGao/DocSys/issues";
+		window.open(href);   //新窗口打开	
+
+		/*
 		bootstrapQ.dialog({
 			url: 'feeback.html',
 			title: '意见与反馈',
@@ -499,7 +503,7 @@
 			callback: function(){
 				FeebackPageInit();
 			},
-		});
+		});*/
 	}
 	
 	function downloadInstallPackage()
