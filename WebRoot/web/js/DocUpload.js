@@ -59,7 +59,7 @@
         	return uploadStatus;
         }
       	
-      	//设置进度条的上传取消按键的接口,this function has performance issue, so it will not be used
+      	//设置进度条的上传取消按键的接口,该接口有性能问题不再使用
     	function itemStopUploadDelegate()
     	{
     		console.log("itemStopUploadDelegate");
@@ -451,7 +451,7 @@
 		    				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+SubContext.name+"</span></a>"+
 		    				"<a class='reuploadBtn reupload"+i+"' onclick='reuploadFailDocs("+i+")'>重传 </a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
-		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload("+i+")'></i>"+
+		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='DocUpload.stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
 		    					"<div class='el-progress-bar'>"+
 		    						"<div class='el-progress-bar__outer' >"+
@@ -2013,8 +2013,8 @@
 		
 		function stopUpload(index)
 		{
-			console.log("stopUpload() index:" + index ,SubContext);
-			SubContext.stopUploadFlag = true;
+			console.log("stopUpload() index:" + index ,SubContext[index]);
+			SubContextList[index].stopUploadFlag = true;
 		}
 		
 		function stopAllUpload()
