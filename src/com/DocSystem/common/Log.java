@@ -136,6 +136,9 @@ public class Log {
 	}
 	
 	public static void toFile(String content, String filePath) {
-		FileUtil.appendContentToFile(filePath, content, "UTF-8");	
-	}
+		if(filePath != null)
+		{
+			FileUtil.appendContentToFile(filePath, content, "UTF-8");	
+		}
+	}	
 }
