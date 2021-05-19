@@ -50,7 +50,6 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Doc/downloadDocPrepare",
 		"Doc/downloadHistoryDocPrepare",
 		"Doc/downloadDoc",
-		"Doc/saveDoc",
 		"Doc/doGetTmpFile",
 		"Doc/DocToPDF",
 		"Doc/lockDoc",
@@ -70,6 +69,8 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"web/static/office-editor",
 		//For Sales
 		"Sales/checkLicense",
+		//For Office Editor
+		"Bussiness/saveDoc",
 		//For Payment
 		"pay/queryGoods",
 		"pay/initOrder",
