@@ -26,7 +26,8 @@ Boolean isBussienss = BaseController.systemLicenseInfo.hasLicense;
 	    var key = docInfo.docId + "";
 	    
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST", <%=isBussienss%>);
-	    	    
+	    document.title = docInfo.name;
+	    
 	    function showOffice(data)
 	   	{
 			var fileLink = buildFullLink(data.fileLink);
