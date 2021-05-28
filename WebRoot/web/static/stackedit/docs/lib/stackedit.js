@@ -191,7 +191,8 @@ var Stackedit = function () {
       this.$containerEl.className = silent ? 'stackedit-hidden-container' : 'stackedit-container';
       this.$containerEl.innerHTML = containerHtml;
       
-      var placeholderId = "editor";
+      var placeholderId = this.$options.placeholder;
+      console.log("stackedit.js placeholderId:" + placeholderId);
       var target = document.getElementById(placeholderId);
       //document.body.appendChild(this.$containerEl);
       target.appendChild(this.$containerEl);

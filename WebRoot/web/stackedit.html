@@ -81,7 +81,9 @@
 		function showText(docText, tmpSavedDocText)
 		{
 			//console.log("showText:", docText);
-			const stackedit = new Stackedit();
+			const stackedit = new Stackedit({
+				  placeholder: 'editor',
+			});
 			
 			// Open the iframe
 			stackedit.openFile({
