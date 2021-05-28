@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>TextPlayer</title>
+    <script src="static/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/base64.js"></script>
+    <script type="text/javascript" src="js/DocSys.js"></script>
+    <script src="static/stackedit/docs/lib/stackedit.min.js"></script>
+</head>
+<body style="height: 100%; margin: 0;">
+    <div align=center style="margin-top:20px" >
+		<textarea>Hello World</textarea>
+    </div>   
+	<script type="text/javascript">
+	    var docInfo = getDocInfoFromRequestParamStr();
+	    document.title = docInfo.name;
+	    
+	    if(!docInfo.fileSuffix)
+	    {
+	    	docInfo.fileSuffix = getFileSuffix(docInfo.name);
+	    }
+	    
+		var docText = "";
+		var tmpSavedDocText = "";
+		var isContentChanged = false;
+		getDocText(docInfo, showText, showErrorMessage);
+	
+		const el = document.querySelector('textarea');
+		el.value = docText;
+				
+		function showText(docText, tmpSavedDocText)
+		{
+			console.log("showText:", docText);
+			const stackedit = new Stackedit();
+			
+			// Open the iframe
+			stackedit.openFile({
+			    name: docInfo.name, // with an optional filename
+			    content: {
+			      text: docText // and the Markdown content.
+			    }
+			  });
+			
+			/*stackedit.openFile({
+			    name: docInfo.name, // with an optional filename
+			    content: {
+			        text: docText,
+			        properties: {
+			          extensions: {
+			            preset: 'commonmark'
+			          }
+			    	}
+			    }
+			});*/
+		
+			// Listen to StackEdit events and apply the changes to the textarea.
+			stackedit.on('fileChange', (file) => {
+			    el.value = file.content.text;
+			});
+		}
+    </script>
+</body>
+</html>

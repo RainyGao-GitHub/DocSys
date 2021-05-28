@@ -791,6 +791,26 @@ function isVideo(suffix)
 	return true;
 }
 
+function isMarkdown(suffix)
+{
+	if(!suffix || suffix == "")
+	{
+		return false;
+	}
+	var fileTypeMap = {
+			md : true,
+			markdown : true,
+	};
+	
+	var type = fileTypeMap[suffix];
+	if ( undefined == type )
+	{
+		return false;
+	}
+	
+	return true;
+}
+
 function isText(suffix)
 {
 	if(!suffix || suffix == "")
@@ -800,7 +820,7 @@ function isText(suffix)
 	var fileTypeMap = {
 			txt : true,
 			log : true,
-			md : true,
+			//md : true,
 			py : true,
 			java : true,
 			cpp : true,
@@ -918,6 +938,12 @@ function isTextFile(fileName)
 {		
 	var suffix = getFileSuffix(fileName);
 	return isText(suffix);
+}
+
+function isMarkdownFile(fileName)
+{		
+	var suffix = getFileSuffix(fileName);
+	return isMarkdown(suffix);
 }
 
 function getDiyFileIconType(name)
@@ -1116,6 +1142,10 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 	else if(isOffice(docInfo.fileSuffix))
 	{
 		openOffice(docInfo, openInNewPage, preview);
+	}
+	else if(isMarkdown(docInfo.fileSuffix))
+	{
+		showMarkdown(docInfo, openInNewPage);		
 	}
 	else if(isText(docInfo.fileSuffix))
 	{
@@ -1418,6 +1448,25 @@ function showPdf(docInfo, openInNewPage)
 	}
 }
 
+function showMarkdown(docInfo, openInNewPage)
+{
+	if(openInNewPage == "openInNewPage")
+	{
+		showMarkdownInNewPage(docInfo);
+	}
+	else
+	{
+		if(openInNewPage == "openInArtDialog")
+		{			
+			showMarkdownInArtDialog(docInfo);
+		}
+		else
+		{
+			showMarkdownInDialog(docInfo);
+		}
+	}
+}
+
 function showText(docInfo, openInNewPage)
 {
 	if(openInNewPage == "openInNewPage")
@@ -1496,11 +1545,11 @@ function showPdfInNewPage(docInfo, fileLink)
 	window.open("/DocSystem/web/pdf.html?" + urlParamStr);
 }
 
-function showMarkdownInNewPage(docInfo)
+function showMarkdownInNewPage(docInfo, openType)
 {
-	console.log("showMarkdownInNewPage docInfo:", docInfo);
+	console.log("showTextInNewPage docInfo:", docInfo);
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/markdown.html?" + urlParamStr);
+	window.open("/DocSystem/web/stackedit.html?" + urlParamStr);			
 }
 
 function showTextInNewPage(docInfo, openType)
