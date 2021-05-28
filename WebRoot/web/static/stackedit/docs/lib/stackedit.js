@@ -1,4 +1,6 @@
 (function webpackUniversalModuleDefinition(root, factory) {
+	console.log("stackedit.js init");
+	
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
@@ -104,6 +106,8 @@ var origin = window.location.protocol + '//' + window.location.host;
 var urlParser = document.createElement('a');
 
 var Stackedit = function () {
+  console.log("stackedit.js Stackedit init");
+
   function Stackedit() {
     var _this = this;
 
@@ -128,6 +132,8 @@ var Stackedit = function () {
   _createClass(Stackedit, [{
     key: '$trigger',
     value: function $trigger(type, payload) {
+      console.log("stackedit.js Stackedit $trigger",'$trigger');
+
       var listeners = this.$listeners[type] || [];
       // Use setTimeout as a way to ignore errors
       listeners.forEach(function (listener) {
@@ -139,6 +145,8 @@ var Stackedit = function () {
   }, {
     key: 'on',
     value: function on(type, listener) {
+      console.log("stackedit.js Stackedit on");
+
       var listeners = this.$listeners[type] || [];
       listeners.push(listener);
       this.$listeners[type] = listeners;
@@ -146,6 +154,7 @@ var Stackedit = function () {
   }, {
     key: 'off',
     value: function off(type, listener) {
+      console.log("stackedit.js Stackedit off");
       var listeners = this.$listeners[type] || [];
       var idx = listeners.indexOf(listener);
       if (idx >= 0) {
@@ -160,6 +169,8 @@ var Stackedit = function () {
   }, {
     key: 'openFile',
     value: function openFile() {
+      console.log("stackedit.js Stackedit openFile");
+        
       var _this2 = this;
 
       var file = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -180,6 +191,8 @@ var Stackedit = function () {
         : content.yamlProperties,
         silent: silent
       };
+      
+      console.log("stackedit.js Stackedit openFile params", params);
       var serializedParams = Object.keys(params).map(function (key) {
         return key + '=' + encodeURIComponent(params[key] || '');
       }).join('&');
@@ -190,7 +203,9 @@ var Stackedit = function () {
       this.$containerEl = document.createElement('div');
       this.$containerEl.className = silent ? 'stackedit-hidden-container' : 'stackedit-container';
       this.$containerEl.innerHTML = containerHtml;
-      
+
+      console.log("stackedit.js Stackedit openFile containerHtml", containerHtml);
+
       var placeholderId = this.$options.placeholder;
       console.log("stackedit.js placeholderId:" + placeholderId);
       var target = document.getElementById(placeholderId);
@@ -210,7 +225,8 @@ var Stackedit = function () {
       // Add message handler
       this.$messageHandler = function (event) {
         if (event.origin === _this2.$origin && event.source === iframeEl.contentWindow) {
-          switch (event.data.type) {
+            console.log("stackedit.js Stackedit $messageHandler", event.data.type);
+        	switch (event.data.type) {
             case 'ready':
               // StackEdit has its own one close button
               closeButton.parentNode.removeChild(closeButton);
@@ -238,7 +254,9 @@ var Stackedit = function () {
   }, {
     key: 'close',
     value: function close() {
-      if (this.$messageHandler) {
+        console.log("stackedit.js Stackedit close");
+
+    	if (this.$messageHandler) {
         // Clean everything
         window.removeEventListener('message', this.$messageHandler);
         document.body.removeChild(this.$containerEl);
