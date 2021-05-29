@@ -558,14 +558,9 @@ function buildFullLink(docLink)
 		return null;
 	}
 	
-	var host = window.location.hostname; //域名不带端口  
- 	var port = window.location.port;
- 	if(port && port != "")
- 	{
- 		host += ":" + port;
- 	}
- 	
- 	var url = "http://" + host + docLink;
+	var protocol = window.location.protocol + '//';
+	var host = window.location.host; //域名带端口  
+ 	var url = protocol + host + docLink;
  	console.log("buildFullLink() url:" + url);
  	return url;
 }
@@ -589,9 +584,8 @@ function getDocShareLink(reposId, docShare, IpAddress)
 	var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
  	console.log(href);
 	
- 	//var host = window.location.host;	//域名带端口
+	var protocol = window.location.protocol + '//';
  	var host = window.location.hostname; //域名不带端口       	 		
- 		
  	if(host == "localhost" && IpAddress && IpAddress != "")
  	{
  		host = 	IpAddress;
@@ -603,7 +597,7 @@ function getDocShareLink(reposId, docShare, IpAddress)
  		host += ":" + port;
  	}
  		
- 	var url = "http://"+host+href;
+ 	var url = protocol + host + href;
  	return url;
 }
 
