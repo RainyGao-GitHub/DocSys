@@ -1886,7 +1886,7 @@ function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 	console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
 	
 	bootstrapQ.dialog({
-		id: "StackEdit",
+		id: "StackeidtEditor",
 		title: docInfo.name,
 		url: 'stackeditEditor.html',
 		msg: '页面正在加载，请稍等...',
@@ -1894,7 +1894,7 @@ function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 		big: true,
 		mstyle: getDialogStyle(),
 		callback: function(){
-			MarkdownEditor.markdownEditorPageInit(docInfo);
+			StackeditEditor.PageInit(docInfo);
 		},
 	});
 }

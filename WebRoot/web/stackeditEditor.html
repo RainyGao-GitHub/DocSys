@@ -1,12 +1,6 @@
-<script src="static/scripts/jquery.min.js"></script>
-<link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-<link href="static/bootstrapQ/qiao.css" rel="stylesheet">
-<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
-<link href="static/markdown/css/editormd.min.css" rel="stylesheet">
-<script type="text/javascript" src="js/common.js"></script>
-<script type="text/javascript" src="js/base64.js"></script>
-<script type="text/javascript" src="js/DocSys.js"></script>
-<script src="static/stackedit/docs/lib/stackedit.js"  charset="utf-8"></script><style type="text/css" media="screen">
+<script src="static/stackedit/docs/lib/stackedit.js"  charset="utf-8"></script>
+
+<style type="text/css" media="screen">
   body {
       overflow: hidden;
   }
@@ -48,36 +42,28 @@
 		</div>
 	</div>
 </div>
-<script type="text/javascript">
-	//提示对话框
-	function showErrorMessage($msg) {
-		alert($msg);
-	}
 
-	//获取artDialog父窗口传递过来的参数
-	var dialog = top.dialog.get(window);
-	var docInfo = dialog.data; // 获取对话框传递过来的数据
-	console.log("docInfo:",docInfo)
+<script type="text/javascript">
+//获取窗口的高度并设置高度
+var height =  getWinHeight()-100;
+var width = getWinWidth();
+document.getElementById('textEditor').style.height = height + "px";
+document.getElementById('textEditor').style.width = width + "px";
 	
-    if(!docInfo.fileSuffix)
-    {
-    	docInfo.fileSuffix = getFileSuffix(docInfo.name);
-    }
-    
+var StackeditEditor = (function () {
+    var docInfo = {};
 	var docText = "";
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
 	
-	//页面加载完成处理函数    
-	$(document).ready(function()
+	function PageInit(Input_doc)
 	{
-		if(!docInfo.fileSuffix)
-		{
-			docInfo.fileSuffix = getFileSuffix(docInfo.name);
-		}
-		getDocText(docInfo, showText, showErrorMessage);
-	});	
-				
+		console.log("PageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;		
+	
+		getDocText(docInfo, showText, showErrorMessage);	  	
+  	}
+
 	function showText(docText_, tmpSavedDocText_)
 	{
 		docText =  docText_;
@@ -279,4 +265,22 @@
 			editor.setReadOnly(true);
 		}
 	}
+    //开放给外部的接口
+    return {
+        PageInit: function(docInfo){
+        	PageInit(docInfo);
+        },
+        saveDoc: function(){
+        	saveDoc();
+        },
+        enableEdit: function(){
+        	enableEdit();
+        },
+        exitEdit: function(){
+        	exitEdit();
+        },
+    };
+})();
 </script>
+
+
