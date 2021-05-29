@@ -74,13 +74,12 @@
 		var tmpSavedDocText = "";
 		var isContentChanged = false;
 		getDocText(docInfo, showText, showErrorMessage);
-	
-		const el = document.querySelector('textarea');
-		el.value = docText;
-				
-		function showText(docText, tmpSavedDocText)
+					
+		function showText(docText_, tmpSavedDocText_)
 		{
-			//console.log("showText:", docText);
+			docText =  docText_;
+			tmpSavedDocText = tmpSavedDocText_;
+			console.log("showText:", docText);
 			const stackedit = new Stackedit({
 				  placeholder: 'editor',
 			});
@@ -107,7 +106,8 @@
 		
 			// Listen to StackEdit events and apply the changes to the textarea.
 			stackedit.on('fileChange', (file) => {
-			    el.value = file.content.text;
+				docText = file.content.text;
+				isContentChanged = true;
 			});
 		}
 		
@@ -122,7 +122,6 @@
 	    		return;
 	    	}
 	    	
-			var content = editor.getValue();
 			$.ajax({
 	            url : "/DocSystem/Doc/updateDocContent.do",
 	            type : "post",
@@ -132,18 +131,14 @@
 	            	docId : docInfo.docId,
 	            	path: docInfo.path,
 	                name: docInfo.name,
-	            	content : content,
+	            	content : docText,
 	            	docType: 1, //RealDoc
 	                shareId: docInfo.shareId,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
 	                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
-	                    docText = content;
-	                    isContentChanged = false;
-	                    stackZ.clear();
-	                    stackY.clear();
-	
+	                    isContentChanged = false;	
 	                    bootstrapQ.msg({
 									msg : "保存成功 :" + (new Date()).toLocaleDateString(),
 									type : 'success',
