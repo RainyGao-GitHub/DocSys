@@ -1,0 +1,286 @@
+<script src="static/scripts/jquery.min.js"></script>
+<link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<link href="static/markdown/css/editormd.min.css" rel="stylesheet">
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
+<script type="text/javascript" src="js/DocSys.js"></script>
+<script src="static/stackedit/docs/lib/stackedit.js"  charset="utf-8"></script>
+
+<style type="text/css" media="screen">
+body {
+    overflow: hidden;
+}
+
+#editor {
+    margin: 40px 0 0 0;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+</style>
+
+<div id="textEditor">
+	<div id="textEditorToolBar" style="height:40px;">
+		<div class="editormd-toolbar" style="display: block;">
+			<div class="editormd-toolbar-container">
+				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
+					<li><a href="javascript:;" onclick="saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
+				</ul>
+				<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
+					<li id="textEditorCloseBtn" style="display:none;">
+						<a href="javascript:;" onclick="exitEdit()" title="退出编辑" unselectable="on">
+							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
+						</a>
+					</li>
+					<li id="textEditorEditBtn">
+						<a href="javascript:;" onclick="enableEdit()" title="编辑" unselectable="on">
+							<i class="fa fa-edit" name="edit" unselectable="on"></i>
+						</a>
+					</li>
+				</ul>				
+			</div>
+		</div>
+	</div>
+	<div class="textEditorContent" style="min-height: 600px;">
+		<div id="editor">
+			<textarea>Hello World</textarea>
+		</div>
+  		</div>
+</div>
+
+<script type="text/javascript">
+	//提示对话框
+	function showErrorMessage($msg) {
+		alert($msg);
+	}
+
+	//获取artDialog父窗口传递过来的参数
+	var dialog = top.dialog.get(window);
+	var docInfo = dialog.data; // 获取对话框传递过来的数据
+	console.log("docInfo:",docInfo)
+	
+    if(!docInfo.fileSuffix)
+    {
+    	docInfo.fileSuffix = getFileSuffix(docInfo.name);
+    }
+    
+	var docText = "";
+	var tmpSavedDocText = "";
+	var isContentChanged = false;
+	
+	//页面加载完成处理函数    
+	$(document).ready(function()
+	{
+		if(!docInfo.fileSuffix)
+		{
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		}
+		getDocText(docInfo, showText, showErrorMessage);
+	});	
+				
+	function showText(docText_, tmpSavedDocText_)
+	{
+		docText =  docText_;
+		tmpSavedDocText = tmpSavedDocText_;
+		console.log("showText:", docText);
+		const stackedit = new Stackedit({
+			  placeholder: 'editor',
+		});
+		
+		// Open the iframe
+		stackedit.openFile({
+		    name: docInfo.name, // with an optional filename
+		    content: {
+		      text: docText // and the Markdown content.
+		    }
+		  });
+
+		/*stackedit.openFile({
+		    name: docInfo.name, // with an optional filename
+		    content: {
+		        text: docText,
+		        properties: {
+		          extensions: {
+		            preset: 'commonmark'
+		          }
+		    	}
+		    }
+		});*/
+	
+		// Listen to StackEdit events and apply the changes to the textarea.
+		stackedit.on('fileChange', (file) => {
+			docText = file.content.text;
+			isContentChanged = true;
+		});
+	}
+	
+	
+    function saveDoc()
+	{
+    	console.log("saveDoc docInfo.docId:" + docInfo.docId);
+		
+    	if(isContentChanged == false)
+    	{
+    	   	console.log("saveDoc there is no change");
+    		return;
+    	}
+    	
+		$.ajax({
+            url : "/DocSystem/Doc/updateDocContent.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                reposId: docInfo.vid,
+            	docId : docInfo.docId,
+            	path: docInfo.path,
+                name: docInfo.name,
+            	content : docText,
+            	docType: 1, //RealDoc
+                shareId: docInfo.shareId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
+                    isContentChanged = false;	
+                    bootstrapQ.msg({
+								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
+								type : 'success',
+								time : 1000,
+					});
+				}else {
+                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
+                }
+            },
+            error : function () {
+                bootstrapQ.alert("保存失败:服务器异常");
+            }
+        });
+    }
+
+    function enableEdit()
+    {
+		console.log("enableEdit()");
+		if(!docInfo.docId || docInfo.docId == 0)
+		{
+			showErrorMessage("请选择文件!");
+			return;
+		}
+
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 1, //LockType: Online Edit
+				reposId : docInfo.vid, 
+				docId : docInfo.docId,
+				path: docInfo.path,
+				name: docInfo.name,
+				docType: 1,
+                shareId: docInfo.shareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status)
+				{
+					console.log("enableEdit() ret.data",ret.data);
+					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
+
+					//显示工具条和退出编辑按键
+					switchEditMode(true);
+					return;
+ 				}
+				else
+				{
+					showErrorMessage("lockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("lockDoc 异常");
+				return;
+			}
+		});
+    }
+    
+	//退出文件编辑状态
+    function exitEdit() {   	
+		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
+		if(!docInfo.docId || docInfo.docId == 0)
+		{
+			showErrorMessage("文件不存在");
+			switchEditMode(false);
+			return;
+		}
+		
+		$.ajax({
+			url : "/DocSystem/Doc/unlockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 1, //unlock the doc
+				reposId : docInfo.vid, 
+            	docId : docInfo.docId,
+				path: docInfo.path,
+				name: docInfo.name,
+				docType: 1,
+                shareId: docInfo.shareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status)
+				{
+					console.log("exitEdit() ret:",ret.data);
+					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
+					switchEditMode(false);
+					return;
+ 				}
+				else
+				{
+					showErrorMessage("exitEdit() unlockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("exitEdit() unlockDoc 异常");
+				return;
+			}
+		});
+	}
+
+	function switchEditMode(edit)
+	{
+		if(edit == true)
+		{
+			//显示工具条
+			$("#toolBarMenu").show();
+			
+			//显示退出编辑按键
+			$("#textEditorCloseBtn").show();
+			
+			//隐藏编辑按键
+			$("#textEditorEditBtn").hide();
+
+			//Enable Edit
+			editor.setReadOnly(false);
+		}
+		else
+		{
+			//隐藏工具条
+			$("#toolBarMenu").hide();
+			
+			//隐藏退出编辑按键
+			$("#textEditorCloseBtn").hide();
+		
+			//显示编辑按键
+			$("#textEditorEditBtn").show();			
+			
+			//Disable Edit
+			editor.setReadOnly(true);
+		}
+	}
+</script>

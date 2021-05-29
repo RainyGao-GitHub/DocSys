@@ -101,9 +101,13 @@ var _createStyle = function createStyle() {
 };
 
 var containerHtml = '\n<div class="stackedit-iframe-container">\n  <iframe class="stackedit-iframe"></iframe>\n  <a href="javascript:void(0)" class="stackedit-close-button" title="Close">\n    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">\n      <path fill="#777" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />\n    </svg>\n  </a>\n</div>\n';
+console.log("stackedit.js containerHtml:", containerHtml);
 
 var origin = window.location.protocol + '//' + window.location.host;
+console.log("stackedit.js origin:", origin);
+
 var urlParser = document.createElement('a');
+console.log("stackedit.js urlParser:", urlParser);
 
 var Stackedit = function () {
   console.log("stackedit.js Stackedit init");
@@ -132,7 +136,7 @@ var Stackedit = function () {
   _createClass(Stackedit, [{
     key: '$trigger',
     value: function $trigger(type, payload) {
-      console.log("stackedit.js Stackedit $trigger",'$trigger');
+      console.log("stackedit.js Stackedit $trigger", type, payload);
 
       var listeners = this.$listeners[type] || [];
       // Use setTimeout as a way to ignore errors
@@ -145,7 +149,8 @@ var Stackedit = function () {
   }, {
     key: 'on',
     value: function on(type, listener) {
-      console.log("stackedit.js Stackedit on");
+      //注册消息处理函数
+      console.log("stackedit.js Stackedit add listener:", type, listener);
 
       var listeners = this.$listeners[type] || [];
       listeners.push(listener);
@@ -154,7 +159,8 @@ var Stackedit = function () {
   }, {
     key: 'off',
     value: function off(type, listener) {
-      console.log("stackedit.js Stackedit off");
+      //注销消息处理
+      console.log("stackedit.js Stackedit  remove listener:", type, listener);
       var listeners = this.$listeners[type] || [];
       var idx = listeners.indexOf(listener);
       if (idx >= 0) {
@@ -225,13 +231,15 @@ var Stackedit = function () {
       // Add message handler
       this.$messageHandler = function (event) {
         if (event.origin === _this2.$origin && event.source === iframeEl.contentWindow) {
-            console.log("stackedit.js Stackedit $messageHandler", event.data.type);
+            console.log("stackedit.js Stackedit $messageHandler received msg:", event.data.type);
         	switch (event.data.type) {
             case 'ready':
+              // iframe 页面加载完成
               // StackEdit has its own one close button
               closeButton.parentNode.removeChild(closeButton);
               break;
             case 'fileChange':
+              //收到iframe文件改动消息
               // Trigger fileChange event
               _this2.$trigger('fileChange', event.data.payload);
               if (silent) {
@@ -239,11 +247,13 @@ var Stackedit = function () {
               }
               break;
             case 'close':
+            	//收到iframe的关闭消息
             default:
               _this2.close();
           }
         }
       };
+      //监听iframe发来的消息
       window.addEventListener('message', this.$messageHandler);
 
       if (!silent) {

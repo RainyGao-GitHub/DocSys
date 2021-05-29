@@ -1886,17 +1886,74 @@ function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 	console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
 	
 	bootstrapQ.dialog({
-		id: "MdViewer",
+		id: "StackEdit",
 		title: docInfo.name,
-		url: 'mdViewer.html',
+		url: 'stackeditEditor.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
 		mstyle: getDialogStyle(),
 		callback: function(){
-			MdViewer.mdViewerPageInit(docInfo);
+			MarkdownEditor.markdownEditorPageInit(docInfo);
 		},
 	});
+}
+
+function showMarkdownInArtDialog(docInfo)
+{
+	console.log("showMarkdownInArtDialog docInfo.docId:" + docInfo.docId);
+	//获取窗口的高度并设置高度
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();	
+	var d = dialog({
+		id: "StackeditEditor"  + docInfo.docId,
+		title: docInfo.name,
+		url: 'stackeditEditorForArt.html',
+		msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			padding: 0,
+			width: width,
+			height: height,
+			resize: true,
+			drag: true,
+			data: docInfo,
+			onshow: function(){
+				console.log('onshow');
+			},
+			oniframeload: function () {
+				console.log('oniframeload');
+			},
+		});
+	d.show();
+		
+	//等待页面加载好了再获取
+	setTimeout(function (){
+		var isMax = false;
+		
+		var oDiv = document.getElementById("title:StackeditEditor"  + docInfo.docId);
+		oDiv.ondblclick=function(ev){
+	    	console.log("DB Clicked on " +"StackeditEditor"  + docInfo.docId);
+			if(isMax)
+			{
+				var height = getArtDialogInitHeight();
+				var width = getArtDialogInitWidth();
+				
+				isMax = false;
+				d.width(width);
+				d.height(height);	
+			}
+			else
+			{
+				//最大化
+				var height =  getArtDialogMaxHeight();
+				var width = getArtDialogMaxWidth();
+				isMax = true;
+				d.width(width);
+				d.height(height);		
+			}	
+		}
+	}, 100);
 }
 
 function showTextInDialog(docInfo, openType)
