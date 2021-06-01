@@ -42,6 +42,8 @@
     </div>
 	<script type="text/javascript">
 		var docInfo = getDocInfoFromRequestParamStr();
+		document.title = docInfo.name;
+		
 		var gShareId = docInfo.shareId;
 		var curRightClickedTreeNode = null;
 		
