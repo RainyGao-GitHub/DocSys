@@ -19,6 +19,10 @@
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
+<!-- artDialog -->
+<link rel="stylesheet" href="static/artDialog/css/ui-dialog.css">
+<script src="static/artDialog/dist/dialog-min.js"></script>
+<script src="static/artDialog/dist/dialog-plus-min.js"></script>
 <!-- contextMenu -->
 <link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
 <link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
@@ -35,6 +39,9 @@
 	console.log("docInfo:",docInfo);
 	var gShareId = docInfo.shareId;
 	var curRightClickedTreeNode = null;
+	
+	//用于解决artDialog再次调用artDialog的数据穿透问题
+	var gDialogData = {};
 	
 	contextMenuInit();
 	
@@ -199,7 +206,8 @@
     function zTreeOnDbClick(event, treeId, treeNode) 
     {
     	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
-		openDoc(treeNode, true, "openInDialog", docInfo.shareId);
+    	gDialogData["ArtDialog" + treeNode.docId] = treeNode;
+		openDoc(treeNode, true, "openInArtDialog", docInfo.shareId);
     }
 	
       //This function was used to get the rightClick treeNode,it will be used for contextjs
@@ -257,7 +265,8 @@
   		console.log("zipOpenDoc:", curRightClickedTreeNode);
 	  	if(curRightClickedTreeNode && curRightClickedTreeNode != null)
   		{
-	  		openDoc(curRightClickedTreeNode, true, "openInDialog", docInfo.shareId);
+	    	gDialogData["ArtDialog" + curRightClickedTreeNode.docId] = curRightClickedTreeNode;
+	  		openDoc(curRightClickedTreeNode, true, "openInArtDialog", docInfo.shareId);
   		}
   	}
   	

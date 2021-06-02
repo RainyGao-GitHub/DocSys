@@ -12,7 +12,16 @@ Boolean isBussienss = BaseController.systemLicenseInfo.hasLicense;
 <div id="placeholder" style="height: 100%"></div>
 <script type="text/javascript">
 	var artDialog = top.dialog.get(window);
-	var docInfo = artDialog.data;
+	var docInfo = {};
+	if(artDialog)
+	{
+		docInfo = artDialog.data; // 获取对话框传递过来的数据
+	}
+	else
+	{
+		//解决artDialog递归调用的数据穿透问题
+		docInfo = window.parent.gDialogData[window.name];
+	}
 	console.log("docInfo:",docInfo);
 
 	var editor;
