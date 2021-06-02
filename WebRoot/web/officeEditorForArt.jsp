@@ -11,8 +11,8 @@ Boolean isBussienss = BaseController.systemLicenseInfo.hasLicense;
 <script type="text/javascript" src="<%=officeEditorApi%>"></script>
 <div id="placeholder" style="height: 100%"></div>
 <script type="text/javascript">
-	var dialog = top.dialog.get(window);
-	var docInfo = dialog.data;
+	var artDialog = top.dialog.get(window);
+	var docInfo = artDialog.data;
 	console.log("docInfo:",docInfo);
 
 	var editor;
