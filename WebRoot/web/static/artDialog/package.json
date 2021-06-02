@@ -1,9 +1,14 @@
 {
-    "name": "artDialog",
-    "version": "6.0.4",
+    "name": "art-dialog",
+    "version": "7.0.01",
     "readmeFilename": "README.md",
-    "description": "经典的网页对话框组件，内外皆用心雕琢",
+    "description": "A smart dialog box component",
     "homepage": "https://github.com/aui/artDialog",
+    "scripts": {
+        "build": "webpack -p",
+        "dev": "webpack -d",
+        "build-doc": "node doc/build/index.js"
+    },
     "keywords": [
         "dialog"
     ],
@@ -12,17 +17,12 @@
         "type": "git",
         "url": "https://github.com/aui/artDialog.git"
     },
-    "main": "./src/dialog.js",
-    "dependencies": {
-        "jquery": "*"
-    },
+    "main": "./dist/dialog.js",
     "devDependencies": {
-        "grunt-cli": "*",
-        "grunt": "*",
-        "grunt-contrib-uglify": "*",
-        "grunt-unwrap": "*"
+        "css-loader": "^0.27.3",
+        "markdown-it": "^8.3.1",
+        "style-loader": "^0.15.0",
+        "webpack": "^2.2.1"
     },
-    "license": "LGPL"
+    "license": "LGPL-3.0"
 }
-        
-        
