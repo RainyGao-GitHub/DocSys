@@ -207,7 +207,8 @@
     {
     	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
     	gDialogData["ArtDialog" + treeNode.docId] = treeNode;
-		openDoc(treeNode, true, "openInArtDialog", docInfo.shareId);
+		
+    	openDoc(treeNode, true, "openInArtDialog", docInfo.shareId);
     }
 	
       //This function was used to get the rightClick treeNode,it will be used for contextjs
