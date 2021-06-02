@@ -49,14 +49,18 @@
 	</div>
 </div>
 <script type="text/javascript">
-	//提示对话框
-	function showErrorMessage($msg) {
-		alert($msg);
-	}
-
 	//获取artDialog父窗口传递过来的参数
 	var artDialog = top.dialog.get(window);
-	var docInfo = artDialog.data; // 获取对话框传递过来的数据
+	var docInfo = {};
+	if(artDialog)
+	{
+		docInfo = artDialog.data; // 获取对话框传递过来的数据
+	}
+	else
+	{
+		//解决artDialog递归调用的数据穿透问题
+		docInfo = window.parent.gDialogData[window.name];
+	}
 	console.log("docInfo:",docInfo)
 	
     if(!docInfo.fileSuffix)
