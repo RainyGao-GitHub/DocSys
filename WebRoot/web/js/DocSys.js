@@ -774,6 +774,7 @@ function isVideo(suffix)
 			asf : true,
 			flv : true,
 			ogg : true,
+			mp3: true,
 	};
 	
 	var type = fileTypeMap[suffix];
