@@ -1595,7 +1595,7 @@ function showImgInArtDialog(docInfo)
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();	
 	var d = dialog({
-		id: "ImgViewer"  + docInfo.docId,
+		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
 		url: 'imgViewerForArt.html',
 		msg: '页面正在加载，请稍等...',
@@ -1620,7 +1620,7 @@ function showImgInArtDialog(docInfo)
 	setTimeout(function (){
 		var isMax = false;
 		
-		var oDiv = document.getElementById("title:ImgViewer"  + docInfo.docId);
+		var oDiv = document.getElementById("title:ArtDialog"  + docInfo.docId);
 		oDiv.ondblclick=function(ev){
 	    	console.log("DB Clicked on " +"ImgViewer"  + docInfo.docId);
 			if(isMax)
@@ -1669,7 +1669,7 @@ function showVideoInArtDialog(docInfo)
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();	
 	var d = dialog({
-		id: "VideoViewer"  + docInfo.docId,
+		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
 		url: 'videoViewerForArt.html',
 		msg: '页面正在加载，请稍等...',
@@ -1694,9 +1694,9 @@ function showVideoInArtDialog(docInfo)
 	setTimeout(function (){
 		var isMax = false;
 		
-		var oDiv = document.getElementById("title:VideoViewer"  + docInfo.docId);
+		var oDiv = document.getElementById("title:ArtDialog"  + docInfo.docId);
 		oDiv.ondblclick=function(ev){
-	    	console.log("DB Clicked on " +"VideoViewer"  + docInfo.docId);
+	    	console.log("DB Clicked on " +"ArtDialog"  + docInfo.docId);
 			if(isMax)
 			{
 				var height =  getArtDialogInitHeight();
@@ -1742,7 +1742,7 @@ function showZipInArtDialog(docInfo)
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();	
 	var d = dialog({
-		id: "ZipViewer"  + docInfo.docId,
+		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
 		url: 'zipViewerForArt.html',
 		msg: '页面正在加载，请稍等...',
@@ -1768,9 +1768,9 @@ function showZipInArtDialog(docInfo)
 	setTimeout(function (){
 		var isMax = false;
 		
-		var oDiv = document.getElementById("title:ZipViewer"  + docInfo.docId);
+		var oDiv = document.getElementById("title:ArtDialog"  + docInfo.docId);
 		oDiv.ondblclick=function(ev){
-	    	console.log("DB Clicked on " +"ZipViewer"  + docInfo.docId);
+	    	console.log("DB Clicked on " +"ArtDialog"  + docInfo.docId);
 			if(isMax)
 			{
 				var height =  getArtDialogInitHeight();
@@ -1815,7 +1815,7 @@ function showPdfInArtDialog(docInfo)
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();	
 	var d = dialog({
-		id: "PdfViewer"  + docInfo.docId,
+		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
 		url: 'pdfViewerForArt.html',
 		msg: '页面正在加载，请稍等...',
@@ -1840,9 +1840,9 @@ function showPdfInArtDialog(docInfo)
 	setTimeout(function (){
 		var isMax = false;
 		
-		var oDiv = document.getElementById("title:PdfViewer"  + docInfo.docId);
+		var oDiv = document.getElementById("title:ArtDialog"  + docInfo.docId);
 		oDiv.ondblclick=function(ev){
-	    	console.log("DB Clicked on " +"PdfViewer"  + docInfo.docId);
+	    	console.log("DB Clicked on " +"ArtDialog"  + docInfo.docId);
 			if(isMax)
 			{
 				var height =  getArtDialogInitHeight();
@@ -1906,7 +1906,7 @@ function showMarkdownInArtDialog(docInfo)
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();	
 	var d = dialog({
-		id: "StackeditEditor"  + docInfo.docId,
+		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
 		url: 'stackeditEditorForArt.html',
 		msg: '页面正在加载，请稍等...',
@@ -1931,9 +1931,9 @@ function showMarkdownInArtDialog(docInfo)
 	setTimeout(function (){
 		var isMax = false;
 		
-		var oDiv = document.getElementById("title:StackeditEditor"  + docInfo.docId);
+		var oDiv = document.getElementById("title:ArtDialog"  + docInfo.docId);
 		oDiv.ondblclick=function(ev){
-	    	console.log("DB Clicked on " +"StackeditEditor"  + docInfo.docId);
+	    	console.log("DB Clicked on " +"ArtDialog"  + docInfo.docId);
 			if(isMax)
 			{
 				var height = getArtDialogInitHeight();
@@ -2000,7 +2000,7 @@ function showTextInArtDialog(docInfo, openType)
 	if(openType && openType == "textViewer")
 	{
 		var d = dialog({
-			id: "textViewer"  + docInfo.docId,
+			id: "ArtDialog"  + docInfo.docId,
 			title: docInfo.name,
 			url: 'textViewerForArt.html',
 			msg: '页面正在加载，请稍等...',
@@ -2023,7 +2023,7 @@ function showTextInArtDialog(docInfo, openType)
 	else
 	{
 		var d = dialog({
-			id: "AceEditor"  + docInfo.docId,
+			id: "ArtDialog"  + docInfo.docId,
 			title: docInfo.name,
 			url: 'aceEditorForArt.html',
 			msg: '页面正在加载，请稍等...',
@@ -2048,9 +2048,9 @@ function showTextInArtDialog(docInfo, openType)
 		setTimeout(function (){
 			var isMax = false;
 			
-			var oDiv = document.getElementById("title:AceEditor"  + docInfo.docId);
+			var oDiv = document.getElementById("title:ArtDialog"  + docInfo.docId);
 			oDiv.ondblclick=function(ev){
-		    	console.log("DB Clicked on " +"AceEditor"  + docInfo.docId);
+		    	console.log("DB Clicked on " +"ArtDialog"  + docInfo.docId);
 				if(isMax)
 				{
 					var height = getArtDialogInitHeight();
@@ -2150,7 +2150,7 @@ function showOfficeInArtDialog(docInfo)
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();	
 	var d = dialog({
-		id: "OfficeEditor"  + docInfo.docId,
+		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
 		url: 'officeEditorForArt.jsp',
 		msg: '页面正在加载，请稍等...',
@@ -2175,9 +2175,9 @@ function showOfficeInArtDialog(docInfo)
 	setTimeout(function (){
 		var isMax = false;
 		
-		var oDiv = document.getElementById("title:OfficeEditor"  + docInfo.docId);
+		var oDiv = document.getElementById("title:ArtDialog"  + docInfo.docId);
 		oDiv.ondblclick=function(ev){
-	    	console.log("DB Clicked on " +"OfficeEditor"  + docInfo.docId);
+	    	console.log("DB Clicked on " +"ArtDialog"  + docInfo.docId);
 			if(isMax)
 			{
 				var height =  getArtDialogInitHeight();
