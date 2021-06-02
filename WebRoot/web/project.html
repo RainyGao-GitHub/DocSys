@@ -443,6 +443,9 @@
 	//Repos Info
 	var gInitReposInfo = {};
 	var gReposInfo = {};
+	//For ArtDialog
+	var gDialogData = {};
+	
 	
 	function showReposManagerPage(){
 		//open reposManager in current page
@@ -1635,7 +1638,7 @@
     	if(gDocInfo.openMode == 2)
     	{
 			//Open Doc in Dialog
-			openDoc(gDocInfo, false, "openInArtDialog");
+			openDoc(gDocInfo, false, "openInArtDialog", "office", gShareId);
 		}
     }
 	
@@ -1669,7 +1672,7 @@
 		if(gDocInfo.type == 1)
 		{
 	    	//open doc in dialog
-	    	openDoc(gDocInfo, true, "openInArtDialog");
+	    	openDoc(gDocInfo, true, "openInArtDialog", "office", gShareId);
 		}
 		else
 		{
@@ -2329,7 +2332,7 @@
     	  
     	  if(gDocInfo.docId == treeNode.id)
     	  {
-    		  openDoc(gDocInfo, false, "openInArtDialog");
+    		  openDoc(gDocInfo, false, "openInArtDialog", "office", gShareId);
     		  return;
     	  }
     	  
@@ -4135,12 +4138,12 @@
 			{divider: true},
 			{text: '预览', action: function(e){
 					e.preventDefault();
-					openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf");  
+					openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);  
 				}
 			},
 			{text: '打开', action: function(e){
 					e.preventDefault();
-					openDoc(curRightClickedTreeNode, true, "openInNewPage");  
+					openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);
 				}
 			},
 			{text: '下载', action: function(e){
@@ -4409,12 +4412,12 @@
 			context.attach('#secondList', [
 				{text: '预览', action: function(e){
 						e.preventDefault();
-						openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf");  
+						openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);  
 					}
 				},
 				{text: '打开', action: function(e){
 						e.preventDefault();
-						openDoc(curRightClickedTreeNode, true, "openInNewPage");  
+						openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);  
 					}
 				},
 				{text: '下载', action: function(e){
@@ -4534,12 +4537,12 @@
 				{divider: true},
 				{text: '预览', action: function(e){
 							e.preventDefault();
-							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf");    
+							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);    
 						}
 				},
 				{text: '打开', action: function(e){
 							e.preventDefault();
-							openDoc(curRightClickedDocListNode, true, "openInNewPage");    
+							openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);    
 						}
 				},
 				{text: '下载', action: function(e){
