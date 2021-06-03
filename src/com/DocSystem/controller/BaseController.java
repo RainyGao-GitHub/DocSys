@@ -52,6 +52,7 @@ import org.apache.tools.zip.ZipFile;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.socket.WebSocketSession;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tukaani.xz.XZInputStream;
 
@@ -184,6 +185,61 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
+	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+		Long curTime = new Date().getTime();
+
+		if(authCodeMap.size() > 100)
+		{
+			//Do clean expired authCode
+			ArrayList<String> deleteList = new ArrayList<String>();
+			Iterator<Entry<String, AuthCode>> iterator = authCodeMap.entrySet().iterator();
+		    while (iterator.hasNext()) 
+		    {
+		    	Entry<String, AuthCode> entry = iterator.next();
+		        if(entry != null)
+		        {
+		        	if(entry.getValue().getExpTime() < curTime || entry.getValue().getRemainCount() <=0 )
+		        	{
+		        		deleteList.add(entry.getKey());
+		        	}
+		        }
+	        }
+		    for(int i=0; i < deleteList.size(); i++)
+		    {
+		    	authCodeMap.remove(deleteList.get(i));
+		    }
+		}
+		
+		//add authCode to authCodeMap
+		AuthCode authCode = new AuthCode();
+		Long expTime = curTime + duration;
+		String codeStr = usage + curTime;
+		String code = "" + codeStr.hashCode();
+		authCode.setUsage(usage);
+		authCode.setCode(code);
+		authCode.setExpTime(expTime);
+		authCode.setRemainCount(maxUseCount);
+		authCode.setReposAccess(reposAccess);
+		authCodeMap.put(code, authCode);
+		return authCode;
+	}
+	
+	protected String getAuthCodeForOfficeEditor(Doc doc, ReposAccess reposAccess) {
+		//add authCode to authCodeMap
+		AuthCode authCode = generateAuthCode("officeEditor", 1*CONST_DAY, 1000, reposAccess);
+		return authCode.getCode();
+	}
+	
+	protected String addDocDownloadAuthCode() {
+		AuthCode authCode = generateAuthCode("docDownload", 3*CONST_DAY, 100, null);
+		return authCode.getCode();
+	}
+	
+	static void addDocSysInitAuthCode() {
+		AuthCode authCode = generateAuthCode("docSysInit", 7*CONST_DAY, 1000, null);
+		docSysInitAuthCode = authCode.getCode();
+	}
+	
 	protected boolean checkAuthCode(String code, String expUsage) {
 		System.out.println("checkAuthCode() authCode:" + code);
 		AuthCode authCode = authCodeMap.get(code);
@@ -11437,23 +11493,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
-	
-	protected String getAuthCodeForOfficeEditor(Doc doc, ReposAccess reposAccess) {
-		//add authCode to authCodeMap
-		AuthCode authCode = new AuthCode();
-		String usage = "officeEditor";
-		Long curTime = new Date().getTime();
-		Long expTime = curTime + 1*24*60*60*1000;
-		String officeEditAuthCode = usage.hashCode() + "" + doc.getDocId();	//用docId和usage作为authCode
-		authCode.setUsage(usage);
-		authCode.setCode(officeEditAuthCode);
-		authCode.setExpTime(expTime);
-		authCode.setRemainCount(1000);
-		authCode.setReposAccess(reposAccess);
-		authCodeMap.put(officeEditAuthCode, authCode);
-		return officeEditAuthCode;
-	}
-	
+
 	protected String buildSaveDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
 		if(downloadDoc == null)
