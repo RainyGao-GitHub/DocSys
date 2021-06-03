@@ -224,7 +224,9 @@ public class LuceneUtil2   extends BaseFunction
 		
 		if(doc.getName() != null)
 		{
-			document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
+			document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+			//nameForSearch需要全部转成小写，用于支持大小写搜索
+			document.add(new Field("nameForSearch", doc.getName().toLowerCase(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));
 		}
 		else
 		{
