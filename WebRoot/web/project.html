@@ -4282,6 +4282,7 @@
 						},
 						{text: '复制下载链接', action: function(e){
 								e.preventDefault();
+								curRightClickedTreeNode.shareId = gShareId;
 						  		getDocFileLink(curRightClickedTreeNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
 							}
 						},
@@ -4686,6 +4687,7 @@
 							},
 							{text: '复制下载链接', action: function(e){
 									e.preventDefault();
+									curRightClickedDocListNode.shareId = gShareId;
 							  		getDocFileLink(curRightClickedDocListNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
 								}
 							},
