@@ -570,7 +570,12 @@
 		<artifactId>activation</artifactId>
 		<version>1.1.1</version>
 	</dependency>
-	
+	<!-- https://mvnrepository.com/artifact/com.github.junrar/junrar -->
+	<dependency>
+		<groupId>com.github.junrar</groupId>
+		<artifactId>junrar</artifactId>
+		<version>7.4.0</version>
+	</dependency>
 	<!-- https://mvnrepository.com/artifact/org.tmatesoft.svnkit/svnkit -->
 	<!--<dependency>
 	    <groupId>org.tmatesoft.svnkit</groupId>
