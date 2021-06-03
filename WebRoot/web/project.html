@@ -4280,6 +4280,11 @@
 								copyString(localPath);
 							}
 						},
+						{text: '复制下载链接', action: function(e){
+								e.preventDefault();
+						  		getDocFileLink(curRightClickedTreeNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+							}
+						},
 						//{divider: true},
 			           	//{text: '执行', action: function(e){
 			           	//运行需要进行远程登录后实现	
@@ -4677,6 +4682,11 @@
 									var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
 									console.log("本地路径 localPath:" + localPath);	
 									copyString(localPath);
+								}
+							},
+							{text: '复制下载链接', action: function(e){
+									e.preventDefault();
+							  		getDocFileLink(curRightClickedDocListNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
 								}
 							},
 							//{divider: true},
