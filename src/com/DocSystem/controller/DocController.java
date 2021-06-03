@@ -60,6 +60,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jzlib.GZIPInputStream;
+import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.FileCharsetDetector;
@@ -1851,6 +1852,60 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	
+	/**************** download Doc Without LoginCheck ******************/
+	@RequestMapping(value="/downloadDocEx/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
+	public void downloadDocEx(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
+			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
+			String disposition,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		System.out.println("\n************** downloadDocEx ****************");
+		System.out.println("downloadDocEx reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(authCode == null || checkAuthCode(authCode, "docDownload") == false)
+		{
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(targetPath == null || targetName == null)
+		{
+			Log.docSysErrorLog("目标路径不能为空！", rt);
+			writeJson(rt, response);	
+			return;
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = Base64Util.base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			Log.docSysErrorLog("目标路径解码失败！", rt);
+			writeJson(rt, response);	
+			return;
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = Base64Util.base64Decode(targetName);
+		if(targetName == null)
+		{
+			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			writeJson(rt, response);	
+			return;
+		}
+	
+		System.out.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, disposition);
+		
+		if(deleteFlag != null && deleteFlag == 1)
+		{
+			FileUtil.delFileOrDir(targetPath+targetName);
+		}
+	}
+	
 	@RequestMapping(value="/downloadDoc/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
@@ -2590,7 +2645,8 @@ public class DocController extends BaseController{
 		
 		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
-		String fileLink = buildDownloadDocLink(tmpDoc, null, urlStyle, rt);
+		String authCode = addDocDownloadAuthCode();
+		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, rt);
 		if(fileLink == null)
 		{
 			System.out.println("getZipDocFileLink() buildDocFileLink failed");
@@ -2700,7 +2756,8 @@ public class DocController extends BaseController{
 			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
 		}
 		
-		String fileLink = buildDownloadDocLink(tmpDoc, null, urlStyle, rt);
+		String authCode = addDocDownloadAuthCode();
+		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, rt);
 		if(fileLink == null)
 		{
 			System.out.println("getDocFileLink() buildDocFileLink failed");

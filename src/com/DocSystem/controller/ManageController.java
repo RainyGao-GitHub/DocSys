@@ -477,21 +477,6 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	static void addDocSysInitAuthCode() {
-		//add authCode to authCodeMap
-		AuthCode authCode = new AuthCode();
-		String usage = "docSysInit";
-		Long curTime = new Date().getTime();
-		Long expTime = curTime + 7*24*60*60*1000;
-		String codeStr = usage + curTime;
-		docSysInitAuthCode = "" + codeStr.hashCode();
-		authCode.setUsage(usage);
-		authCode.setCode(docSysInitAuthCode);
-		authCode.setExpTime(expTime);
-		authCode.setRemainCount(1000);
-		authCodeMap.put(docSysInitAuthCode, authCode);
-	}
-	
 	@RequestMapping("/testDatabase.do")
 	public void testDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
