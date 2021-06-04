@@ -36,10 +36,8 @@
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
 	<link rel="stylesheet" type="text/css" href="css/style.css">
 	
-	<!-- Video --> 
-	<!--
+	<!-- video.js --> 
 	<link href="static/video-js/video-js.min.css" rel="stylesheet">
- 	-->
  	
      <style type="text/css">
      	html {
@@ -166,9 +164,10 @@
 	<script type="text/javascript" src="js/base64.js"></script>
 	<script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
 	
-	<!-- Video -->
-	<!-- 
+	<!-- video.js -->
 	<script src="static/video-js/video.js"></script>
+	
+	<!-- DPlayer
 	<script src="static/DPlayer/DPlayer.min.js"></script>
     -->
     
@@ -340,11 +339,13 @@
                 		<img id="fileLogo" name="fileLogo" src="" style="display:none; width:128px; height:128px;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileLogoErrHandler();"></img>
                 		<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:60%; max-height:60%;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileImgErrHandler();"></img>
                 		<!-- HTML5 Default Mode --> 
-                		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+                		<!-- <video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+                		 -->
                 		<!-- VideoJs Mode  -->
-                		<!-- 
-                		<video id="videoPreview" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
-                		-->
+                		<video-js id="videoPreview" class="video-js example_video_1-dimensions vjs-controls-enabled vjs-workinghover vjs-v7 vjs-has-started vjs-user-inactive vjs-paused vjs-ended" 
+                			webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
+                			crossorigin="anonymous" 
+                			style="display:none;"></video-js>
                 		<!-- DPlayer Mode -->
                 		<!-- 
                 		<div id="videoPreview"></div> 
@@ -1768,8 +1769,8 @@
 			console.log("showVideoPreview() docLink:" + docLink);
 			$("#videoPreview").attr('src', docLink);
 			$("#videoPreview").show();
-			//var type = getVideoTypeByFileSuffix(gDocInfo.fileSuffix);
-			//showVideoWithVideojs('videoPreview', docLink, type);
+			var type = getVideoTypeByFileSuffix(gDocInfo.fileSuffix);
+			showVideoWithVideojs('videoPreview', docLink, type);
 			//showVideoWithDPlayer('videoPreview', docLink);
  		}
 	}
