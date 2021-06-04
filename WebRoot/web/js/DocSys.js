@@ -1359,14 +1359,14 @@ function showVideoWithVideojs(objId, fileLink, type)
 {
 	var player = videojs(document.getElementById(objId), {
 	  controls: true, // 是否显示控制条
-	  poster: fileLink, // 视频封面图地址
+	  //poster: fileLink, // 视频封面图地址
 	  preload: 'auto',
 	  autoplay: false,
 	  fluid: true, // 自适应宽高
 	  language: 'zh-CN', // 设置语言
 	  muted: false, // 是否静音
 	  inactivityTimeout: false,
-	  seeking: true,
+	  //seeking: true,
 	  controlBar: { // 设置控制条组件
 	    /* 设置控制条里面组件的相关属性及显示与否
 	    'currentTimeDisplay':true,
@@ -1398,7 +1398,7 @@ function showVideoWithVideojs(objId, fileLink, type)
 	      {
 	          src: fileLink,
 	          type: type,
-	          poster: fileLink,
+	          //poster: fileLink,
 	      }
 	  ]
 	}, function (){
