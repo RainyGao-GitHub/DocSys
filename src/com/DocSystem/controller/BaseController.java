@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -1844,22 +1845,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("sendFileToWebPage() showName befor convert:" + showName);
-		
-		//解决中文编码问题
-		String userAgent = request.getHeader("User-Agent").toUpperCase();
-		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
-		{  
-			showName = URLEncoder.encode(showName, "UTF-8");  
-			System.out.println("sendFileToWebPage() showName after URL Encode:" + showName);
-		}else{  
-			showName = new String(showName.getBytes("UTF-8"),"ISO8859-1");  
-			
-			
-			System.out.println("sendFileToWebPage() showName after convert to ISO8859-1:" + showName);
-		}
-		//解决空格问题（空格变加号和兼容性问题）
-		showName = showName.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
-		System.out.println("sendFileToWebPage() showName:" + showName);
+		showName = getFileNameForWeb(request, showName);
 		
 		if(disposition == null || disposition.isEmpty())
 		{
@@ -1906,6 +1892,55 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+    //获取UserAgent接口，即判断目前用户使用了哪种浏览器
+	private String getFileNameForWeb(HttpServletRequest request, String showName) throws UnsupportedEncodingException {
+		// TODO Auto-generated method stub
+		
+		//解决中文编码问题
+		String userAgent = getUA(request);
+		switch(userAgent)
+		{
+		case "ie":
+		case "safari":
+			showName = URLEncoder.encode(showName, "UTF-8");  
+			System.out.println("sendFileToWebPage() showName after URL Encode:" + showName);
+			break;
+		default:
+			showName = new String(showName.getBytes("UTF-8"),"ISO8859-1");  
+			System.out.println("sendFileToWebPage() showName after convert to ISO8859-1:" + showName);
+			break;
+		}
+
+		//解决空格问题（空格变加号和兼容性问题）
+		showName = showName.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
+		System.out.println("sendFileToWebPage() showName:" + showName);
+		return showName;
+	}
+
+	protected String getUA(HttpServletRequest request){
+	     String scan = request.getHeader("User-Agent").toLowerCase();
+	     //document.write(scan);
+	     if(scan.indexOf("MSIE") > -1 || scan.indexOf("LIKE GECKO") > -1 || scan.indexOf("/Trident/i") > -1)
+	         return "ie"; //判断是否是ie浏览器，包括最新的ie11浏览器
+	     else if(scan.indexOf("Chrome") > -1 )
+	         return "chrome";//Chrome Browser
+	     else if(scan.indexOf("iPhone") > -1 || scan.indexOf("Mac") > -1 || 
+	             scan.indexOf("iPad") > -1)
+	         return "safari";//safari Browser
+	     else if(scan.indexOf("vivo") > -1)
+	         return "vivo";
+	     else if(scan.indexOf("XiaoMi") > -1)
+	         return "xiaomi";
+	     else if(scan.indexOf("Edge") > -1)
+	         return "edge";
+	     else if(scan.indexOf("Opera") > -1)
+	         return "opera";
+	     else if(scan.indexOf("Firefox") > -1)
+	         return "firefox";
+	     else 
+	         return "other";
+	 }
+		
 	protected void sendVideoFileToWebPage(String localParentPath, String fileName, String showName, String videoType, 
 			ReturnAjax rt,
 			HttpServletResponse response,HttpServletRequest request, 
