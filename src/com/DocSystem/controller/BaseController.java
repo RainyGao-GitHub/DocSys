@@ -1824,7 +1824,7 @@ public class BaseController  extends BaseFunction{
 		case "flv":
 		case "ogg":
 		case "mp3":
-			sendVideoFileToWebPage(localParentPath, file_name, file_name, rt, response, request, disposition);
+			sendVideoFileToWebPage(localParentPath, file_name, file_name, suffix, rt, response, request, disposition);
 		default:
 			sendFileToWebPage(localParentPath, file_name, file_name, rt, response, request, disposition);			
 		}
@@ -1906,7 +1906,10 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	protected void sendVideoFileToWebPage(String localParentPath, String fileName, String showName, ReturnAjax rt,HttpServletResponse response,HttpServletRequest request, String disposition) throws Exception{
+	protected void sendVideoFileToWebPage(String localParentPath, String fileName, String showName, String videoType, 
+			ReturnAjax rt,
+			HttpServletResponse response,HttpServletRequest request, 
+			String disposition) throws Exception{
 		String dstPath = localParentPath + fileName;
 		BufferedInputStream bis = null;
 		try {
@@ -1973,7 +1976,8 @@ public class BaseController  extends BaseFunction{
 					response.setHeader("Content-Range", contentRange);
 				}
  
-				response.setContentType("application/octet-stream");
+				//response.setContentType("application/octet-stream");
+				response.setContentType("video/" + videoType);
 				response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
  
 				OutputStream out = response.getOutputStream();
