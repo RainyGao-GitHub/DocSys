@@ -2013,7 +2013,8 @@ public class BaseController  extends BaseFunction{
  
 				//response.setContentType("application/octet-stream");
 				response.setContentType("video/" + videoType);
-				response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
+				showName = getFileNameForWeb(request, showName);
+				response.addHeader("Content-Disposition", "attachment;filename=" + showName);
  
 				OutputStream out = response.getOutputStream();
 				int n = 0;
