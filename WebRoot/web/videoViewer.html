@@ -1,9 +1,14 @@
 <div align=center style="margin-top:20px" >
-   	<!--
-   	<div id="videoPlayer"></div>	
-	<video id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
-   	-->
-   	<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none; width:100%;"></video>
+	<!-- HTML5 Default Mode --> 
+    <!-- <video id="videoPlayer" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+    -->
+    <!-- VideoJs Mode  -->
+    <video-js id=videoPlayer class="video-js vjs-big-play-centered vjs-fluid" 
+    	webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
+        crossorigin="anonymous" 
+        style="display:none;"></video-js>
+    <!-- DPlayer Mode -->
+    <!-- <div id="videoPlayer"></div> -->
 </div>  
 
 <script type="text/javascript">
@@ -37,8 +42,8 @@ var VideoViewer = (function () {
 		$("#videoPlayer").show();
 		$("#videoPlayer").attr('src', fileLink);	
 		//Videojs Mode
-		//var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);
-		//showVideoWithVideojs('videoPlayer', fileLink, type);
+		var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);
+		showVideoWithVideojs('videoPlayer', fileLink, type);
 		
 		//DPlayer Mode
 		//showVideoWithDPlayer('videoPlayer', fileLink);

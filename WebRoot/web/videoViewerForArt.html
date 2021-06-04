@@ -1,13 +1,27 @@
+<!-- video.js -->
+<link href="static/video-js/video-js.min.css" rel="stylesheet">
+
 <script src="static/scripts/jquery.min.js"></script>
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
+<!-- DPlayer
+<script src="static/DPlayer/DPlayer.min.js"></script>
+ -->
+<!-- video.js -->
+<script src="static/video-js/video.js"></script>
+
 <div align=center style="margin-top:20px" >
-   	<!--
-   	<div id="videoPlayer"></div>	
-	<video id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid" webkit-playsinline x-webkit-airplay="allow"></video>
-   	-->
-   	<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none; width:100%;"></video>
+	<!-- HTML5 Default Mode --> 
+    <!-- <video id="videoPlayer" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+    -->
+    <!-- VideoJs Mode  -->
+    <video-js id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid" 
+    	webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
+        crossorigin="anonymous" 
+        style="display:none;"></video-js>
+    <!-- DPlayer Mode -->
+    <!-- <div id="videoPlayer"></div> -->
 </div>  
 
 <script type="text/javascript">
@@ -31,8 +45,8 @@
    	{
 		$("#videoPlayer").show();
 		$("#videoPlayer").attr('src', fileLink);	
-		//var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);;
-		//showVideoWithVideojs('videoPlayer', fileLink, type);	
+		var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);;
+		showVideoWithVideojs('videoPlayer', fileLink, type);	
 		//showVideoWithDPlayer('videoPlayer', fileLink);
 
    	}

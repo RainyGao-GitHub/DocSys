@@ -8,43 +8,40 @@
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
     
-    <!-- 
+    <!-- DPlayer
     <script src="static/DPlayer/DPlayer.min.js"></script>
     -->
-    <!--
+    <!-- video.js -->
     <script src="static/video-js/video.min.js"></script>
     <link href="static/video-js/video-js.min.css" rel="stylesheet">
-    -->
 </head>
 <body style="height: 100%; margin: 0;">
     <div align=center style="margin-top:20px" >
-		<!--  
-		<div id="videoPlayer"></div>	
-		<video id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid"></video>
-		-->
-		<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none;max-width:100%; max-height:100%;"></video>
+		<!-- HTML5 Default Mode --> 
+	    <!-- <video id="videoPlayer" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+	    -->
+	    <!-- VideoJs Mode  -->
+	    <video-js id="videoPlayer" class="video-js vjs-big-play-centered vjs-fluid" 
+	    	webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
+	        crossorigin="anonymous" 
+	        style="display:none;"></video-js>
+	    <!-- DPlayer Mode -->
+	    <!-- <div id="videoPlayer"></div> -->
     </div>   
 	<script type="text/javascript">
-	    var fileLink = getQueryString("fileLink");	    
-	    if(!fileLink || fileLink != null)
-	    {
-		    var docInfo = getDocInfoFromRequestParamStr();
-		    docInfo.fileSuffix = getFileSuffix(docInfo.name);
-	    	getDocFileLink(docInfo, showVideo, showErrorMessage);    	
-	    }
-	    else
-	    {
-	    	showVideo(fileLink);
-	    }
-		
+    	var docInfo = getDocInfoFromRequestParamStr();
+		document.title = docInfo.name;
+
+		docInfo.fileSuffix = getFileSuffix(docInfo.name);
+	    getDocFileLink(docInfo, showVideo, showErrorMessage);    	
+	    
 	    function showVideo(fileLink)
 	   	{
 			$("#videoPlayer").show();
 			$("#videoPlayer").attr('src', fileLink);	
-			//var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);;
-			//showVideoWithVideojs('videoPlayer', fileLink, type);	
+			var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);;
+			showVideoWithVideojs('videoPlayer', fileLink, type);	
 			//showVideoWithDPlayer('videoPlayer', fileLink);
-
 	   	}
     </script>
 </body>
