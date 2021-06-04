@@ -1757,7 +1757,7 @@
 		if(showFlag == false)
 		{
 			$("#videoPreview").attr('src', "");
- 			$("#videoPreview").attr('poster', "");
+ 			//$("#videoPreview").attr('poster', "");
 			$("#videoPreview").hide();
 			return;
 		}
@@ -1776,14 +1776,14 @@
  		{
  			console.log("showVideoPreview() docLink is null");
  			$("#videoPreview").attr('src', "");
- 			$("#videoPreview").attr('poster', "");
+ 			//$("#videoPreview").attr('poster', "");
  			$("#videoPreview").hide();
  		}
  		else
  		{
 			console.log("showVideoPreview() docLink:" + docLink);
 			$("#videoPreview").attr('src', docLink);
-			$("#videoPreview").attr('poster', docLink);
+			//$("#videoPreview").attr('poster', docLink);
 			$("#videoPreview").show();
 			var type = getVideoTypeByFileSuffix(gDocInfo.fileSuffix);
 			previewVideoWithVideojs('videoPreview', docLink, type);
@@ -1804,7 +1804,7 @@
 			gVideoPlayer.src(data);
 			gVideoPlayer.load(data);
 			// 动态切换poster
-			gVideoPlayer.posterImage.setSrc(fileLink);
+			//gVideoPlayer.posterImage.setSrc(fileLink);
 			//gVideoPlayer.play();
 			// 销毁videojs
 			//player.dispose();
