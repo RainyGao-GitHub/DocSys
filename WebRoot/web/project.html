@@ -482,6 +482,9 @@
 	var gDocContent = "";
 	var gTmpSavedDocContent = "";
 	
+	//视频播放器
+	var gVideoPlayer;
+	
 	//当前页面显示模式
 	var gInitShowType = 1;
 	var gShowType = 1; //1:标准模式 2:电子书模式
@@ -1753,6 +1756,7 @@
 		if(showFlag == false)
 		{
 			$("#videoPreview").attr('src', "");
+ 			$("#videoPreview").attr('poster', "");
 			$("#videoPreview").hide();
 			return;
 		}
@@ -1762,17 +1766,80 @@
  		{
  			console.log("showVideoPreview() docLink is null");
  			$("#videoPreview").attr('src', "");
+ 			$("#videoPreview").attr('poster', "");
  			$("#videoPreview").hide();
  		}
  		else
  		{
 			console.log("showVideoPreview() docLink:" + docLink);
 			$("#videoPreview").attr('src', docLink);
+			$("#videoPreview").attr('poster', docLink);
 			$("#videoPreview").show();
 			var type = getVideoTypeByFileSuffix(gDocInfo.fileSuffix);
-			showVideoWithVideojs('videoPreview', docLink, type);
-			//showVideoWithDPlayer('videoPreview', docLink);
+			previewVideoWithVideojs('videoPreview', docLink, type);
  		}
+	}
+	
+	
+	function previewVideoWithVideojs(objId, fileLink, type)
+	{
+		if(gVideoPlayer)
+		{
+			var data = {
+				src: fileLink,
+				type: type
+			};
+			
+			gVideoPlayer.pause();
+			gVideoPlayer.src(data);
+			gVideoPlayer.load(data);
+			// 动态切换poster
+			gVideoPlayer.posterImage.setSrc(fileLink);
+			//gVideoPlayer.play();
+			// 销毁videojs
+			//player.dispose();
+		}
+		else
+		{
+			gVideoPlayer = videojs(document.getElementById(objId), {
+			  controls: true, // 是否显示控制条
+			  poster: fileLink, // 视频封面图地址
+			  preload: 'auto',
+			  autoplay: false,
+			  fluid: true, // 自适应宽高
+			  language: 'zh-CN', // 设置语言
+			  muted: false, // 是否静音
+			  inactivityTimeout: false,
+			  seeking: true,
+			  controlBar: { // 设置控制条组件
+			    /* 使用children的形式可以控制每一个控件的位置，以及显示与否 */
+			    children: [
+			      {name: 'playToggle'}, // 播放按钮
+			      {name: 'currentTimeDisplay'}, // 当前已播放时间
+			      {name: 'progressControl'}, // 播放进度条
+			      {name: 'durationDisplay'}, // 总时间
+			      { // 倍数播放
+			        name: 'playbackRateMenuButton',
+			        'playbackRates': [0.5, 1, 1.5, 2, 2.5]
+			      },
+			      {
+			        name: 'volumePanel', // 音量控制
+			        inline: false, // 不使用水平方式
+			      },
+			      {name: 'FullscreenToggle'} // 全屏
+			    ]
+			  },
+			  sources:[ // 视频源
+			      {
+			          src: fileLink,
+			          type: type,
+			          poster: fileLink,
+			      }
+			  ]
+			}, function (){
+			  console.log('视频可以播放了',this);
+			});
+		}
 	}
 	
 	function parseDocContent(content)
