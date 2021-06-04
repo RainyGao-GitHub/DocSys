@@ -13,8 +13,9 @@
 		<div id="textPlayer" class="textPlayer" style="width: 100%; min-height:1200px; word-wrap: break-word; white-space: pre-wrap;"></div>
     </div>   
 	<script type="text/javascript">
-
 		var docInfo = getDocInfoFromRequestParamStr();	 
+		document.title = docInfo.name;
+		
 		var docText = "";
 		var tmpSavedDocText = "";
 		
