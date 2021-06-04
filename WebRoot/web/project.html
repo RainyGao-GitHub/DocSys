@@ -342,10 +342,10 @@
                 		<!-- <video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
                 		 -->
                 		<!-- VideoJs Mode  -->
-                		<video-js id="videoPreview" class="video-js example_video_1-dimensions vjs-controls-enabled vjs-workinghover vjs-v7 vjs-has-started vjs-user-inactive vjs-paused vjs-ended" 
+                		<video id="videoPreview" class="video-js example_video_1-dimensions vjs-controls-enabled vjs-workinghover vjs-v7 vjs-has-started vjs-user-inactive vjs-paused vjs-ended" 
                 			webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
                 			crossorigin="anonymous" 
-                			style="display:none;"></video-js>
+                			style="display:none;"></video>
                 		<!-- DPlayer Mode -->
                 		<!-- 
                 		<div id="videoPreview"></div> 
@@ -1706,6 +1706,7 @@
 			return;
 		}
 		
+		docDataEx.shareId = gShareId;
 		var docLink = getDocDownloadLink(docInfo);
 
 		console.log("showImgPreview() docLink:" + docLink);
@@ -1761,7 +1762,16 @@
 			return;
 		}
 		
+		var docDataEx = gDocInfo.dataEx;
+		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+		{
+			console.log("showVideoPreview() dataEx is null");
+			showFileImg(docInfo);
+			return;
+		}
+		docDataEx.shareId = gShareId;
  		var docLink = getDocDownloadLink(gDocInfo);
+ 		//docLink = "/DocSystem/web/static/video-js/oceans.mp4";
  		if(docLink == null)
  		{
  			console.log("showVideoPreview() docLink is null");
