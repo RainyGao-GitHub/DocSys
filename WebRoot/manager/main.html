@@ -2214,6 +2214,13 @@
 		//没有退款成功的订单都可以继续退款
 		if(node.payType == "Pay" && node.orderStatus != "Refunded")
 		{
+			var curTime = new Date().getTime();
+			//console.log("needShowRefundBtn curTime:" + curTime + " createTime:" + node.createTime + " diff:" + (curTime - node.createTime));
+			if(curTime > node.createTime && (curTime - node.createTime > 30*24*60*60*1000))
+			{
+				//超过一个月的订单不显示退款
+				return false;
+			}
 			return true;
 		}
 		return false;
