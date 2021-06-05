@@ -2216,12 +2216,23 @@
 		{
 			var curTime = new Date().getTime();
 			//console.log("needShowRefundBtn curTime:" + curTime + " createTime:" + node.createTime + " diff:" + (curTime - node.createTime));
-			if(curTime > node.createTime && (curTime - node.createTime > 30*24*60*60*1000))
+			if(curTime <= node.createTime)
 			{
-				//超过一个月的订单不显示退款
-				return false;
-			}
-			return true;
+				return true;
+			}	
+			
+			//根据订单时间决定是否显示
+			var diff = curTime - node.createTime;
+		    switch(node.orderStatus)
+		    {
+		    case "Paid":
+		    case "Success":
+		    	//支付成功的订单一个月后不许退款
+				return 	(diff < 30*24*60*60*1000);
+			default:
+				//支付异常的订单7天后不许退款
+				return (diff < 7*24*60*60*1000);
+		    }
 		}
 		return false;
 	}
