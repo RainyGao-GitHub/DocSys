@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 
+import com.DocSystem.common.MyExtractCallback;
+
 import net.sf.sevenzipjbinding.ArchiveFormat;
 import net.sf.sevenzipjbinding.ExtractOperationResult;
 import net.sf.sevenzipjbinding.IInArchive;
@@ -38,7 +40,7 @@ public class UnrarTest {
 				in[i] = i;
 			}
 			
-			inArchive.extract(in, false, new ExtractCallback(inArchive, "366", outDir));
+			inArchive.extract(in, false, new MyExtractCallback(inArchive, "366", outDir));
 		} catch (FileNotFoundException | SevenZipException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

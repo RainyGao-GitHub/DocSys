@@ -11407,7 +11407,8 @@ public class BaseController  extends BaseFunction{
             inArchive = SevenZip.openInArchive(null, // autodetect archive type
                     new RandomAccessFileInStream(randomAccessFile));
 
-            for (int i = 0; i < inArchive.getNumberOfItems(); i++) {
+        	int[] in = new int[inArchive.getNumberOfItems()];
+	        for (int i = 0; i < inArchive.getNumberOfItems(); i++) {
             	String subEntryPath = (String) inArchive.getProperty(i, PropID.PATH);
             	if(subEntryPath.equals(expEntryPath))
             	{
@@ -11424,10 +11425,10 @@ public class BaseController  extends BaseFunction{
      					}
                     	
                     	//解压
-    					int[] in = new int[1];
-    		            in[0] = i;
-    		            inArchive.extract(in, false, // Non-test mode
-    		                    new MyExtractCallback(inArchive));
+    				    in[0] = i;
+    				    String outputDir = zipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName() + "/";
+    				    System.out.println("extractEntryFromCompressFile outDir:" + outputDir);
+    		            inArchive.extract(in, false, new MyExtractCallback(inArchive, "366", outputDir));
                 	}
                     ret = true;
                     break;
