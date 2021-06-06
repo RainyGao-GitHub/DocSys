@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -24,6 +25,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -71,6 +73,7 @@ import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.MyExtractCallback;
 import com.DocSystem.common.OS;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.QueryResult;
@@ -111,6 +114,15 @@ import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jzlib.GZIPInputStream;
 
+import net.sf.sevenzipjbinding.ExtractOperationResult;
+import net.sf.sevenzipjbinding.IInArchive;
+import net.sf.sevenzipjbinding.ISequentialOutStream;
+import net.sf.sevenzipjbinding.PropID;
+import net.sf.sevenzipjbinding.SevenZip;
+import net.sf.sevenzipjbinding.SevenZipException;
+import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 import util.GitUtil.GITUtil;
 import util.LuceneUtil.LuceneUtil2;
 import util.SvnUtil.SVNUtil;
@@ -10725,7 +10737,7 @@ public class BaseController  extends BaseFunction{
 		case "war":
 			return extractEntryFromZipFile(parentCompressDoc, doc);
 		case "rar":
-			return extractEntryFromRarFile(parentCompressDoc, doc);			
+			return extractEntryFromCompressFile(parentCompressDoc, doc);			
 		case "7z":
 			return extractEntryFrom7zFile(parentCompressDoc, doc);			
 		case "tar":
@@ -11368,6 +11380,80 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
+	//这是使用SevenZip的解压接口
+	private boolean extractEntryFromCompressFile(Doc parentZipDoc, Doc zipDoc) {
+        boolean ret = false;
+		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		
+        File file = new File(parentZipFilePath);
+		if(file.exists() == false)
+		{
+			System.out.println("extractEntryFromCompressFile " + parentZipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			System.out.println("extractEntryFromCompressFile " + parentZipFilePath + " 是目录！");
+			return ret;
+		}
+		
+	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
+        String expEntryPath = (relativePath + zipDoc.getName()).replace("/", "\\");
+        
+        RandomAccessFile randomAccessFile = null;
+        IInArchive inArchive = null;
+        try {
+            randomAccessFile = new RandomAccessFile(parentZipFilePath, "r");
+            inArchive = SevenZip.openInArchive(null, // autodetect archive type
+                    new RandomAccessFileInStream(randomAccessFile));
+
+            for (int i = 0; i < inArchive.getNumberOfItems(); i++) {
+            	String subEntryPath = (String) inArchive.getProperty(i, PropID.PATH);
+            	if(subEntryPath.equals(expEntryPath))
+            	{
+                	System.out.println("extractEntryFromCompressFile subEntry:" + subEntryPath);
+                    if (((Boolean) inArchive.getProperty(i, PropID.IS_FOLDER)).booleanValue()) {
+                		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
+                    }
+                	else
+                	{
+                    	File tmpFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+    					File parent = tmpFile.getParentFile();
+    					if (!parent.exists()) {
+     						parent.mkdirs();
+     					}
+                    	
+                    	//解压
+    					int[] in = new int[1];
+    		            in[0] = i;
+    		            inArchive.extract(in, false, // Non-test mode
+    		                    new MyExtractCallback(inArchive));
+                	}
+                    ret = true;
+                    break;
+            	}
+            }
+        } catch (Exception e) {
+            System.err.println("extractEntryFromCompressFile Error occurs: " + e);
+        } finally {
+            if (inArchive != null) {
+                try {
+                    inArchive.close();
+                } catch (SevenZipException e) {
+                    System.err.println("extractEntryFromCompressFile Error closing archive: " + e);
+                }
+            }
+            if (randomAccessFile != null) {
+                try {
+                    randomAccessFile.close();
+                } catch (IOException e) {
+                    System.err.println("extractEntryFromCompressFile Error closing file: " + e);
+                }
+            }
+        }
+        return ret;
+	}
+	
 	private boolean extractEntryFromRarFile(Doc parentZipDoc, Doc zipDoc) {
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
