@@ -1,4 +1,4 @@
-package com.DocSystem.test;
+package com.DocSystem.common;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,13 +14,13 @@ import net.sf.sevenzipjbinding.ISequentialOutStream;
 import net.sf.sevenzipjbinding.PropID;
 import net.sf.sevenzipjbinding.SevenZipException;
 
-public class ExtractCallback implements IArchiveExtractCallback {
+public class MyExtractCallback implements IArchiveExtractCallback {
 	private int index;
 	private String packageName;
 	private IInArchive inArchive;
 	private String ourDir;
  
-	public ExtractCallback(IInArchive inArchive, String packageName, String ourDir) {
+	public MyExtractCallback(IInArchive inArchive, String packageName, String ourDir) {
 		this.inArchive = inArchive;
 		this.packageName = packageName;
 		this.ourDir = ourDir;
