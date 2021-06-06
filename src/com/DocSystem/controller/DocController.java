@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +54,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jzlib.GZIPInputStream;
+
+import net.sf.sevenzipjbinding.IInArchive;
+import net.sf.sevenzipjbinding.SevenZip;
+import net.sf.sevenzipjbinding.SevenZipException;
+import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
+
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.FileUtil;
@@ -4604,7 +4613,7 @@ public class DocController extends BaseController{
 		case "war":
 			return getSubDocListForZip(repos, rootDoc, path, name, rt);
 		case "rar":
-			return getSubDocListForRar(repos, rootDoc, path, name, rt);			
+			return getSubDocListForCompressFile(repos, rootDoc, path, name, rt);			
 		case "7z":
 			return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
 		case "tar":
@@ -4628,7 +4637,73 @@ public class DocController extends BaseController{
 		return null;
 	}
 	
+	//使用SevenZip方式（支持多种格式）
+	private List<Doc> getSubDocListForCompressFile(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+		System.out.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
+		System.out.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		
+        String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
 
+        List <Doc> subDocList = new ArrayList<Doc>();
+        RandomAccessFile randomAccessFile = null;
+        IInArchive inArchive = null;
+        try {
+            randomAccessFile = new RandomAccessFile(zipFilePath, "r");
+            inArchive = SevenZip.openInArchive(null, // autodetect archive type
+                    new RandomAccessFileInStream(randomAccessFile));
+
+            // Getting simple interface of the archive inArchive
+            ISimpleInArchive simpleInArchive = inArchive.getSimpleInterface();
+            
+            for (ISimpleInArchiveItem entry : simpleInArchive.getArchiveItems()) {
+               //System.out.println(String.format("%9s | %9s | %s", // 
+               //         entry.getSize(), 
+               //         entry.getPackedSize(), 
+               //         entry.getPath()));
+               String subDocPath = rootPath + entry.getPath().replace("\\", "/");
+               Doc subDoc = buildBasicDocFromCompressEntry(rootDoc, subDocPath, entry);
+               subDocList.add(subDoc);
+            }
+        } catch (Exception e) {
+            System.err.println("Error occurs: " + e);
+        } finally {
+            if (inArchive != null) {
+                try {
+                    inArchive.close();
+                } catch (SevenZipException e) {
+                    System.err.println("Error closing archive: " + e);
+                }
+            }
+            if (randomAccessFile != null) {
+                try {
+                    randomAccessFile.close();
+                } catch (IOException e) {
+                    System.err.println("Error closing file: " + e);
+                }
+            }
+        }
+		return subDocList;
+	}
+
+	private Doc buildBasicDocFromCompressEntry(Doc rootDoc, String docPath, ISimpleInArchiveItem entry) throws SevenZipException {
+		Doc subDoc = null;
+		if (entry.isFolder()) 
+		{
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+		} 
+		else 
+		{
+			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 1, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
+			if(FileUtil.isCompressFile(subDoc.getName()))
+			{
+				subDoc.setType(2); //压缩文件展示为目录，以便前端触发获取zip文件获取子目录
+			}
+		}
+		return subDoc;
+	}
+
+	//Unrar解压Rar5存在缺陷
 	private List<Doc> getSubDocListForRar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		System.out.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
