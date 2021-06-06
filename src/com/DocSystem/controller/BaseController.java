@@ -11398,7 +11398,12 @@ public class BaseController  extends BaseFunction{
 		}
 		
 	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
-        String expEntryPath = (relativePath + zipDoc.getName()).replace("/", "\\");
+	    String expEntryPath = relativePath + zipDoc.getName();
+	    if(isWinOS())
+	    {
+	    	expEntryPath = expEntryPath.replace("/", "\\");
+	    }
+    	System.out.println("extractEntryFromCompressFile expEntryPath:" + expEntryPath);
         
         RandomAccessFile randomAccessFile = null;
         IInArchive inArchive = null;
@@ -11410,9 +11415,10 @@ public class BaseController  extends BaseFunction{
         	int[] in = new int[inArchive.getNumberOfItems()];
 	        for (int i = 0; i < inArchive.getNumberOfItems(); i++) {
             	String subEntryPath = (String) inArchive.getProperty(i, PropID.PATH);
+            	System.out.println("extractEntryFromCompressFile subEntryPath:" + subEntryPath);
             	if(subEntryPath.equals(expEntryPath))
             	{
-                	System.out.println("extractEntryFromCompressFile subEntry:" + subEntryPath);
+                	System.out.println("extractEntryFromCompressFile expEntry found:" + subEntryPath);
                     if (((Boolean) inArchive.getProperty(i, PropID.IS_FOLDER)).booleanValue()) {
                 		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
                     }
