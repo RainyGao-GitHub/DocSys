@@ -3,9 +3,12 @@ package com.DocSystem.test;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 import net.sf.sevenzipjbinding.ArchiveFormat;
+import net.sf.sevenzipjbinding.ExtractOperationResult;
 import net.sf.sevenzipjbinding.IInArchive;
+import net.sf.sevenzipjbinding.ISequentialOutStream;
 import net.sf.sevenzipjbinding.SevenZip;
 import net.sf.sevenzipjbinding.SevenZipException;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
@@ -80,22 +83,5 @@ public class UnrarTest {
 	                }
 	            }
 	        }
-	}
-	
-	private int getNumberOfItemsInArchive(String archiveFile) throws Exception {
-	    IInArchive archive;
-	    RandomAccessFile randomAccessFile;
-
-	    randomAccessFile = new RandomAccessFile(archiveFile, "r");
-
-	    archive = SevenZip.openInArchive(ArchiveFormat.ZIP, // null - autodetect
-	            new RandomAccessFileInStream(randomAccessFile));
-
-	    int numberOfItems = archive.getNumberOfItems();
-
-	    archive.close();
-	    randomAccessFile.close();
-
-	    return numberOfItems;
 	}
 }
