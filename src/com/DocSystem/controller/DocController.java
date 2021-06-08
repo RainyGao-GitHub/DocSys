@@ -1373,24 +1373,6 @@ public class DocController extends BaseController{
 			}
 		}
 	}
-
-	private void deleteTmpVirtualDocContent(Repos repos, Doc doc, User accessUser) {
-		
-		String docVName = Path.getVDocName(doc);
-		
-		String userTmpDir = Path.getReposTmpPathForTextEdit(repos, accessUser, false);
-		
-		String vDocPath = userTmpDir + docVName + "/";
-		
-		FileUtil.delFileOrDir(vDocPath);
-	}
-	
-	private void deleteTmpRealDocContent(Repos repos, Doc doc, User accessUser) 
-	{
-		String userTmpDir = Path.getReposTmpPathForTextEdit(repos, accessUser, true);
-		String mdFilePath = userTmpDir + doc.getDocId() + "_" + doc.getName();
-		FileUtil.delFileOrDir(mdFilePath);
-	}
 	
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")

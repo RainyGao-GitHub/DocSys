@@ -2570,6 +2570,30 @@ public class BaseController  extends BaseFunction{
 		}
 		return false;
 	}
+	
+	//底层addDoc接口
+	//docData: null为新建文件或者是目录，否则为文件上传（新增）
+	protected boolean addDocEx(Repos repos, Doc doc, 
+			byte[] docData,
+			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	{
+		System.out.println("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
+	
+		switch(repos.getType())
+		{
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			return addDocEx_FSM(repos, doc,	//Add a empty file
+					docData, //For upload
+					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
+					commitMsg, commitUser, login_user, rt, actionList);
+			
+		}
+		return false;
+	}
 
 	protected boolean addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
 			MultipartFile uploadFile, //For upload
@@ -2623,6 +2647,110 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			{	
+				unlockDoc(doc, lockType, login_user);
+				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
+				rt.setError(MsgInfo);
+				System.out.println("addDoc_FSM() updateRealDoc Failed");
+				return false;
+			}
+		}
+		
+		//Update the latestEditTime
+		Doc fsDoc = fsGetDoc(repos, doc);
+		doc.setCreateTime(fsDoc.getLatestEditTime());
+		doc.setLatestEditTime(fsDoc.getLatestEditTime());
+		
+		String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
+		if(revision == null)
+		{
+			Log.docSysWarningLog("verReposDocCommit Failed", rt);
+		}
+		else
+		{
+			//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+			doc.setRevision(revision);
+			if(dbAddDoc(repos, doc, false, false) == false)
+			{	
+				Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+			}
+			
+			//Insert Push Action
+			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+		}
+		
+		//检查dbParentDoc是否已添加
+		List <Doc> addedParentDocList = new ArrayList<Doc>();
+		dbCheckAddUpdateParentDoc(repos, doc, addedParentDocList, actionList);
+		if(addedParentDocList.size() > 0)
+		{
+			rt.setDataEx(addedParentDocList);
+		}
+				
+		//BuildMultiActionListForDocAdd();
+		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
+		
+		unlockDoc(doc, lockType, login_user);
+		
+		rt.setData(doc);
+		rt.setMsgData("isNewNode");
+		Log.docSysDebugLog("新增成功", rt); 
+		
+		return true;
+	}
+	
+	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
+			byte[] docData,
+			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	{
+		System.out.println("addDoc_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
+		
+		//add doc detail info
+		doc.setCreator(login_user.getId());
+		doc.setCreatorName(login_user.getName());
+		doc.setLatestEditor(login_user.getId());
+		doc.setLatestEditorName(login_user.getName());
+		
+		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
+		synchronized(syncLock)
+		{
+			//LockDoc
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
+			if(docLock == null)
+			{
+				SyncLock.unlock(syncLock);
+				System.out.println("addDoc_FSM() lockDoc " + doc.getName() + " Failed!");
+				return false;
+			}
+		}
+		
+		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
+		String localDocPath = localParentPath + doc.getName();
+		File localEntry = new File(localDocPath);
+		if(localEntry.exists())
+		{	
+			unlockDoc(doc, lockType, login_user);
+			Log.docSysDebugLog("addDoc_FSM() " +localDocPath + "　已存在！", rt);
+		}
+		
+		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
+		if(docData == null)
+		{	
+			//File must not exists
+			if(createRealDoc(repos, doc, rt) == false)
+			{	
+				unlockDoc(doc, lockType, login_user);
+				String MsgInfo = "createRealDoc " + doc.getName() +" Failed";
+				rt.setError(MsgInfo);
+				System.out.println("addDoc_FSM() createRealDoc Failed");
+				return false;
+			}
+		}
+		else
+		{
+			if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
 				unlockDoc(doc, lockType, login_user);
 				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
@@ -5337,6 +5465,26 @@ public class BaseController  extends BaseFunction{
 		}
 		return false;
 	}
+	
+	//底层updateDoc接口
+	public boolean updateDocEx(Repos repos, Doc doc,
+								byte [] docData,
+								Integer chunkNum, Long chunkSize, String chunkParentPath, 
+								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			return updateDocEx_FSM(repos, doc,
+					docData,
+					chunkNum, chunkSize, chunkParentPath, 
+					commitMsg, commitUser, login_user, rt, actionList);
+		}
+		return false;
+	}
 
 	protected boolean updateDoc_FSM(Repos repos, Doc doc,
 				MultipartFile uploadFile,
@@ -5408,6 +5556,76 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	protected boolean updateDocEx_FSM(Repos repos, Doc doc,
+			byte[] docData,
+			Integer chunkNum, Long chunkSize, String chunkParentPath, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
+			List<CommonAction> actionList) 
+	{	
+		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
+		synchronized(syncLock)
+		{
+			//Try to lock the doc
+			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
+			if(docLock == null)
+			{
+				SyncLock.unlock(syncLock); 
+	
+				System.out.println("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
+				return false;
+			}
+			SyncLock.unlock(syncLock); 
+		}
+	
+		//get RealDoc Full ParentPath
+		String reposRPath =  Path.getReposRealPath(repos);		
+	
+		//保存文件信息
+		if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
+		{
+			unlockDoc(doc, lockType, login_user);
+	
+			System.out.println("updateDoc_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
+			rt.setError("Failed to updateRealDoc " + doc.getName());
+			return false;
+		}
+		
+		doc.setLatestEditor(login_user.getId());
+		doc.setLatestEditorName(login_user.getName());
+		
+		//Get latestEditTime
+		Doc fsDoc = fsGetDoc(repos, doc);
+		doc.setLatestEditTime(fsDoc.getLatestEditTime());
+	
+		//需要将文件Commit到版本仓库上去
+		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+		if(revision == null)
+		{
+			Log.docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+			Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+		}
+		else
+		{
+			//updateDoc Info
+			doc.setRevision(revision);
+			if(dbUpdateDoc(repos, doc, true) == false)
+			{
+				Log.docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
+			}
+			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+			//Insert Push Action
+			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+		}
+		
+		//Build DocUpdate action
+		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
+		
+		unlockDoc(doc, lockType, login_user);
+		
+		return true;
+	}
+		
 	protected boolean renameDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		switch(repos.getType())
 		{
@@ -5688,6 +5906,39 @@ public class BaseController  extends BaseFunction{
 				
 		return ret;
 	}
+	
+	protected boolean commitVirualDoc(Repos repos, Doc doc, 
+			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
+	{
+		Doc vDoc = buildVDoc(doc);
+		verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
+
+		//Insert Push Action
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
+
+		//Insert index add action for VDoc
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
+		return true;
+	}
+	
+	protected void deleteTmpVirtualDocContent(Repos repos, Doc doc, User accessUser) {
+		
+		String docVName = Path.getVDocName(doc);
+		
+		String userTmpDir = Path.getReposTmpPathForTextEdit(repos, accessUser, false);
+		
+		String vDocPath = userTmpDir + docVName + "/";
+		
+		FileUtil.delFileOrDir(vDocPath);
+	}
+	
+	protected void deleteTmpRealDocContent(Repos repos, Doc doc, User accessUser) 
+	{
+		String userTmpDir = Path.getReposTmpPathForTextEdit(repos, accessUser, true);
+		String mdFilePath = userTmpDir + doc.getDocId() + "_" + doc.getName();
+		FileUtil.delFileOrDir(mdFilePath);
+	}
+	
 
 	private boolean updateVirualDocContent_FSM(Repos repos, Doc doc,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
@@ -7219,6 +7470,68 @@ public class BaseController  extends BaseFunction{
 			if(null == chunkNum)	//非分片上传
 			{
 				retName = FileUtil.saveFile(uploadFile, localDocParentPath,name);
+			}
+			else if(chunkNum == 1)	//单个文件直接复制
+			{
+				String chunk0Path = chunkParentPath + name + "_0";
+				if(new File(chunk0Path).exists() == false)
+				{
+					chunk0Path =  chunkParentPath + name;
+				}
+				if(FileUtil.copyFile(chunk0Path, localDocParentPath+name, true) == false)
+				{
+					return false;
+				}
+				retName = name;
+			}
+			else	//多个则需要进行合并
+			{
+				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
+			}
+			//Verify the size and FileCheckSum
+			if(false == checkFileSizeAndCheckSum(localDocParentPath,name,fileSize,fileCheckSum))
+			{
+				System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error");
+				return false;
+			}
+			
+		} catch (Exception e) {
+			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
+			Log.docSysDebugLog(e.toString(), rt);
+			e.printStackTrace();
+			return false;
+		}
+		
+		System.out.println("updateRealDoc() FileUtil.saveFile return: " + retName);
+		if(retName == null  || !retName.equals(name))
+		{
+			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" Failed！");
+			return false;
+		}
+		return true;
+	}
+	
+	//Function: updateRealDoc
+	//Pramams:
+	//chunkNum: null:非分片上传(直接用uploadFile存为文件)  1: 单文件或单分片文件  >1:多分片文件（需要进行合并）
+	protected boolean updateRealDoc(Repos repos, Doc doc, byte[] docData, Integer chunkNum, Long chunkSize, String chunkParentPath, ReturnAjax rt) 
+	{
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		Long fileSize = doc.getSize();
+		String fileCheckSum = doc.getCheckSum();
+		
+		String reposRPath = Path.getReposRealPath(repos);
+		
+		String localDocParentPath = reposRPath + parentPath;
+		String retName = null;
+		try {
+			if(null == chunkNum)	//非分片上传
+			{
+				if(FileUtil.saveDataToFile(docData, localDocParentPath,name))
+				{
+					retName = name;
+				}
 			}
 			else if(chunkNum == 1)	//单个文件直接复制
 			{
