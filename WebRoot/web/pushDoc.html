@@ -92,6 +92,11 @@
 			type = _type;
 			node = _node;
 			
+			var protocol = window.location.protocol + '//';
+			var host = window.location.host; //域名带端口  
+			targetServerUrl = protocol + host;
+			$("#dialog-push-doc input[name='targetServer']").val(targetServerUrl);
+			
 			targetPath = node.path;
 	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);    
 		}
