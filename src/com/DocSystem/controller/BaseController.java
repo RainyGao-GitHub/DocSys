@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.Map.Entry;
 
 import javax.servlet.http.Cookie;
@@ -12184,5 +12185,29 @@ public class BaseController  extends BaseFunction{
 			}
         }
 		return param;
+	}
+	
+	protected JSONObject getRequestBodyAsJSONObject(HttpServletRequest request) {
+		String body = "";
+        try
+        {
+            Scanner scanner = new Scanner(request.getInputStream());
+            scanner.useDelimiter("\\A");
+            body = scanner.hasNext() ? scanner.next() : "";
+            scanner.close();
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+        
+        if (body.isEmpty())
+        {
+            return null;
+        }
+        
+        System.out.println("getRequestBodyAsJSONObject body:" + body);        
+        JSONObject jsonObj = JSON.parseObject(body);
+        return jsonObj;
 	}
 }
