@@ -4212,6 +4212,19 @@
 				},	
 				]
 			},
+			{text: '推送', subMenu: [
+				{text: '至仓库',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(curRightClickedTreeNode, 1);
+					}
+				},
+				{text: '至目录',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(curRightClickedTreeNode, 2);
+					}
+				},	
+				]
+			},
 			{divider: true},
 			{text: '预览', action: function(e){
 					e.preventDefault();
@@ -4617,6 +4630,21 @@
 					},	
 					]
 				},
+				{text: '推送', subMenu: [
+					{text: '至仓库',  action: function(e){
+							e.preventDefault();
+							var node = getNodeByNodeId(gDocInfo.docId);
+							showDocPushPanel(node, 1);
+						}
+					},
+					{text: '至目录',  action: function(e){
+							e.preventDefault();
+							var node = getNodeByNodeId(gDocInfo.docId);
+							showDocPushPanel(node, 2);
+						}
+					},	
+					]
+				},
 				{divider: true},
 				{text: '预览', action: function(e){
 							e.preventDefault();
@@ -4933,6 +4961,22 @@
  		event.stopPropagation();
  	}
     
+	function showDocPushPanel(node, type)
+	{
+		console.log("showDocPushPanel type:" + type, node, );
+		bootstrapQ.dialog({
+			id: 'pushDoc',
+			url: 'pushDoc.html',
+			title: '文件推送:' + node.name,
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				pushDocPageInit(node, type);
+			},
+		});
+	}
+	
 	function showDocSharePanel(docShare, docName, url)
 	{
 		console.log("showDocSharePanel docName:" + docName);

@@ -1,0 +1,172 @@
+<div id="dialog-push-doc" class="form-horizontal">
+	<div class="modal-body">
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">服务器</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="targetServer" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">用户名</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="userName" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	    <div class="form-group">
+	    	<label class="col-sm-2 control-label">密码</label>
+	        <div class="col-sm-10">
+	            <input type="text" id="" name="pwd" class="form-control"  maxlength="16"></input>
+	        </div>
+	    </div>
+	    <div name="targetReposDiv" class="form-group" style="display:none;">
+	        <label class="col-sm-2 control-label">仓库</label>
+	        <div class="col-sm-10">
+	            <select class="form-control" name="targetRepos" style="width: 100%">   
+	            	<option value="1" selected="selected">仓库1</option>
+	            	<option value="2">仓库2</option>
+	            	<option value="3">仓库3</option>
+	            </select>
+	        </div>
+	    </div>
+	    <div class="form-group">
+	        <label class="col-sm-2 control-label">目录</label>
+	        <div class="col-sm-10">
+	            <input type="text" name="targetPath" class="form-control"  maxlength="400"></input>
+	        </div>
+	    </div>   
+	</div>    
+    <div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelPushDoc();" style="width: 100px;height: 42px;">取消</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function pushDocPageInit(_node, _type)
+	{
+		console.log("pushDocPageInit() _type:" + _type, _node);
+		if(_type == 1)
+		{
+			$("#dialog-push-doc div[name='targetReposDiv']").show();
+		}
+		DocPush.init(_node, _type);  
+	}
+	
+	function closePushDocDialog()
+	{
+		closeBootstrapDialog("pushDoc");
+	}
+
+	function doPushDoc()
+	{
+		DocPush.doPushDoc();
+      	closePushDocDialog();	
+	}
+	
+	function cancelPushDoc()
+	{
+		closePushDocDialog();
+	}
+	
+	var DocPush = (function () {
+		var type;
+		var node;
+
+		var targetServerUrl = "";
+		var userName = "";
+		var pwd = "";
+		var targetReposId = "";
+		var targetPath = "";
+		
+		function init(_node, _type)
+		{
+			console.log("DocPush.init() _type:" + _type, _node);
+
+			type = _type;
+			node = _node;
+			
+			targetPath = node.path;
+	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);    
+		}
+		
+		function doPushDoc()
+		{
+		    targetServerUrl = $("#dialog-push-doc input[name='targetServer']").val();
+		    userName = $("#dialog-push-doc input[name='userName']").val();
+		    pwd = MD5($("#dialog-push-doc input[name='pwd']").val());
+		    if(type == 1)
+		    {
+		    	targetReposId = $("#dialog-push-doc input[name='targetRepos']").val();
+		    }
+		    targetPath = $("#dialog-push-doc input[name='targetPath']").val();
+		    
+		    if(targetServerUrl)
+			{
+		  	  	pushDoc(node, targetServerUrl, userName, pwd, targetReposId, targetPath);
+		      	return true;
+			}
+			else
+			{
+		    	alert("服务器地址不能为空");
+		        return false;
+		    }
+		}
+		
+	   	function pushDoc()
+	   	{
+	    	$.ajax({
+	             url : "/DocSystem/Bussiness/pushDoc.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	                reposId : node.vid, 
+	                path: node.path,
+	                name : node.name,
+	             	targetServerUrl: targetServerUrl,
+	             	userName: userName,
+	             	pwd: pwd,
+	             	targetReposId: targetReposId,
+	             	targetPath: targetPath,
+	             	shareId: gShareId,
+	             },
+	             success : function (ret) {
+	            	console.log("pushDoc ret:", ret);            		
+	             	if( "ok" == ret.status){             		
+	             		// 普通消息提示条
+						bootstrapQ.msg({
+									msg : "推送成功！",
+									type : 'success',
+									time : 2000,
+						});         		
+	                }
+	                else
+	                {
+	                	showErrorMessage("推送失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("推送失败:服务器异常！");
+	            }
+	        });
+	    }
+	   	
+		//开放给外部的调用接口
+        return {
+			init: function(_type, _parentNode){
+				init(_type, _parentNode);
+			},
+        	doPushDoc: function(){
+        		doPushDoc();
+            },
+        };
+	})();
+
+</script>
+
