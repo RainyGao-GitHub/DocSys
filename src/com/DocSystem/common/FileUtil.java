@@ -182,6 +182,57 @@ public class FileUtil {
 		}
 	}
 	
+	public static byte[] readBufferFromFile(String path, String name, Long offset, int size) 
+	{	
+		byte buffer[] = null;
+		RandomAccessFile in = null;
+		String filePath = path + name;
+		try 
+		{			
+			File file = new File(filePath);
+			if(!file.exists() || !file.isFile())
+			{
+				//System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				return null;
+			}
+
+			long fileSize = file.length();
+			if(offset >= fileSize)
+			{
+				return null;
+			}
+			
+			if(offset + size > fileSize)
+			{
+				size = (int) (offset + size - fileSize);
+			}
+			System.out.println("size:[" + size + "]");
+			if(size  <= 0)
+			{
+				return null;
+			}
+			
+			in = new RandomAccessFile(filePath, "r");
+			buffer = new byte[size];
+			in.seek(offset);
+			in.read(buffer);			
+			return buffer;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(in != null)
+			{
+				try {
+					in.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}	
+			}
+		}
+		return buffer;
+	}
+	
 	public static String readDocContentFromFile(String path, String name, String encode) 
 	{	
 		byte buffer[] = readBufferFromFile(path, name);
