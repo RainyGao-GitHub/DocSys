@@ -2700,24 +2700,42 @@ public class DocController extends BaseController{
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer lockType, Integer docType,
 			Integer shareId,
+			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = null;
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode, null) == false)
+			{
+				System.out.println("lockDoc checkAuthCode Failed");
+				rt.setError("无效授权码");
+				writeJson(rt, response);		
+				return;
+			}
+			reposAccess = authCodeMap.get(authCode).getReposAccess();
+		}
+		else
+		{
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		}
 		if(reposAccess == null)
 		{
-			writeJson(rt, response);			
-			return;	
-		}
-		
-		if(docId == null)
-		{
-			Log.docSysErrorLog("docId is null", rt);
-			writeJson(rt, response);			
+			System.out.println("lockDoc reposAccess is null");
+			rt.setError("非法访问");
+			writeJson(rt, response);		
 			return;
 		}
+		
+//		if(docId == null)
+//		{
+//			Log.docSysErrorLog("docId is null", rt);
+//			writeJson(rt, response);			
+//			return;
+//		}
 		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -2774,24 +2792,42 @@ public class DocController extends BaseController{
 	public void unlockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer lockType, Integer docType,
 			Integer shareId,
+			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("SyncLock.unlockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
+		System.out.println("unlockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = null;
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode, null) == false)
+			{
+				System.out.println("lockDoc checkAuthCode Failed");
+				rt.setError("无效授权码");
+				writeJson(rt, response);		
+				return;
+			}
+			reposAccess = authCodeMap.get(authCode).getReposAccess();
+		}
+		else
+		{
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		}
 		if(reposAccess == null)
 		{
-			writeJson(rt, response);			
-			return;	
-		}
-		
-		if(docId == null)
-		{
-			Log.docSysErrorLog("SyncLock.unlockDoc docId is null", rt);
-			writeJson(rt, response);			
+			System.out.println("lockDoc reposAccess is null");
+			rt.setError("非法访问");
+			writeJson(rt, response);		
 			return;
 		}
+		
+//		if(docId == null)
+//		{
+//			Log.docSysErrorLog("SyncLock.unlockDoc docId is null", rt);
+//			writeJson(rt, response);			
+//			return;
+//		}
 		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
