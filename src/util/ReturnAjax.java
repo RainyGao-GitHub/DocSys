@@ -31,7 +31,7 @@ public class ReturnAjax {
 		
 		if(errmsg != null)
 		{
-			this.msgInfo += "\n" + errmsg;
+			this.msgInfo = errmsg + "\n" + this.msgInfo;
 		}
 	}
 
@@ -48,7 +48,7 @@ public class ReturnAjax {
 		
 		if(debugLog != null)
 		{
-			this.debugLog += "\n" + debugLog;
+			this.debugLog =  debugLog + "\n" + this.msgInfo;
 		}
 	}
 	
