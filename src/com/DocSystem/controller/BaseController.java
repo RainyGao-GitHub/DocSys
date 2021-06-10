@@ -7529,6 +7529,11 @@ public class BaseController  extends BaseFunction{
 		try {
 			if(null == chunkNum)	//非分片上传
 			{
+				if(false == checkFileSizeAndCheckSum((long)docData.length, null, doc.getSize(), fileCheckSum))
+				{
+					System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error1");
+					return false;
+				}
 				if(FileUtil.saveDataToFile(docData, localDocParentPath,name))
 				{
 					retName = name;
@@ -7541,6 +7546,14 @@ public class BaseController  extends BaseFunction{
 				{
 					chunk0Path =  chunkParentPath + name;
 				}
+				
+				//Verify the size and FileCheckSum
+				if(false == checkFileSizeAndCheckSum(new File(chunk0Path).length(), null, fileSize,fileCheckSum))
+				{
+					System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error2");
+					return false;
+				}
+				
 				if(FileUtil.copyFile(chunk0Path, localDocParentPath+name, true) == false)
 				{
 					return false;
@@ -7549,14 +7562,22 @@ public class BaseController  extends BaseFunction{
 			}
 			else	//多个则需要进行合并
 			{
+				long size = 0;
+				for(int chunkIndex = 0; chunkIndex < chunkNum; chunkIndex ++)
+		        {
+					File chunkFile =  new File(chunkParentPath + name + "_" + chunkIndex);
+		        	size += chunkFile.length();
+		        }
+				//Verify the size and FileCheckSum
+				if(false == checkFileSizeAndCheckSum(size, null, fileSize,fileCheckSum))
+				{
+					System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error3");
+					return false;
+				}
+				
 				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
 			}
-			//Verify the size and FileCheckSum
-			if(false == checkFileSizeAndCheckSum(localDocParentPath,name,fileSize,fileCheckSum))
-			{
-				System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error");
-				return false;
-			}
+
 			
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
@@ -7673,9 +7694,13 @@ public class BaseController  extends BaseFunction{
 	protected boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Long fileSize,
 			String fileCheckSum) {
 		File file = new File(localDocParentPath,name);
-		if(fileSize != file.length())
+		return checkFileSizeAndCheckSum(file.length(), null, fileSize, fileCheckSum);
+	}
+	
+	protected boolean checkFileSizeAndCheckSum(Long size, String checkSum, Long expSize, String expCheckSum) {
+		if(!size.equals(expSize))
 		{
-			System.out.println("checkFileSizeAndCheckSum() fileSize " + file.length() + "not match with ExpectedSize" + fileSize);
+			System.out.println("checkFileSizeAndCheckSum() size:" + size + " is not match with ExpectedSize:" + expSize);
 			return false;
 		}
 		return true;
