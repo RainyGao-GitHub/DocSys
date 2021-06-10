@@ -71,6 +71,8 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Sales/checkLicense",
 		//For Office Editor
 		"Bussiness/saveDoc",
+		//For remote Access
+		"Bussiness/getAuthCode",
 		//For Payment
 		"pay/queryGoods",
 		"pay/initOrder",
