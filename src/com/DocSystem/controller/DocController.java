@@ -2703,6 +2703,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** lockDoc ****************");
 		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -2795,6 +2796,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("\n************** unlockDoc ****************");
 		System.out.println("unlockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
