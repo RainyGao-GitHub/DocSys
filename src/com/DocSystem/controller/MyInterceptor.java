@@ -53,6 +53,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Doc/doGetTmpFile",
 		"Doc/DocToPDF",
 		"Doc/lockDoc",
+		"Doc/unlockDoc",
 		"Doc/checkDocInfo",
 		"Doc/checkChunkUploaded",
 		"Doc/getDocContent",
