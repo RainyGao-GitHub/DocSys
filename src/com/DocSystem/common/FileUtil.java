@@ -197,16 +197,19 @@ public class FileUtil {
 			}
 
 			long fileSize = file.length();
+			//System.out.println("readBufferFromFile fileSize:[" + fileSize + "]");
+			
 			if(offset >= fileSize)
 			{
 				return null;
 			}
 			
+			//System.out.println("readBufferFromFile size:[" + size + "]");
 			if(offset + size > fileSize)
 			{
-				size = (int) (offset + size - fileSize);
+				size = (int) (fileSize - offset);
 			}
-			System.out.println("size:[" + size + "]");
+			//System.out.println("readBufferFromFile size:[" + size + "]");
 			if(size  <= 0)
 			{
 				return null;
@@ -215,7 +218,7 @@ public class FileUtil {
 			in = new RandomAccessFile(filePath, "r");
 			buffer = new byte[size];
 			in.seek(offset);
-			in.read(buffer);			
+			in.read(buffer);	
 			return buffer;
 		} catch (Exception e) {
 			e.printStackTrace();
