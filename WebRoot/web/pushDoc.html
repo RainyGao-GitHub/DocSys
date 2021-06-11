@@ -82,7 +82,7 @@
 		var pwd = "";
 		var targetReposId = "";
 		var targetPath = "";
-		var remtoeAuthCode = "";
+		var remoteAuthCode = "";
 		
 		function init(_node, _type)
 		{
@@ -115,8 +115,8 @@
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
-		                    	remtoeAuthCode = ret.data;
-		                        showReposSelectList(remtoeAuthCode);
+		                    	remoteAuthCode = ret.data;
+		                        showReposSelectList(remoteAuthCode);
 		                    }
 		                    else
 		                    {
@@ -206,12 +206,13 @@
 	             type : "post",
 	             dataType : "json",
 	             data : {
+		            targetServerUrl: targetServerUrl,
+		            userName: userName,
+		            pwd: pwd,
+					remoteAuthCode: remoteAuthCode,
 	                reposId : node.vid, 
 	                path: node.path,
 	                name : node.name,
-	             	targetServerUrl: targetServerUrl,
-	             	userName: userName,
-	             	pwd: pwd,
 	             	targetReposId: targetReposId,
 	             	targetPath: targetPath,
 	             	shareId: gShareId,
