@@ -1535,7 +1535,7 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			System.out.println("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
+			//System.out.println("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
