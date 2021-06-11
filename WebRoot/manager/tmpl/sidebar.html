@@ -1,4 +1,50 @@
-<div class="sidebar-dropdown"><a href="#">导航</a></div>
+<div class="sidebar-dropdown">
+	<ul id="navMobile">
+	    <li data-eb-event="content.refresh" data-eb-params="user" >
+	    	<a href="#"><i class="icon-bar-chart"></i>用户管理</a>
+	    </li>
+	    <li data-eb-event="content.refresh" data-eb-params="group" >
+	    	<a href="#"><i class="icon-bar-chart"></i>用户组管理</a>
+	    </li>
+	    <li data-eb-event="content.refresh" data-eb-params="repos">
+	    	<a href="#"><i class="icon-bar-chart"></i>仓库管理</a>
+	    </li>
+	
+	    {{if type > 0}}
+	    {{if docSysType > 0}}
+		<li data-eb-event="content.refresh" data-eb-params="systemLog">
+	    	<a href="#"><i class="icon-bar-chart"></i>日志管理</a>
+	    </li>
+	    {{/if}}
+	    {{/if}}
+	
+	    {{if type == 2}}
+	    <li data-eb-event="content.refresh" data-eb-params="system" class="has_sublist">
+	        <a href="#" class=''>
+	            <i class="icon-list-alt"></i> 系统管理  <span class="pull-right"><i class="icon-chevron-right"></i></span>
+	        </a> 
+	        <ul id="sidebarSystemSublist" class="sublist" style="display:none">
+	            <li data-eb-event="content.refresh" data-eb-params="systemEmailConfig"><a href="#" class="open">邮件服务</a> </li>
+	            <li data-eb-event="content.refresh" data-eb-params="systemSmsConfig"><a href="#" >短信服务</a> </li>
+	            <li data-eb-event="content.refresh" data-eb-params="systemDbConfig"><a href="#" >数据库设置</a> </li>
+	            <li data-eb-event="content.refresh" data-eb-params="systemUpgrade"><a href="#" >系统设置</a></li>
+	            <li data-eb-event="content.refresh" data-eb-params="systemLicenses"><a href="#" >证书安装</a></li>
+	        </ul>
+	    </li>
+	    {{/if}}
+	
+	    {{if type > 0}}
+	    {{if isSalesServer == 1}}
+		<li data-eb-event="content.refresh" data-eb-params="license">
+	    	<a href="#"><i class="icon-bar-chart"></i>证书管理</a>
+	    </li>
+	    <li data-eb-event="content.refresh" data-eb-params="order">
+	    	<a href="#"><i class="icon-bar-chart"></i>订单管理</a>
+	    </li>
+	    {{/if}}
+	    {{/if}}
+	</ul>
+</div>
 
 <!--- Sidebar navigation -->
 <!-- If the main navigation has sub navigation, then add the class "has_sub" to "li" of main navigation. -->
