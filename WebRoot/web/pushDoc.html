@@ -24,9 +24,7 @@
 	        <label class="col-sm-2 control-label">仓库</label>
 	        <div class="col-sm-10">
 	            <select class="form-control" name="targetRepos" style="width: 100%">   
-	            	<option value="1" selected="selected">仓库1</option>
-	            	<option value="2">仓库2</option>
-	            	<option value="3">仓库3</option>
+	            	<option value="" selected="selected">暂无数据</option>
 	            </select>
 	        </div>
 	    </div>
@@ -84,6 +82,7 @@
 		var pwd = "";
 		var targetReposId = "";
 		var targetPath = "";
+		var remtoeAuthCode = "";
 		
 		function init(_node, _type)
 		{
@@ -98,7 +97,87 @@
 			$("#dialog-push-doc input[name='targetServer']").val(targetServerUrl);
 			
 			targetPath = node.path;
-	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);    
+	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);
+	        
+	        getRemoteAuthCode(showReposSelectList);
+		}
+		
+		function getRemoteAuthCode(callback)
+		{
+		   	console.log("getRemoteAuthCode()");		   	
+		    $.ajax({
+		               	url : targetServerUrl + "/DocSystem/Bussiness/getAuthCode.do",
+		                type : "post",
+		                dataType : "json",
+		                data : {
+		                	userName: userName,
+		                	pwd: pwd,
+		                },
+		                success : function (ret) {
+		                    if( "ok" == ret.status ){
+		                    	remtoeAuthCode = ret.data;
+		                        showReposSelectList(remtoeAuthCode);
+		                    }
+		                    else
+		                    {
+		                    	showErrorMessage("获取授权码失败:" + ret.msgInfo);
+		                    }
+		                },
+		                error : function () {
+		                   showErrorMessage('获取授权码失败：服务器异常，请检查服务器地址是否正确！');
+		                }
+		    });
+		}
+		
+		function showReposSelectList(authCode)
+		{
+		   	console.log("showReposSelectList()");		   	
+		   	if(type != 1)
+			{
+		   		return;
+			}
+
+		   	$("#dialog-push-doc div[name='targetReposDiv']").show();
+		   	$.ajax({
+		               	url : targetServerUrl + "/DocSystem/Repos/getReposList.do",
+		                type : "post",
+		                dataType : "json",
+		                data : {
+		                	authCode: authCode,
+		                },
+		                success : function (ret) {
+		                    if( "ok" == ret.status ){
+		                        showReposList(ret.data);
+		                    }
+		                    else
+		                    {
+		                    	showErrorMessage("Error:" + ret.msgInfo);
+		                    }
+		                },
+		                error : function () {
+		                   showErrorMessage('服务器异常：获取仓库列表失败！');
+		                }
+		    });
+			    
+			//根据获取到的仓库列表数据，绘制列表
+			function showReposList(data){
+				console.log(data);
+				var c = $("#reposList").children();
+				$(c).remove();
+				if(data.length==0){
+					$("#reposList").append("<p>暂无数据</p>");
+				}
+				
+				for(var i=0;i<data.length;i++){
+					var d = data[i];
+					//alert(d.id);				
+					var se = "<li>"
+						+ "		<a href='/DocSystem/web/reposManager.html?vid=" + d.id + "'>" + d.name +"</a>"
+						+ "	  </li>";
+					
+					$("#reposList").append(se);
+				}
+			}	    
 		}
 		
 		function doPushDoc()
