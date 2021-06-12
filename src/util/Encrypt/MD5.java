@@ -8,18 +8,31 @@ public class MD5 {
 	}
 	
 	public static String md5(String text, String encode) {
+        byte [] data = null;
+		try {
+		    if(encode == null)
+	        {
+	        	data = text.getBytes();
+	        }
+	        else
+	        {
+	        	data = text.getBytes(encode);
+	        }	 
+		    return md5(data);
+        } 
+        catch (Exception e) 
+        {
+            e.printStackTrace();
+        }
+		return text;
+	}
+	
+	
+	public static String md5(byte[] data) {
         try {
             // Create MessageDigest instance for MD5
             MessageDigest md = MessageDigest.getInstance("MD5");
-            //Add password bytes to digest
-            if(encode == null)
-            {
-            	md.update(text.getBytes());
-            }
-            else
-            {
-            	md.update(text.getBytes(encode));
-            }
+            md.update(data);
             
             //Get the hash's bytes 
             byte[] bytes = md.digest();
@@ -37,6 +50,6 @@ public class MD5 {
         {
             e.printStackTrace();
         }
-		return text;
+		return null;
 	}
 }
