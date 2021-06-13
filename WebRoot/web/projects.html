@@ -117,11 +117,13 @@
         <div class="container">
             <div class="row text-center">
                 <ul>
+                    <li><div id="qrcode"></div></li>
+                </ul>
+                <ul>
                     <li><a href="#">MxsDoc</a></li>
                     <li>&nbsp;·&nbsp;</li>
                     <li><a onclick="showFeebackPanel()">意见反馈</a> </li>
                 </ul>
-
             </div>
         </div>
     </footer>
@@ -194,6 +196,7 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="static/pagination/jquery.pagination.js"></script>
+<script src="js/qrcode.js"></script>
 <script type="text/javascript">
 	//页面初始化
 	var gDocSysConfig = null;
@@ -257,8 +260,39 @@
                 alert("服务器异常:获取用户信息失败");
             }
         });
+		
+		//showQRCode();
     }
     
+	function showQRCode()
+	{
+		$.ajax({
+            url : "/DocSystem/Doc/getLoginLink.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+         		console.log("getLoginLink ret:", ret)
+         		if(ret.status == "ok")
+            	{
+         			var url = ret.data;
+         			console.log(url);
+         			new QRCode(document.getElementById("qrcode"), url);  // 设置要生成二维码的链接
+         		}
+                else
+                {
+                	new QRCode(document.getElementById("qrcode"), "http://dw.gofreeteam.com/DocSystem");  // 设置要生成二维码的链接
+                    showErrorMessage("获取登录链接失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	new QRCode(document.getElementById("qrcode"), "http://dw.gofreeteam.com/DocSystem");  // 设置要生成二维码的链接
+                showErrorMessage('获取登录链接失败: 服务器异常');
+            }
+        });
+
+	}
+	
     function userLogout()
    	{
     	logout();
