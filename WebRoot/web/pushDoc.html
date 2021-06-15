@@ -116,7 +116,7 @@
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
 		                    	remoteAuthCode = ret.data;
-		                        showReposSelectList(remoteAuthCode);
+		                        showReposSelectList(ret.dataEx);
 		                    }
 		                    else
 		                    {
@@ -129,7 +129,7 @@
 		    });
 		}
 		
-		function showReposSelectList(authCode)
+		function showReposSelectList(data)
 		{
 		   	console.log("showReposSelectList()");		   	
 		   	if(type != 1)
@@ -138,42 +138,18 @@
 			}
 
 		   	$("#dialog-push-doc div[name='targetReposDiv']").show();
-		   	$.ajax({
-		               	url : targetServerUrl + "/DocSystem/Repos/getReposList.do",
-		                type : "post",
-		                dataType : "json",
-		                data : {
-		                	authCode: authCode,
-		                },
-		                success : function (ret) {
-		                    if( "ok" == ret.status ){
-		                        showReposList(ret.data);
-		                    }
-		                    else
-		                    {
-		                    	showErrorMessage("Error:" + ret.msgInfo);
-		                    }
-		                },
-		                error : function () {
-		                   showErrorMessage('服务器异常：获取仓库列表失败！');
-		                }
-		    });
-			    
-			//根据获取到的仓库列表数据，绘制列表
-			function showReposList(data){
-				console.log(data);
-				if(data.length > 0){
-					var c = $("#dialog-push-doc select[name='targetRepos']").children();
-					$(c).remove();
+			console.log(data);
+			if(data.length > 0){
+				var c = $("#dialog-push-doc select[name='targetRepos']").children();
+				$(c).remove();
 							
-					var selectListHtml = "";
-					for(var i=0;i<data.length;i++){
-						var d = data[i];
-						selectListHtml += "<option value=" +d.id + ">" + d.name + "</option>";
-					}
-					$("#dialog-push-doc select[name='targetRepos']").append(selectListHtml);
+				var selectListHtml = "";
+				for(var i=0;i<data.length;i++){
+					var d = data[i];
+					selectListHtml += "<option value=" +d.id + ">" + d.name + "</option>";
 				}
-			}	    
+				$("#dialog-push-doc select[name='targetRepos']").append(selectListHtml);
+			}
 		}
 		
 		function doPushDoc()
