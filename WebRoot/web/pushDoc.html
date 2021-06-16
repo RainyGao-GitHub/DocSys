@@ -3,7 +3,9 @@
 	   <div class="form-group">
 	       <label class="col-sm-2 control-label">服务器</label>
 	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="targetServer" style="width: 100%"/>
+	       	    <select class="form-control" name="targetServer" style="width: 100%">   
+	            	<option value="" selected="selected">暂无数据</option>
+	            </select>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
@@ -65,7 +67,11 @@
 	var DocPush = (function () {
 		var type;
 		var node;
-
+		
+		var localServer = {};
+		var targetServerList = [];
+		var curServerIndex = 0;
+		
 		var targetServerUrl = "";
 		var userName = "";
 		var pwd = "";
@@ -79,28 +85,100 @@
 
 			type = _type;
 			node = _node;
-			
-			var protocol = window.location.protocol + '//';
-			var host = window.location.host; //域名带端口  
-			targetServerUrl = protocol + host;
-			$("#dialog-push-doc input[name='targetServer']").val(targetServerUrl);
-			
+
+			//set targetPath
 			targetPath = node.path;
 	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);
-	        
-	        getRemoteAuthCode(showReposSelectList);
+			
+			//初始化serverList
+			initTaregetServerList(showTargetServerSelectList);
 		}
 		
-		function getRemoteAuthCode(callback)
+		function initTaregetServerList(callback)
+		{			
+			//Build Local ServerUrl
+			var protocol = window.location.protocol + '//';
+			var host = window.location.host; //域名带端口  
+			var serverUrl = protocol + host;
+			localServer.serverUrl = serverUrl;
+			localServer.name = "本地服务器";	
+			localServer.isLocal = true;				
+			targetServerList.push(localServer);
+			
+			//获取用户自定义服务器列表
+			getUserPreferServerList(callback);
+		}
+		
+		function getUserPreferServerList(callback)
 		{
-		   	console.log("getRemoteAuthCode()");		   	
+		   	console.log("getUserPreferServerList()");		   	
 		    $.ajax({
-		               	url : targetServerUrl + "/DocSystem/Bussiness/getAuthCode.do",
+		               	url : "/DocSystem/Bussiness/getUserPreferServerList.do",
+		                type : "post",
+		                dataType : "json",
+		                data : {},
+		                success : function (ret) {
+		                    if( "ok" == ret.status ){
+		                    	var list = ret.data;
+		                    	for(var i=0; i<list.length; i++)
+		                    	{
+			                    	targetServerList.push(list[i]);		                    		
+		                    	}
+		                    	callback && callback();
+		                    }
+		                    else
+		                    {
+		                    	console.log("获取常用服务器列表失败:" + ret.msgInfo);
+		                    	callback && callback();
+		                    }
+		                },
+		                error : function () {
+	                       console.log('获取常用服务器列表失败：服务器异常！');
+	                       callback && callback();
+		                }
+		    });
+		}
+		
+		function showTargetServerSelectList()
+		{
+		   	console.log("showTargetServerSelectList()");
+		   	var data = targetServerList;
+		   	
+			console.log(data);
+			if(data.length > 0){
+				var c = $("#dialog-push-doc select[name='targetServer']").children();
+				$(c).remove();
+							
+				var selectListHtml = "";
+				for(var i=0;i<data.length;i++){
+					var d = data[i];
+					selectListHtml += "<option value=" + i + ">" + d.name + "</option>";
+				}
+				$("#dialog-push-doc select[name='targetServer']").append(selectListHtml);
+			}
+			
+			//get AuthCode For Selected Server
+			getRemoteAuthCode();
+		}
+		
+		function getRemoteAuthCode()
+		{
+		   	console.log("getRemoteAuthCode()");		
+		   	var seletedServer = targetServerList[curServerIndex];
+		   	var serverUrl = seletedServer.serverUrl;
+		    if(seletedServer.isLocal)
+		    {
+		    	serverUrl = undefined;
+		    }
+		   	
+		    $.ajax({
+		               	url : "/DocSystem/Bussiness/getAuthCode.do",
 		                type : "post",
 		                dataType : "json",
 		                data : {
-		                	userName: userName,
-		                	pwd: pwd,
+		                	serverUrl: serverUrl,
+		                	userName: seletedServer.userName,
+		                	pwd: seletedServer.pwd,
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
@@ -143,7 +221,7 @@
 		
 		function doPushDoc()
 		{
-		    targetServerUrl = $("#dialog-push-doc input[name='targetServer']").val();
+		    targetServerUrl = targetServerList[curServerIndex].serverUrl;
 		    userName = $("#dialog-push-doc input[name='userName']").val();
 		    pwd = MD5($("#dialog-push-doc input[name='pwd']").val());
 		    if(type == 1)
