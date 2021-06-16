@@ -1,0 +1,139 @@
+<div id="dialog-addUserPreferServer" class="form-horizontal">
+	<div class="modal-body">
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">服务器</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="targetServer" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">用户名</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="userName" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	    	<label class="col-sm-2 control-label">密码</label>
+	        <div class="col-sm-10">
+	            <input type="text" id="" name="pwd" class="form-control"  maxlength="16"></input>
+	        </div>
+	    </div>
+	</div>
+    <div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelPushDoc();" style="width: 100px;height: 42px;">取消</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function addUserPreferServerPageInit(_serverUrl, _callback)
+	{
+		console.log("addUserPreferServerPageInit() _serverUrl:" + _serverUrl);
+		
+		AddUerPreferServer.init(_serverUrl, _callback);
+	}
+	
+	function closeAddUserPreferServerDialog()
+	{
+		closeBootstrapDialog("addUserPreferServer");
+	}
+
+	function doAddUserPreferServer()
+	{
+		AddUerPreferServer.doAddUserPreferServer();
+	}
+	
+	function cancelAddUserPreferServer()
+	{
+		closeAddUserPreferServerDialog();
+	}
+	
+	var AddUerPreferServer = (function () {
+		var callback;
+		var serverUrl;
+		var userName;
+		var pwd;
+
+		function init(_serverUrl)
+		{
+			console.log("DocPush.init() _serverUrl:" + _serverUrl);
+			serverUrl = _serverUrl;
+			callback = _callback;
+			if(_serverUrl)
+			{
+				$("#dialog-push-doc div[name='targetServer']").val(_serverUrl);
+			}			
+		}
+		
+		function doAddUserPreferServer()
+		{
+			serverUrl = $("#dialog-push-doc input[name='targetServer']").val();
+		    userName = $("#dialog-push-doc input[name='userName']").val();
+		    pwd = MD5($("#dialog-push-doc input[name='pwd']").val());
+
+		    if(serverUrl)
+			{
+		  	  	addUserPreferServer(serverUrl, userName, pwd);
+		      	return true;
+			}
+			else
+			{
+		    	alert("服务器地址不能为空");
+		        return false;
+		    }
+		}
+		
+	   	function addUserPreferServer()
+	   	{
+	    	$.ajax({
+	             url : "/DocSystem/Bussiness/addUserPreferServer.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	            	 serverUrl: serverUrl,
+		            userName: userName,
+		            pwd: pwd,
+	             },
+	             success : function (ret) {
+	            	console.log("addUserPreferServer ret:", ret);            		
+	             	if( "ok" == ret.status){             		
+	             		// 普通消息提示条
+						bootstrapQ.msg({
+									msg : "添加成功！",
+									type : 'success',
+									time : 2000,
+						});
+	             		
+	             		callback && callback();
+	            		closeAddUserPreferServerDialog();
+	                }
+	                else
+	                {
+	                	showErrorMessage("添加失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("添加失败:服务器异常！");
+	            }
+	        });
+	    }
+	   	
+		//开放给外部的调用接口
+        return {
+			init: function(_serverUrl){
+				init(_serverUrl);
+			},
+			doAddUserPreferServer: function(){
+				doAddUserPreferServer();
+            },
+        };
+	})();
+</script>
+
