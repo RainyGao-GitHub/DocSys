@@ -831,7 +831,31 @@ public class BaseFunction{
 		String path = getSystemLogStorePath() + indexLibName + "/";
 		return path;
 	}
-		
+	
+	protected static String getDBStorePath() {
+    	String path = null;
+    	path = ReadProperties.read("docSysConfig.properties", "DBStorePath");
+        if(path != null && !path.isEmpty())
+        {
+        	return Path.localDirPathFormat(path, OSType);
+        }
+
+        switch(OSType)
+        {
+        case OS.Windows:
+        	path = "C:/DocSysDB/";
+        	break;
+        case OS.Linux: 
+        	path = "/data/DocSysDB/";
+        	break;
+        case OS.MacOS:
+        	path = "/data/DocSysDB/";
+        	break;
+        }
+        return path;
+    }	
+	
+	
 	protected static String getSystemLogStorePath() {
     	String path = null;
     	path = ReadProperties.read("docSysConfig.properties", "SystemLogStorePath");

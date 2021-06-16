@@ -70,14 +70,16 @@
 		
 		var localServer = {};
 		var targetServerList = [];
-		var curServerIndex = 0;
 		
+		//cur ServerInfo
+		var curServerIndex = 0;
 		var targetServerUrl = "";
 		var userName = "";
 		var pwd = "";
+		var remoteAuthCode = "";
+		
 		var targetReposId = "";
 		var targetPath = "";
-		var remoteAuthCode = "";
 		
 		function init(_node, _type)
 		{
@@ -101,7 +103,7 @@
 			var host = window.location.host; //域名带端口  
 			var serverUrl = protocol + host;
 			localServer.serverUrl = serverUrl;
-			localServer.name = "本地服务器";	
+			localServer.serverName = "本地服务器";	
 			localServer.isLocal = true;				
 			targetServerList.push(localServer);
 			
@@ -120,9 +122,12 @@
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
 		                    	var list = ret.data;
-		                    	for(var i=0; i<list.length; i++)
+		                    	if(list)
 		                    	{
-			                    	targetServerList.push(list[i]);		                    		
+			                    	for(var i=0; i<list.length; i++)
+			                    	{
+				                    	targetServerList.push(list[i]);		                    		
+			                    	}
 		                    	}
 		                    	callback && callback();
 		                    }
@@ -152,7 +157,12 @@
 				var selectListHtml = "";
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					selectListHtml += "<option value=" + i + ">" + d.name + "</option>";
+					var showName = d.serverUrl;
+					if(d.serverName)
+					{		
+						showName = d.serverName;
+					}
+					selectListHtml += "<option value=" + i + ">" + showName + "</option>";
 				}
 				$("#dialog-push-doc select[name='targetServer']").append(selectListHtml);
 			}
@@ -170,8 +180,12 @@
 		{
 		   	console.log("getRemoteAuthCode()");		
 		   	var seletedServer = targetServerList[curServerIndex];
-		   	var serverUrl = seletedServer.serverUrl;
-		    if(seletedServer.isLocal)
+		   	targetServerUrl = seletedServer.serverUrl;
+		   	userName = seletedServer.serverUserName;
+		   	pwd = seletedServer.serverPwd;		
+		   	
+		   	var serverUrl = targetServerUrl;
+		   	if(seletedServer.isLocal)
 		    {
 		    	serverUrl = undefined;
 		    }
@@ -182,8 +196,8 @@
 		                dataType : "json",
 		                data : {
 		                	serverUrl: serverUrl,
-		                	userName: seletedServer.userName,
-		                	pwd: seletedServer.pwd,
+		                	userName: userName,
+		                	pwd: pwd,
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
@@ -226,9 +240,11 @@
 		
 		function doPushDoc()
 		{
-		    targetServerUrl = targetServerList[curServerIndex].serverUrl;
-		    userName = $("#dialog-push-doc input[name='userName']").val();
-		    pwd = MD5($("#dialog-push-doc input[name='pwd']").val());
+		   	var seletedServer = targetServerList[curServerIndex];
+		   	targetServerUrl = seletedServer.serverUrl;
+		   	userName = seletedServer.serverUserName;
+		   	pwd = seletedServer.serverPwd;	
+		   	
 		    if(type == 1)
 		    {
 		    	targetReposId = $("#dialog-push-doc select[name='targetRepos']").val();
