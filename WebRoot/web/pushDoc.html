@@ -14,7 +14,7 @@
 	   <div name="targetReposDiv" class="form-group" style="display:none;">
 	        <label class="col-sm-2 control-label">仓库</label>
 	        <div class="col-sm-10">
-	            <select class="form-control" name="targetRepos" style="width: 100%">   
+	            <select class="form-control" name="targetRepos" onchange="doSelectTargetSever();" style="width: 100%">   
 	            	<option value="" selected="selected">暂无数据</option>
 	            </select>
 	        </div>
@@ -158,6 +158,11 @@
 			}
 			
 			//get AuthCode For Selected Server
+			getRemoteAuthCode();
+		}
+		
+		function doSelectTargetSever() {
+			curServerIndex = $("#dialog-push-doc select[name='targetServer']").val();
 			getRemoteAuthCode();
 		}
 		
