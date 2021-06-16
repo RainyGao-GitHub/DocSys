@@ -1616,6 +1616,7 @@ public class LuceneUtil2   extends BaseFunction
         }
 	}
 	
+	//queryType 是针对String类型的字段
 	public static List<QueryCondition> buildQueryConditionsForObject(Object obj, Occur occurType, Integer queryType) 
 	{
 		if(obj == null)
