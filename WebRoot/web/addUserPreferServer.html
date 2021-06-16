@@ -1,9 +1,16 @@
 <div id="dialog-addUserPreferServer" class="form-horizontal">
 	<div class="modal-body">
 	   <div class="form-group">
-	       <label class="col-sm-2 control-label">服务器</label>
+	       <label class="col-sm-2 control-label">服务器地址</label>
 	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="targetServer" style="width: 100%"/>
+ 	           <input class="form-control" type="text" name=serverUrl style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">服务器名称</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="serverName" style="width: 100%"/>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
@@ -19,7 +26,7 @@
 	        <div class="col-sm-10">
 	            <input type="text" id="" name="pwd" class="form-control"  maxlength="16"></input>
 	        </div>
-	    </div>
+	   </div>
 	</div>
     <div class="modal-footer">
 	    <div class="form-group">
@@ -58,13 +65,18 @@
 	var AddUerPreferServer = (function () {
 		var callback;
 		var serverUrl;
+		var serverName;
 		var userName;
 		var pwd;
 
-		function init(_serverUrl)
+		function init(_serverInfo, _callback)
 		{
 			console.log("DocPush.init() _serverUrl:" + _serverUrl);
-			serverUrl = _serverUrl;
+			serverUrl = _serverInfo.serverUrl;
+			serverName = _serverInfo.serverName;
+			userName = _serverInfo.serverUserName;
+			pwd = _serverInfo.serverUserPwd;
+			
 			callback = _callback;
 			if(_serverUrl)
 			{
@@ -74,13 +86,14 @@
 		
 		function doAddUserPreferServer()
 		{
-			serverUrl = $("#dialog-push-doc input[name='targetServer']").val();
-		    userName = $("#dialog-push-doc input[name='userName']").val();
+			serverUrl = $("#dialog-push-doc input[name='serverUrl']").val();
+			serverName = $("#dialog-push-doc input[name='serverName']").val();
+			userName = $("#dialog-push-doc input[name='userName']").val();
 		    pwd = MD5($("#dialog-push-doc input[name='pwd']").val());
 
 		    if(serverUrl)
 			{
-		  	  	addUserPreferServer(serverUrl, userName, pwd);
+		  	  	addUserPreferServer(serverName, serverUrl, userName, pwd);
 		      	return true;
 			}
 			else
@@ -90,14 +103,15 @@
 		    }
 		}
 		
-	   	function addUserPreferServer()
+	   	function addUserPreferServer(serverName, serverUrl, userName, pwd)
 	   	{
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/addUserPreferServer.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	            	 serverUrl: serverUrl,
+	            	serverName: serverName,
+	            	serverUrl: serverUrl,
 		            userName: userName,
 		            pwd: pwd,
 	             },
@@ -127,8 +141,8 @@
 	   	
 		//开放给外部的调用接口
         return {
-			init: function(_serverUrl){
-				init(_serverUrl);
+			init: function(_serverInfo, _callback){
+				init(_serverInfo, _callback);
 			},
 			doAddUserPreferServer: function(){
 				doAddUserPreferServer();
