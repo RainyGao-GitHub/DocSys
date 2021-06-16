@@ -698,6 +698,64 @@ public class BaseFunction{
     }
     
 	//日志管理	
+	protected static boolean addUserPreferServer(String serverName, String serverUrl, String userName, String pwd, User accessUser)
+    {
+		UserPreferServer server = new UserPreferServer();
+		server.createTime = new Date().getTime();
+		
+		server.serverName = serverName;
+		server.serverUrl = serverUrl;
+		server.serverUserName = userName;
+		server.serverUserPwd = pwd;
+		
+		server.userId = accessUser.getId();
+		server.userName = accessUser.getName();
+		
+		server.id = server.userId + "_" + serverUrl.hashCode() + "_" + server.createTime;
+		
+		String indexLib = getIndexLibPathForUserPreferServer();
+		return addUserPreferServerIndex(server, indexLib);
+    }
+
+	private static boolean addUserPreferServerIndex(UserPreferServer server, String indexLib) {
+    	System.out.println("addUserPreferServerIndex() id:" + server.id + " indexLib:"+indexLib);    	
+    	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(server);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        System.out.println("addUserPreferServerIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        System.out.println("addUserPreferServerIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+
+	//日志管理	
 	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
     {
 		SystemLog log = new SystemLog();
@@ -830,6 +888,11 @@ public class BaseFunction{
 		String indexLibName = "SystemLog-" + date.getYear() + "-" + date.getMonth();
 		String path = getSystemLogStorePath() + indexLibName + "/";
 		return path;
+	}
+	
+    
+	protected static String getIndexLibPathForUserPreferServer() {
+		return getDBStorePath() + "UserPreferServer/";
 	}
 	
 	protected static String getDBStorePath() {
