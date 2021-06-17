@@ -1,32 +1,40 @@
 <div id="dialog-push-doc" class="form-horizontal">
-	<div class="modal-body">
-	   <div class="form-group">
-	       <label class="col-sm-2 control-label">服务器</label>
-	       <div class="col-sm-10">
-	       	    <select class="form-control" name="targetServer" style="width: 100%">   
-	            	<option value="" selected="selected">暂无数据</option>
-	            </select>
-	       </div>
-	       <div class="clearfix"></div>
-	   </div>
-	</div>
-	<div class="modal-footer">
-	   <div name="targetReposDiv" class="form-group" style="display:none;">
+    <div class="form-group">
+       <label class="col-sm-2 control-label">服务器</label>
+       <div class="col-sm-7" style="padding-right:0;">
+       	    <select class="form-control" name="targetServer" style="width: 100%;">   
+            	<option value="" selected="selected">暂无数据</option>
+            </select>
+       </div>
+       <div class="col-sm-3">
+           <span class="btn" title="添加" onclick="addUserPreferServer();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
+				<i class="icons plus1"></i>
+			</span>
+           <span class="btn" title="修改" onclick="editUserPreferServer();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+				<i class="icons set"></i>
+			</span>
+           <span class="btn" title="删除" onclick="deleteUserPreferServer();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
+				<i class="icons delete"></i>
+			</span>
+       	</div>
+       <div class="clearfix"></div>
+    </div>
+    <div class="modal-footer"></div>
+	<div class="form-group"  name="targetReposDiv"  style="display:none;">
 	        <label class="col-sm-2 control-label">仓库</label>
 	        <div class="col-sm-10">
 	            <select class="form-control" name="targetRepos" onchange="doSelectTargetSever();" style="width: 100%">   
 	            	<option value="" selected="selected">暂无数据</option>
 	            </select>
 	        </div>
-	   </div>
-	   <div class="form-group">
+	</div>
+	<div class="form-group">
 	        <label class="col-sm-2 control-label">目录</label>
 	        <div class="col-sm-10">
 	            <input type="text" name="targetPath" class="form-control"  maxlength="400"></input>
 	        </div>
-	   </div>   
-	</div>    
-    <div class="modal-footer">
+	</div>   
+	<div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
 		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">确定</button>
