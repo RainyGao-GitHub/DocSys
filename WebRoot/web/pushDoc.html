@@ -77,6 +77,11 @@
 		showAddUserPreferServerPanel();
 	}
 	
+	function editUserPreferServer()
+	{
+		DocPush.showEditUserPreferServerPanel();
+	}
+	
 	function deleteUserPreferServer()
 	{
 		console.log("deleteUserPreferServer()");		   	
@@ -132,6 +137,29 @@
 			initTaregetServerList();
 		}
 		
+		function showEditUserPreferServerPanel()
+		{
+			console.log("showEditUserPreferServerPanel");
+			if(curServerIndex == 0)
+			{
+				showErrorMessage("无法修改本地服务器！");
+				return;
+			}
+			
+			bootstrapQ.dialog({
+				id: 'editUserPreferServer',
+				url: 'editUserPreferServer.html',
+				title: '设置常用服务器',
+				msg: '页面正在加载，请稍等...',
+				foot: false,
+				big: false,
+				callback: function(){
+					var seletedServer = targetServerList[curServerIndex];
+					editUserPreferServerPageInit(DocPush.initTaregetServerList, seletedServer);
+				},
+			});
+		}
+		
 		function deleteUserPreferServerConfirm()
 		{
 			console.log("deleteUserPreferServerConfirm()");
@@ -172,6 +200,12 @@
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
+	             		// 普通消息提示条
+						bootstrapQ.msg({
+									msg : "删除成功！",
+									type : 'success',
+									time : 2000,
+						});
 	                	initTaregetServerList();
 	                }
 	                else
@@ -428,6 +462,9 @@
             },
             deleteUserPreferServer: function(serverId){
             	deleteUserPreferServer(serverId);
+            },
+            showEditUserPreferServerPanel: function(){
+            	showEditUserPreferServerPanel();
             },
             initTaregetServerList: function() {
             	initTaregetServerList();

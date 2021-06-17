@@ -66,6 +66,7 @@
 	
 	var AddUerPreferServer = (function () {
 		var callback;
+		var serverInfo;
 		var serverUrl;
 		var serverName;
 		var userName;
@@ -74,18 +75,7 @@
 		function init(_callback, _serverInfo)
 		{
 			console.log("AddUerPreferServer.init() _serverInfo:", _serverInfo);
-			if(_serverInfo)
-			{
-				serverUrl = _serverInfo.serverUrl;
-				serverName = _serverInfo.serverName;
-				userName = _serverInfo.serverUserName;
-				pwd = _serverInfo.serverUserPwd;
-				if(_serverUrl)
-				{
-					$("#dialog-addUserPreferServer div[name='serverUrl']").val(_serverUrl);
-				}
-			}			
-			
+			serverInfo = _serverInfo;
 			callback = _callback;
 						
 		}

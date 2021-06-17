@@ -723,6 +723,50 @@ public class BaseFunction{
 		return server;
     }
 	
+	protected boolean editUserPreferServer(UserPreferServer server) {
+		String indexLib = getIndexLibPathForUserPreferServer();
+		return updateUserPreferServerIndex(server, indexLib);
+	}
+	
+	
+	protected boolean updateUserPreferServerIndex(UserPreferServer server, String indexLib)
+    {	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(server);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.updateDocument(new Term("id", server.id), document);
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        System.out.println("updateUserPreferServerIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        System.out.println("updateUserPreferServerIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+	
 	protected boolean deleteUserPreferServer(String serverId)
     {
 		String indexLib = getIndexLibPathForUserPreferServer();
