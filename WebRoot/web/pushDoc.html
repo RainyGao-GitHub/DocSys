@@ -2,7 +2,7 @@
     <div class="form-group">
        <label class="col-sm-2 control-label">服务器</label>
        <div class="col-sm-7" style="padding-right:0;">
-       	    <select class="form-control" name="targetServer" style="width: 100%;">   
+       	    <select class="form-control" name="targetServer"  onchange="DocPush.doSelectTargetSever();" style="width: 100%;">   
             	<option value="" selected="selected">暂无数据</option>
             </select>
        </div>
@@ -23,7 +23,7 @@
 	<div class="form-group"  name="targetReposDiv"  style="display:none;">
 	        <label class="col-sm-2 control-label">仓库</label>
 	        <div class="col-sm-10">
-	            <select class="form-control" name="targetRepos" onchange="doSelectTargetSever();" style="width: 100%">   
+	            <select class="form-control" name="targetRepos" style="width: 100%">   
 	            	<option value="" selected="selected">暂无数据</option>
 	            </select>
 	        </div>
@@ -72,6 +72,33 @@
 		closePushDocDialog();
 	}
 	
+	function addUserPreferServer()
+	{
+		showAddUserPreferServerPanel();
+	}
+	
+	function deleteUserPreferServer()
+	{
+		console.log("deleteUserPreferServer()");		   	
+	   	DocPush.deleteUserPreferServerConfirm();
+	}
+	
+	function showAddUserPreferServerPanel()
+	{
+		console.log("showAddUserPreferServerPanel");
+		bootstrapQ.dialog({
+			id: 'addUserPreferServer',
+			url: 'addUserPreferServer.html',
+			title: '添加常用服务器',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				addUserPreferServerPageInit(DocPush.initTaregetServerList);
+			},
+		});
+	}
+	
 	var DocPush = (function () {
 		var type;
 		var node;
@@ -81,6 +108,7 @@
 		
 		//cur ServerInfo
 		var curServerIndex = 0;
+		var targetServerId;
 		var targetServerUrl = "";
 		var userName = "";
 		var pwd = "";
@@ -101,11 +129,67 @@
 	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);
 			
 			//初始化serverList
-			initTaregetServerList(showTargetServerSelectList);
+			initTaregetServerList();
 		}
 		
-		function initTaregetServerList(callback)
-		{			
+		function deleteUserPreferServerConfirm()
+		{
+			console.log("deleteUserPreferServerConfirm()");
+			if(curServerIndex == 0)
+			{
+				showErrorMessage("无法删除本地服务器！");
+				return;
+			}
+			
+			var seletedServer = targetServerList[curServerIndex];
+			var showName = seletedServer.serverUrl;
+			if(seletedServer.serverName)
+			{		
+				showName = seletedServer.serverName;
+			}
+			bootstrapQ.confirm(
+					{
+						id: "deleteTargetServerConfirm",
+						title: "删除确认",
+						msg : "是否删除 " + showName,
+					},
+					function () {
+				    	//alert("点击了确定");
+						DocPush.deleteUserPreferServer(seletedServer.id);
+				    	return true;   
+				 	});
+		}
+		
+		function deleteUserPreferServer(serverId) 
+		{
+		   	console.log("deleteUserPreferServer() serverId:" + serverId);		   	
+		   	$.ajax({
+	           	url : "/DocSystem/Bussiness/deleteUserPreferServer.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	serverId: serverId,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status ){
+	                	initTaregetServerList();
+	                }
+	                else
+	                {
+	                	console.log("删除常用服务器失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                  console.log('删除常用服务器失败：服务器异常！');
+	            }
+		    });
+		}
+		
+		function initTaregetServerList()
+		{	
+			targetServerList = [];
+			curServerIndex = 0;
+			
 			//Build Local ServerUrl
 			var protocol = window.location.protocol + '//';
 			var host = window.location.host; //域名带端口  
@@ -116,7 +200,7 @@
 			targetServerList.push(localServer);
 			
 			//获取用户自定义服务器列表
-			getUserPreferServerList(callback);
+			getUserPreferServerList(showTargetServerSelectList);
 		}
 		
 		function getUserPreferServerList(callback)
@@ -180,7 +264,9 @@
 		}
 		
 		function doSelectTargetSever() {
+		   	console.log("doSelectTargetSever()");
 			curServerIndex = $("#dialog-push-doc select[name='targetServer']").val();
+		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
 			getRemoteAuthCode();
 		}
 		
@@ -188,6 +274,7 @@
 		{
 		   	console.log("getRemoteAuthCode()");		
 		   	var seletedServer = targetServerList[curServerIndex];
+		   	targetServerId = seletedServer.id;
 		   	targetServerUrl = seletedServer.serverUrl;
 		   	userName = seletedServer.serverUserName;
 		   	pwd = seletedServer.serverPwd;		
@@ -203,6 +290,7 @@
 		                type : "post",
 		                dataType : "json",
 		                data : {
+		                	serverId: targetServerId,
 		                	serverUrl: serverUrl,
 		                	userName: userName,
 		                	pwd: pwd,
@@ -214,11 +302,13 @@
 		                    }
 		                    else
 		                    {
+		                    	cleanReposSelectList();
 		                    	showErrorMessage("获取授权码失败:" + ret.msgInfo);
 		                    }
 		                },
 		                error : function () {
-		                   showErrorMessage('获取授权码失败：服务器异常，请检查服务器地址是否正确！');
+		                   cleanReposSelectList();
+		                   showErrorMessage('获取授权码失败：服务器异常！');
 		                }
 		    });
 		}
@@ -244,6 +334,22 @@
 				}
 				$("#dialog-push-doc select[name='targetRepos']").append(selectListHtml);
 			}
+		}
+		
+		function cleanReposSelectList()
+		{
+		   	console.log("cleanReposSelectList()");		   	
+		   	if(type != 1)
+			{
+		   		return;
+			}
+
+		   	$("#dialog-push-doc div[name='targetReposDiv']").show();
+			var c = $("#dialog-push-doc select[name='targetRepos']").children();
+			$(c).remove();
+							
+			var selectListHtml = "<option>暂无数据</option>";
+			$("#dialog-push-doc select[name='targetRepos']").append(selectListHtml);
 		}
 		
 		function doPushDoc()
@@ -278,13 +384,11 @@
 	             type : "post",
 	             dataType : "json",
 	             data : {
-		            targetServerUrl: targetServerUrl,
-		            userName: userName,
-		            pwd: pwd,
-					remoteAuthCode: remoteAuthCode,
 	                reposId : node.vid, 
 	                path: node.path,
 	                name : node.name,
+		            targetServerUrl: targetServerUrl,
+					remoteAuthCode: remoteAuthCode,
 	             	targetReposId: targetReposId,
 	             	targetPath: targetPath,
 	             	shareId: gShareId,
@@ -317,6 +421,19 @@
 			},
         	doPushDoc: function(){
         		doPushDoc();
+            },
+            deleteUserPreferServerConfirm: function()
+            {
+            	deleteUserPreferServerConfirm();
+            },
+            deleteUserPreferServer: function(serverId){
+            	deleteUserPreferServer(serverId);
+            },
+            initTaregetServerList: function() {
+            	initTaregetServerList();
+            },
+            doSelectTargetSever: function(){
+            	doSelectTargetSever();
             },
         };
 	})();
