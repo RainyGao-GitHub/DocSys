@@ -1,38 +1,40 @@
 <div id="dialog-addUserPreferServer" class="form-horizontal">
 	<div class="modal-body">
 	   <div class="form-group">
-	       <label class="col-sm-2 control-label">服务器地址</label>
-	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name=serverUrl style="width: 100%"/>
+	       <label class="col-sm-3 control-label">服务器地址</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="serverUrl" placeholder="请填写您的服务器地址" style="width: 100%"/>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
 	   <div class="form-group">
-	       <label class="col-sm-2 control-label">服务器名称</label>
-	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="serverName" style="width: 100%"/>
-	       </div>
-	       <div class="clearfix"></div>
-	   </div>
-	   <div class="form-group">
-	       <label class="col-sm-2 control-label">用户名</label>
-	       <div class="col-sm-10">
+	       <label class="col-sm-3 control-label">账号</label>
+	       <div class="col-sm-9">
  	           <input class="form-control" type="text" name="userName" style="width: 100%"/>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
 	   <div class="form-group">
-	    	<label class="col-sm-2 control-label">密码</label>
-	        <div class="col-sm-10">
-	            <input type="text" id="" name="pwd" class="form-control"  maxlength="16"></input>
+	    	<label class="col-sm-3 control-label">密码</label>
+	        <div class="col-sm-9">
+	            <input class="form-control"  type="password" name="pwd" maxlength="16"></input>
 	        </div>
+	   </div>
+	</div>
+    <div class="modal-footer">
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">服务器名称</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="serverName" placeholder="自定义服务器名称" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
 	   </div>
 	</div>
     <div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">确定</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelPushDoc();" style="width: 100px;height: 42px;">取消</button>
+		        <button  type="button" class="btn btnPrimary" onclick="doAddUserPreferServer();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelAddUserPreferServer();" style="width: 100px;height: 42px;">取消</button>
 			</div>
 		</div>
 	</div>
@@ -40,11 +42,11 @@
 
 <script src="js/md5.js"></script>
 <script type="text/javascript">
-	function addUserPreferServerPageInit(_serverUrl, _callback)
+	function addUserPreferServerPageInit(_callback, _serverInfo)
 	{
-		console.log("addUserPreferServerPageInit() _serverUrl:" + _serverUrl);
+		console.log("addUserPreferServerPageInit(): _serverInfo", _serverInfo);
 		
-		AddUerPreferServer.init(_serverUrl, _callback);
+		AddUerPreferServer.init(_callback, _serverInfo);
 	}
 	
 	function closeAddUserPreferServerDialog()
@@ -69,27 +71,31 @@
 		var userName;
 		var pwd;
 
-		function init(_serverInfo, _callback)
+		function init(_callback, _serverInfo)
 		{
-			console.log("DocPush.init() _serverUrl:" + _serverUrl);
-			serverUrl = _serverInfo.serverUrl;
-			serverName = _serverInfo.serverName;
-			userName = _serverInfo.serverUserName;
-			pwd = _serverInfo.serverUserPwd;
+			console.log("AddUerPreferServer.init() _serverInfo:", _serverInfo);
+			if(_serverInfo)
+			{
+				serverUrl = _serverInfo.serverUrl;
+				serverName = _serverInfo.serverName;
+				userName = _serverInfo.serverUserName;
+				pwd = _serverInfo.serverUserPwd;
+				if(_serverUrl)
+				{
+					$("#dialog-addUserPreferServer div[name='serverUrl']").val(_serverUrl);
+				}
+			}			
 			
 			callback = _callback;
-			if(_serverUrl)
-			{
-				$("#dialog-push-doc div[name='targetServer']").val(_serverUrl);
-			}			
+						
 		}
 		
 		function doAddUserPreferServer()
 		{
-			serverUrl = $("#dialog-push-doc input[name='serverUrl']").val();
-			serverName = $("#dialog-push-doc input[name='serverName']").val();
-			userName = $("#dialog-push-doc input[name='userName']").val();
-		    pwd = MD5($("#dialog-push-doc input[name='pwd']").val());
+			serverUrl = $("#dialog-addUserPreferServer input[name='serverUrl']").val();
+			serverName = $("#dialog-addUserPreferServer input[name='serverName']").val();
+			userName = $("#dialog-addUserPreferServer input[name='userName']").val();
+		    pwd = MD5($("#dialog-addUserPreferServer input[name='pwd']").val());
 
 		    if(serverUrl)
 			{
@@ -126,7 +132,7 @@
 						});
 	             		
 	             		callback && callback();
-	            		closeAddUserPreferServerDialog();
+	            		//closeAddUserPreferServerDialog();
 	                }
 	                else
 	                {

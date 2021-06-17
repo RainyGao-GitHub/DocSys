@@ -22,6 +22,9 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -697,8 +700,7 @@ public class BaseFunction{
         return path;
     }
     
-	//日志管理	
-	protected static boolean addUserPreferServer(String serverName, String serverUrl, String userName, String pwd, User accessUser)
+	protected static UserPreferServer addUserPreferServer(String serverUrl, String userName, String pwd, String serverName, User accessUser)
     {
 		UserPreferServer server = new UserPreferServer();
 		server.createTime = new Date().getTime();
@@ -714,8 +716,51 @@ public class BaseFunction{
 		server.id = server.userId + "_" + serverUrl.hashCode() + "_" + server.createTime;
 		
 		String indexLib = getIndexLibPathForUserPreferServer();
-		return addUserPreferServerIndex(server, indexLib);
+		if(addUserPreferServerIndex(server, indexLib) == false)
+		{
+			return null;
+		}
+		return server;
     }
+	
+	protected boolean deleteUserPreferServer(String serverId)
+    {
+		String indexLib = getIndexLibPathForUserPreferServer();
+		return deleteUserPreferServerIndex(serverId, indexLib);
+	}
+	
+	protected boolean deleteUserPreferServerIndex(String serverId, String indexLib)
+	{
+    	System.out.println("deleteUserPreferServerIndex() serverId:" + serverId + " indexLib:"+indexLib);
+    	Analyzer analyzer = null;
+    	Directory directory = null;
+    	IndexWriter indexWriter = null;
+    	
+		try {
+			Date date1 = new Date();
+			directory = FSDirectory.open(new File(indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        indexWriter = new IndexWriter(directory, config);
+	        
+	        Query query = new TermQuery(new Term("id", serverId));
+	        indexWriter.deleteDocuments(query);
+	        indexWriter.commit();
+
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        
+	        Date date2 = new Date();
+	        System.out.println("deleteUserPreferServerIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+			e.printStackTrace();
+			return false;
+		}
+    }  
 
 	private static boolean addUserPreferServerIndex(UserPreferServer server, String indexLib) {
     	System.out.println("addUserPreferServerIndex() id:" + server.id + " indexLib:"+indexLib);    	
