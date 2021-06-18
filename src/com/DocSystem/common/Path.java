@@ -97,10 +97,12 @@ public class Path {
 	public static String localDirPathFormat(String path, Integer OSType) {
 		if(path == null || path.isEmpty())
 		{
-			return path;
+			path = "/";
 		}
-
-		path = path.replace('\\','/');
+		else
+		{
+			path = path.replace('\\','/');
+		}
 		
 		String [] paths = path.split("/");
 		
