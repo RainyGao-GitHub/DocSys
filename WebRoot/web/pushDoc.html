@@ -431,11 +431,7 @@
 	            	console.log("pushDoc ret:", ret);            		
 	             	if( "ok" == ret.status){             		
 	             		// 普通消息提示条
-						bootstrapQ.msg({
-									msg : "推送成功！",
-									type : 'success',
-									time : 2000,
-						});         		
+	             		showPushResultInfo(ret);     		
 	                }
 	                else
 	                {
@@ -447,6 +443,32 @@
 	            }
 	        });
 	    }
+	   	
+	   	function showPushResultInfo(ret)
+	   	{
+	   		var totalNum = ret.dataEx.totalCount;
+	   		var successNum = ret.dataEx.successCount;
+  			var pushResultInfo = "推送成功(共" + totalNum +"个)";
+      		if(successNum != totalNum)
+      		{
+      			uploadEndInfo = "推送完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : pushResultInfo,
+    					type : 'warning',
+    					time : 2000,
+    				    }); 
+      		}
+      		else
+      		{
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : pushResultInfo,
+    					type : 'success',
+    					time : 2000,
+    				    }); 
+      		}
+	   	}
 	   	
 		//开放给外部的调用接口
         return {
