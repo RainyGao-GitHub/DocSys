@@ -66,6 +66,9 @@ public class Doc  implements Comparable<Doc>{
 
 	public Boolean isBussiness;
 	
+	public Integer isRealDocTextSearchEnabled;
+	public Integer isVirutalDocTextSearchEnabled;	
+	
 	//文件锁定信息(用于前台显示)
     private Integer state;
     public String[] locker = null;

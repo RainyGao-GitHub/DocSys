@@ -3514,65 +3514,6 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private JSONObject getDocTextSearch(Repos repos, Doc doc) {
-		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
-		String disableRealDocTextSearchFileName = doc.getDocId() + ".disableRealDocTextSearch";
-		String disableVirtualDocTextSearchFileName = doc.getDocId() + ".disableVirtualDocTextSearch";
-		
-		JSONObject textSearchSetting = new JSONObject();
-		
-		//全文搜索
-		File realDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
-		if(realDocTextSearchDisableFile.exists())
-		{
-			textSearchSetting.put("disableRealDocTextSearch", 1);
-		}
-		else
-		{
-			textSearchSetting.put("disableRealDocTextSearch", 0);			
-		}
-		
-		//备注全文搜索
-		File virtualDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableVirtualDocTextSearchFileName);
-		if(virtualDocTextSearchDisableFile.exists())
-		{
-			textSearchSetting.put("disableVirtualDocTextSearch", 1);
-		}
-		else
-		{
-			textSearchSetting.put("disableVirtualDocTextSearch", 0);			
-		}
-		return textSearchSetting;
-	}
-	
-	private boolean setDocTextSearch(Repos repos, Doc doc, Integer disableRealDocTextSearch,
-			Integer disableVirtualDocTextSearch) {
-		
-		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
-		String disableRealDocTextSearchFileName = doc.getDocId() + ".disableRealDocTextSearch";
-		String disableVirtualDocTextSearchFileName = doc.getDocId() + ".disableVirtualDocTextSearch";
-		
-		//全文搜索
-		if(disableRealDocTextSearch == null || disableRealDocTextSearch == 0)
-		{
-			FileUtil.delFile(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
-		}
-		else
-		{
-			FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
-		}
-		
-		//备注全文搜索
-		if(disableVirtualDocTextSearch == null || disableVirtualDocTextSearch == 0)
-		{
-			FileUtil.delFile(reposTextSearchConfigPath + disableVirtualDocTextSearchFileName);
-		}
-		else
-		{
-			FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableVirtualDocTextSearchFileName, "UTF-8");
-		}
-		return true;
-	}
 	/****************   set  Doc Access PWD ******************/
 	@RequestMapping("/setDocPwd.do")
 	public void setDocPwd(Integer reposId, String path, String name,
