@@ -8732,9 +8732,11 @@ public class BaseController  extends BaseFunction{
 		String fileName = doc.getDocId() + ".disableRealDocTextSearch";
 		if(FileUtil.isFileExist(parentPath + fileName))
 		{
+			Log.println("isRealDocTextSearchDisabled() " + doc.getPath() + doc.getName() + " realDocTextSearch disabled");
 			return true;
 		}
-		
+
+		Log.println("isRealDocTextSearchDisabled() " + doc.getPath() + doc.getName() + " realDocTextSearch enabled");
 		if(doc.getDocId() != 0)
 		{
 			Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), doc.getReposPath(), doc.getPath(), "", null, 2, true, null, null, 0L, "");
