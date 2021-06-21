@@ -3,6 +3,8 @@ package com.DocSystem.entity;
 public class DocAuth {
     private Integer id;
 
+    private Integer reposAuthId;
+
     private Integer userId;
 
     private Integer groupId;
@@ -33,12 +35,21 @@ public class DocAuth {
 
     private String docName;
 
+    
     public Integer getId() {
         return id;
     }
 
     public void setId(Integer id) {
         this.id = id;
+    }
+    
+    public Integer getReposAuthId() {
+        return reposAuthId;
+    }
+
+    public void setReposAuthId(Integer reposAuthId) {
+        this.reposAuthId = reposAuthId;
     }
 
     public Integer getUserId() {
