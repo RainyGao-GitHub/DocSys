@@ -3519,6 +3519,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0; i< entryList.size(); i++)
     	{
     		Doc subDoc = entryList.get(i);
+    		subDoc.isRealDocTextSearchEnabled = doc.isRealDocTextSearchEnabled;
     		buildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
     	}
 		return true;
@@ -8657,7 +8658,11 @@ public class BaseController  extends BaseFunction{
 	{		
 		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		if(isRealDocTextSearchDisabled(repos, doc))
+		if(doc.isRealDocTextSearchEnabled == null)
+		{
+			doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc)? 0: 1;
+		}
+		if(doc.isRealDocTextSearchEnabled == 0)
 		{
 			System.out.println("addIndexForRDoc() RealDocTextSearchDisabled");
 			return false;
@@ -8730,6 +8735,11 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
+		if(doc.getDocId() != 0)
+		{
+			Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), doc.getReposPath(), doc.getPath(), "", null, 2, true, null, null, 0L, "");
+			return isRealDocTextSearchDisabled(repos, parentDoc);
+		}
 		return false;
 	}
 
@@ -12228,5 +12238,65 @@ public class BaseController  extends BaseFunction{
         System.out.println("getRequestBodyAsJSONObject body:" + body);        
         JSONObject jsonObj = JSON.parseObject(body);
         return jsonObj;
+	}
+	
+	protected JSONObject getDocTextSearch(Repos repos, Doc doc) {
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
+		String disableRealDocTextSearchFileName = doc.getDocId() + ".disableRealDocTextSearch";
+		String disableVirtualDocTextSearchFileName = doc.getDocId() + ".disableVirtualDocTextSearch";
+		
+		JSONObject textSearchSetting = new JSONObject();
+		
+		//全文搜索
+		File realDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+		if(realDocTextSearchDisableFile.exists())
+		{
+			textSearchSetting.put("disableRealDocTextSearch", 1);
+		}
+		else
+		{
+			textSearchSetting.put("disableRealDocTextSearch", 0);			
+		}
+		
+		//备注全文搜索
+		File virtualDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableVirtualDocTextSearchFileName);
+		if(virtualDocTextSearchDisableFile.exists())
+		{
+			textSearchSetting.put("disableVirtualDocTextSearch", 1);
+		}
+		else
+		{
+			textSearchSetting.put("disableVirtualDocTextSearch", 0);			
+		}
+		return textSearchSetting;
+	}
+	
+	protected boolean setDocTextSearch(Repos repos, Doc doc, Integer disableRealDocTextSearch,
+			Integer disableVirtualDocTextSearch) {
+		
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
+		String disableRealDocTextSearchFileName = doc.getDocId() + ".disableRealDocTextSearch";
+		String disableVirtualDocTextSearchFileName = doc.getDocId() + ".disableVirtualDocTextSearch";
+		
+		//全文搜索
+		if(disableRealDocTextSearch == null || disableRealDocTextSearch == 0)
+		{
+			FileUtil.delFile(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+		}
+		else
+		{
+			FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
+		}
+		
+		//备注全文搜索
+		if(disableVirtualDocTextSearch == null || disableVirtualDocTextSearch == 0)
+		{
+			FileUtil.delFile(reposTextSearchConfigPath + disableVirtualDocTextSearchFileName);
+		}
+		else
+		{
+			FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableVirtualDocTextSearchFileName, "UTF-8");
+		}
+		return true;
 	}
 }

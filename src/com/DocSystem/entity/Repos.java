@@ -59,6 +59,8 @@ public class Repos {
     private Long lockTime;
     
 	public boolean  isBussiness;
+	
+	public Integer isTextSearchEnabled;
 
     public Integer getId() {
         return id;

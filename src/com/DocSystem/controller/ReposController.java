@@ -130,18 +130,37 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(vid);
+		
+		repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 		repos.isBussiness = systemLicenseInfo.hasLicense;
 		rt.setData(repos);
 		writeJson(rt, response);
 	}
 	
+	private Integer isReposTextSearchEnabled(Repos repos) {
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
+		String disableRealDocTextSearchFileName = "0.disableRealDocTextSearch";
+		File realDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+		if(!realDocTextSearchDisableFile.exists())
+		{
+			return 1;
+		}
+		return 0;
+	}
+
 	/****************   add a Repository ******************/
 	@RequestMapping("/addRepos.do")
 	public void addRepos(String name,String info, Integer type, String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
-			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, Long createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, Long createTime,
+			Integer isTextSearchEnabled,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
 		System.out.println("\n****************** addRepos.do ***********************");
-		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  + " realDocPath: " + realDocPath + " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
+		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  
+				+ " realDocPath: " + realDocPath 
+				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
+				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
+				+ "isTextSearchEnabled:" + isTextSearchEnabled);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -272,6 +291,11 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);	
 			return;			
 		}
+		
+		if(isTextSearchEnabled == null || isTextSearchEnabled == 0)
+		{	
+			setReposTextSearch(repos, isTextSearchEnabled);			
+		}
 
 		InitReposAuthInfo(repos,login_user,rt);		
 
@@ -285,6 +309,19 @@ public class ReposController extends BaseController{
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
 	}
 	
+	private boolean setReposTextSearch(Repos repos, Integer isReposTextSearchEnabled) {
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
+		String disableRealDocTextSearchFileName = "0.disableRealDocTextSearch";
+		
+		//全文搜索
+		if(isReposTextSearchEnabled != null && isReposTextSearchEnabled == 1)
+		{
+			return FileUtil.delFile(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+		}
+		
+		return FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
+	}
+
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -357,10 +394,16 @@ public class ReposController extends BaseController{
 	/****************   set a Repository ******************/
 	@RequestMapping("/updateReposInfo.do")
 	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
-			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
+			Integer isTextSearchEnabled,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** updateReposInfo.do ***********************");
-		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " realDocPath:" + realDocPath +" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
+		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path 
+				+ " realDocPath:" + realDocPath 
+				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
+				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
+				+ " isTextSearchEnabled:" + isTextSearchEnabled);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -406,7 +449,7 @@ public class ReposController extends BaseController{
 		newReposInfo.setLocalSvnPath1(localSvnPath1);
 		newReposInfo.setSvnPath1(svnPath1);
 		newReposInfo.setSvnUser1(svnUser1);
-		newReposInfo.setSvnPwd1(svnPwd1);	
+		newReposInfo.setSvnPwd1(svnPwd1);
 		formatReposInfo(newReposInfo);
 		
 		//Get reposInfo (It will be used to revert the reposInfo)
@@ -418,11 +461,35 @@ public class ReposController extends BaseController{
 			System.out.println("禁止修改文件系统类型");		
 		}
 		newReposInfo.setType(reposInfo.getType());
-		
+				
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
 		{
+			if(isTextSearchEnabled != null)
+			{
+				reposInfo.isTextSearchEnabled = isReposTextSearchEnabled(reposInfo);
+				if(isTextSearchEnabled != reposInfo.isTextSearchEnabled)
+				{
+					if(setReposTextSearch(reposInfo, isTextSearchEnabled) == false)
+					{
+						rt.setError("设置全文搜索失败");
+						writeJson(rt, response);
+						return;
+					}
+				}
+			}
+			
 			writeJson(rt, response);	
 			return;
+		}
+		
+		//设置全文搜索
+		if(isTextSearchEnabled != null)
+		{
+			reposInfo.isTextSearchEnabled = isReposTextSearchEnabled(reposInfo);
+			if(isTextSearchEnabled != reposInfo.isTextSearchEnabled)
+			{
+				setReposTextSearch(reposInfo, isTextSearchEnabled);				
+			}
 		}
 		
 		//Update ReposInfo
