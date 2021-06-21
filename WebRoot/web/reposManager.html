@@ -942,18 +942,21 @@ function showDocAuthList(){
 			if(d.id > 0) //docAuthId > 0 表示这不是继承的权限
 			{
 				docAuthId = d.id;
-				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+docAuthId+");' class='mybtn-primary'>删除</a>";
+				//opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+docAuthId+");' class='mybtn-primary'>删除</a>";
 				//var opBtn = "<a href='javascript:void(0)' onclick='configDocAuth("+docAuthId+");' class='mybtn'>设置</a>";
 			}
+			
 			var userId = "";
 			if(d.userId >= 0)
 			{
 				userId = d.userId;
+				opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserReposAuthConfirm("+d.reposAuthId+ "," +userId+");'>删除</a>";
 			}
 			var groupId = "";
 			if(d.groupId > 0)
 			{
 				groupId = d.groupId;
+				opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteGroupReposAuthConfirm("+d.reposAuthId+ "," +groupId+");'>删除</a>";				
 			}
 			var se = "<li value="+ i +">"
 				+"	<i class='cell select w5'>"
@@ -971,7 +974,8 @@ function showDocAuthList(){
 				+"	</i>"
 				+"	<i class='cell docpath w15'>"
 				+"		<span class='name'>"
-				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
+				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+ "/" + d.docPath+d.docName+"</a>"
+//				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell access w7'>"
@@ -1006,6 +1010,103 @@ function showDocAuthList(){
 			$("#reposAuthArea").append(se);
 		}
 	}
+}
+
+
+function deleteGroupReposAuthConfirm(reposAuthId,groupId)
+{
+		qiao.bs.confirm({
+ 	    	id: 'deleteGroupReposAuthConfirm',
+ 	        msg: "是否删除该用户组的仓库权限?",
+ 	        close: false,		
+ 	        okbtn: "删除",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	
+ 	    	//alert("点击了确定");
+ 	    	deleteGroupReposAuth(reposAuthId,groupId);
+ 	    	return true;   
+ 	    },function(){
+ 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function deleteGroupReposAuth(reposAuthId,groupId)
+{	
+   	console.log("deleteGroupReposAuth()");
+   	
+   	var vid = getQueryString("vid");
+    $.ajax({
+            url : "/DocSystem/Repos/deleteReposAuth.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                reposAuthId: reposAuthId,
+                groupId: groupId,
+                reposId: vid,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showAuthList();
+                }
+                else
+                {
+                	showErrorMessage("删除用户组的仓库权限失败：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+               showErrorMessage('删除用户组的仓库权限失败：服务器异常');
+            }
+    });
+}
+
+function deleteUserReposAuthConfirm(reposAuthId,userId)
+{
+		qiao.bs.confirm({
+ 	    	id: 'deleteUserReposAuthConfirm',
+ 	        msg: "是否删除该用户的仓库权限?",
+ 	        close: false,		
+ 	        okbtn: "删除",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	
+ 	    	//alert("点击了确定");
+ 	    	deleteUserReposAuth(reposAuthId,userId);
+ 	    	return true;   
+ 	    },function(){
+ 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function deleteUserReposAuth(reposAuthId,userId)
+{	
+   	console.log("deleteUserReposAuth()");
+   	
+   	var vid = getQueryString("vid");
+    $.ajax({
+            url : "/DocSystem/Repos/deleteReposAuth.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                reposAuthId: reposAuthId,
+                userId: userId,
+                reposId: vid,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showAuthList();
+                }
+                else
+                {
+                	showErrorMessage("删除用户的仓库权限失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+               showErrorMessage('删除用户的仓库权限失败：服务器异常！');
+            }
+    });
 }
 
 function EnableUserConfig(index){

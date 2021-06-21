@@ -1190,42 +1190,43 @@ public class ReposController extends BaseController{
 			
 			if(docAuth !=null)
 			{
+				docAuth.setReposAuthId(reposAuth.getId());
 				docAuthList.add(docAuth);
 			}	
 		}
 		
 		//如果是根目录，则要将仓库下其他的 直接设置 显示出来
-		if(docId == null || docId == 0)
-		{
-			List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(reposId);
-			if(allDocAuthList != null)
-			{
-				//add the docAuth to docAuthList which docId is not 0
-				for(int i=0;i<allDocAuthList.size();i++)
-				{
-					DocAuth tmpDocAuth = allDocAuthList.get(i);
-					if(tmpDocAuth == null)
-					{
-						System.out.println("getDocAuthList() allDocAuthList[" + i+ "] is null");
-						continue;
-					}
-					
-					//非组权限的时候需要判断是否时任意用户权限
-					if(tmpDocAuth.getGroupId() == null)
-					{
-						if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId() == 0)
-						{
-							tmpDocAuth.setUserName("任意用户");
-						}
-					}
-					
-					if(tmpDocAuth.getDocId() != null && tmpDocAuth.getDocId() != 0)	//过滤掉docId = 0的权限（已经在里面了）
-					{
-						docAuthList.add(tmpDocAuth);						
-					}
-				}
-			}
-		}
+//		if(docId == null || docId == 0)
+//		{
+//			List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(reposId);
+//			if(allDocAuthList != null)
+//			{
+//				//add the docAuth to docAuthList which docId is not 0
+//				for(int i=0;i<allDocAuthList.size();i++)
+//				{
+//					DocAuth tmpDocAuth = allDocAuthList.get(i);
+//					if(tmpDocAuth == null)
+//					{
+//						System.out.println("getDocAuthList() allDocAuthList[" + i+ "] is null");
+//						continue;
+//					}
+//					
+//					//非组权限的时候需要判断是否时任意用户权限
+//					if(tmpDocAuth.getGroupId() == null)
+//					{
+//						if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId() == 0)
+//						{
+//							tmpDocAuth.setUserName("任意用户");
+//						}
+//					}
+//					
+//					if(tmpDocAuth.getDocId() != null && tmpDocAuth.getDocId() != 0)	//过滤掉docId = 0的权限（已经在里面了）
+//					{
+//						docAuthList.add(tmpDocAuth);						
+//					}
+//				}
+//			}
+//		}
 		Log.printObject("docAuthList:",docAuthList);
 
 		rt.setData(docAuthList);
