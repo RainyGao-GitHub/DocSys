@@ -1,0 +1,150 @@
+<div id="dialog-addPreferLink" class="form-horizontal">
+	<div class="modal-body">
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">网站地址</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="url" placeholder="请填写网站地址" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	   	   <label class="col-sm-3 control-label">类型</label>
+		   <div class="col-sm-9">
+			   <select class="form-control" name="type" style="width: 100%">   
+			   		<option value="1">网站</option> 
+			        <option value="2">链接</option>
+			        <option value="3">服务器</option>   
+			   </select>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	   	   <label class="col-sm-3 control-label">描述</label>
+	       <div class="col-sm-9">
+ 	           <textarea class="form-control" type="text" name="content" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	</div>
+    <div class="modal-footer">
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">网站名称</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="name" placeholder="自定义网站名称" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	</div>
+    <div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="doAddPreferLink();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelAddPreferLink();" style="width: 100px;height: 42px;">取消</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function addPreferLinkPageInit(_callback)
+	{
+		console.log("addPreferLinkPageInit()");
+		
+		AddPreferLink.init(_callback);
+	}
+	
+	function closeAddPreferLinkDialog()
+	{
+		closeBootstrapDialog("addPreferLink");
+	}
+
+	function doAddPreferLink()
+	{
+		AddPreferLink.doAddPreferLink();
+	}
+	
+	function cancelAddPreferLink()
+	{
+		closeAddPreferLinkDialog();
+	}
+	
+	var AddPreferLink = (function () {
+		var callback;
+		var url;
+		var name;
+		var type;
+		var content;
+
+		function init(_callback)
+		{
+			console.log("AddPreferLink.init()");
+			callback = _callback;
+		}
+		
+		function doAddPreferLink()
+		{
+			url = $("#dialog-addPreferLink input[name='url']").val();
+			name = $("#dialog-addPreferLink input[name='name']").val();
+			content = $("#dialog-addPreferLink textarea[name='content']").val();
+		    type = $("#dialog-addPreferLink select[name='type']").val();
+
+		    if(url)
+			{
+		  	  	addPreferLink(name, url, content, type);
+		      	return true;
+			}
+			else
+			{
+		    	alert("网站地址不能为空");
+		        return false;
+		    }
+		}
+		
+	   	function addPreferLink(name, url, content, type)
+	   	{
+	    	$.ajax({
+	             url : "/DocSystem/Bussiness/addPreferLink.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	            	name: name,
+	            	url: url,
+		            content: content,
+		            type: type,
+	             },
+	             success : function (ret) {
+	            	console.log("addPreferLink ret:", ret);            		
+	             	if( "ok" == ret.status){             		
+	             		// 普通消息提示条
+						bootstrapQ.msg({
+									msg : "添加成功！",
+									type : 'success',
+									time : 2000,
+						});
+	             		
+	             		callback && callback();
+	                }
+	                else
+	                {
+	                	showErrorMessage("添加失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("添加失败:服务器异常！");
+	            }
+	        });
+	    }
+	   	
+		//开放给外部的调用接口
+        return {
+			init: function(_callback){
+				init(_callback);
+			},
+			doAddPreferLink: function(){
+				doAddPreferLink();
+            },
+        };
+	})();
+</script>
+
