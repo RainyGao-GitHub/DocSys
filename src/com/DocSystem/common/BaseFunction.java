@@ -738,7 +738,7 @@ public class BaseFunction{
 		
 		link.id = link.userId + "_" + url.hashCode() + "_" + link.createTime;
 		
-		String indexLib = getIndexLibPathForUserPreferServer();
+		String indexLib = getIndexLibPathForPreferLink();
 		if(addPreferLinkIndex(link, indexLib) == false)
 		{
 			return null;

@@ -381,6 +381,21 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
 	background-position: 0px 0px;
    	background-size: 18px 18px; 
 }
+.icons.webserver{
+	background: url("./img/webserver.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.webpage{
+	background: url("./img/webpage.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.weblink{
+	background: url("./img/weblink.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
 .icons.note{
 	background: url("./img/note.svg") no-repeat; 
 	background-position: 0px 0px;
