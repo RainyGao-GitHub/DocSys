@@ -108,6 +108,12 @@
         <div class="row">
             <div id="project-box" class="project-box"></div>
             <div class="clearfix"></div>
+            <div style="margin: 20px 0px 20px 20px; border-top:1px solid #e5e5e5;">
+            	<h5>常用网站</h5>
+            	<button class="line-search-btn" onclick="searchDoc();"></button>
+            </div>
+            <div id="preferLink-box" class="project-box"></div>
+            <div class="clearfix"></div>
             <div class="manual-page">
             </div>
         </div>
@@ -153,6 +159,24 @@
     </li>
         {{/each}}
     </ul>
+</script>
+
+<script type="text/html" id="tmpl-preferLinks">
+    <div style="margin-top: 20px"></div>
+    {{each list as preferLink i}}
+        <div class="s-box">
+            <div class="s-content-box">
+                <h4 class="s-title">
+                    <i class="{{preferLink.iconStyle}}"></i>
+                    <a href="{{preferLink.url}}" title="" target="_blank">{{# preferLink.showName}}</a>
+                </h4>
+                <div class="s-content">
+                    {{# preferLink.content}}
+                </div>
+            </div>
+            <hr/>
+        </div>
+    {{/each}}
 </script>
 
 <script type="text/html" id="tmpl-searchResults">
@@ -239,7 +263,8 @@
                 	loginBtnCtrl(user);
                 	
                 	//用戶已經登錄才能看到倉庫
-                	getReposList();                	
+                	getReposList();
+                	getPreferLinks();
                 }
                 else 
                 {
@@ -372,22 +397,67 @@
 	                var html = template('tmpl-projects', {
 	                    list : ret.data
 	                });
+	                
 	                $("#project-box").html(html);
 	            }
 	            else
 	            {
 	            	console.log(ret.msgInfo);
-	            	showErrorMessage(ret.msgInfo);
+	            	showErrorMessage("获取仓库列表失败: " + ret.msgInfo);
 	            }
             },
             error : function () {
-            	showErrorMessage('服务器异常:获取仓库列表失败');
+            	showErrorMessage('获取仓库列表失败: 服务器异常');
+            }
+        });
+    }
+    
+    function getPreferLinks()
+    {
+    	console.log("getPreferLinks");
+        $.ajax({
+            url : "/DocSystem/Bussiness/getPreferLinkList.do",
+            type :"post",
+            dataType :"json",
+            data : null,
+            success : function (ret) {
+                if(ret.status == "ok")
+                {
+                	var list = ret.data;
+                	if(list)
+                	{
+	                	for(var i=0; i<list.length; i++)
+	                	{
+	                		var jsonObj = list[i];
+	                		jsonObj.showName = list.url;
+	                		if(jsonObj.name)
+	                		{
+	                			jsonObj.showName = jsonObj.name;
+	                		}
+	                		jsonObj.iconStyle = "icons smallicon file";
+	                	}
+		                var html = template('tmpl-preferLinks', {
+		                    list : ret.data
+		                });
+		                
+		                $("#preferLink-box").html(html);
+                	}
+	            }
+	            else
+	            {
+	            	console.log(ret.msgInfo);
+	            	//showErrorMessage("获取常用网站列表失败：" + ret.msgInfo);
+	            }
+            },
+            error : function () {
+            	//showErrorMessage('获取常用网站列表失败：服务器异常');
             }
         });
     }
     
     function onChange(){
     	getReposList();
+    	getPreferLinks()
     }
 
     $(function () {
