@@ -108,9 +108,9 @@
         <div class="row">
             <div id="project-box" class="project-box"></div>
             <div class="clearfix"></div>
-            <div style="margin: 20px 0px 20px 20px; border-top:1px solid #e5e5e5;">
+            <div style="margin: 200px 0px 20px 20px; border-top:1px solid #e5e5e5;">
                 <h4 class="s-title">
-                    <i class="icons favorite" onclick="addPreferLink()"></i>
+                    <i title="添加您的常用网站" class="icons favorite" onclick="addPreferLink()"></i>
                     <span>常用网站</span>
                 </h4>
             </div>
@@ -164,13 +164,24 @@
 </script>
 
 <script type="text/html" id="tmpl-preferLinks">
-    <div style="margin-top: 20px"></div>
+    <div style="margin-top: 20px; "></div>
     {{each list as preferLink i}}
-        <div class="s-box">
+        <div class="s-box" style="margin-left: 50px">
             <div class="s-content-box">
                 <h4 class="s-title">
                     <i class="{{preferLink.iconStyle}}"></i>
                     <a href="{{preferLink.url}}" title="" target="_blank">{{# preferLink.showName}}</a>
+					<ul class="navbar-right">
+				    	<li id="loginBtn">
+                        	<a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                    	</li>
+                    	<li id="newReposBtn" style="display:none">
+							<a href="#" title="新建仓库" onclick="newRepos()">新建</a>
+						</li>
+						<li id="goManagerBtn" style="display:none">
+							<a href="/DocSystem/manager/main.html" title="管理后台">管理后台</a>
+						</li>
+                	</ul>
                 </h4>
                 <div class="s-content">
                     {{# preferLink.content}}
@@ -414,6 +425,28 @@
         });
     }
     
+    function addPreferLink()
+    {
+    	console.log("addPreferLink");
+    	showAddPreferLinkPanel();
+    }
+    
+	function showAddPreferLinkPanel()
+	{
+		console.log("showAddPreferLinkPanel");
+		bootstrapQ.dialog({
+			id: 'addPreferLink',
+			url: 'addPreferLink.html',
+			title: '添加常用网站',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				addPreferLinkPageInit(getPreferLinks);
+			},
+		});
+	}
+    
     function getPreferLinks()
     {
     	console.log("getPreferLinks");
@@ -425,18 +458,27 @@
             success : function (ret) {
                 if(ret.status == "ok")
                 {
+                	console.log("getPreferLinkList ret:", ret);
                 	var list = ret.data;
                 	if(list)
                 	{
 	                	for(var i=0; i<list.length; i++)
 	                	{
 	                		var jsonObj = list[i];
-	                		jsonObj.showName = list.url;
-	                		if(jsonObj.name)
+	                		jsonObj.showName = jsonObj.url;
+	                		if(jsonObj.name && jsonObj.name != "")
 	                		{
 	                			jsonObj.showName = jsonObj.name;
 	                		}
-	                		jsonObj.iconStyle = "icons smallicon file";
+                			jsonObj.iconStyle = "icons bigicon webpage";
+	                		if(jsonObj.type == 2)
+	                		{
+	                			jsonObj.iconStyle = "icons bigicon weblink";
+	                		}
+	                		else if(jsonObj.type == 3)
+	                		{
+	                			jsonObj.iconStyle = "icons bigicon webserver";	                			
+	                		}	                		
 	                	}
 		                var html = template('tmpl-preferLinks', {
 		                    list : ret.data
