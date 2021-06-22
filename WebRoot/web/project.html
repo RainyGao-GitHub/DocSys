@@ -3295,9 +3295,20 @@
 	{
 		console.log("backToParentDoc() gDocInfo.docId:" + gDocInfo.docId);
 		DocListState = 0;
-		if(!gDocInfo.docId || gDocInfo.docId == gRootDoc.docId)	//reach the top level
+		if(gDocInfo.docId == 0 || gDocInfo.docId == gRootDoc.docId)	//reach the top level
 		{	
-			showDocList(gRootDoc);
+			console.log("backToParentDoc() gShareId", gShareId, gIsPC);
+			if(gShareId || gIsPC == true)
+			{
+				showDocList(gRootDoc);
+			}
+			else
+			{
+				console.log("backToParentDoc() back to projects");
+				//back to projects
+				var href = "/DocSystem/web/projects.html";
+				window.location.href = href;
+			}
 			return;
 		}
 		
