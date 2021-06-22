@@ -3988,6 +3988,32 @@ public class BaseController  extends BaseFunction{
 		return changeInfo;
 	}
 	
+	protected String buildChangeReminderInfo(HashMap<Long, DocChange> ChangeList) 
+	{
+		String changeInfo = "";
+		if(ChangeList == null || ChangeList.size() == 0)
+		{
+			return "";
+		}
+
+		int count = ChangeList.size();
+		for(DocChange docChange: ChangeList.values())
+	    {
+			Doc doc = docChange.getDoc();
+			if(count == 1)
+			{
+				changeInfo = doc.getPath() + doc.getName() + " 有改动！";
+			}
+			else
+			{
+				changeInfo = doc.getPath() + doc.getName() + " 等" + count +"个文件有改动！";				
+			}		
+			break;
+		}
+		
+		return changeInfo;
+	}
+	
 	protected boolean syncupScanForDoc_FSM(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag) 
 	{
 		//Log.printObject("syncupScanForDoc_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
