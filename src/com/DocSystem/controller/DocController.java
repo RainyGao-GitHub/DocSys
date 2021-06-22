@@ -1084,19 +1084,18 @@ public class DocController extends BaseController{
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
 		
+		//Check Edit Right
+		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		//Check Add Right
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 			if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
-			{
-				writeJson(rt, response);	
-				return;
-			}
-		}
-		else
-		{
-			if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -3273,6 +3272,25 @@ public class DocController extends BaseController{
 			else
 			{
 				vDoc = buildBasicDoc(reposId, docId, pid, reposPath, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+			}
+		}
+		
+		//Check Edit Right
+		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		//Check Add Right
+		Doc curDoc = docSysGetDoc(repos, doc);
+		if(curDoc == null || curDoc.getType() == 0)
+		{
+			Log.println("revertDocHistory " + curDoc.getPath() + curDoc.getName() + " 不存在！");
+			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+			if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
+			{
+				writeJson(rt, response);	
+				return;
 			}
 		}
 						
