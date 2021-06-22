@@ -4644,14 +4644,12 @@
 				{text: '推送', subMenu: [
 					{text: '至仓库',  action: function(e){
 							e.preventDefault();
-							var node = getNodeByNodeId(gDocInfo.docId);
-							showDocPushPanel(node, 1);
+							showDocPushPanel(curRightClickedDocListNode, 1);
 						}
 					},
 					{text: '至目录',  action: function(e){
 							e.preventDefault();
-							var node = getNodeByNodeId(gDocInfo.docId);
-							showDocPushPanel(node, 2);
+							showDocPushPanel(curRightClickedDocListNode, 2);
 						}
 					},	
 					]
