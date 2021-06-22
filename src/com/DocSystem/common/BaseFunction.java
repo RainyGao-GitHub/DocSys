@@ -723,6 +723,72 @@ public class BaseFunction{
 		return server;
     }
 	
+	
+	protected PreferLink addPreferLink(String url, String name, String content, Integer type, User accessUser) {
+		PreferLink link = new PreferLink();
+		link.createTime = new Date().getTime();
+		
+		link.name = name;
+		link.url = url;
+		link.content = content;
+		link.type = type;
+		
+		link.userId = accessUser.getId();
+		link.userName = accessUser.getName();
+		
+		link.id = link.userId + "_" + url.hashCode() + "_" + link.createTime;
+		
+		String indexLib = getIndexLibPathForUserPreferServer();
+		if(addPreferLinkIndex(link, indexLib) == false)
+		{
+			return null;
+		}
+		return link;
+	}
+
+
+	protected boolean editPreferLink(PreferLink link) {
+		String indexLib = getIndexLibPathForPreferLink();
+		return updatePreferLinkIndex(link, indexLib);
+	}
+	
+	private boolean updatePreferLinkIndex(PreferLink link, String indexLib) {
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(link);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.updateDocument(new Term("id", link.id), document);
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        System.out.println("updatePreferLinkIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        System.out.println("updatePreferLinkIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	protected boolean editUserPreferServer(UserPreferServer server) {
 		String indexLib = getIndexLibPathForUserPreferServer();
 		return updateUserPreferServerIndex(server, indexLib);
@@ -771,6 +837,11 @@ public class BaseFunction{
     {
 		String indexLib = getIndexLibPathForUserPreferServer();
 		return deleteUserPreferServerIndex(serverId, indexLib);
+	}
+	
+	protected boolean deletePreferLink(String linkId) {
+		String indexLib = getIndexLibPathForPreferLink();
+		return deleteUserPreferServerIndex(linkId, indexLib);
 	}
 	
 	protected boolean deleteUserPreferServerIndex(String serverId, String indexLib)
@@ -843,6 +914,45 @@ public class BaseFunction{
 			return false;
 		}
     }
+	
+	
+	private boolean addPreferLinkIndex(PreferLink link, String indexLib) {
+    	System.out.println("addPreferLinkIndex() id:" + link.id + " indexLib:"+indexLib);    	
+    	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(link);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        System.out.println("addPreferLinkIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        System.out.println("addPreferLinkIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 	//日志管理	
 	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
@@ -979,7 +1089,10 @@ public class BaseFunction{
 		return path;
 	}
 	
-    
+	protected String getIndexLibPathForPreferLink() {
+		return getDBStorePath() + "UserPreferLink/";
+	}
+	
 	protected static String getIndexLibPathForUserPreferServer() {
 		return getDBStorePath() + "UserPreferServer/";
 	}
