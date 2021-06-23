@@ -1,31 +1,36 @@
 <div id="dialog-editPreferLink" class="form-horizontal">
 	<div class="modal-body">
 	   <div class="form-group">
-	       <label class="col-sm-3 control-label">服务器地址</label>
+	       <label class="col-sm-3 control-label">网站地址</label>
 	       <div class="col-sm-9">
- 	           <input class="form-control" type="text" name="serverUrl" placeholder="请填写您的服务器地址" style="width: 100%"/>
+ 	           <input class="form-control" type="text" name="url" placeholder="请填写网站地址" style="width: 100%"/>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
 	   <div class="form-group">
-	       <label class="col-sm-3 control-label">账号</label>
-	       <div class="col-sm-9">
- 	           <input class="form-control" type="text" name="userName" style="width: 100%"/>
+	   	   <label class="col-sm-3 control-label">类型</label>
+		   <div class="col-sm-9">
+			   <select class="form-control" name="type" style="width: 100%">   
+			   		<option value="1">网站</option> 
+			        <option value="2">链接</option>
+			        <option value="3">服务器</option>   
+			   </select>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
 	   <div class="form-group">
-	    	<label class="col-sm-3 control-label">密码</label>
-	        <div class="col-sm-9">
-	            <input class="form-control"  type="password" name="pwd" maxlength="16"></input>
-	        </div>
+	   	   <label class="col-sm-3 control-label">描述</label>
+	       <div class="col-sm-9">
+ 	           <textarea class="form-control" type="text" name="content" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
 	   </div>
 	</div>
     <div class="modal-footer">
 	   <div class="form-group">
-	       <label class="col-sm-3 control-label">服务器名称</label>
+	       <label class="col-sm-3 control-label">网站名称</label>
 	       <div class="col-sm-9">
- 	           <input class="form-control" type="text" name="serverName" placeholder="自定义服务器名称" style="width: 100%"/>
+ 	           <input class="form-control" type="text" name="name" placeholder="自定义网站名称" style="width: 100%"/>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
@@ -42,11 +47,11 @@
 
 <script src="js/md5.js"></script>
 <script type="text/javascript">
-	function editPreferLinkPageInit(_callback, _serverInfo)
+	function editPreferLinkPageInit(_preferLinkInfo, _callback)
 	{
-		console.log("editPreferLinkPageInit(): _serverInfo", _serverInfo);
+		console.log("editPreferLinkPageInit(): _preferLinkInfo", _preferLinkInfo);
 		
-		EditUerPreferServer.init(_callback, _serverInfo);
+		EditPreferLink.init(_preferLinkInfo, _callback);
 	}
 	
 	function closeEditPreferLinkDialog()
@@ -56,7 +61,7 @@
 
 	function doEditPreferLink()
 	{
-		EditUerPreferServer.doEditPreferLink();
+		EditPreferLink.doEditPreferLink();
 	}
 	
 	function cancelEditPreferLink()
@@ -64,35 +69,35 @@
 		closeEditPreferLinkDialog();
 	}
 	
-	var EditUerPreferServer = (function () {
+	var EditPreferLink = (function () {
 		var callback;
-		var serverInfo;
+		var preferLinkInfo;
 
-		function init(_callback, _serverInfo)
+		function init(_preferLinkInfo, _callback)
 		{
-			console.log("EditUerPreferServer.init() _serverInfo:", _serverInfo);
-			if(_serverInfo)
+			console.log("EditPreferLink.init() _preferLinkInfo:", _preferLinkInfo);
+			if(_preferLinkInfo)
 			{
-				serverInfo = _serverInfo;
-				var serverUrl = serverInfo.serverUrl;
-				var serverName = serverInfo.serverName;
-				var userName = serverInfo.serverUserName;
-				var pwd = serverInfo.serverUserPwd;
-				if(serverUrl)
+				preferLinkInfo = _preferLinkInfo;
+				var url = preferLinkInfo.url;
+				var name = preferLinkInfo.name;
+				var content = preferLinkInfo.content;
+				var type = preferLinkInfo.type;
+				if(url)
 				{
-					$("#dialog-editPreferLink input[name='serverUrl']").val(serverUrl);
+					$("#dialog-editPreferLink input[name='url']").val(url);
 				}
-				if(serverName)
+				if(name)
 				{
-					$("#dialog-editPreferLink input[name='serverName']").val(serverName);
+					$("#dialog-editPreferLink input[name='name']").val(name);
 				}
-				if(userName)
+				if(content)
 				{
-					$("#dialog-editPreferLink input[name='userName']").val(userName);
+					$("#dialog-editPreferLink textarea[name='content']").val(content);
 				}
-				if(pwd)
+				if(type)
 				{
-					$("#dialog-editPreferLink input[name='pwd']").val(pwd);
+					$("#dialog-editPreferLink select[name='type']").val(type);
 				}
 			}			
 			
@@ -103,66 +108,66 @@
 		function doEditPreferLink()
 		{
 			var isChanged = false;
-			var serverUrl;
-			var serverName;
-			var userName;
-			var pwd;
-			var tmpServerUrl = $("#dialog-editPreferLink input[name='serverUrl']").val();
-			if(!(serverInfo.serverUrl && tmpServerUrl === serverInfo.serverUrl))
+			var url;
+			var name;
+			var content;
+			var type;
+			var tmpUrl = $("#dialog-editPreferLink input[name='url']").val();
+			if(!(preferLinkInfo.serverUrl && tmpServerUrl === preferLinkInfo.serverUrl))
 			{				
 				isChanged = true;
-				serverUrl = tmpServerUrl;
-				console.log("doEditPreferLink serverUrl changed:", serverUrl);
+				url = tmpUrl;
+				console.log("doEditPreferLink url changed:", url);
 			}
 				
-			var tmpServerName = $("#dialog-editPreferLink input[name='serverName']").val();
-			if(!(serverInfo.serverName && tmpServerName === serverInfo.serverName))
+			var tmpName = $("#dialog-editPreferLink input[name='name']").val();
+			if(!(preferLinkInfo.name && tmpName === preferLinkInfo.name))
 			{
 				isChanged = true;
-				serverName = tmpServerName;
-				console.log("doEditPreferLink serverName changed:", serverName);
+				name = tmpName;
+				console.log("doEditPreferLink name changed:", name);
 			}
 			
-			var tmpUserName = $("#dialog-editPreferLink input[name='userName']").val();
-			if(!(serverInfo.serverUserName && tmpUserName === serverInfo.serverUserName))
+			var tmpContent = $("#dialog-editPreferLink textarea[name='content']").val();
+			if(!(preferLinkInfo.content && tmpContent === preferLinkInfo.content))
 			{
 				isChanged = true;
-				userName = tmpUserName;
-				console.log("doEditPreferLink serverUserName changed:", userName);
+				content = tmpContent;
+				console.log("doEditPreferLink content changed:", content);
 			}
 			
-			var tmpPwd = $("#dialog-editPreferLink input[name='pwd']").val();
-		    if(!(serverInfo.serverUserPwd && tmpPwd === serverInfo.serverUserPwd))
+			var tmpType = $("#dialog-editPreferLink select[name='type']").val();
+		    if(!(preferLinkInfo.type && tmpType === preferLinkInfo.type))
 		    {
-		    	isChanged = true;		    	
-		    	pwd = MD5(tmpPwd);
-				console.log("doEditPreferLink serverUserPwd changed:", pwd);
+		    	isChanged = true;
+		    	type = tmpType;
+				console.log("doEditPreferLink type changed:", type);
 		    }	
 
 		    if(isChanged == true)
 			{
-		  	  	editPreferLink(serverName, serverUrl, userName, pwd);
+		  	  	editPreferLink(name, url, content, type);
 		      	return true;
 			}
 			else
 			{
-		    	alert("服务器设置未改动！");
+		    	alert("设置未改动！");
 		        return false;
 		    }
 		}
 		
-	   	function editPreferLink(serverName, serverUrl, userName, pwd)
+	   	function editPreferLink(name, url, content, type)
 	   	{
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/editPreferLink.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	            	serverId: serverInfo.id,
-	            	serverName: serverName,
-	            	serverUrl: serverUrl,
-		            userName: userName,
-		            pwd: pwd,
+	            	linkId: preferLinkInfo.id,
+	            	name: name,
+	            	url: url,
+	            	content: content,
+	            	type: type,
 	             },
 	             success : function (ret) {
 	            	console.log("editPreferLink ret:", ret);            		
@@ -189,8 +194,8 @@
 	   	
 		//开放给外部的调用接口
         return {
-			init: function(_serverInfo, _callback){
-				init(_serverInfo, _callback);
+			init: function(_preferLinkInfo, _callback){
+				init(_preferLinkInfo, _callback);
 			},
 			doEditPreferLink: function(){
 				doEditPreferLink();
