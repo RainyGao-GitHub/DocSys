@@ -54,13 +54,13 @@
                 <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                     <ul class="dropdown-menu" role="menu">
-						<li id="mobileNewReposBtn">
+						<li id="mobileNewReposBtn"  style="display:none">
 							<a href="#" title="新建仓库" onclick="newRepos()">新建仓库</a>
 						</li>
                         <li id="mobileLoginBtn">
                             <a onclick="showLoginPanel()" title="用户登录">登录</a>
                         </li>
-                        <li id="mobileLogoutBtn">
+                        <li id="mobileLogoutBtn"  style="display:none">
                             <a onclick="userLogout()" title="退出登录">退出登录</a>
                         </li>
                     </ul>
@@ -108,14 +108,6 @@
         <div class="row">
             <div id="project-box" class="project-box"></div>
             <div class="clearfix"></div>
-            <div style="margin: 200px 0px 20px 20px; border-top:1px solid #e5e5e5;">
-                <h4 class="s-title">
-                    <i title="添加您的常用网站" class="icons favorite" onclick="addPreferLink()"></i>
-                    <span>常用网站</span>
-                </h4>
-            </div>
-            <div id="preferLink-box" class="project-box"></div>
-            <div class="clearfix"></div>
             <div class="manual-page">
             </div>
         </div>
@@ -124,9 +116,9 @@
     <footer class="footer">
         <div class="container">
             <div class="row text-center">
-                <ul>
+                <!-- <ul>
                     <li><div id="qrcode"></div></li>
-                </ul>
+                </ul> -->
                 <ul>
                     <li><a href="#">MxsDoc</a></li>
                     <li>&nbsp;·&nbsp;</li>
@@ -144,52 +136,35 @@
 
 <script type="text/html" id="tmpl-projects">
     <ul>
-        {{each list as repos i}}
-    <li>
-        <a href="project.html?vid={{ repos.id }}" class="box" title="" >
-            <div class="pull-left imgbox">
-                <i class="fa fa-desktop"></i>
-            </div>
-            <h4>{{ repos.name }}</h4>
-            <span></span>
-        </a>
-        <p class="summary hidden-xs hidden-sm hidden-md">
-            <a href="project.html?vid={{ repos.id }}" class="text">
-                {{ repos.info }}
-            </a>
-        </p>
-    </li>
-        {{/each}}
-    </ul>
-</script>
-
-<script type="text/html" id="tmpl-preferLinks">
-    <div style="margin-top: 20px; "></div>
-    {{each list as preferLink i}}
-        <div class="s-box" style="margin-left: 50px">
-            <div class="s-content-box">
-                <h4 class="s-title">
-                    <i class="{{preferLink.iconStyle}}"></i>
-                    <a href="{{preferLink.url}}" title="" target="_blank">{{# preferLink.showName}}</a>
-					<ul class="navbar-right">
-				    	<li id="loginBtn">
-                        	<a onclick="showLoginPanel()"  title="用户登录">登录</a>
-                    	</li>
-                    	<li id="newReposBtn" style="display:none">
-							<a href="#" title="新建仓库" onclick="newRepos()">新建</a>
-						</li>
-						<li id="goManagerBtn" style="display:none">
-							<a href="/DocSystem/manager/main.html" title="管理后台">管理后台</a>
-						</li>
-                	</ul>
-                </h4>
-                <div class="s-content">
-                    {{# preferLink.content}}
-                </div>
-            </div>
-            <hr/>
-        </div>
+	{{each list as repos i}}
+    	<li>
+        	<a href="project.html?vid={{ repos.id }}" class="box" title="" >
+            	<div class="pull-left imgbox">
+                	<i class="fa fa-desktop"></i>
+            	</div>
+            	<h4>{{ repos.name }}</h4>
+            	<span></span>
+        	</a>
+        	<p class="summary hidden-xs hidden-sm hidden-md">
+            	<a href="project.html?vid={{ repos.id }}" class="text">
+                	{{ repos.info }}
+            	</a>
+        	</p>
+    	</li>
     {{/each}}
+    	<li>
+        	<a href="myPreferLinks.html" class="box" title="" >
+            	<div class="pull-left imgbox">
+                	<i class="fa fa-star-o"></i>
+            	</div>
+            	<h4>我的常用网站</h4>
+            	<span></span>
+        	</a>
+        	<p class="summary hidden-xs hidden-sm hidden-md">
+            	<a href="myPreferLinks.html" class="text">自定义您的常用网站</a>
+        	</p>
+    	</li>
+    </ul>
 </script>
 
 <script type="text/html" id="tmpl-searchResults">
@@ -277,7 +252,6 @@
                 	
                 	//用戶已經登錄才能看到倉庫
                 	getReposList();
-                	getPreferLinks();
                 }
                 else 
                 {
@@ -425,83 +399,8 @@
         });
     }
     
-    function addPreferLink()
-    {
-    	console.log("addPreferLink");
-    	showAddPreferLinkPanel();
-    }
-    
-	function showAddPreferLinkPanel()
-	{
-		console.log("showAddPreferLinkPanel");
-		bootstrapQ.dialog({
-			id: 'addPreferLink',
-			url: 'addPreferLink.html',
-			title: '添加常用网站',
-			msg: '页面正在加载，请稍等...',
-			foot: false,
-			big: false,
-			callback: function(){
-				addPreferLinkPageInit(getPreferLinks);
-			},
-		});
-	}
-    
-    function getPreferLinks()
-    {
-    	console.log("getPreferLinks");
-        $.ajax({
-            url : "/DocSystem/Bussiness/getPreferLinkList.do",
-            type :"post",
-            dataType :"json",
-            data : null,
-            success : function (ret) {
-                if(ret.status == "ok")
-                {
-                	console.log("getPreferLinkList ret:", ret);
-                	var list = ret.data;
-                	if(list)
-                	{
-	                	for(var i=0; i<list.length; i++)
-	                	{
-	                		var jsonObj = list[i];
-	                		jsonObj.showName = jsonObj.url;
-	                		if(jsonObj.name && jsonObj.name != "")
-	                		{
-	                			jsonObj.showName = jsonObj.name;
-	                		}
-                			jsonObj.iconStyle = "icons bigicon webpage";
-	                		if(jsonObj.type == 2)
-	                		{
-	                			jsonObj.iconStyle = "icons bigicon weblink";
-	                		}
-	                		else if(jsonObj.type == 3)
-	                		{
-	                			jsonObj.iconStyle = "icons bigicon webserver";	                			
-	                		}	                		
-	                	}
-		                var html = template('tmpl-preferLinks', {
-		                    list : ret.data
-		                });
-		                
-		                $("#preferLink-box").html(html);
-                	}
-	            }
-	            else
-	            {
-	            	console.log(ret.msgInfo);
-	            	//showErrorMessage("获取常用网站列表失败：" + ret.msgInfo);
-	            }
-            },
-            error : function () {
-            	//showErrorMessage('获取常用网站列表失败：服务器异常');
-            }
-        });
-    }
-    
     function onChange(){
     	getReposList();
-    	getPreferLinks()
     }
 
     $(function () {
