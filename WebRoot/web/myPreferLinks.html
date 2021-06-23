@@ -1,0 +1,458 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="author" content="Rainy" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="renderer" content="webkit" />
+    <link rel="shortcut icon" href="static/SmartWiki/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+    
+    <title>常用网站 - MxsDoc</title>
+    <!-- CSS: Bootstrap、font-awesome、boostrapQ、 -->
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="static/styles/styles.css" rel="stylesheet">
+    <link href="static/zTree/css/metroStyle/standardStyle.css" rel="stylesheet" id="zTreeCss">
+	<link href="static/pagination/pagination.css" rel="stylesheet" >
+	<script src="static/scripts/jquery.min.js"></script>
+	<!-- this style define a lots css for project.html 
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+    -->
+    
+    <style>
+        /* 大图标 */
+        .bigicon {
+        	background-size:40px 40px !important;
+		    width: 40px;
+		    height: 40px;
+        }
+        
+        /* 大图标 */
+        .middleicon {
+        	background-size:24px 24px !important;
+		    width: 24px;
+		    height: 24px;
+        }
+
+        /* 小图标 */
+        .smallicon {
+            background-size:20px 20px !important;
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+    <style>
+        /* 强制不换行 */
+        .nowrap{white-space:nowrap;}
+        /* 允许单词内断句，首先会尝试挪到下一行，看看下一行的宽度够不够，不够的话就进行单词内的断句 */
+        .breakword{word-wrap: break-word;}
+        /* 断句时，不会把长单词挪到下一行，而是直接进行单词内的断句 */
+        .breakAll{word-break:break-all;}            
+        /* 超出部分显示省略号 */
+        .ellipsis{text-overflow:ellipsis;overflow:hidden;}
+    </style>
+</head>
+<body>
+<div class="manual-reader">
+    <header class="navbar navbar-static-top smart-nav navbar-fixed-top" role="banner">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand"  style="color: #445;font-weight: 600;" href="/DocSystem/web/projects.html"><i class="fa fa-paper-plane"></i> MxsDoc</a>
+                <a class="navbar-brand" style="font-weight: 600; width: 50vw; white-space:nowrap; text-overflow: ellipsis; overflow: hidden;" href="">我的常用网站</a>
+                <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
+                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
+                    <ul class="dropdown-menu" role="menu">
+                    	<li id="mobileNewReposBtn"  style="display:none">
+							<a href="#" title="添加网站" onclick="addPreferLink()">添加网站</a>
+						</li>
+                        <li id="mobileLoginBtn">
+                            <a onclick="showLoginPanel()" title="用户登录">登录</a>
+                        </li>
+                        
+                        <li id="mobileLogoutBtn"  style="display:none">
+                            <a onclick="userLogout()" title="退出登录">退出登录</a>
+                        </li>
+                    </ul>
+                </div>
+             </div>
+
+            <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+                <ul class="nav navbar-nav navbar-right">
+				    <li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" onerror="UserImgErrHandler();" class="img-circle m5"/></li>
+					<li id="userInfoDiv" style="display:none">
+							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
+								<li><a href="/DocSystem/web/shareManager.html">我的分享</a></li>
+								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
+							</ul>
+					</li>
+                    <li id="loginBtn">
+                        <a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                    </li>
+                    <li id="newReposBtn" style="display:none">
+						<a href="#" title="添加网站" onclick="addPreferLink()">添加网站</a>
+					</li>
+                    
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container smart-container">
+        <!-- <div class="row">
+            <div style="margin: 20px 0px 20px 20px; border-bottom:1px solid #e5e5e5;">
+                <h4 class="s-title">
+                    <i title="添加您的常用网站" class="fa fa-star-o" onclick="addPreferLink()"></i>
+                    <span>我的常用网站</span>             
+                </h4>
+            </div>
+        </div> 
+        -->
+
+        <div class="row">
+            <div id="preferLink-box" class="project-box"></div>
+            <div class="clearfix"></div>
+            <div class="manual-page">
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <footer class="footer">
+        <div class="container">
+            <div class="row text-center">
+                <ul>
+                    <li><div id="qrcode"></div></li>
+                </ul>
+                <ul>
+                    <li><a href="#">MxsDoc</a></li>
+                    <li>&nbsp;·&nbsp;</li>
+                    <li><a onclick="showFeebackPanel()">意见反馈</a> </li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <div id="scrollToTopDiv"></div>
+
+    <!-- 利用bootstrap的响应式，判断是否小屏幕 -->
+    <div id="visibleOnSmall" class="visible-xs"></div>
+</div>
+
+<script type="text/html" id="tmpl-preferLinks">
+    <div style="margin-top: 20px; "></div>
+    {{each list as preferLink i}}
+        <div class="s-box" style="margin-left: 50px">
+            <div class="s-content-box">
+                <h4 class="s-title">
+                    <i class="{{preferLink.iconType}} {{preferLink.iconStyle}}"></i>
+                    <a href="{{preferLink.url}}" title="{{preferLink.url}}" target="_blank">{{preferLink.showName}}</a>
+					<ul class="pull-right">
+				    	<li>
+           					<span class="btn" title="修改" onclick="editPreferLink({{i}});">
+								<i class="icons set {{preferLink.btnIconStyle}}"></i>
+							</span>
+           					<span class="btn" title="删除" onclick="deletePreferLink({{i}});">
+								<i class="icons delete {{preferLink.btnIconStyle}}"></i>
+							</span>                    	
+						</li>
+            		</ul>       
+                </h4>
+                <div class="s-content">
+                    <p>{{# preferLink.content}}</p>
+                </div>
+            </div>     
+			<hr/>
+        </div>
+    {{/each}}
+    <!-- 分页功能 -->
+    <div class="wrap">
+        <ul id="newsList"></ul>
+        <div id="pagination" class="l-page"></div>
+    </div>
+</script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="static/scripts/scripts.js" type="text/javascript"></script>
+<script src="static/scripts/template.js" type="text/javascript"></script>
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<script type="text/javascript" src="js/DocSys.js"></script>
+<script type="text/javascript" src="js/logon.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
+<script type="text/javascript" src="static/pagination/jquery.pagination.js"></script>
+<script src="js/qrcode.js"></script>
+<script type="text/javascript">
+	//页面初始化
+	var gDocSysConfig = null;
+	var login_user = "";
+	var gShareId;
+	var gPageIndex = 1;
+	var gPageSize = 10;
+	var preferLinkList = [];
+	
+	function pageInit()
+    {
+    	console.log("pageInit");
+    	
+    	getDocSysConfig();
+
+		// 加载滚动到顶端功能
+		$("#scrollToTopDiv").load("goTop.html")
+    	 	
+    	//确定当前登录用户是否已登录
+    	$.ajax({
+            url : "/DocSystem/User/getLoginUser.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status )
+                {
+                	var user = ret.data;
+                	login_user = user;
+                	//显示用户信息
+                	ShowUserInfo(user);
+                	loginBtnCtrl(user);
+                	
+                	getPreferLinks();
+                }
+                else 
+                {
+                	console.log("pageInit() 获取用户信息失败:" + ret.msgInfo);
+                	if(ret.data && ret.data == "needAddFirstAdmin")
+                    {
+                		showAddFirstAdminUserPanel();
+                    }
+                	else
+                	{
+	                	console.log(ret.msgInfo);
+	                    //showLoginPanel();
+	                	//showErrorMessage("获取用户信息失败:" + ret.msgInfo);
+                	}
+                }
+            },
+            error : function () {
+                alert("服务器异常:获取用户信息失败");
+            }
+        });
+	}
+    
+    function userLogout()
+   	{
+    	logout();
+    	loginBtnCtrl();
+   	}
+    
+    function loginBtnCtrl(user)
+    {
+    	if(user)
+    	{
+        	$('#loginBtn').hide();
+        	$('#mobileLoginBtn').hide();
+        	
+        	$('#logoutBtn').show();
+           	$('#mobileLogoutBtn').show();            
+           	
+        	$('#newReposBtn').show();
+        	$('#mobileNewReposBtn').show();
+    	}
+    	else
+    	{
+        	$('#loginBtn').show();
+        	$('#mobileLoginBtn').show();
+        	
+        	$('#logoutBtn').hide();
+           	$('#mobileLogoutBtn').hide();
+
+           	$('#newReposBtn').hide();
+        	$('#mobileNewReposBtn').hide();
+    	}
+    }
+    
+	function getDocSysConfig()
+    {
+    	console.log("getDocSysConfig");
+        $.ajax({
+            url : "/DocSystem/Repos/getDocSysConfig.do",
+            type :"post",
+            dataType :"json",
+            data : null,
+            success : function (ret) {
+                if(ret.status == "ok")
+                {
+                	gDocSysConfig = ret.data;
+                	console.log("getDocSysConfig config:", gDocSysConfig);
+	            }
+	            else
+	            {
+	            	console.log(ret.msgInfo);
+	            }
+            },
+            error : function () {
+            	console.log('服务器异常:获取DocSysConfig失败');
+            }
+        });
+    }
+	function deletePreferLink(index)
+	{
+		console.log("deletePreferLink() index:" + index);		   	
+		deletePreferLinkConfirm(index);
+	}
+	
+	function deletePreferLinkConfirm(index)
+	{
+		console.log("deletePreferLinkConfirm()");
+		
+		var preferLink = preferLinkList[index];
+		var showName = preferLink.url;
+		if(preferLink.name)
+		{		
+			showName = preferLink.name;
+		}
+		bootstrapQ.confirm(
+				{
+					id: "deletePreferLinkConfirm",
+					title: "删除确认",
+					msg : "是否删除 " + showName,
+				},
+				function () {
+			    	//alert("点击了确定");
+					doDeletePreferLink(preferLink.id);
+			    	return true;   
+			 	});
+	}
+	
+	function doDeletePreferLink(linkId) 
+	{
+	   	console.log("doDeletePreferLink() linkId:" + linkId);		   	
+	   	$.ajax({
+           	url : "/DocSystem/Bussiness/deletePreferLink.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	linkId: linkId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+             		// 普通消息提示条
+					bootstrapQ.msg({
+								msg : "删除成功！",
+								type : 'success',
+								time : 2000,
+					});
+					getPreferLinks();	//刷新列表
+                }
+                else
+                {
+                	console.log("删除常用网站失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+                  console.log('删除常用网站失败：服务器异常！');
+            }
+	    });
+	}
+	
+    function addPreferLink()
+    {
+    	console.log("addPreferLink");
+    	showAddPreferLinkPanel();
+    }
+    
+	function showAddPreferLinkPanel()
+	{
+		console.log("showAddPreferLinkPanel");
+		bootstrapQ.dialog({
+			id: 'addPreferLink',
+			url: 'addPreferLink.html',
+			title: '添加常用网站',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				addPreferLinkPageInit(getPreferLinks);
+			},
+		});
+	}
+    
+    function getPreferLinks()
+    {
+    	console.log("getPreferLinks");
+        $.ajax({
+            url : "/DocSystem/Bussiness/getPreferLinkList.do",
+            type :"post",
+            dataType :"json",
+            data : null,
+            success : function (ret) {
+                if(ret.status == "ok")
+                {
+                	console.log("getPreferLinkList ret:", ret);
+                	var list = ret.data;
+                	preferLinkList = list;
+                	if(list)
+                	{
+	                	for(var i=0; i<list.length; i++)
+	                	{
+	                		var jsonObj = list[i];
+	                		jsonObj.showName = jsonObj.url;
+	                		if(jsonObj.name && jsonObj.name != "")
+	                		{
+	                			jsonObj.showName = jsonObj.name;
+	                		}
+	                		
+	                		jsonObj.iconType = "icons webpage";
+	                		if(jsonObj.type == 2)
+	                		{
+	                			jsonObj.iconType = "icons weblink";
+	                		}
+	                		else if(jsonObj.type == 3)
+	                		{
+	                			jsonObj.iconType = "icons webserver";	                			
+	                		}
+	                		if(gIsPC == true)
+	                		{
+	                			jsonObj.iconStyle = " bigicon";
+	                			jsonObj.btnIconStyle = "";
+	                		}
+	                		else
+	                		{
+	                			jsonObj.iconStyle = " middleicon";
+	                			jsonObj.btnIconStyle = "";	 //小图标                			
+	                		}
+	                	}
+		                var html = template('tmpl-preferLinks', {
+		                    list : ret.data
+		                });
+		                
+		                $("#preferLink-box").html(html);
+                	}
+	            }
+	            else
+	            {
+	            	console.log(ret.msgInfo);
+	            	//showErrorMessage("获取常用网站列表失败：" + ret.msgInfo);
+	            }
+            },
+            error : function () {
+            	//showErrorMessage('获取常用网站列表失败：服务器异常');
+            }
+        });
+    }
+    
+    $(function () {
+    	pageInit();
+    });
+
+	function showFeebackPanel()
+	{
+		console.log("showFeebackPanel");
+		var href = "https://gitee.com/RainyGao/DocSys/issues";
+		window.open(href);   //新窗口打开
+	}
+
+</script>
+</body>
+</html>
