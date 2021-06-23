@@ -42,11 +42,11 @@
 
 <script src="js/md5.js"></script>
 <script type="text/javascript">
-	function editUserPreferServerPageInit(_callback, _serverInfo)
+	function editUserPreferServerPageInit(_serverInfo, _callback)
 	{
 		console.log("editUserPreferServerPageInit(): _serverInfo", _serverInfo);
 		
-		EditUerPreferServer.init(_callback, _serverInfo);
+		EditUserPreferServer.init(_serverInfo, _callback);
 	}
 	
 	function closeEditUserPreferServerDialog()
@@ -56,7 +56,7 @@
 
 	function doEditUserPreferServer()
 	{
-		EditUerPreferServer.doEditUserPreferServer();
+		EditUserPreferServer.doEditUserPreferServer();
 	}
 	
 	function cancelEditUserPreferServer()
@@ -64,13 +64,13 @@
 		closeEditUserPreferServerDialog();
 	}
 	
-	var EditUerPreferServer = (function () {
+	var EditUserPreferServer = (function () {
 		var callback;
 		var serverInfo;
 
-		function init(_callback, _serverInfo)
+		function init(_serverInfo, _callback)
 		{
-			console.log("EditUerPreferServer.init() _serverInfo:", _serverInfo);
+			console.log("EditUserPreferServer.init() _serverInfo:", _serverInfo);
 			if(_serverInfo)
 			{
 				serverInfo = _serverInfo;

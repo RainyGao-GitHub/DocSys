@@ -377,6 +377,30 @@
 			},
 		});
 	}
+	
+	function editPreferLink(index)
+	{
+		console.log("editPreferLink() index:" + index);		   	
+		showEditPreferLinkPanel(index);
+	}
+	
+	function showEditPreferLinkPanel(index)
+	{
+		console.log("showEditPreferLinkPanel");
+		
+		bootstrapQ.dialog({
+			id: 'editPreferLink',
+			url: 'editPreferLink.html',
+			title: '设置常用服务器',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				var preferLink = preferLinkList[index];
+				editPreferLinkPageInit(preferLink, getPreferLinks);
+			},
+		});
+	}
     
     function getPreferLinks()
     {
