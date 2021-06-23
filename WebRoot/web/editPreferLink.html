@@ -1,0 +1,201 @@
+<div id="dialog-editPreferLink" class="form-horizontal">
+	<div class="modal-body">
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">服务器地址</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="serverUrl" placeholder="请填写您的服务器地址" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">账号</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="userName" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	    	<label class="col-sm-3 control-label">密码</label>
+	        <div class="col-sm-9">
+	            <input class="form-control"  type="password" name="pwd" maxlength="16"></input>
+	        </div>
+	   </div>
+	</div>
+    <div class="modal-footer">
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">服务器名称</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="serverName" placeholder="自定义服务器名称" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	</div>
+    <div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="doEditPreferLink();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelEditPreferLink();" style="width: 100px;height: 42px;">取消</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function editPreferLinkPageInit(_callback, _serverInfo)
+	{
+		console.log("editPreferLinkPageInit(): _serverInfo", _serverInfo);
+		
+		EditUerPreferServer.init(_callback, _serverInfo);
+	}
+	
+	function closeEditPreferLinkDialog()
+	{
+		closeBootstrapDialog("editPreferLink");
+	}
+
+	function doEditPreferLink()
+	{
+		EditUerPreferServer.doEditPreferLink();
+	}
+	
+	function cancelEditPreferLink()
+	{
+		closeEditPreferLinkDialog();
+	}
+	
+	var EditUerPreferServer = (function () {
+		var callback;
+		var serverInfo;
+
+		function init(_callback, _serverInfo)
+		{
+			console.log("EditUerPreferServer.init() _serverInfo:", _serverInfo);
+			if(_serverInfo)
+			{
+				serverInfo = _serverInfo;
+				var serverUrl = serverInfo.serverUrl;
+				var serverName = serverInfo.serverName;
+				var userName = serverInfo.serverUserName;
+				var pwd = serverInfo.serverUserPwd;
+				if(serverUrl)
+				{
+					$("#dialog-editPreferLink input[name='serverUrl']").val(serverUrl);
+				}
+				if(serverName)
+				{
+					$("#dialog-editPreferLink input[name='serverName']").val(serverName);
+				}
+				if(userName)
+				{
+					$("#dialog-editPreferLink input[name='userName']").val(userName);
+				}
+				if(pwd)
+				{
+					$("#dialog-editPreferLink input[name='pwd']").val(pwd);
+				}
+			}			
+			
+			callback = _callback;
+						
+		}
+		
+		function doEditPreferLink()
+		{
+			var isChanged = false;
+			var serverUrl;
+			var serverName;
+			var userName;
+			var pwd;
+			var tmpServerUrl = $("#dialog-editPreferLink input[name='serverUrl']").val();
+			if(!(serverInfo.serverUrl && tmpServerUrl === serverInfo.serverUrl))
+			{				
+				isChanged = true;
+				serverUrl = tmpServerUrl;
+				console.log("doEditPreferLink serverUrl changed:", serverUrl);
+			}
+				
+			var tmpServerName = $("#dialog-editPreferLink input[name='serverName']").val();
+			if(!(serverInfo.serverName && tmpServerName === serverInfo.serverName))
+			{
+				isChanged = true;
+				serverName = tmpServerName;
+				console.log("doEditPreferLink serverName changed:", serverName);
+			}
+			
+			var tmpUserName = $("#dialog-editPreferLink input[name='userName']").val();
+			if(!(serverInfo.serverUserName && tmpUserName === serverInfo.serverUserName))
+			{
+				isChanged = true;
+				userName = tmpUserName;
+				console.log("doEditPreferLink serverUserName changed:", userName);
+			}
+			
+			var tmpPwd = $("#dialog-editPreferLink input[name='pwd']").val();
+		    if(!(serverInfo.serverUserPwd && tmpPwd === serverInfo.serverUserPwd))
+		    {
+		    	isChanged = true;		    	
+		    	pwd = MD5(tmpPwd);
+				console.log("doEditPreferLink serverUserPwd changed:", pwd);
+		    }	
+
+		    if(isChanged == true)
+			{
+		  	  	editPreferLink(serverName, serverUrl, userName, pwd);
+		      	return true;
+			}
+			else
+			{
+		    	alert("服务器设置未改动！");
+		        return false;
+		    }
+		}
+		
+	   	function editPreferLink(serverName, serverUrl, userName, pwd)
+	   	{
+	    	$.ajax({
+	             url : "/DocSystem/Bussiness/editPreferLink.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	            	serverId: serverInfo.id,
+	            	serverName: serverName,
+	            	serverUrl: serverUrl,
+		            userName: userName,
+		            pwd: pwd,
+	             },
+	             success : function (ret) {
+	            	console.log("editPreferLink ret:", ret);            		
+	             	if( "ok" == ret.status){             		
+	             		// 普通消息提示条
+						bootstrapQ.msg({
+									msg : "修改成功！",
+									type : 'success',
+									time : 2000,
+						});
+	             		
+	             		callback && callback();
+	                }
+	                else
+	                {
+	                	showErrorMessage("修改失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("修改失败:服务器异常！");
+	            }
+	        });
+	    }
+	   	
+		//开放给外部的调用接口
+        return {
+			init: function(_serverInfo, _callback){
+				init(_serverInfo, _callback);
+			},
+			doEditPreferLink: function(){
+				doEditPreferLink();
+            },
+        };
+	})();
+</script>
+
