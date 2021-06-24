@@ -3428,6 +3428,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
+				doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc)? 0: 1;
 				if(doc.getDocId() == 0)
 				{
 					//Delete All Index Lib
@@ -3454,6 +3455,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 				if(docDetect(repos, doc))
 				{	
+					doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc)? 0: 1;
 					HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
 					rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
 				}
@@ -3484,7 +3486,11 @@ public class BaseController  extends BaseFunction{
 	{	
 		if(force == false)
 		{
-			return buildIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
+			//强行添加Index
+			addIndexForDocName(repos, doc);
+			addIndexForRDoc(repos, doc);
+			addIndexForVDoc(repos, doc);
+			return true;
 		}	
 		
 		//强行添加Index
