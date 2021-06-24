@@ -60,8 +60,15 @@
         <div class="container">
             <div class="navbar-header">
                 <a class="navbar-brand"  style="color: #445;font-weight: 600;" href="/DocSystem/web/projects.html"><i class="fa fa-paper-plane"></i> MxsDoc</a>
-                <a class="navbar-brand" style="font-weight: 600; width: 50vw; white-space:nowrap; text-overflow: ellipsis; overflow: hidden;" href="">我的常用网站</a>
-                <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
+                <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
+                    <div class="form-inline">
+                        <input class="form-control" id="searchWord" name="searchWord" type="search" placeholder="请输入网站关键词..." oninput="$('[id=\'searchWord\']:eq(1)').val(this.value)">
+                        <button class="search-btn" onclick="searchPreferLink();">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+                </div>               
+				<div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                     <ul class="dropdown-menu" role="menu">
                     	<li id="mobileNewReposBtn"  style="display:none">
@@ -102,15 +109,16 @@
     </header>
 
     <div class="container smart-container">
-        <!-- <div class="row">
-            <div style="margin: 20px 0px 20px 20px; border-bottom:1px solid #e5e5e5;">
-                <h4 class="s-title">
-                    <i title="添加您的常用网站" class="fa fa-star-o" onclick="addPreferLink()"></i>
-                    <span>我的常用网站</span>             
-                </h4>
+        <div class="row">
+            <div class="searchbar visible-sm-inline-block visible-xs-inline-block" style="width: 95%; margin-left: 10px;">
+                <div class="form-inline">
+                    <input class="form-control line-search-input" id="searchWord" name="keyword" type="search" placeholder="请输入网站关键词..." oninput="$('[id=\'searchWord\']:eq(0)').val(this.value)">
+                    <button class="line-search-btn" onclick="searchPreferLink();">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
             </div>
-        </div> 
-        -->
+        </div>
 
         <div class="row">
             <div id="preferLink-box" class="project-box"></div>
@@ -196,7 +204,13 @@
 	function pageInit()
     {
     	console.log("pageInit");
-    	
+		document.onkeydown=function(event)
+		{
+			//浏览器兼容性处理
+			var e = event || window.event || arguments.callee.caller.arguments[0];
+			EnterKeyListenerForSearchPreferLink(e);	
+		}
+		
     	getDocSysConfig();
 
 		// 加载滚动到顶端功能
@@ -238,6 +252,96 @@
                 alert("服务器异常:获取用户信息失败");
             }
         });
+	}
+	
+	//回车键监听函数，该event已经过兼容性处理 
+	function EnterKeyListenerForSearchPreferLink(event){
+		if (event.keyCode == 13)
+		{  
+			var isFocus=$("#searchWord").is(":focus");  
+			if(isFocus)
+			{
+				console.log("enter key listener for SearchPreferLink");
+				searchPreferLink();
+			}
+			return;
+	 	}
+	}
+	
+	function searchPreferLink(pageIndex)
+	{
+		var searchWord = $("#searchWord").val();
+		var sort = "";
+		
+       	$.ajax({
+               url : "/DocSystem/Bussiness/getPreferLinkList.do",
+               type : "post",
+               dataType : "json",
+               data : {
+                   searchWord:searchWord,
+                   sort:sort,
+               },
+               success : function (ret) {
+	           		console.log("searchPreferLink ret:", ret);
+	        		if(ret.status == "ok")
+	           		{
+	           			console.log("搜索成功", ret);
+						var list = ret.data;
+						preferLinkList = list;
+						showPreferLinkList(list);						
+	               	}
+	               	else
+	               	{
+	               		showErrorMessage("搜索出错:" + ret.msgInfo);
+	               	}
+               },
+               error : function () {
+                   showErrorMessage("搜索出错:服务器异常");
+               }
+           });
+	}
+	
+	function showPreferLinkList(list)
+	{
+		console.log("showPreferLinkList");
+    	if(list)
+    	{
+    		
+        	for(var i=0; i<list.length; i++)
+        	{
+        		var jsonObj = list[i];
+        		jsonObj.showName = jsonObj.url;
+        		if(jsonObj.name && jsonObj.name != "")
+        		{
+        			jsonObj.showName = jsonObj.name;
+        		}
+        		
+        		jsonObj.iconType = "icons webpage";
+        		if(jsonObj.type == 2)
+        		{
+        			jsonObj.iconType = "icons weblink";
+        		}
+        		else if(jsonObj.type == 3)
+        		{
+        			jsonObj.iconType = "icons webserver";	                			
+        		}
+        		if(gIsPC == true)
+        		{
+        			jsonObj.iconStyle = " bigicon";
+        			jsonObj.btnIconStyle = "";
+        		}
+        		else
+        		{
+        			jsonObj.iconStyle = " middleicon";
+        			jsonObj.btnIconStyle = "";	 //小图标                			
+        		}
+        	}
+            var html = template('tmpl-preferLinks', {
+                list : list
+            });
+            
+            $("#preferLink-box").html(html);
+    	}
 	}
     
     function userLogout()
@@ -416,43 +520,8 @@
                 	console.log("getPreferLinkList ret:", ret);
                 	var list = ret.data;
                 	preferLinkList = list;
-                	if(list)
-                	{
-	                	for(var i=0; i<list.length; i++)
-	                	{
-	                		var jsonObj = list[i];
-	                		jsonObj.showName = jsonObj.url;
-	                		if(jsonObj.name && jsonObj.name != "")
-	                		{
-	                			jsonObj.showName = jsonObj.name;
-	                		}
-	                		
-	                		jsonObj.iconType = "icons webpage";
-	                		if(jsonObj.type == 2)
-	                		{
-	                			jsonObj.iconType = "icons weblink";
-	                		}
-	                		else if(jsonObj.type == 3)
-	                		{
-	                			jsonObj.iconType = "icons webserver";	                			
-	                		}
-	                		if(gIsPC == true)
-	                		{
-	                			jsonObj.iconStyle = " bigicon";
-	                			jsonObj.btnIconStyle = "";
-	                		}
-	                		else
-	                		{
-	                			jsonObj.iconStyle = " middleicon";
-	                			jsonObj.btnIconStyle = "";	 //小图标                			
-	                		}
-	                	}
-		                var html = template('tmpl-preferLinks', {
-		                    list : ret.data
-		                });
-		                
-		                $("#preferLink-box").html(html);
-                	}
+                	
+                	showPreferLinkList(list);
 	            }
 	            else
 	            {
