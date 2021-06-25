@@ -71,10 +71,10 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
-	                  <tr>
+	                  <tr {{if value.docSysType < 1}} style="display:none" {{/if}}>
 	                    <td>LDAP设置</td>
 	                    <td>
-	                    	<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xxx:389/ou=xxx,dc=xxx,dc=xxx">
+	                    	<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">
 	                    </td>
 	                    <td class="edit">
 	                    </td>
