@@ -675,6 +675,18 @@ public class BaseFunction{
         return path;
     }
     
+    //获取LDAP设置
+	protected String getLdapConfig() {
+    	String ldapConfig = null;
+    	ldapConfig = ReadProperties.read("docSysConfig.properties", "ldapConfig");
+        if(ldapConfig != null && !ldapConfig.isEmpty())
+        {
+        	return ldapConfig;
+        }
+
+		return null;
+	}
+	
 	//获取OpenOffice的安装路径
     public String getOpenOfficePath() {
     	//get OpenOffice Home From Config File

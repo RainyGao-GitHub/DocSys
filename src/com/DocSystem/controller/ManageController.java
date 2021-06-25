@@ -722,6 +722,7 @@ public class ManageController extends BaseController{
 		String javaHome = getJavaHome();
 		String officeEditorApi = Path.getOfficeEditorApi();
 		String defaultReposStorePath = Path.getDefaultReposRootPath(OSType);
+		String ldapConfig = getLdapConfig();
 
 		JSONObject config = new JSONObject();
 		config.put("docSysType", docSysType);
@@ -730,6 +731,8 @@ public class ManageController extends BaseController{
 		config.put("version", version);
 		config.put("tomcatPath", tomcatPath);
 		config.put("javaHome", javaHome);
+		config.put("ldapConfig", ldapConfig);
+		
 		if(docSysType < 1)
 		{
 			String openOfficePath = getOpenOfficePath();
@@ -740,7 +743,7 @@ public class ManageController extends BaseController{
 		rt.setData(config);
 		writeJson(rt, response);
 	}
-	
+
 	@RequestMapping("/getSystemLicenses.do")
 	public void getSystemLicenses(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -785,11 +788,16 @@ public class ManageController extends BaseController{
 			String openOfficePath, 
 			String officeEditorApi,
 			String defaultReposStorePath,
+			String ldapConfig,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** setSystemInfo.do ***********************");
 
-		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome + " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi + " defaultReposStorePath:" + defaultReposStorePath);
+		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome 
+				+ " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
+				+ " defaultReposStorePath:" + defaultReposStorePath 
+				+ " ldapConfig:" + ldapConfig);
+		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -797,7 +805,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(tomcatPath == null && openOfficePath == null && javaHome == null)
+		if(tomcatPath == null && openOfficePath == null && javaHome == null && ldapConfig == null)
 		{
 			Log.docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
@@ -850,6 +858,11 @@ public class ManageController extends BaseController{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "defaultReposStorePath", defaultReposStorePath);
 		}
 		
+		if(ldapConfig != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
+		}
+				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
 			System.out.println("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
