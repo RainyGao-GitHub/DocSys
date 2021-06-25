@@ -13,7 +13,13 @@ import com.DocSystem.common.Log;
 public class LDAPTest {
     public static void main(String[] args)    
     {  
-    	LDAPConnectionTest();
+    	//LDAPConnectionTest();
+      	LDAPConnectionTest1();        
+    }
+    
+    static void LDAPConnectionTest1()
+    {
+    	LdapAuthenticationManager.getAuthorities("ragao");    	
     }
     
     public static void LDAPConnectionTest() {
@@ -65,7 +71,7 @@ public class LDAPTest {
         
 //        方式2
 //        基于Account User Logon name:
-        userAccount = "ragao";
+        userAccount = "uid=ragao";
         
 //        方式3
 //        基于Account User Logon name(pre-windows 2000):
@@ -85,6 +91,7 @@ public class LDAPTest {
         HashEnv.put(Context.PROVIDER_URL, LDAP_URL);
 
         ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文
+
         return ctx;
     }	
 }
