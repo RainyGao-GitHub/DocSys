@@ -15,14 +15,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import javax.naming.NamingException;
 import java.util.ArrayList;
 import java.util.Collection;
 
 @Component
 public class LdapAuthenticationManager implements AuthenticationManager {
 
-	private Logger logger = LoggerFactory.getLogger(LdapAuthenticationManager.class);
+	private static Logger logger = LoggerFactory.getLogger(LdapAuthenticationManager.class);
 	private Ldap ldap = new Ldap();
 
 	class Ldap {
@@ -54,7 +53,7 @@ public class LdapAuthenticationManager implements AuthenticationManager {
 		return new UsernamePasswordAuthenticationToken(ldap.getLdapUserDetail(authentication.getName()).getUsername(), authentication.getCredentials(), getAuthorities(authentication.getName()));
 	}
 
-	public Collection<? extends GrantedAuthority> getAuthorities(String username) {
+	public static Collection<? extends GrantedAuthority> getAuthorities(String username) {
 		ArrayList<GrantedAuthority> authorities = new ArrayList<>();
 		String access =  getAuthority(username);
 		logger.info("User [{}] has role: {}", username, access);
@@ -62,7 +61,7 @@ public class LdapAuthenticationManager implements AuthenticationManager {
 		authorities.add(authority);
 		return authorities;
 	}
-	private String getAuthority(String userId){
+	private static String getAuthority(String userId){
 		return "private";
 	}
 }
