@@ -9,6 +9,7 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
 import com.DocSystem.common.Log;
+import com.DocSystem.websocket.LdapAuthenticationManager;
 
 public class LDAPTest {
     public static void main(String[] args)    
