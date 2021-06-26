@@ -51,23 +51,22 @@ public class UserController extends BaseController {
 		System.out.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
 		ReturnAjax rt = new ReturnAjax();
-		//tmp_user is used for store the query condition
+		
 		User tmp_user = new User();
 		tmp_user.setName(userName);
 		tmp_user.setPwd(pwd);
-		List<User> uLists = getUserList(userName,pwd);
-		boolean ret =loginCheck(rt, tmp_user, uLists, session,response);
-		if(ret == false)
+		
+		User loginUser = loginCheck(userName, pwd, request, session, response, rt);
+		if(loginUser == null)
 		{
-			System.out.println("登录失败");
-			addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, "");
 			writeJson(rt, response);	
+			addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, "");
 			return;
 		}
 		
 		//Set session
 		System.out.println("登录成功");
-		session.setAttribute("login_user", uLists.get(0));
+		session.setAttribute("login_user", loginUser);
 		System.out.println("SESSION ID:" + session.getId());
 
 		//如果用户点击了保存密码则保存cookies
@@ -77,17 +76,30 @@ public class UserController extends BaseController {
 			System.out.println("用户cookie保存成功");
 		}
 
-		
 		//Feeback to page
 		addSystemLog(request, tmp_user, "login", "login", "登录","成功", null, null, null, "");
 		
 		rt.setMsgInfo("登录成功！");
-		rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
+		rt.setData(loginUser);	//将数据库取出的用户信息返回至前台
 		writeJson(rt, response);	
 
 		return;
 	}
 	
+	private User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) {
+		User tmp_user = new User();
+		tmp_user.setName(userName);
+		tmp_user.setPwd(pwd);
+		List<User> uLists = getUserList(userName,pwd);
+		boolean ret =loginCheck(rt, tmp_user, uLists, session,response);
+		if(ret == false)
+		{
+			System.out.println("loginCheck() 登录失败");
+			return null;
+		}
+		return uLists.get(0);
+	}
+
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
 	public void getLoginUser(HttpServletRequest request,HttpSession session,HttpServletResponse response){
