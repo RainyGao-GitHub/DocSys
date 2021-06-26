@@ -35,13 +35,13 @@ import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.QueryCondition;
-import com.DocSystem.common.QueryResult;
 import com.DocSystem.common.Reflect;
+import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.QueryCondition;
+import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.controller.BaseController;
 
 @Controller

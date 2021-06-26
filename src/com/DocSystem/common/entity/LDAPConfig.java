@@ -1,4 +1,4 @@
-package com.DocSystem.common;
+package com.DocSystem.common.entity;
 
 public class LDAPConfig {
 	public Boolean enabled;

@@ -70,11 +70,11 @@ import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.QueryCondition;
-import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.entity.QueryCondition;
+import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.commonService.ProxyThread;
 

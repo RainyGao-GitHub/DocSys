@@ -65,7 +65,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
-import com.DocSystem.common.QueryCondition;
+import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;

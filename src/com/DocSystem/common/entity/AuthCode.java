@@ -1,4 +1,4 @@
-package com.DocSystem.common;
+package com.DocSystem.common.entity;
 
 public class AuthCode {
 	private String code = null; //hashCode for authCode

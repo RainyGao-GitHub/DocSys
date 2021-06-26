@@ -1,4 +1,4 @@
-package com.DocSystem.common;
+package com.DocSystem.common.entity;
 
 public class License {
 	public String id;	//licenseId
