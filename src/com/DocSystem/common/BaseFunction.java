@@ -127,7 +127,7 @@ public class BaseFunction{
 		}
 		
 		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfig);
-		systemLdapConfig.url = urlInfo.prefix + "://" + urlInfo.params[0] + "/";
+		systemLdapConfig.url = urlInfo.prefix + urlInfo.params[0] + "/";
 		systemLdapConfig.basedn = "";
 		if(urlInfo.params.length > 1)
 		{
@@ -1254,11 +1254,9 @@ public class BaseFunction{
 	    urlInfo.prefix = subStrs1[0] + "://";
 	    String hostWithPortAndParams = subStrs1[1];	    
 	    String subStrs2[] = hostWithPortAndParams.split("/");
+    	urlInfo.params = subStrs2;
+
 	    String hostWithPort = subStrs2[0];
-	    if(subStrs2.length > 1)
-	    {
-	    	urlInfo.params = subStrs2;
-	    }
 	    
 	    String subStrs3[] = hostWithPort.split(":");
 	    if(subStrs3.length < 2)
