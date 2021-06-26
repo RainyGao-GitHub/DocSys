@@ -57,6 +57,10 @@
 						<li id="mobileNewReposBtn"  style="display:none">
 							<a href="#" title="新建仓库" onclick="newRepos()">新建仓库</a>
 						</li>
+						<li id="mobileGoManagerBtn" style="display:none">
+							<a href="/DocSystem/manager/main.html" title="管理后台">管理后台</a>
+						</li>
+						
                         <li id="mobileLoginBtn">
                             <a onclick="showLoginPanel()" title="用户登录">登录</a>
                         </li>
@@ -83,7 +87,7 @@
                         <a onclick="showLoginPanel()"  title="用户登录">登录</a>
                     </li>
                     <li id="newReposBtn" style="display:none">
-						<a href="#" title="新建仓库" onclick="newRepos()">新建</a>
+						<a href="#" title="新建仓库" onclick="newRepos()">新建仓库</a>
 					</li>
 					<li id="goManagerBtn" style="display:none">
 						<a href="/DocSystem/manager/main.html" title="管理后台">管理后台</a>
@@ -327,6 +331,7 @@
         	if(user.type > 0) //超级管理员和管理员才能新建仓库，后台也徐亚进行控制，普通用户只能建立最多10个私人仓库
         	{
         		$('#goManagerBtn').show();
+        		$('#mobileGoManagerBtn').show();
         	}
     	}
     	else
@@ -341,6 +346,7 @@
         	$('#mobileNewReposBtn').hide();
         	
         	$('#goManagerBtn').hide();
+        	$('#mobileGoManagerBtn').hide();        	
     	}
     }
     
