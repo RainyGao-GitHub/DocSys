@@ -38,9 +38,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.common.FileUtil;
-import com.DocSystem.common.LdapUser;
 import com.DocSystem.common.Log;
-import com.DocSystem.common.SystemLog;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 
@@ -104,7 +102,7 @@ public class UserController extends BaseController {
 		tmp_user.setName(userName);
 		tmp_user.setPwd(pwd);
 		
-		if(ldapConfig.enabled == false)
+		if(systemLdapConfig.enabled == false || systemLdapConfig.url == null || systemLdapConfig.url.isEmpty())
 		{
 			List<User> uLists = getUserList(userName,pwd);
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
@@ -117,6 +115,7 @@ public class UserController extends BaseController {
 		}
 		
 		//LDAP模式
+		Log.println("loginCheck() LDAP Mode"); 
 		User ldapLoginUser = ldapLoginCheck(userName, pwd);
 		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
 		{
@@ -198,8 +197,8 @@ public class UserController extends BaseController {
             //String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/";
     		//String basedn = "o=NSN";
     		
-    		String LDAP_URL = ldapConfig.url;
-    		String basedn = ldapConfig.basedn;
+    		String LDAP_URL = systemLdapConfig.url;
+    		String basedn = systemLdapConfig.basedn;
             
             Hashtable<String,String> HashEnv = new Hashtable<String,String>();
             HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
