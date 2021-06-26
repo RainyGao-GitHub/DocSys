@@ -870,9 +870,13 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
-		
+				
 		writeJson(rt, response);
+		
+		if(ldapConfig != null)
+		{
+			applySystemLdapConfig(ldapConfig);			
+		}
 	}
 
 	@RequestMapping("/upgradeSystem.do")

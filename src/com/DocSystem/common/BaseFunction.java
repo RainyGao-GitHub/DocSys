@@ -67,7 +67,7 @@ public class BaseFunction{
     public static OfficeLicense officeLicenseInfo = null;
 
     //系统LDAP设置
-    public static LDAPConfig ldapConfig = null;
+    public static LDAPConfig systemLdapConfig = null;
 	
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
@@ -104,11 +104,37 @@ public class BaseFunction{
 	private static void initLdapConfig() {
 		System.out.println("initLdapConfig() ");
 		//Default LDAPConfig
-		ldapConfig = new LDAPConfig();
-		ldapConfig.enabled = false;
-		ldapConfig.url = "";
-		ldapConfig.basedn = "";
+		systemLdapConfig = new LDAPConfig();
+		systemLdapConfig.enabled = false;
+		systemLdapConfig.url = "";
+		systemLdapConfig.basedn = "";
+		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "ldapConfig");
+		if(value != null)
+		{
+			applySystemLdapConfig(value);
+		}		
 	}
+	
+	protected static void applySystemLdapConfig(String ldapConfig) {
+		//UPdate系统ldapConfig
+		if(docSysType > 1)
+		{
+			systemLdapConfig.enabled = true;
+		}
+		else
+		{
+			systemLdapConfig.enabled = false;				
+		}
+		
+		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfig);
+		systemLdapConfig.url = urlInfo.prefix + "://" + urlInfo.params[0] + "/";
+		systemLdapConfig.basedn = "";
+		if(urlInfo.params.length > 1)
+		{
+			systemLdapConfig.basedn = urlInfo.params[1];	//0保存的是host+port			
+		}
+	}
+
 
 	protected boolean systemLicenseInfoCheck(ReturnAjax rt) {
 		if(systemLicenseInfo.expireTime != null)
@@ -1212,7 +1238,7 @@ public class BaseFunction{
 	    return ip.equals("0:0:0:0:0:0:0:1")?"127.0.0.1":ip;
 	}
 	
-	protected URLInfo getUrlInfoFromUrl(String url) {
+	protected static URLInfo getUrlInfoFromUrl(String url) {
 		Log.info("getUrlInfoFromUrl()", "url:" + url);
 		
 		URLInfo urlInfo = new URLInfo();
@@ -1229,6 +1255,10 @@ public class BaseFunction{
 	    String hostWithPortAndParams = subStrs1[1];	    
 	    String subStrs2[] = hostWithPortAndParams.split("/");
 	    String hostWithPort = subStrs2[0];
+	    if(subStrs2.length > 1)
+	    {
+	    	urlInfo.params = subStrs2;
+	    }
 	    
 	    String subStrs3[] = hostWithPort.split(":");
 	    if(subStrs3.length < 2)
@@ -1240,6 +1270,7 @@ public class BaseFunction{
 	    	urlInfo.host = subStrs3[0];
 	    	urlInfo.port = subStrs3[1];  	
 	    }
+
 	    Log.printObject("getUrlInfoFromUrl() urlInfo:", urlInfo);
 		return urlInfo;
 	}
