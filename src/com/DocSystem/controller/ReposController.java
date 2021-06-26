@@ -78,7 +78,7 @@ public class ReposController extends BaseController{
 		Integer UserId = login_user.getId();
 		System.out.println("UserId:" + UserId);
 		List <Repos> accessableReposList = getAccessableReposList(UserId);
-		Log.printObject("getReposList() accessableReposList",accessableReposList);
+		//Log.printObject("getReposList() accessableReposList",accessableReposList);
 		rt.setData(accessableReposList);
 		writeJson(rt, response);
 	}
