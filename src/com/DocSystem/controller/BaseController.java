@@ -6738,7 +6738,7 @@ public class BaseController  extends BaseFunction{
 		ReposAuth qReposAuth = new ReposAuth();
 		qReposAuth.setUserId(userId);
 		List <ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
-		Log.printObject("getUserReposAuthHashMap() userID[" + userId +"] reposAuthList:", reposAuthList);
+		//Log.printObject("getUserReposAuthHashMap() userID[" + userId +"] reposAuthList:", reposAuthList);
 		
 		if(reposAuthList == null || reposAuthList.size() == 0)
 		{
