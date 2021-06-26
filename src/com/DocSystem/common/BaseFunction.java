@@ -36,6 +36,12 @@ import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
+import com.DocSystem.common.entity.LDAPConfig;
+import com.DocSystem.common.entity.License;
+import com.DocSystem.common.entity.OfficeLicense;
+import com.DocSystem.common.entity.PreferLink;
+import com.DocSystem.common.entity.SystemLog;
+import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.commonService.ProxyThread;
 import com.DocSystem.commonService.ShareThread;
 import com.DocSystem.controller.URLInfo;

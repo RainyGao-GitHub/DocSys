@@ -1,4 +1,4 @@
-package com.DocSystem.common;
+package com.DocSystem.common.entity;
 
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocShare;
