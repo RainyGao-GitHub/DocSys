@@ -14,22 +14,15 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import com.DocSystem.common.LdapUser;
 import com.DocSystem.common.Log;
-import com.DocSystem.websocket.LdapAuthenticationManager;
+import com.DocSystem.entity.User;
 
 import util.Encrypt.MD5;
 	
 public class LDAPTest {
     public static void main(String[] args)    
     {  
-    	LDAPConnectionTest();
-      	//LDAPConnectionTest1();        
-    }
-    
-    static void LDAPConnectionTest1()
-    {
-    	LdapAuthenticationManager.getAuthorities("ragao");    	
+    	LDAPConnectionTest();    
     }
     
     public static void LDAPConnectionTest() {
@@ -41,7 +34,7 @@ public class LDAPTest {
 			}
 			else
 			{
-				List<LdapUser> list = readLdap(ctx, "", "ragao");
+				List<User> list = readLdap(ctx, "", "ragao");
 				Log.printObject("LDAPConnectionTest() list", list);				
 			}
 		} catch (AuthenticationException e) {
@@ -62,15 +55,11 @@ public class LDAPTest {
     public static LdapContext getLDAPConnection() throws AuthenticationException, CommunicationException,Exception {
         LdapContext ctx = null;
 
-        //LDAP 连接地址 ldap://IP:PORT (default port 389)
-        //String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/o=NSN";
-        String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/";
-
-        String basedn = "o=NSN";
-        String userId = "ragao";
+        String LDAP_URL = "ldap://localhost:389/";
+        String basedn = "ou=xxx,dc=xxx,dc=com";
+        String userId = "test";
         String userAccount = "uid=" + userId + "," + basedn;     
-        String userPassword = MD5.md5("Rain_121902");
-        //String userPassword = "Rain_121902";
+        String userPassword = "123456";
         Hashtable<String,String> HashEnv = new Hashtable<String,String>();
         HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
         HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
@@ -84,9 +73,9 @@ public class LDAPTest {
         return ctx;
     }
     
-    public static List<LdapUser> readLdap(LdapContext ctx,String basedn, String userId){
+    public static List<User> readLdap(LdapContext ctx,String basedn, String userId){
 		
-		List<LdapUser> lm=new ArrayList<LdapUser>();
+		List<User> lm=new ArrayList<User>();
 		try {
 			 if(ctx!=null){
 				//过滤条件
@@ -102,27 +91,29 @@ public class LDAPTest {
 	            while (answer.hasMore()) {
 	                SearchResult result = (SearchResult) answer.next();
 	                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
-	                LdapUser lu=new LdapUser();
+	                User lu=new User();
 	                while (attrs.hasMore()) {
 	                    Attribute attr = (Attribute) attrs.next();
 	                    if("userPassword".equals(attr.getID())){
 	                    	Object value = attr.get();
-	                    	lu.userPassword  = new String((byte [])value);
+	                    	lu.setPwd(new String((byte [])value));
 	                    }else if("uid".equals(attr.getID())){
-	                    	lu.uid = attr.get().toString();
+	                    	lu.setName(attr.get().toString());
 	                    }else if("displayName".equals(attr.getID())){
-	                    	lu.displayName = attr.get().toString();
-	                    }else if("cn".equals(attr.getID())){
-	                    	lu.cn = attr.get().toString();
-	                    }else if("sn".equals(attr.getID())){
-	                    	lu.sn = attr.get().toString();
-	                    }else if("mail".equals(attr.getID())){
-	                    	lu.mail = attr.get().toString();
+	                    	lu.setRealName(attr.get().toString());
+	                    }
+	                    //else if("cn".equals(attr.getID())){
+	                    //	lu.cn = attr.get().toString();
+	                    //}else if("sn".equals(attr.getID())){
+	                    //	lu.sn = attr.get().toString();
+	                    //}
+	                    else if("mail".equals(attr.getID())){
+	                    	lu.setEmail(attr.get().toString());
 	                    }else if("description".equals(attr.getID())){
-	                    	lu.description = attr.get().toString();
+	                    	lu.setIntro(attr.get().toString());
 	                    }
 	                }
-	                if(lu.uid != null)
+	                if(lu.getName() != null)
 	                {
 	                	lm.add(lu);
 	                }
