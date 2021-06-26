@@ -66,6 +66,9 @@ public class BaseFunction{
     //OnlyOffice License
     public static OfficeLicense officeLicenseInfo = null;
 
+    //系统LDAP设置
+    public static LDAPConfig ldapConfig = null;
+	
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
 	
@@ -84,6 +87,7 @@ public class BaseFunction{
 		docSysIniPath = webappsPath + "docSys.ini/";   
     	initSystemLicenseInfo();
     	initOfficeLicenseInfo();
+    	initLdapConfig();
 		serverHost = getServerHost();		
     }
     
@@ -97,6 +101,15 @@ public class BaseFunction{
 		systemLicenseInfo.hasLicense = false;
 	}
 	
+	private static void initLdapConfig() {
+		System.out.println("initLdapConfig() ");
+		//Default LDAPConfig
+		ldapConfig = new LDAPConfig();
+		ldapConfig.enabled = false;
+		ldapConfig.url = "";
+		ldapConfig.basedn = "";
+	}
+
 	protected boolean systemLicenseInfoCheck(ReturnAjax rt) {
 		if(systemLicenseInfo.expireTime != null)
 		{	
