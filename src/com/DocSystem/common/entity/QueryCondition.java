@@ -1,4 +1,4 @@
-package com.DocSystem.common;
+package com.DocSystem.common.entity;
 
 import org.apache.lucene.search.BooleanClause.Occur;
 
