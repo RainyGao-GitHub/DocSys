@@ -96,199 +96,6 @@ public class UserController extends BaseController {
 
 		return;
 	}
-	
-	private User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) {
-		User tmp_user = new User();
-		tmp_user.setName(userName);
-		tmp_user.setPwd(pwd);
-		
-		if(systemLdapConfig.enabled == false || systemLdapConfig.url == null || systemLdapConfig.url.isEmpty())
-		{
-			List<User> uLists = getUserList(userName,pwd);
-			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
-			if(ret == false)
-			{
-				System.out.println("loginCheck() 登录失败");
-				return null;
-			}
-			return uLists.get(0);
-		}
-		
-		//LDAP模式
-		Log.println("loginCheck() LDAP Mode"); 
-		User ldapLoginUser = ldapLoginCheck(userName, pwd);
-		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
-		{
-			List<User> uLists = getUserList(userName,pwd);
-			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
-			if(ret == false)
-			{
-				System.out.println("loginCheck() 登录失败");
-				return null;
-			}
-			return uLists.get(0);
-		}
-		
-		//获取数据库用户
-		User dbUser = getUserByName(userName);
-		if(dbUser == null)
-		{
-			//Add LDAP User into DB
-			if(checkSystemUsersCount(rt) == false)
-			{
-				return null;			
-			}
-			
-			if(userCheck(ldapLoginUser, rt) == false)
-			{
-				System.out.println("用户检查失败!");			
-				return null;			
-			}
-
-			ldapLoginUser.setPwd(pwd); //密码也存入DB
-
-			ldapLoginUser.setCreateType(3);	//用户为LDAP登录添加
-
-			//set createTime
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-			String createTime = df.format(new Date());// new Date()为获取当前系统时间
-			ldapLoginUser.setCreateTime(createTime);	//设置川剧时间
-
-			if(userService.addUser(ldapLoginUser) == 0)
-			{
-				Log.docSysErrorLog("Failed to add new User in DB", rt);
-			}
-			return ldapLoginUser;
-		}
-		
-		//登录的用户名字和邮箱总是以LDAP的为准
-		dbUser.setRealName(ldapLoginUser.getRealName());
-		dbUser.setEmail(ldapLoginUser.getEmail());
-		return dbUser;
-	}
-	
-	public User ldapLoginCheck(String userName, String pwd)
-	{
-		LdapContext ctx = getLDAPConnection(userName, pwd);
-		if(ctx == null)
-		{
-			Log.println("ldapLoginCheck() getLDAPConnection 失败"); 
-			return null;
-		}
-		
-		List<User> list = readLdap(ctx, "", userName);
-		if(list == null || list.size() != 0)
-		{
-			Log.println("ldapLoginCheck() readLdap 失败"); 			
-			return null;
-		}
-		
-		return list.get(0);
-	}
-	
-	/**
-     * 获取默认LDAP连接     * Exception 则登录失败，ctx不为空则登录成功
-     * @return void
-     */
-    public LdapContext getLDAPConnection(String userName, String pwd) 
-    {
-        LdapContext ctx = null;
-    	try {
-            //String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/";
-    		//String basedn = "o=NSN";
-    		
-    		String LDAP_URL = systemLdapConfig.url;
-    		String basedn = systemLdapConfig.basedn;
-            
-            Hashtable<String,String> HashEnv = new Hashtable<String,String>();
-            HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
-            
-            //userName为空则只获取LDAP basedn的ctx，不进行用户校验
-            if(userName == null || userName.isEmpty())
-    		{
-    			HashEnv.put(Context.SECURITY_PRINCIPAL, basedn);
-    		}
-            else
-            {
-            	String userAccount = "uid=" + userName + "," + basedn;     
-    			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
-                HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
-    		}	
-            
-            HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
-            HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
-            HashEnv.put(Context.PROVIDER_URL, LDAP_URL);
-            ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
-		} catch (AuthenticationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
-        return ctx;
-    }
-    
-    public List<User> readLdap(LdapContext ctx, String basedn, String userId){
-		
-		List<User> lm=new ArrayList<User>();
-		try {
-			 if(ctx!=null){
-				//过滤条件
-	            //String filter = "(&(objectClass=*)(uid=*))";
-	            String filter = "(&(objectClass=*)(uid=" +userId+ "))";
-				
-	            String[] attrPersonArray = { "uid", "userPassword", "displayName", "cn", "sn", "mail", "description" };
-	            SearchControls searchControls = new SearchControls();//搜索控件
-	            searchControls.setSearchScope(2);//搜索范围
-	            searchControls.setReturningAttributes(attrPersonArray);
-	            //1.要搜索的上下文或对象的名称；2.过滤条件，可为null，默认搜索所有信息；3.搜索控件，可为null，使用默认的搜索控件
-	            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter.toString(),searchControls);
-	            while (answer.hasMore()) {
-	                SearchResult result = (SearchResult) answer.next();
-	                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
-	                
-	                User lu=new User();
-	                while (attrs.hasMore()) {
-	                    Attribute attr = (Attribute) attrs.next();
-	                    if("userPassword".equals(attr.getID())){
-	                    	Object value = attr.get();
-	                    	lu.setPwd(new String((byte [])value));
-	                    }else if("uid".equals(attr.getID())){
-	                    	lu.setName(attr.get().toString());
-	                    }else if("displayName".equals(attr.getID())){
-	                    	lu.setRealName(attr.get().toString());
-	                    }
-	                    //else if("cn".equals(attr.getID())){
-	                    //	lu.cn = attr.get().toString();
-	                    //}
-	                	//else if("sn".equals(attr.getID())){
-	                    //	lu.sn = attr.get().toString();
-	                    //}
-	                    else if("mail".equals(attr.getID())){
-	                    	lu.setEmail(attr.get().toString());
-	                    }
-	                    else if("description".equals(attr.getID())){
-	                    	lu.setIntro(attr.get().toString());
-	                    }
-	                }
-	                if(lu.getName() != null)
-	                {
-	                	lm.add(lu);
-	                }
-	            }
-			 }
-		}catch (Exception e) {
-			System.out.println("获取用户信息异常:");
-			e.printStackTrace();
-		}
-		 
-		return lm;
-	}
 
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
@@ -380,7 +187,7 @@ public class UserController extends BaseController {
 			return;
 		}
 		
-		userCheck(user, rt);
+		userCheck(user, true, true, rt);
 		writeJson(rt, response);
 	}
 	
@@ -423,7 +230,7 @@ public class UserController extends BaseController {
 			return;
 		}
 		
-		if(userCheck(user, rt) == false)
+		if(userCheck(user, true, true, rt) == false)
 		{
 			System.out.println("用户检查失败!");			
 			writeJson(rt, response);
@@ -473,19 +280,6 @@ public class UserController extends BaseController {
 		rt.setData(user);
 		writeJson(rt, response);
 		return;
-	}
-	
-	public User getUserByName(String name)
-	{
-		User user = new User();
-		user.setName(name);
-		List<User> uList = userService.getUserListByUserInfo(user);
-		if(uList == null || uList.size() == 0)
-		{
-			return null;
-		}
-		
-		return uList.get(0);
 	}
 	
 	/**
