@@ -131,14 +131,15 @@
 							<i class="cell username w10">用户名</i>
 							<i class="cell groupname w10">组</i>
 							<i class="cell docpath w15">路径</i>
-							<i class="cell access w7">管理员权限</i>
-							<i class="cell read w7">读权限</i>
-							<i class="cell edit w7">写权限</i>
-							<i class="cell add w7">增加权限</i>
-							<i class="cell delete w7">删除权限</i>
-							<i class="cell download w7">下载权限</i>
-							<i class="cell heritable w7">可继承</i>
-							<i class="cell selectAll w7"></i>
+							<i class="cell access w6">管理员权限</i>
+							<i class="cell read w6">读权限</i>
+							<i class="cell edit w6">写权限</i>
+							<i class="cell add w6">增加权限</i>
+							<i class="cell delete w6">删除权限</i>
+							<i class="cell download w6">下载权限</i>
+							<i class="cell uploadSize w7">上传限制</i>
+							<i class="cell heritable w6">可继承</i>
+							<i class="cell selectAll w6"></i>
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
@@ -508,6 +509,13 @@
 				docAuth.addEn = $("#AddEn"+index).prop("checked")?1:0;
 				docAuth.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
 				docAuth.downloadEn = $("#DownloadEn"+index).prop("checked")?1:0;
+				var uploadSize = $("#UploadSize"+index).val();
+				console.log("saveAuth uploadSize:", uploadSize);
+				if(uploadSize ===  "未限制")
+				{
+					uploadSize = "";
+				}
+				docAuth.uploadSize = uploadSize;				
 				docAuth.heritable = $("#Heritable"+index).prop("checked")?1:0;
 				console.log(docAuth);
 				docAuths.push(docAuth);	//将用户加入到列表中
@@ -519,7 +527,6 @@
 		ConfigUserAuth.configUserAuths(docAuths,vid);
     }
 	
-	//将权限保存到后台
     function cancelSaveAuth() {
     	console.log("cancelSaveAuth");
     	$("#btnAddReposUser").show();
@@ -933,6 +940,7 @@ function showDocAuthList(){
 			var addChecked = d.addEn == 1? "checked":"";
 			var deleteChecked = d.deleteEn == 1? "checked":"";
 			var downloadChecked = d.downloadEn == 1? "checked":"";
+			var uploadSize = d.uploadSize == undefined? "未限制" : d.uploadSize;
 			var heritableChecked = d.heritable == 1? "checked":"";
 			//var selectAllChecked = d.selectAll == 1? "checked":"";
 			var selectAllChecked = "";
@@ -978,28 +986,31 @@ function showDocAuthList(){
 //				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 				+"		</span>"
 				+"	</i>"
-				+"	<i class='cell access w7'>"
+				+"	<i class='cell access w6'>"
 				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>管理员</input>"
 				+"	</i>"
-				+"	<i class='cell  read w7'>"
+				+"	<i class='cell  read w6'>"
 				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>读</input>"
 				+"	</i>"
-				+"	<i class='cell edit w7'>"
+				+"	<i class='cell edit w6'>"
 				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>写</input>"
 				+"	</i>"
-				+"	<i class='cell add w7'>"
+				+"	<i class='cell add w6'>"
 				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " onchange='EnableUserConfig("+i+");'>增加</input>"
 				+"	</i>"
-				+"	<i class='cell delete w7'>"
+				+"	<i class='cell delete w6'>"
 				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>删除</input>"
 				+"	</i>"
-				+"	<i class='cell download w7'>"
+				+"	<i class='cell download w6'>"
 				+"		<input id='DownloadEn"+i+"' value='"+ d.downloadEn+"' type='checkbox' " + downloadChecked + " onchange='EnableUserConfig("+i+");'>下载</input>"
 				+"	</i>"
-				+"	<i class='cell heritable w7'>"
+				+"	<i class='cell uploadSize w7'>"
+				+"		<input id='UploadSize"+i+"' value='"+ uploadSize+"' type='text' class='form-control' style='width: 80%'  onclick='EnableUserConfig("+i+");'>"
+				+"	</i>"
+				+"	<i class='cell heritable w6'>"
 				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " onchange='EnableUserConfig("+i+");'>可继承</input>"
 				+"	</i>"
-				+"	<i class='cell selectAll w7'>"
+				+"	<i class='cell selectAll w6'>"
 				+"		<input id='SelectAll"+i+"' value='"+ d.selectAll+"' type='checkbox' " + selectAllChecked + " onclick='selectAllAuth(" +i+")' onchange='EnableUserConfig("+i+");'>全部</input>"
 				+"	</i>"
 				+"	<i class='cell operation w10'>"
@@ -1116,6 +1127,7 @@ function EnableUserConfig(index){
 	if($("#DocAuth"+index).prop("checked") == false)
 	{
 		$("#DocAuth"+index).prop("checked",true);
+        //$("#UploadSize"+index).attr("disabled",false);
 	}
 }
 
@@ -1131,6 +1143,7 @@ function selectAllAuth(index)
 		$("#DeleteEn"+index).prop("checked",true);
 		$("#DownloadEn"+index).prop("checked",true);
 		$("#Heritable"+index).prop("checked",true);
+        //$("#UploadSize"+index).attr("disabled",false);
 	}
 	else
 	{
@@ -1142,6 +1155,7 @@ function selectAllAuth(index)
 		$("#DeleteEn"+index).prop("checked",false);
 		$("#DownloadEn"+index).prop("checked",false);
 		$("#Heritable"+index).prop("checked",false);
+        //$("#UploadSize"+index).attr("disabled",false);
 	}
 }
 
@@ -1498,6 +1512,7 @@ function showTextSearchSetPanel()
 				         addEn: docAuth.addEn, 
 				         deleteEn: docAuth.deleteEn, 
 				         downloadEn: docAuth.downloadEn,
+				         uploadSize: docAuth.uploadSize,
 				         heritable: docAuth.heritable,
 				     },
 				     success : function (ret) {
