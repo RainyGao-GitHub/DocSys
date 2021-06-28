@@ -1027,7 +1027,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(userCheck(user, rt) == false)
+		if(userCheck(user, true, true, rt) == false)
 		{
 			System.out.println("用户检查失败!");			
 			writeJson(rt, response);
@@ -1107,7 +1107,7 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		
-		if(userCheck(user, rt) == false)
+		if(userCheck(user, true, true, rt) == false)
 		{
 			System.out.println("用户检查失败!");			
 			writeJson(rt, response);

@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +38,15 @@ import java.util.Properties;
 import java.util.Scanner;
 import java.util.Map.Entry;
 
+import javax.naming.AuthenticationException;
+import javax.naming.CommunicationException;
+import javax.naming.Context;
+import javax.naming.NamingEnumeration;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -2101,9 +2111,9 @@ public class BaseController  extends BaseFunction{
 				User tmp_user = new User();
 				tmp_user.setName(userName);			
 				tmp_user.setPwd(pwd);
-				List<User> uLists = getUserList(userName,pwd);
-				boolean ret =loginCheck(rt, tmp_user, uLists, session,response);
-				if(ret == false)
+
+				User loginUser = loginCheck(userName, pwd, request, session, response, rt);
+				if(loginUser == null)
 				{
 					System.out.println("自动登录失败");
 					rt.setMsgData("自动登陆失败");
@@ -2113,14 +2123,14 @@ public class BaseController  extends BaseFunction{
 				
 				System.out.println("自动登录成功");
 				//Set session
-				session.setAttribute("login_user", uLists.get(0));
+				session.setAttribute("login_user", loginUser);
 				//延长cookie的有效期
 				addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
 				addCookie(response, "dstoken", pwd, 7*24*60*60);
 				System.out.println("用户cookie保存成功");
 				System.out.println("SESSION ID:" + session.getId());
 
-				rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
+				rt.setData(loginUser);	//将数据库取出的用户信息返回至前台
 				writeJson(rt, response);
 				return null;
 			}
@@ -2134,6 +2144,213 @@ public class BaseController  extends BaseFunction{
 		return user;
 	}
 	
+	
+	protected User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) {
+		User tmp_user = new User();
+		tmp_user.setName(userName);
+		tmp_user.setPwd(pwd);
+		
+		if(systemLdapConfig.enabled == false || systemLdapConfig.url == null || systemLdapConfig.url.isEmpty())
+		{
+			List<User> uLists = getUserList(userName,pwd);
+			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
+			if(ret == false)
+			{
+				System.out.println("loginCheck() 登录失败");
+				return null;
+			}
+			return uLists.get(0);
+		}
+		
+		//LDAP模式
+		Log.println("loginCheck() LDAP Mode"); 
+		User ldapLoginUser = ldapLoginCheck(userName, pwd);
+		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
+		{
+			List<User> uLists = getUserList(userName,pwd);
+			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
+			if(ret == false)
+			{
+				System.out.println("loginCheck() 登录失败");
+				return null;
+			}
+			return uLists.get(0);
+		}
+		
+		//获取数据库用户
+		User dbUser = getUserByName(userName);
+		if(dbUser == null)
+		{
+			//Add LDAP User into DB
+			if(checkSystemUsersCount(rt) == false)
+			{
+				return null;			
+			}
+			
+			//For User added by LDAP login no need to check tel and email
+			if(userCheck(ldapLoginUser, false, false, rt) == false)
+			{
+				System.out.println("用户检查失败!");			
+				return null;			
+			}
+
+			ldapLoginUser.setPwd(pwd); //密码也存入DB
+			ldapLoginUser.setCreateType(10);	//用户为LDAP登录添加
+
+			//set createTime
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+			String createTime = df.format(new Date());// new Date()为获取当前系统时间
+			ldapLoginUser.setCreateTime(createTime);	//设置川剧时间
+
+			if(userService.addUser(ldapLoginUser) == 0)
+			{
+				Log.docSysErrorLog("Failed to add new User in DB", rt);
+			}
+			return ldapLoginUser;
+		}
+		
+		//登录的用户名字和邮箱总是以LDAP的为准
+		dbUser.setRealName(ldapLoginUser.getRealName());
+		dbUser.setEmail(ldapLoginUser.getEmail());
+		return dbUser;
+	}
+	
+	public User getUserByName(String name)
+	{
+		User user = new User();
+		user.setName(name);
+		List<User> uList = userService.getUserListByUserInfo(user);
+		if(uList == null || uList.size() == 0)
+		{
+			return null;
+		}
+		
+		return uList.get(0);
+	}
+	
+	public User ldapLoginCheck(String userName, String pwd)
+	{
+		LdapContext ctx = getLDAPConnection(userName, pwd);
+		if(ctx == null)
+		{
+			Log.println("ldapLoginCheck() getLDAPConnection 失败"); 
+			return null;
+		}
+		
+		List<User> list = readLdap(ctx, "", userName);
+		if(list == null || list.size() != 0)
+		{
+			Log.println("ldapLoginCheck() readLdap 失败"); 			
+			return null;
+		}
+		
+		return list.get(0);
+	}
+	
+	/**
+     * 获取默认LDAP连接     * Exception 则登录失败，ctx不为空则登录成功
+     * @return void
+     */
+    public LdapContext getLDAPConnection(String userName, String pwd) 
+    {
+        LdapContext ctx = null;
+    	try {
+            //String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/";
+    		//String basedn = "o=NSN";
+    		
+    		String LDAP_URL = systemLdapConfig.url;
+    		String basedn = systemLdapConfig.basedn;
+            
+            Hashtable<String,String> HashEnv = new Hashtable<String,String>();
+            HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
+            
+            //userName为空则只获取LDAP basedn的ctx，不进行用户校验
+            if(userName == null || userName.isEmpty())
+    		{
+    			HashEnv.put(Context.SECURITY_PRINCIPAL, basedn);
+    		}
+            else
+            {
+            	String userAccount = "uid=" + userName + "," + basedn;     
+    			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
+                HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+    		}	
+            
+            HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
+            HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
+            HashEnv.put(Context.PROVIDER_URL, LDAP_URL);
+            ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
+		} catch (AuthenticationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+        return ctx;
+    }
+    
+    public List<User> readLdap(LdapContext ctx, String basedn, String userId){
+		
+		List<User> lm=new ArrayList<User>();
+		try {
+			 if(ctx!=null){
+				//过滤条件
+	            //String filter = "(&(objectClass=*)(uid=*))";
+	            String filter = "(&(objectClass=*)(uid=" +userId+ "))";
+				
+	            String[] attrPersonArray = { "uid", "userPassword", "displayName", "cn", "sn", "mail", "description" };
+	            SearchControls searchControls = new SearchControls();//搜索控件
+	            searchControls.setSearchScope(2);//搜索范围
+	            searchControls.setReturningAttributes(attrPersonArray);
+	            //1.要搜索的上下文或对象的名称；2.过滤条件，可为null，默认搜索所有信息；3.搜索控件，可为null，使用默认的搜索控件
+	            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter.toString(),searchControls);
+	            while (answer.hasMore()) {
+	                SearchResult result = (SearchResult) answer.next();
+	                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
+	                
+	                User lu=new User();
+	                while (attrs.hasMore()) {
+	                    Attribute attr = (Attribute) attrs.next();
+	                    if("userPassword".equals(attr.getID())){
+	                    	Object value = attr.get();
+	                    	lu.setPwd(new String((byte [])value));
+	                    }else if("uid".equals(attr.getID())){
+	                    	lu.setName(attr.get().toString());
+	                    }else if("displayName".equals(attr.getID())){
+	                    	lu.setRealName(attr.get().toString());
+	                    }
+	                    //else if("cn".equals(attr.getID())){
+	                    //	lu.cn = attr.get().toString();
+	                    //}
+	                	//else if("sn".equals(attr.getID())){
+	                    //	lu.sn = attr.get().toString();
+	                    //}
+	                    else if("mail".equals(attr.getID())){
+	                    	lu.setEmail(attr.get().toString());
+	                    }
+	                    else if("description".equals(attr.getID())){
+	                    	lu.setIntro(attr.get().toString());
+	                    }
+	                }
+	                if(lu.getName() != null)
+	                {
+	                	lm.add(lu);
+	                }
+	            }
+			 }
+		}catch (Exception e) {
+			System.out.println("获取用户信息异常:");
+			e.printStackTrace();
+		}
+		 
+		return lm;
+	}
+    
 	/**
 	 * 用户数据校验
 	 * @param uLists 根据条件从数据库中查出的user列表
@@ -2154,10 +2371,27 @@ public class BaseController  extends BaseFunction{
 			System.out.println("loginCheck() uLists size < 1");
 			rt.setError("用户名或密码错误！");
 			return false;
-		}else if(uLists.size()>1){
-			//TODO系统异常需要处理
-			System.out.println("loginCheck() uLists size > 1");
-			rt.setError("登录失败！");
+		}
+		
+		System.out.println("loginCheck() uLists size > 1");
+		int systemUserCount = 0;
+		for(int i = 0; i < uLists.size(); i++)
+		{
+			if(uLists.get(i).getCreateType() < 10)
+			{
+				systemUserCount ++;
+				if(systemUserCount > 1)
+				{
+					break;
+				}
+			}
+		}
+		
+		if(systemUserCount != 1)
+		{
+			System.out.println("loginCheck() 系统存在多个相同用户 systemUserCount:" + systemUserCount);
+			rt.setError("用户名或密码错误！");
+			//rt.setError("登录失败！");
 			return false;
 		}
 		
@@ -2260,7 +2494,18 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
-		return true;
+		
+		for(int i=0; i < uList.size(); i++)
+		{
+			User user = uList.get(i);
+			//创建类型<10为系统用户（10： LDAP登录添加的用户， 11：第三方登录添加的用户）
+			if(user.getCreateType() < 10)
+			{
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	public boolean isEmailUsed(String email)
@@ -2272,10 +2517,21 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
-		return true;
+		
+		for(int i=0; i < uList.size(); i++)
+		{
+			User user = uList.get(i);
+			//创建类型<10为系统用户（10： LDAP登录添加的用户， 11：第三方登录添加的用户）
+			if(user.getCreateType() < 10)
+			{
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
-	protected boolean userCheck(User user, ReturnAjax rt) {
+	protected boolean userCheck(User user, boolean emailCheckEn, boolean telCheckEn, ReturnAjax rt) {
 		String userName = user.getName();
 		String pwd = user.getPwd();
 		String tel = user.getTel();
@@ -2298,56 +2554,68 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		//如果用户使用手机号则需要检查手机号
-		if(RegularUtil.IsMobliePhone(userName) == true)
+		if(telCheckEn)
 		{
-			if(isTelUsed(userName) == true)
+			//如果用户使用手机号则需要检查手机号
+			if(RegularUtil.IsMobliePhone(userName) == true)
 			{
-				Log.docSysErrorLog("该手机已被使用！", rt);
-				return false;				
+				if(isTelUsed(userName) == true)
+				{
+					Log.docSysErrorLog("该手机已被使用！", rt);
+					return false;				
+				}
 			}
 		}
 		
-		//如果用户使用邮箱则需要检查邮箱
-		if(RegularUtil.isEmail(userName) == true)
+		if(emailCheckEn)
 		{
-			if(isEmailUsed(userName) == true)
+			//如果用户使用邮箱则需要检查邮箱
+			if(RegularUtil.isEmail(userName) == true)
 			{
-				Log.docSysErrorLog("该邮箱已被使用！", rt);
-				return false;				
-			}
-		}	
-
-		if(tel != null && !tel.isEmpty())
-		{
-			if(RegularUtil.IsMobliePhone(tel) == false)
-			{
-				Log.docSysErrorLog("手机格式错误！", rt);
-				return false;
-			}
-			
-			if(isTelUsed(tel) == true)
-			{
-				Log.docSysErrorLog("该手机已被使用！", rt);
-				return false;				
-			}
-			user.setTelValid(1);
+				if(isEmailUsed(userName) == true)
+				{
+					Log.docSysErrorLog("该邮箱已被使用！", rt);
+					return false;				
+				}
+			}	
 		}
 		
-		if(email != null && !email.isEmpty())
+		if(telCheckEn)
 		{
-			if(RegularUtil.isEmail(email) == false)
+			if(tel != null && !tel.isEmpty())
 			{
-				Log.docSysErrorLog("邮箱格式错误！", rt);
-				return false;
+				if(RegularUtil.IsMobliePhone(tel) == false)
+				{
+					Log.docSysErrorLog("手机格式错误！", rt);
+					return false;
+				}
+				
+				if(isTelUsed(tel) == true)
+				{
+					Log.docSysErrorLog("该手机已被使用！", rt);
+					return false;				
+				}
+				user.setTelValid(1);
 			}
-			
-			if(isEmailUsed(email) == true)
+		}
+		
+		if(emailCheckEn)
+		{
+			if(email != null && !email.isEmpty())
 			{
-				Log.docSysErrorLog("该邮箱已被使用！", rt);
-				return false;				
+				if(RegularUtil.isEmail(email) == false)
+				{
+					Log.docSysErrorLog("邮箱格式错误！", rt);
+					return false;
+				}
+				
+				if(isEmailUsed(email) == true)
+				{
+					Log.docSysErrorLog("该邮箱已被使用！", rt);
+					return false;				
+				}
+				user.setEmailValid(1);
 			}
-			user.setEmailValid(1);
 		}
 		return true;
 	}
