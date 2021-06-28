@@ -123,7 +123,7 @@ public class BaseFunction{
 	
 	protected static void applySystemLdapConfig(String ldapConfig) {
 		//UPdate系统ldapConfig
-		if(docSysType > 1)
+		if(docSysType > 0)
 		{
 			systemLdapConfig.enabled = true;
 		}
