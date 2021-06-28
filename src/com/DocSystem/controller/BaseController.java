@@ -2238,6 +2238,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		List<User> list = readLdap(ctx, "", userName);
+		Log.printObject("ldapLoginCheck", list);
 		if(list == null || list.size() != 1)
 		{
 			Log.println("ldapLoginCheck() readLdap 失败"); 			
@@ -2322,14 +2323,18 @@ public class BaseController  extends BaseFunction{
 	                    }else if("uid".equals(attr.getID())){
 	                    	lu.setName(attr.get().toString());
 	                    }else if("displayName".equals(attr.getID())){
+	                    	Log.println("readLdap displayName:" + attr.get().toString());
+	                    	//lu.setRealName(attr.get().toString());
+	                    }
+	                    else if("cn".equals(attr.getID())){
+	                    //	lu.cn = attr.get().toString();
+	                    	Log.println("readLdap cn:" + attr.get().toString());
 	                    	lu.setRealName(attr.get().toString());
 	                    }
-	                    //else if("cn".equals(attr.getID())){
-	                    //	lu.cn = attr.get().toString();
-	                    //}
-	                	//else if("sn".equals(attr.getID())){
+	                	else if("sn".equals(attr.getID())){
 	                    //	lu.sn = attr.get().toString();
-	                    //}
+	                		Log.println("readLdap sn:" + attr.get().toString());
+	                    }
 	                    else if("mail".equals(attr.getID())){
 	                    	lu.setEmail(attr.get().toString());
 	                    }
@@ -7540,6 +7545,14 @@ public class BaseController  extends BaseFunction{
 		{
 			auth.setEditEn(1);
 		}
+		if(tmpAuth.getDownloadEn()!=null && tmpAuth.getDownloadEn().equals(1))
+		{
+			auth.setDownloadEn(1);
+		}
+		if(tmpAuth.getUploadSize() == null || (auth.getUploadSize() != null && tmpAuth.getUploadSize() > auth.getUploadSize()))
+		{
+			auth.setUploadSize(tmpAuth.getUploadSize());
+		}
 		if(tmpAuth.getHeritable()!=null && tmpAuth.getHeritable().equals(1))
 		{
 			auth.setHeritable(1);
@@ -7566,6 +7579,14 @@ public class BaseController  extends BaseFunction{
 		if(tmpAuth.getEditEn()!=null && tmpAuth.getEditEn().equals(1))
 		{
 			auth.setEditEn(1);
+		}
+		if(tmpAuth.getDownloadEn()!=null && tmpAuth.getDownloadEn().equals(1))
+		{
+			auth.setDownloadEn(1);
+		}
+		if(tmpAuth.getUploadSize() == null || (auth.getUploadSize() != null && tmpAuth.getUploadSize() > auth.getUploadSize()))
+		{
+			auth.setUploadSize(tmpAuth.getUploadSize());
 		}
 		if(tmpAuth.getHeritable()!=null && tmpAuth.getHeritable().equals(1))
 		{
@@ -10315,9 +10336,15 @@ public class BaseController  extends BaseFunction{
 		{
 			//update DB for Doc Name and Path Expand
 			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);
 			dbTabList.add(DOCSYS_DOC_LOCK);			
-		}		
+		}
+		else if(oldVersion < 20207)
+		{
+			dbTabList.add(DOCSYS_REPOS_AUTH);
+			dbTabList.add(DOCSYS_DOC_AUTH);			
+		}
 		return dbTabList;
 	}
 	

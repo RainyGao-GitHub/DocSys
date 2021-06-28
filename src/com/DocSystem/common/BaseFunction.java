@@ -17,9 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.LongField;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -50,7 +47,6 @@ import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 
 public class BaseFunction{	
 	protected static final long CONST_SECOND = 1000;

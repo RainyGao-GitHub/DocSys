@@ -1309,11 +1309,14 @@ public class ReposController extends BaseController{
 	/****************   Config User or Group or anyUser ReposAuth ******************/
 	@RequestMapping("/configReposAuth.do")
 	public void configReposAuth(Integer userId,Integer groupId, Integer reposId,
-			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, 
+			Integer downloadEn, Long uploadSize, Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** configReposAuth.do ***********************");
-		System.out.println("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		System.out.println("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin 
+				+ " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn 
+				+ " downloadEn:"+ downloadEn + " uploadSize:"+ uploadSize + " heritable:" + heritable);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -1365,6 +1368,7 @@ public class ReposController extends BaseController{
 			qReposAuth.setAddEn(addEn);
 			qReposAuth.setDeleteEn(deleteEn);
 			qReposAuth.setDownloadEn(downloadEn);
+			qReposAuth.setUploadSize(uploadSize);
 			qReposAuth.setHeritable(heritable);
 			if(reposService.addReposAuth(qReposAuth) == 0)
 			{
@@ -1389,6 +1393,7 @@ public class ReposController extends BaseController{
 			reposAuth.setAddEn(addEn);
 			reposAuth.setDeleteEn(deleteEn);
 			reposAuth.setDownloadEn(downloadEn);
+			reposAuth.setUploadSize(uploadSize);
 			reposAuth.setHeritable(heritable);
 			if(reposService.updateReposAuth(reposAuth) == 0)
 			{
@@ -1472,11 +1477,11 @@ public class ReposController extends BaseController{
 	/****************  Config User or Group or anyUser DocAuth ******************/
 	@RequestMapping("/configDocAuth.do")
 	public void configUserAuth( Integer reposId, Integer userId, Integer groupId, Long docId, Long pid, String path, String name, Integer level, Integer type,
-			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer downloadEn,Integer heritable,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer downloadEn, Long uploadSize, Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** configDocAuth.do ***********************");
-		System.out.println("configDocAuth reposId:" + reposId + " userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " path:" + path + " name:" + name + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:" + downloadEn + " heritable:" + heritable);
+		System.out.println("configDocAuth reposId:" + reposId + " userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " path:" + path + " name:" + name + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:" + downloadEn + " uploadSize:" + uploadSize + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1511,7 +1516,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//login_user不得设置超过自己的权限：超过了则无效
-		if(isUserAuthExpanded(repos, login_user, doc, isAdmin,access,editEn,addEn,deleteEn,downloadEn,heritable,rt) == true)
+		if(isUserAuthExpanded(repos, login_user, doc, isAdmin,access,editEn,addEn,deleteEn,downloadEn,uploadSize,heritable,rt) == true)
 		{
 			System.out.println("超过设置者的权限 ！");
 			writeJson(rt, response);			
@@ -1553,6 +1558,7 @@ public class ReposController extends BaseController{
 			qDocAuth.setAddEn(addEn);
 			qDocAuth.setDeleteEn(deleteEn);
 			qDocAuth.setDownloadEn(downloadEn);
+			qDocAuth.setUploadSize(uploadSize);
 			qDocAuth.setHeritable(heritable);
 			qDocAuth.setDocPath(path);
 			qDocAuth.setDocName(name);
@@ -1579,6 +1585,7 @@ public class ReposController extends BaseController{
 			docAuth.setAddEn(addEn);
 			docAuth.setDeleteEn(deleteEn);
 			docAuth.setDownloadEn(downloadEn);
+			docAuth.setUploadSize(uploadSize);
 			docAuth.setHeritable(heritable);
 			if(reposService.updateDocAuth(docAuth) == 0)
 			{
@@ -1652,7 +1659,7 @@ public class ReposController extends BaseController{
 	}
 
 	private boolean isUserAuthExpanded(Repos repos, User login_user, Doc doc, 
-			Integer isAdmin, Integer access, Integer editEn, Integer addEn, Integer deleteEn, Integer downloadEn, Integer heritable,
+			Integer isAdmin, Integer access, Integer editEn, Integer addEn, Integer deleteEn, Integer downloadEn, Long uploadSize, Integer heritable,
 			ReturnAjax rt) 
 	{
 		
@@ -1697,6 +1704,11 @@ public class ReposController extends BaseController{
 		if(docAuth.getDownloadEn()==null || downloadEn > docAuth.getDownloadEn())
 		{
 			rt.setError("您无权设置下载权限");
+			return true;
+		}
+		if(docAuth.getUploadSize() != null && uploadSize > docAuth.getUploadSize())
+		{
+			rt.setError("您设置上传大小超出您的权限");
 			return true;
 		}
 		if(docAuth.getHeritable()==null || heritable > docAuth.getHeritable())

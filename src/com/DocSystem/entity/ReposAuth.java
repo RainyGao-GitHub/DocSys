@@ -25,6 +25,8 @@ public class ReposAuth {
 
     private Integer downloadEn;
 
+    private Long uploadSize;
+    
     private Integer heritable;
 
     public Integer getId() {
@@ -122,6 +124,14 @@ public class ReposAuth {
     public void setDownloadEn(Integer downloadEn) {
         this.downloadEn = downloadEn;
     }
+    
+    public Long getUploadSize() {
+        return uploadSize;
+    }
+
+    public void setUploadSize(Long uploadSize) {
+        this.uploadSize = uploadSize;
+    }
 
     public Integer getHeritable() {
         return heritable;
@@ -131,7 +141,7 @@ public class ReposAuth {
         this.heritable = heritable;
     }
     
-    //ReposAuth ¸½¼ÓÐÅÏ¢: ÐèÒªÍ¨¹ýjoint doc and user or group Table to get these info
+    //ReposAuth ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢: ï¿½ï¿½ÒªÍ¨ï¿½ï¿½joint doc and user or group Table to get these info
     private String  userName="";	//from user Table
     private String  realName="";	//from user Table
     private String  groupName="";	//from group Table

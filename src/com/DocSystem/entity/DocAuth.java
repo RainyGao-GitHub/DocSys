@@ -29,8 +29,10 @@ public class DocAuth {
 
     private Integer downloadEn;
 
-    private Integer heritable;
+    private Long uploadSize;
 
+    private Integer heritable;
+    
     private String docPath;
 
     private String docName;
@@ -146,6 +148,14 @@ public class DocAuth {
 
     public void setDownloadEn(Integer downloadEn) {
         this.downloadEn = downloadEn;
+    }
+    
+    public Long getUploadSize() {
+        return uploadSize;
+    }
+
+    public void setUploadSize(Long uploadSize) {
+        this.uploadSize = uploadSize;
     }
 
     public Integer getHeritable() {
