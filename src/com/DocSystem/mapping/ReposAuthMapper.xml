@@ -14,11 +14,12 @@
     <result column="ADD_EN" jdbcType="INTEGER" property="addEn" />
     <result column="DELETE_EN" jdbcType="INTEGER" property="deleteEn" />
     <result column="DOWNLOAD_EN" jdbcType="INTEGER" property="downloadEn" />
+    <result column="UPLOAD_SIZE" jdbcType="BIGINT" property="uploadSize" />
     <result column="HERITABLE" jdbcType="INTEGER" property="heritable" />
   </resultMap>
   <sql id="Base_Column_List">
     ID, USER_ID, GROUP_ID, TYPE, PRIORITY, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, 
-    DELETE_EN, DOWNLOAD_EN, HERITABLE
+    DELETE_EN, DOWNLOAD_EN, UPLOAD_SIZE, HERITABLE
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -34,13 +35,14 @@
     insert into repos_auth (ID, USER_ID, GROUP_ID, 
       TYPE, PRIORITY, REPOS_ID, 
       IS_ADMIN, ACCESS, EDIT_EN, 
-      ADD_EN, DELETE_EN, DOWNLOAD_EN, 
+      ADD_EN, DELETE_EN, 
+      DOWNLOAD_EN, UPLOAD_SIZE, 
       HERITABLE)
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
       #{type,jdbcType=INTEGER}, #{priority,jdbcType=INTEGER}, #{reposId,jdbcType=INTEGER}, 
       #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, #{editEn,jdbcType=INTEGER}, 
       #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, #{downloadEn,jdbcType=INTEGER}, 
-      #{heritable,jdbcType=INTEGER})
+      #{uploadSize,jdbcType=BIGINT}, #{heritable,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.ReposAuth">
     insert into repos_auth
@@ -80,6 +82,9 @@
       </if>
       <if test="downloadEn != null">
         DOWNLOAD_EN,
+      </if>
+      <if test="uploadSize != null">
+        UPLOAD_SIZE,
       </if>
       <if test="heritable != null">
         HERITABLE,
@@ -122,6 +127,9 @@
       <if test="downloadEn != null">
         #{downloadEn,jdbcType=INTEGER},
       </if>
+      <if test="uploadSize != null">
+        #{uploadSize,jdbcType=BIGINT},
+      </if>
       <if test="heritable != null">
         #{heritable,jdbcType=INTEGER},
       </if>
@@ -163,6 +171,9 @@
       <if test="downloadEn != null">
         DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER},
       </if>
+      <if test="uploadSize != null">
+        UPLOAD_SIZE = #{uploadSize,jdbcType=BIGINT},
+      </if>
       <if test="heritable != null">
         HERITABLE = #{heritable,jdbcType=INTEGER},
       </if>
@@ -182,6 +193,7 @@
       ADD_EN = #{addEn,jdbcType=INTEGER},
       DELETE_EN = #{deleteEn,jdbcType=INTEGER},
       DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER},
+      UPLOAD_SIZE = #{uploadSize,jdbcType=BIGINT},
       HERITABLE = #{heritable,jdbcType=INTEGER}
     where ID = #{id,jdbcType=INTEGER}
   </update>
@@ -220,6 +232,9 @@
     <if test="downloadEn != null">
       and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
     </if>
+    <if test="uploadSize != null">
+      and UPLOAD_SIZE = #{uploadSize,jdbcType=BIGINT}
+    </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
@@ -257,6 +272,9 @@
     </if>
     <if test="downloadEn != null">
       and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
+    </if>
+    <if test="uploadSize != null">
+      and UPLOAD_SIZE = #{uploadSize,jdbcType=BIGINT}
     </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
@@ -298,6 +316,9 @@
     <if test="downloadEn != null">
       and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
     </if>
+    <if test="uploadSize != null">
+      and UPLOAD_SIZE = #{uploadSize,jdbcType=BIGINT}
+    </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
@@ -306,7 +327,7 @@
 	select 
 		user.ID as userId,user.NAME as userName,user.REAL_NAME as realName,
 		repos_auth.ID as id, 
-		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, UPLOAD_SIZE, HERITABLE
       from user
     LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
@@ -314,7 +335,7 @@
 	select 
 		user.ID as userId,user.NAME as userName,user.REAL_NAME as realName,
 		repos_auth.ID as id, 
-		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, UPLOAD_SIZE, HERITABLE
       from user
     LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = ${reposId}
       where 1 = 1
@@ -342,7 +363,7 @@
 	select 
 		user_group.ID as groupId,user_group.NAME as groupName,
 		repos_auth.ID as id, 
-		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, UPLOAD_SIZE, HERITABLE
       from user_group
     LEFT JOIN repos_auth ON  user_group.ID = repos_auth.GROUP_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>

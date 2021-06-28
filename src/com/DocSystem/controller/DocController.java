@@ -755,22 +755,18 @@ public class DocController extends BaseController{
 		{
 			if(size > MaxFileSize.longValue()*1024*1024)
 			{
-				Log.docSysErrorLog("上传文件超过 "+ MaxFileSize + "M", rt);
+				Log.docSysErrorLog("上传文件过大，系统无法支持！", rt);
 				writeJson(rt, response);
 				return;
 			}
 		}
 			
-		//任意用户上传文件大小限制检查（30M）
-		if((UserDocAuth.getGroupId() == null) && ((UserDocAuth.getUserId() == null) || (UserDocAuth.getUserId() == 0)))
+		if(UserDocAuth.getUploadSize() != null && UserDocAuth.getUploadSize() < size)
 		{
-			if(size > 30*1024*1024)
-			{
-				Log.docSysErrorLog("非仓库授权用户最大上传文件不超过30M!", rt);
-				writeJson(rt, response);
-				return;
-			}
-		}
+			Log.docSysErrorLog("上传文件大小已超限，请联系管理员！", rt);
+			writeJson(rt, response);
+			return;
+		}		
 		
 		//是否可以秒传检查(文件是否已存在且校验码一致或者文件不存在但系统中存在相同校验码的文件)
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
@@ -1085,20 +1081,65 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
 		
 		//Check Edit Right
-		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
+		if(docUserAuth == null)
 		{
-			writeJson(rt, response);	
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
 			return;
 		}
+		if(docUserAuth.getAccess() == 0)
+		{
+			rt.setError("您无权访问该目录，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
+		{
+			rt.setError("您没有该文件的编辑权限，请联系管理员");
+			writeJson(rt, response);
+			return;				
+		}
+		
+		if(docUserAuth.getUploadSize() < size)
+		{
+			rt.setError("上传文件大小超限，请联系管理员");
+			writeJson(rt, response);
+			return;							
+		}
+
 		//Check Add Right
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
-			if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
+			DocAuth parentDocUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask());
+			if(parentDocUserAuth == null)
 			{
-				writeJson(rt, response);	
+				rt.setError("您无此操作权限，请联系管理员");
+				writeJson(rt, response);
 				return;
+			}
+			if(parentDocUserAuth.getAccess() == 0)
+			{
+				rt.setError("您无权访问该目录，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(parentDocUserAuth.getAddEn() == null || parentDocUserAuth.getAddEn() != 1)
+			{
+				rt.setError("您没有该目录的新增权限，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(parentDocUserAuth.getUploadSize() < size)
+			{
+				rt.setError("上传文件大小超限，请联系管理员");
+				writeJson(rt, response);
+				return;							
 			}
 		}
 		
