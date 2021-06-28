@@ -2238,7 +2238,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		List<User> list = readLdap(ctx, "", userName);
-		if(list == null || list.size() != 0)
+		if(list == null || list.size() != 1)
 		{
 			Log.println("ldapLoginCheck() readLdap 失败"); 			
 			return null;
@@ -2273,7 +2273,7 @@ public class BaseController  extends BaseFunction{
             {
             	String userAccount = "uid=" + userName + "," + basedn;     
     			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
-                HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+                //HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
     		}	
             
             HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
