@@ -9155,6 +9155,11 @@ public class BaseController  extends BaseFunction{
 		return docSysIniState;
 	}
 	
+	public static Boolean isBussienss()
+	{
+		return systemLicenseInfo.hasLicense;
+	}
+	
 	public static String getOfficeEditor(HttpServletRequest request)
 	{
 		String officeEditor = officeEditorApi;

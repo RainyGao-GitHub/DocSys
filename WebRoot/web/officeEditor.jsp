@@ -1,7 +1,7 @@
 <%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%
 String officeEditorApi = BaseController.getOfficeEditor(request);
-Boolean isBussienss = BaseController.systemLicenseInfo.hasLicense;
+Boolean isBussienss = BaseController.isBussienss();
 %>
 
 <div id="officePlayer" class="officePlayer" style="width: 100%; height: 1000px;">
