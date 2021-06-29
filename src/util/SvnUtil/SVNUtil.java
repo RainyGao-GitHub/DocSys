@@ -998,6 +998,12 @@ public class SVNUtil  extends BaseController{
     		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
     		return;
     	}
+    	
+    	if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
+    	{
+    		System.out.println("scheduleForCommit() " + doc.getName() + " was ignored");
+    		return;
+    	}
  	
     	String entryPath = doc.getPath() + doc.getName();
     	String localEntryPath = localRootPath + entryPath;    	
