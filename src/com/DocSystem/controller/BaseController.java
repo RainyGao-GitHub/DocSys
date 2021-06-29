@@ -2145,7 +2145,8 @@ public class BaseController  extends BaseFunction{
 	protected User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) {
 		User tmp_user = new User();
 		tmp_user.setName(userName);
-		String decodedPwd = Base64.decode(pwd.getBytes()).toString();
+		String decodedPwd = Base64Util.base64Decode(pwd);
+		Log.println("loginCheck decodedPwd:" + decodedPwd);
 		String md5Pwd = MD5.md5(decodedPwd);
 		tmp_user.setPwd(pwd);
 		
