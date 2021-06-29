@@ -133,6 +133,13 @@ public class ReposController extends BaseController{
 		
 		repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 		repos.isBussiness = systemLicenseInfo.hasLicense;
+		
+		//获取磁盘空间
+		String localRootPath = Path.getReposRealPath(repos);
+		File file = new File(localRootPath);
+		repos.totalSize = file.getTotalSpace();
+		repos.freeSize = file.getFreeSpace();
+		
 		rt.setData(repos);
 		writeJson(rt, response);
 	}
