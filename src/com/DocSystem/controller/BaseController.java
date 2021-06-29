@@ -62,6 +62,7 @@ import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
+import org.apache.xmlbeans.impl.util.Base64;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -2107,10 +2108,6 @@ public class BaseController  extends BaseFunction{
 				System.out.println("自动登录");
 				String userName = c1.getValue();
 				String pwd = c2.getValue();
-				//tmp_user is used for store the query condition
-				User tmp_user = new User();
-				tmp_user.setName(userName);			
-				tmp_user.setPwd(pwd);
 
 				User loginUser = loginCheck(userName, pwd, request, session, response, rt);
 				if(loginUser == null)
@@ -2148,11 +2145,13 @@ public class BaseController  extends BaseFunction{
 	protected User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) {
 		User tmp_user = new User();
 		tmp_user.setName(userName);
+		String decodedPwd = Base64.decode(pwd.getBytes()).toString();
+		String md5Pwd = MD5.md5(decodedPwd);
 		tmp_user.setPwd(pwd);
 		
 		if(systemLdapConfig.enabled == false || systemLdapConfig.url == null || systemLdapConfig.url.isEmpty())
 		{
-			List<User> uLists = getUserList(userName,pwd);
+			List<User> uLists = getUserList(userName,md5Pwd);
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
 			if(ret == false)
 			{
@@ -2164,10 +2163,10 @@ public class BaseController  extends BaseFunction{
 		
 		//LDAP模式
 		Log.println("loginCheck() LDAP Mode"); 
-		User ldapLoginUser = ldapLoginCheck(userName, pwd);
+		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd, false);
 		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
 		{
-			List<User> uLists = getUserList(userName,pwd);
+			List<User> uLists = getUserList(userName,md5Pwd);
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
 			if(ret == false)
 			{
@@ -2194,7 +2193,7 @@ public class BaseController  extends BaseFunction{
 				return null;			
 			}
 
-			ldapLoginUser.setPwd(pwd); //密码也存入DB
+			ldapLoginUser.setPwd(md5Pwd); //密码也存入DB
 			ldapLoginUser.setCreateType(10);	//用户为LDAP登录添加
 
 			//set createTime
@@ -2228,9 +2227,9 @@ public class BaseController  extends BaseFunction{
 		return uList.get(0);
 	}
 	
-	public User ldapLoginCheck(String userName, String pwd)
+	public User ldapLoginCheck(String userName, String pwd, boolean pwdEn)
 	{
-		LdapContext ctx = getLDAPConnection(userName, pwd);
+		LdapContext ctx = getLDAPConnection(userName, pwd, pwdEn);
 		if(ctx == null)
 		{
 			Log.println("ldapLoginCheck() getLDAPConnection 失败"); 
@@ -2252,7 +2251,7 @@ public class BaseController  extends BaseFunction{
      * 获取默认LDAP连接     * Exception 则登录失败，ctx不为空则登录成功
      * @return void
      */
-    public LdapContext getLDAPConnection(String userName, String pwd) 
+    public LdapContext getLDAPConnection(String userName, String pwd, boolean pwdEn) 
     {
         LdapContext ctx = null;
     	try {
@@ -2274,7 +2273,10 @@ public class BaseController  extends BaseFunction{
             {
             	String userAccount = "uid=" + userName + "," + basedn;     
     			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
-                //HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+    			if(pwdEn)
+    			{
+    				HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+    			}
     		}	
             
             HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
