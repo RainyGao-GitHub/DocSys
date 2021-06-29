@@ -282,8 +282,9 @@
                     reposType = ret.data.type;
                     reposName = ret.data.name;
                     $("#projectName").text(ret.data.name);
-                    var time=getDate(ret.data.createTime);
-                    $("#editTime").text(time);
+               		
+                    showDiskSpaceInfo(ret.data);
+                    
                     if(reposType == 0)
                     {
                     	//alert("虚拟文件系统");
@@ -297,6 +298,7 @@
                     $("#btnAddReposGroup").show();
                 }else {
                     $("#projectName").text("项目名");
+                    
                     $("#editTime").text((new Date()).toLocaleTimeString());
                     alert(ret.msgInfo);
                     window.location.href = "index.html";
@@ -317,6 +319,22 @@
             }
         });
 
+    }
+    
+    function showDiskSpaceInfo(reposInfo)
+    {
+    	if(reposInfo.totalSize)
+    	{
+    		var totalSpace = parseInt(reposInfo.totalSize / 1024 / 1024 / 1024) + "G";
+    		var freeSpace = parseInt(reposInfo.freeSize / 1024 / 1024 / 1024) + "G";
+    		var spaceInfo = "磁盘空间： " + totalSpace + " / " + freeSpace;
+    		$("#editTime").text(spaceInfo);
+    	}
+    	else
+    	{
+            var time=getDate(reposInfo.createTime);
+            $("#editTime").text(time);    		
+    	}
     }
     
 	//更新后台的zTree数据: callback是成功后的回调函数

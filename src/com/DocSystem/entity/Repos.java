@@ -61,7 +61,10 @@ public class Repos {
 	public boolean  isBussiness;
 	
 	public Integer isTextSearchEnabled;
-
+	
+	public Long totalSize;
+	public Long freeSize;
+	
     public Integer getId() {
         return id;
     }
