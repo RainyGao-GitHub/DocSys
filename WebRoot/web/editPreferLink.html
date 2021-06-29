@@ -57,11 +57,15 @@
 	function closeEditPreferLinkDialog()
 	{
 		closeBootstrapDialog("editPreferLink");
+		//临时方案避免滚动条消失
+		window.location.reload();
 	}
 
 	function doEditPreferLink()
 	{
 		EditPreferLink.doEditPreferLink();
+		//临时方案避免滚动条消失
+		window.location.reload();
 	}
 	
 	function cancelEditPreferLink()
