@@ -1,27 +1,30 @@
 <div class="form-horizontal">
     <div class="form-group">
         <label class="col-sm-2 control-label">分享链接</label>
-        <div class="col-sm-7" style="padding-right:0;">
+        <div class="col-sm-6" style="padding-right:0;">
             <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"></input>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
            <span class="btn" title="打开分享链接" onclick="openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
 				<i class="icons open"></i>
 			</span>
+           <span class="btn" title="发送邮件" onclick="showDocShareSendMail();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+				<i class="icons mail"></i>
+		   </span>
            <span class="btn" title="复制链接" onclick="copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
 				<i class="icons copy"></i>
-			</span>
+		   </span>
            <span class="btn" title="二维码" onclick="showShareLinkQRCode();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
 				<i class="icons qrcode"></i>
-			</span>
+		   </span>
         </div>
     </div>
     <div class="form-group">
         <label class="col-sm-2 control-label">提取密码</label>
-        <div class="col-sm-7"  style="padding-right:0;">
+        <div class="col-sm-6"  style="padding-right:0;">
             <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码"/>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
            <span class="btn" onclick="generateSharePwd();" style="border:1px solid #ccc; border-radius:4px;">
 				随机生成
 			</span>
@@ -169,6 +172,28 @@
 			big: false,
 			callback: function(){
 				DocShareQRCodePageInit(url);
+			},
+		});
+	}
+	
+	function showDocShareSendMail()
+	{
+		var shareLink = $("#shareLink").val();
+		showDocShareSendMailPanel(shareLink);
+	}
+	
+	function showDocShareSendMailPanel(url)
+	{
+		console.log("showDocShareSendMailPanel url:" + url);
+		bootstrapQ.dialog({
+			id: 'docShareSendMail',
+			url: 'docShareSendMail.html',
+			title: '发送分享链接',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				DocShareSendMailPageInit(url);
 			},
 		});
 	}

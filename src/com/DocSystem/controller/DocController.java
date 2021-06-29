@@ -3993,7 +3993,7 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		emailService.sendEmail(rt, email, content);
 	}
-
+	
 	private String buildShareLink(HttpServletRequest request, String ipAddress, Integer reposId, Integer shareId) {
 		URLInfo urlInfo = getUrlInfoFromRequest(request);
 		String host = urlInfo.host;

@@ -1419,6 +1419,12 @@
 	/******************************** Doc Interfaces***************************************/
 	function updateProjectName()
 	{
+		if(gIsPC == true)
+		{
+			//电脑端不需要更新显示
+			return;
+		}
+		
 		if(!gDocInfo.docId || gDocInfo.docId == 0)
 		{
 			$("#projectName").text(gRootDoc.showName);		
