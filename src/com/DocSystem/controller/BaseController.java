@@ -8979,7 +8979,7 @@ public class BaseController  extends BaseFunction{
 	{		
 		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		if(doc.isRealDocTextSearchEnabled == null)
+    	if(doc.isRealDocTextSearchEnabled == null)
 		{
 			doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc)? 0: 1;
 		}
@@ -8988,6 +8988,12 @@ public class BaseController  extends BaseFunction{
 			System.out.println("addIndexForRDoc() RealDocTextSearchDisabled");
 			return false;
 		}
+		
+		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
+    	{
+    		System.out.println("addIndexForRDoc() " + doc.getName() + " was ignored");
+    		return false;
+    	}
 		
 		String indexLib = getIndexLibPath(repos, 1);
 
