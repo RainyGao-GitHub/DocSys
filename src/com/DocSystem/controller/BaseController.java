@@ -2381,7 +2381,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		System.out.println("loginCheck() uLists size > 1");
+		System.out.println("loginCheck() uLists size:" + uLists.size());
 		int systemUserCount = 0;
 		for(int i = 0; i < uLists.size(); i++)
 		{
