@@ -3701,7 +3701,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
-				doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc)? 0: 1;
+				doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc, true)? 0: 1;
 				if(doc.getDocId() == 0)
 				{
 					//Delete All Index Lib
@@ -3728,7 +3728,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 				if(docDetect(repos, doc))
 				{	
-					doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc)? 0: 1;
+					doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc, true)? 0: 1;
 					HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
 					rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
 				}
@@ -8981,19 +8981,19 @@ public class BaseController  extends BaseFunction{
 		
     	if(doc.isRealDocTextSearchEnabled == null)
 		{
-			doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc)? 0: 1;
+			doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc, true)? 0: 1;
 		}
-		if(doc.isRealDocTextSearchEnabled == 0)
+    	else if(doc.isRealDocTextSearchEnabled == 1)	//表明parentDoc is already enabled
+    	{
+			doc.isRealDocTextSearchEnabled = isRealDocTextSearchDisabled(repos, doc, false)? 0: 1;    		
+    	}
+    	
+    	if(doc.isRealDocTextSearchEnabled == 0)
 		{
 			System.out.println("addIndexForRDoc() RealDocTextSearchDisabled");
 			return false;
 		}
 		
-		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
-    	{
-    		System.out.println("addIndexForRDoc() " + doc.getName() + " was ignored");
-    		return false;
-    	}
 		
 		String indexLib = getIndexLibPath(repos, 1);
 
@@ -9054,7 +9054,13 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private static boolean isRealDocTextSearchDisabled(Repos repos, Doc doc) {
+	private static boolean isRealDocTextSearchDisabled(Repos repos, Doc doc, boolean force) {
+		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
+    	{
+    		System.out.println("isRealDocTextSearchDisabled() " + doc.getPath() + doc.getName() + " realDocTextSearch disabled");
+    		return true;
+    	}
+		
 		String parentPath = Path.getReposTextSearchConfigPath(repos);
 		String fileName = doc.getDocId() + ".disableRealDocTextSearch";
 		if(FileUtil.isFileExist(parentPath + fileName))
@@ -9063,11 +9069,16 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 
+		if(force == false)
+		{
+			return false;
+		}
+		
 		Log.println("isRealDocTextSearchDisabled() " + doc.getPath() + doc.getName() + " realDocTextSearch enabled");
 		if(doc.getDocId() != 0)
 		{
 			Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), doc.getReposPath(), doc.getPath(), "", null, 2, true, null, null, 0L, "");
-			return isRealDocTextSearchDisabled(repos, parentDoc);
+			return isRealDocTextSearchDisabled(repos, parentDoc, force);
 		}
 		return false;
 	}
