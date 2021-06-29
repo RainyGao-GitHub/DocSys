@@ -2217,9 +2217,9 @@ public class GITUtil  extends BaseController{
     		return;
     	}
     	
-    	if(doc.getName().equals(".git"))
+    	if(doc.getName().equals(".git") || doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
     	{
-    		System.out.println("scheduleForCommit() .git was ignored");
+    		System.out.println("scheduleForCommit() " + doc.getName() + " was ignored");
     		return;
     	}
  	
