@@ -175,7 +175,7 @@
             dataType : "json",
             data : {
                  userName : $('input[name="userName"]').val(),
-                 pwd : MD5($('input[name="pwd"]').val()),
+                 pwd : base64_encode($('input[name="pwd"]').val()),
                  rememberMe : $('input[name="rememberMe"]').val(),
             },
             success : function (ret) {
