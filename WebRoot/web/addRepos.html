@@ -118,11 +118,15 @@
 	function cancelAddRepos()
 	{
 		closeAddReposDialog();
+		//临时方案避免滚动条消失
+		window.location.reload();
 	}
 	
 	function closeAddReposDialog()
 	{
 		closeBootstrapDialog("addRepos");
+		//临时方案避免滚动条消失
+		window.location.reload();
 	}
 	
 	function doAddRepos()
@@ -217,6 +221,8 @@
 	        });
 	    
 	    closeAddReposDialog();
+		//临时方案避免滚动条消失
+		window.location.reload();
 	    return true;
 	}
 	
