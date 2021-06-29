@@ -1,7 +1,7 @@
 <%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%
 String officeEditorApi = BaseController.getOfficeEditor(request);
-Boolean isBussienss = BaseController.systemLicenseInfo.hasLicense;
+Boolean isBussienss = BaseController.isBussienss();
 %>
 
 <script src="static/scripts/jquery.min.js"></script>
