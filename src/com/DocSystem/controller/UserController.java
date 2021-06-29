@@ -63,14 +63,12 @@ public class UserController extends BaseController {
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User tmp_user = new User();
-		tmp_user.setName(userName);
-		tmp_user.setPwd(pwd);
-		
 		User loginUser = loginCheck(userName, pwd, request, session, response, rt);
 		if(loginUser == null)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			User tmp_user = new User();
+			tmp_user.setName(userName);
 			addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, "");
 			return;
 		}
@@ -88,7 +86,7 @@ public class UserController extends BaseController {
 		}
 
 		//Feeback to page
-		addSystemLog(request, tmp_user, "login", "login", "登录","成功", null, null, null, "");
+		addSystemLog(request, loginUser, "login", "login", "登录","成功", null, null, null, "");
 		
 		rt.setMsgInfo("登录成功！");
 		rt.setData(loginUser);	//将数据库取出的用户信息返回至前台
