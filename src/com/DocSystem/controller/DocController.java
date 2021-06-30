@@ -749,18 +749,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//最大上传文件大小限制检查 
-		Integer MaxFileSize = getMaxFileSize();	//获取系统最大文件限制
-		if(MaxFileSize != null)
-		{
-			if(size > MaxFileSize.longValue()*1024*1024)
-			{
-				Log.docSysErrorLog("上传文件过大，系统无法支持！", rt);
-				writeJson(rt, response);
-				return;
-			}
-		}
-			
 		if(UserDocAuth.getUploadSize() != null && UserDocAuth.getUploadSize() < size)
 		{
 			Log.docSysErrorLog("上传文件大小已超限，请联系管理员！", rt);
