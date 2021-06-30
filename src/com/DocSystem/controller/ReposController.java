@@ -1600,7 +1600,12 @@ public class ReposController extends BaseController{
 			docAuth.setAddEn(addEn);
 			docAuth.setDeleteEn(deleteEn);
 			docAuth.setDownloadEn(downloadEn);
+			if(uploadSize == null)
+			{
+				uploadSize = Long.MAX_VALUE;
+			}
 			docAuth.setUploadSize(uploadSize);
+			
 			docAuth.setHeritable(heritable);
 			if(reposService.updateDocAuth(docAuth) == 0)
 			{
