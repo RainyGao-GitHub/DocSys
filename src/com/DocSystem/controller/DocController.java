@@ -1090,7 +1090,7 @@ public class DocController extends BaseController{
 			return;				
 		}
 		
-		if(docUserAuth.getUploadSize() < size)
+		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
 		{
 			rt.setError("上传文件大小超限，请联系管理员");
 			writeJson(rt, response);
@@ -1123,7 +1123,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			if(parentDocUserAuth.getUploadSize() < size)
+			if(parentDocUserAuth.getUploadSize() != null && parentDocUserAuth.getUploadSize() < size)
 			{
 				rt.setError("上传文件大小超限，请联系管理员");
 				writeJson(rt, response);
