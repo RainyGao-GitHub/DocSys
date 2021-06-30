@@ -1376,10 +1376,6 @@ public class ReposController extends BaseController{
 			qReposAuth.setDeleteEn(deleteEn);
 			qReposAuth.setDownloadEn(downloadEn);
 			qReposAuth.setUploadSize(uploadSize);
-			if(userId == 0 && uploadSize == null) //任意用户默认上传大小为30M
-			{
-				uploadSize = (long) (30*1024*1024);
-			}
 			qReposAuth.setHeritable(heritable);
 			if(reposService.addReposAuth(qReposAuth) == 0)
 			{
@@ -1404,6 +1400,10 @@ public class ReposController extends BaseController{
 			reposAuth.setAddEn(addEn);
 			reposAuth.setDeleteEn(deleteEn);
 			reposAuth.setDownloadEn(downloadEn);
+			if(uploadSize == null)
+			{
+				uploadSize = Long.MAX_VALUE;
+			}
 			reposAuth.setUploadSize(uploadSize);
 			reposAuth.setHeritable(heritable);
 			if(reposService.updateReposAuth(reposAuth) == 0)
@@ -1569,10 +1569,6 @@ public class ReposController extends BaseController{
 			qDocAuth.setAddEn(addEn);
 			qDocAuth.setDeleteEn(deleteEn);
 			qDocAuth.setDownloadEn(downloadEn);
-			if(userId == 0 && uploadSize == null)	//任意用户默认上传大小为30M
-			{
-				uploadSize = (long) (30*1024*1024);
-			}
 			qDocAuth.setUploadSize(uploadSize);			
 			qDocAuth.setHeritable(heritable);
 			qDocAuth.setDocPath(path);
