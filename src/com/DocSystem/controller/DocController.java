@@ -203,6 +203,11 @@ public class DocController extends BaseController{
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
 		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
 		
+		Log.docSysErrorLog("请在码云上提交意见与建议：<br>https://gitee.com/RainyGao/DocSys/issues", rt);
+		writeJson(rt, response);	
+		return;
+		
+		/*
 		if(name == null)
 		{
 			Log.docSysErrorLog("意见不能为空！", rt);
@@ -260,6 +265,7 @@ public class DocController extends BaseController{
 		}
 		
 		executeCommonActionList(actionList, rt);
+		*/
 	}
 	
 	private Integer getReposIdForFeeback() {
