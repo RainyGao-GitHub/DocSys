@@ -83,9 +83,9 @@
 
 <script src="./static/js/jquery.toastmessage-min.js"></script>
 
-<script src="./static/js/md5.js"></script>
+<script src="js/base64.js"></script>
 
-<script src="./static/js/eb4js.js"></script>
+<script src="js/eb4js.js"></script>
 
 <script src="./static/js/config.js"></script>
 
@@ -100,7 +100,7 @@
             dataType : "json",
             data : {
                  userName : $('input[name="userName"]').val(),
-                 pwd : MD5($('input[name="pwd"]').val()),
+                 pwd : base64_encode($('input[name="pwd"]').val()),
                  rememberMe : $('input[name="rememberMe"]').val(),
             },
             success : function (ret) {
