@@ -399,9 +399,15 @@
     	switch(curPath)
        	{
 	   	case "system":
-            showSystemEmailConfig();
+	   		showSystemUpgrade();
             break;
-        case "systemEmailConfig":
+        case "systemUpgrade":
+            showSystemUpgrade();
+        	break;
+        case "systemLicenses":
+            showSystemLicenses();
+        	break; 
+	   	case "systemEmailConfig":
         	showSystemEmailConfig();
             break;
         case "systemSmsConfig":
@@ -410,13 +416,7 @@
         case "systemDbConfig":
         	showSystemDbConfig();
         	break;
-        case "systemUpgrade":
-            showSystemUpgrade();
-        	break;
-        case "systemLicenses":
-            showSystemLicenses();
-        	break;  
-	    }
+       	}
     }
 	
 	//系统邮件服务设置
