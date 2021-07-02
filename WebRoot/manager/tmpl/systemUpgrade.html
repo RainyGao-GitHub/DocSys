@@ -75,6 +75,10 @@
 	                    <td>LDAP设置</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">
+				            <select class="form-control" id="RBStype" onchange="doSelectFS();" disabled="disabled" style="width: 100%">   
+				            	<option value="1" selected="selected">无密码认证</option>   
+				            	<option value="2">密码认证</option>
+				            </select>
 	                    </td>
 	                    <td class="edit">
 	                    </td>
