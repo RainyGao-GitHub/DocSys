@@ -47,6 +47,7 @@ import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 public class BaseFunction{	
 	protected static final long CONST_SECOND = 1000;
@@ -128,15 +129,75 @@ public class BaseFunction{
 			systemLdapConfig.enabled = false;				
 		}
 		
-		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfig);
+		String [] configs = ldapConfig.split(";");
+		systemLdapConfig.settings = getLDAPSettings(configs);		
+
+		//获取url和basedn
+		String ldapConfigUrl = configs[0].trim();
+		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
 		systemLdapConfig.url = urlInfo.prefix + urlInfo.params[0] + "/";
 		systemLdapConfig.basedn = "";
 		if(urlInfo.params.length > 1)
 		{
 			systemLdapConfig.basedn = urlInfo.params[1];	//0保存的是host+port			
 		}
+		
+		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings);
 	}
 
+
+	private static Integer getLdapAuthMode(JSONObject ldapSettings) {
+		if(ldapSettings == null)
+		{
+			return 1;	//默认明文密码验证
+		}
+		
+		String authModeStr = ldapSettings.getString("authMode");
+		if(authModeStr == null || authModeStr.isEmpty())
+		{
+			return 1; //默认明文密码验证
+		}
+				
+		switch(authModeStr.toLowerCase())
+		{
+		case "0":
+		case "none":
+		case "disabled":
+			return 0;
+		case "1":
+		case "plain":	
+			return 1;
+		case "2":
+		case "md5":
+			return 2;
+		}
+		
+		return 1;
+	}
+
+	private static JSONObject getLDAPSettings(String[] configs) {
+		if(configs.length < 2)
+		{
+			return null;
+		}
+		
+		JSONObject settings = new JSONObject();
+		for(int i=1; i<configs.length; i++)
+		{
+			String configStr = configs[i];
+			if(!configStr.isEmpty())
+			{
+				String [] subStr = configStr.split("=");
+				if(subStr.length >= 2)
+				{
+					String key = subStr[0];
+					String value = subStr[1];
+					settings.put(key, value);
+				}
+			}
+		}
+		return settings;
+	}
 
 	protected boolean systemLicenseInfoCheck(ReturnAjax rt) {
 		if(systemLicenseInfo.expireTime != null)

@@ -2164,7 +2164,7 @@ public class BaseController  extends BaseFunction{
 		
 		//LDAP模式
 		Log.println("loginCheck() LDAP Mode"); 
-		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd, false);
+		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd);
 		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
 		{
 			List<User> uLists = getUserList(userName,md5Pwd);
@@ -2228,9 +2228,9 @@ public class BaseController  extends BaseFunction{
 		return uList.get(0);
 	}
 	
-	public User ldapLoginCheck(String userName, String pwd, boolean pwdEn)
+	public User ldapLoginCheck(String userName, String pwd)
 	{
-		LdapContext ctx = getLDAPConnection(userName, pwd, pwdEn);
+		LdapContext ctx = getLDAPConnection(userName, pwd);
 		if(ctx == null)
 		{
 			Log.println("ldapLoginCheck() getLDAPConnection 失败"); 
@@ -2252,7 +2252,7 @@ public class BaseController  extends BaseFunction{
      * 获取默认LDAP连接     * Exception 则登录失败，ctx不为空则登录成功
      * @return void
      */
-    public LdapContext getLDAPConnection(String userName, String pwd, boolean pwdEn) 
+    public LdapContext getLDAPConnection(String userName, String pwd) 
     {
         LdapContext ctx = null;
     	try {
@@ -2274,9 +2274,18 @@ public class BaseController  extends BaseFunction{
             {
             	String userAccount = "uid=" + userName + "," + basedn;     
     			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
-    			if(pwdEn)
+            	Log.println("getLDAPConnection() authMode:" + systemLdapConfig.authMode); 
+    			if(systemLdapConfig.authMode != null)
     			{
-    				HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+    				switch(systemLdapConfig.authMode)
+    				{
+    				case 1:	//Plain Text 验证
+        				HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+        				break;
+    				case 2:	//MD5 加密后验证
+    					HashEnv.put(Context.SECURITY_CREDENTIALS, MD5.md5(pwd));
+        				break;
+    				}
     			}
     		}	
             
