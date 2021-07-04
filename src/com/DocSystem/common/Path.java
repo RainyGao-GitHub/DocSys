@@ -243,8 +243,16 @@ public class Path {
 	
 	//WebPath was 
 	public static String getWebPath(Integer OSType) {
-        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        String webPath =  wac.getServletContext().getRealPath("/");
+		String webPath = null;
+		try {
+	        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+	        webPath =  wac.getServletContext().getRealPath("/");
+		} 
+		catch (Exception e)
+		{
+			System.err.println("getWebPath() 异常，系统出现严重错误,请检查系统!!");
+			e.printStackTrace();
+		}
         webPath = localDirPathFormat(webPath, OSType);
         System.out.println("getWebPath() webPath:" + webPath);
 		return webPath;
