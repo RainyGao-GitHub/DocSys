@@ -19,7 +19,7 @@
     <result column="LATEST_EDIT_TIME" jdbcType="BIGINT" property="latestEditTime" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.DocSystem.entity.Doc">
-    <result column="CONTENT" jdbcType="LONGVARCHAR" property="content" />
+    <result column="CONTENT" jdbcType="VARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
     ID, NAME, TYPE, SIZE, CHECK_SUM, REVISION, PATH, DOC_ID, PID, VID, PWD, CREATOR, 
@@ -51,7 +51,7 @@
       #{size,jdbcType=BIGINT}, #{checkSum,jdbcType=VARCHAR}, #{revision,jdbcType=VARCHAR}, 
       #{path,jdbcType=VARCHAR}, #{docId,jdbcType=BIGINT}, #{pid,jdbcType=BIGINT}, #{vid,jdbcType=INTEGER}, 
       #{pwd,jdbcType=VARCHAR}, #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT}, 
-      #{latestEditor,jdbcType=INTEGER}, #{latestEditTime,jdbcType=BIGINT}, #{content,jdbcType=LONGVARCHAR}
+      #{latestEditor,jdbcType=INTEGER}, #{latestEditTime,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Doc">
@@ -153,7 +153,7 @@
         #{latestEditTime,jdbcType=BIGINT},
       </if>
       <if test="content != null">
-        #{content,jdbcType=LONGVARCHAR},
+        #{content,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -203,7 +203,7 @@
         LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
       </if>
       <if test="content != null">
-        CONTENT = #{content,jdbcType=LONGVARCHAR},
+        CONTENT = #{content,jdbcType=VARCHAR},
       </if>
     </set>
     where ID = #{id,jdbcType=INTEGER}
@@ -224,7 +224,7 @@
       CREATE_TIME = #{createTime,jdbcType=BIGINT},
       LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
       LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
-      CONTENT = #{content,jdbcType=LONGVARCHAR}
+      CONTENT = #{content,jdbcType=VARCHAR}
     where ID = #{id,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.Doc">
