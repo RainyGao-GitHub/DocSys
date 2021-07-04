@@ -40,7 +40,7 @@
 	</div>
 </div>
 
-<script src="js/md5.js"></script>
+<script src="js/base64.js"></script>
 <script type="text/javascript">
 	function addUserPreferServerPageInit(_callback, _serverInfo)
 	{
@@ -85,7 +85,7 @@
 			serverUrl = $("#dialog-addUserPreferServer input[name='serverUrl']").val();
 			serverName = $("#dialog-addUserPreferServer input[name='serverName']").val();
 			userName = $("#dialog-addUserPreferServer input[name='userName']").val();
-		    pwd = MD5($("#dialog-addUserPreferServer input[name='pwd']").val());
+		    pwd = base64_encode($("#dialog-addUserPreferServer input[name='pwd']").val());
 
 		    if(serverUrl)
 			{

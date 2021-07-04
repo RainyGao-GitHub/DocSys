@@ -40,7 +40,7 @@
 	</div>
 </div>
 
-<script src="js/md5.js"></script>
+<script src="js/base64.js"></script>
 <script type="text/javascript">
 	function editUserPreferServerPageInit(_serverInfo, _callback)
 	{
@@ -135,7 +135,7 @@
 		    if(!(serverInfo.serverUserPwd && tmpPwd === serverInfo.serverUserPwd))
 		    {
 		    	isChanged = true;		    	
-		    	pwd = MD5(tmpPwd);
+		    	pwd = base64_encode(tmpPwd);
 				console.log("doEditUserPreferServer serverUserPwd changed:", pwd);
 		    }	
 
