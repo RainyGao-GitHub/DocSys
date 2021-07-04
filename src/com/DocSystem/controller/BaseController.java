@@ -9524,7 +9524,7 @@ public class BaseController  extends BaseFunction{
 			prefix = urlParts[2];
 		}
 		
-		String rootPath = "/";
+		String rootPath = "";
 		if(prefix.equals("classpath") || (prefix.equals("resource")))
 		{
 			rootPath = docSysWebPath;
@@ -10303,10 +10303,17 @@ public class BaseController  extends BaseFunction{
 	protected static boolean initDBForSqlite(String type, String url, String user, String pwd) 
 	{
 		System.out.println("initDBForSqlite() url:" + url);
-		String dbPath = getDbPathFromUrl(url);
-		String dbName = getDBNameFromUrl("sqlite", url);
+		//String dbPath = getDbPathFromUrl(url);
+		//String dbName = getDBNameFromUrl("sqlite", url);
+		//return FileUtil.copyFile( docSysWebPath + "WEB-INF/classes/data/DocSystem.db", dbPath + dbName, true);
 	
-		return FileUtil.copyFile( docSysWebPath + "WEB-INF/classes/data/DocSystem.db", dbPath + dbName, true);
+		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/sqlite_docsystem.sql";
+		if(FileUtil.isFileExist(sqlScriptPath) == false)
+		{
+			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
+			return false;
+		}
+		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
 	}
 	
 	protected static boolean initDBForMysql(String type, String url, String user, String pwd) 
