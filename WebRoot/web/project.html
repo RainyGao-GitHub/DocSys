@@ -35,7 +35,7 @@
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
 	<link rel="stylesheet" type="text/css" href="css/style.css">
-	
+	<link href="static/swiper/swiper.min.css" rel="stylesheet">
 	<!-- video.js --> 
 	<link href="static/video-js/video-js.min.css" rel="stylesheet">
  	
@@ -121,6 +121,12 @@
         .ellipsis{text-overflow:ellipsis;overflow:hidden;}
     </style>
 
+    <style type="text/css">
+        /*自定义左右键悬浮变色*/
+        .swiper-container div[aria-disabled='false']:hover {
+            color: #fa0 !important;
+        }
+    </style>
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -144,6 +150,7 @@
     <script src="static/markdown/plugins/preformatted-text-dialog/preformatted-text-dialog.js" type="text/javascript"></script>
     <script src="static/pdfjs/build/pdf.js"></script>
     <script src="static/pdfjs/build/pdf.worker.js"></script>
+	<script src="static/swiper/swiper.min.js" type="text/javascript" ></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
 	<script type="text/javascript" src="static/layer/layer.js"></script>
 	<script type="text/javascript" src="static/nprogress/nprogress.js"></script>
@@ -334,24 +341,36 @@
         		</div>
          	</div>
             <div class="manual-article" id="previewZone">
-                <div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
-                	<div align=center style="margin-top:20px" >
-                		<img id="fileLogo" name="fileLogo" src="" style="display:none; width:128px; height:128px;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileLogoErrHandler();"></img>
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:60%; max-height:60%;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileImgErrHandler();"></img>
-                		<!-- HTML5 Default Mode --> 
-                		<!-- <video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
-                		 -->
-                		<!-- VideoJs Mode  -->
-                		<video id="videoPreview" class="video-js example_video_1-dimensions vjs-controls-enabled vjs-workinghover vjs-v7 vjs-has-started vjs-user-inactive vjs-paused vjs-ended" 
-                			webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
-                			crossorigin="anonymous" 
-                			style="display:none;"></video>
-                		<!-- DPlayer Mode -->
-                		<!-- 
-                		<div id="videoPreview"></div> 
-                		-->
-                	</div>
-	            </div>
+				<!--文件轮播显示-->
+				<div class="swiper-container">
+					<div class="swiper-wrapper">
+						<div class="swiper-slide">
+							<div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
+								<div align=center style="margin-top:20px" >
+									<img id="fileLogo" name="fileLogo" src="" style="display:none; width:128px; height:128px;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileLogoErrHandler();"></img>
+									<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:60%; max-height:60%;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileImgErrHandler();"></img>
+									<!-- HTML5 Default Mode -->
+									<!-- <video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+									 -->
+									<!-- VideoJs Mode  -->
+									<video id="videoPreview" class="video-js example_video_1-dimensions vjs-controls-enabled vjs-workinghover vjs-v7 vjs-has-started vjs-user-inactive vjs-paused vjs-ended"
+										   webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
+										   crossorigin="anonymous"
+										   style="display:none;"></video>
+									<!-- DPlayer Mode -->
+									<!--
+									<div id="videoPreview"></div>
+									-->
+								</div>
+							</div>
+						</div>
+						<div class="swiper-slide">
+
+						</div>
+					</div>
+					<div class="swiper-button-prev" style="color: #007aff"></div>
+					<div class="swiper-button-next" style="color: #007aff"></div>
+				</div>
                 <div class="article-body editor-content"  id="vdocPreview" style="min-height: 650px;">
                 </div>
             </div>
@@ -5119,5 +5138,20 @@
         return;*/
     }
 </SCRIPT>
+<script type="text/javascript">
+	// 初始化轮播组件
+	var swiper = new Swiper('.swiper-container', {
+		spaceBetween: 30,
+		centeredSlides: true,
+		pagination: {
+			el: '.swiper-pagination',
+			clickable: true
+		},
+		navigation: {
+			nextEl: '.swiper-button-next',
+			prevEl: '.swiper-button-prev'
+		}
+	});
+</script>
 </body>
 </html>
