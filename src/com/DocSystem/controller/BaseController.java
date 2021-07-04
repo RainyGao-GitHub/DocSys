@@ -9505,7 +9505,7 @@ public class BaseController  extends BaseFunction{
 	private static String getAbsoluteSqliteUrl(String jdbcUrl) {
 		String dbPath = getDbPathFromUrl(jdbcUrl);
 		String dbName = getDBNameFromUrl("sqlite", jdbcUrl);
-		String absSqliteUrl = "jdbc:sqlite:/"+ dbPath + dbName;
+		String absSqliteUrl = "jdbc:sqlite:"+ dbPath + dbName;
 		System.out.println("getAbsoluteSqliteUrl absSqliteUrl:" + absSqliteUrl);
 		return absSqliteUrl;
 	}
@@ -9518,15 +9518,20 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		String prefix = urlParts[urlParts.length-2];
-		String rootPath = "";
+		String prefix = "";
+		if(urlParts.length > 2)
+		{
+			prefix = urlParts[2];
+		}
+		
+		String rootPath = "/";
 		if(prefix.equals("classpath") || (prefix.equals("resource")))
 		{
 			rootPath = docSysWebPath;
 		}
 		else if(OS.isWinDiskChar(prefix))
 		{
-			rootPath = prefix + ":";
+			rootPath = prefix + ":/";
 		}
 
 		String dbFilePath = urlParts[urlParts.length-1];
@@ -9538,10 +9543,12 @@ public class BaseController  extends BaseFunction{
 		boolean firstFlag = true;	
 		for(int i=0; i< subStrs.length-1; i++)
 		{	
+			Log.println("getDbPathFromUrl subStrs[" + i + "]: " + subStrs[i]);
 			if(subStrs[i].isEmpty())
 			{
 				continue;
 			}
+			
 			if(firstFlag)
 			{
 				firstFlag = false;
@@ -9552,16 +9559,19 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					relativePath = subStrs[i];
+					relativePath = subStrs[i] + "/";
 				}
 			}	
 			else
 			{
-				relativePath += subStrs[i] + "/";
+				relativePath = relativePath + subStrs[i] + "/";
 			}
 		}
 		
-		return rootPath + relativePath;
+		
+		String dbPath = rootPath + relativePath;
+		Log.println("getDbPathFromUrl dbPath:" + dbPath);		
+		return dbPath;
 	}
 
 	private static boolean createDBForMysql(String dbType, String dbName, String url, String user, String pwd) {
