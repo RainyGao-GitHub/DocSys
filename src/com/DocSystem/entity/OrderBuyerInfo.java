@@ -1,7 +1,5 @@
 package com.DocSystem.entity;
 
-import com.DocSystem.sales.enums.BuyerTypelEnum;
-
 import java.util.Date;
 
 /**
