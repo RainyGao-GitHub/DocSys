@@ -1,9 +1,5 @@
 package com.DocSystem.entity;
 
-import com.DocSystem.sales.enums.OrderStatusEnum;
-import com.DocSystem.sales.enums.PayChannelEnum;
-import com.DocSystem.sales.enums.PayTypeEnum;
-
 import java.math.BigDecimal;
 import java.util.Date;
 
