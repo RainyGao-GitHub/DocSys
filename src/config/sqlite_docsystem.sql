@@ -7,14 +7,15 @@
 --
 -- 表的结构 `doc`
 --
+drop table if exists doc;
 CREATE TABLE `doc` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `NAME` varchar(200) DEFAULT NULL,
   `TYPE` int(10) DEFAULT NULL,
   `SIZE` bigint(20) NOT NULL DEFAULT '0',
   `CHECK_SUM` varchar(32) DEFAULT NULL,
   `REVISION` varchar(100) DEFAULT NULL,
-  `CONTENT` longtext,
+  `CONTENT` varchar(4096) default null,
   `PATH` varchar(2000) NOT NULL DEFAULT '',
   `DOC_ID` bigint(20) DEFAULT NULL,
   `PID` bigint(20) NOT NULL DEFAULT '0',
@@ -31,9 +32,9 @@ CREATE TABLE `doc` (
 --
 -- 表的结构 `doc_auth`
 --
-
+drop table if exists doc_auth;
 CREATE TABLE `doc_auth` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL,
   `TYPE` int(1) DEFAULT NULL,
@@ -46,7 +47,7 @@ CREATE TABLE `doc_auth` (
   `ADD_EN` int(1) DEFAULT NULL,
   `DELETE_EN` int(1) DEFAULT NULL,
   `DOWNLOAD_EN` int(1) DEFAULT NULL,
-  `UPLOAD_SIZE` bigint(20) DEFAULT NULL COMMENT '文件上传大小',  
+  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,
   `HERITABLE` int(1) NOT NULL DEFAULT '0',
   `DOC_PATH` varchar(2000) DEFAULT NULL,
   `DOC_NAME` varchar(200) DEFAULT NULL
@@ -57,9 +58,9 @@ CREATE TABLE `doc_auth` (
 --
 -- 表的结构 `doc_share`
 --
-
+drop table if exists doc_share;
 CREATE TABLE `doc_share` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `SHARE_ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL,
   `PATH` varchar(2000) NOT NULL DEFAULT '',
@@ -76,9 +77,9 @@ CREATE TABLE `doc_share` (
 --
 -- 表的结构 `doc_lock`
 --
-
+drop table if exists doc_lock;
 CREATE TABLE `doc_lock` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `TYPE` int(10) DEFAULT NULL,
   `NAME` varchar(200) DEFAULT NULL,
   `PATH` varchar(2000) NOT NULL DEFAULT '/',
@@ -96,9 +97,9 @@ CREATE TABLE `doc_lock` (
 --
 -- 表的结构 `group_member`
 --
-
+drop table if exists group_member;
 CREATE TABLE `group_member` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `GROUP_ID` int(11) DEFAULT NULL,
   `USER_ID` int(11) DEFAULT NULL
 );
@@ -108,9 +109,9 @@ CREATE TABLE `group_member` (
 --
 -- 表的结构 `repos`
 --
-
+drop table if exists repos;
 CREATE TABLE `repos` (
-  `ID` int(8) NOT NULL,
+  `ID` integer primary key ,
   `NAME` varchar(255) DEFAULT NULL,
   `TYPE` int(10) DEFAULT '1',
   `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes',
@@ -143,9 +144,9 @@ CREATE TABLE `repos` (
 --
 -- 表的结构 `repos_auth`
 --
-
+drop table if exists repos_auth;
 CREATE TABLE `repos_auth` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL,
   `TYPE` int(1) DEFAULT '0',
@@ -157,7 +158,7 @@ CREATE TABLE `repos_auth` (
   `ADD_EN` int(1) DEFAULT NULL,
   `DELETE_EN` int(1) DEFAULT NULL,
   `DOWNLOAD_EN` int(1) DEFAULT NULL,
-  `UPLOAD_SIZE` bigint(20) DEFAULT NULL COMMENT '文件上传大小',
+  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,
   `HERITABLE` int(1) NOT NULL DEFAULT '0'
 );
 
@@ -166,9 +167,9 @@ CREATE TABLE `repos_auth` (
 --
 -- 表的结构 `role`
 --
-
+drop table if exists role;
 CREATE TABLE `role` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `NAME` varchar(50) NOT NULL,
   `ROLE_ID` int(11) NOT NULL
 );
@@ -178,9 +179,9 @@ CREATE TABLE `role` (
 --
 -- 表的结构 `sys_config`
 --
-
+drop table if exists sys_config;
 CREATE TABLE `sys_config` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `REG_ENABLE` int(2) NOT NULL DEFAULT '1',
   `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'
 );
@@ -190,10 +191,9 @@ CREATE TABLE `sys_config` (
 --
 -- 表的结构 `user`
 --
-
+drop table if exists user;
 CREATE TABLE user (
-    ID              INTEGER       NOT NULL
-                                  PRIMARY KEY AUTOINCREMENT,
+    ID              INTEGER       PRIMARY KEY,
     NAME            VARCHAR (40)  DEFAULT NULL,
     PWD             VARCHAR (40)  NOT NULL,
     TYPE            INT (1)       NOT NULL
@@ -201,7 +201,7 @@ CREATE TABLE user (
     ROLE            INT (11)      DEFAULT NULL,
     REAL_NAME       VARCHAR (50)  DEFAULT NULL,
     NICK_NAME       VARCHAR (50)  DEFAULT NULL,
-    INTRO           LONGTEXT,
+    INTRO           VARCHAR (200) DEFAULT NULL,
     IMG             VARCHAR (200) DEFAULT NULL,
     EMAIL           VARCHAR (50)  DEFAULT '',
     EMAIL_VALID     INT (1)       NOT NULL
@@ -222,9 +222,9 @@ CREATE TABLE user (
 --
 -- 表的结构 `user_group`
 --
-
+drop table if exists user_group;
 CREATE TABLE `user_group` (
-  `ID` int(11) NOT NULL,
+  `ID` integer primary key ,
   `NAME` varchar(200) DEFAULT NULL,
   `TYPE` int(1) DEFAULT NULL,
   `INFO` varchar(1000) DEFAULT NULL,

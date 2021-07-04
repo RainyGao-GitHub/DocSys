@@ -21,7 +21,7 @@
     <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.DocSystem.entity.User">
-    <result column="INTRO" jdbcType="LONGVARCHAR" property="intro" />
+    <result column="INTRO" jdbcType="VARCHAR" property="intro" />
   </resultMap>
   <sql id="Base_Column_List">
     ID, NAME, PWD, TYPE, ROLE, REAL_NAME, NICK_NAME, IMG, EMAIL, EMAIL_VALID, TEL, TEL_VALID, 
@@ -55,7 +55,7 @@
       #{nickName,jdbcType=VARCHAR}, #{img,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, 
       #{emailValid,jdbcType=INTEGER}, #{tel,jdbcType=VARCHAR}, #{telValid,jdbcType=INTEGER}, 
       #{lastLoginTime,jdbcType=VARCHAR}, #{lastLoginIp,jdbcType=VARCHAR}, #{lastLoginCity,jdbcType=VARCHAR}, 
-      #{createType,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{intro,jdbcType=LONGVARCHAR}
+      #{createType,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{intro,jdbcType=VARCHAR}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.User">
@@ -169,7 +169,7 @@
         #{createTime,jdbcType=VARCHAR},
       </if>
       <if test="intro != null">
-        #{intro,jdbcType=LONGVARCHAR},
+        #{intro,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -225,7 +225,7 @@
         CREATE_TIME = #{createTime,jdbcType=VARCHAR},
       </if>
       <if test="intro != null">
-        INTRO = #{intro,jdbcType=LONGVARCHAR},
+        INTRO = #{intro,jdbcType=VARCHAR},
       </if>
     </set>
     where ID = #{id,jdbcType=INTEGER}
@@ -248,7 +248,7 @@
       LAST_LOGIN_CITY = #{lastLoginCity,jdbcType=VARCHAR},
       CREATE_TYPE = #{createType,jdbcType=INTEGER},
       CREATE_TIME = #{createTime,jdbcType=VARCHAR},
-      INTRO = #{intro,jdbcType=LONGVARCHAR}
+      INTRO = #{intro,jdbcType=VARCHAR}
     where ID = #{id,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.User">
@@ -328,7 +328,7 @@
         and CREATE_TIME = #{createTime,jdbcType=VARCHAR}
       </if>
       <if test="intro != null">
-        and INTRO = #{intro,jdbcType=LONGVARCHAR}
+        and INTRO = #{intro,jdbcType=VARCHAR}
       </if>
   </select>
   
@@ -452,7 +452,7 @@
         and CREATE_TIME = #{createTime,jdbcType=VARCHAR}
       </if>
       <if test="intro != null">
-        and INTRO = #{intro,jdbcType=LONGVARCHAR}
+        and INTRO = #{intro,jdbcType=VARCHAR}
       </if>
   </select>
   
@@ -510,7 +510,7 @@
         and CREATE_TIME = #{createTime,jdbcType=VARCHAR}
       </if>
       <if test="intro != null">
-        and INTRO = #{intro,jdbcType=LONGVARCHAR}
+        and INTRO = #{intro,jdbcType=VARCHAR}
       </if>
       ORDER BY NAME ASC, CREATE_TIME DESC
       <if test="start != null">
