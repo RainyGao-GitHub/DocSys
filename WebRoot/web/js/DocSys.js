@@ -1577,15 +1577,15 @@ function showImgInDialog(docInfo)
 {
 	console.log("showImgInDialog docInfo:", docInfo);
 	bootstrapQ.dialog({
-		id: "ImgViewer",
+		id: "ImgListViewer",
 		title: docInfo.name,
-		url: 'imgViewer.html',
+		url: 'imgListViewer.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
 		mstyle: getDialogStyle(),
 		callback: function(){
-			ImgViewer.imgViewerPageInit(docInfo);
+			ImgListViewer.imgViewerPageInit(docInfo);
 		},
 	});
 }
@@ -1599,7 +1599,7 @@ function showImgInArtDialog(docInfo)
 	var d = dialog({
 		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
-		url: 'imgViewerForArt.html',
+		url: 'imgListViewerForArt.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,

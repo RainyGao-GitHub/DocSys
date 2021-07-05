@@ -1,0 +1,30 @@
+<script src="static/scripts/jquery.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
+<script type="text/javascript" src="js/DocSys.js"></script>
+<div align="center" style="margin-top:20px; min-height:500px;">
+	<img id="imgPlayer" name="imgPlayer" src="" style="display:none; max-width:100%; max-height:100%;"></img>
+</div>
+
+<script type="text/javascript">
+	var artDialog = top.dialog.get(window);
+	var docInfo = {};
+	if(artDialog)
+	{
+		docInfo = artDialog.data; // 获取对话框传递过来的数据
+	}
+	else
+	{
+		//解决artDialog递归调用的数据穿透问题
+		docInfo = window.parent.gDialogData[window.name];
+	}
+	console.log("docInfo:",docInfo)
+	
+	getDocFileLink(docInfo, showImage, showErrorMessage);    	
+    
+    function showImage(fileLink)
+    {
+		$("#imgPlayer").attr('src', fileLink);
+		$("#imgPlayer").show();
+    }
+   </script>
