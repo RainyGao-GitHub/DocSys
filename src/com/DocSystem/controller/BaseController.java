@@ -9444,17 +9444,13 @@ public class BaseController  extends BaseFunction{
 			//runner.setStopOnError(false);
 			//runner.setLogWriter(null);//设置是否输出日志
 
-			if(type != null && type.equals("sqlite")) {
-				initSqliteTables(conn);
-			} else {
-				// 从class目录下直接读取
-				in = new FileInputStream(filePath);
-				read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
+			// 从class目录下直接读取
+			in = new FileInputStream(filePath);
+			read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
 
-				runner.runScript(read);
+			runner.runScript(read);
 
-				runner.closeConnection();
-			}
+			runner.closeConnection();
             System.out.println("sql脚本执行完毕");
             ret = true;
         } catch (Exception e) {
@@ -9477,186 +9473,227 @@ public class BaseController  extends BaseFunction{
 
 	/**
 	 * sqlite表结构初始化
+	 * @param pwd 
+	 * @param user 
+	 * @param url 
+	 * @param type 
 	 * @param conn 数据库连接
+	 * @return 
 	 * @throws Exception e
 	 */
-	private static void initSqliteTables(Connection conn) throws Exception{
-		Statement statement = conn.createStatement();
-		statement.execute("drop table if exists doc");
-		statement.execute("CREATE TABLE `doc` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `NAME` varchar(200) DEFAULT NULL,\n" +
-				"  `TYPE` int(10) DEFAULT NULL,\n" +
-				"  `SIZE` bigint(20) NOT NULL DEFAULT '0',\n" +
-				"  `CHECK_SUM` varchar(32) DEFAULT NULL,\n" +
-				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
-				"  `CONTENT` varchar(4096) default null,\n" +
-				"  `PATH` varchar(2000) NOT NULL DEFAULT '',\n" +
-				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-				"  `PID` bigint(20) NOT NULL DEFAULT '0',\n" +
-				"  `VID` int(11) DEFAULT NULL,\n" +
-				"  `PWD` varchar(20) DEFAULT NULL,\n" +
-				"  `CREATOR` int(11) DEFAULT NULL,\n" +
-				"  `CREATE_TIME` bigint(20) NOT NULL DEFAULT '0',\n" +
-				"  `LATEST_EDITOR` int(11) DEFAULT NULL,\n" +
-				"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
-				")");
+	private static boolean initSqliteTables(String type, String url, String user, String pwd) {
+    	boolean ret = false;
+    	Connection conn = null;
+    	ScriptRunner runner = null;
+    	InputStream in = null;
+        Reader read = null;
+    	
+        try {
+        	Class.forName(getJdbcDriverName(type));
+        	conn = getDBConnection(type, url,user,pwd);
+            runner = new ScriptRunner(conn);
+			//runner.setAutoCommit(true);//自动提交
+			//runner.setFullLineDelimiter(false);
+			//runner.setDelimiter(";");////每条命令间的分隔符
+			//runner.setSendFullScript(false);
+			//runner.setStopOnError(false);
+			//runner.setLogWriter(null);//设置是否输出日志
 
-		statement.execute("drop table if exists doc_auth");
-		statement.execute("CREATE TABLE `doc_auth` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `USER_ID` int(11) DEFAULT NULL,\n" +
-				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
-				"  `TYPE` int(1) DEFAULT NULL,\n" +
-				"  `PRIORITY` int(1) NOT NULL DEFAULT '0',\n" +
-				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-				"  `REPOS_ID` int(11) NOT NULL DEFAULT '0',\n" +
-				"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
-				"  `ACCESS` int(1) NOT NULL DEFAULT '0',\n" +
-				"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
-				"  `ADD_EN` int(1) DEFAULT NULL,\n" +
-				"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
-				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
-				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
-				"  `HERITABLE` int(1) NOT NULL DEFAULT '0',\n" +
-				"  `DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
-				"  `DOC_NAME` varchar(200) DEFAULT NULL\n" +
-				"  );");
+			// 从class目录下直接读取
+    		
+    		Statement statement = conn.createStatement();
+    		statement.execute("drop table if exists doc");
+    		statement.execute("CREATE TABLE `doc` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
+    				"  `TYPE` int(10) DEFAULT NULL,\n" +
+    				"  `SIZE` bigint(20) NOT NULL DEFAULT '0',\n" +
+    				"  `CHECK_SUM` varchar(32) DEFAULT NULL,\n" +
+    				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
+    				"  `CONTENT` varchar(4096) default null,\n" +
+    				"  `PATH` varchar(2000) NOT NULL DEFAULT '',\n" +
+    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+    				"  `PID` bigint(20) NOT NULL DEFAULT '0',\n" +
+    				"  `VID` int(11) DEFAULT NULL,\n" +
+    				"  `PWD` varchar(20) DEFAULT NULL,\n" +
+    				"  `CREATOR` int(11) DEFAULT NULL,\n" +
+    				"  `CREATE_TIME` bigint(20) NOT NULL DEFAULT '0',\n" +
+    				"  `LATEST_EDITOR` int(11) DEFAULT NULL,\n" +
+    				"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
+    				")");
 
-		statement.execute("drop table if exists doc_share");
-		statement.execute("CREATE TABLE `doc_share` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `SHARE_ID` int(11) NOT NULL,\n" +
-				"  `NAME` varchar(200) DEFAULT NULL,\n" +
-				"  `PATH` varchar(2000) NOT NULL DEFAULT '',\n" +
-				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-				"  `VID` int(11) DEFAULT NULL,\n" +
-				"  `SHARE_AUTH` varchar(2000) DEFAULT NULL,\n" +
-				"  `SHARE_PWD` varchar(20) DEFAULT NULL,\n" +
-				"  `SHARED_BY` int(11) DEFAULT NULL,\n" +
-				"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-				")");
+    		statement.execute("drop table if exists doc_auth");
+    		statement.execute("CREATE TABLE `doc_auth` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `USER_ID` int(11) DEFAULT NULL,\n" +
+    				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
+    				"  `TYPE` int(1) DEFAULT NULL,\n" +
+    				"  `PRIORITY` int(1) NOT NULL DEFAULT '0',\n" +
+    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+    				"  `REPOS_ID` int(11) NOT NULL DEFAULT '0',\n" +
+    				"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
+    				"  `ACCESS` int(1) NOT NULL DEFAULT '0',\n" +
+    				"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
+    				"  `ADD_EN` int(1) DEFAULT NULL,\n" +
+    				"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
+    				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
+    				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
+    				"  `HERITABLE` int(1) NOT NULL DEFAULT '0',\n" +
+    				"  `DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
+    				"  `DOC_NAME` varchar(200) DEFAULT NULL\n" +
+    				"  );");
 
-		statement.execute("drop table if exists doc_lock");
-		statement.execute("CREATE TABLE `doc_lock` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `TYPE` int(10) DEFAULT NULL,\n" +
-				"  `NAME` varchar(200) DEFAULT NULL,\n" +
-				"  `PATH` varchar(2000) NOT NULL DEFAULT '/',\n" +
-				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-				"  `PID` bigint(20) DEFAULT NULL,\n" +
-				"  `VID` int(10) DEFAULT NULL,\n" +
-				"  `STATE` int(1) NOT NULL DEFAULT '1',\n" +
-				"  `LOCKER` varchar(200) DEFAULT NULL,\n" +
-				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
-				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-				")");
+    		statement.execute("drop table if exists doc_share");
+    		statement.execute("CREATE TABLE `doc_share` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `SHARE_ID` int(11) NOT NULL,\n" +
+    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
+    				"  `PATH` varchar(2000) NOT NULL DEFAULT '',\n" +
+    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+    				"  `VID` int(11) DEFAULT NULL,\n" +
+    				"  `SHARE_AUTH` varchar(2000) DEFAULT NULL,\n" +
+    				"  `SHARE_PWD` varchar(20) DEFAULT NULL,\n" +
+    				"  `SHARED_BY` int(11) DEFAULT NULL,\n" +
+    				"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
+    				")");
 
-		statement.execute("drop table if exists group_member");
-		statement.execute("CREATE TABLE `group_member` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
-				"  `USER_ID` int(11) DEFAULT NULL\n" +
-				")");
+    		statement.execute("drop table if exists doc_lock");
+    		statement.execute("CREATE TABLE `doc_lock` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `TYPE` int(10) DEFAULT NULL,\n" +
+    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
+    				"  `PATH` varchar(2000) NOT NULL DEFAULT '/',\n" +
+    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+    				"  `PID` bigint(20) DEFAULT NULL,\n" +
+    				"  `VID` int(10) DEFAULT NULL,\n" +
+    				"  `STATE` int(1) NOT NULL DEFAULT '1',\n" +
+    				"  `LOCKER` varchar(200) DEFAULT NULL,\n" +
+    				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
+    				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
+    				")");
 
-		statement.execute("drop table if exists repos");
-		statement.execute("CREATE TABLE `repos` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `NAME` varchar(255) DEFAULT NULL,\n" +
-				"  `TYPE` int(10) DEFAULT '1',\n" +
-				"  `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes',\n" +
-				"  `REAL_DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
-				"  `VER_CTRL` int(2) NOT NULL DEFAULT '0',\n" +
-				"  `IS_REMOTE` int(1) NOT NULL DEFAULT '1',\n" +
-				"  `LOCAL_SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
-				"  `SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
-				"  `SVN_USER` varchar(50) DEFAULT NULL,\n" +
-				"  `SVN_PWD` varchar(20) DEFAULT NULL,\n" +
-				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
-				"  `VER_CTRL1` int(2) NOT NULL DEFAULT '0',\n" +
-				"  `IS_REMOTE1` int(1) NOT NULL DEFAULT '1',\n" +
-				"  `LOCAL_SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
-				"  `SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
-				"  `SVN_USER1` varchar(50) DEFAULT NULL,\n" +
-				"  `SVN_PWD1` varchar(20) DEFAULT NULL,\n" +
-				"  `REVISION1` varchar(100) DEFAULT NULL,\n" +
-				"  `INFO` varchar(1000) DEFAULT NULL,\n" +
-				"  `PWD` varchar(20) DEFAULT NULL,\n" +
-				"  `OWNER` int(11) DEFAULT NULL,\n" +
-				"  `CREATE_TIME` bigint(20) DEFAULT '0',\n" +
-				"  `STATE` int(1) NOT NULL DEFAULT '0',\n" +
-				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
-				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-				")");
+    		statement.execute("drop table if exists group_member");
+    		statement.execute("CREATE TABLE `group_member` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
+    				"  `USER_ID` int(11) DEFAULT NULL\n" +
+    				")");
 
-		statement.execute("drop table if exists repos_auth");
-		statement.execute("CREATE TABLE `repos_auth` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `USER_ID` int(11) DEFAULT NULL,\n" +
-				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
-				"  `TYPE` int(1) DEFAULT '0',\n" +
-				"  `PRIORITY` int(1) DEFAULT '0',\n" +
-				"  `REPOS_ID` int(11) DEFAULT NULL,\n" +
-				"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
-				"  `ACCESS` int(1) DEFAULT NULL,\n" +
-				"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
-				"  `ADD_EN` int(1) DEFAULT NULL,\n" +
-				"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
-				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
-				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
-				"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
-				")");
+    		statement.execute("drop table if exists repos");
+    		statement.execute("CREATE TABLE `repos` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `NAME` varchar(255) DEFAULT NULL,\n" +
+    				"  `TYPE` int(10) DEFAULT '1',\n" +
+    				"  `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes',\n" +
+    				"  `REAL_DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
+    				"  `VER_CTRL` int(2) NOT NULL DEFAULT '0',\n" +
+    				"  `IS_REMOTE` int(1) NOT NULL DEFAULT '1',\n" +
+    				"  `LOCAL_SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
+    				"  `SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
+    				"  `SVN_USER` varchar(50) DEFAULT NULL,\n" +
+    				"  `SVN_PWD` varchar(20) DEFAULT NULL,\n" +
+    				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
+    				"  `VER_CTRL1` int(2) NOT NULL DEFAULT '0',\n" +
+    				"  `IS_REMOTE1` int(1) NOT NULL DEFAULT '1',\n" +
+    				"  `LOCAL_SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
+    				"  `SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
+    				"  `SVN_USER1` varchar(50) DEFAULT NULL,\n" +
+    				"  `SVN_PWD1` varchar(20) DEFAULT NULL,\n" +
+    				"  `REVISION1` varchar(100) DEFAULT NULL,\n" +
+    				"  `INFO` varchar(1000) DEFAULT NULL,\n" +
+    				"  `PWD` varchar(20) DEFAULT NULL,\n" +
+    				"  `OWNER` int(11) DEFAULT NULL,\n" +
+    				"  `CREATE_TIME` bigint(20) DEFAULT '0',\n" +
+    				"  `STATE` int(1) NOT NULL DEFAULT '0',\n" +
+    				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
+    				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
+    				")");
 
-		statement.execute("drop table if exists role;");
-		statement.execute("CREATE TABLE `role` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `NAME` varchar(50) NOT NULL,\n" +
-				"  `ROLE_ID` int(11) NOT NULL\n" +
-				")");
+    		statement.execute("drop table if exists repos_auth");
+    		statement.execute("CREATE TABLE `repos_auth` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `USER_ID` int(11) DEFAULT NULL,\n" +
+    				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
+    				"  `TYPE` int(1) DEFAULT '0',\n" +
+    				"  `PRIORITY` int(1) DEFAULT '0',\n" +
+    				"  `REPOS_ID` int(11) DEFAULT NULL,\n" +
+    				"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
+    				"  `ACCESS` int(1) DEFAULT NULL,\n" +
+    				"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
+    				"  `ADD_EN` int(1) DEFAULT NULL,\n" +
+    				"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
+    				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
+    				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
+    				"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
+    				")");
 
-		statement.execute("drop table if exists sys_config");
-		statement.execute("CREATE TABLE `sys_config` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
-				"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
-				")");
+    		statement.execute("drop table if exists role;");
+    		statement.execute("CREATE TABLE `role` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `NAME` varchar(50) NOT NULL,\n" +
+    				"  `ROLE_ID` int(11) NOT NULL\n" +
+    				")");
 
-		statement.execute("drop table if exists user");
-		statement.execute("CREATE TABLE user (\n" +
-				"    ID              INTEGER       PRIMARY KEY,\n" +
-				"    NAME            VARCHAR (40)  DEFAULT NULL,\n" +
-				"    PWD             VARCHAR (40)  NOT NULL,\n" +
-				"    TYPE            INT (1)       NOT NULL\n" +
-				"                                  DEFAULT '0',\n" +
-				"    ROLE            INT (11)      DEFAULT NULL,\n" +
-				"    REAL_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
-				"    NICK_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
-				"    INTRO           VARCHAR (200) DEFAULT NULL,\n" +
-				"    IMG             VARCHAR (200) DEFAULT NULL,\n" +
-				"    EMAIL           VARCHAR (50)  DEFAULT '',\n" +
-				"    EMAIL_VALID     INT (1)       NOT NULL\n" +
-				"                                  DEFAULT '0',\n" +
-				"    TEL             VARCHAR (20)  DEFAULT NULL,\n" +
-				"    TEL_VALID       INT (1)       NOT NULL\n" +
-				"                                  DEFAULT '0',\n" +
-				"    LAST_LOGIN_TIME VARCHAR (50)  DEFAULT NULL,\n" +
-				"    LAST_LOGIN_IP   VARCHAR (50)  DEFAULT NULL,\n" +
-				"    LAST_LOGIN_CITY VARCHAR (100) DEFAULT NULL,\n" +
-				"    CREATE_TYPE     INT (1)       NOT NULL\n" +
-				"                                  DEFAULT '0',\n" +
-				"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
-				")");
+    		statement.execute("drop table if exists sys_config");
+    		statement.execute("CREATE TABLE `sys_config` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
+    				"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
+    				")");
 
-		statement.execute("drop table if exists user_group");
-		statement.execute("CREATE TABLE `user_group` (\n" +
-				"  `ID` integer primary key ,\n" +
-				"  `NAME` varchar(200) DEFAULT NULL,\n" +
-				"  `TYPE` int(1) DEFAULT NULL,\n" +
-				"  `INFO` varchar(1000) DEFAULT NULL,\n" +
-				"  `IMG` varchar(200) DEFAULT NULL,\n" +
-				"  `PRIORITY` int(2) DEFAULT NULL,\n" +
-				"  `CREATE_TIME` varchar(50) DEFAULT NULL\n" +
-				")");
+    		statement.execute("drop table if exists user");
+    		statement.execute("CREATE TABLE user (\n" +
+    				"    ID              INTEGER       PRIMARY KEY,\n" +
+    				"    NAME            VARCHAR (40)  DEFAULT NULL,\n" +
+    				"    PWD             VARCHAR (40)  NOT NULL,\n" +
+    				"    TYPE            INT (1)       NOT NULL\n" +
+    				"                                  DEFAULT '0',\n" +
+    				"    ROLE            INT (11)      DEFAULT NULL,\n" +
+    				"    REAL_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
+    				"    NICK_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
+    				"    INTRO           VARCHAR (200) DEFAULT NULL,\n" +
+    				"    IMG             VARCHAR (200) DEFAULT NULL,\n" +
+    				"    EMAIL           VARCHAR (50)  DEFAULT '',\n" +
+    				"    EMAIL_VALID     INT (1)       NOT NULL\n" +
+    				"                                  DEFAULT '0',\n" +
+    				"    TEL             VARCHAR (20)  DEFAULT NULL,\n" +
+    				"    TEL_VALID       INT (1)       NOT NULL\n" +
+    				"                                  DEFAULT '0',\n" +
+    				"    LAST_LOGIN_TIME VARCHAR (50)  DEFAULT NULL,\n" +
+    				"    LAST_LOGIN_IP   VARCHAR (50)  DEFAULT NULL,\n" +
+    				"    LAST_LOGIN_CITY VARCHAR (100) DEFAULT NULL,\n" +
+    				"    CREATE_TYPE     INT (1)       NOT NULL\n" +
+    				"                                  DEFAULT '0',\n" +
+    				"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
+    				")");
+
+    		statement.execute("drop table if exists user_group");
+    		statement.execute("CREATE TABLE `user_group` (\n" +
+    				"  `ID` integer primary key ,\n" +
+    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
+    				"  `TYPE` int(1) DEFAULT NULL,\n" +
+    				"  `INFO` varchar(1000) DEFAULT NULL,\n" +
+    				"  `IMG` varchar(200) DEFAULT NULL,\n" +
+    				"  `PRIORITY` int(2) DEFAULT NULL,\n" +
+    				"  `CREATE_TIME` varchar(50) DEFAULT NULL\n" +
+    				")");
+            ret = true;
+        } catch (Exception e) {
+            System.out.println("sql脚本执行发生异常");
+            e.printStackTrace();
+        }finally{
+	        // 关闭资源
+	        try{
+	            if(runner!=null) runner.closeConnection();
+	            if(conn!=null) conn.close();
+	            if(in!=null) in.close();
+	            if(read!=null) read.close();
+	        }catch(Exception se){
+	            se.printStackTrace();
+	        }
+	    }
+        
+		return ret;
 	}
 
 	protected static boolean createDB(String dbType, String dbName,String url, String user, String pwd) 
@@ -9974,9 +10011,10 @@ public class BaseController  extends BaseFunction{
 		switch(type)
 		{
 		case "mysql":
-			return testDBForMysql(type, url, user, pwd);
 		case "sqlite":
-			return testDBForSqlite(type, url, user, pwd);
+			return testDBStandard(type, url, user, pwd);
+		//case "sqlite":
+			//return testDBForSqlite(type, url, user, pwd);
 		}
 		return false;
     }	
@@ -9992,7 +10030,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	public static boolean testDBForMysql(String type, String url, String user, String pwd)
+	public static boolean testDBStandard(String type, String url, String user, String pwd)
 	{
         Connection conn = null;
         try {
@@ -10491,17 +10529,7 @@ public class BaseController  extends BaseFunction{
 	protected static boolean initDBForSqlite(String type, String url, String user, String pwd) 
 	{
 		System.out.println("initDBForSqlite() url:" + url);
-		//String dbPath = getDbPathFromUrl(url);
-		//String dbName = getDBNameFromUrl("sqlite", url);
-		//return FileUtil.copyFile( docSysWebPath + "WEB-INF/classes/data/DocSystem.db", dbPath + dbName, true);
-	
-		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/sqlite_docsystem.sql";
-		if(FileUtil.isFileExist(sqlScriptPath) == false)
-		{
-			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
-			return false;
-		}
-		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
+		return initSqliteTables(type, url, user, pwd);
 	}
 	
 	protected static boolean initDBForMysql(String type, String url, String user, String pwd) 
