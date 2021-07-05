@@ -25,23 +25,84 @@
 		            <img id="imgPlayer" name="imgPlayer" src="" style="display:none; max-width:100%; max-height:100%;"></img>
                 </div>
             </div>
-            <div class="swiper-button-prev" style="color: #007aff"></div>
-            <div class="swiper-button-next" style="color: #007aff"></div>
+            <div class="swiper-button-prev" onclick="gotoPreviousDoc()" style="color: #007aff"></div>
+            <div class="swiper-button-next" onclick="gotoNextDoc()" style="color: #007aff"></div>
         </div>
 	</div>    
 	<script type="text/javascript">
-	    var fileLink = getQueryString("fileLink");	    
-	    if(!fileLink || fileLink != null)
-	    {
-		    var docInfo = getDocInfoFromRequestParamStr();	    
-	    	getDocFileLink(docInfo, showImage, showErrorMessage);    	
+	    var docInfo = getDocInfoFromRequestParamStr();	    
+	    var imgList = [];
+	    var index = 0;
+	    function getAndShowImages(docInfo)
+	    {	
+			$.ajax({
+	            url : "/DocSystem/Repos/getSubDocList.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	                vid: docInfo.vid,
+	                docId: docInfo.docId,
+	                path: docInfo.path,
+	                name: "",
+	                shareId: docInfo.shareId,
+	            },
+	            success : function (ret) {
+	         		console.log("showDocList ret:", ret)
+	         		if(ret.status == "ok")
+	            	{
+						imgList = getImgList(ret.data);
+						showImage(index);
+	                }
+	                else
+	                {
+	                	console.log(ret.msgInfo);
+	                    showErrorMessage("获取文件列表错误:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	            	showErrorMessage("获取文件列表错误:服务器异常");
+	            }
+	        });
 	    }
-	    else
+	    
+	    function getImgList(docList, docInfo)
+	   	{
+	    	var count = 0;
+	    	for(int i = 0; i < docList.length; i++)
+	    	{
+				doc = docList[i];
+				if(isImage(doc))
+				{
+					imgList.push(doc);
+					if(doc.id == docInfo.docId)
+					{
+						index = imgList.length;
+						showImage(doc.fileLink);
+					}
+				}
+	    	}
+	   	}
+	    
+	    function gotoPreviousDoc()
 	    {
-	    	showImage(fileLink);
+	    	if(index > 0)
+	    	{
+	    		index--;
+	    		showImage(imgList[index].fileLink);
+	    	}
 	    }
-		
-	    function showImage(fileLink)
+	    
+	    function gotoNextDoc()
+	    {
+	    	if(index < imgList.size)
+	    	{
+	    		index++;
+	    		showImage(imgList[index].fileLink);
+	    	}	    	
+	    }
+	    
+	    
+		function showImage(fileLink)
 	    {
 			$("#imgPlayer").attr('src', fileLink);
 			$("#imgPlayer").show();
