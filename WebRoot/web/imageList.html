@@ -31,8 +31,12 @@
 	</div>    
 	<script type="text/javascript">
 	    var docInfo = getDocInfoFromRequestParamStr();	    
+	    console.log("docInfo:", docInfo);
+	    	
 	    var imgList = [];
 	    var index = 0;
+	    getAndShowImages(docInfo);
+	    
 	    function getAndShowImages(docInfo)
 	    {	
 			$.ajax({
@@ -47,10 +51,10 @@
 	                shareId: docInfo.shareId,
 	            },
 	            success : function (ret) {
-	         		console.log("showDocList ret:", ret)
+	         		//console.log("showDocList ret:", ret)
 	         		if(ret.status == "ok")
 	            	{
-						imgList = getImgList(ret.data);
+						getImgList(ret.data, docInfo);
 						showImage(index);
 	                }
 	                else
@@ -68,19 +72,23 @@
 	    function getImgList(docList, docInfo)
 	   	{
 	    	var count = 0;
-	    	for(int i = 0; i < docList.length; i++)
+	    	for(var i = 0; i < docList.length; i++)
 	    	{
-				doc = docList[i];
-				if(isImage(doc))
+				var doc = docList[i];
+				//console.log("getImgList doc:", doc);
+				if(isPictureFile(doc.name) == true)
 				{
 					imgList.push(doc);
-					if(doc.id == docInfo.docId)
+					if(doc.id === docInfo.docId)
 					{
-						index = imgList.length;
-						showImage(doc.fileLink);
+						index = imgList.length-1;
 					}
 				}
 	    	}
+	    	//console.log("imgList:", imgList);
+	    	
+	    	getAndShowImage(imgList[index]);
+	    	
 	   	}
 	    
 	    function gotoPreviousDoc()
@@ -88,17 +96,52 @@
 	    	if(index > 0)
 	    	{
 	    		index--;
-	    		showImage(imgList[index].fileLink);
+	    		getAndShowImage(imgList[index]);
 	    	}
 	    }
 	    
 	    function gotoNextDoc()
 	    {
-	    	if(index < imgList.size)
+	    	if(index < imgList.length -1)
 	    	{
 	    		index++;
-	    		showImage(imgList[index].fileLink);
+	    		getAndShowImage(imgList[index]);
 	    	}	    	
+	    }
+	    
+	    function getAndShowImage(docInfo)
+	    {
+	    	$.ajax({
+	            url : "/DocSystem/Doc/getDocFileLink.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	reposId: docInfo.vid,
+	                path: docInfo.path,
+	                name: docInfo.name,
+	                shareId: docInfo.shareId,
+	                urlStyle: "REST",
+	            },
+	            success : function (ret) {
+	            	console.log("getDocFileLink ret",ret);
+	            	if( "ok" == ret.status )
+	            	{
+	            		var docLink = ret.data;
+	            		//var fileLink = buildFullLink(docLink);
+	            		showImage(docLink);
+	                }
+	                else 
+	                {
+	                	console.log(ret.msgInfo);
+	                	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+	                	showErrorMessage(errorInfo);
+	                }
+	            },
+	            error : function () {
+	            	errorInfo = "获取文件信息失败：服务器异常";
+	            	showErrorMessage(errorInfo);
+	            }
+	        });
 	    }
 	    
 	    
