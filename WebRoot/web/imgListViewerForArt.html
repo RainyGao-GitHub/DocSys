@@ -1,9 +1,25 @@
+<link rel="stylesheet" href="static/swiper/swiper.min.css" type="text/css">
+<style type="text/css">
+   /*自定义左右键悬浮变色*/
+   .swiper-container div[aria-disabled='false']:hover {
+    	color: #fa0 !important;
+   }
+</style>
 <script src="static/scripts/jquery.min.js"></script>
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
 <div align="center" style="margin-top:20px; min-height:500px;">
-	<img id="imgPlayer" name="imgPlayer" src="" style="display:none; max-width:100%; max-height:100%;"></img>
+    <!--图片轮播显示-->
+    <div class="swiper-container">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide">
+				<img id="imgPlayer" name="imgPlayer" src="" style="display:none; max-width:100%; max-height:100%;"></img>
+            </div>
+        </div>
+        <div class="swiper-button-prev" onclick="gotoPreviousDoc()" style="color: #007aff"></div>
+        <div class="swiper-button-next" onclick="gotoNextDoc()" style="color: #007aff"></div>
+    </div>
 </div>
 
 <script type="text/javascript">
@@ -20,7 +36,80 @@
 	}
 	console.log("docInfo:",docInfo)
 	
-	getDocFileLink(docInfo, showImage, showErrorMessage);    	
+    var imgList = [];
+    var index = 0;
+    getAndShowImages(docInfo);
+    
+    function getAndShowImages(docInfo)
+    {	
+		$.ajax({
+            url : "/DocSystem/Repos/getSubDocList.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                vid: docInfo.vid,
+                docId: docInfo.docId,
+                path: docInfo.path,
+                name: "",
+                shareId: docInfo.shareId,
+            },
+            success : function (ret) {
+         		//console.log("showDocList ret:", ret)
+         		if(ret.status == "ok")
+            	{
+					getImgList(ret.data, docInfo);
+                }
+                else
+                {
+                	console.log(ret.msgInfo);
+                    showErrorMessage("获取文件列表错误:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("获取文件列表错误:服务器异常");
+            }
+        });
+    }
+    
+    function getImgList(docList, docInfo)
+   	{
+    	index = 0;
+    	for(var i = 0; i < docList.length; i++)
+    	{
+			var doc = docList[i];
+			//console.log("getImgList doc:", doc);
+			if(isPictureFile(doc.name) == true)
+			{
+				imgList.push(doc);
+				if(doc.docId == docInfo.docId)
+				{
+					index = imgList.length-1;
+				}
+			}
+    	}
+    	console.log("getImgList imgList:", imgList);
+    	console.log("getImgList index:", index);
+    	
+		getDocFileLink(imgList[index], showImage, showErrorMessage);	    	
+   	}
+    
+    function gotoPreviousDoc()
+    {
+    	if(index > 0)
+    	{
+    		index--;
+			getDocFileLink(imgList[index], showImage, showErrorMessage);	    	
+    	}
+    }
+    
+    function gotoNextDoc()
+    {
+    	if(index < imgList.length -1)
+    	{
+    		index++;
+			getDocFileLink(imgList[index], showImage, showErrorMessage);	    	
+    	}	    	
+    }
     
     function showImage(fileLink)
     {
