@@ -1510,7 +1510,7 @@ function showImgInNewPage(docInfo, fileLink)
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/image.html?" + urlParamStr);
+	window.open("/DocSystem/web/imageList.html?" + urlParamStr);
 }
 
 function showVideoInNewPage(docInfo, fileLink){
