@@ -2171,7 +2171,7 @@ function showOfficeInArtDialog(docInfo)
 			console.log('oniframeload');
 		},
         cancel: function(){
-            qiao.bs.confirm('确定关闭当前窗口？',function(){
+            qiao.bs.confirm('是否关闭当前窗口？',function(){
                 dialog.get("ArtDialog"  + docInfo.docId).close()
             });
             return false;
