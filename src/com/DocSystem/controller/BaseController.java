@@ -9510,7 +9510,7 @@ public class BaseController  extends BaseFunction{
     				"  `SIZE` bigint(20) NOT NULL DEFAULT '0',\n" +
     				"  `CHECK_SUM` varchar(32) DEFAULT NULL,\n" +
     				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
-    				"  `CONTENT` varchar(4096) default null,\n" +
+    				"  `CONTENT` varchar(10000) default null,\n" +
     				"  `PATH` varchar(2000) NOT NULL DEFAULT '',\n" +
     				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
     				"  `PID` bigint(20) NOT NULL DEFAULT '0',\n" +
@@ -9651,7 +9651,7 @@ public class BaseController  extends BaseFunction{
     				"    ROLE            INT (11)      DEFAULT NULL,\n" +
     				"    REAL_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
     				"    NICK_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
-    				"    INTRO           VARCHAR (200) DEFAULT NULL,\n" +
+    				"    INTRO           VARCHAR (10000) DEFAULT NULL,\n" +
     				"    IMG             VARCHAR (200) DEFAULT NULL,\n" +
     				"    EMAIL           VARCHAR (50)  DEFAULT '',\n" +
     				"    EMAIL_VALID     INT (1)       NOT NULL\n" +
@@ -10577,8 +10577,8 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_SYS_CONFIG);
 			dbTabList.add(DOCSYS_DOC_SHARE);			
 			dbTabList.add(DOCSYS_REPOS);
-			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
@@ -10586,16 +10586,18 @@ public class BaseController  extends BaseFunction{
 		{
 			dbTabList.add(DOCSYS_DOC_SHARE);
 			dbTabList.add(DOCSYS_REPOS);
-			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_USER);
+			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
 		else if(oldVersion < 20128)
 		{
 			dbTabList.add(DOCSYS_REPOS);
-			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_USER);
+			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
@@ -10603,14 +10605,22 @@ public class BaseController  extends BaseFunction{
 		{
 			//update DB for Doc Name and Path Expand
 			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_USER);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);
 			dbTabList.add(DOCSYS_DOC_LOCK);			
 		}
 		else if(oldVersion < 20207)
 		{
+			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_USER);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
+		}
+		else if(oldVersion < 20208)
+		{
+			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_USER);			
 		}
 		return dbTabList;
 	}
