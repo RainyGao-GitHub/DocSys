@@ -3336,7 +3336,7 @@ public class DocController extends BaseController{
 		//lockDoc
 		DocLock docLock = null;
 		
-		int lockType = isRealDoc? DocLock.LOCK_STATE_FORCE : DocLock.LOCK_STATE_VFORCE;
+		int lockType = isRealDoc? DocLock.LOCK_TYPE_FORCE : DocLock.LOCK_TYPE_VFORCE;
 		synchronized(syncLock)
 		{
 			//LockDoc
