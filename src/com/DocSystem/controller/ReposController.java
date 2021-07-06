@@ -261,7 +261,7 @@ public class ReposController extends BaseController{
 
 		//Lock the repos
 		DocLock reposLock = null;
-		int lockType = DocLock.LOCK_STATE_FORCE;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{	
 			long lockTime = nowTimeStamp + 4*60*60*1000;
