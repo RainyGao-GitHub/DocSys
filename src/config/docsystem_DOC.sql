@@ -35,7 +35,7 @@ CREATE TABLE `doc` (
   `SIZE` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT '文件大小',
   `CHECK_SUM` varchar(32) DEFAULT NULL COMMENT '文件的MD5校验值',
   `REVISION` varchar(100) DEFAULT NULL COMMENT 'RealDoc Revision',
-  `CONTENT` longtext COMMENT 'doc''s virtual content',
+  `CONTENT` varchar(10000) DEFAULT NULL COMMENT 'doc''s virtual content',
   `PATH` varchar(6000) NOT NULL DEFAULT '' COMMENT '基于仓库目录的相对路径',
   `DOC_ID` bigint(20) DEFAULT NULL COMMENT 'Doc Node id',
   `PID` bigint(20) NOT NULL DEFAULT '0' COMMENT 'Parent Node id',
