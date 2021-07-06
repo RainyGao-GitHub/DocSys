@@ -36,7 +36,7 @@ CREATE TABLE `user` (
   `ROLE` int(11) DEFAULT NULL COMMENT '角色ID',
   `REAL_NAME` varchar(50) DEFAULT NULL,
   `NICK_NAME` varchar(50) DEFAULT NULL COMMENT '昵称',
-  `INTRO` longtext,
+  `INTRO` varchar(10000) DEFAULT NULL,
   `IMG` varchar(200) DEFAULT NULL,
   `EMAIL` varchar(50) DEFAULT '',
   `EMAIL_VALID` int(1) NOT NULL DEFAULT '0' COMMENT '邮箱是否已验证',

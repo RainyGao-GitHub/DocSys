@@ -15,7 +15,7 @@ CREATE TABLE `doc` (
   `SIZE` bigint(20) NOT NULL DEFAULT '0',
   `CHECK_SUM` varchar(32) DEFAULT NULL,
   `REVISION` varchar(100) DEFAULT NULL,
-  `CONTENT` varchar(4096) default null,
+  `CONTENT` varchar(10000) default null,
   `PATH` varchar(2000) NOT NULL DEFAULT '',
   `DOC_ID` bigint(20) DEFAULT NULL,
   `PID` bigint(20) NOT NULL DEFAULT '0',
@@ -196,24 +196,20 @@ CREATE TABLE user (
     ID              INTEGER       PRIMARY KEY,
     NAME            VARCHAR (40)  DEFAULT NULL,
     PWD             VARCHAR (40)  NOT NULL,
-    TYPE            INT (1)       NOT NULL
-                                  DEFAULT '0',
+    TYPE            INT (1)       NOT NULL DEFAULT '0',
     ROLE            INT (11)      DEFAULT NULL,
     REAL_NAME       VARCHAR (50)  DEFAULT NULL,
     NICK_NAME       VARCHAR (50)  DEFAULT NULL,
-    INTRO           VARCHAR (200) DEFAULT NULL,
+    INTRO           VARCHAR (10000) DEFAULT NULL,
     IMG             VARCHAR (200) DEFAULT NULL,
     EMAIL           VARCHAR (50)  DEFAULT '',
-    EMAIL_VALID     INT (1)       NOT NULL
-                                  DEFAULT '0',
+    EMAIL_VALID     INT (1)       NOT NULL DEFAULT '0',
     TEL             VARCHAR (20)  DEFAULT NULL,
-    TEL_VALID       INT (1)       NOT NULL
-                                  DEFAULT '0',
+    TEL_VALID       INT (1)       NOT NULL DEFAULT '0',
     LAST_LOGIN_TIME VARCHAR (50)  DEFAULT NULL,
     LAST_LOGIN_IP   VARCHAR (50)  DEFAULT NULL,
     LAST_LOGIN_CITY VARCHAR (100) DEFAULT NULL,
-    CREATE_TYPE     INT (1)       NOT NULL
-                                  DEFAULT '0',
+    CREATE_TYPE     INT (1)       NOT NULL DEFAULT '0',
     CREATE_TIME     VARCHAR (50)  DEFAULT NULL
 );
 
