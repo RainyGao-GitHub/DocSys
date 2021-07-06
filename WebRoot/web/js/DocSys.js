@@ -2170,7 +2170,13 @@ function showOfficeInArtDialog(docInfo)
 		oniframeload: function () {
 			console.log('oniframeload');
 		},
-	});
+        cancel: function(){
+            qiao.bs.confirm('确定离开吗？',function(){
+                dialog.get("ArtDialog"  + docInfo.docId).close()
+            });
+            return false;
+        }
+    });
 	d.show();
 
 	//等待页面加载好了再获取
