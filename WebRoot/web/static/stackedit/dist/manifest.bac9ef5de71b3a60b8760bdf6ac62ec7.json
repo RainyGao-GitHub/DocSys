@@ -1,0 +1,41 @@
+{
+  "icons": [
+    {
+      "src": "./icon_512x512.bc1452c3b77b59eb0d8c449de1c77310.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon_384x384.3f55b77300c8b37b4aa380c8460ee0a2.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon_256x256.f406288343ae34c5c7bd1543700c2ac0.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon_192x192.eec0feaecc5bef1a499b3de11bde6b27.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon_128x128.43ad56ce3535a3ffe333a76a05c13267.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon_96x96.1d93fc90dc62ceec6c921786ddab3f69.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ],
+  "name": "StackEdit",
+  "short_name": "StackEdit",
+  "orientation": "any",
+  "display": "standalone",
+  "start_url": "app",
+  "description": "Full-featured, open-source Markdown editor",
+  "background_color": "#ffffff"
+}
