@@ -7955,7 +7955,7 @@ public class BaseController  extends BaseFunction{
 	public void deleteChunks(String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath) {
 		System.out.println("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath);
 		
-		if(null == chunkIndex || chunkIndex < (chunkNum-1))
+		if(null == chunkNum || chunkIndex < (chunkNum-1))
 		{
 			return;
 		}
