@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      var origin = location.protocol + '//' + location.host;
+      (window.opener || window.parent).postMessage(location.hash || location.search, origin);
+    </script>
+  </body>
+</html>
