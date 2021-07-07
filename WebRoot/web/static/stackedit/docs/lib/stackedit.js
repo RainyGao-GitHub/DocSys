@@ -120,7 +120,8 @@ var Stackedit = function () {
     _classCallCheck(this, Stackedit);
 
     this.$options = {
-      url: 'https://stackedit.io/app'
+      //url: 'https://stackedit.io/app'
+      url: '/DocSystem/web/static/stackedit/dist/index.html'    	  
     };
     this.$listeners = {};
 
