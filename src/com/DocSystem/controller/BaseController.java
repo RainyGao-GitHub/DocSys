@@ -2447,6 +2447,7 @@ public class BaseController  extends BaseFunction{
 		
 		tmp_user.setName(userName);
 		tmp_user.setPwd(pwd);
+		
 		List<User> uList = userService.queryUserExt(tmp_user);
 		if(uList == null || uList.size() == 0)
 		{
