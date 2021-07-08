@@ -59,7 +59,8 @@ public class UserController extends BaseController {
 	//用户登录接口
 	@RequestMapping("/login.do")
 	public void login(String userName,String pwd,String rememberMe,HttpServletRequest request,HttpSession session,HttpServletResponse response){
-		System.out.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
+		Log.println("\n************** login ****************");
+		Log.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -98,7 +99,8 @@ public class UserController extends BaseController {
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
 	public void getLoginUser(HttpServletRequest request,HttpSession session,HttpServletResponse response){
-		System.out.println("getLoginUser SESSION ID:" + session.getId());
+		Log.println("\n************** getLoginUser ****************");
+		Log.println("getLoginUser SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -134,7 +136,8 @@ public class UserController extends BaseController {
 	//登出接口
 	@RequestMapping(value="logout")
 	public void logOut(HttpServletRequest request, HttpSession session,HttpServletResponse response,ModelMap model,String type){
-		System.out.println("Logout SESSION ID:" + session.getId());
+		Log.println("\n************** logout ****************");
+		Log.println("Logout SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
 		User loginUser = (User) session.getAttribute("login_user");
@@ -156,7 +159,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="checkUserRegistered")
 	public void checkUserRegistered(String userName, HttpServletResponse response)
 	{
-		System.out.println("checkUserRegistered userName:"+userName);
+		Log.println("\n************** checkUserRegistered ****************");
+		Log.println("checkUserRegistered userName:"+userName);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -193,7 +197,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="register")
 	public void register(HttpServletRequest request, HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		System.out.println("register userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
+		Log.println("\n************** register ****************");		
+		Log.println("register userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -288,7 +293,8 @@ public class UserController extends BaseController {
 	@RequestMapping("/sendVerifyCode.do")
 	public void sendVerifyCode(String userName,Integer type,HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("sendVerifyCode userName:"+userName + " type:" + type);
+		Log.println("\n************** sendVerifyCode ****************");		
+		Log.println("sendVerifyCode userName:"+userName + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(userName == null || "".equals(userName))	//从session中取出用户名??
@@ -411,7 +417,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="checkVerifyCode")
 	public void checkVerifyCode(HttpSession session,String userName,Integer type, String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		System.out.println("checkVerifyCode userName:"+userName + " type:"+type + " verifyCode:"+verifyCode);
+		Log.println("\n************** checkVerifyCode ****************");		
+		Log.println("checkVerifyCode userName:"+userName + " type:"+type + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -454,7 +461,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="changePwd")
 	public void changePwd(HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		System.out.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
+		Log.println("\n************** changePwd ****************");		
+		Log.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -532,7 +540,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="modifyPwd")
 	public void modifyPwd(HttpSession session,String userName,String pwd,String pwd2,String oldPwd,HttpServletResponse response,ModelMap model)
 	{
-		System.out.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " oldPwd:"+oldPwd);
+		Log.println("\n************** modifyPwd ****************");		
+		Log.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " oldPwd:"+oldPwd);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -592,7 +601,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="updateLoginUserInfo")
 	public void updateLoginUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
 	{
-		System.out.println("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
+		Log.println("\n************** updateLoginUserInfo ****************");		
+		Log.println("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -684,7 +694,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="uploadUserImg")
     public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
-		System.out.println("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
+		Log.println("\n************** uploadUserImg ****************");		
+		Log.println("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -785,7 +796,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="getUserImg")
     public  void getUserImg(String fileName, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
-		System.out.println("getUserImg() fileName:" + fileName);
+		Log.println("\n************** getUserImg ****************");				
+		Log.println("getUserImg() fileName:" + fileName);
 		
 		//解决中文编码问题
 		if(request.getHeader("User-Agent").toUpperCase().indexOf("MSIE")>0){  
