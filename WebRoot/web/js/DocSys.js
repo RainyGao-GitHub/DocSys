@@ -2150,7 +2150,7 @@ function showOfficeInArtDialog(docInfo)
 {	
 	//获取窗口的高度并设置高度
 	var height =  getArtDialogInitHeight();
-	var width = getArtDialogInitWidth();	
+	var width = getArtDialogInitWidth();
 	var d = dialog({
 		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
@@ -2171,13 +2171,20 @@ function showOfficeInArtDialog(docInfo)
 			console.log('oniframeload');
 		},
         cancel: function(){
-            qiao.bs.confirm('是否关闭当前窗口？',function(){
-                dialog.get("ArtDialog"  + docInfo.docId).close()
-            });
-            return false;
+		    // 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
+		    let check = $($(".ui-dialog iframe")[0].contentWindow.document).find("iframe")[0].contentWindow.document.getElementById("asc-gen468").disabled;
+            if (!check) {
+                qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？',function(){
+                    dialog.get("ArtDialog"  + docInfo.docId).close()
+                });
+                return false;
+            }
         }
     });
 	d.show();
+
+	// 去除最后一列的按钮栏
+	$(".ui-dialog .ui-dialog-footer").parent().remove();
 
 	//等待页面加载好了再获取
 	setTimeout(function (){
