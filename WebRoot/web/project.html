@@ -757,13 +757,11 @@
 			href += "&shareId"+gShareId;
 		}
 		console.log(href);
+		var protocol = window.location.protocol + '//';
 		var host = window.location.host;	//域名带端口
 		//var host2=document.domain; 			//域名不带端口
 		//var url = window.location.href;		//全路径
-		console.log(host);
-		//console.log(host2);
-		//console.log(url);
-		var url = host+href;
+		var url = protocol + host + href;
 		console.log(url);
 		
 		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
@@ -4308,7 +4306,14 @@
 			},
 			{text: '打开', action: function(e){
 					e.preventDefault();
-					openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);
+					if(curRightClickedTreeNode != null && curRightClickedTreeNode.type == 2)
+					{
+						openDocInNewPage(curRightClickedTreeNode);
+					}
+					else
+					{
+						openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);
+					}
 				}
 			},
 			{text: '下载', action: function(e){
@@ -4583,12 +4588,19 @@
 			context.attach('#secondList', [
 				{text: '预览', action: function(e){
 						e.preventDefault();
-						openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);  
+						openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);  
 					}
 				},
 				{text: '打开', action: function(e){
 						e.preventDefault();
-						openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);  
+						if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
+						{
+							openDocInNewPage(curRightClickedDocListNode);
+						}
+						else
+						{
+							openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId); 
+						}
 					}
 				},
 				{text: '下载', action: function(e){
@@ -4726,7 +4738,14 @@
 				},
 				{text: '打开', action: function(e){
 							e.preventDefault();
-							openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);    
+							if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
+							{
+								openDocInNewPage(curRightClickedDocListNode);
+							}
+							else
+							{
+								openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);    
+							}							
 						}
 				},
 				{text: '下载', action: function(e){
