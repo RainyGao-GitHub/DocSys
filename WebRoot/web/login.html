@@ -192,6 +192,10 @@
                 	window.location.href = url;	//刷新页面
                 }else {
                 	showErrorMessage("错误："+ret.msgInfo);
+                	if(ret.data == "needCheckDBSetting")
+                	{
+                		window.location.href='/DocSystem/index.jsp'
+                	}
                 }
             },
             error : function () {

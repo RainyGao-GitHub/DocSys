@@ -64,15 +64,28 @@ public class UserController extends BaseController {
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User loginUser = loginCheck(userName, pwd, request, session, response, rt);
-		if(loginUser == null)
-		{
-			writeJson(rt, response);
-			User tmp_user = new User();
-			tmp_user.setName(userName);
-			addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, "");
+		User loginUser = null;
+		try {
+			loginUser = loginCheck(userName, pwd, request, session, response, rt);
+			if(loginUser == null)
+			{
+				writeJson(rt, response);
+				User tmp_user = new User();
+				tmp_user.setName(userName);
+				addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, "");
+				return;
+			}
+		} catch (Exception e) {
+			Log.println("login 异常！");
+			e.printStackTrace();
+			rt.setError("用户登录异常，请检查数据库配置是否正常!");
+			rt.setData("needCheckDBSetting");
+			docSysIniState = -1;
+			addDocSysInitAuthCode();
+			writeJson(rt, response);	
 			return;
 		}
+		
 		
 		//Set session
 		System.out.println("登录成功");
