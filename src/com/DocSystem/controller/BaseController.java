@@ -10011,10 +10011,9 @@ public class BaseController  extends BaseFunction{
 		switch(type)
 		{
 		case "mysql":
-		case "sqlite":
 			return testDBStandard(type, url, user, pwd);
-		//case "sqlite":
-			//return testDBForSqlite(type, url, user, pwd);
+		case "sqlite":
+			return testDBForSqlite(type, url, user, pwd);
 		}
 		return false;
     }	
@@ -10025,7 +10024,7 @@ public class BaseController  extends BaseFunction{
 		File dbFile = new File(dbPath, dbName);
 		if(dbFile.exists() && dbFile.length() > 0)
 		{
-			return true;
+			return testDBStandard(type, url, user, pwd);
 		}
 		return false;
 	}

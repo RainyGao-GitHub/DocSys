@@ -1097,6 +1097,24 @@ function showSuccessMsg(msg)
 	});
 }
 
+/****************** Show File In NewPage **************************/
+function openDocInNewPage(doc)
+{
+	console.log("openDocInNewPage() doc:",doc);
+
+	var vid = gReposInfo.id;
+	var docId = doc.docId;
+	var path = base64_encode(doc.path);
+	var name = base64_encode(doc.name);
+	var href = "/DocSystem/web/project.html?vid="+gReposInfo.id+"&doc="+docId+"&path="+path+"&name="+name;
+	if(gShareId)
+	{
+		href += "&shareId"+gShareId;
+	}
+	console.log(href);
+	window.open(href);
+}
+
 /****************** Show File In NewPage/Dialog **************************/
 function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 {
