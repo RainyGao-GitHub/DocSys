@@ -1339,6 +1339,7 @@
                 	gReposInfo = ret.data;
                 	console.log("gReposInfo:", gReposInfo);
 
+                	gRootDoc.vid = gReposInfo.id;
                 	if(!gRootDoc.showName)
                 	{
 	                	gRootDoc.showName = gReposInfo.name;
@@ -3826,7 +3827,7 @@
                 if( "ok" == ret.status )
                 {
                 	var docShare = ret.data;
-                	
+                	gRootDoc.vid = docShare.vid;
                 	gRootDoc.showName = docShare.name;
                 	gRootDoc.name = docShare.name;
                 	gRootDoc.path = docShare.path;
@@ -4176,6 +4177,19 @@
 						curRightClickedTreeNode = null; 
 					    gParentNodeForUpload = null;	//uploadFiles is the trigger, so need to save the destination dir to gVar
 						uploadDir();
+					}
+				},	
+				]
+			},
+			{text: '推送', subMenu: [
+				{text: '至仓库',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(gRootDoc, 1);
+					}
+				},
+				{text: '至目录',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(gRootDoc, 2);
 					}
 				},	
 				]
@@ -5055,7 +5069,7 @@
     
 	function showDocPushPanel(node, type)
 	{
-		console.log("showDocPushPanel type:" + type, node, );
+		console.log("showDocPushPanel type:" + type, node);
 		bootstrapQ.dialog({
 			id: 'pushDoc',
 			url: 'pushDoc.html',
