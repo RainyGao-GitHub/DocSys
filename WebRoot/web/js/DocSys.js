@@ -2190,7 +2190,7 @@ function showOfficeInArtDialog(docInfo)
 		},
         cancel: function(){
 		    // 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
-		    let check = $($(".ui-dialog iframe")[0].contentWindow.document).find("iframe")[0].contentWindow.document.getElementById("asc-gen468").disabled;
+		    let check = $($(".ui-dialog iframe")[0].contentWindow.document).find("iframe")[0].contentWindow.document.getElementById("asc-gen517").disabled;
             if (!check) {
                 qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？',function(){
                     dialog.get("ArtDialog"  + docInfo.docId).close()
