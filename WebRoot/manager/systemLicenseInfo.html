@@ -53,8 +53,7 @@
 		console.log("SystemLicenseInfoPageCallback()");
         
 	    //Page Value Init
-	    var type = getFormatedLicenseType(systemLicenseInfo.type);
-	    $("#systemLicenseType").val(type);	
+	    $("#systemLicenseType").val(systemLicenseInfo.formatedType);	
 
 	    if(systemLicenseInfo.customer != undefined)
 	    {
