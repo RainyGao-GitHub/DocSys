@@ -53,18 +53,7 @@
 		console.log("SystemLicenseInfoPageCallback()");
         
 	    //Page Value Init
-	    var type = "开源版";
-	    if(systemLicenseInfo.type == 1)
-	    {
-	    	if(systemLicenseInfo.hasLicense == false)
-	    	{
-			    type = "试用版";			    				    		
-	    	}
-	    	else
-	    	{
-			    type = "商业版";			    				    					    		
-	    	}
-	    }
+	    var type = getFormatedLicenseType(systemLicenseInfo.type);
 	    $("#systemLicenseType").val(type);	
 
 	    if(systemLicenseInfo.customer != undefined)

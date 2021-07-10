@@ -30,6 +30,7 @@
 		//Disable the obj
 		$(obj).attr("disabled",true);
 		
+		var type = $("#lienceType").val();
 		var customer = $("#customer").val();
 	    var payInfo = $("#payInfo").val();
 	    var usersCount =  $("#usersCount").val();
@@ -42,6 +43,7 @@
             type : "post",
             dataType : "json",
             data : {
+            	type: type,
             	customer : customer,
             	payInfo : payInfo,
             	usersCount : usersCount,
@@ -78,6 +80,16 @@
 </script>
                     
                   <div class="form-horizontal">
+                    <!-- type -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3">证书类型</label>
+                      <div class="col-lg-9">
+                        <select class="form-control" id="lienceType" name="lienceType">
+                          <option value="2">专业版</option>
+                          <option value="1">企业版</option>
+                        </select>
+                      </div>
+                    </div>
                     <!-- customer -->
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="customer">客户信息</label>

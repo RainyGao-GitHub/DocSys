@@ -2404,6 +2404,8 @@
 					node.formatedState = "已作废";
 				}
 			}
+
+			node.formatedType = getFormatedLicenseType(node.type);
 			
 			if(node.installedCount)
 			{
@@ -2859,11 +2861,41 @@
 			callback: function(){
 			    console.log("page loaded callback");
 			    var systemLicenseInfo = systemLicenses.systemLicense;
+			    systemLicenseInfo.formatedType = getFormatedLicenseType(systemLicenseInfo.type);
 			    SystemLicenseInfoPageCallback(systemLicenseInfo);
 			}
 		});
 	}
 
+	function getFormatedLicenseType(type)
+	{
+		var formatedType = "未知";			
+		if(type != undefined)
+		{
+			switch(type)
+			{
+			case 0: //开源版
+				formatedType = "开源版";
+				break;
+			case 1: //企业版
+				formatedType = "企业版";
+				break;
+			case 2: //专业版
+				formatedType = "专业版";
+				break;
+			case 3: //个人版
+				formatedType = "个人版";
+				break;
+			}
+		}
+		else
+		{
+			//老版证书都是企业版
+			formatedType = "企业版";				
+		}
+		return formatedType;
+	}
+	
 	//showOfficeLicenseInfoPanel
 	function showOfficeLicenseInfoPanel(){
 		console.log("showOfficeLicenseInfoPanel");
