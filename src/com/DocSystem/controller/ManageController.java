@@ -2,7 +2,6 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.lucene.search.BooleanClause.Occur;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,8 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
-import util.LuceneUtil.LuceneUtil2;
-
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
@@ -38,9 +34,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.Reflect;
-import com.DocSystem.common.entity.AuthCode;
-import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.controller.BaseController;
 
@@ -860,6 +853,12 @@ public class ManageController extends BaseController{
 		
 		if(ldapConfig != null)
 		{
+			if(docSysType != 1)
+			{
+				Log.docSysErrorLog("系统不支持LDAP登录认证，请购买企业版证书！", rt);
+				writeJson(rt, response);
+				return;
+			}
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
 		}
 				

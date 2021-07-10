@@ -6,7 +6,6 @@
               <div class="widget-icons pull-right">
                   <div class="form-inline">
                       <button onclick="showAddLicensePanel()" class="btn btn-md btn-success examine_ban">新增证书</button>
-                      <button onclick="showAddOfficeLicensePanel()" class="btn btn-md btn-success examine_ban">新增Office证书</button>
                       <button onclick="importLicense()" class="btn btn-md btn-success examine_ban">导入证书</button>
                       <div class="form-group">
                           <input type="input" class="form-control" id="search-license" placeholder="请输入关键字">
@@ -24,6 +23,7 @@
                 <tr>
                   <th>#</th>
                   <th>ID</th>
+                  <th>证书类型</th>
                   <th>客户名称</th>
                   <th>支付信息</th>
                   <th>用户限制</th>
@@ -40,6 +40,7 @@
                 {{each list as value i}}
                   <tr index="{{i}}">
                   	<td>{{value.index}}</td>
+                    <td>{{value.formatedType}}</td>
                     <td>{{value.id}}</td>
                     <td>{{value.customer}}</td>
                     <td>{{value.payInfo}}</td>

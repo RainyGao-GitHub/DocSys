@@ -55,7 +55,7 @@
                 	showUserList(gPageIndex);	//刷新UserList
                 	showErrorMessage("新增成功");
                 }else {
-                	showErrorMessage("错误：" + ret.msgInfo);
+                	showErrorMessage("新增失败：" + ret.msgInfo);
                 }
             },
             error : function () {
