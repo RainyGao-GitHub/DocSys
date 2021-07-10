@@ -2170,6 +2170,8 @@ function showOfficeInArtDialog(docInfo)
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();
 	var ArtDialogId = "ArtDialog"  + docInfo.docId;
+	// 清除该文件可能存在的已打开的iframe
+	$(`iframe[name=${ArtDialogId}]`).remove();
 	var d = dialog({
 		id: ArtDialogId,
 		title: docInfo.name,
@@ -2191,25 +2193,25 @@ function showOfficeInArtDialog(docInfo)
 		},
         cancel: function(){
 		    // 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
-        	var SaveButtonId = getSaveButtonId(docInfo);
-        	//try{
-        		console.log($(".ui-dialog iframe")[0]);
-        		console.log($("#content:" + ArtDialogId).find("iframe[name='" + ArtDialogId + "']"));
-        		let saveButton = $($("#content:" + ArtDialogId).find("iframe[name='" + ArtDialogId + "']").contentWindow.document).find("iframe")[0].contentWindow.document.getElementById(SaveButtonId);
-		        if(saveButton && saveButton != null)
-		        {
-			        let check = saveButton.disabled;
-			        if (!check) {
-			        	qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function(){dialog.get(ArtDialogId).close()});
-				        return false;
-			        }
-			    }
-        	//} 
-        	//catch(err)
-        	//{
-        	//	console.log("页面未加载完成，直接关闭:", err);
-        	//	//dialog.get(ArtDialogId).close();
-        	//}
+        	// 获取该文档唯一iframe,其name是文档唯一值
+			let docIframe = $(`iframe[name=${ArtDialogId}]`)[0];
+			if (docIframe !== undefined) {
+				// 根据该iframe获取下一级iframe
+				let officeIframe = $(docIframe.contentWindow.document).find("iframe[name=frameEditor]")[0];
+				if (officeIframe !== undefined) {
+					// 从该iframe中，获取是否保存按钮元素，修改为通过绝对元素相对定位获取
+					let saveButton = $(officeIframe.contentWindow.document).find("div#slot-btn-dt-save > button:first");
+					if (saveButton !== undefined) {
+						// 获取该元素的禁用状态，开启则提示，禁用则直接关闭窗口即可
+						let check = $(saveButton).prop("disabled");
+						if(!check) {
+							qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function(){dialog.get(ArtDialogId).close()});
+							return false;
+						}
+					}
+				}
+			}
+			return true;
         }
     });
 	d.show();
@@ -2244,29 +2246,6 @@ function showOfficeInArtDialog(docInfo)
 			}	
 		}
 	}, 100);
-}
-
-function getSaveButtonId(docInfo)
-{
-	if(!docInfo.fileSuffix)
-	{
-		docInfo.fileSuffix = getFileSuffix(docInfo.name);    			
-	}
-	
-	switch(docInfo.fileSuffix)
-	{
-	case "doc":
-	case "docx":
-		return "asc-gen517";
-	case "xls":
-	case "xlsx":
-		return "asc-gen804";
-	case "ppt":
-	case "pptx":
-		return "asc-gen472";
-	default:
-		return "asc-gen517";
-	}
 }
 
 function getZipDialogStyle()
