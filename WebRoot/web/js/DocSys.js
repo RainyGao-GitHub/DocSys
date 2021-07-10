@@ -2169,8 +2169,9 @@ function showOfficeInArtDialog(docInfo)
 	//获取窗口的高度并设置高度
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();
+	var ArtDialogId = "ArtDialog"  + docInfo.docId;
 	var d = dialog({
-		id: "ArtDialog"  + docInfo.docId,
+		id: ArtDialogId,
 		title: docInfo.name,
 		url: 'officeEditorForArt.jsp',
 		msg: '页面正在加载，请稍等...',
@@ -2191,13 +2192,24 @@ function showOfficeInArtDialog(docInfo)
         cancel: function(){
 		    // 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
         	var SaveButtonId = getSaveButtonId(docInfo);
-		    let check = $($(".ui-dialog iframe")[0].contentWindow.document).find("iframe")[0].contentWindow.document.getElementById(SaveButtonId).disabled;
-            if (!check) {
-                qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？',function(){
-                    dialog.get("ArtDialog"  + docInfo.docId).close()
-                });
-                return false;
-            }
+        	//try{
+        		console.log($(".ui-dialog iframe")[0]);
+        		console.log($("#content:" + ArtDialogId).find("iframe[name='" + ArtDialogId + "']"));
+        		let saveButton = $($("#content:" + ArtDialogId).find("iframe[name='" + ArtDialogId + "']").contentWindow.document).find("iframe")[0].contentWindow.document.getElementById(SaveButtonId);
+		        if(saveButton && saveButton != null)
+		        {
+			        let check = saveButton.disabled;
+			        if (!check) {
+			        	qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function(){dialog.get(ArtDialogId).close()});
+				        return false;
+			        }
+			    }
+        	//} 
+        	//catch(err)
+        	//{
+        	//	console.log("页面未加载完成，直接关闭:", err);
+        	//	//dialog.get(ArtDialogId).close();
+        	//}
         }
     });
 	d.show();
