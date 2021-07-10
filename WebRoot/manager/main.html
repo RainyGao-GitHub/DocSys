@@ -1976,10 +1976,11 @@
 	            else 
 	            {
 	                console.log(ret.msgInfo);
+		        	showErrorMessage("查询失败:" + ret.msgInfo);	                
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("获取日志列表失败:服务器异常");
+	        	showErrorMessage("查询失败:服务器异常");
 	        }
 	    });
 	}
@@ -2405,7 +2406,7 @@
 				}
 			}
 
-			node.formatedType = getFormatedLicenseType(node.type);
+			node.formatedType = getFormatedLicenseType(node.type, node.hasLicense);
 			
 			if(node.installedCount)
 			{
@@ -2861,13 +2862,13 @@
 			callback: function(){
 			    console.log("page loaded callback");
 			    var systemLicenseInfo = systemLicenses.systemLicense;
-			    systemLicenseInfo.formatedType = getFormatedLicenseType(systemLicenseInfo.type);
+			    systemLicenseInfo.formatedType = getFormatedLicenseType(systemLicenseInfo.type, systemLicenseInfo.hasLicense);
 			    SystemLicenseInfoPageCallback(systemLicenseInfo);
 			}
 		});
 	}
 
-	function getFormatedLicenseType(type)
+	function getFormatedLicenseType(type, hasLicense)
 	{
 		var formatedType = "未知";			
 		if(type != undefined)
@@ -2879,9 +2880,17 @@
 				break;
 			case 1: //企业版
 				formatedType = "企业版";
+				if(hasLicense != undefined && hasLicense == false)
+				{
+					formatedType = "企业版(试用)";
+				}
 				break;
 			case 2: //专业版
 				formatedType = "专业版";
+				if(hasLicense != undefined && hasLicense == false)
+				{
+					formatedType = "专业版(试用)";
+				}
 				break;
 			case 3: //个人版
 				formatedType = "个人版";
