@@ -30,17 +30,6 @@
 	                    	<button onclick="deleteSystemLicense()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
 	                    </td>
 	                  </tr>
-	                  {{if value.docSysType == 2}}
-	                  <tr>
-	                    <td>Office证书</td>
-	                    <td>{{value.officeLicense.status}}</td>
-	                    <td class="edit">
-	                      	<button onclick="showOfficeLicenseInfoPanel()" data-id="" class="btn btn-lg btn-success examine_ban">详情</button>
-	                      	<button onclick="installOfficeLicense()" data-id="" class="btn btn-lg btn-warning examine_ban">安装</button>
-	                    	<button onclick="deleteOfficeLicense()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
-	                    </td>
-	                  </tr>
-	                  {{/if}}
 	                </tbody>
 	          </table>
               <div class="widget-foot">

@@ -78,7 +78,7 @@ public class BaseFunction{
 	public static int OSType = OS.UNKOWN; //
 	
 	//DocSysType
-    protected static int docSysType = 0; //0: Community Edition 1: Professional Edition 2: Enterprise Edition
+    protected static int docSysType = 0; //0: Community Edition 1: Enterprise Edition 2: Professional Edition 3: Personal Edition 
     
     protected static int isSalesServer = 0;
 	protected static String serverHost = null;
@@ -120,7 +120,7 @@ public class BaseFunction{
 	
 	protected static void applySystemLdapConfig(String ldapConfig) {
 		//UPdate系统ldapConfig
-		if(docSysType > 0)
+		if(docSysType == 1)
 		{
 			systemLdapConfig.enabled = true;
 		}
