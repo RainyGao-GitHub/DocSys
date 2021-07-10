@@ -2169,9 +2169,8 @@ function showOfficeInArtDialog(docInfo)
 	//获取窗口的高度并设置高度
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();
+	var ArtDialogDivContentId = "div[aria-describedby='content:ArtDialog"+docInfo.docId+"']";
 	var ArtDialogId = "ArtDialog"  + docInfo.docId;
-	// 清除该文件可能存在的已打开的iframe
-	$(`iframe[name=${ArtDialogId}]`).remove();
 	var d = dialog({
 		id: ArtDialogId,
 		title: docInfo.name,
@@ -2194,7 +2193,7 @@ function showOfficeInArtDialog(docInfo)
         cancel: function(){
 		    // 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
         	// 获取该文档唯一iframe,其name是文档唯一值
-			let docIframe = $(`iframe[name=${ArtDialogId}]`)[0];
+			let docIframe = $(ArtDialogDivContentId).find(`iframe[name=${ArtDialogId}]`)[0];
 			if (docIframe !== undefined) {
 				// 根据该iframe获取下一级iframe
 				let officeIframe = $(docIframe.contentWindow.document).find("iframe[name=frameEditor]")[0];
@@ -2205,7 +2204,9 @@ function showOfficeInArtDialog(docInfo)
 						// 获取该元素的禁用状态，开启则提示，禁用则直接关闭窗口即可
 						let check = $(saveButton).prop("disabled");
 						if(!check) {
-							qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function(){dialog.get(ArtDialogId).close()});
+							qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function(){
+							    dialog.get(ArtDialogId).close();
+							});
 							return false;
 						}
 					}
