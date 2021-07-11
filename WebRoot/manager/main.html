@@ -1919,6 +1919,53 @@
 		xhr.send(form);
 	}
 	
+	function installOfficeConfirm()
+	{
+		console.log("installOfficeConfirm()");
+	    qiao.bs.confirm({
+	    		id: "installOfficeConfirmDialog",
+		        title: "安装Office",
+		        msg: "是否安装Office？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+				startInstallOffice();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startInstallOffice()
+	{
+		console.log("startInstallOffice()");
+		$.ajax({
+	        url : "/DocSystem/Bussiness/installOffice.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        },
+	        success : function (ret) {
+	        	console.log("startInstallOffice ret",ret);
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("安装成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+		        	showErrorMessage("安装失败:" + ret.msgInfo);	                
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("安装失败:服务器异常");
+	        }
+	    });
+	}
+	
+	
 	var systemLogSearchWord = "";
 	function searchSystemLog()
 	{
