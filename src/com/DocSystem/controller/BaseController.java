@@ -9182,6 +9182,14 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 			
+			String localOfficeApiPath = docSysWebPath + "web/static/office-editor/web-apps/apps/api/documents/api.js";
+			File file = new File(localOfficeApiPath);
+			if(file.exists() == false)
+			{
+				System.out.println("getOfficeEditor() officeEditor not installed");								
+				return null;
+			}
+			
 			System.out.println("getOfficeEditor() url:" + request.getRequestURL());
 			String url = getHostAndPortFromUrl(request.getRequestURL());
 			officeEditor = url + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";
