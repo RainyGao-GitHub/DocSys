@@ -64,12 +64,12 @@ import com.DocSystem.entity.Repos;
 
 public class GITUtil  extends BaseController{
     //For Low Level APIs
-	private String repositoryURL = null;
-	private String user = null;
-	private String pwd = null;
-	private String gitDir = null;
-	private String wcDir = null;
-	private boolean isRemote = false;
+	public String repositoryURL = null;
+	public String user = null;
+	public String pwd = null;
+	public String gitDir = null;
+	public String wcDir = null;
+	public boolean isRemote = false;
 	
 	//以下三个变量只用于打开gitDir而不是wcDir
     Git git = null;
