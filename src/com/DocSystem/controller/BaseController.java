@@ -9165,6 +9165,12 @@ public class BaseController  extends BaseFunction{
 		return docSysIniState;
 	}
 	
+	//This interface will be called by jsp
+	public static Boolean isBussienss()
+	{
+		return docSysType > 0;
+	}
+	
 	public static String getOfficeEditor(HttpServletRequest request)
 	{
 		String officeEditor = officeEditorApi;
