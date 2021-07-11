@@ -34,6 +34,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.controller.BaseController;
 
@@ -851,11 +852,17 @@ public class ManageController extends BaseController{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "defaultReposStorePath", defaultReposStorePath);
 		}
 		
-		if(ldapConfig != null)
+		if(ldapConfig != null && !ldapConfig.isEmpty())
 		{
-			if(docSysType != 1)
+			if(docSysType == constants.DocSys_Professional_Edition)
 			{
-				Log.docSysErrorLog("系统不支持LDAP登录认证，请购买企业版证书！", rt);
+				Log.docSysErrorLog("专业版不支持LDAP登录认证，请购买企业版证书！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			else if(docSysType == constants.DocSys_Personal_Edition)
+			{
+				Log.docSysErrorLog("个人版不支持LDAP登录认证，请购买企业版证书！", rt);
 				writeJson(rt, response);
 				return;
 			}
