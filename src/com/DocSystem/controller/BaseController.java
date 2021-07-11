@@ -1205,7 +1205,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private String cloneGitRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+	protected String cloneGitRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
 		GITUtil gitUtil = new GITUtil();
         
         gitUtil.Init(repos, isRealDoc, "");
