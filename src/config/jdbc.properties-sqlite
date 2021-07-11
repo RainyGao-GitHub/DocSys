@@ -1,0 +1,5 @@
+db.type=sqlite
+db.driver=org.sqlite.JDBC
+db.url=jdbc:sqlite:${catalina.home}/DocSystem.db
+db.username=
+db.password=
