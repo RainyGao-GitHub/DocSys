@@ -9165,17 +9165,12 @@ public class BaseController  extends BaseFunction{
 		return docSysIniState;
 	}
 	
-	public static Boolean isBussienss()
-	{
-		return systemLicenseInfo.hasLicense;
-	}
-	
 	public static String getOfficeEditor(HttpServletRequest request)
 	{
 		String officeEditor = officeEditorApi;
 		if(officeEditor == null || officeEditor.isEmpty())
 		{
-			if(systemLicenseInfo.type != constants.DocSys_Bussiness_Edition)
+			if(docSysType == constants.DocSys_Community_Edition)
 			{
 				System.out.println("getOfficeEditor() officeEditor not cofigured");				
 				return null;
