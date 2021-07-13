@@ -61,6 +61,8 @@
 	                    	<input type="text" class="form-control" id="officeEditorApi" name="officeEditorApi" value="{{value.officeEditorApi}}" disabled="disabled" placeholder="http://localhost:88\web-apps\apps\api\documents\api.js">
 	                    </td>
 	                    <td class="edit">
+	                      	<button onclick="installOffice()" data-id="" class="btn btn-lg btn-warning examine_ban">安装...</button>	                      	
+	                      	<button onclick="onlineInstallOfficeConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">在线安装</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
@@ -71,7 +73,7 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
-	                  <tr {{if value.docSysType != 1}} style="display:none" {{/if}}>
+	                  <tr>
 	                    <td>LDAP设置</td>
 	                    <td>
 							<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">

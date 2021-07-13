@@ -81,9 +81,9 @@
     	}
     	
 		//多文件Upload接口
-		function uploadDocs(files,parentNode,parentPath,parentId,level,vid)	//多文件上传函数
+		function uploadDocs(files,parentNode,parentPath,parentId,level,vid,commitMsg)	//多文件上传函数
 		{
-			console.log("uploadDocs()");
+			console.log("uploadDocs() commitMsg:" + commitMsg);
 			
 			if(!files || files.length <= 0)
 			{
@@ -93,12 +93,12 @@
 			
 			if(isUploading == true)
 			{
-				DocUploadAppend(files,parentNode,parentPath,parentId,level,vid);
+				DocUploadAppend(files,parentNode,parentPath,parentId,level,vid,commitMsg);
 			}
 			else
 			{
 				//初始化文件上传参数
-				DocUploadInit(files,parentNode,parentPath,parentId,level,vid);
+				DocUploadInit(files,parentNode,parentPath,parentId,level,vid,commitMsg);
 				
 				uploadTime = new Date().getTime();	//初始化上传时间
 				uploadStartTime = uploadTime;
@@ -109,9 +109,9 @@
 		}
 		
 		//初始化DocUpload设置
-      	function DocUploadInit(files,parentNode, parentPath, parentId, level, vid)	//多文件移动函数
+      	function DocUploadInit(files,parentNode, parentPath, parentId, level, vid,commitMsg)	//多文件移动函数
 		{
-			console.log("DocUploadInit()");
+			console.log("DocUploadInit() commitMsg:" + commitMsg);
 			if(!files)
 			{
 				console.log("DocUploadInit() files undefined");		
@@ -134,6 +134,7 @@
 			Batch.parentNode = parentNode;
 			Batch.parentPath = parentPath;
 			Batch.parentId = parentId;
+			Batch.commitMsg = commitMsg;
 			Batch.level = level;
 			Batch.vid = vid;
 			Batch.num = fileNum;
@@ -198,9 +199,9 @@
       	}
       	
       	//增加上传文件
-      	function DocUploadAppend(files,parentNode, parentPath, parentId, level, vid)	//多文件移动函数
+      	function DocUploadAppend(files,parentNode, parentPath, parentId, level, vid,commitMsg)	//多文件移动函数
 		{
-			console.log("DocUploadAppend()");
+			console.log("DocUploadAppend() commitMsg:" + commitMsg);
 			if(!files)
 			{
 				console.log("DocUploadAppend() files is null");
@@ -217,6 +218,7 @@
 			Batch.parentPath = parentPath;
 			Batch.parentId = parentId;
 			Batch.level = level;
+			Batch.commitMsg = commitMsg;
 			Batch.vid = vid;
 			Batch.num = fileNum;
 			Batch.index = 0;
@@ -265,7 +267,8 @@
       		var vid = Batch.vid;
       		var index = Batch.index;
       		var fileNum =  Batch.num;
-      		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum );
+			var commitMsg=Batch.commitMsg;
+      		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum + "commitMsg:"+commitMsg);
       		
       		var count = 0;
 			console.log("buildSubContextList fileNum:" + fileNum);
@@ -291,6 +294,7 @@
     	   		   	SubContext.parentId = parentId;
     	   		   	SubContext.level = level;
         			SubContext.vid = vid;
+					SubContext.commitMsg = commitMsg;
     	   		   	
 		    		SubContext.docId = -1; //-1: 新增  
 		    		
@@ -1704,6 +1708,7 @@
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
 				form.append("uploadFile", SubContext.file);
+				form.append("commitMsg", SubContext.commitMsg);
 				if(gShareId)
 				{
 					form.append("shareId", gShareId);
@@ -1721,6 +1726,7 @@
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
+				form.append("commitMsg", SubContext.commitMsg);
 				if(gShareId)
 				{
 					form.append("shareId", gShareId);
@@ -2033,8 +2039,8 @@
 				
 		//开放给外部的调用接口
         return {
-            uploadDocs: function(files,parentNode,parentPath,parentId,level,vid){
-            	uploadDocs(files,parentNode,parentPath,parentId,level,vid);
+            uploadDocs: function(files,parentNode,parentPath,parentId,level,vid, commitMsg){
+            	uploadDocs(files,parentNode,parentPath,parentId,level,vid, commitMsg);
             },
             stopAllUpload: function(){
             	stopAllUpload();

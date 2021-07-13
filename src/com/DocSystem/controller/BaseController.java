@@ -1205,7 +1205,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private String cloneGitRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+	protected String cloneGitRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
 		GITUtil gitUtil = new GITUtil();
         
         gitUtil.Init(repos, isRealDoc, "");
@@ -4904,11 +4904,14 @@ public class BaseController  extends BaseFunction{
 		switch(repos.getType())
 		{
 		case 1:
-		case 2:
+		case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
 			return fsGetDoc(repos, doc);
 		case 3:
 		case 4:
 			return verReposGetDoc(repos, doc, null);
+		//case 5:// FTP 前置
+		//case 6:// SFTP 前置
+		//case 7:// SMB 前置 (共享目录)
 		}
 		
 		return null;
@@ -9165,9 +9168,10 @@ public class BaseController  extends BaseFunction{
 		return docSysIniState;
 	}
 	
+	//This interface will be called by jsp
 	public static Boolean isBussienss()
 	{
-		return systemLicenseInfo.hasLicense;
+		return docSysType > 0;
 	}
 	
 	public static String getOfficeEditor(HttpServletRequest request)
@@ -9175,9 +9179,17 @@ public class BaseController  extends BaseFunction{
 		String officeEditor = officeEditorApi;
 		if(officeEditor == null || officeEditor.isEmpty())
 		{
-			if(systemLicenseInfo.type != constants.DocSys_Bussiness_Edition)
+			if(docSysType == constants.DocSys_Community_Edition)
 			{
 				System.out.println("getOfficeEditor() officeEditor not cofigured");				
+				return null;
+			}
+			
+			String localOfficeApiPath = docSysWebPath + "web/static/office-editor/web-apps/apps/api/documents/api.js";
+			File file = new File(localOfficeApiPath);
+			if(file.exists() == false)
+			{
+				System.out.println("getOfficeEditor() officeEditor not installed");								
 				return null;
 			}
 			
