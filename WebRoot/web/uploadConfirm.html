@@ -17,7 +17,16 @@
             <div class="clearfix"></div>
         </div>
     </div>
-    
+	<!-- 添加commitMsg-->
+    <div class="modal-footer">
+    	<div class="form-group">
+            <label class="col-sm-2 control-label">文件说明：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="commitMsg" title="文件说明">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
     <div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
@@ -31,7 +40,7 @@
 	function uploadConfirmPageInit(files, parentNode)
 	{
 		console.log("uploadConfirmPageInit()");
-		UploadConfirm.init(files, parentNode);            
+		UploadConfirm.init(files,parentNode);            
 	}
 	
 	function closeUploadConfirmDialog()
@@ -116,7 +125,9 @@
 		function doUploadDocs()
 		{ 
 			//开始上传
-			DocUpload.uploadDocs(files,parentNode,parentPath,parentId,level,vid);
+			var commitMsg = $("#dialog-upload-confirm input[name='commitMsg']").val();      
+   	    	console.log("commitMsg:" + commitMsg);
+			DocUpload.uploadDocs(files,parentNode,parentPath,parentId,level,vid,commitMsg);
 		    return true;   
 		}
 		
