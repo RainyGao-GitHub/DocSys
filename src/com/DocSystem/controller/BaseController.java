@@ -4904,11 +4904,14 @@ public class BaseController  extends BaseFunction{
 		switch(repos.getType())
 		{
 		case 1:
-		case 2:
+		case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
 			return fsGetDoc(repos, doc);
 		case 3:
 		case 4:
 			return verReposGetDoc(repos, doc, null);
+		//case 5:// FTP 前置
+		//case 6:// SFTP 前置
+		//case 7:// SMB 前置 (共享目录)
 		}
 		
 		return null;
