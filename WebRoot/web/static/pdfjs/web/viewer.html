@@ -39,7 +39,13 @@ See https://github.com/adobe-type-tools/cmap-resources
 
 
     <script src="viewer.js"></script>
-
+    <script src="/DocSystem/web/static/scripts/jquery.min.js"></script>
+	<script type="text/javascript">
+		$(document).on('contextmenu', '#outerContainer', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+		});
+    </script>		
   </head>
 
   <body tabindex="1" class="loadingInProgress">
