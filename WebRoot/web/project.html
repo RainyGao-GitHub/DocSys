@@ -1016,7 +1016,12 @@
 				big: false,
 				//okbtn: "开始上传",
 				callback: function(){	//page load ok callback
-					uploadConfirmPageInit(files, parentNode);
+					var showCommitMsg = false;
+					if(gReposInfo.verCtrl && gReposInfo.verCtrl != 0)
+					{
+						showCommitMsg = true;
+					}
+					uploadConfirmPageInit(files, parentNode, showCommitMsg);
 				},
 			});		
 	}
