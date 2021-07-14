@@ -135,6 +135,12 @@ public class BaseFunction{
 		//获取url和basedn
 		String ldapConfigUrl = configs[0].trim();
 		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
+		if(urlInfo == null)
+		{
+			Log.println("applySystemLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
+			return;
+		}
+		
 		systemLdapConfig.url = urlInfo.prefix + urlInfo.params[0] + "/";
 		systemLdapConfig.basedn = "";
 		if(urlInfo.params.length > 1)

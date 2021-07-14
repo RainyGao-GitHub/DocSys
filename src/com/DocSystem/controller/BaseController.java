@@ -62,7 +62,6 @@ import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
-import org.apache.xmlbeans.impl.util.Base64;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -2258,8 +2257,18 @@ public class BaseController  extends BaseFunction{
     	try {
             //String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/";
     		//String basedn = "o=NSN";
-    		
+    		if(systemLdapConfig.enabled == null || systemLdapConfig.enabled == false)
+    		{
+    			return null;
+    		}
+    				
     		String LDAP_URL = systemLdapConfig.url;
+    		if(LDAP_URL == null || LDAP_URL.isEmpty())
+    		{
+    			Log.println("getLDAPConnection LDAP_URL is null or empty, LDAP_URL" + LDAP_URL);
+    			return null;
+    		}
+    			
     		String basedn = systemLdapConfig.basedn;
             
             Hashtable<String,String> HashEnv = new Hashtable<String,String>();
