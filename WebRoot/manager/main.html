@@ -3314,6 +3314,7 @@
 	}
 	
 	//仓库管理
+	var gReposList = [];
 	function showReposList(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getReposList.do",
@@ -3323,6 +3324,7 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
+	            	gReposList = ret.data;
 	            	ReposListDisplay(ret.data);
 	            }
 	            else 
@@ -3412,16 +3414,17 @@
         });
 	}
 	
-	function showEditReposPanel(e, reposId, type)
+	function showEditReposPanel(e, reposId, type, index)
 	{
-		console.log("showEditReposPanel() " + reposId + " type:" + type);
+		console.log("showEditReposPanel() " + reposId + " type:" + type + " index:" + index);
 		
+		var repos = gReposList[index];
 		//TODO: 以下代码从显示元素里读取仓库信息存在风险,显示内容的顺序和含义修改会导致信息错误
-		var Obj = e.target;
-		var trObj =  $(e.target).parent().parent();
-		var name = trObj.children("td:eq(1)").text();
-		var info = trObj.children("td:eq(2)").text();		
-		var path = trObj.children("td:eq(3)").text();		
+		//var Obj = e.target;
+		//var trObj =  $(e.target).parent().parent();
+		//var name = trObj.children("td:eq(1)").text();
+		//var info = trObj.children("td:eq(2)").text();		
+		//var path = trObj.children("td:eq(3)").text();		
 		
 		qiao.bs.dialog({
 			url: 'editRepos.html',
@@ -3433,10 +3436,12 @@
 			    console.log("page loaded callback");
 			    //Page Value Init
 			    $("#reposId").val(reposId);
-				$("#name").val(name);
-			    $("#info").val(info);
-				$("#path").val(path);
-			   	$("#type option[value='"+type+"']").attr("selected","selected");
+			    showReposSetting(repos);
+			    
+			    //$("#name").val(name);
+			    //$("#info").val(info);
+				//$("#path").val(path);
+			   	//$("#type option[value='"+type+"']").attr("selected","selected");
 			}
 		}, null);	
 	}
