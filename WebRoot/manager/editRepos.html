@@ -59,6 +59,192 @@
         });
 	}
 	
+	function showReposSetting(reposInfo)
+	{
+		console.log(reposInfo);
+	   	$("#name").val(reposInfo.name);
+	   	$("#info").val(reposInfo.info);
+	   	$("#path").val(reposInfo.path);
+	   	$("#type option[value='"+reposInfo.type+"']").attr("selected","selected");
+	   	$("#realDocPath").val(reposInfo.realDocPath);
+	   	$("#verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote == 0)
+	   	{
+		   	$("#isRemote").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#isRemote").attr("checked","checked");
+		   	
+	   	}
+	   	$("#localSvnPath").val(reposInfo.localSvnPath);
+	   	$("#svnPath").val(reposInfo.svnPath);
+	   	$("#svnUser").val(reposInfo.svnUser);
+	   	$("#svnPwd").val(reposInfo.svnPwd);
+	   	$("#verCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote1 == 0)
+	   	{
+		   	$("#isRemote1").attr("checked",false);	   		
+	   	}
+	   	else
+	   	{
+		   	$("#isRemote1").attr("checked","checked");
+	   	}
+	   	$("#localSvnPath1").val(reposInfo.localSvnPath1);
+	   	$("#svnPath1").val(reposInfo.svnPath1);
+	   	$("#svnUser1").val(reposInfo.svnUser1);
+	   	$("#svnPwd1").val(reposInfo.svnPwd1);
+	   	if(reposInfo.isTextSearchEnabled == 0)
+	   	{
+		   	$("#isTextSearchEnabled").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#isTextSearchEnabled").attr("checked","checked");
+	   	}	
+	   	
+	   	doSelectVerCtrl();
+	   	doSelectVerCtrl1();
+	}
+	
+	function doSelectFS()
+	{
+		var type = $("#type").val();
+		
+		if(type == 1)	//文件管理系统
+		{
+			//RealDoc verCtrl
+			$("#realDocVerCtrlDiv").show();
+			$("#verCtrl").get(0).selectedIndex=0;
+			$("#verCtrl").attr('disabled',false);
+			
+			//virtualDoc verCtrl 默认总是Git
+			$("#virtualDocVerCtrlDiv").show();
+			$("#verCtrl1").get(0).selectedIndex=2;
+		}
+		else if(type == 2) //文件系统前置
+		{
+			$("#realDocVerCtrlDiv").hide();
+			$("#verCtrl").get(0).selectedIndex=0;
+			
+			//virtualDoc verCtrl 默认总是Git
+			$("#virtualDocVerCtrlDiv").show();
+			$("#verCtrl1").get(0).selectedIndex=2;
+		}
+		else if(type == 3)	//SVN前置
+		{
+			//RealDoc verCtrl
+			$("#realDocVerCtrlDiv").show();
+			$("#verCtrl").get(0).selectedIndex=1;
+			$("#verCtrl").attr('disabled',true);
+
+			//virtualDoc verCtrl 默认总是Git
+			$("#virtualDocVerCtrlDiv").show();
+			$("#verCtrl1").get(0).selectedIndex=2;
+		}
+		else if(type == 4)	//GIT前置
+		{
+			//RealDoc verCtrl
+			$("#realDocVerCtrlDiv").show();
+			$("#verCtrl").get(0).selectedIndex=2;
+			$("#verCtrl").attr('disabled',true);
+			
+			//virtualDoc verCtrl 默认总是Git
+			$("#virtualDocVerCtrlDiv").show();
+			$("#verCtrl1").get(0).selectedIndex=2;
+		}
+		doSelectVerCtrl();
+		doSelectVerCtrl1();			
+	}
+	
+	//According verCtrl value to disale the svnPath or not
+	function doSelectVerCtrl()
+	{
+		console.log("doSelectVerCtrl ");
+		var type = $("#type").val();	
+		console.log("doSelectVerCtrl fsType:" + type);
+		if(type == 1)
+		{
+			$("#realDocVerCtrlDiv").show();
+		}
+		else if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
+		{
+			$("#realDocVerCtrlDiv").hide();
+		}
+		else
+		{
+			$("#realDocVerCtrlDiv").show();
+		}
+		
+		var verCtrl = $("#verCtrl").val();
+		var isRemote = $("#isRemote").is(':checked')? 1: 0;
+		
+		//alert(verCtrl);
+		if(verCtrl != 0) 			//show verRepos info
+		{
+			if(isRemote == 0)
+			{
+				$("#localVerRepos").hide();
+				$("#remoteVerRepos").hide();
+			}
+			else
+			{
+				if(verCtrl == 1)
+				{
+					$("#localVerRepos").hide();
+				}
+				else
+				{
+					$("#localVerRepos").show();					
+				}
+				$("#remoteVerRepos").show();				
+			}
+			$("#isRemoteSetting").show();
+			$("#verReposSetting").show();				
+		}
+		else	//hide verRepos info
+		{
+			$("#isRemoteSetting").hide();
+			$("#verReposSetting").hide();				
+		}   
+	}
+	
+	//According verCtrl1 value to disale the svnPath1 or not
+	function doSelectVerCtrl1()
+	{
+		console.log("doSelectVerCtrl1");
+		var verCtrl = $("#verCtrl1").val();
+		var isRemote = $("#isRemote1").is(':checked')? 1: 0;
+
+		if(verCtrl != 0) 			//show verRepos info
+		{
+			if(isRemote == 0)
+			{
+				$("#localVerRepos1").hide();
+				$("#remoteVerRepos1").hide();
+			}
+			else
+			{
+				if(verCtrl == 1)
+				{
+					$("#localVerRepos1").hide();
+				}
+				else
+				{
+					$("#localVerRepos1").show();
+				}
+				$("#remoteVerRepos1").show();				
+			}
+			$("#isRemoteSetting1").show();
+			$("#verReposSetting1").show();				
+		}
+		else	//hide verRepos info
+		{
+			$("#isRemoteSetting1").hide();
+			$("#verReposSetting1").hide();				
+		}     
+	}
+	
 	//页面初始化代码    
     $(function(){
     	console.log("editRepos Page init");
@@ -67,49 +253,113 @@
 	});
 </script>
                     
-                  <div class="form-horizontal">
-                    <div class="form-group" hidden>
-                      <label class="control-label col-lg-3" for="reposId">仓库ID</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="reposId" name="reposId">
-                      </div>
-                    </div>
-                    <!-- ReposName -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">仓库名称</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="name" name="name">
-                      </div>
-                    </div>
-                    <!-- info -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="info">简介</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="info" name="info">
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="path">仓库位置</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="path" name="path">
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="type">仓库类型</label>
-                      <div class="col-lg-9">
-			            <select class="form-control" id="type" name="type" style="width: 100%">   
-			            	<option value="1" selected="selected">文件管理系统</option>   
-			            	<!-- <option value="2">文件系统前置</option> -->
-			            	<option value="3">SVN前置</option>   
-			            	<option value="4">GIT前置</option>   
-			            </select>
-                      </div>
-                    </div>
-                    <!-- Buttons -->
-                    <div class="form-group">
-                      <!-- Buttons -->
-                      <div class="col-lg-offset-9 col-lg-2">
-                        <button type="submit" class="btn btn-success" id="btn_editRepos" onclick="editRepos()">保存</button>
-                      </div>
-                    </div>
-                  </div>
+<div class="form-horizontal">
+	<div class="form-group" hidden>
+    	<label class="control-label col-lg-3" for="reposId">仓库ID</label>
+    	<div class="col-lg-9">
+      		<input type="text" class="form-control" id="reposId" name="reposId">
+    	</div>
+  	</div>
+  
+  	<!-- ReposName -->
+  	<div class="form-group">
+    	<label class="control-label col-lg-3" for="name">仓库名称</label>
+    	<div class="col-lg-9">
+      		<input type="text" class="form-control" id="name" name="name">
+    	</div>
+  	</div>
+  
+  	<!-- info -->
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="info">简介</label>
+       	<div class="col-lg-9">
+        	<input type="text" class="form-control" id="info" name="info">
+       	</div>
+	</div>
+    
+    <div class="form-group">
+		<label class="control-label col-lg-3" for="path">仓库位置</label>
+		<div class="col-lg-9">
+        	<input type="text" class="form-control" id="path" name="path">
+       	</div>
+	</div>
+    <div class="form-group">
+		<label class="control-label col-lg-3" for="type">仓库类型</label>
+       	<div class="col-lg-9">
+			<select class="form-control" id="type" name="type" style="width: 100%">   
+				<option value="1" selected="selected">文件管理系统</option>   
+				<!-- <option value="2">文件系统前置</option> -->
+				<option value="3">SVN前置</option>   
+				<option value="4">GIT前置</option>   
+			</select>
+       </div>
+	</div>
+                    
+   	<div class="form-group">
+    	<label class="control-label col-lg-3" for="realDocPath">存储位置</label>
+        <div class="col-lg-9">
+        	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+		<div id="realDocVerCtrlDiv" style="margin-top:10px;padding-left:30px">
+	    	<label>版本管理 <span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
+	       	<select class="form-control" id="verCtrl" onchange="doSelectVerCtrl();" style="width: 86%">   
+	        	<option value="0">无</option>   
+	            <option value="1">SVN</option>   
+	            <option value="2">GIT</option>   
+	        </select>
+		    <div id="verReposSetting" style="padding-left:45px;display:none">
+				<div id="localVerRepos">
+					<label>版本仓库所在目录</label>
+				    <input class="form-control" type="text" id="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
+			    </div>
+			   	<div id="remoteVerRepos">
+					<label>版本仓库链接</label>
+				    <input class="form-control" type="text" id="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
+				    <label>用户名</label>
+				    <input class="form-control" type="text" id="svnUser"  value="" style="width: 85%"/>
+				    <label>密码</label>
+			        <input class="form-control" type="password" id="svnPwd" value="" style="width: 85%"/>           
+			    </div>	
+			</div>
+	     </div>
+	       	
+	     <div id="virtualDocVerCtrlDiv"  style="margin-top:10px;padding-left:30px;">
+	     	<label >备注版本管理<span id="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" id="isRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
+		    <select class="form-control" id="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 86%">   
+		    	<option value="0">无</option>   
+		        <option value="1">SVN</option>   
+		        <option value="2">GIT</option>  
+		    </select>
+		    <div id="verReposSetting1" style="padding-left:45px;display:none">
+				<div id="localVerRepos1">            
+					<label>版本仓库所在目录</label>
+				    <input class="form-control" type="text" id="localSvnPath1"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 85%"/>
+		        </div>
+		        <div id="remoteVerRepos1">
+					<label>版本仓库链接</label>
+				    <input class="form-control" type="text" id="svnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
+				    <label>用户名</label>
+				    <input class="form-control" type="text" id="svnUser1"  value="" style="width: 85%"/>
+				    <label>密码</label>
+				    <input class="form-control" type="password" id="svnPwd1" value="" style="width: 85%"/>          
+				</div>
+			</div>
+		</div>
+	</div>                
+
+	<div class="form-group">
+		<div name="textSearchEnablelDiv" style="margin-top:10px;padding-left:30px;">
+	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0" onclick="doSetTextSearch()"></span></label>
+		</div>
+	</div>
+                    
+    <!-- Buttons -->
+    <div class="form-group">
+  		<div class="col-lg-offset-9 col-lg-2">
+        	<button type="submit" class="btn btn-success" id="btn_editRepos" onclick="editRepos()">保存</button>
+        </div>
+    </div>
+</div>
