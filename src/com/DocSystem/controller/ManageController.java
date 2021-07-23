@@ -1443,6 +1443,16 @@ public class ManageController extends BaseController{
 		
 		List <Repos> list = getAllReposes();
 		
+		//Set isTextSearchEnabled which will be used for editRepos
+		if(list != null)
+		{
+			for(int i=0; i<list.size(); i++)
+			{
+				Repos repos = list.get(i);
+				repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
+			}
+		}
+		
 		rt.setData(list);
 		writeJson(rt, response);
 	}

@@ -9078,6 +9078,17 @@ public class BaseController  extends BaseFunction{
 		//System.out.println("addIndexForRDoc() 未知文件类型不支持索引");
 		return false;
 	}
+	
+	protected Integer isReposTextSearchEnabled(Repos repos) {
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
+		String disableRealDocTextSearchFileName = "0.disableRealDocTextSearch";
+		File realDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+		if(!realDocTextSearchDisableFile.exists())
+		{
+			return 1;
+		}
+		return 0;
+	}
 
 	private static boolean isRealDocTextSearchDisabled(Repos repos, Doc doc, boolean force) {
 		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))

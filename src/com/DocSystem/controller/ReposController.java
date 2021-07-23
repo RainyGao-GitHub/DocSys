@@ -78,7 +78,7 @@ public class ReposController extends BaseController{
 		Integer UserId = login_user.getId();
 		System.out.println("UserId:" + UserId);
 		List <Repos> accessableReposList = getAccessableReposList(UserId);
-		//Log.printObject("getReposList() accessableReposList",accessableReposList);
+		//Log.printObject("getReposList() accessableReposList",accessableReposList);		
 		rt.setData(accessableReposList);
 		writeJson(rt, response);
 	}
@@ -142,17 +142,6 @@ public class ReposController extends BaseController{
 		
 		rt.setData(repos);
 		writeJson(rt, response);
-	}
-	
-	private Integer isReposTextSearchEnabled(Repos repos) {
-		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
-		String disableRealDocTextSearchFileName = "0.disableRealDocTextSearch";
-		File realDocTextSearchDisableFile = new File(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
-		if(!realDocTextSearchDisableFile.exists())
-		{
-			return 1;
-		}
-		return 0;
 	}
 
 	/****************   add a Repository ******************/

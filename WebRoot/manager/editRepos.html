@@ -1,7 +1,11 @@
 <script type="text/javascript">
-	function EditReposPageInit()
+	var gCurReposInfo;
+	function EditReposPageInit(_reposInfo)
 	{
-		console.log("EditReposPageInit()");
+		console.log("EditReposPageInit() reposInfo:", _reposInfo);
+		gCurReposInfo = _reposInfo;
+		showReposBasicSetting(_reposInfo);	    
+
 		EnterKeyListenerForEditRepos();
 	}
 	
@@ -19,49 +23,199 @@
 		console.log("start enter key listener");
 		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
 	 	if (event.keyCode == 13){  
-	 		editRepos();
+	 		saveReposBasicSetting();
 	 	}  
 	}
 	
-	function editRepos(){
-		console.log("editRepos()");
+	function saveReposBasicSetting()
+	{
+		console.log("saveReposBasicSetting");
+		var newReposSetting = [];
+		newReposSetting.vid = $("#reposId").val();
+		newReposSetting.name = $("#name").val();
+		newReposSetting.info = $("#info").val();
+		newReposSetting.type =  $("#type").val();	//Real DocSystem
+		newReposSetting.path = $("#path").val();
+		newReposSetting.realDocPath = $("#realDocPath").val();
+		newReposSetting.verCtrl = $("#verCtrl").val();
+		newReposSetting.isRemote =  $("#isRemote").is(':checked')? 1: 0;
+		newReposSetting.localSvnPath = $("#localSvnPath").val();
+		newReposSetting.svnPath = $("#svnPath").val();
+		newReposSetting.svnUser = $("#svnUser").val();
+		newReposSetting.svnPwd = $("#svnPwd").val();
+		newReposSetting.verCtrl1 = $("#verCtrl1").val();
+		newReposSetting.isRemote1 =  $("#isRemote1").is(':checked')? 1: 0;
+		newReposSetting.localSvnPath1 = $("#localSvnPath1").val();
+		newReposSetting.svnPath1 = $("#svnPath1").val();
+		newReposSetting.svnUser1 = $("#svnUser1").val();
+		newReposSetting.svnPwd1 = $("#svnPwd1").val();
+		newReposSetting.isTextSearchEnabled =  $("#isTextSearchEnabled").is(':checked')? 1: 0;
+		
+		if(newReposSetting.isRemote == 0)
+		{
+			newReposSetting.localSvnPath = newReposSetting.path + "DocSysVerReposes/";
+		}
+		
+		if(newReposSetting.isRemote1 == 0)
+		{
+			newReposSetting.localSvnPath1 = newReposSetting.path + "DocSysVerReposes/";        		
+		}
+		console.log("saveReposBasicSetting newReposSetting:", newReposSetting);
+		
+		if(verifyReposSetting(gCurReposInfo,newReposSetting) == true)
+		{	
+	   		$.ajax({
+	                url : "/DocSystem/Repos/updateReposInfo.do",
+	                type : "post",
+	                dataType : "json",
+	                data : {
+	                	reposId : newReposSetting.vid,
+	                    name : newReposSetting.name,
+	                    info : newReposSetting.info,
+	                    type : newReposSetting.type,
+	                    path : newReposSetting.path,
+	                    realDocPath : newReposSetting.realDocPath,
+	                    verCtrl : newReposSetting.verCtrl,
+	                    isRemote : newReposSetting.isRemote,
+	                    localSvnPath : newReposSetting.localSvnPath,
+	                    svnPath : newReposSetting.svnPath,
+	                    svnUser : newReposSetting.svnUser,
+	                    svnPwd : newReposSetting.svnPwd,
+	                    verCtrl1 : newReposSetting.verCtrl1,
+	                    isRemote1 : newReposSetting.isRemote1,
+	                    localSvnPath1 : newReposSetting.localSvnPath1,
+	                    svnPath1 : newReposSetting.svnPath1,
+	                    svnUser1 : newReposSetting.svnUser1,
+	                    svnPwd1 : newReposSetting.svnPwd1,
+	                    isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
+	                },
+	                success : function (ret) {
+	                	if(ret.status == "ok")
+	                	{
+	                		console.log("更新仓库设置成功");
+	                		showReposList();
+	                		alert("修改成功");
+		                }
+	                    else
+	                    {
+	                    	alert("修改失败:" + ret.msgInfo);
+	                    }
+	                },
+	                error : function () {
+	                    alert('修改成功: 服务器异常');
+	                }
+	            });
+	            return true;
+	       }
+	       else
+	       {
+	            return false;
+	       }    
+	       
+	       function verifyReposSetting(oldSetting, newSetting)
+	       {
+	       		if(oldSetting.name != newSetting.name)
+	       		{
+	       			console.log("verifyReposSetting name changed");
+	       			return true;
+	       		}
+	       		
+	       		if(oldSetting.type != newSetting.type)
+	       		{
+	       			alert("仓库类型不能修改");
+	       			return false;
+	       		}
+	       		
+	       		if(oldSetting.path != newSetting.path)
+	       		{
+	       			console.log("verifyReposSetting path changed");
+	       			return true;
+	       		}
+	       		
+	       		if(oldSetting.realDocPath != newSetting.realDocPath)
+	       		{
+	       			console.log("verifyReposSetting realDocPath changed");
+	       			return true;
+	       		}
 
-		var reposId =  $("#reposId").val();
-		var name = $("#name").val();
-	    var info = $("#info").val();
-	    var path = $("#path").val();
-	    var type = $("#type").val();
-	    
-	    console.log(reposId,name,info,path,type);
-	    
-        $.ajax({
-            url : "/DocSystem/Repos/updateReposInfo.do",
-            type : "post",
-            dataType : "json",
-            data : {
-            	 reposId : reposId,
-                 name : name,
-                 info : info,
-                 path : path,
-                 type : type,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	showReposList();	//刷新ReposList
-                	alert("更新成功");
-                }else {
-                	alert("错误：" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	alert("服务器异常:更新失败");
-            }
-        });
+	       		if(oldSetting.info != newSetting.info)
+	       		{
+	       			console.log("verifyReposSetting info changed");
+	       			return true;
+	       		}
+	       		if(oldSetting.verCtrl != newSetting.verCtrl)
+	       		{
+	       			console.log("verifyReposSetting verCtrl changed");
+	       			return true;
+	       		}
+	       		if(oldSetting.isRemote != newSetting.isRemote)
+	       		{
+	       			console.log("verifyReposSetting isRemote changed");
+	       			return true;
+	       		}
+	       		if(oldSetting.localSvnPath != newSetting.localSvnPath)
+	       		{
+	       			console.log("verifyReposSetting localSvnPath changed");
+	       			return true;
+	       		}
+	       		if(oldSetting.svnPath != newSetting.svnPath)
+	       		{
+	       			console.log("verifyReposSetting svnPath changed");
+	       			return true;
+	       		}
+	       		if(oldSetting.svnUser != newSetting.svnUser)
+	       		{
+	       			console.log("verifyReposSetting svnUser changed");
+	       			return true;
+	       		}
+	       		if(oldSetting.svnPwd != newSetting.svnPwd)
+	       		{
+	       			console.log("verifyReposSetting svnPwd changed");
+	       			return true;
+	       		}
+	       		if(oldSetting.verCtrl1 != newSetting.verCtrl1)
+	       		{
+	       			console.log("verifyReposSetting verCtrl1 changed");	       			
+	       			return true;
+	       		}
+	       		if(oldSetting.isRemote1 != newSetting.isRemote1)
+	       		{
+	       			console.log("verifyReposSetting isRemote1 changed");	       			
+	       			return true;
+	       		}
+	       		if(oldSetting.localSvnPath1 != newSetting.localSvnPath1)
+	       		{
+	       			console.log("verifyReposSetting localSvnPath1 changed");	       			
+	       			return true;
+	       		}
+	       		if(oldSetting.svnPath1 != newSetting.svnPath1)
+	       		{
+	       			console.log("verifyReposSetting svnPath1 changed");	       			
+	       			return true;
+	       		}
+	       		if(oldSetting.svnUser1 != newSetting.svnUser1)
+	       		{
+	       			console.log("verifyReposSetting svnUser1 changed");	       			
+	       			return true;
+	       		}
+	       		if(oldSetting.svnPwd1 != newSetting.svnPwd1)
+	       		{
+	       			console.log("verifyReposSetting svnPwd1 changed");	       			
+	       			return true;
+	       		} 
+	       		
+	       		if(oldSetting.isTextSearchEnabled != newSetting.isTextSearchEnabled)
+	       		{
+	       			console.log("verifyReposSetting isTextSearchEnabled changed");	       			
+	       			return true;
+	       		}
+	       		alert("仓库信息未变化！");
+	       		return false;
+	       }  
 	}
 	
-	function showReposSetting(reposInfo)
+	function showReposBasicSetting(reposInfo)
 	{
-		console.log(reposInfo);
 	   	$("#name").val(reposInfo.name);
 	   	$("#info").val(reposInfo.info);
 	   	$("#path").val(reposInfo.path);
@@ -94,6 +248,7 @@
 	   	$("#svnPath1").val(reposInfo.svnPath1);
 	   	$("#svnUser1").val(reposInfo.svnUser1);
 	   	$("#svnPwd1").val(reposInfo.svnPwd1);
+   		
 	   	if(reposInfo.isTextSearchEnabled == 0)
 	   	{
 		   	$("#isTextSearchEnabled").attr("checked",false);
@@ -248,7 +403,6 @@
 	//页面初始化代码    
     $(function(){
     	console.log("editRepos Page init");
-    	EditReposPageInit();
 		$("#name").click().focus();
 	});
 </script>
@@ -286,7 +440,7 @@
     <div class="form-group">
 		<label class="control-label col-lg-3" for="type">仓库类型</label>
        	<div class="col-lg-9">
-			<select class="form-control" id="type" name="type" style="width: 100%">   
+			<select class="form-control" id="type" name="type"  onchange="doSelectFS();" style="width: 100%">   
 				<option value="1" selected="selected">文件管理系统</option>   
 				<!-- <option value="2">文件系统前置</option> -->
 				<option value="3">SVN前置</option>   
@@ -352,14 +506,14 @@
 
 	<div class="form-group">
 		<div name="textSearchEnablelDiv" style="margin-top:10px;padding-left:30px;">
-	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0" onclick="doSetTextSearch()"></span></label>
+	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0"></span></label>
 		</div>
 	</div>
                     
     <!-- Buttons -->
     <div class="form-group">
   		<div class="col-lg-offset-9 col-lg-2">
-        	<button type="submit" class="btn btn-success" id="btn_editRepos" onclick="editRepos()">保存</button>
+        	<button type="submit" class="btn btn-success" id="btn_editRepos" onclick="saveReposBasicSetting()">保存</button>
         </div>
     </div>
 </div>
