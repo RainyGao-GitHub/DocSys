@@ -61,7 +61,7 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 ### 限制
 | 功能限制       |   社区版      | 个人版         | 专业版        | 企业版         |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
-| 价格          | 免费           | 免费          | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [咨询](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |
+| 价格          | 免费           | 免费          | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |
 | 文件管理功能   | +             |     +         |       +       |     +         |
 | 用户管理功能   | +             |     +         |       +       |     +         |
 | 历史版本功能   | +             |     +         |       +       |     +         |
