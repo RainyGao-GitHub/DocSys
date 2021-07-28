@@ -93,3 +93,8 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 
 # 技术咨询与购买 
 ## 购买与咨询 请加群 : 953982034
+
+# 常见问题
+### 一、二次开发如何集成商业版功能
+#### 1、下载开源版对应版本的[DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
+#### 2、解压DocSystem.war到本地，并分别复制 **DocSystem\web\static\office-editor** 和 **DocSystem\WEB-INF\classes\com\DocSystem\websocket** 到源码的 **WebRoot\web\static** 和 **WebRoot\WEB-INF\classes\com\DocSystem** 目录
