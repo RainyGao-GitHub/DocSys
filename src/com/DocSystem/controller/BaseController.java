@@ -3635,6 +3635,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Repos repos = action.getRepos();
+		repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 		Log.printObject("syncupForDocChange() repos:", repos);
 		
 		//文件管理系统类型需要进行RealDoc的同步
@@ -9091,6 +9092,13 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static boolean isRealDocTextSearchDisabled(Repos repos, Doc doc, boolean force) {
+		if(repos.isTextSearchEnabled == null || repos.isTextSearchEnabled == 0)
+    	{
+    		System.out.println("isRealDocTextSearchDisabled() " + repos.getId() + " " + repos.getName() + " repos realDocTextSearch disabled");
+    		return true;
+    	}
+		
+		
 		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
     	{
     		System.out.println("isRealDocTextSearchDisabled() " + doc.getPath() + doc.getName() + " realDocTextSearch disabled");
