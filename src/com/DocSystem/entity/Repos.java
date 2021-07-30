@@ -16,6 +16,8 @@ public class Repos {
 
     private String realDocPath;
 
+	private String remoteStorage;
+
     private Integer verCtrl;
 
     private Integer isRemote;
@@ -272,4 +274,12 @@ public class Repos {
     public void setLockTime(Long lockTime) {
         this.lockTime = lockTime;
     }
+
+    public String getRemoteStorage() {
+        return remoteStorage;
+    }
+    
+	public void setRemoteStorage(String remoteStorage) {
+        this.remoteStorage = remoteStorage;		
+	}
 }

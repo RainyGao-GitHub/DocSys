@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,16 +16,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
+import util.SFTPUtil.SFTPUtil;
+
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
+import com.jcraft.jsch.SftpException;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.RemoteStorage;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -146,14 +151,19 @@ public class ReposController extends BaseController{
 
 	/****************   add a Repository ******************/
 	@RequestMapping("/addRepos.do")
-	public void addRepos(String name,String info, Integer type, String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
-			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, Long createTime,
+	public void addRepos(String name,String info, Integer type, String path, 
+			String realDocPath, 
+			String remoteStorage,
+			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
+			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, 
+			Long createTime,
 			Integer isTextSearchEnabled,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
 		System.out.println("\n****************** addRepos.do ***********************");
 		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  
 				+ " realDocPath: " + realDocPath 
+				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
 				+ "isTextSearchEnabled:" + isTextSearchEnabled);
@@ -213,6 +223,7 @@ public class ReposController extends BaseController{
 		repos.setType(type);
 		repos.setPath(path);
 		repos.setRealDocPath(realDocPath);
+		repos.setRemoteStorage(remoteStorage);
 		repos.setOwner(login_user.getId());
 		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 		repos.setCreateTime(nowTimeStamp);
@@ -288,6 +299,13 @@ public class ReposController extends BaseController{
 			return;			
 		}
 		
+		//If Remote Storage was Configured, We need to download all docs to
+		if(repos.getType() == 1 && remoteStorage != null)	//文件管理系统类型的仓库，如果设置了远程存储，第一次创建时（如果目标存储目录为空，那么需要从远程存储服务下载文件）
+		{
+			String localRootPath = Path.getReposRealPath(repos);
+			pullFromRemoteStorage(remoteStorage, localRootPath);
+		}
+		
 		if(isTextSearchEnabled == null || isTextSearchEnabled == 0)
 		{	
 			setReposTextSearch(repos, isTextSearchEnabled);			
@@ -305,6 +323,74 @@ public class ReposController extends BaseController{
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
 	}
 	
+	//从远程存储服务下载所有文件
+	private boolean pullFromRemoteStorage(String remoteStorage, String localRootPath) {
+		RemoteStorage remote = parseRemoteStorageConfig(remoteStorage);
+		if(remote == null)
+		{
+			Log.println("downloadFromRemoteStorage() parse Failed");
+			return false;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "sftp":
+			return downloadFilesFromSftpServer(remote, null, remote.SFTP.rootPath, localRootPath, true);
+		default:
+			Log.println("downloadFromRemoteStorage() not supported protocol");
+			break;
+		}
+		return false;
+	}
+
+	private boolean downloadFilesFromSftpServer(RemoteStorage remote, SFTPUtil sftp, String remotePath, String localPath, boolean subFileDownloadEn) {
+        try {
+        	if(sftp == null)
+        	{
+        		sftp = new SFTPUtil(remote.SFTP.userName, remote.SFTP.pwd, remote.SFTP.host, remote.SFTP.port);
+            	if(sftp.login() == false)
+            	{
+            		System.out.println("login failed");
+            		return false;
+            	}
+        	}
+        	
+        	System.out.println("login successed");
+			Vector<?> list = sftp.listFiles(remotePath);
+			Log.printObject("list:", list);
+			for(int i=0; i<list.size(); i++)
+			{
+				Object remoteObj = list.get(i);
+//				if(remoteObj.isFolder)
+//				{
+//					//create dir
+//					
+//					if(subFileDownloadEn)
+//					{
+//						//download File
+//						subFileName = remoteObj.name;
+//						downloadFilesFromSftpServer(remote, sftp, remotePath + "/" + fileName, localPath + "/" + subFileName, subFileDownloadEn);
+//					}
+//				}
+//				else
+//				{													
+//					//download File
+//					sftp.download(remotePath, subFileName)
+//				}
+			}
+			return true;
+		} catch (SftpException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return false;
+	}
+
+	private RemoteStorage parseRemoteStorageConfig(String remoteStorage) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private boolean setReposTextSearch(Repos repos, Integer isReposTextSearchEnabled) {
 		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
 		String disableRealDocTextSearchFileName = "0.disableRealDocTextSearch";
