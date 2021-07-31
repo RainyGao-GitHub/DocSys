@@ -25,6 +25,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
 import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
@@ -343,7 +344,7 @@ public class ReposController extends BaseController{
 		return false;
 	}
 
-	private boolean downloadFilesFromSftpServer(RemoteStorage remote, SFTPUtil sftp, String remotePath, String localPath, boolean subFileDownloadEn) {
+	private static boolean downloadFilesFromSftpServer(RemoteStorage remote, SFTPUtil sftp, String remotePath, String localPath, boolean subFileDownloadEn) {
         try {
         	if(sftp == null)
         	{
@@ -353,30 +354,35 @@ public class ReposController extends BaseController{
             		System.out.println("login failed");
             		return false;
             	}
-        	}
+            	System.out.println("login successed");
+        	}        	
         	
-        	System.out.println("login successed");
 			Vector<?> list = sftp.listFiles(remotePath);
-			Log.printObject("list:", list);
+			//Log.printObject("list:", list);
 			for(int i=0; i<list.size(); i++)
 			{
-				Object remoteObj = list.get(i);
-//				if(remoteObj.isFolder)
-//				{
-//					//create dir
-//					
-//					if(subFileDownloadEn)
-//					{
-//						//download File
-//						subFileName = remoteObj.name;
-//						downloadFilesFromSftpServer(remote, sftp, remotePath + "/" + fileName, localPath + "/" + subFileName, subFileDownloadEn);
-//					}
-//				}
-//				else
-//				{													
-//					//download File
-//					sftp.download(remotePath, subFileName)
-//				}
+				LsEntry entry = (LsEntry) list.get(i);
+				String fileName = entry.getFilename();
+				if(fileName.equals(".") || fileName.equals(".."))
+				{
+					continue;
+				}
+				Log.println(remotePath + "/" +fileName);
+				
+				if(entry.getAttrs().isDir())
+				{
+					FileUtil.createDir(localPath + "/" + fileName);
+				
+					if(subFileDownloadEn)
+					{
+						downloadFilesFromSftpServer(remote, sftp, remotePath + "/" + fileName, localPath + "/" + fileName, subFileDownloadEn);
+					}
+				}
+				else
+				{													
+					//download File
+					sftp.download(remotePath, fileName, localPath + "/" + fileName);
+				}
 			}
 			return true;
 		} catch (SftpException e) {
