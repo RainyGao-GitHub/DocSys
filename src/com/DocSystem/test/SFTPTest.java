@@ -1,5 +1,8 @@
 package com.DocSystem.test;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Vector;
 
 import com.DocSystem.common.FileUtil;
@@ -24,8 +27,75 @@ class SFTPTest {
 
         String localRootPath = "C:/SFtpTestRootPath";
         
-        downloadFilesFromSftpServer(remote, null, remote.SFTP.rootPath, localRootPath, true);       
+        downloadFilesFromSftpServer(remote, null, remote.SFTP.rootPath, localRootPath, true);
+        
+        uploadDirToSftpServer(remote, null, remote.SFTP.rootPath, localRootPath, true);
     }
+
+	private static boolean uploadDirToSftpServer(RemoteStorage remote, SFTPUtil sftp, String remotePath, String localPath, boolean subFileUploadEn) {
+        try {
+        	if(sftp == null)
+        	{
+        		sftp = new SFTPUtil(remote.SFTP.userName, remote.SFTP.pwd, remote.SFTP.host, remote.SFTP.port);
+            	if(sftp.login() == false)
+            	{
+            		System.out.println("login failed");
+            		return false;
+            	}
+            	System.out.println("login successed");
+        	}        	
+        	
+    		File dir = new File(localPath);
+    		File[] subFiles = dir.listFiles();
+    		if(subFiles != null)
+    		{
+    			for(int i=0; i<subFiles.length; i++)
+    			{
+    				File subFile = subFiles[i];
+    				if(subFile.isFile())
+    				{
+    					uploadFileToSftpServer(remote, sftp, remotePath, localPath, subFile.getName());
+    				}
+    				else
+    				{
+    					sftp.mkdir(remotePath + "/" + subFile.getName());
+    					if(subFileUploadEn)
+    					{
+        					uploadDirToSftpServer(remote, sftp, remotePath + "/" + subFile.getName(), localPath + "/" + subFile.getName(), subFileUploadEn);    						
+    					}
+    				}
+    			}
+    			return true;        		
+        	}        	
+			return true;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return false;
+	}
+
+	private static boolean uploadFileToSftpServer(RemoteStorage remote, SFTPUtil sftp, String remotePath, String localPath, String fileName) {
+        try {
+        	if(sftp == null)
+        	{
+        		sftp = new SFTPUtil(remote.SFTP.userName, remote.SFTP.pwd, remote.SFTP.host, remote.SFTP.port);
+            	if(sftp.login() == false)
+            	{
+            		System.out.println("login failed");
+            		return false;
+            	}
+            	System.out.println("login successed");
+        	}        	
+        	        	
+			sftp.upload(remotePath, fileName, new FileInputStream(localPath + "/" + fileName));
+			return true;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return false;
+	}
     
 	private static boolean downloadFilesFromSftpServer(RemoteStorage remote, SFTPUtil sftp, String remotePath, String localPath, boolean subFileDownloadEn) {
         try {
