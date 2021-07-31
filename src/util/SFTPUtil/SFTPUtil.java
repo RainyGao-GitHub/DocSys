@@ -127,6 +127,48 @@ public class SFTPUtil {
         }
     }
  
+    public boolean mkdir(String directory) throws SftpException {
+        try {
+            if (directory != null && !"".equals(directory)) {
+                sftp.mkdir(directory);
+            }
+            return true;
+        } catch (SftpException e) {
+            return false;
+        }
+    }
+    
+    public boolean delDir(String directory) throws SftpException {
+        try {
+            if (directory != null && !"".equals(directory)) {
+                sftp.rmdir(directory);
+            }
+            return true;
+        } catch (SftpException e) {
+            return false;
+        }
+    }
+
+    public boolean delFile(String directory, String fileName) throws SftpException {
+        try {
+            sftp.rm(directory + "/" + fileName);
+            return true;
+        } catch (SftpException e) {
+            return false;
+        }
+    }    
+
+    //move/rename File
+    public boolean rename(String fromFilePath, String toFilePath) throws SftpException {
+        try {
+            sftp.rename(fromFilePath, toFilePath);
+            return true;
+        } catch (SftpException e) {
+            return false;
+        }
+    }    
+
+    
     public void cd(String directory) throws SftpException {
         if (directory != null && !"".equals(directory) && !"/".equals(directory)) {
             sftp.cd(directory);
