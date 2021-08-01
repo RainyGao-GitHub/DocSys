@@ -1,5 +1,7 @@
 package com.DocSystem.entity;
 
+import com.DocSystem.common.RemoteStorage;
+
 public class Repos {    
 	public static final Integer FSM = 1;
 	public static final Integer FSP = 2;
@@ -66,6 +68,7 @@ public class Repos {
 	
 	public Long totalSize;
 	public Long freeSize;
+	public RemoteStorage remoteStorageConfig;
 	
     public Integer getId() {
         return id;
