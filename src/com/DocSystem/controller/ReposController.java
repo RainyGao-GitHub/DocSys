@@ -300,13 +300,6 @@ public class ReposController extends BaseController{
 			return;			
 		}
 		
-		//If Remote Storage was Configured, We need to download all docs to
-		if(repos.getType() == 1 && remoteStorage != null)	//文件管理系统类型的仓库，如果设置了远程存储，第一次创建时（如果目标存储目录为空，那么需要从远程存储服务下载文件）
-		{
-			String localRootPath = Path.getReposRealPath(repos);
-			pullFromRemoteStorage(remoteStorage, localRootPath);
-		}
-		
 		if(isTextSearchEnabled == null || isTextSearchEnabled == 0)
 		{	
 			setReposTextSearch(repos, isTextSearchEnabled);			
@@ -322,79 +315,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);	
 		
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
-	}
-	
-	//从远程存储服务下载所有文件
-	private boolean pullFromRemoteStorage(String remoteStorage, String localRootPath) {
-		RemoteStorage remote = parseRemoteStorageConfig(remoteStorage);
-		if(remote == null)
-		{
-			Log.println("downloadFromRemoteStorage() parse Failed");
-			return false;
-		}
-		
-		switch(remote.protocol)
-		{
-		case "sftp":
-			return downloadFilesFromSftpServer(remote, null, remote.SFTP.rootPath, localRootPath, true);
-		default:
-			Log.println("downloadFromRemoteStorage() not supported protocol");
-			break;
-		}
-		return false;
-	}
-
-	private static boolean downloadFilesFromSftpServer(RemoteStorage remote, SFTPUtil sftp, String remotePath, String localPath, boolean subFileDownloadEn) {
-        try {
-        	if(sftp == null)
-        	{
-        		sftp = new SFTPUtil(remote.SFTP.userName, remote.SFTP.pwd, remote.SFTP.host, remote.SFTP.port);
-            	if(sftp.login() == false)
-            	{
-            		System.out.println("login failed");
-            		return false;
-            	}
-            	System.out.println("login successed");
-        	}        	
-        	
-			Vector<?> list = sftp.listFiles(remotePath);
-			//Log.printObject("list:", list);
-			for(int i=0; i<list.size(); i++)
-			{
-				LsEntry entry = (LsEntry) list.get(i);
-				String fileName = entry.getFilename();
-				if(fileName.equals(".") || fileName.equals(".."))
-				{
-					continue;
-				}
-				Log.println(remotePath + "/" +fileName);
-				
-				if(entry.getAttrs().isDir())
-				{
-					FileUtil.createDir(localPath + "/" + fileName);
-				
-					if(subFileDownloadEn)
-					{
-						downloadFilesFromSftpServer(remote, sftp, remotePath + "/" + fileName, localPath + "/" + fileName, subFileDownloadEn);
-					}
-				}
-				else
-				{													
-					//download File
-					sftp.download(remotePath, fileName, localPath + "/" + fileName);
-				}
-			}
-			return true;
-		} catch (SftpException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        return false;
-	}
-
-	private RemoteStorage parseRemoteStorageConfig(String remoteStorage) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	private boolean setReposTextSearch(Repos repos, Integer isReposTextSearchEnabled) {
