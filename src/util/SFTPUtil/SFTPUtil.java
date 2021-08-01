@@ -77,7 +77,10 @@ public class SFTPUtil {
             }
             Properties config = new Properties();
             config.put("StrictHostKeyChecking", "no");
- 
+            
+            //解决Kerberos username
+            config.put("PreferredAuthentications","publickey,keyboard-interactive,password"); 
+
             session.setConfig(config);
             session.connect();
  
@@ -123,6 +126,7 @@ public class SFTPUtil {
             sftp.put(input, sftpFileName);  //上传文件
             return true;
         } catch (SftpException e) {
+        	e.printStackTrace();
             return false;
         }
     }
@@ -134,6 +138,7 @@ public class SFTPUtil {
             }
             return true;
         } catch (SftpException e) {
+        	e.printStackTrace();
             return false;
         }
     }
@@ -145,6 +150,7 @@ public class SFTPUtil {
             }
             return true;
         } catch (SftpException e) {
+        	e.printStackTrace();
             return false;
         }
     }
@@ -154,6 +160,7 @@ public class SFTPUtil {
             sftp.rm(directory + "/" + fileName);
             return true;
         } catch (SftpException e) {
+        	e.printStackTrace();
             return false;
         }
     }    
@@ -164,6 +171,7 @@ public class SFTPUtil {
             sftp.rename(fromFilePath, toFilePath);
             return true;
         } catch (SftpException e) {
+        	e.printStackTrace();
             return false;
         }
     }    
@@ -193,19 +201,15 @@ public class SFTPUtil {
                 sftp.cd(directory);
             }
             file = new File(saveFile);
-            sftp.get(downloadFile, new FileOutputStream(file));
-        } catch (SftpException e) {
-            e.printStackTrace();
-            if (file != null) {
-                file.delete();
-            }
-        } catch (FileNotFoundException e) {
+            FileOutputStream os = new FileOutputStream(file);
+            sftp.get(downloadFile, os);
+            os.close();
+        } catch (Exception e) {
             e.printStackTrace();
             if (file != null) {
                 file.delete();
             }
         }
- 
     }
  
     /**
@@ -219,9 +223,9 @@ public class SFTPUtil {
         if (directory != null && !"".equals(directory)) {
             sftp.cd(directory);
         }
-        InputStream is = sftp.get(downloadFile);
- 
+        InputStream is = sftp.get(downloadFile); 
         byte[] fileData = IOUtils.toByteArray(is);
+        is.close();
  
         return fileData;
     }
@@ -250,9 +254,20 @@ public class SFTPUtil {
         return sftp.ls(directory);
     }
  
+    public boolean isDirExists(String directory) { 
+        try {
+			sftp.cd(directory);
+			return true;
+        } catch (SftpException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return false;
+    }
+ 
     public boolean isExistsFile(String directory, String fileName) {
  
-        List<String> findFilelist = new ArrayList();
+        List<String> findFilelist = new ArrayList<String>();
         ChannelSftp.LsEntrySelector selector = new ChannelSftp.LsEntrySelector() {
             @Override
             public int select(ChannelSftp.LsEntry lsEntry) {
@@ -274,16 +289,5 @@ public class SFTPUtil {
         } else {
             return false;
         }
-    }
- 
-    //上传文件测试
-    public static void main(String[] args) throws SftpException, IOException {
-        SFTPUtil sftp = new SFTPUtil("xxx", "xxx", "xx.com.cn", 22);
-        sftp.login();
-        File file = new File("/Volumes/work/new1.xlsx");
-        InputStream is = new FileInputStream(file);
- 
-        //sftp.upload("/test", "", "test_sftp.jpg", is);
-        sftp.logout();
     }
 }
