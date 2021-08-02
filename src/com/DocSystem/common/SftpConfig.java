@@ -5,7 +5,7 @@ public class SftpConfig {
 	public String userName;
 	public String pwd;
 	public String host;
-	public int port;
+	public Integer port;
 	public String rootPath;
 
 }

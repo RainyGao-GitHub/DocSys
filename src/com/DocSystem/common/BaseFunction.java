@@ -332,30 +332,21 @@ public class BaseFunction{
 	}
 	
 	private RemoteStorage parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
-		String[] subStrs = remoteStorage.split(";");
-		//parse host port rootPath
-		String mainStr = subStrs[0];
-		Log.println("parseRemoteStorageConfigForSftp mainStr:" + mainStr);
-		String mainSubStrs[] = mainStr.split("sftp://");
-		String hostportrootSubString[] = mainSubStrs[1].split(":");
-		String host = hostportrootSubString[0];
-		String[] portrootSubStrs = hostportrootSubString[1].split("/");
-		Integer port = Integer.getInteger(portrootSubStrs[0]);
-		String rootPath = buildRemoteStorageRootPath(portrootSubStrs);
-		Log.println("parseRemoteStorageConfigForSftp host:" + host + " port:" + port + " rootPath:" + rootPath);
-		
 		RemoteStorage remote = new RemoteStorage();
 		remote.SFTP = new SftpConfig();
-		remote.SFTP.host = host;
-		remote.SFTP.port = port;
-		remote.SFTP.rootPath = rootPath;
 
-		//parse userName/pwd
+		String[] subStrs = remoteStorage.split(";");
+
+		//Parse sftpUrl
+		String sftpUrl = subStrs[0];
+		parseSftpUrl(remote, sftpUrl);
+
+		//Parse sftpConfigs
 		JSONObject config = new JSONObject();
 		for(int i=1; i<subStrs.length; i++)
 		{
 			String[] param = subStrs[i].split("=");
-			config.put(param[0], param[1]);
+			config.put(param[0].trim(), param[1].trim());
 		}
 		remote.SFTP.userName = config.getString("userName");
 		remote.SFTP.pwd = config.getString("pwd");
@@ -364,6 +355,28 @@ public class BaseFunction{
 		//add remote config to hashmap
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
+	}
+
+	private void parseSftpUrl(RemoteStorage remote, String sftpUrl) {
+		Log.println("parseSftpUrl mainStr:" + sftpUrl);
+		
+		String tmpStr = sftpUrl.substring("sftp://".length());
+		String subStrs[] = tmpStr.split(":");
+		String host = subStrs[0];
+		String tmpStr1 = subStrs[1];
+		//seperate port with rootPath
+		String[] subStrs1 = tmpStr1.split("/");
+		Integer port = Integer.getInteger(subStrs1[0]);
+		String rootPath = buildRemoteStorageRootPath(subStrs);
+		Log.println("parseSftpUrl host:" + host + " port:" + port + " rootPath:" + rootPath);
+		if(port == null)
+		{
+			port = 22;
+		}
+		
+		remote.SFTP.host = host;
+		remote.SFTP.port = port;
+		remote.SFTP.rootPath = rootPath;
 	}
 
 	private String buildRemoteStorageRootPath(String[] portrootSubStrs) {
