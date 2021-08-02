@@ -314,6 +314,10 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);	
 		
+		if(remoteStorage != null)
+		{
+			parseRemoteStorageConfig(repos, remoteStorage);
+		}
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
 	}
 
