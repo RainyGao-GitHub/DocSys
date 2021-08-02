@@ -286,11 +286,102 @@ public class BaseFunction{
 	protected static ShareThread shareThread = null;
 	
 	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();
+	
+	protected void deleteRemoteStorageConfig(Repos repos) {
+		Log.println("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
+		reposRemoteStorageHashMap.remove(repos.getId());
+	}		
+	
+	
 	protected RemoteStorage parseRemoteStorageConfig(Repos repos, String remoteStorage) {
-		// TODO Auto-generated method stub
+		Log.println("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
+		String protocol = null;
+		if(remoteStorage.indexOf("sftp://") == 0)
+		{
+			protocol = "sftp";
+		}
+		else if(remoteStorage.indexOf("ftp://") == 0)
+		{
+			protocol = "ftp";
+		}
+		else if(remoteStorage.indexOf("http://") == 0)
+		{
+			protocol = "http";
+		}
+		else if(remoteStorage.indexOf("https://") == 0)
+		{
+			protocol = "https";
+		}
+		else if(remoteStorage.indexOf("\\") == 0)
+		{
+			protocol = "smb";		
+		}
+		
+		if(protocol == null)
+		{
+			Log.println("parseRemoteStorageConfig unknown protocol");
+			return null;
+		}
+		
+		switch(protocol)
+		{
+		case "sftp":
+			return parseRemoteStorageConfigForSftp(repos, remoteStorage);
+		}
 		return null;
 	}
 	
+	private RemoteStorage parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
+		String[] subStrs = remoteStorage.split(";");
+		//parse host port rootPath
+		String mainStr = subStrs[0];
+		Log.println("parseRemoteStorageConfigForSftp mainStr:" + mainStr);
+		String mainSubStrs[] = mainStr.split("sftp://");
+		String hostportrootSubString[] = mainSubStrs[1].split(":");
+		String host = hostportrootSubString[0];
+		String[] portrootSubStrs = hostportrootSubString[1].split("/");
+		Integer port = Integer.getInteger(portrootSubStrs[0]);
+		String rootPath = buildRemoteStorageRootPath(portrootSubStrs);
+		Log.println("parseRemoteStorageConfigForSftp host:" + host + " port:" + port + " rootPath:" + rootPath);
+		
+		RemoteStorage remote = new RemoteStorage();
+		remote.SFTP = new SftpConfig();
+		remote.SFTP.host = host;
+		remote.SFTP.port = port;
+		remote.SFTP.rootPath = rootPath;
+
+		//parse userName/pwd
+		JSONObject config = new JSONObject();
+		for(int i=1; i<subStrs.length; i++)
+		{
+			String[] param = subStrs[i].split("=");
+			config.put(param[0], param[1]);
+		}
+		remote.SFTP.userName = config.getString("userName");
+		remote.SFTP.pwd = config.getString("pwd");
+		Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd);
+		
+		//add remote config to hashmap
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
+		return remote;
+	}
+
+	private String buildRemoteStorageRootPath(String[] portrootSubStrs) {
+		if(portrootSubStrs.length <= 1)
+		{
+			return "";
+		}
+		String rootPath = "";
+		for(int i=1; i< portrootSubStrs.length;i ++)
+		{
+			if(!portrootSubStrs[i].isEmpty())
+			{
+				rootPath += "/" + portrootSubStrs[i];
+			}
+		}
+		return rootPath;
+	}
+
 	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 	protected boolean insertUniqueCommonAction(CommonAction action)
 	{

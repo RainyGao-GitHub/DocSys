@@ -4,6 +4,7 @@
 	{"dbName":"TYPE", 				"name":"type", 			"type":"Integer"},
 	{"dbName":"PATH", 				"name":"path", 			"type":"String"},
 	{"dbName":"REAL_DOC_PATH", 		"name":"realDocPath", 	"type":"String"},
+	{"dbName":"REMOTE_STORAGE", 	"name":"remoteStorage", "type":"String"},
 	{"dbName":"VER_CTRL", 			"name":"verCtrl", 		"type":"Integer"},
 	{"dbName":"IS_REMOTE", 			"name":"isRemote", 		"type":"Integer"},
 	{"dbName":"LOCAL_SVN_PATH", 	"name":"localSvnPath", 	"type":"String"},
