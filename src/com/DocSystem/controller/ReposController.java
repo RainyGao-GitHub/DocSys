@@ -448,6 +448,7 @@ public class ReposController extends BaseController{
 		newReposInfo.setInfo(info);
 		newReposInfo.setPath(path);
 		newReposInfo.setRealDocPath(realDocPath);
+		newReposInfo.setRemoteStorage(remoteStorage);
 		newReposInfo.setVerCtrl(verCtrl);
 		newReposInfo.setIsRemote(isRemote);
 		newReposInfo.setLocalSvnPath(localSvnPath);
