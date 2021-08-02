@@ -103,7 +103,7 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 解压DocSystem.war到本地，并分别复制 **DocSystem\web\static\office-editor** 和 **DocSystem\WEB-INF\classes\com\DocSystem\websocket** 到源码的 **WebRoot\web\static** 和 **WebRoot\WEB-INF\classes\com\DocSystem** 目录
 ## 二、Linux系统war包直接部署Office无法预览和编辑
 ### 1、手动创建DocSystem目录
-解压DocSystem.war到**tomcat\webapps\DocSystem**目录
+解压 **DocSystem.war** 到 **tomcat\webapps\DocSystem** 目录
 ### 2、手动安装动态库
 复制 **DocSystem\web\static\office-editor\libs\Linux** 目录下的所有动态库到 **/usr/lib64** 目录
 ### 3、重启MxsDoc
