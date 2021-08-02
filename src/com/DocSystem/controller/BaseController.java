@@ -10640,7 +10640,7 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_USER);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);			
-			dbTabList.add(DOCSYS_DOC_LOCK);
+			dbTabList.add(DOCSYS_DOC_LOCK);			
 		}
 		else if(oldVersion < 20181)	
 		{
@@ -10649,19 +10649,26 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_USER);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
 			dbTabList.add(DOCSYS_DOC_AUTH);
-			dbTabList.add(DOCSYS_DOC_LOCK);			
+			dbTabList.add(DOCSYS_DOC_LOCK);
+			dbTabList.add(DOCSYS_REPOS);
 		}
 		else if(oldVersion < 20207)
 		{
 			dbTabList.add(DOCSYS_DOC);
 			dbTabList.add(DOCSYS_USER);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
-			dbTabList.add(DOCSYS_DOC_AUTH);			
+			dbTabList.add(DOCSYS_DOC_AUTH);
+			dbTabList.add(DOCSYS_REPOS);
 		}
 		else if(oldVersion < 20208)
 		{
 			dbTabList.add(DOCSYS_DOC);
 			dbTabList.add(DOCSYS_USER);			
+			dbTabList.add(DOCSYS_REPOS);
+		}
+		else if(oldVersion < 20210)
+		{
+			dbTabList.add(DOCSYS_REPOS);
 		}
 		return dbTabList;
 	}
