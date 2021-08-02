@@ -285,6 +285,11 @@ public class BaseFunction{
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
 	
+	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();
+	protected RemoteStorage parseRemoteStorageConfig(Repos repos, String remoteStorage) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 	protected boolean insertUniqueCommonAction(CommonAction action)
