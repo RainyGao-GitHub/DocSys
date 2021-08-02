@@ -47,6 +47,7 @@
 		var path = $("#path").val();
 	    var type = $("#type").val();
 	    var realDocPath = $("#realDocPath").val();	//realDocPath
+	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
 	    var verCtrl = $("#verCtrl").val();
 	    var isRemote = $("#isRemote").is(':checked')? 1: 0;
 	    var localSvnPath = $("#localSvnPath").val();
@@ -102,6 +103,7 @@
                  path : path,
                  type : type,
 	             realDocPath: realDocPath,
+	             remoteStorage: remoteStorage,
 	             verCtrl: verCtrl,
 	             isRemote: isRemote,
 	             localSvnPath: localSvnPath,
@@ -317,6 +319,12 @@
     	<label class="control-label col-lg-3" for="realDocPath">存储位置</label>
         <div class="col-lg-9">
         	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+        </div>
+    </div>
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="remoteStorage">远程存储</label>
+        <div class="col-lg-9">
+        	<input class="form-control" type="text" id="remoteStorage"  placeholder=""  value="" style="width: 100%"/>
         </div>
     </div>
 

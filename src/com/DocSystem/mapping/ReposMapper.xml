@@ -7,6 +7,7 @@
     <result column="TYPE" jdbcType="INTEGER" property="type" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
     <result column="REAL_DOC_PATH" jdbcType="VARCHAR" property="realDocPath" />
+    <result column="REMOTE_STORAGE" jdbcType="VARCHAR" property="remoteStorage" />
     <result column="VER_CTRL" jdbcType="INTEGER" property="verCtrl" />
     <result column="IS_REMOTE" jdbcType="INTEGER" property="isRemote" />
     <result column="LOCAL_SVN_PATH" jdbcType="VARCHAR" property="localSvnPath" />
@@ -46,7 +47,7 @@
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.Repos">
     insert into repos (ID, NAME, TYPE, 
-      PATH, REAL_DOC_PATH, VER_CTRL, 
+      PATH, REAL_DOC_PATH, REMOTE_STORAGE, VER_CTRL, 
       IS_REMOTE, LOCAL_SVN_PATH, SVN_PATH, 
       SVN_USER, SVN_PWD, REVISION, 
       VER_CTRL1, IS_REMOTE1, LOCAL_SVN_PATH1, 
@@ -55,7 +56,7 @@
       OWNER, CREATE_TIME, STATE, 
       LOCK_BY, LOCK_TIME)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
-      #{path,jdbcType=VARCHAR}, #{realDocPath,jdbcType=VARCHAR}, #{verCtrl,jdbcType=INTEGER}, 
+      #{path,jdbcType=VARCHAR}, #{realDocPath,jdbcType=VARCHAR}, #{remoteStorage,jdbcType=VARCHAR}, #{verCtrl,jdbcType=INTEGER}, 
       #{isRemote,jdbcType=INTEGER}, #{localSvnPath,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, 
       #{svnUser,jdbcType=VARCHAR}, #{svnPwd,jdbcType=VARCHAR}, #{revision,jdbcType=VARCHAR}, 
       #{verCtrl1,jdbcType=INTEGER}, #{isRemote1,jdbcType=INTEGER}, #{localSvnPath1,jdbcType=VARCHAR}, 
@@ -81,6 +82,9 @@
       </if>
       <if test="realDocPath != null">
         REAL_DOC_PATH,
+      </if>
+      <if test="remoteStorage != null">
+        REMOTE_STORAGE,
       </if>
       <if test="verCtrl != null">
         VER_CTRL,
@@ -162,6 +166,9 @@
       <if test="realDocPath != null">
         #{realDocPath,jdbcType=VARCHAR},
       </if>
+      <if test="remoteStorage != null">
+        #{remoteStorage,jdbcType=VARCHAR},
+      </if>
       <if test="verCtrl != null">
         #{verCtrl,jdbcType=INTEGER},
       </if>
@@ -242,6 +249,9 @@
       <if test="realDocPath != null">
         REAL_DOC_PATH = #{realDocPath,jdbcType=VARCHAR},
       </if>
+      <if test="remoteStorage != null">
+        REMOTE_STORAGE = #{remoteStorage,jdbcType=VARCHAR},
+      </if>
       <if test="verCtrl != null">
         VER_CTRL = #{verCtrl,jdbcType=INTEGER},
       </if>
@@ -314,6 +324,7 @@
       TYPE = #{type,jdbcType=INTEGER},
       PATH = #{path,jdbcType=VARCHAR},
       REAL_DOC_PATH = #{realDocPath,jdbcType=VARCHAR},
+      REMOTE_STORAGE = #{remoteStorage,jdbcType=VARCHAR},
       VER_CTRL = #{verCtrl,jdbcType=INTEGER},
       IS_REMOTE = #{isRemote,jdbcType=INTEGER},
       LOCAL_SVN_PATH = #{localSvnPath,jdbcType=VARCHAR},
@@ -354,6 +365,9 @@
       </if>
       <if test="realDocPath != null">
         REAL_DOC_PATH,
+      </if>
+      <if test="remoteStorage != null">
+        REMOTE_STORAGE,
       </if>
       <if test="verCtrl != null">
         VER_CTRL,
@@ -431,6 +445,9 @@
       </if>
       <if test="realDocPath != null">
         #{realDocPath,jdbcType=VARCHAR},
+      </if>
+      <if test="remoteStorage != null">
+        #{remoteStorage,jdbcType=VARCHAR},
       </if>
       <if test="verCtrl != null">
         #{verCtrl,jdbcType=INTEGER},
@@ -519,6 +536,9 @@
     </if>
     <if test="realDocPath != null">
       and REAL_DOC_PATH = #{realDocPath,jdbcType=VARCHAR}
+    </if>
+    <if test="remoteStorage != null">
+      and REMOTE_STORAGE = #{remoteStorage,jdbcType=VARCHAR}
     </if>
     <if test="localSvnPath != null">
       and LOCAL_SVN_PATH = #{localSvnPath,jdbcType=VARCHAR}

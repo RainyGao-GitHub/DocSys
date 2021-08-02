@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -16,21 +14,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
-import util.SFTPUtil.SFTPUtil;
-
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
-import com.jcraft.jsch.SftpException;
-import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.RemoteStorage;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -397,15 +390,19 @@ public class ReposController extends BaseController{
 	    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
 		}
 		
-		
-		writeJson(rt, response);	
+		deleteRemoteStorageConfig(repos);
 
+		writeJson(rt, response);	
+		
 		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","成功", repos, null, null, "");
 	}
 	
 	/****************   set a Repository ******************/
 	@RequestMapping("/updateReposInfo.do")
-	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
+	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, 
+			String realDocPath,
+			String remoteStorage,
+			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
 			Integer isTextSearchEnabled,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -476,6 +473,11 @@ public class ReposController extends BaseController{
 				
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
 		{
+			if(remoteStorage != null)
+			{
+				parseRemoteStorageConfig(reposInfo, remoteStorage);
+			}
+			
 			if(isTextSearchEnabled != null)
 			{
 				reposInfo.isTextSearchEnabled = isReposTextSearchEnabled(reposInfo);
