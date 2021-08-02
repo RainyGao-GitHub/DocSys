@@ -136,6 +136,7 @@ CREATE TABLE `repos` (
   `TYPE` int(10) DEFAULT '1' COMMENT '文件系统类型',
   `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes' COMMENT '仓库所在的目录',
   `REAL_DOC_PATH` varchar(2000) DEFAULT NULL COMMENT 'RealDoc的存储路径',
+  `REMOTE_STORAGE` varchar(5000) DEFAULT NULL COMMENT '远程存储配置',
   `VER_CTRL` int(2) NOT NULL DEFAULT '0' COMMENT 'RealDoc版本控制: 0:无版本控制 1:SVN 2:GIT',
   `IS_REMOTE` int(1) NOT NULL DEFAULT '1' COMMENT '0:本地版本仓库 1:远程版本仓库',
   `LOCAL_SVN_PATH` varchar(2000) DEFAULT NULL COMMENT '本地版本仓库所在目录',

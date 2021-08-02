@@ -9627,6 +9627,7 @@ public class BaseController  extends BaseFunction{
     				"  `TYPE` int(10) DEFAULT '1',\n" +
     				"  `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes',\n" +
     				"  `REAL_DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
+    				"  `REMOTE_STORAGE` varchar(5000) DEFAULT NULL,\n" +
     				"  `VER_CTRL` int(2) NOT NULL DEFAULT '0',\n" +
     				"  `IS_REMOTE` int(1) NOT NULL DEFAULT '1',\n" +
     				"  `LOCAL_SVN_PATH` varchar(2000) DEFAULT NULL,\n" +

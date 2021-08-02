@@ -18,7 +18,10 @@
 		        <label>文件存储位置</label>
 				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 			</div>
-			
+            <div id="RBSremoteStorageDiv">
+		        <label>远程存储</label>
+				<input class="form-control" type="text" id="RBSremoteStorage"  placeholder=""  value="" style="width: 100%"/>
+			</div>			
             <div id="RBSverCtrlDiv">
 	            <div id="RBSrealDocVerCtrlDiv">
 		            <label>版本管理 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
@@ -242,6 +245,7 @@ function getReposBasicSetting()
 	   	$("#RBSpath").val(reposInfo.path);
 	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#RBSrealDocPath").val(reposInfo.realDocPath);
+	   	$("#RBSremoteStorage").val(reposInfo.remoteStorage);
 	   	$("#RBSverCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
 	   	{
@@ -289,6 +293,7 @@ function saveReposBasicSetting()
 	newReposSetting.type =  $("#RBStype").val();	//Real DocSystem
 	newReposSetting.path = $("#RBSpath").val();
 	newReposSetting.realDocPath = $("#RBSrealDocPath").val();
+	newReposSetting.remoteStorage = $("#RBSremoteStorage").val();
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;
 	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
@@ -327,6 +332,7 @@ function saveReposBasicSetting()
                     type : newReposSetting.type,
                     path : newReposSetting.path,
                     realDocPath : newReposSetting.realDocPath,
+                    remoteStorage : newReposSetting.remoteStorage,
                     verCtrl : newReposSetting.verCtrl,
                     isRemote : newReposSetting.isRemote,
                     localSvnPath : newReposSetting.localSvnPath,
@@ -393,6 +399,11 @@ function saveReposBasicSetting()
        			return true;
        		}
 
+       		if(oldSetting.remoteStorage != newSetting.remoteStorage)
+       		{
+       			return true;
+       		}
+       		
        		if(oldSetting.info != newSetting.info)
        		{
        			return true;

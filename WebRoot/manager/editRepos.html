@@ -37,6 +37,7 @@
 		newReposSetting.type =  $("#type").val();	//Real DocSystem
 		newReposSetting.path = $("#path").val();
 		newReposSetting.realDocPath = $("#realDocPath").val();
+		newReposSetting.remoteStorage = $("#remoteStorage").val();
 		newReposSetting.verCtrl = $("#verCtrl").val();
 		newReposSetting.isRemote =  $("#isRemote").is(':checked')? 1: 0;
 		newReposSetting.localSvnPath = $("#localSvnPath").val();
@@ -75,6 +76,7 @@
 	                    type : newReposSetting.type,
 	                    path : newReposSetting.path,
 	                    realDocPath : newReposSetting.realDocPath,
+	                    remoteStorage : newReposSetting.remoteStorage,
 	                    verCtrl : newReposSetting.verCtrl,
 	                    isRemote : newReposSetting.isRemote,
 	                    localSvnPath : newReposSetting.localSvnPath,
@@ -137,7 +139,13 @@
 	       			console.log("verifyReposSetting realDocPath changed");
 	       			return true;
 	       		}
-
+	       		
+	       		if(oldSetting.remoteStorage != newSetting.remoteStorage)
+	       		{
+	       			console.log("verifyReposSetting remoteStorage changed");
+	       			return true;
+	       		}
+	       		
 	       		if(oldSetting.info != newSetting.info)
 	       		{
 	       			console.log("verifyReposSetting info changed");
@@ -221,6 +229,7 @@
 	   	$("#path").val(reposInfo.path);
 	   	$("#type option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#realDocPath").val(reposInfo.realDocPath);
+	   	$("#remoteStorage").val(reposInfo.remoteStorage);
 	   	$("#verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
 	   	{
@@ -456,6 +465,13 @@
         </div>
     </div>
 
+   	<div class="form-group">
+    	<label class="control-label col-lg-3" for="remoteStorage">远程存储</label>
+        <div class="col-lg-9">
+        	<input class="form-control" type="text" id="remoteStorage"  placeholder=""  value="" style="width: 100%"/>
+        </div>
+    </div>
+    
     <div class="form-group">
 		<div id="realDocVerCtrlDiv" style="margin-top:10px;padding-left:30px">
 	    	<label>版本管理 <span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
