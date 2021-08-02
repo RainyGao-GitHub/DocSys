@@ -348,7 +348,10 @@ public class BaseFunction{
 			for(int i=1; i<subStrs.length; i++)
 			{
 				String[] param = subStrs[i].split("=");
-				config.put(param[0].trim(), param[1].trim());
+				if(param.length > 1)
+				{
+					config.put(param[0].trim(), param[1].trim());
+				}
 			}
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
@@ -361,7 +364,7 @@ public class BaseFunction{
 	}
 
 	private void parseSftpUrl(RemoteStorage remote, String sftpUrl) {
-		Log.println("parseSftpUrl mainStr:" + sftpUrl);
+		Log.println("parseSftpUrl sftpUrl:" + sftpUrl);
 		
 		String tmpStr = sftpUrl.substring("sftp://".length());
 		String subStrs[] = tmpStr.split("/");
@@ -370,7 +373,7 @@ public class BaseFunction{
 		String rootPath = "";
 		if(subStrs.length > 1)
 		{
-			buildRemoteStorageRootPath(subStrs);
+			rootPath = buildRemoteStorageRootPath(subStrs);
 		}
 		Log.println("parseSftpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		
@@ -393,17 +396,14 @@ public class BaseFunction{
 		remote.SFTP.rootPath = rootPath;
 	}
 
-	private String buildRemoteStorageRootPath(String[] portrootSubStrs) {
-		if(portrootSubStrs.length <= 1)
-		{
-			return "";
-		}
+	private String buildRemoteStorageRootPath(String[] sftpUrlSubStrs) {
 		String rootPath = "";
-		for(int i=1; i< portrootSubStrs.length;i ++)
+		for(int i=1; i< sftpUrlSubStrs.length; i++)
 		{
-			if(!portrootSubStrs[i].isEmpty())
+			if(!sftpUrlSubStrs[i].isEmpty())
 			{
-				rootPath += "/" + portrootSubStrs[i];
+				//Log.println(sftpUrlSubStrs[i]);
+				rootPath += "/" + sftpUrlSubStrs[i].trim();
 			}
 		}
 		return rootPath;
