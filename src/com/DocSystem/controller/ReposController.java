@@ -410,6 +410,7 @@ public class ReposController extends BaseController{
 		System.out.println("\n****************** updateReposInfo.do ***********************");
 		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path 
 				+ " realDocPath:" + realDocPath 
+				+ " remoteStorage:" + remoteStorage 
 				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
 				+ " isTextSearchEnabled:" + isTextSearchEnabled);
@@ -472,12 +473,7 @@ public class ReposController extends BaseController{
 		newReposInfo.setType(reposInfo.getType());
 				
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
-		{
-			if(remoteStorage != null)
-			{
-				parseRemoteStorageConfig(reposInfo, remoteStorage);
-			}
-			
+		{	
 			if(isTextSearchEnabled != null)
 			{
 				reposInfo.isTextSearchEnabled = isReposTextSearchEnabled(reposInfo);
@@ -494,6 +490,11 @@ public class ReposController extends BaseController{
 			
 			writeJson(rt, response);	
 			return;
+		}
+		
+		if(remoteStorage != null)
+		{
+			parseRemoteStorageConfig(reposInfo, remoteStorage);
 		}
 		
 		//设置全文搜索
