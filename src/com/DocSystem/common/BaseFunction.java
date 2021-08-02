@@ -339,18 +339,21 @@ public class BaseFunction{
 
 		//Parse sftpUrl
 		String sftpUrl = subStrs[0];
-		parseSftpUrl(remote, sftpUrl);
+		parseSftpUrl(remote, sftpUrl.trim());
 
 		//Parse sftpConfigs
-		JSONObject config = new JSONObject();
-		for(int i=1; i<subStrs.length; i++)
+		if(subStrs.length > 1)
 		{
-			String[] param = subStrs[i].split("=");
-			config.put(param[0].trim(), param[1].trim());
+			JSONObject config = new JSONObject();
+			for(int i=1; i<subStrs.length; i++)
+			{
+				String[] param = subStrs[i].split("=");
+				config.put(param[0].trim(), param[1].trim());
+			}
+			remote.SFTP.userName = config.getString("userName");
+			remote.SFTP.pwd = config.getString("pwd");
+			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd);
 		}
-		remote.SFTP.userName = config.getString("userName");
-		remote.SFTP.pwd = config.getString("pwd");
-		Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd);
 		
 		//add remote config to hashmap
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
@@ -361,19 +364,30 @@ public class BaseFunction{
 		Log.println("parseSftpUrl mainStr:" + sftpUrl);
 		
 		String tmpStr = sftpUrl.substring("sftp://".length());
-		String subStrs[] = tmpStr.split(":");
-		String host = subStrs[0];
-		String tmpStr1 = subStrs[1];
-		//seperate port with rootPath
-		String[] subStrs1 = tmpStr1.split("/");
-		Integer port = Integer.getInteger(subStrs1[0]);
-		String rootPath = buildRemoteStorageRootPath(subStrs);
-		Log.println("parseSftpUrl host:" + host + " port:" + port + " rootPath:" + rootPath);
+		String subStrs[] = tmpStr.split("/");
+		
+		String hostWithPort = subStrs[0];
+		String rootPath = "";
+		if(subStrs.length > 1)
+		{
+			buildRemoteStorageRootPath(subStrs);
+		}
+		Log.println("parseSftpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
+		
+		//seperate host with port
+		String[] subStrs1 = hostWithPort.split(":");
+		String host = subStrs1[0];
+		
+		Integer port = null;
+		if(subStrs1.length > 1)
+		{
+			port = Integer.getInteger(subStrs1[1]);
+		}
 		if(port == null)
 		{
 			port = 22;
 		}
-		
+
 		remote.SFTP.host = host;
 		remote.SFTP.port = port;
 		remote.SFTP.rootPath = rootPath;
