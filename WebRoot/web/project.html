@@ -5183,6 +5183,74 @@
 		});
 	}
 	
+	function showRemoteStoragePushPanel(node)
+	{
+		console.log("showRemoteStoragePushPanel node:", node);
+		if(gReposInfo.remoteStorageConfig == undefined)
+		{
+        	showErrorMessage("该仓库未设置远程存储！");			
+			return;
+		}
+		
+		bootstrapQ.dialog({
+			id: 'remoteStoragePush',
+			url: 'remoteStoragePush.html',
+			title: '远程推送:' + node.name,
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				remoteStoragePushPageInit(node, gReposInfo);
+			},
+		});
+	}
+	
+	function showRemoteStoragePullPanel(node)
+	{
+		console.log("showRemoteStoragePullPanel node:", node);
+		if(gReposInfo.remoteStorageConfig == undefined)
+		{
+        	showErrorMessage("该仓库未设置远程存储！");			
+			return;
+		}
+		
+		bootstrapQ.dialog({
+			id: 'remoteStoragePull',
+			url: 'remoteStoragePull.html',
+			title: '远程拉取:' + node.name,
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				remoteStoragePullPageInit(node, gReposInfo);
+			},
+		});
+	}
+	
+	
+	function getTargetServerDispInfo(repos)
+	{
+		var remote = repos.remoteStorageConfig;
+		console.log("getTargetServerDispInfo remote:", remote);
+		var serverInfo = "";
+		switch(remote.protocol)
+		{
+		case "sftp":
+			serverInfo = getTargetServerDispInfoForSftp(remote);
+			break;
+		}
+		return serverInfo;
+	}
+	
+	function getTargetServerDispInfoForSftp(remote)
+	{
+		var sftp = remote.SFTP;
+		console.log("getTargetServerDispInfoForSftp sftp:", sftp);
+		var sftUrl = "sftp://" + sftp.host + ":" + sftp.port + "" + sftp.rootPath;	
+		console.log("getTargetServerDispInfoForSftp sftUrl:", sftUrl);
+		return sftUrl;
+	}
+	
 	function showDocSharePanel(docShare, docName, url)
 	{
 		console.log("showDocSharePanel docName:" + docName);
@@ -5198,7 +5266,7 @@
 			},
 		});
 	}
- 	
+	
     //Markdown的图片截图粘贴接口
     document.addEventListener('paste', handlePasteImgEvent);        
     function handlePasteImgEvent(event)

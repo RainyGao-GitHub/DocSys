@@ -1,0 +1,147 @@
+<div id="dialog-remoteStoragePush" class="form-horizontal">
+    <div class="form-group">
+       <label class="col-sm-2 control-label">服务器</label>
+       <div class="col-sm-10" style="padding-right:0;">
+	        <input type="text" name="targetServer" class="form-control"  maxlength="400"></input>
+       </div>
+       <div class="clearfix"></div>
+    </div>
+    <div class="modal-footer"></div>
+	<div class="form-group">
+	   <label name="targetType" class="col-sm-2 control-label">目录</label>
+	   <div class="col-sm-10">
+	            <input type="text" name="targetPath" class="form-control"  maxlength="400"></input>
+	   </div>
+	</div>   
+	<div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="doRemoteStoragePush();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelRemoteStoragePush();" style="width: 100px;height: 42px;">取消</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function remoteStoragePushPageInit(_node, _repos)
+	{
+		console.log("remoteStoragePushPageInit() ", _node, _repos);
+		RemoteStoragePush.init(_node, _repos);  
+	}
+	
+	function closeRemoteStoragePushDialog()
+	{
+		closeBootstrapDialog("remoteStoragePush");
+	}
+
+	function doRemoteStoragePush()
+	{
+		RemoteStoragePush.doRemoteStoragePush();
+      	closeRemoteStoragePushDialog();	
+	}
+	
+	function cancelRemoteStoragePush()
+	{
+		closeRemoteStoragePushDialog();
+	}
+	
+	var RemoteStoragePush = (function () {
+		var node;
+		var repos;
+		
+		function init(_node, _repos)
+		{
+			console.log("RemoteStoragePush.init() node:", _node, _repos);
+
+			node = _node;
+			repos = _repos;
+			
+			var targetServer = getTargetServerDispInfo(repos);
+	        $("#dialog-remoteStoragePush input[name='targetServer']").val(targetServer);
+
+			if(node.type == 1)
+			{
+				$("#dialog-remoteStoragePush label[name='targetType']").text("文件");
+			}
+						
+			//set targetPath
+			var targetPath = node.path;
+	        $("#dialog-remoteStoragePush input[name='targetPath']").val(targetPath);
+		}
+		
+		function doRemoteStoragePush()
+		{		   	   
+		    remoteStoragePush();
+		    return true;
+		}
+		
+	   	function remoteStoragePush()
+	   	{
+	    	$.ajax({
+	             url : "/DocSystem/Bussiness/remoteStoragePush.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	                reposId : node.vid, 
+	                path: node.path,
+	                name : node.name,
+		            shareId: gShareId,
+	             },
+	             success : function (ret) {
+	            	console.log("remoteStoragePush ret:", ret);            		
+	             	if( "ok" == ret.status){             		
+	             		// 普通消息提示条
+	             		showPushResultInfo(ret);     		
+	                }
+	                else
+	                {
+	                	showErrorMessage("推送失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("推送失败:服务器异常！");
+	            }
+	        });
+	    }
+	   	
+	   	function showPushResultInfo(ret)
+	   	{
+	   		var totalNum = ret.dataEx.totalCount;
+	   		var successNum = ret.dataEx.successCount;
+  			var pushResultInfo = "推送成功(共" + totalNum +"个)";
+      		if(successNum != totalNum)
+      		{
+      			pushResultInfo = "推送完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : pushResultInfo,
+    					type : 'warning',
+    					time : 2000,
+    				    }); 
+      		}
+      		else
+      		{
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : pushResultInfo,
+    					type : 'success',
+    					time : 2000,
+    				    }); 
+      		}
+	   	}
+	   	
+		//开放给外部的调用接口
+        return {
+			init: function(_node, _repos){
+				init(_node, _repos);
+			},
+        	doRemoteStoragePush: function(){
+        		doRemoteStoragePush();
+            },
+        };
+	})();
+
+</script>
+

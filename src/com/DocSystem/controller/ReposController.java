@@ -129,7 +129,7 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(vid);
-		
+		repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
 		repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 		repos.isBussiness = systemLicenseInfo.hasLicense;
 		
