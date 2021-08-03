@@ -4235,12 +4235,12 @@
 			{text: '远程存储', subMenu: [
 				{text: '推送',  action: function(e){
 						e.preventDefault();
-						showRemoteStoragePushPanel(gRootDoc, 1);
+						showRemoteStoragePushPanel(gRootDoc);
 					}
 				},
 				{text: '拉取',  action: function(e){
 						e.preventDefault();
-						showRemoteStoragePullPanel(gRootDoc, 2);
+						showRemoteStoragePullPanel(gRootDoc);
 					}
 				},	
 				]
@@ -4401,12 +4401,12 @@
 			{text: '远程存储', subMenu: [
 				{text: '推送',  action: function(e){
 						e.preventDefault();
-						showRemoteStoragePushPanel(curRightClickedTreeNode, 1);
+						showRemoteStoragePushPanel(curRightClickedTreeNode);
 					}
 				},
 				{text: '拉取',  action: function(e){
 						e.preventDefault();
-						showReposStoragePullPanel(curRightClickedTreeNode, 2);
+						showRemoteStoragePullPanel(curRightClickedTreeNode);
 					}
 				},	
 				]
@@ -4608,7 +4608,7 @@
 				{text: '拉取',  action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-						showReposStoragePullPanel(parentNode);
+						showRemoteStoragePullPanel(parentNode);
 					}
 				},	
 				]
@@ -4759,7 +4759,7 @@
 					},
 					{text: '拉取',  action: function(e){
 							e.preventDefault();
-							showReposStoragePullPanel(curRightClickedDocListNode);
+							showRemoteStoragePullPanel(curRightClickedDocListNode);
 						}
 					},	
 					]
@@ -4917,7 +4917,7 @@
 					},
 					{text: '拉取',  action: function(e){
 							e.preventDefault();
-							showReposStoragePullPanel(curRightClickedDocListNode);
+							showRemoteStoragePullPanel(curRightClickedDocListNode);
 						}
 					},	
 					]

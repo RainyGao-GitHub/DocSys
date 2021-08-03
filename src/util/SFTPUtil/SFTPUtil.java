@@ -1,5 +1,6 @@
 package util.SFTPUtil;
 
+import com.DocSystem.common.Log;
 import com.jcraft.jsch.*;
 import org.apache.poi.util.IOUtils;
  
@@ -69,7 +70,8 @@ public class SFTPUtil {
             if (privateKey != null) {
                 jsch.addIdentity(privateKey);// 设置私钥
             }
- 
+            
+            Log.println("login host:" + host + " port:" + port + " userName:" + username + " password:" + password);
             session = jsch.getSession(username, host, port);
  
             if (password != null) {
@@ -192,17 +194,17 @@ public class SFTPUtil {
      * @param downloadFile 下载的文件
      * @param saveFile     存在本地的路径
      */
-    public boolean download(String directory, String downloadFile, String saveFile) {
-        System.out.println("download:" + directory + " downloadFile:" + downloadFile + " saveFile:" + saveFile);
+    public boolean download(String remotePath, String localPath, String fileName) {
+        System.out.println("download remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
  
         File file = null;
         try {
-            if (directory != null && !"".equals(directory)) {
-                sftp.cd(directory);
+            if (remotePath != null && !"".equals(remotePath)) {
+                sftp.cd(remotePath);
             }
-            file = new File(saveFile);
+            file = new File(localPath + fileName);
             FileOutputStream os = new FileOutputStream(file);
-            sftp.get(downloadFile, os);
+            sftp.get(remotePath + fileName, os);
             os.close();
             return true;
         } catch (Exception e) {
