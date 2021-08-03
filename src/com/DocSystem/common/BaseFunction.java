@@ -411,6 +411,7 @@ public class BaseFunction{
 				rootPath += "/" + sftpUrlSubStrs[i].trim();
 			}
 		}
+		rootPath += "/";
 		return rootPath;
 	}
 
