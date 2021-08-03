@@ -139,6 +139,16 @@
     					time : 2000,
     				    }); 
       		}
+      		
+      		//有文件拉取成功，那么刷新页面
+      		if(successNum > 0)
+      		{
+		     	//2秒后刷新页面
+		        setTimeout(function () 
+		        {
+			     	window.location.reload();			        	
+	            }, 100);
+      		}
 	   	}
 	   	
 		//开放给外部的调用接口
