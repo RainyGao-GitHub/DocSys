@@ -9256,7 +9256,7 @@ public class BaseController  extends BaseFunction{
 		return docSysInitAuthCode;
 	}
 	
-	protected static String docSysInit(boolean force) 
+	protected String docSysInit(boolean force) 
 	{	
 		System.out.println("\n*************** docSysInit force:" + force + " *****************");
 		System.out.println("docSysInit() docSysIniPath:" + docSysIniPath);
@@ -9354,14 +9354,39 @@ public class BaseController  extends BaseFunction{
 				//更新版本号
 				FileUtil.copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
 				System.out.println("docSysInit() updateVersion done");
+				
+				initReposRemoteStorageHashMap();
 				return "ok";
 			}
 		}
 		
 		//数据库已存在
 		System.out.println("docSysInit() checkAndUpdateDB start");
-		return checkAndUpdateDB(true);
+		String ret = checkAndUpdateDB(true);
+		if(ret.equals("ok"))
+		{
+			initReposRemoteStorageHashMap();
+		}
+		
+		return ret;
 	}
+	
+	protected void initReposRemoteStorageHashMap() {
+		Log.println("initReposRemoteStorageHashMap for All Repos");
+		List <Repos> list = reposService.getAllReposList();
+		if(list == null)
+		{
+			Log.println("initReposRemoteStorageHashMap there is no repos");
+			return;
+		}
+		
+		for(int i=0; i<list.size(); i++)
+		{
+			Repos repos = list.get(i);
+			Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
+			parseRemoteStorageConfig(repos, repos.getRemoteStorage());
+		}
+	}		
 	
 	protected void collectDocSysInstallationInfo(String serverIP, HttpServletRequest request) 
 	{

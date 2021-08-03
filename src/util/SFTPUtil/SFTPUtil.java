@@ -192,7 +192,7 @@ public class SFTPUtil {
      * @param downloadFile 下载的文件
      * @param saveFile     存在本地的路径
      */
-    public void download(String directory, String downloadFile, String saveFile) {
+    public boolean download(String directory, String downloadFile, String saveFile) {
         System.out.println("download:" + directory + " downloadFile:" + downloadFile + " saveFile:" + saveFile);
  
         File file = null;
@@ -204,12 +204,14 @@ public class SFTPUtil {
             FileOutputStream os = new FileOutputStream(file);
             sftp.get(downloadFile, os);
             os.close();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             if (file != null) {
                 file.delete();
             }
         }
+        return false;
     }
  
     /**
