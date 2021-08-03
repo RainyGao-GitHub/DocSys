@@ -107,3 +107,6 @@ MxsDoc是基于Web的文件管理系统，支持文件权限管理和历史版�
 #### 2、手动安装动态库
 复制 **DocSystem\web\static\office-editor\libs\Linux** 目录下的所有动态库到 **/usr/lib64** 目录
 #### 3、重启MxsDoc
+### 三、Windows系统Office无法预览和编辑
+#### 1、检查系统缺少的动态库并修复
+双击运行 **DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat** ，根据报错提示确定需要修复的动态库
