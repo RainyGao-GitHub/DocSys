@@ -5034,6 +5034,94 @@
 			]);
 		}
 		
+		//previewZone上的右键菜单
+		if(gIsPC == true)
+		{
+			context.attach('#previewZone', [
+				{text: '预览', action: function(e){
+						e.preventDefault();
+						openDoc(gDocInfo, true, "openInArtDialog", "pdf", gShareId);  
+					}
+				},
+				{text: '打开', action: function(e){
+						e.preventDefault();
+						if(gDocInfo != null && gDocInfo.type == 2)
+						{
+							openDocInNewPage(gDocInfo);
+						}
+						else
+						{
+							openDoc(gDocInfo, true, "openInNewPage", "office", gShareId); 
+						}
+					}
+				},
+				{text: '下载', action: function(e){
+						e.preventDefault();
+						var treeNodes = [];
+						treeNodes.push(gDocInfo);
+						downloadDoc(treeNodes,true,1);
+					}
+				},
+				{text: '推送', subMenu: [
+					{text: '至仓库',  action: function(e){
+							e.preventDefault();
+							showDocPushPanel(gDocInfo, 1);
+						}
+					},
+					{text: '至目录',  action: function(e){
+							e.preventDefault();
+							showDocPushPanel(gDocInfo, 2);
+						}
+					},	
+					]
+				},
+				{text: '分享', action: function(e){
+							e.preventDefault();
+							shareDoc(gDocInfo);    
+						}
+				},
+				{divider: true},
+				{text: '删除', action: function(e){
+							e.preventDefault();
+							console.log(e);
+							var deleteNodes = [];
+							deleteNodes.push(gDocInfo);
+							DoDelete(deleteNodes);
+						}
+				},
+				{text: '远程存储', subMenu: [
+					{text: '推送',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePushPanel(gDocInfo);
+						}
+					},
+					{text: '拉取',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePullPanel(gDocInfo);
+						}
+					},	
+					]
+				},
+				{divider: true},
+				{text: '详细信息', action: function(e){
+						e.preventDefault();
+						showDocDetail(gDocInfo);
+					}
+				},
+				{divider: true},
+				{text: '查看历史版本', action: function(e){
+						e.preventDefault();
+						showDocHistory(gDocInfo,0);
+					}
+				},
+				{text: '查看备注历史', action: function(e){
+						e.preventDefault();
+					    showDocHistory(gDocInfo,1);
+					}
+				},
+			]);			
+		}
+		
 		context.settings({compress: true});
 		
 		$(document).on('mouseover', '.me-codesta', function(){
