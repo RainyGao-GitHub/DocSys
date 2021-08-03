@@ -1,7 +1,7 @@
 <div id="dialog-remoteStoragePush" class="form-horizontal">
     <div class="form-group">
        <label class="col-sm-2 control-label">服务器</label>
-       <div class="col-sm-10" style="padding-right:0;">
+       <div class="col-sm-10">
 	        <input type="text" name="targetServer" class="form-control"  maxlength="400"></input>
        </div>
        <div class="clearfix"></div>
@@ -68,6 +68,10 @@
 						
 			//set targetPath
 			var targetPath = node.path;
+			if(targetPath == undefined || targetPath == "")
+			{
+				targetPath = "/";
+			}
 	        $("#dialog-remoteStoragePush input[name='targetPath']").val(targetPath);
 		}
 		
