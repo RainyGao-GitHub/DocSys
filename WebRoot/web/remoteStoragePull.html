@@ -73,6 +73,10 @@
 			{
 				targetPath = "/";
 			}
+			if(node.name)
+			{
+				targetPath += node.name;	
+			}
 	        $("#dialog-remoteStoragePull input[name='targetPath']").val(targetPath);
 		}
 
