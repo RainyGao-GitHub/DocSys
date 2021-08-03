@@ -294,6 +294,11 @@ public class BaseFunction{
 	
 	protected static RemoteStorage parseRemoteStorageConfig(Repos repos, String remoteStorage) {
 		Log.println("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
+		if(remoteStorage == null)
+		{
+			return null;
+		}
+		
 		String protocol = null;
 		if(remoteStorage.indexOf("sftp://") == 0)
 		{
