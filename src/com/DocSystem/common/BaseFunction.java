@@ -285,15 +285,14 @@ public class BaseFunction{
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
 	
-	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();
-	
+	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();	
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.println("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		reposRemoteStorageHashMap.remove(repos.getId());
 	}		
 	
 	
-	protected RemoteStorage parseRemoteStorageConfig(Repos repos, String remoteStorage) {
+	protected static RemoteStorage parseRemoteStorageConfig(Repos repos, String remoteStorage) {
 		Log.println("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		String protocol = null;
 		if(remoteStorage.indexOf("sftp://") == 0)
@@ -331,8 +330,9 @@ public class BaseFunction{
 		return null;
 	}
 	
-	private RemoteStorage parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
+	private static RemoteStorage parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
 		RemoteStorage remote = new RemoteStorage();
+		remote.protocol = "sftp";
 		remote.SFTP = new SftpConfig();
 
 		String[] subStrs = remoteStorage.split(";");
@@ -363,7 +363,7 @@ public class BaseFunction{
 		return remote;
 	}
 
-	private void parseSftpUrl(RemoteStorage remote, String sftpUrl) {
+	private static void parseSftpUrl(RemoteStorage remote, String sftpUrl) {
 		Log.println("parseSftpUrl sftpUrl:" + sftpUrl);
 		
 		String tmpStr = sftpUrl.substring("sftp://".length());
@@ -396,7 +396,7 @@ public class BaseFunction{
 		remote.SFTP.rootPath = rootPath;
 	}
 
-	private String buildRemoteStorageRootPath(String[] sftpUrlSubStrs) {
+	private static String buildRemoteStorageRootPath(String[] sftpUrlSubStrs) {
 		String rootPath = "";
 		for(int i=1; i< sftpUrlSubStrs.length; i++)
 		{
