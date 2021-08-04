@@ -777,7 +777,7 @@ public class BaseController  extends BaseFunction{
 		return relativePath;
 	}
 
-	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc, Action syncType, User user, String commitMsg) 
+	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc, Action syncType, User user, String commitMsg, boolean checkLock) 
 	{
 		Log.printObject("addDocToSyncUpList() syncType:" + syncType + " doc:", doc);
 		if(user == null)
@@ -785,7 +785,7 @@ public class BaseController  extends BaseFunction{
 			user = autoSyncUser;
 		}
 		
-		if(false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
+		if(checkLock == false || false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
 		{
 			CommonAction.insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AUTOSYNCUP, syncType, DocType.REALDOC, null, user, false);
 		}

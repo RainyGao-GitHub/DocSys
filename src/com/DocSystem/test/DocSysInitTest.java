@@ -3,7 +3,7 @@ package com.DocSystem.test;
 import com.DocSystem.controller.BaseController;
 
 class DocSysInitTest extends BaseController{
-    public static void main(String[] args) {
+    public void main(String[] args) {
     	String testDir = "C:/DocSysTestDir/";
     	docSysWebPath = testDir + "WebRoot/";
     	docSysIniPath = docSysWebPath + "../docSys.ini/";
