@@ -247,7 +247,7 @@ function getReposBasicSetting()
 	   	$("#RBSrealDocPath").val(reposInfo.realDocPath);
 	   	$("#RBSremoteStorage").val(reposInfo.remoteStorage);
 	   	console.log("remoteStorageConfig:", reposInfo.remoteStorageConfig);
-	   	if(reposInfo.remoteStorageConfig && reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
+	   	if(reposInfo.remoteStorageConfig != undefined && reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
 	   	{
 		   	$("#autoPull").attr("checked","checked");
 	   	}
