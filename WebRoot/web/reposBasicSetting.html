@@ -19,7 +19,7 @@
 				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 			</div>
             <div id="RBSremoteStorageDiv">
-		        <label>远程存储</label>
+		        <label>远程存储  <span style="margin-left:20px"><input type="checkbox" id="RBSautoPull" value="0">自动拉取</span></label>
 				<input class="form-control" type="text" id="RBSremoteStorage"  placeholder=""  value="" style="width: 100%"/>
 			</div>			
             <div id="RBSverCtrlDiv">
@@ -246,6 +246,15 @@ function getReposBasicSetting()
 	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#RBSrealDocPath").val(reposInfo.realDocPath);
 	   	$("#RBSremoteStorage").val(reposInfo.remoteStorage);
+	   	if(reposInfo.remoteStorageConfig && reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
+	   	{
+		   	$("#autoPull").attr("checked",true);
+	   	}
+	   	else
+	   	{
+		   	$("#autoPull").attr("checked",false);
+	   	}		
+	   	
 	   	$("#RBSverCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
 	   	{
@@ -293,7 +302,13 @@ function saveReposBasicSetting()
 	newReposSetting.type =  $("#RBStype").val();	//Real DocSystem
 	newReposSetting.path = $("#RBSpath").val();
 	newReposSetting.realDocPath = $("#RBSrealDocPath").val();
-	newReposSetting.remoteStorage = $("#RBSremoteStorage").val();
+    var remoteStorage = $("#RBSremoteStorage").val();	//remoteStorage
+	var autoPull = $("#RBSautoPull").is(':checked')? 1: 0;
+    if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
+	{
+		remoteStorage += ";autoPull=1";
+	}
+	newReposSetting.remoteStorage = remoteStorage;
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;
 	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
