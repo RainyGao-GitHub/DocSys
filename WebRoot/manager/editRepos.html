@@ -41,9 +41,28 @@
 		var autoPull = $("#autoPull").is(':checked')? 1: 0;
 	    if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
 		{
-			remoteStorage += ";autoPull=1";
+	    	if(remoteStorage.indexOf("autoPull") == -1)
+	    	{
+	    		remoteStorage += ";autoPull=1";
+	    	}
+	    	else
+	    	{
+	    		remoteStorage = remoteStorage.split("autoPull=0").join("autoPull=1");
+	    	}
 		}
-		newReposSetting.remoteStorage = remoteStorage;
+	    else
+	    {
+	    	if(remoteStorage.indexOf("autoPull") == -1)
+	    	{
+	    		remoteStorage += ";autoPull=0";
+	    	}
+	    	else
+	    	{
+	    		remoteStorage = remoteStorage.split("autoPull=1").join("autoPull=0");
+	    	}
+	    }
+	    $("#remoteStorage").val(remoteStorage);
+	    newReposSetting.remoteStorage = remoteStorage;
 		newReposSetting.verCtrl = $("#verCtrl").val();
 		newReposSetting.isRemote =  $("#isRemote").is(':checked')? 1: 0;
 		newReposSetting.localSvnPath = $("#localSvnPath").val();
@@ -236,9 +255,10 @@
 	   	$("#type option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#realDocPath").val(reposInfo.realDocPath);
 	   	$("#remoteStorage").val(reposInfo.remoteStorage);
-	   	if(reposInfo.remoteStorageConfig && reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
+	   	console.log("remoteStorageConfig:", reposInfo.remoteStorageConfig);
+	   	if(reposInfo.remoteStorageConfig != undefined && reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
 	   	{
-		   	$("#autoPull").attr("checked",true);
+		   	$("#autoPull").attr("checked","checked");
 	   	}
 	   	else
 	   	{
@@ -481,14 +501,14 @@
     </div>
 
    	<div class="form-group">
-    	<label class="control-label col-lg-3" for="remoteStorage">远程存储 <span style="margin-left:20px"><input type="checkbox" id="autoPull" value="0">自动拉取</span></label>
-        <div class="col-lg-9">
-        	<input class="form-control" type="text" id="remoteStorage"  placeholder=""  value="" style="width: 100%"/>
+		<div style="margin-top:10px;padding-left:30px">
+   			<label>远程存储 <span style="margin-left:20px"><input type="checkbox" id="autoPull" value="0">自动拉取</span></label>
+        	<input class="form-control" type="text" id="remoteStorage"  placeholder=""  value="" style="width: 86%"/>
         </div>
     </div>
     
     <div class="form-group">
-		<div id="realDocVerCtrlDiv" style="margin-top:10px;padding-left:30px">
+		<div id="realDocVerCtrlDiv" style="padding-left:30px">
 	    	<label>版本管理 <span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 	       	<select class="form-control" id="verCtrl" onchange="doSelectVerCtrl();" style="width: 86%">   
 	        	<option value="0">无</option>   

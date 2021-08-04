@@ -141,10 +141,28 @@
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
 	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
 		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
-		if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
+	    if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
 		{
-			remoteStorage += ";autoPull=1";
+	    	if(remoteStorage.indexOf("autoPull") == -1)
+	    	{
+	    		remoteStorage += ";autoPull=1";
+	    	}
+	    	else
+	    	{
+	    		remoteStorage = remoteStorage.split("autoPull=0").join("autoPull=1");
+	    	}
 		}
+	    else
+	    {
+	    	if(remoteStorage.indexOf("autoPull") == -1)
+	    	{
+	    		remoteStorage += ";autoPull=0";
+	    	}
+	    	else
+	    	{
+	    		remoteStorage = remoteStorage.split("autoPull=1").join("autoPull=0");
+	    	}
+	    }
 	    
 	    var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
 	    var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
