@@ -326,7 +326,7 @@ public class ReposController extends BaseController{
 				String localRootPath = Path.getReposRealPath(repos);
 				String localVRootPath = Path.getReposVirtualPath(repos);
 		        Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
-		        channel.remoteStoragePull(repos, rootDoc, login_user, "仓库初始化远程自动拉取", rt);
+		        channel.remoteStoragePull(repos, rootDoc, login_user, "仓库初始化远程自动拉取", true, rt);
 			}
 		}
 		
@@ -1016,16 +1016,36 @@ public class ReposController extends BaseController{
 		System.out.println("getSubDocList() docList ready");
 		writeJson(rt, response);
 		
+		//远程存储自动拉取
+		RemoteStorage remote = repos.remoteStorageConfig;
+		if(remote != null && remote.autoPull != null && remote.autoPull)
+		{
+	        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+	        if(channel == null)
+	        {
+				Log.println("非商业版不支持远程存储！");
+	        }
+	        else
+	        {
+		        new Thread(new Runnable() {
+					public void run() {
+						System.out.println("getSubDocList() executeUniqueCommonActionList in new thread");
+						channel.remoteStoragePull(repos, tmpDoc, reposAccess.getAccessUser(), "远程存储自动拉取", false, rt);
+					}
+				}).start();			
+		        return;
+	        }
+		}
+		
 		//Add doc for AutoSync
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null, true);
-
 		new Thread(new Runnable() {
-			public void run() {
-				System.out.println("getSubDocList() executeUniqueCommonActionList in new thread");
-				executeUniqueCommonActionList(actionList, rt);
-			}
-		}).start();
+				public void run() {
+					System.out.println("getSubDocList() executeUniqueCommonActionList in new thread");
+					executeUniqueCommonActionList(actionList, rt);
+				}
+			}).start();
 	}
 	
 	List<Doc> updateLockStateAndsortDocList(List<Doc> docList, String sort, Integer needLockState) 
