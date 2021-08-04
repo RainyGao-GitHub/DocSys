@@ -143,7 +143,7 @@
 		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
 		if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
 		{
-			remoteStorage += ";autoPull=true";
+			remoteStorage += ";autoPull=1";
 		}
 	    
 	    var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();

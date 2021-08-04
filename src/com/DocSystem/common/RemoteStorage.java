@@ -3,6 +3,6 @@ package com.DocSystem.common;
 public class RemoteStorage {
 
 	public String protocol;
-	public Boolean autoPull;
+	public Integer autoPull;
 	public SftpConfig SFTP;
 }
