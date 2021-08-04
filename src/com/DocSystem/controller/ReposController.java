@@ -581,7 +581,7 @@ public class ReposController extends BaseController{
 				String localRootPath = Path.getReposRealPath(repos);
 				String localVRootPath = Path.getReposVirtualPath(repos);			
 				Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, reposPath, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
-				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNC, login_user, "自动同步：版本仓库类型变更 " + reposInfo.getVerCtrl() + ":" + newReposInfo.getVerCtrl());
+				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNC, login_user, "自动同步：版本仓库类型变更 " + reposInfo.getVerCtrl() + ":" + newReposInfo.getVerCtrl(), true);
 				executeUniqueCommonActionList(actionList, rt);
 			}
 			else
@@ -1000,7 +1000,7 @@ public class ReposController extends BaseController{
 		
 		//Add doc for AutoSync
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null);
+		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null, true);
 
 		new Thread(new Runnable() {
 			public void run() {
