@@ -19,7 +19,7 @@
 				<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 			</div>
             <div name="remoteStorageDiv">
-		        <label>远程存储</label>
+		        <label>远程存储 <span name="isAutoPullEnable" style="margin-left:20px"><input type="checkbox" name="autoPull" value="0">自动拉取</span></label>
 				<input class="form-control" type="text" name="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
 			</div>			
 			<div name="verCtrlEnablelDiv" style="margin-top:10px">
@@ -140,6 +140,12 @@
 	    var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
 	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
+		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
+		if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
+		{
+			remoteStorage += ";autoPull=true";
+		}
+	    
 	    var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
 	    var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
 	    var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
