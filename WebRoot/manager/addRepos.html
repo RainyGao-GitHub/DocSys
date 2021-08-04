@@ -48,6 +48,12 @@
 	    var type = $("#type").val();
 	    var realDocPath = $("#realDocPath").val();	//realDocPath
 	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
+		var autoPull = $("#autoPull").is(':checked')? 1: 0;
+	    if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
+		{
+			remoteStorage += ";autoPull=true";
+		}
+	    
 	    var verCtrl = $("#verCtrl").val();
 	    var isRemote = $("#isRemote").is(':checked')? 1: 0;
 	    var localSvnPath = $("#localSvnPath").val();
@@ -322,7 +328,7 @@
         </div>
     </div>
     <div class="form-group">
-    	<label class="control-label col-lg-3" for="remoteStorage">远程存储</label>
+    	<label class="control-label col-lg-3" for="remoteStorage">远程存储 <span id="isAutoPullEnable" style="margin-left:20px"><input type="checkbox" id="autoPull" value="0">自动拉取</span></label>
         <div class="col-lg-9">
         	<input class="form-control" type="text" id="remoteStorage"  placeholder=""  value="" style="width: 100%"/>
         </div>
