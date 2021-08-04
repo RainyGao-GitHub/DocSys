@@ -1,8 +1,8 @@
 package com.DocSystem.common.channels;
 
-import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.User;
 
 import util.ReturnAjax;
 
@@ -16,7 +16,7 @@ public interface Channel {
 
     String channelName();
     
-	void remoteStoragePull(Repos repos, Doc doc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt);
+	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, ReturnAjax rt);
 
-	void remoteStoragePush(Repos repos, Doc dbDoc, ReposAccess reposAccess, ReturnAjax rt);
+	void remoteStoragePush(Repos repos, Doc doc, User accessUser, ReturnAjax rt);
 }
