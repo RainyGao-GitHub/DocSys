@@ -6,7 +6,7 @@
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
-<script src="static/stackedit/docs/lib/stackedit.js"  charset="utf-8"></script><style type="text/css" media="screen">
+<style type="text/css" media="screen">
   body {
       overflow: hidden;
   }
@@ -20,8 +20,76 @@
       right: 0;
   }
 </style>
+<!--编辑器的样式提取-->
+<style>
+	.stackedit-no-overflow {
+		overflow: hidden;
+	}
+
+	.stackedit-container {
+		background-color: rgba(160, 160, 160, 0.5);
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 9999;
+	}
+
+	.stackedit-hidden-container {
+		position: absolute;
+		width: 10px;
+		height: 10px;
+		left: -99px;
+	}
+
+	.stackedit-iframe-container {
+		background-color: #fff;
+		position: absolute;
+		margin: auto;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	.stackedit-iframe {
+		position: absolute;
+		height: 100%;
+		width: 100%;
+		border: 0;
+		border-radius: 2px;
+	}
+
+	@media (max-width: 740px) {
+		.stackedit-iframe-container {
+			height: 100%;
+			width: 100%;
+			border-radius: 0;
+		}
+
+		.stackedit-iframe {
+			border-radius: 0;
+		}
+	}
+
+	.stackedit-close-button {
+		position: absolute !important;
+		box-sizing: border-box !important;
+		width: 38px !important;
+		height: 36px !important;
+		margin: 4px !important;
+		padding: 0 4px !important;
+		text-align: center !important;
+		vertical-align: middle !important;
+		text-decoration: none !important;
+	}
+</style>
 <div id="textEditor">
-	<div id="textEditorToolBar" style="height:40px;">
+	<!--<div id="textEditorToolBar" style="height:40px;">
 		<div class="editormd-toolbar" style="display: block;">
 			<div class="editormd-toolbar-container">
 				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
@@ -41,84 +109,138 @@
 				</ul>				
 			</div>
 		</div>
-	</div>
+	</div>-->
 	<div class="textEditorContent" style="min-height: 600px;">
 		<div id="editor">
-			<textarea>Hello World</textarea>
+			<div class="stackedit-container">
+				<div class="stackedit-iframe-container">
+					<iframe class="stackedit-iframe" src="#" width="100%" height="100%"></iframe>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
 <script type="text/javascript">
 	//获取artDialog父窗口传递过来的参数
 	var artDialog = top.dialog.get(window);
+	// 定义成员变量
 	var docInfo = {};
-	if(artDialog)
-	{
-		docInfo = artDialog.data; // 获取对话框传递过来的数据
-	}
-	else
-	{
-		//解决artDialog递归调用的数据穿透问题
-		docInfo = window.parent.gDialogData[window.name];
-	}
-	console.log("docInfo:",docInfo)
-	
-    if(!docInfo.fileSuffix)
-    {
-    	docInfo.fileSuffix = getFileSuffix(docInfo.name);
-    }
-    
 	var docText = "";
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
-	
 	//页面加载完成处理函数    
-	$(document).ready(function()
-	{
-		if(!docInfo.fileSuffix)
-		{
-			docInfo.fileSuffix = getFileSuffix(docInfo.name);
-		}
+	$(document).ready(function() {
+		// 初始化文档信息
+		docInfoInit();
+		// 加载文档窗口，传入文档加载成功回调函数和加载失败函数
 		getDocText(docInfo, showText, showErrorMessage);
 	});	
-				
-	function showText(docText_, tmpSavedDocText_)
-	{
-		docText =  docText_;
-		tmpSavedDocText = tmpSavedDocText_;
-		console.log("showText:", docText);
-		const stackedit = new Stackedit({
-			  placeholder: 'editor',
-		});
-		
-		// Open the iframe
-		stackedit.openFile({
-		    name: docInfo.name, // with an optional filename
-		    content: {
-		      text: docText // and the Markdown content.
-		    }
-		  });
-
-		/*stackedit.openFile({
-		    name: docInfo.name, // with an optional filename
-		    content: {
-		        text: docText,
-		        properties: {
-		          extensions: {
-		            preset: 'commonmark'
-		          }
-		    	}
-		    }
-		});*/
-	
-		// Listen to StackEdit events and apply the changes to the textarea.
-		stackedit.on('fileChange', (file) => {
-			docText = file.content.text;
-			isContentChanged = true;
-		});
+	/**
+	 * 文档信息初始化方法
+	 */
+	function docInfoInit() {
+		if(artDialog) {
+			docInfo = artDialog.data; // 获取对话框传递过来的数据
+		} else {
+			//解决artDialog递归调用的数据穿透问题
+			if (window.name !== undefined && window.name !== "") {
+				docInfo = window.parent.gDialogData[window.name];	
+			}
+		}
+		// 为空时获取文档的后缀
+		if(docInfo.fileSuffix !==  undefined || docInfo.fileSuffix !== "") {
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		}	
 	}
-	
-	
+	/**
+	 * 文档加载类
+	 * @param docText_ 文档内容
+	 * @param tmpSavedDocText_ 临时保存文档内容（暂时未使用）
+	 */
+	function showText(docText_, tmpSavedDocText_) {
+		// 传入staticedit插件地址和文件内容，获取staticedit插件指定路径
+		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html",docText_);
+		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
+		var stackEditIframeEl = $(".stackedit-iframe");
+		stackEditIframeEl.prop("src",url);		
+
+		// Listen to StackEdit events and apply the changes to the textarea.
+		//监听iframe发来的消息
+		window.addEventListener('message', messageHandler);
+		// 设置定时0.5s后设置页面为只读
+		setTimeout(function () {
+			setStaticEditReaOnly(false);
+		},500)
+	}
+
+	/**
+	 * staticEdit消息事件处理
+	 * 
+	 * @param event 事件对象
+	 */
+	function messageHandler(event) {
+		switch (event.data.type) {
+			case 'ready':
+				// iframe 页面加载完成,设置当前页面为只读
+				setStaticEditReaOnly(false);
+				break;
+			case 'fileChange':
+				//收到iframe文件改动消息
+				var file = event.data.payload;
+				docText = file.content.text;
+				isContentChanged = true;
+				break;
+			case 'close':
+				//收到iframe的关闭消息
+				var artDialog = top.dialog.get(window);
+				artDialog.close();
+				break;
+			case 'saveChange':
+				//执行文档保存操作
+				saveDoc();
+				break;
+			default:
+		}
+	}
+
+	/**
+	 * stackEdit插件加载路径初始化，在原始路径上拼装文件信息，域信息
+	 *
+	 * @param url 插件路径
+	 * @param doc_text 文档内容
+	 * @return 拼装后携带文件内容的url路径
+	 */
+	function getStaticEditUrl(url,doc_text) {
+		var origin = window.location.protocol + '//' + window.location.host;
+		var fileName = docInfo.name;
+		var params = {
+			origin: origin,
+			fileName: fileName,
+			contentText: doc_text,
+			silent: false
+		};
+		var serializedParams = Object.keys(params).map(function (key) {
+			return key + '=' + encodeURIComponent(params[key] || '');
+		}).join('&');
+		var hash = '#' + serializedParams;
+		return url+hash;
+	}
+
+	/**
+	 * 设置编辑器的编辑状态为只读
+	 * 
+	 * @param editFlag false代表编辑状态，true代表只读状态
+	 */
+	function setStaticEditReaOnly(editFlag) {
+		var stackeditEl = $(".stackedit-iframe");
+		if (stackeditEl !== undefined) {
+			stackeditEl[0].contentWindow.postMessage({"type":"toggleEditor","flag":editFlag},"*")	
+		}
+	}
+
+	/**
+	 * 保存文档
+	 */
     function saveDoc()
 	{
     	console.log("saveDoc docInfo.docId:" + docInfo.docId);
@@ -264,9 +386,6 @@
 			
 			//隐藏编辑按键
 			$("#textEditorEditBtn").hide();
-
-			//Enable Edit
-			editor.setReadOnly(false);
 		}
 		else
 		{
@@ -278,9 +397,8 @@
 		
 			//显示编辑按键
 			$("#textEditorEditBtn").show();			
-			
-			//Disable Edit
-			editor.setReadOnly(true);
 		}
+		//Enable Edit
+		setStaticEditReaOnly(edit);
 	}
 </script>

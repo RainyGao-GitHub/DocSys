@@ -695,16 +695,18 @@ function buildBasicDoc(path, name)
 }
 
 //文件类型获取与判断接口
-function getFileSuffix(name)
-{
-   var i = name.lastIndexOf(".")
-   if( i< 0 ){
-		// 默认是文本类型
+function getFileSuffix(name) {
+	if (name !== undefined && name !== "" && name.lastIndexOf(".") !== -1) {
+		var i = name.lastIndexOf(".")
+		if (i < 0) {
+			// 默认是文本类型
+			return "";
+		}
+		var suffix = name.substring(i + 1, name.length).toLowerCase();
+		return suffix;
+	} else {
 		return "";
-   }
-   
-   var suffix = name.substring(i + 1 , name.length).toLowerCase();
-   return suffix;
+	}
 }
 
 function isBinary(suffix)
