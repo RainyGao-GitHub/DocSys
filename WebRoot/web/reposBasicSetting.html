@@ -246,9 +246,10 @@ function getReposBasicSetting()
 	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#RBSrealDocPath").val(reposInfo.realDocPath);
 	   	$("#RBSremoteStorage").val(reposInfo.remoteStorage);
+	   	console.log("remoteStorageConfig:", reposInfo.remoteStorageConfig);
 	   	if(reposInfo.remoteStorageConfig && reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
 	   	{
-		   	$("#autoPull").attr("checked",true);
+		   	$("#autoPull").attr("checked","checked");
 	   	}
 	   	else
 	   	{
@@ -306,8 +307,27 @@ function saveReposBasicSetting()
 	var autoPull = $("#RBSautoPull").is(':checked')? 1: 0;
     if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
 	{
-		remoteStorage += ";autoPull=1";
+    	if(remoteStorage.indexOf("autoPull") == -1)
+    	{
+    		remoteStorage += ";autoPull=1";
+    	}
+    	else
+    	{
+    		remoteStorage = remoteStorage.split("autoPull=0").join("autoPull=1");
+    	}
 	}
+    else
+    {
+    	if(remoteStorage.indexOf("autoPull") == -1)
+    	{
+    		remoteStorage += ";autoPull=0";
+    	}
+    	else
+    	{
+    		remoteStorage = remoteStorage.split("autoPull=1").join("autoPull=0");
+    	}
+    }
+    $("#RBSremoteStorage").val(remoteStorage);
 	newReposSetting.remoteStorage = remoteStorage;
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;

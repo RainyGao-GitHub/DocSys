@@ -358,8 +358,10 @@ public class BaseFunction{
 					config.put(param[0].trim(), param[1].trim());
 				}
 			}
+			remote.autoPull = config.getInteger("autoPull");
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
+			
 			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd);
 		}
 		
