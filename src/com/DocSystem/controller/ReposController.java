@@ -316,7 +316,7 @@ public class ReposController extends BaseController{
 			parseRemoteStorageConfig(repos, remoteStorage);
 			RemoteStorage remote = repos.remoteStorageConfig;
 			//如果设置了自动拉取，那么仓库新建时需要拉取整个远程目录
-			if(remote != null && remote.autoPull != null && remote.autoPull == true)
+			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 			{
 		        Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		        if(channel == null)
@@ -1018,7 +1018,7 @@ public class ReposController extends BaseController{
 		
 		//远程存储自动拉取
 		RemoteStorage remote = repos.remoteStorageConfig;
-		if(remote != null && remote.autoPull != null && remote.autoPull)
+		if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 		{
 	        Channel channel = ChannelFactory.getByChannelName("businessChannel");
 	        if(channel == null)
