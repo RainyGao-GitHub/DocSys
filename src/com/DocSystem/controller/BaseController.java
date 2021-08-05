@@ -85,6 +85,7 @@ import com.DocSystem.common.MyExtractCallback;
 import com.DocSystem.common.OS;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
+import com.DocSystem.common.RemoteStorage;
 import com.DocSystem.common.RunResult;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
@@ -98,6 +99,8 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.CommonAction.DocType;
+import com.DocSystem.common.channels.Channel;
+import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.ReposAccess;
@@ -390,6 +393,90 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 
+	protected List<Doc> docSysGetDocList(Repos repos, Doc doc) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+		case 2:
+			List<Doc> localList = getLocalEntryList(repos, doc);
+			RemoteStorage remote = reposRemoteStorageHashMap.get(repos.getId());
+			if(remote == null)
+			{
+				return localList;
+			}
+			repos.remoteStorageConfig = remote;
+			List<Doc> remoteList = getRemoteStorageEntryList(repos, doc);
+			if(remoteList == null)
+			{
+				return localList;
+			}
+			return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
+		case 3:
+		case 4:
+			return getRemoteEntryList(repos, doc);
+		}
+		return null;
+	}
+	
+	private List<Doc> combineLocalListWithRemoteList(Repos repos, Doc doc, List<Doc> localList, List<Doc> remoteList) {
+		List<Doc> result = new ArrayList<Doc>();
+		
+		//TODO: 获取dbList（可以用于标记本地文件和远程存储文件的新增、删除、修改）
+		//List<Doc> dbList = getRemoteStorageDBEntryList(repos, doc);
+		//转成dbHashMap
+		
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already scanned
+		
+		//遍历localList并放入 hashMap
+		for(int i=0; i<localList.size(); i++)
+		{
+			Doc localDoc = localList.get(i);
+			docHashMap.put(localDoc.getName(), localDoc);
+			result.add(localDoc);
+			//TODO: if(dbDoc.lastestEditTime != localDoc.lastestEditTime) localChanged			
+		}
+		
+		//遍历remoteList并放入 hashMap
+		for(int i=0; i<remoteList.size(); i++)
+		{
+			Doc remoteDoc = remoteList.get(i);
+    		Doc tmpDoc = docHashMap.get(remoteDoc.getName());
+    		if(tmpDoc == null)
+    		{
+    			tmpDoc = remoteDoc;
+    			//docHashMap.put(remoteDoc.getName(), remoteDoc);
+    		}
+    		result.add(tmpDoc);
+    		
+			//TODO: if(dbDoc.revision != tmpDoc.revision) remoteChanged			
+		}
+		
+		return result;
+	}
+
+	private List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc) {
+        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+        if(channel == null)
+        {
+			Log.println("非商业版不支持远程存储！");
+			return null;
+        }
+        
+        return channel.remoteStorageGetDBEntryList(repos, doc);
+	}
+	
+	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc) {
+        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+        if(channel == null)
+        {
+			Log.println("非商业版不支持远程存储！");
+			return null;
+        }
+        
+        return channel.remoteStorageGetEntryList(repos, doc);
+	}
+	
 	private List<Doc> getDBEntryList(Repos repos, Doc doc) {
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
@@ -402,20 +489,6 @@ public class BaseController  extends BaseFunction{
     		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
     	}
     	return subEntryList;
-	}
-
-	protected List<Doc> docSysGetDocList(Repos repos, Doc doc) 
-	{
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-			return getLocalEntryList(repos, doc);
-		case 3:
-		case 4:
-			return getRemoteEntryList(repos, doc);
-		}
-		return null;
 	}
 	
 	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
