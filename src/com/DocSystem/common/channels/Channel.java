@@ -1,5 +1,6 @@
 package com.DocSystem.common.channels;
 
+import java.util.HashMap;
 import java.util.List;
 
 import com.DocSystem.entity.Doc;
@@ -24,5 +25,7 @@ public interface Channel {
 
 	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc);
 
-	List<Doc> remoteStorageGetDBEntryList(Repos repos, Doc doc);	
+	List<Doc> remoteStorageGetDBEntryList(Repos repos, Doc doc);
+
+	HashMap<String, Doc> remoteStorageGetDBHashMap(Repos repos, Doc doc);	
 }
