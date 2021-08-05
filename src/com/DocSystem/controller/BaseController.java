@@ -399,19 +399,7 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
-			List<Doc> localList = getLocalEntryList(repos, doc);
-			RemoteStorage remote = reposRemoteStorageHashMap.get(repos.getId());
-			if(remote == null)
-			{
-				return localList;
-			}
-			repos.remoteStorageConfig = remote;
-			List<Doc> remoteList = getRemoteStorageEntryList(repos, doc);
-			if(remoteList == null)
-			{
-				return localList;
-			}
-			return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
+			return docSysGetDocListWithChangeType(repos, doc);
 		case 3:
 		case 4:
 			return getRemoteEntryList(repos, doc);
@@ -419,13 +407,29 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	private List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
+		List<Doc> localList = getLocalEntryList(repos, doc);
+		RemoteStorage remote = reposRemoteStorageHashMap.get(repos.getId());
+		if(remote == null)
+		{
+			return localList;
+		}
+		repos.remoteStorageConfig = remote;
+		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc);
+		if(remoteList == null)
+		{
+			return localList;
+		}
+		return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
+	}
+
 	private List<Doc> combineLocalListWithRemoteList(Repos repos, Doc doc, List<Doc> localList, List<Doc> remoteList) {
 		List<Doc> result = new ArrayList<Doc>();
 		
-		//TODO: 获取dbList（可以用于标记本地文件和远程存储文件的新增、删除、修改）
-		//List<Doc> dbList = getRemoteStorageDBEntryList(repos, doc);
-		//转成dbHashMap
+		//dbHashMap（可以用于标记本地文件和远程存储文件的新增、删除、修改）
+		HashMap<String, Doc> dbHashMap = getRemoteStorageDBHashMap(repos, doc);
 		
+		//to mark the doc have been add to result
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already scanned
 		
 		//遍历localList并放入 hashMap
@@ -434,7 +438,10 @@ public class BaseController  extends BaseFunction{
 			Doc localDoc = localList.get(i);
 			docHashMap.put(localDoc.getName(), localDoc);
 			result.add(localDoc);
-			//TODO: if(dbDoc.lastestEditTime != localDoc.lastestEditTime) localChanged			
+			if(dbHashMap != null)
+			{
+				localDoc.localChangeType = getLocalChangeType(dbHashMap, localDoc);
+			}
 		}
 		
 		//遍历remoteList并放入 hashMap
@@ -448,11 +455,23 @@ public class BaseController  extends BaseFunction{
     			//docHashMap.put(remoteDoc.getName(), remoteDoc);
     		}
     		result.add(tmpDoc);
-    		
-			//TODO: if(dbDoc.revision != tmpDoc.revision) remoteChanged			
+    		//TODO: if(dbDoc.revision != tmpDoc.revision) remoteChanged			
+			if(dbHashMap != null)
+			{
+				tmpDoc.remoteChangeType = getRemoteChangeType(dbHashMap, remoteDoc);
+			}
 		}
-		
 		return result;
+	}
+
+	private DocChangeType getRemoteChangeType(HashMap<String, Doc> dbHashMap, Doc remoteDoc) {
+		Doc dbDoc = dbHashMap.get(remoteDoc.getName());
+		return getRemoteDocChangeType(dbDoc, remoteDoc);
+	}
+
+	private DocChangeType getLocalChangeType(HashMap<String, Doc> dbHashMap, Doc localDoc) {
+		Doc dbDoc = dbHashMap.get(localDoc.getName());
+		return getLocalDocChangeType(dbDoc, localDoc);
 	}
 
 	private List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc) {
@@ -464,6 +483,17 @@ public class BaseController  extends BaseFunction{
         }
         
         return channel.remoteStorageGetDBEntryList(repos, doc);
+	}
+	
+	private HashMap<String, Doc> getRemoteStorageDBHashMap(Repos repos, Doc doc) {
+        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+        if(channel == null)
+        {
+			Log.println("非商业版不支持远程存储！");
+			return null;
+        }
+        
+        return channel.remoteStorageGetDBHashMap(repos, doc);
 	}
 	
 	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc) {
@@ -4479,6 +4509,102 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return true;
+	}
+	
+	//确定Doc localChangeType
+	protected DocChangeType getLocalDocChangeType(Doc dbDoc, Doc localEntry) 
+	{						
+		if(dbDoc == null)
+		{
+			if(localEntry != null && localEntry.getType() != 0)
+			{
+				return DocChangeType.LOCALADD;
+			}			
+			return DocChangeType.NOCHANGE;
+		}
+		
+		//dbDoc存在，localEntry不存在
+		if(localEntry == null || localEntry.getType() == 0)
+		{
+			return DocChangeType.LOCALDELETE;
+		}
+		
+		//dbDoc存在，localEntry存在且是文件
+		if(localEntry.getType() == 1)
+		{
+			if(dbDoc.getType() == 2)
+			{
+				return DocChangeType.LOCALDIRTOFILE;
+			}
+			
+			if(!dbDoc.getSize().equals(localEntry.getSize()) || !dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
+			{
+				return DocChangeType.LOCALCHANGE;
+			}			
+			return DocChangeType.NOCHANGE;
+		}
+		
+		//dbDoc存在，localDoc存在且是目录
+		if(localEntry.getType() == 2)
+		{
+			if(dbDoc.getType() == 1)
+			{
+				return DocChangeType.LOCALFILETODIR;
+			}			
+			return DocChangeType.NOCHANGE;
+		}
+		
+		//未知文件类型(localDoc.type !=1/2)
+		return DocChangeType.UNDEFINED;
+	}
+	
+	protected DocChangeType getRemoteDocChangeType(Doc dbDoc, Doc remoteEntry) 
+	{						
+		//dbDoc不存在
+		if(dbDoc == null)
+		{
+			if(remoteEntry != null && remoteEntry.getType() != 0)
+			{
+				return DocChangeType.REMOTEADD;
+			}
+			
+			//未变更
+			return DocChangeType.NOCHANGE;
+		}
+		
+		//dbDoc存在，remoteEntry不存在
+		if(remoteEntry == null || remoteEntry.getType() == 0)
+		{
+			return DocChangeType.REMOTEDELETE;
+		}
+		
+		//dbDoc存在，remoteEntry存在且是文件
+		if(remoteEntry.getType() == 1)
+		{
+			if(dbDoc.getType() == 2)
+			{
+				return DocChangeType.REMOTEDIRTOFILE;
+			}
+			
+			if(!dbDoc.getSize().equals(remoteEntry.getSize()) || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
+			{
+				return DocChangeType.REMOTECHANGE;
+			}			
+			return DocChangeType.NOCHANGE;
+		}
+		
+		//dbDoc存在，remoteEntry存在且是目录
+		if(remoteEntry.getType() == 2)
+		{
+			if(dbDoc.getType() == 1)
+			{
+				return DocChangeType.REMOTEFILETODIR;
+			}
+			return DocChangeType.NOCHANGE;
+		}
+		
+		//未知文件类型(remoteEntry.type !=1/2)
+		return DocChangeType.UNDEFINED;
 	}
 	
 	protected DocChangeType getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 

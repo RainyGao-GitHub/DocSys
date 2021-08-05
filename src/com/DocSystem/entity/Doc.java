@@ -1,5 +1,7 @@
 package com.DocSystem.entity;
 
+import com.DocSystem.common.DocChangeType;
+
 public class Doc  implements Comparable<Doc>{
     private Integer id;	//id in dataBase
         		
@@ -67,7 +69,9 @@ public class Doc  implements Comparable<Doc>{
 	public Boolean isBussiness;
 	
 	public Integer isRealDocTextSearchEnabled;
-	public Integer isVirutalDocTextSearchEnabled;	
+	public Integer isVirutalDocTextSearchEnabled;
+	public DocChangeType localChangeType;
+	public DocChangeType remoteChangeType;	
 	
 	//文件锁定信息(用于前台显示)
     private Integer state;
