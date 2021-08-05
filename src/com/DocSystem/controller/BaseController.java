@@ -412,18 +412,22 @@ public class BaseController  extends BaseFunction{
 		RemoteStorage remote = reposRemoteStorageHashMap.get(repos.getId());
 		if(remote == null)
 		{
+			Log.println("docSysGetDocListWithChangeType remote is null");
 			return localList;
 		}
 		repos.remoteStorageConfig = remote;
 		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc);
 		if(remoteList == null)
 		{
+			Log.println("docSysGetDocListWithChangeType remoteList is null");
 			return localList;
 		}
 		return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
 	}
 
 	private List<Doc> combineLocalListWithRemoteList(Repos repos, Doc doc, List<Doc> localList, List<Doc> remoteList) {
+		Log.println("combineLocalListWithRemoteList");
+
 		List<Doc> result = new ArrayList<Doc>();
 		
 		//dbHashMap（可以用于标记本地文件和远程存储文件的新增、删除、修改）
@@ -433,32 +437,44 @@ public class BaseController  extends BaseFunction{
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already scanned
 		
 		//遍历localList并放入 hashMap
-		for(int i=0; i<localList.size(); i++)
+		if(localList != null)
 		{
-			Doc localDoc = localList.get(i);
-			docHashMap.put(localDoc.getName(), localDoc);
-			result.add(localDoc);
-			if(dbHashMap != null)
+			for(int i=0; i<localList.size(); i++)
 			{
-				localDoc.localChangeType = getLocalChangeType(dbHashMap, localDoc);
+				Doc localDoc = localList.get(i);
+				if(dbHashMap != null)
+				{
+					localDoc.localChangeType = getLocalChangeType(dbHashMap, localDoc);
+				}
+				docHashMap.put(localDoc.getName(), localDoc);
+				result.add(localDoc);
 			}
 		}
 		
 		//遍历remoteList并放入 hashMap
-		for(int i=0; i<remoteList.size(); i++)
+		if(remoteList != null)
 		{
-			Doc remoteDoc = remoteList.get(i);
-    		Doc tmpDoc = docHashMap.get(remoteDoc.getName());
-    		if(tmpDoc == null)
-    		{
-    			tmpDoc = remoteDoc;
-    			//docHashMap.put(remoteDoc.getName(), remoteDoc);
-    		}
-    		result.add(tmpDoc);
-    		//TODO: if(dbDoc.revision != tmpDoc.revision) remoteChanged			
-			if(dbHashMap != null)
+			for(int i=0; i<remoteList.size(); i++)
 			{
-				tmpDoc.remoteChangeType = getRemoteChangeType(dbHashMap, remoteDoc);
+				Doc remoteDoc = remoteList.get(i);
+	    		
+				Doc tmpDoc = docHashMap.get(remoteDoc.getName());
+	    		if(tmpDoc == null)
+	    		{
+		    		if(dbHashMap != null)
+					{
+		    			remoteDoc.remoteChangeType = getRemoteChangeType(dbHashMap, remoteDoc);
+					}
+	    			docHashMap.put(remoteDoc.getName(), remoteDoc);
+	        		result.add(remoteDoc);
+	    		}
+	    		else
+	    		{
+		    		if(dbHashMap != null)
+					{
+						tmpDoc.remoteChangeType = getRemoteChangeType(dbHashMap, remoteDoc);
+					}
+	    		}
 			}
 		}
 		return result;
