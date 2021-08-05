@@ -1348,6 +1348,10 @@ public class BaseFunction{
 		return getDBStorePath() + "UserPreferServer/";
 	}
 	
+	protected static String getIndexLibPathForRemoteStorageDoc(Repos repos) {
+		return getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
+	}
+	
 	protected static String getDBStorePath() {
     	String path = null;
     	path = ReadProperties.read("docSysConfig.properties", "DBStorePath");
