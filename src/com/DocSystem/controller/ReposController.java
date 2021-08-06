@@ -326,7 +326,7 @@ public class ReposController extends BaseController{
 				String localRootPath = Path.getReposRealPath(repos);
 				String localVRootPath = Path.getReposVirtualPath(repos);
 		        Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
-		        channel.remoteStoragePull(repos, rootDoc, login_user, "仓库初始化远程自动拉取", true, rt);
+		        channel.remoteStoragePull(repos, rootDoc, login_user, "仓库初始化远程自动拉取", true, true, rt);
 			}
 		}
 		
@@ -1030,7 +1030,7 @@ public class ReposController extends BaseController{
 		        new Thread(new Runnable() {
 					public void run() {
 						System.out.println("getSubDocList() executeUniqueCommonActionList in new thread");
-						channel.remoteStoragePull(repos, tmpDoc, reposAccess.getAccessUser(), "远程存储自动拉取", false, rt);
+						channel.remoteStoragePull(repos, tmpDoc, reposAccess.getAccessUser(), "远程存储自动拉取", false, false, rt);
 					}
 				}).start();			
 		        return;
