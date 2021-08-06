@@ -255,7 +255,7 @@ public class SFTPUtil {
      * @param directory 要列出的目录
      */
     public Vector<?> listFiles(String directory) throws SftpException {
-        return sftp.ls(directory);
+    	return sftp.ls(directory);
     }
  
     public boolean isDirExists(String directory) { 

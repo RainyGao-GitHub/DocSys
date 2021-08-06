@@ -19,9 +19,9 @@ public interface Channel {
 
     String channelName();
     
-	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, ReturnAjax rt);
+	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
 
-	void remoteStoragePush(Repos repos, Doc doc, User accessUser, boolean recurcive, ReturnAjax rt);
+	void remoteStoragePush(Repos repos, Doc doc, User accessUser, boolean recurcive, boolean force, ReturnAjax rt);
 
 	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc);
 

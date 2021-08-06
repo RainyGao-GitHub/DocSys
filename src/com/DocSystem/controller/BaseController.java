@@ -550,7 +550,7 @@ public class BaseController  extends BaseFunction{
     	return subEntryList;
 	}
 	
-	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
+	protected List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
 		//System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
@@ -614,6 +614,74 @@ public class BaseController  extends BaseFunction{
 	    	return subEntryList;
     	}catch(Exception e){
     		System.out.println("getLocalEntryList() Excepiton for " + doc.getDocId() + " " + doc.getPath() + doc.getName());    		
+    		e.printStackTrace();
+    		return null;
+    	}
+	}
+	
+	protected HashMap<String, Doc> getLocalEntryHashMap(Repos repos, Doc doc) 
+	{
+    	try {
+    		String reposPath = Path.getReposPath(repos);
+			String localRootPath = Path.getReposRealPath(repos);
+			String localVRootPath = Path.getReposVirtualPath(repos);
+			
+			String docName = doc.getName();
+			if(doc.getDocId() == 0)
+			{
+				docName = "";
+			}
+	
+			File dir = new File(localRootPath + doc.getPath() + docName);
+	    	if(false == dir.exists())
+	    	{
+	    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不存在！");
+	    		return null;
+	    	}
+	    	
+	    	if(dir.isFile())
+	    	{
+	    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不是目录！");
+	    		return null;
+	    	}
+	
+			String subDocParentPath = doc.getPath() + docName + "/";
+			if(docName.isEmpty())
+			{
+				subDocParentPath = doc.getPath();
+			}
+			
+			Integer subDocLevel = getSubDocLevel(doc);
+	    	
+	        //Go through the subEntries
+	    	HashMap <String, Doc> subEntryHashMap =  new HashMap<String, Doc>();
+	    	
+	    	File[] localFileList = dir.listFiles();
+	    	for(int i=0;i<localFileList.length;i++)
+	    	{
+	    		File file = localFileList[i];
+	    		
+	    		int type = 1;
+	    		if(file.isDirectory())
+	    		{
+	    			type = 2;
+	    		}
+	    		
+	    		//getDirSize的性能太低下，不建议使用
+	    		//long size = getFileOrDirSize(file, file.isFile());
+	    		long size = file.length();
+	    				
+	    		String name = file.getName();
+	    		//System.out.println("getLocalEntryList subFile:" + name);
+	
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		subDoc.setLatestEditTime(file.lastModified());
+	    		subDoc.setCreateTime(file.lastModified());
+	    		subEntryHashMap.put(subDoc.getName(), subDoc);
+	    	}
+	    	return subEntryHashMap;
+    	}catch(Exception e){
+    		System.out.println("getLocalEntryHashMap() Excepiton for " + doc.getDocId() + " " + doc.getPath() + doc.getName());    		
     		e.printStackTrace();
     		return null;
     	}
