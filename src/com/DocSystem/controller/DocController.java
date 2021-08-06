@@ -72,6 +72,8 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.channels.Channel;
+import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.controller.BaseController;
@@ -1587,12 +1589,16 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-//		if(localEntry.getType() == 0)
-//		{
-//			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-//			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-//			return;
-//		}
+		if(localEntry.getType() == 0)
+		{
+			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+			//尝试远程拉取
+	        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+	        if(channel != null)
+	        {
+	        	channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", false, false, rt);
+	        }
+		}		
 		
 		String targetName = doc.getName();
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
@@ -2121,7 +2127,21 @@ public class DocController extends BaseController{
 			if(commitId == null)
 			{
 				//SVN/GIT前置类型仓库需要先将文件下载到本地
-				if(repos.getType() == 3 || repos.getType() == 4)
+				if(repos.getType() == 1)
+				{
+					Doc localEntry = fsGetDoc(repos, doc);
+					if(localEntry.getType() == 0)
+					{
+						Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+						//尝试远程拉取
+				        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				        if(channel != null)
+				        {
+				        	channel.remoteStoragePull(repos, localEntry, reposAccess.getAccessUser(), "文件内容拉取", false, false, rt);
+				        }
+					}		
+				}
+				else if(repos.getType() == 3 || repos.getType() == 4)
 				{
 					verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);
 				}
