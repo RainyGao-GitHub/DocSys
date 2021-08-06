@@ -36,7 +36,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.tukaani.xz.XZInputStream;
 
-import util.ReadProperties;
 import util.ReturnAjax;
 import util.FileUtil.FileUtils2;
 import util.LuceneUtil.LuceneUtil2;
@@ -266,17 +265,6 @@ public class DocController extends BaseController{
 		
 		executeCommonActionList(actionList, rt);
 		*/
-	}
-	
-	private Integer getReposIdForFeeback() {
-		String tempStr = null;
-		tempStr = ReadProperties.read("docSysConfig.properties", "feebackReposId");
-	    if(tempStr == null || "".equals(tempStr))
-	    {
-	    	return 5;
-	    }
-	    
-	    return(Integer.parseInt(tempStr));
 	}
 
 	/****************   refresh a Document ******************/
@@ -1982,40 +1970,6 @@ public class DocController extends BaseController{
 		}
 		
 		sendFileToWebPage(localParentPath,fileName,rt, response, request, null); 
-	}
-
-	private boolean isUpdateNeeded(Repos repos, Doc doc) {
-		Doc localEntry = null;
-		Doc indexDoc = null;
-		switch(repos.getType())
-		{
-		case 1: //FSM
-			localEntry = fsGetDoc(repos, doc);
-			Doc dbDoc = dbGetDoc(repos, doc, false);
-			if(false == isDocLocalChanged(repos, dbDoc,localEntry))	//本地未变化，则直接返回链接
-			{
-				return false;
-			}
-			return true;
-		case 2:
-			localEntry = fsGetDoc(repos, doc);
-			indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
-			if(false == isDocLocalChanged(repos, indexDoc,localEntry))	//本地未变化，则直接返回链接
-			{
-				return false;
-			}
-			return true;
-		case 3:
-		case 4:
-			Doc remoteEntry = verReposGetDoc(repos, doc, null);
-			indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
-			if(false == isDocRemoteChanged(repos, indexDoc,remoteEntry))	//本地未变化，则直接返回链接
-			{
-				return false;
-			}
-			return true;
-		}
-		return false;
 	}
 
 	public String getCheckSum(File localEntry, Long chunkSize) 
@@ -4414,32 +4368,6 @@ public class DocController extends BaseController{
 		
 		return docList;
 	}
-    
-	private String removeSpecialJsonChars(String str) {
-		if(str != null && !str.isEmpty())
-		{
-			//str = removeAllBlank(str);
-			//str = trim(str);
-		    //str = str.replace("[", "");
-		    //str = str.replace("]", "");
-		    //str = str.replace("{", "");
-		    //str = str.replace("}", "");
-		   //str = str.replace(">", "");
-		    //str = str.replace("<", "");
-		    //str = str.replace(" ", "");
-		    //str = str.replace("\"", ""); //双引号
-		    //str = str.replace("\'", ""); //单引号
-		    //str = str.replace("\\", "/");//对斜线的转义
-		    //str = str.replace("\n", ""); //回车
-		    str = str.replace("\r", ""); //换行
-		    str = str.replace("\t", ""); //水平制表符
-			/* \n 回车(\u000a)
-			// \t 水平制表符(\u0009)
-			// \s 空格(\u0008)
-			// \r 换行(\u000d)	 */   
-		}
-		return str;
-	}
 	
 	/**
      * 去除字符串中所包含的空格（包括:空格(全角，半角)、制表符、换页符等）
@@ -4467,6 +4395,7 @@ public class DocController extends BaseController{
         return result;
     }
 
+	@SuppressWarnings("unused")
 	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, String path, HashMap<String, HitDoc> searchResult) 
 	{
 		String [] keyWords = searchWord.split(" ");
@@ -4735,6 +4664,7 @@ public class DocController extends BaseController{
 	}
 
 	//Unrar解压Rar5存在缺陷
+	@SuppressWarnings({ "unused", "deprecation" })
 	private List<Doc> getSubDocListForRar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		Log.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
@@ -5184,6 +5114,7 @@ public class DocController extends BaseController{
 		return subDocList;
 	}
 
+	@SuppressWarnings("unused")
 	private void sortDocListWithDocId(List<Doc> subDocList) {
 		Collections.sort(subDocList,
 			new Comparator<Doc>() {
@@ -5254,6 +5185,7 @@ public class DocController extends BaseController{
 		return subDocList;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, String charSet, Boolean messCheck, ReturnAjax rt) {
 		Log.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName() + " charSet:" + charSet);
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
@@ -5293,7 +5225,6 @@ public class DocController extends BaseController{
 				subDocList.add(subDoc);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			subDocList = null;
 		} finally {
@@ -5302,7 +5233,6 @@ public class DocController extends BaseController{
 				try {
 					zipFile.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

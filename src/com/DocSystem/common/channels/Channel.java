@@ -27,5 +27,9 @@ public interface Channel {
 
 	List<Doc> remoteStorageGetDBEntryList(Repos repos, Doc doc);
 
-	HashMap<String, Doc> remoteStorageGetDBHashMap(Repos repos, Doc doc);	
+	HashMap<String, Doc> remoteStorageGetDBHashMap(Repos repos, Doc doc);
+
+	Doc remoteStorageGetEntry(Repos repos, Doc doc);
+
+	Doc remoteStorageGetDBEntry(Repos repos, Doc doc);	
 }
