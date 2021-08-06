@@ -479,6 +479,18 @@ public class BaseController  extends BaseFunction{
 		}
 		return result;
 	}
+	
+
+	private Doc getRemoteStorageEntry(Repos repos, Doc doc) {
+        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+        if(channel == null)
+        {
+			Log.println("非商业版不支持远程存储！");
+			return null;
+        }
+        
+        return channel.remoteStorageGetEntry(repos, doc);
+	}
 
 	private DocChangeType getRemoteChangeType(HashMap<String, Doc> dbHashMap, Doc remoteDoc) {
 		Doc dbDoc = dbHashMap.get(remoteDoc.getName());
@@ -490,6 +502,7 @@ public class BaseController  extends BaseFunction{
 		return getLocalDocChangeType(dbDoc, localDoc);
 	}
 
+	@SuppressWarnings("unused")
 	private List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel == null)
@@ -2030,8 +2043,6 @@ public class BaseController  extends BaseFunction{
 	
     //获取UserAgent接口，即判断目前用户使用了哪种浏览器
 	private String getFileNameForWeb(HttpServletRequest request, String showName) throws UnsupportedEncodingException {
-		// TODO Auto-generated method stub
-		
 		//解决中文编码问题
 		String userAgent = getUA(request);
 		switch(userAgent)
@@ -2422,13 +2433,10 @@ public class BaseController  extends BaseFunction{
             HashEnv.put(Context.PROVIDER_URL, LDAP_URL);
             ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
 		} catch (AuthenticationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (CommunicationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	
@@ -5130,7 +5138,7 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
-			return fsGetDoc(repos, doc);
+			return docSysGetDocWithChangeType(repos, doc);
 		case 3:
 		case 4:
 			return verReposGetDoc(repos, doc, null);
@@ -5142,6 +5150,53 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	private Doc docSysGetDocWithChangeType(Repos repos, Doc doc) {
+		Doc localDoc = fsGetDoc(repos, doc);
+		RemoteStorage remote = reposRemoteStorageHashMap.get(repos.getId());
+		if(remote == null)
+		{
+			Log.println("docSysGetDocListWithChangeType remote is null");
+			return localDoc;
+		}
+		repos.remoteStorageConfig = remote;
+		Doc remoteDoc = getRemoteStorageEntry(repos, doc);
+		if(remoteDoc == null)
+		{
+			Log.println("docSysGetDocListWithChangeType remoteList is null");
+			return localDoc;
+		}
+		
+		return combineLocalDocWithRemoteDoc(repos, localDoc, remoteDoc);
+	}
+
+	private Doc combineLocalDocWithRemoteDoc(Repos repos, Doc localDoc, Doc remoteDoc) {
+		Log.println("combineLocalDocWithRemoteDoc");
+
+		if(localDoc == null || localDoc.getType() == 0)
+		{
+			return remoteDoc;
+		}
+		
+		//dbHashMap（可以用于标记本地文件和远程存储文件的新增、删除、修改）
+		Doc dbDoc = getRemoteStorageDBEntry(repos, localDoc);
+		localDoc.localChangeType = getLocalDocChangeType(dbDoc, remoteDoc);
+		localDoc.remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+		return localDoc;
+	}
+	
+	
+
+	private Doc getRemoteStorageDBEntry(Repos repos, Doc doc) {
+        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+        if(channel == null)
+        {
+			Log.println("非商业版不支持远程存储！");
+			return null;
+        }
+        
+        return channel.remoteStorageGetDBEntry(repos, doc);
+	}
+
 	protected boolean verReposPullPush(Repos repos, boolean isRealDoc, ReturnAjax rt)
 	{
 		Integer isRemote = repos.getIsRemote();
@@ -9983,7 +10038,6 @@ public class BaseController  extends BaseFunction{
         try {
 			Class.forName(getJdbcDriverName(dbType));
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -10159,7 +10213,6 @@ public class BaseController  extends BaseFunction{
         try {
 			Class.forName(getJdbcDriverName(dbType));
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -10318,7 +10371,6 @@ public class BaseController  extends BaseFunction{
 			Class.forName(getJdbcDriverName(type));
 			
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -10358,7 +10410,6 @@ public class BaseController  extends BaseFunction{
 		try {
 			return DriverManager.getConnection(dbUrl, user, pwd);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -11776,7 +11827,6 @@ public class BaseController  extends BaseFunction{
     
 
 	private static String readProcessOutput(Process ps) throws IOException {
-		// TODO Auto-generated method stub
 		String result = read(ps.getInputStream(), System.out);
 		if(result == null)
 		{
@@ -11800,11 +11850,6 @@ public class BaseController  extends BaseFunction{
 	}
 
 	/****************************DocSys其他接口 *********************************/
-	protected Integer getMaxFileSize() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
 	//获取当前登录用户信息
 	protected User getCurrentUser(HttpSession session){
 		User user = (User) session.getAttribute("login_user");
@@ -12698,6 +12743,7 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 	
+	@SuppressWarnings({ "unused", "deprecation" })
 	private boolean extractEntryFromRarFile(Doc parentZipDoc, Doc zipDoc) {
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -12798,7 +12844,6 @@ public class BaseController  extends BaseFunction{
 			
 			ret = dumpZipEntryToFile(parentZipFile, entry, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			if(parentZipFile != null)
@@ -12806,7 +12851,6 @@ public class BaseController  extends BaseFunction{
 				try {
 					parentZipFile.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -12945,7 +12989,6 @@ public class BaseController  extends BaseFunction{
 			}
 			ret = true;
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			if(fileOutputStream != null)
@@ -12953,7 +12996,6 @@ public class BaseController  extends BaseFunction{
 				try {
 					fileOutputStream.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -12962,7 +13004,6 @@ public class BaseController  extends BaseFunction{
 				try {
 					inputStream.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -13063,6 +13104,7 @@ public class BaseController  extends BaseFunction{
 		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode() + "";
 	}
 	
+	@SuppressWarnings("rawtypes")
 	protected HashMap<String, String> buildQueryParamForObj(User obj, Integer pageIndex, Integer pageSize) {
 		HashMap<String, String> param = new HashMap<String,String>();
 		if(pageIndex != null && pageSize != null)
@@ -13099,10 +13141,8 @@ public class BaseController  extends BaseFunction{
 						param.put(fieldName, val+"");
 					}
 	            } catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
