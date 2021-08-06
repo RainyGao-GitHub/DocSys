@@ -202,6 +202,11 @@ public class SFTPUtil {
             if (remotePath != null && !"".equals(remotePath)) {
                 sftp.cd(remotePath);
             }
+            File localDir = new File(localPath);
+            if(localDir.exists() == false)
+            {
+            	localDir.mkdirs();
+            }
             file = new File(localPath + fileName);
             FileOutputStream os = new FileOutputStream(file);
             sftp.get(remotePath + fileName, os);
