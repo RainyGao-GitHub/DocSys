@@ -3801,11 +3801,11 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
 		Log.printObject("executeSyncUpAction() action:",action);
-		return syncupForDocChange(action, rt);
+		return syncupForDocChange(action, false, rt);
 	}
 
 	//这个接口要保证只有一次Commit操作
-	private boolean syncupForDocChange(CommonAction action, ReturnAjax rt) {		
+	protected boolean syncupForDocChange(CommonAction action, boolean remoteStoragePullEnable ,ReturnAjax rt) {		
 		Doc doc = action.getDoc();
 		if(doc == null)
 		{
@@ -3820,6 +3820,31 @@ public class BaseController  extends BaseFunction{
 			login_user = autoSyncUser;
 		}
 		
+		Repos repos =  action.getRepos();
+		
+		if(remoteStoragePullEnable)
+		{
+			//远程存储自动拉取
+			RemoteStorage remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
+			{
+		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		        if(channel == null)
+		        {
+					Log.println("非商业版不支持远程存储！");
+		        }
+		        else
+		        {
+	        		boolean recurcive = false;
+		        	if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
+		        	{
+		        		recurcive = true;
+		        	}
+					channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", recurcive, false, rt);
+		        }
+			}
+		}
+		
 		//文件管理系统
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
@@ -3829,7 +3854,6 @@ public class BaseController  extends BaseFunction{
 			subDocSyncupFlag = 2;
 		}
 		
-		Repos repos = action.getRepos();
 		repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 		Log.printObject("syncupForDocChange() repos:", repos);
 		
