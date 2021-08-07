@@ -68,8 +68,6 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
-import com.DocSystem.entity.User;
-
 import java.math.BigDecimal;
 
 import util.FileUtil.FileUtils2;
@@ -97,6 +95,7 @@ import util.FileUtil.FileUtils2;
  * （1）文件内容和备注内容，通过索引库进行查询（分别建库以便能够进行分类搜索）
  * （2）文件名需要支持部分匹配，通过查找Lucene Document的name字段来实现
  */
+@SuppressWarnings("deprecation")
 public class LuceneUtil2   extends BaseFunction
 {    
     public static boolean deleteIndexLib(String indexLib)
@@ -1434,6 +1433,7 @@ public class LuceneUtil2   extends BaseFunction
 		return null;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public static String buildCsvTitleStrForObject(Object obj) {
 		StringBuffer sb = new StringBuffer();	
 		
@@ -1463,7 +1463,6 @@ public class LuceneUtil2   extends BaseFunction
 						break;
 					}
 	            } catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1472,6 +1471,7 @@ public class LuceneUtil2   extends BaseFunction
 		return sb.toString();
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static String buildCsvStrForObject(Object obj) {
 		StringBuffer sb = new StringBuffer();	
 		
@@ -1511,10 +1511,8 @@ public class LuceneUtil2   extends BaseFunction
 						sb.append(",");
 					}
 	            } catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1523,6 +1521,7 @@ public class LuceneUtil2   extends BaseFunction
 		return sb.toString();
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public static Document buildDocumentForObject(Object obj) {
 		Document document = new Document();	
 		
@@ -1559,10 +1558,8 @@ public class LuceneUtil2   extends BaseFunction
 						}
 					}
 	            } catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1571,6 +1568,7 @@ public class LuceneUtil2   extends BaseFunction
 		return document;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public static void buildObjectForDocument(Object obj, Document document) {
     	Class userCla = (Class) obj.getClass();
     	java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
@@ -1606,10 +1604,8 @@ public class LuceneUtil2   extends BaseFunction
 						}
 					}
 	            } catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1617,6 +1613,7 @@ public class LuceneUtil2   extends BaseFunction
 	}
 	
 	//queryType 是针对String类型的字段
+	@SuppressWarnings("rawtypes")
 	public static List<QueryCondition> buildQueryConditionsForObject(Object obj, Occur occurType, Integer queryType) 
 	{
 		if(obj == null)
@@ -1654,10 +1651,8 @@ public class LuceneUtil2   extends BaseFunction
 				        conditions.add(condition);
 					}
 	            } catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
