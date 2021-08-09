@@ -968,7 +968,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		Doc tmpDoc = docSysGetDoc(repos, doc);
+		Doc tmpDoc = docSysGetDoc(repos, doc, true);
 		if(tmpDoc == null)
 		{
 			System.out.println("getSubDocList() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
