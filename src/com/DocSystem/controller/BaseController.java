@@ -486,10 +486,19 @@ public class BaseController  extends BaseFunction{
         if(channel == null)
         {
 			Log.println("非商业版不支持远程存储！");
-			return null;
+			return null;        	
         }
         
-        return channel.remoteStorageGetEntry(repos, doc);
+        if(channel.remoteStorageLogin(repos) == null)
+        {
+			Log.println("远程存储登录失败！");
+			return null;    
+        }
+        
+        Doc remoteDoc = channel.remoteStorageGetEntry(repos, doc);
+        channel.remoteStorageLogout(repos);
+        
+        return remoteDoc;
 	}
 
 	private DocChangeType getRemoteChangeType(HashMap<String, Doc> dbHashMap, Doc remoteDoc) {
@@ -505,24 +514,20 @@ public class BaseController  extends BaseFunction{
 	@SuppressWarnings("unused")
 	private List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
-        if(channel == null)
+        if(channel != null)
         {
-			Log.println("非商业版不支持远程存储！");
-			return null;
+        	return channel.remoteStorageGetDBEntryList(repos, doc);
         }
-        
-        return channel.remoteStorageGetDBEntryList(repos, doc);
+        return null;
 	}
 	
 	private HashMap<String, Doc> getRemoteStorageDBHashMap(Repos repos, Doc doc) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
-        if(channel == null)
+        if(channel != null)
         {
-			Log.println("非商业版不支持远程存储！");
-			return null;
+        	return channel.remoteStorageGetDBHashMap(repos, doc);
         }
-        
-        return channel.remoteStorageGetDBHashMap(repos, doc);
+        return null;
 	}
 	
 	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc) {
@@ -533,7 +538,15 @@ public class BaseController  extends BaseFunction{
 			return null;
         }
         
-        return channel.remoteStorageGetEntryList(repos, doc);
+        if(channel.remoteStorageLogin(repos) == null)
+        {
+			Log.println("远程存储登录失败！");
+			return null;
+        }
+        
+		List<Doc> list = channel.remoteStorageGetEntryList(repos, doc);
+        channel.remoteStorageLogout(repos);
+        return list;
 	}
 	
 	private List<Doc> getDBEntryList(Repos repos, Doc doc) {
@@ -3829,18 +3842,15 @@ public class BaseController  extends BaseFunction{
 			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 			{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-		        if(channel == null)
-		        {
-					Log.println("非商业版不支持远程存储！");
-		        }
-		        else
-		        {
-	        		boolean recurcive = false;
+				if(channel != null && channel.remoteStorageLogin(repos) != null)
+		        {		        
+					boolean recurcive = false;
 		        	if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
 		        	{
 		        		recurcive = true;
 		        	}
 					channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", recurcive, false, rt);
+					channel.remoteStorageLogout(repos);
 		        }
 			}
 		}
@@ -5159,13 +5169,12 @@ public class BaseController  extends BaseFunction{
 
 	private Doc getRemoteStorageDBEntry(Repos repos, Doc doc) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
-        if(channel == null)
+		Doc remoteDoc = null;
+		if(channel != null)
         {
-			Log.println("非商业版不支持远程存储！");
-			return null;
+			return channel.remoteStorageGetDBEntry(repos, doc);
         }
-        
-        return channel.remoteStorageGetDBEntry(repos, doc);
+		return remoteDoc;
 	}
 
 	protected boolean verReposPullPush(Repos repos, boolean isRealDoc, ReturnAjax rt)
