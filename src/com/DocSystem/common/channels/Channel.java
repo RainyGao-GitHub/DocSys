@@ -3,6 +3,7 @@ package com.DocSystem.common.channels;
 import java.util.HashMap;
 import java.util.List;
 
+import com.DocSystem.common.entity.RemoteStorageSession;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -18,18 +19,22 @@ import util.ReturnAjax;
 public interface Channel {
 
     String channelName();
+        
+    RemoteStorageSession remoteStorageLogin(Repos repos);
     
-	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
-
-	void remoteStoragePush(Repos repos, Doc doc, User accessUser, boolean recurcive, boolean force, ReturnAjax rt);
-
+    boolean remoteStorageLogout(Repos repos);
+    
 	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc);
+
+	Doc remoteStorageGetEntry(Repos repos, Doc doc);
 
 	List<Doc> remoteStorageGetDBEntryList(Repos repos, Doc doc);
 
 	HashMap<String, Doc> remoteStorageGetDBHashMap(Repos repos, Doc doc);
 
-	Doc remoteStorageGetEntry(Repos repos, Doc doc);
-
 	Doc remoteStorageGetDBEntry(Repos repos, Doc doc);	
+	
+	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+
+	void remoteStoragePush(Repos repos, Doc doc, User accessUser, boolean recurcive, boolean force, ReturnAjax rt);
 }

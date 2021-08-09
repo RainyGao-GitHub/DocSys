@@ -1594,9 +1594,10 @@ public class DocController extends BaseController{
 			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			//尝试远程拉取
 	        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-	        if(channel != null)
+			if(channel != null && channel.remoteStorageLogin(repos) != null)
 	        {
 	        	channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", false, false, rt);
+	        	channel.remoteStorageLogout(repos);
 	        }
 		}		
 		
@@ -2135,10 +2136,11 @@ public class DocController extends BaseController{
 						Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 						//尝试远程拉取
 				        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				        if(channel != null)
-				        {
+						if(channel != null && channel.remoteStorageLogin(repos) != null)
+						{
 				        	channel.remoteStoragePull(repos, localEntry, reposAccess.getAccessUser(), "文件内容拉取", false, false, rt);
-				        }
+				        	channel.remoteStorageLogout(repos);
+						}
 					}		
 				}
 				else if(repos.getType() == 3 || repos.getType() == 4)
