@@ -159,7 +159,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		Doc tmpDoc = docSysGetDoc(repos, doc);
+		Doc tmpDoc = docSysGetDoc(repos, doc, false);
 		if(tmpDoc != null && tmpDoc.getType() != 0)
 		{
 			Log.docSysErrorLog(doc.getName() + " 已存在", rt);
@@ -451,7 +451,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, pid, reposPath, path, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
+		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
@@ -537,7 +537,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
+		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
@@ -610,7 +610,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
+		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
@@ -988,7 +988,7 @@ public class DocController extends BaseController{
 				
 				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 				
-				Doc dbDoc = docSysGetDoc(repos, doc);
+				Doc dbDoc = docSysGetDoc(repos, doc, false);
 				if(dbDoc == null || dbDoc.getType() == 0)
 				{
 					boolean ret = addDoc(repos, doc,
@@ -1094,7 +1094,7 @@ public class DocController extends BaseController{
 		}
 
 		//Check Add Right
-		Doc dbDoc = docSysGetDoc(repos, doc);
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
@@ -1330,7 +1330,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		Doc dbDoc = docSysGetDoc(repos, doc);
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + path + name + " 不存在！", rt);
@@ -1520,7 +1520,7 @@ public class DocController extends BaseController{
 
 	public void downloadDocPrepare_VRP(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
-		Doc dbDoc = docSysGetDoc(repos, doc);
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
 			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
@@ -2476,7 +2476,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		Doc dbDoc = docSysGetDoc(repos, doc);
+		Doc dbDoc = docSysGetDoc(repos, doc, true);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + path+name + " 不存在！", rt);
@@ -3297,7 +3297,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		//Check Add Right
-		Doc curDoc = docSysGetDoc(repos, doc);
+		Doc curDoc = docSysGetDoc(repos, doc, false);
 		if(curDoc == null || curDoc.getType() == 0)
 		{
 			Log.println("revertDocHistory " + curDoc.getPath() + curDoc.getName() + " 不存在！");

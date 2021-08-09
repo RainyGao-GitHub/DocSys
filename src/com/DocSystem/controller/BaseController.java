@@ -374,7 +374,7 @@ public class BaseController  extends BaseFunction{
 	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
-		List<Doc> tmpDocList = docSysGetDocList(repos, doc);
+		List<Doc> tmpDocList = docSysGetDocList(repos, doc, true);
 
 		if(tmpDocList != null)
     	{
@@ -393,13 +393,17 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 
-	protected List<Doc> docSysGetDocList(Repos repos, Doc doc) 
+	protected List<Doc> docSysGetDocList(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
-			return docSysGetDocListWithChangeType(repos, doc);
+			if(remoteStorageEn)
+			{
+				return docSysGetDocListWithChangeType(repos, doc);
+			}
+			return getLocalEntryList(repos, doc);
 		case 3:
 		case 4:
 			return getRemoteEntryList(repos, doc);
@@ -3502,7 +3506,7 @@ public class BaseController  extends BaseFunction{
 	{	
 		if(deleteSubDocs == true)
 		{
-			List<Doc> subDocList = docSysGetDocList(repos, doc);
+			List<Doc> subDocList = docSysGetDocList(repos, doc, false);
 			if(subDocList != null)
 			{
 				for(int i=0; i<subDocList.size(); i++)
@@ -3991,7 +3995,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean docDetect(Repos repos, Doc doc) {
 		System.out.println("docDetect()");
-		List<Doc> entryList =  docSysGetDocList(repos, doc);
+		List<Doc> entryList =  docSysGetDocList(repos, doc, false);
 		if(entryList != null)
 		{
 			return true;
@@ -4040,7 +4044,7 @@ public class BaseController  extends BaseFunction{
 			subDocSyncupFlag = 0;
 		}
 		
-		List<Doc> entryList = docSysGetDocList(repos, doc);		
+		List<Doc> entryList = docSysGetDocList(repos, doc, false);		
 		if(entryList == null)
     	{
     		System.out.println("buildIndexForDoc() entryList 获取异常:");
@@ -4067,7 +4071,7 @@ public class BaseController  extends BaseFunction{
 				return true;
 			}
 			
-			Doc localDoc = docSysGetDoc(repos, doc);
+			Doc localDoc = docSysGetDoc(repos, doc, false);
 			Doc indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
 			if(localDoc == null || localDoc.getType() == 0) //文件不存在则删除索引
 			{
@@ -4149,7 +4153,7 @@ public class BaseController  extends BaseFunction{
 			subDocSyncupFlag = 0;
 		}
 		
-		List<Doc> entryList = docSysGetDocList(repos, doc);
+		List<Doc> entryList = docSysGetDocList(repos, doc, false);
 		if(entryList == null)
     	{
     		System.out.println("refreshIndexForDoc() localEntryList 获取异常:");
@@ -5113,13 +5117,17 @@ public class BaseController  extends BaseFunction{
 		return localDoc;
 	}
 	
-	protected Doc docSysGetDoc(Repos repos, Doc doc) 
+	protected Doc docSysGetDoc(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
-			return docSysGetDocWithChangeType(repos, doc);
+			if(remoteStorageEn)
+			{
+				return docSysGetDocWithChangeType(repos, doc);
+			}
+			return fsGetDoc(repos, doc);
 		case 3:
 		case 4:
 			return verReposGetDoc(repos, doc, null);
@@ -5385,7 +5393,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(addSubDocs)
 		{
-			List<Doc> subDocList = docSysGetDocList(repos, doc);			
+			List<Doc> subDocList = docSysGetDocList(repos, doc, false);			
 			if(subDocList != null)
 			{
 				for(int i=0; i<subDocList.size(); i++)
