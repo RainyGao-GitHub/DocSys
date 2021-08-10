@@ -1589,17 +1589,24 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(localEntry.getType() == null || localEntry.getType() == 0)
+		//本地文件不存在
+		if(localEntry.getType() == 0)
 		{
 			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+			
 			//尝试远程拉取
 	        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-			if(channel != null && channel.remoteStorageLogin(repos) != null)
+			if(channel == null || channel.remoteStorageLogin(repos) == null)
 	        {
-	        	channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, false, rt);
-	        	channel.remoteStorageLogout(repos);
-	        }
-		}		
+				Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+			}
+			else
+			{
+				channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, false, rt);
+				channel.remoteStorageLogout(repos);
+				localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
+			}
+		}
 		
 		String targetName = doc.getName();
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
@@ -1640,7 +1647,8 @@ public class DocController extends BaseController{
 			Log.docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
 			return;						
 		}
-
+		
+		//本地文件不存在（尝试从版本仓库中下载）
 		if(localEntry.getType() == 0)
 		{
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
@@ -1654,7 +1662,7 @@ public class DocController extends BaseController{
 			if(remoteEntry.getType() == null || remoteEntry.getType() == 0)
 			{
 				Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-				Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+				Log.docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
 				return;	
 			}
 				
@@ -2140,6 +2148,7 @@ public class DocController extends BaseController{
 						{
 				        	channel.remoteStoragePull(repos, localEntry, reposAccess.getAccessUser(), "文件内容拉取", false, false, rt);
 				        	channel.remoteStorageLogout(repos);
+				        	localEntry = fsGetDoc(repos, doc); //重新读取文件信息
 						}
 					}		
 				}
