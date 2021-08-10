@@ -10,7 +10,7 @@
 	   <div class="form-group">
 	       <label class="col-sm-2 control-label">描述</label>
 	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="content" style="width: 100%"/>
+ 	           <textarea class="form-control" type="text" name="content" style="width: 100%"/>
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
@@ -86,7 +86,7 @@
 		function doAddDoc()
 		{
 		    var name = $("#dialog-new-doc input[name='name']").val();
-		    var content = $("#dialog-new-doc input[name='content']").val();
+		    var content = $("#dialog-new-doc textarea[name='content']").val();
 
 		    //检查当前目录下是否有同名文件
 			  if(isNodeExist(name,parentNode) == true)
@@ -97,12 +97,7 @@
 			  var vid = gReposInfo.id;
 			  
 			  //发送新建文件请求到后台
-		    if( name ){
-		  	  	if(content && content != "")
-		  	  	{
-		  		  	content = "#" + content; 
-		  	  	}
-		  	  	
+		    if( name ){		  	  	
 		      	addDoc(name,type,content,parentNode,parentId,vid);
 		      	return true;
 		    }else{
