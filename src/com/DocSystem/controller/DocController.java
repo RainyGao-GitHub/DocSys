@@ -1589,7 +1589,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(localEntry.getType() == 0)
+		if(localEntry.getType() == null || localEntry.getType() == 0)
 		{
 			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			//尝试远程拉取
@@ -1651,7 +1651,7 @@ public class DocController extends BaseController{
 				return;
 			}
 				
-			if(remoteEntry.getType() == 0)
+			if(remoteEntry.getType() == null || remoteEntry.getType() == 0)
 			{
 				Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 				Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
