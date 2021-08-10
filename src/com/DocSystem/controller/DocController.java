@@ -1596,7 +1596,7 @@ public class DocController extends BaseController{
 	        Channel channel = ChannelFactory.getByChannelName("businessChannel");
 			if(channel != null && channel.remoteStorageLogin(repos) != null)
 	        {
-	        	channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", false, false, rt);
+	        	channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, false, rt);
 	        	channel.remoteStorageLogout(repos);
 	        }
 		}		
