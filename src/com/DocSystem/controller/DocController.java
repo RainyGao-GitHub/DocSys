@@ -139,7 +139,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -229,7 +229,7 @@ public class DocController extends BaseController{
 			type = 1;
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -287,7 +287,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -345,7 +345,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -417,7 +417,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 	
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -499,7 +499,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -577,7 +577,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 	
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -649,7 +649,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -828,7 +828,7 @@ public class DocController extends BaseController{
 	private Repos getReposInfo(Integer reposId, DocShare docShare) {
 		if(docShare == null || docShare.getType() == null || docShare.getType() == 0)
 		{
-			return reposService.getRepos(reposId);
+			return getRepos(reposId);
 		}
 		
 		return getRemoteReposInfo(reposId,docShare);
@@ -940,7 +940,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -1042,7 +1042,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -1209,7 +1209,7 @@ public class DocController extends BaseController{
 		
 		JSONObject res = new JSONObject();
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			res.put("success", 0);
@@ -1317,7 +1317,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -1417,7 +1417,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 				
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -1467,7 +1467,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -1959,7 +1959,7 @@ public class DocController extends BaseController{
 		}
 		
 		//虚拟文件下载
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2019,7 +2019,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2098,7 +2098,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2311,7 +2311,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2365,7 +2365,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 				
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2439,7 +2439,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2557,7 +2557,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2622,7 +2622,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2748,7 +2748,7 @@ public class DocController extends BaseController{
 //			return;
 //		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2841,7 +2841,7 @@ public class DocController extends BaseController{
 //			return;
 //		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2907,7 +2907,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2965,7 +2965,7 @@ public class DocController extends BaseController{
 		}
 		
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3018,7 +3018,7 @@ public class DocController extends BaseController{
 		}
 		
 		//get reposInfo to 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3236,7 +3236,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3443,7 +3443,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3506,7 +3506,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3567,7 +3567,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3642,7 +3642,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3849,7 +3849,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -4240,7 +4240,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			Repos repos = reposService.getRepos(reposId);
+			Repos repos = getRepos(reposId);
 			if(repos != null)
 			{
 				reposList.add(repos);
@@ -4546,7 +4546,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Get Repos
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -5335,7 +5335,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Get Repos
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");

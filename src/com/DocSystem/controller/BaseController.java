@@ -11951,6 +11951,19 @@ public class BaseController  extends BaseFunction{
 		return reposService.getRepos(reposId);
 	}  
 	
+	//获取仓库信息（包括非数据库的信息）
+	public Repos getReposEx(Integer reposId) {
+		Repos repos = reposService.getRepos(reposId);
+		if(repos != null)
+		{
+			repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
+			repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
+			repos.isBussiness = systemLicenseInfo.hasLicense;
+		}
+		return repos;
+	}
+
+	
 	
 	//注意：该接口需要返回真正的parentZipDoc
 	protected Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 
