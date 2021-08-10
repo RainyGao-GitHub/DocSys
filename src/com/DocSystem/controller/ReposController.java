@@ -131,11 +131,8 @@ public class ReposController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(vid);
-		repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
-		repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
-		repos.isBussiness = systemLicenseInfo.hasLicense;
-		
+		Repos repos = getReposEx(vid);
+				
 		//获取磁盘空间
 		String localRootPath = Path.getReposRealPath(repos);
 		File file = new File(localRootPath);
@@ -375,7 +372,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		Repos repos = reposService.getRepos(vid);
+		Repos repos = getRepos(vid);
 		
 		if(reposService.deleteRepos(vid) == 0)
 		{
@@ -482,7 +479,7 @@ public class ReposController extends BaseController{
 		formatReposInfo(newReposInfo);
 		
 		//Get reposInfo (It will be used to revert the reposInfo)
-		Repos reposInfo = reposService.getRepos(reposId);
+		Repos reposInfo = getReposEx(reposId);
 		formatReposInfo(reposInfo);
 
 		if(type != null && type != reposInfo.getType())
@@ -495,7 +492,6 @@ public class ReposController extends BaseController{
 		{	
 			if(isTextSearchEnabled != null)
 			{
-				reposInfo.isTextSearchEnabled = isReposTextSearchEnabled(reposInfo);
 				if(isTextSearchEnabled != reposInfo.isTextSearchEnabled)
 				{
 					if(setReposTextSearch(reposInfo, isTextSearchEnabled) == false)
@@ -519,7 +515,6 @@ public class ReposController extends BaseController{
 		//设置全文搜索
 		if(isTextSearchEnabled != null)
 		{
-			reposInfo.isTextSearchEnabled = isReposTextSearchEnabled(reposInfo);
 			if(isTextSearchEnabled != reposInfo.isTextSearchEnabled)
 			{
 				setReposTextSearch(reposInfo, isTextSearchEnabled);				
@@ -552,7 +547,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//To get updated reposInfo
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -702,7 +697,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -744,7 +739,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//Get Repos
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -899,7 +894,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//Get Repos
-		Repos repos = reposService.getRepos(vid);
+		Repos repos = getReposEx(vid);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + vid + " 不存在！");
@@ -1075,7 +1070,7 @@ public class ReposController extends BaseController{
 		//获取的仓库权限
 		//获取整个仓库的目录结构，包括仓库本身（作为ID=0的存在）
 		//获取仓库信息，并转换成rootDoc
-		Repos repos = reposService.getRepos(vid);
+		Repos repos = getReposEx(vid);
 		
 		//Build rootDoc
 		String reposPath = Path.getReposPath(repos);
@@ -1239,7 +1234,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -1359,7 +1354,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -1467,7 +1462,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -1529,7 +1524,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -1666,7 +1661,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -1779,7 +1774,7 @@ public class ReposController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
