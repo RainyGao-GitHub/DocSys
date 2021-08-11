@@ -3864,10 +3864,7 @@ public class BaseController  extends BaseFunction{
 		{
 			subDocSyncupFlag = 2;
 		}
-		
-		repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
-		Log.printObject("syncupForDocChange() repos:", repos);
-		
+				
 		//文件管理系统类型需要进行RealDoc的同步
 		boolean realDocSyncResult = false;
 		
