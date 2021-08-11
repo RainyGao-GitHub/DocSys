@@ -3845,6 +3845,7 @@ public class BaseController  extends BaseFunction{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 			{
+				Log.println("addRepos() 远程自动拉取");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {		        

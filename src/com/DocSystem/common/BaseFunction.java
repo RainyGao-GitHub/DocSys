@@ -362,7 +362,7 @@ public class BaseFunction{
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
 			
-			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd);
+			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull);
 		}
 		
 		//add remote config to hashmap

@@ -315,6 +315,7 @@ public class ReposController extends BaseController{
 			//如果设置了自动拉取，那么仓库新建时需要拉取整个远程目录
 			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 			{
+				Log.println("addRepos() 远程自动拉取");
 		        Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {
