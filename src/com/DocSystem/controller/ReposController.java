@@ -321,12 +321,11 @@ public class ReposController extends BaseController{
 					String localRootPath = Path.getReposRealPath(repos);
 					String localVRootPath = Path.getReposVirtualPath(repos);
 			        Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
-			        channel.remoteStoragePull(repos, rootDoc, login_user, "仓库初始化远程自动拉取", true, false, rt);
+			        channel.remoteStoragePull(repos, rootDoc, login_user, "仓库初始化远程自动拉取", false, false, rt);
 			        channel.remoteStorageLogout(repos);
 		        }
 			}
-		}
-		
+		}		
 	}
 
 	private boolean setReposTextSearch(Repos repos, Integer isReposTextSearchEnabled) {
