@@ -3818,7 +3818,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
 		Log.printObject("executeSyncUpAction() action:",action);
-		return syncupForDocChange(action, false, rt);
+		return syncupForDocChange(action, true, rt);
 	}
 
 	//这个接口要保证只有一次Commit操作
@@ -3846,7 +3846,7 @@ public class BaseController  extends BaseFunction{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 			{
-				Log.println("addRepos() 远程自动拉取");
+				Log.println("syncupForDocChange() 远程自动拉取");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {		        
