@@ -3838,6 +3838,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Repos repos =  action.getRepos();
+		Log.printObject("syncupForDocChange() repos:",repos);
 		
 		if(remoteStoragePullEnable)
 		{
