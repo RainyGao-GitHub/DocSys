@@ -3848,12 +3848,7 @@ public class BaseController  extends BaseFunction{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {		        
-					boolean recurcive = false;
-		        	if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
-		        	{
-		        		recurcive = true;
-		        	}
-					channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", recurcive, false, rt);
+					channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", false, false, rt);
 					channel.remoteStorageLogout(repos);
 		        }
 			}
