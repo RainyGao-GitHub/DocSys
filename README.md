@@ -119,5 +119,6 @@ MxsDoc是基于Web的文件管理系统，支持权限管理和历史版本管�
 **yum -y install ttmkfdir** 
 #### 4、刷新字体缓存
 **fc-cache**
-#### 5、重启MxsDoc
+#### 5、重新生成office字体库
+运行  **DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh** 
  
