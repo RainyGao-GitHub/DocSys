@@ -310,7 +310,7 @@ public class ReposController extends BaseController{
 		
 		if(remoteStorage != null)
 		{
-			parseRemoteStorageConfig(repos, remoteStorage);
+			repos.remoteStorageConfig = parseRemoteStorageConfig(repos, remoteStorage);
 			RemoteStorage remote = repos.remoteStorageConfig;
 			//如果设置了自动拉取，那么仓库新建时需要拉取整个远程目录
 			if(remote != null && remote.autoPull != null && remote.autoPull == 1)

@@ -413,13 +413,12 @@ public class BaseController  extends BaseFunction{
 	
 	private List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
 		List<Doc> localList = getLocalEntryList(repos, doc);
-		RemoteStorage remote = reposRemoteStorageHashMap.get(repos.getId());
+		RemoteStorage remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
 			Log.println("docSysGetDocListWithChangeType remote is null");
 			return localList;
 		}
-		repos.remoteStorageConfig = remote;
 		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc);
 		if(remoteList == null)
 		{
@@ -5165,13 +5164,13 @@ public class BaseController  extends BaseFunction{
 	
 	private Doc docSysGetDocWithChangeType(Repos repos, Doc doc) {
 		Doc localDoc = fsGetDoc(repos, doc);
-		RemoteStorage remote = reposRemoteStorageHashMap.get(repos.getId());
+		RemoteStorage remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
 			Log.println("docSysGetDocListWithChangeType remote is null");
 			return localDoc;
 		}
-		repos.remoteStorageConfig = remote;
+
 		Doc remoteDoc = getRemoteStorageEntry(repos, doc);
 		if(remoteDoc == null)
 		{
