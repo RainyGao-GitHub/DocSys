@@ -12,6 +12,12 @@
 	   <div class="col-sm-10">
 	            <input type="text" name="targetPath" class="form-control"  maxlength="400"></input>
 	   </div>
+	   <div name="pushControlDiv" style="margin-left:90px; margin-top:30px">
+		   <label>
+		   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">推送子目录</span>
+		   	   <span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">强制推送</span>
+		   </label>
+	   </div>
 	</div>   
 	<div class="modal-footer">
 	    <div class="form-group">
@@ -47,6 +53,43 @@
 		closeRemoteStoragePushDialog();
 	}
 	
+	function doSelectRecurciveConfirm()
+	{
+		var recurciveEn = $("#dialog-remoteStoragePush input[name='recurciveEn']").is(':checked')? 1: 0;
+		if(recurciveEn == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'recurcivePullConfirm',
+		        msg: '该操作将会推送目录下的所有文件，是否允许？',
+		    },function(){
+		    	//确认
+		    	$("#dialog-remoteStoragePush input[name='recurciveEn']").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#dialog-remoteStoragePush input[name='recurciveEn']").attr("checked",false);			
+		    });
+		}
+	}
+	
+	
+	function doSelectForceConfirm()
+	{
+		var forceEn = $("#dialog-remoteStoragePush input[name='forceEn']").is(':checked')? 1: 0;
+		if(forceEn == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'forcePullConfirm',
+		        msg: '远程的文件修改将被强制覆盖，是否强制推送？',
+		    },function(){
+		    	//确认
+		    	$("#dialog-remoteStoragePush input[name='forceEn']").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#dialog-remoteStoragePush input[name='forceEn']").attr("checked",false);			
+		    });
+		}
+	}
+	
 	var RemoteStoragePush = (function () {
 		var node;
 		var repos;
@@ -64,6 +107,10 @@
 			if(node.type == 1)
 			{
 				$("#dialog-remoteStoragePush label[name='targetType']").text("文件");
+			}
+			else
+			{
+				$("#dialog-remoteStoragePush span[name='recurciveEnSpan']").show();				
 			}
 						
 			//set targetPath
@@ -87,6 +134,9 @@
 		
 	   	function remoteStoragePush()
 	   	{
+	   		var forceEn = $("#dialog-remoteStoragePush input[name='forceEn']").is(':checked')? 1: 0;
+	   		var recurciveEn = $("#dialog-remoteStoragePush input[name='recurciveEn']").is(':checked')? 1: 0;
+	   		
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/remoteStoragePush.do",
 	             type : "post",
@@ -96,8 +146,8 @@
 	                path: node.path,
 	                name : node.name,
 		            shareId: gShareId,
-		            recurciveEn : 0,
-		            forceEn : 1,
+		            recurciveEn : recurciveEn,
+		            forceEn : forceEn,
 	             },
 	             success : function (ret) {
 	            	console.log("remoteStoragePush ret:", ret);            		
