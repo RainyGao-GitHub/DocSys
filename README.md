@@ -110,3 +110,14 @@ MxsDoc是基于Web的文件管理系统，支持权限管理和历史版本管�
 ### 三、Windows系统Office无法预览和编辑
 #### 1、检查系统缺少的动态库并修复
 双击运行 **DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat** ，根据报错提示确定需要修复的动态库
+### 四、Centos系统Excel在线编辑退出后，修改内容丢失
+#### 1、安装字体库
+**yum -y install fontconfig**
+#### 2、添加中文字体
+将 **C:/Windows/Fonts** 字体文件复制到 ** /usr/shared/fonts** 目录
+#### 3、生成 **fonts.scale** 文件
+**yum -y install ttmkfdir** 目录
+#### 4、刷新字体缓存
+**fc-cache**
+#### 5、重启MxsDoc
+ 
