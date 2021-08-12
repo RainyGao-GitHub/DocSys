@@ -12,6 +12,12 @@
 	   <div class="col-sm-10">
 	       <input type="text" name="targetPath" class="form-control"  maxlength="400"></input>
 	   </div>
+	   <div name="pullControlDiv" style="margin-left:90px; margin-top:30px">
+		   <label>
+		   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">拉取子目录</span>
+		   	   <span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">强制拉取</span>
+		   </label>
+	   </div>			
 	</div>   
 	<div class="modal-footer">
 	    <div class="form-group">
@@ -47,6 +53,43 @@
 		closeRemoteStoragePullDialog();
 	}
 	
+	function doSelectRecurciveConfirm()
+	{
+		var recurciveEn = $("#dialog-remoteStoragePull input[name='recurciveEn']").is(':checked')? 1: 0;
+		if(recurciveEn == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'recurcivePullConfirm',
+		        msg: '该操作将会拉取目录下的所有文件，是否允许？',
+		    },function(){
+		    	//确认
+		    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked",false);			
+		    });
+		}
+	}
+	
+	
+	function doSelectForceConfirm()
+	{
+		var forceEn = $("#dialog-remoteStoragePull input[name='forceEn']").is(':checked')? 1: 0;
+		if(forceEn == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'forcePullConfirm',
+		        msg: '文件的本地修改将被强制覆盖，是否强制拉取？',
+		    },function(){
+		    	//确认
+		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked",false);			
+		    });
+		}
+	}
+	
 	var RemoteStoragePull = (function () {
 		var node;
 		var repos;
@@ -65,6 +108,10 @@
 			if(node.type == 1)
 			{
 				$("#dialog-remoteStoragePull label[name='targetType']").text("文件");
+			}
+			else
+			{
+				$("#dialog-remoteStoragePull span[name='recurciveEnSpan']").show();				
 			}
 						
 			//set targetPath
@@ -88,6 +135,9 @@
 		
 	   	function remoteStoragePull()
 	   	{
+	   		var forceEn = $("#dialog-remoteStoragePull input[name='forceEn']").is(':checked')? 1: 0;
+	   		var recurciveEn = $("#dialog-remoteStoragePull input[name='recurciveEn']").is(':checked')? 1: 0;
+	   		
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/remoteStoragePull.do",
 	             type : "post",
@@ -97,8 +147,8 @@
 	                path: node.path,
 	                name : node.name,
 		            shareId: gShareId,
-		            recurciveEn : 0,
-		            forceEn : 1,
+		            recurciveEn : recurciveEn,
+		            forceEn : forceEn,
 	             },
 	             success : function (ret) {
 	            	console.log("remoteStoragePull ret:", ret);            		
