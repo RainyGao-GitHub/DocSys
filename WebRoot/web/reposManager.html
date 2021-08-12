@@ -790,7 +790,7 @@
 					}
 			},
 			{divider: true},
-			{text: '全文搜索设置', action: function(e){
+			{text: '全文搜索', action: function(e){
 						e.preventDefault();
 	        			showTextSearchSetPanel();
 					}
@@ -1410,7 +1410,7 @@ function showTextSearchSetPanel()
 	bootstrapQ.dialog({
 		id: 'reposTextSearchSetting',
 		url: 'reposTextSearchSetting.html',
-		title: '全文搜索设置:' + curRightClickedTreeNode.name,
+		title: '全文搜索:' + curRightClickedTreeNode.name,
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
