@@ -3951,7 +3951,6 @@ public class BaseController  extends BaseFunction{
 			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
-				doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, true);
 				if(doc.getDocId() == 0)
 				{
 					//Delete All Index Lib
@@ -3978,7 +3977,6 @@ public class BaseController  extends BaseFunction{
 				System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 				if(docDetect(repos, doc))
 				{	
-					doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, true);
 					HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
 					rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
 				}
@@ -9287,6 +9285,7 @@ public class BaseController  extends BaseFunction{
 	{		
 		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
+		/* TODO: 如果需要對doc進行精確控制搜索使能控制，則需要使用這部分代碼
     	if(doc.isRealDocTextSearchEnabled == null)
 		{
 			doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, true);
@@ -9300,8 +9299,13 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("addIndexForRDoc() RealDocTextSearchDisabled");
 			return false;
-		}
+		}*/
 		
+		if(repos.isTextSearchEnabled == 0)
+		{
+			System.out.println("addIndexForRDoc() RealDocTextSearchDisabled");
+			return false;
+		}
 		
 		String indexLib = getIndexLibPath(repos, 1);
 
@@ -9362,7 +9366,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	protected Integer isReposTextSearchEnabled(Repos repos) {
+	protected static Integer isReposTextSearchEnabled(Repos repos) {
 		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("0") == null)
 		{
 			return 1;
@@ -9370,7 +9374,7 @@ public class BaseController  extends BaseFunction{
 		return 0;
 	}
 
-	private static Integer isRealDocTextSearchEnabled(Repos repos, Doc doc, boolean force) {
+	private static Integer isRealDocTextSearchEnabled(Repos repos, Doc doc, boolean force) {		
 		ConcurrentHashMap<String, String> hashMap = repos.textSearchConfig.realDocTextSearchDisableHashMap;
 		if(hashMap.get("" + doc.getDocId()) != null)
 		{
