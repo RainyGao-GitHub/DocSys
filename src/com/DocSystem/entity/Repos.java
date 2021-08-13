@@ -1,6 +1,7 @@
 package com.DocSystem.entity;
 
 import com.DocSystem.common.RemoteStorage;
+import com.DocSystem.common.TextSearchConfig;
 import com.DocSystem.common.entity.RemoteStorageSession;
 
 public class Repos {    
@@ -71,6 +72,7 @@ public class Repos {
 	public Long freeSize;
 	public RemoteStorage remoteStorageConfig;
 	public RemoteStorageSession remoteStorageSession;
+	public TextSearchConfig textSearchConfig;
 	
     public Integer getId() {
         return id;
