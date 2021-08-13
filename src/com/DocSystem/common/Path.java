@@ -563,4 +563,15 @@ public class Path {
 		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/";
 		return reposPwdPath;
 	}
+	
+	public static String getReposTextSearchConfigPathForRealDoc(Repos repos) {
+		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/RealDoc/";
+		return reposPwdPath;
+	}
+
+	public static String getReposTextSearchConfigPathForVirtualDoc(Repos repos) {
+		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/VirtualDoc/";
+		return reposPwdPath;
+	}
+
 }

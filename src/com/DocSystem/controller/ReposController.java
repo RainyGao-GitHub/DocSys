@@ -299,12 +299,8 @@ public class ReposController extends BaseController{
 		}
 
 		InitReposAuthInfo(repos,login_user,rt);		
-
-		synchronized(syncLock)
-		{	
-			unlockRepos(repos, lockType, login_user); 
-			SyncLock.unlock(syncLock);
-		}
+		unlockRepos(repos, lockType, login_user); 
+		
 		writeJson(rt, response);	
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
 		
@@ -330,16 +326,17 @@ public class ReposController extends BaseController{
 	}
 
 	private boolean setReposTextSearch(Repos repos, Integer isReposTextSearchEnabled) {
-		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPath(repos);
-		String disableRealDocTextSearchFileName = "0.disableRealDocTextSearch";
+		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
 		
-		//全文搜索
+		String disableRealDocTextSearchFileName = "0";
 		if(isReposTextSearchEnabled != null && isReposTextSearchEnabled == 1)
 		{
+			repos.textSearchConfig.realDocTextSearchDisableHashMap.remove("0");
 			return FileUtil.delFile(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
 		}
 		
-		return FileUtil.saveDocContentToFile("disable", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
+		repos.textSearchConfig.realDocTextSearchDisableHashMap.put("0", "disabled");		
+		return FileUtil.saveDocContentToFile("disabled", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
 	}
 
 	/****************   delete a Repository ******************/
