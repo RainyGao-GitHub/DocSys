@@ -9685,7 +9685,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}	
 	
-	private void initReposTextSearchConfig(Repos repos) {
+	protected void initReposTextSearchConfig(Repos repos) {
 		//add TextSearchConfig For repos
 		TextSearchConfig textSearchConfig = new TextSearchConfig();
 		textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, String>(); 
@@ -13280,7 +13280,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			repos.textSearchConfig.realDocTextSearchDisableHashMap.put(""+doc.getDocId(), "disabled");
-			FileUtil.saveDocContentToFile("disabled", Path.getReposTextSearchConfigPathForRealDoc(repos) + doc.getDocId(), "UTF-8");
+			FileUtil.saveDocContentToFile("disabled", Path.getReposTextSearchConfigPathForRealDoc(repos), "" + doc.getDocId(), "UTF-8");
 		}
 		
 		//备注全文搜索
@@ -13292,7 +13292,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(""+doc.getDocId(), "disabled");
-			FileUtil.saveDocContentToFile("disabled", Path.getReposTextSearchConfigPathForVirtualDoc(repos) + doc.getDocId(), "UTF-8");
+			FileUtil.saveDocContentToFile("disabled", Path.getReposTextSearchConfigPathForVirtualDoc(repos), "" + doc.getDocId(), "UTF-8");
 		}
 		return true;
 	}
