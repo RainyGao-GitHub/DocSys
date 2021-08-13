@@ -293,6 +293,8 @@ public class ReposController extends BaseController{
 			return;			
 		}
 		
+		//初始化倉庫的全文搜索
+		initReposTextSearchConfig(repos);
 		if(isTextSearchEnabled == null || isTextSearchEnabled == 0)
 		{	
 			setReposTextSearch(repos, isTextSearchEnabled);			
