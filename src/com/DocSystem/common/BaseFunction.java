@@ -284,6 +284,8 @@ public class BaseFunction{
 	protected static ProxyThread proxyThread = null;
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
+
+	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
 	
 	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();	
 	protected void deleteRemoteStorageConfig(Repos repos) {
