@@ -139,7 +139,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -287,7 +287,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -345,7 +345,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -417,7 +417,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 	
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -499,7 +499,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -577,7 +577,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 	
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -940,7 +940,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -1042,7 +1042,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -1317,7 +1317,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -3245,7 +3245,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
