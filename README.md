@@ -121,4 +121,8 @@ MxsDoc是基于Web的文件管理系统，支持权限管理和历史版本管�
 **fc-cache**
 #### 5、重新生成office字体库
 运行  **DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh** 
- 
+### 四、什么是分布式远程存储
+#### 1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、网盘、oss等文件存储系统）
+#### 2、仓库可以脱离远程文件服务器进行文件操作和版本管理
+#### 3、仓库可以从远程文件服务器拉取文件到本地
+#### 4、仓库可以推送文件到远程文件服务器
