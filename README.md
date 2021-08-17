@@ -100,29 +100,29 @@ MxsDoc是基于Web的文件管理系统，支持权限管理和历史版本管�
 ### 一、二次开发如何集成商业版功能
 #### 1、下载对应的商业版本[DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
 #### 2、集成商业版功能
-解压DocSystem.war到本地，并分别复制 **DocSystem\web\static\office-editor** 和 **DocSystem\WEB-INF\classes\com\DocSystem\websocket** 到源码的 **WebRoot\web\static** 和 **WebRoot\WEB-INF\classes\com\DocSystem** 目录
+解压DocSystem.war到本地，并分别复制 DocSystem\web\static\office-editor 和 DocSystem\WEB-INF\classes\com\DocSystem\websocket 到源码的 WebRoot\web\static 和 WebRoot\WEB-INF\classes\com\DocSystem 目录
 ### 二、Linux系统war包直接部署Office无法预览和编辑
 #### 1、手动创建DocSystem目录
-解压 **DocSystem.war** 到 **tomcat\webapps\DocSystem** 目录
+解压 DocSystem.war 到 tomcat\webapps\DocSystem 目录
 #### 2、手动安装动态库
-复制 **DocSystem\web\static\office-editor\libs\Linux** 目录下的所有动态库到 **/usr/lib64** 目录
+复制 DocSystem\web\static\office-editor\libs\Linux 目录下的所有动态库到 /usr/lib64 目录
 #### 3、重启MxsDoc
 ### 三、Windows系统Office无法预览和编辑
 #### 1、检查系统缺少的动态库并修复
-双击运行 **DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat** ，根据报错提示确定需要修复的动态库
+双击运行 DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat ，根据报错提示确定需要修复的动态库
 ### 四、Centos系统Excel在线编辑退出后，修改内容丢失
 #### 1、安装字体库
-**yum -y install fontconfig**
+yum -y install fontconfig
 #### 2、添加中文字体
-将 **C:/Windows/Fonts** 字体文件复制到 **/usr/shared/fonts** 目录
-#### 3、生成 **fonts.scale** 文件
-**yum -y install ttmkfdir** 
+将 C:/Windows/Fonts 字体文件复制到 /usr/shared/fonts 目录
+#### 3、生成 fonts.scale 文件
+yum -y install ttmkfdir 
 #### 4、刷新字体缓存
-**fc-cache**
+fc-cache
 #### 5、重新生成office字体库
-运行  **DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh** 
+运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 ### 五、什么是分布式远程存储
-#### 1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、网盘、oss等文件存储系统）
-#### 2、可以从远程文件服务器拉取文件到仓库
-#### 3、可以将仓库文件推送到远程文件服务器
-#### 4、仓库可以脱离远程文件服务器进行文件操作和版本管理
+1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、网盘、oss等文件存储系统）
+2、可以从远程文件服务器拉取文件到仓库
+3、可以将仓库文件推送到远程文件服务器
+4、仓库可以脱离远程文件服务器进行文件操作和版本管理
