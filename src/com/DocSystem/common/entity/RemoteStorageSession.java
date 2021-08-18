@@ -1,6 +1,6 @@
 package com.DocSystem.common.entity;
 
-import util.SFTPUtil.SFTPUtil;
+import com.DocSystem.websocket.SFTPUtil;
 
 public class RemoteStorageSession 
 {
