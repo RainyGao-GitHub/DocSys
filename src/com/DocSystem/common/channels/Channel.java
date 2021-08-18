@@ -3,10 +3,10 @@ package com.DocSystem.common.channels;
 import java.util.HashMap;
 import java.util.List;
 
-import com.DocSystem.common.entity.RemoteStorageSession;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.RemoteStorageSession;
 
 import util.ReturnAjax;
 
