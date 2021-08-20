@@ -3607,6 +3607,22 @@ public class DocController extends BaseController{
 		}
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
+		if(isRealDoc == true && (repos.getType() == 1 || repos.getType() == 2))
+		{
+			//远程存储自动推送
+			RemoteStorage remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+			{
+				Log.println("uploadDoc() 远程自动推送");
+				Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel != null && channel.remoteStorageLogin(repos) != null)
+				{	
+					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStorageLogout(repos);
+				}
+			}
+		}
+		
 		writeJson(rt, response);
 		
 		addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, "历史版本:" + commitId);	
