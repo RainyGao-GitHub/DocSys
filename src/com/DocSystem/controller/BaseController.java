@@ -485,7 +485,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private Doc getRemoteStorageEntry(Repos repos, Doc doc) {
+	protected Doc getRemoteStorageEntry(Repos repos, Doc doc) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel == null)
         {
@@ -5161,7 +5161,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private Doc docSysGetDocWithChangeType(Repos repos, Doc doc) {
+	protected Doc docSysGetDocWithChangeType(Repos repos, Doc doc) {
 		Doc localDoc = fsGetDoc(repos, doc);
 		RemoteStorage remote = repos.remoteStorageConfig;
 		if(remote == null)
