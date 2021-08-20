@@ -305,26 +305,6 @@ public class ReposController extends BaseController{
 		
 		writeJson(rt, response);	
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
-		
-		if(remoteStorage != null)
-		{
-			repos.remoteStorageConfig = parseRemoteStorageConfig(repos, remoteStorage);
-			RemoteStorage remote = repos.remoteStorageConfig;
-			//如果设置了自动拉取，那么仓库新建时需要拉取整个远程目录
-			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
-			{
-				Log.println("addRepos() 远程自动拉取");
-		        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null && channel.remoteStorageLogin(repos) != null)
-		        {
-					String localRootPath = Path.getReposRealPath(repos);
-					String localVRootPath = Path.getReposVirtualPath(repos);
-			        Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
-			        channel.remoteStoragePull(repos, rootDoc, login_user, "仓库初始化远程自动拉取", false, false, rt);
-			        channel.remoteStorageLogout(repos);
-		        }
-			}
-		}		
 	}
 
 	private boolean setReposTextSearch(Repos repos, Integer isReposTextSearchEnabled) {
