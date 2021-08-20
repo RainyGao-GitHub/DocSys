@@ -177,6 +177,23 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, actionList); 
+		
+		if(ret == true)
+		{
+			//远程存储自动推送
+			RemoteStorage remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+			{
+				Log.println("uploadDoc() 远程自动推送");
+		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel != null && channel.remoteStorageLogin(repos) != null)
+		        {	
+					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStorageLogout(repos);
+		        }
+			}
+		}
+		
 		writeJson(rt, response);
 		
 		if(ret == false)
@@ -372,6 +389,21 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		if(ret != null)
+		{
+			//远程存储自动推送
+			RemoteStorage remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+			{
+				Log.println("uploadDoc() 远程自动推送");
+		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel != null && channel.remoteStorageLogin(repos) != null)
+		        {	
+					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStorageLogout(repos);
+		        }
+			}
+		}
 		
 		writeJson(rt, response);
 		
@@ -462,6 +494,23 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		if(ret == true)
+		{
+			//远程存储自动推送
+			RemoteStorage remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+			{
+				Log.println("uploadDoc() 远程自动推送");
+		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel != null && channel.remoteStorageLogin(repos) != null)
+		        {	
+					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStorageLogout(repos);
+		        }
+			}
+		}
+		
 		writeJson(rt, response);
 		
 		if(ret)
@@ -549,6 +598,23 @@ public class DocController extends BaseController{
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		if(ret == true)
+		{
+			//远程存储自动推送
+			RemoteStorage remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+			{
+				Log.println("uploadDoc() 远程自动推送");
+		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel != null && channel.remoteStorageLogin(repos) != null)
+		        {	
+					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStorageLogout(repos);
+		        }
+			}
+		}
+		
 		writeJson(rt, response);
 		
 		if(ret)
@@ -622,6 +688,22 @@ public class DocController extends BaseController{
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		if(ret == true)
+		{
+			//远程存储自动推送
+			RemoteStorage remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+			{
+				Log.println("uploadDoc() 远程自动推送");
+		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel != null && channel.remoteStorageLogin(repos) != null)
+		        {	
+					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStorageLogout(repos);
+		        }
+			}
+		}
+		
 		writeJson(rt, response);
 		
 		if(ret)
@@ -1160,9 +1242,10 @@ public class DocController extends BaseController{
 			String commitUser = reposAccess.getAccessUser().getName();
 			String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
+			boolean ret = false;
 			if(dbDoc == null || dbDoc.getType() == 0)
 			{
-				boolean ret = addDoc(repos, doc, 
+				ret = addDoc(repos, doc, 
 						uploadFile,
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 				writeJson(rt, response);
@@ -1175,7 +1258,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				boolean ret = updateDoc(repos, doc, 
+				ret = updateDoc(repos, doc, 
 						uploadFile,  
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
 			
@@ -1188,6 +1271,22 @@ public class DocController extends BaseController{
 				}
 			}
 			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, "");	
+
+			if(ret == true)
+			{
+				//远程存储自动推送
+				RemoteStorage remote = repos.remoteStorageConfig;
+				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+				{
+					Log.println("uploadDoc() 远程自动推送");
+			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+					if(channel != null && channel.remoteStorageLogin(repos) != null)
+			        {	
+						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+						channel.remoteStorageLogout(repos);
+			        }
+				}
+			}
 			return;
 		}
 		else
@@ -1370,6 +1469,22 @@ public class DocController extends BaseController{
 				commitMsg = "更新 " + path + name;
 			}
 			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+			if(ret == true)
+			{
+				//远程存储自动推送
+				RemoteStorage remote = repos.remoteStorageConfig;
+				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+				{
+					Log.println("uploadDoc() 远程自动推送");
+			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+					if(channel != null && channel.remoteStorageLogin(repos) != null)
+			        {	
+						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+						channel.remoteStorageLogout(repos);
+			        }
+				}			
+			}
+			
 			writeJson(rt, response);
 	
 			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "成功",  repos, doc, null, "");			
@@ -1582,6 +1697,21 @@ public class DocController extends BaseController{
 	
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
+		//远程存储自动拉取
+		boolean autoPullDone = false;
+		RemoteStorage remote = repos.remoteStorageConfig;
+		if(remote != null && remote.autoPull != null && remote.autoPull == 1)
+		{
+			Log.println("downloadDocPrepare_FSM() 远程自动拉取");
+	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+			if(channel != null && channel.remoteStorageLogin(repos) != null)
+	        {	
+				channel.remoteStoragePull(repos, doc, accessUser, "远程存储自动拉取", true, remote.autoPullForce, true, rt);
+				channel.remoteStorageLogout(repos);
+	        }
+			autoPullDone = true;
+		}
+
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
@@ -1590,22 +1720,25 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		
 		//本地文件不存在
 		if(localEntry.getType() == 0)
 		{
 			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			
-			//尝试远程拉取
-	        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-			if(channel == null || channel.remoteStorageLogin(repos) == null)
-	        {
-				Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
-			}
-			else
+			if(autoPullDone == false)
 			{
-				channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, false, rt);
-				channel.remoteStorageLogout(repos);
-				localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
+				//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
+		        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel == null || channel.remoteStorageLogin(repos) == null)
+		        {
+					Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+				}
+				else
+				{
+					channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, remote.autoPullForce, true, rt);
+					channel.remoteStorageLogout(repos);
+					localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
+				}
 			}
 		}
 		
@@ -2139,17 +2272,36 @@ public class DocController extends BaseController{
 				//SVN/GIT前置类型仓库需要先将文件下载到本地
 				if(repos.getType() == 1)
 				{
+					//远程存储自动拉取
+					boolean autoPullDone = false;
+					RemoteStorage remote = repos.remoteStorageConfig;
+					if(remote != null && remote.autoPull != null && remote.autoPull == 1)
+					{
+						Log.println("getDocContent() 远程自动拉取");
+				    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+						if(channel != null && channel.remoteStorageLogin(repos) != null)
+				        {	
+							channel.remoteStoragePull(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce, true, rt);
+							channel.remoteStorageLogout(repos);
+				        }
+						autoPullDone = true;
+					}
+					
+					
 					Doc localEntry = fsGetDoc(repos, doc);
 					if(localEntry.getType() == 0)
 					{
-						Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-						//尝试远程拉取
-				        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-						if(channel != null && channel.remoteStorageLogin(repos) != null)
+						Log.println("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在");
+						if(autoPullDone == false)
 						{
-				        	channel.remoteStoragePull(repos, localEntry, reposAccess.getAccessUser(), "文件内容拉取", false, false, rt);
-				        	channel.remoteStorageLogout(repos);
-				        	localEntry = fsGetDoc(repos, doc); //重新读取文件信息
+							//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
+					        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+							if(channel != null && channel.remoteStorageLogin(repos) != null)
+							{
+								channel.remoteStoragePull(repos, localEntry, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce, true, rt);
+								channel.remoteStorageLogout(repos);
+								localEntry = fsGetDoc(repos, doc); //重新读取文件信息
+							}
 						}
 					}		
 				}

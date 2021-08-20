@@ -34,7 +34,7 @@ public interface Channel {
 
 	Doc remoteStorageGetDBEntry(Repos repos, Doc doc);	
 	
-	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt);
 
 	void remoteStoragePush(Repos repos, Doc doc, User accessUser, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
 }

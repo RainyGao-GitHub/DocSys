@@ -3822,7 +3822,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//这个接口要保证只有一次Commit操作
-	protected boolean syncupForDocChange(CommonAction action, boolean remoteStoragePullEnable ,ReturnAjax rt) {		
+	protected boolean syncupForDocChange(CommonAction action, boolean remoteStorageEnable ,ReturnAjax rt) {		
 		Doc doc = action.getDoc();
 		if(doc == null)
 		{
@@ -3840,17 +3840,30 @@ public class BaseController  extends BaseFunction{
 		Repos repos =  action.getRepos();
 		Log.printObject("syncupForDocChange() repos:",repos);
 		
-		if(remoteStoragePullEnable)
+		Integer subDocSyncupFlag = 1;
+		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
 		{
-			//远程存储自动拉取
+			subDocSyncupFlag = 2;
+		}
+		
+		if(remoteStorageEnable)
+		{
+			//远程存储自动拉取/推送
 			RemoteStorage remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
+			if(remote != null && ((remote.autoPull != null && remote.autoPull == 1) || (remote.autoPush != null && remote.autoPush == 1)))
 			{
 				Log.println("syncupForDocChange() 远程自动拉取");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
-		        {		        
-					channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", false, false, rt);
+		        {	
+					if(remote.autoPull != null && remote.autoPull == 1)
+					{
+						channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPullForce, true, rt);
+					}
+					if(remote.autoPush != null && remote.autoPush == 1)
+					{
+						channel.remoteStoragePush(repos, doc, login_user, subDocSyncupFlag == 2, remote.autoPushForce, true, rt);
+					}					
 					channel.remoteStorageLogout(repos);
 		        }
 			}
@@ -3859,11 +3872,6 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-		Integer subDocSyncupFlag = 1;
-		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
-		{
-			subDocSyncupFlag = 2;
-		}
 				
 		//文件管理系统类型需要进行RealDoc的同步
 		boolean realDocSyncResult = false;
