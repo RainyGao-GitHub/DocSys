@@ -5326,6 +5326,9 @@
 		case "sftp":
 			serverInfo = getTargetServerDispInfoForSftp(remote);
 			break;
+		case "ftp":
+			serverInfo = getTargetServerDispInfoForFtp(remote);
+			break;
 		}
 		return serverInfo;
 	}
@@ -5334,9 +5337,18 @@
 	{
 		var sftp = remote.SFTP;
 		console.log("getTargetServerDispInfoForSftp sftp:", sftp);
-		var sftUrl = "sftp://" + sftp.host + ":" + sftp.port + "" + sftp.rootPath;	
-		console.log("getTargetServerDispInfoForSftp sftUrl:", sftUrl);
-		return sftUrl;
+		var url = "sftp://" + sftp.host + ":" + sftp.port + "" + remote.rootPath;	
+		console.log("getTargetServerDispInfoForSftp sftpUrl:", url);
+		return url;
+	}
+
+	function getTargetServerDispInfoForFtp(remote)
+	{
+		var ftp = remote.FTP;
+		console.log("getTargetServerDispInfoForFtp ftp:", ftp);
+		var url = "ftp://" + ftp.host + ":" + ftp.port + "" + remote.rootPath;	
+		console.log("getTargetServerDispInfoForFtp ftpUrl:", url);
+		return url;
 	}
 	
 	function showDocSharePanel(docShare, docName, url)

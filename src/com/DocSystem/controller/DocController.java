@@ -69,6 +69,7 @@ import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.RemoteStorage;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -2448,7 +2449,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2485,7 +2486,30 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		Doc dbDoc = docSysGetDoc(repos, doc, true);
+		Doc dbDoc = fsGetDoc(repos, doc);
+		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
+		{
+			switch(repos.getType())
+			{
+			case 1:
+			case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
+				RemoteStorage remote = repos.remoteStorageConfig;
+				if(remote == null)
+				{
+					Log.println("docSysGetDocListWithChangeType remote is null");
+				}
+				else
+				{
+					dbDoc = getRemoteStorageEntry(repos, doc);
+				}
+				break;
+			case 3:
+			case 4:
+				dbDoc = verReposGetDoc(repos, doc, null);
+				break;
+			}
+			
+		}
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + path+name + " 不存在！", rt);
