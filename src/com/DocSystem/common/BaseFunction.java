@@ -301,6 +301,9 @@ public class BaseFunction{
 			return null;
 		}
 		
+		//格式化远程存储配置
+		remoteStorage = remoteStorage.replace('\\','/');
+		
 		String protocol = null;
 		if(remoteStorage.indexOf("sftp://") == 0)
 		{
@@ -310,17 +313,17 @@ public class BaseFunction{
 		{
 			protocol = "ftp";
 		}
-		else if(remoteStorage.indexOf("http://") == 0)
-		{
-			protocol = "http";
-		}
-		else if(remoteStorage.indexOf("https://") == 0)
-		{
-			protocol = "https";
-		}
-		else if(remoteStorage.indexOf("\\") == 0)
+		else if(remoteStorage.indexOf("smb://") == 0)
 		{
 			protocol = "smb";		
+		}
+		else if(remoteStorage.indexOf("svn://") == 0) //注意协议后面携带的可以包含任意svn协议路径
+		{
+			protocol = "svn";
+		}
+		else if(remoteStorage.indexOf("git://") == 0) //注意协议后面携带的可以包含任意git协议路径
+		{
+			protocol = "git";
 		}
 		
 		if(protocol == null)
@@ -419,7 +422,7 @@ public class BaseFunction{
 		String[] subStrs = remoteStorage.split(";");
 
 		String smbUrl = subStrs[0];
-		parseFtpUrl(remote, smbUrl.trim());
+		parseSmbUrl(remote, smbUrl.trim());
 
 		if(subStrs.length > 1)
 		{
@@ -508,6 +511,40 @@ public class BaseFunction{
 
 		remote.FTP.host = host;
 		remote.FTP.port = port;
+		remote.rootPath = rootPath;
+	}
+	
+
+	private static void parseSmbUrl(RemoteStorage remote, String url) {
+		Log.println("parseSmbUrl url:" + url);
+		
+		String tmpStr = url.substring("smb://".length());
+		String subStrs[] = tmpStr.split("/");
+		
+		String hostWithPort = subStrs[0];
+		String rootPath = "";
+		if(subStrs.length > 1)
+		{
+			rootPath = buildRemoteStorageRootPath(subStrs);
+		}
+		Log.println("parseFtpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
+		
+		//seperate host with port
+		String[] subStrs1 = hostWithPort.split(":");
+		String host = subStrs1[0];
+		
+		Integer port = null;
+		if(subStrs1.length > 1)
+		{
+			port = Integer.getInteger(subStrs1[1]);
+		}
+		if(port == null)
+		{
+			port = 139;
+		}
+
+		remote.SMB.host = host;
+		remote.SMB.port = port;
 		remote.rootPath = rootPath;
 	}
 
