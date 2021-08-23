@@ -6,4 +6,5 @@ public class SmbConfig {
 	public String userName;
 	public String pwd;
 	public String host;
+	public Integer port;
 }
