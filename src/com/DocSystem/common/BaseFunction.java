@@ -335,6 +335,8 @@ public class BaseFunction{
 			return parseRemoteStorageConfigForSftp(repos, remoteStorage);
 		case "ftp":
 			return parseRemoteStorageConfigForFtp(repos, remoteStorage);
+		case "smb":
+			return parseRemoteStorageConfigForSmb(repos, remoteStorage);
 		}
 		return null;
 	}
@@ -402,6 +404,40 @@ public class BaseFunction{
 			remote.FTP.pwd = config.getString("pwd");
 			
 			Log.println("parseRemoteStorageConfigForFtp userName:" + remote.FTP.userName + " pwd:" + remote.FTP.pwd + " autoPull:" + remote.autoPull);
+		}
+		
+		//add remote config to hashmap
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
+		return remote;
+	}
+	
+	private static RemoteStorage parseRemoteStorageConfigForSmb(Repos repos, String remoteStorage) {
+		RemoteStorage remote = new RemoteStorage();
+		remote.protocol = "smb";
+		remote.SMB = new SmbConfig();
+
+		String[] subStrs = remoteStorage.split(";");
+
+		String smbUrl = subStrs[0];
+		parseFtpUrl(remote, smbUrl.trim());
+
+		if(subStrs.length > 1)
+		{
+			JSONObject config = new JSONObject();
+			for(int i=1; i<subStrs.length; i++)
+			{
+				String[] param = subStrs[i].split("=");
+				if(param.length > 1)
+				{
+					config.put(param[0].trim(), param[1].trim());
+				}
+			}
+			remote.autoPull = config.getInteger("autoPull");
+			remote.SMB.userDomain = config.getString("userDomain");
+			remote.SMB.userName = config.getString("userName");
+			remote.SMB.pwd = config.getString("pwd");
+			
+			Log.println("parseRemoteStorageConfigForSmb userDomain:" + remote.SMB.userDomain + " userName:" + remote.SMB.userName + " pwd:" + remote.SMB.pwd + " autoPull:" + remote.autoPull);
 		}
 		
 		//add remote config to hashmap
