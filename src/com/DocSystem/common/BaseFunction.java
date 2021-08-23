@@ -437,8 +437,22 @@ public class BaseFunction{
 			}
 			remote.autoPull = config.getInteger("autoPull");
 			remote.SMB.userDomain = config.getString("userDomain");
+			if(remote.SMB.userDomain == null)
+			{
+				remote.SMB.userDomain = "";
+			}
+
 			remote.SMB.userName = config.getString("userName");
+			if(remote.SMB.userName == null)
+			{
+				remote.SMB.userName = "";
+			}
+
 			remote.SMB.pwd = config.getString("pwd");
+			if(remote.SMB.pwd == null)
+			{
+				remote.SMB.pwd = "";
+			}
 			
 			Log.println("parseRemoteStorageConfigForSmb userDomain:" + remote.SMB.userDomain + " userName:" + remote.SMB.userName + " pwd:" + remote.SMB.pwd + " autoPull:" + remote.autoPull);
 		}
