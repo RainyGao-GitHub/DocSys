@@ -13,5 +13,6 @@ public class RemoteStorage {
 	public SmbConfig SMB = null;
 	public SvnConfig SVN = null;
 	public GitConfig GIT = null;
+	public boolean isVerRepos = false;
 
 }

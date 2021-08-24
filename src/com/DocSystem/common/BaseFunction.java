@@ -340,10 +340,38 @@ public class BaseFunction{
 			return parseRemoteStorageConfigForFtp(repos, remoteStorage);
 		case "smb":
 			return parseRemoteStorageConfigForSmb(repos, remoteStorage);
+		case "svn":
+			return parseRemoteStorageConfigForSvn(repos, remoteStorage);
+		case "git":
+			return parseRemoteStorageConfigForGit(repos, remoteStorage);
 		}
 		return null;
 	}
 	
+	private static RemoteStorage parseRemoteStorageConfigForGit(Repos repos, String remoteStorage) {
+		// TODO Auto-generated method stub
+		RemoteStorage remote = new RemoteStorage();
+		remote.protocol = "svn";
+		remote.isVerRepos = true;
+		remote.SVN = new SvnConfig();
+		
+		//add remote config to hashmap
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
+		return remote;
+	}
+
+	private static RemoteStorage parseRemoteStorageConfigForSvn(Repos repos, String remoteStorage) {
+		// TODO Auto-generated method stub
+		RemoteStorage remote = new RemoteStorage();
+		remote.protocol = "git";
+		remote.isVerRepos = true;
+		remote.GIT = new GitConfig();
+		
+		//add remote config to hashmap
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
+		return remote;
+	}
+
 	private static RemoteStorage parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
 		RemoteStorage remote = new RemoteStorage();
 		remote.protocol = "sftp";
