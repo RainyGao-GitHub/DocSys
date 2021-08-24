@@ -3862,7 +3862,7 @@ public class BaseController  extends BaseFunction{
 					}
 					if(remote.autoPush != null && remote.autoPush == 1)
 					{
-						channel.remoteStoragePush(repos, doc, login_user, subDocSyncupFlag == 2, remote.autoPushForce, true, rt);
+						channel.remoteStoragePush(repos, doc, login_user,  "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPushForce, true, rt);
 					}					
 					channel.remoteStorageLogout(repos);
 		        }
