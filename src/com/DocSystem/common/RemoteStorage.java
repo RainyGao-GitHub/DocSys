@@ -11,4 +11,7 @@ public class RemoteStorage {
 	public SftpConfig SFTP;
 	public FtpConfig FTP;
 	public SmbConfig SMB = null;
+	public SvnConfig SVN = null;
+	public GitConfig GIT = null;
+
 }

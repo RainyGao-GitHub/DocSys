@@ -45,11 +45,9 @@ import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
 public class SVNUtil  extends BaseController{
-	
 	//For Low Level APIs
 	private SVNRepository repository = null;
 	private SVNURL repositoryURL = null;
-
 	/***
      * SVNUtil初始化方法：需要指定此次操作的SVN路径、用户名和密码
      * @param reposURL
@@ -1626,6 +1624,7 @@ public class SVNUtil  extends BaseController{
 		return getSubEntries(remoteEntryPath, revision);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
 	{    	
 		Collection<SVNDirEntry> entries = null;
