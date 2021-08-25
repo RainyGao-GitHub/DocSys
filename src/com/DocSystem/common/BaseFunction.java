@@ -382,11 +382,6 @@ public class BaseFunction{
 			remote.autoPull = config.getInteger("autoPull");
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
-			remote.rootPath = config.getString("rootPath");
-			if(remote.rootPath == null)
-			{
-				remote.rootPath = "";
-			}
 			Log.println("parseRemoteStorageConfigForGit userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
@@ -422,7 +417,7 @@ public class BaseFunction{
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
 			
-			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull);
+			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
 		//add remote config to hashmap
@@ -663,6 +658,7 @@ public class BaseFunction{
 			remote.GIT.isRemote = 0;
 			remote.GIT.localVerReposPath = realUrl.substring("file://".length());
 		}
+		remote.rootPath = "";
 	}
 	
 	private static void parseSvnUrl(RemoteStorage remote, String url) {
@@ -670,11 +666,9 @@ public class BaseFunction{
 		
 		String tmpStr = url.substring("svn://".length());
 		
-		String rootPath = "";
-		String realUrl = tmpStr;
-		
+		String realUrl = tmpStr;		
 		remote.SVN.url = realUrl;
-		remote.rootPath = rootPath;
+		remote.rootPath = "";
 	}
 
 	private static String buildRemoteStorageRootPath(String[] sftpUrlSubStrs) {
