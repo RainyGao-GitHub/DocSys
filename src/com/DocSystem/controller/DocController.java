@@ -188,7 +188,7 @@ public class DocController extends BaseController{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {	
-					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 					channel.remoteStorageLogout(repos);
 		        }
 			}
@@ -399,7 +399,7 @@ public class DocController extends BaseController{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {	
-					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 					channel.remoteStorageLogout(repos);
 		        }
 			}
@@ -504,8 +504,8 @@ public class DocController extends BaseController{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {	
-					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
-					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 					channel.remoteStorageLogout(repos);
 		        }
 			}
@@ -608,8 +608,8 @@ public class DocController extends BaseController{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {	
-					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
-					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 					channel.remoteStorageLogout(repos);
 		        }
 			}
@@ -698,7 +698,7 @@ public class DocController extends BaseController{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 		        {	
-					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 					channel.remoteStorageLogout(repos);
 		        }
 			}
@@ -1282,7 +1282,7 @@ public class DocController extends BaseController{
 			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 					if(channel != null && channel.remoteStorageLogin(repos) != null)
 			        {	
-						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 						channel.remoteStorageLogout(repos);
 			        }
 				}
@@ -1479,7 +1479,7 @@ public class DocController extends BaseController{
 			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 					if(channel != null && channel.remoteStorageLogin(repos) != null)
 			        {	
-						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 						channel.remoteStorageLogout(repos);
 			        }
 				}			
@@ -3617,7 +3617,7 @@ public class DocController extends BaseController{
 				Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null && channel.remoteStorageLogin(repos) != null)
 				{	
-					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), true, remote.autoPushForce, true, rt);
+					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce, true, rt);
 					channel.remoteStorageLogout(repos);
 				}
 			}
