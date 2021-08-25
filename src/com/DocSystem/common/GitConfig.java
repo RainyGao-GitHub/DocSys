@@ -6,5 +6,6 @@ public class GitConfig {
 	public String userName;
 	public String pwd;
 	public String url;
+	public String localVerReposPath;
 
 }

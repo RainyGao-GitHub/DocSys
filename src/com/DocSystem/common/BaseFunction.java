@@ -349,11 +349,46 @@ public class BaseFunction{
 	}
 	
 	private static RemoteStorage parseRemoteStorageConfigForGit(Repos repos, String remoteStorage) {
-		// TODO Auto-generated method stub
 		RemoteStorage remote = new RemoteStorage();
-		remote.protocol = "svn";
+		remote.protocol = "git";
 		remote.isVerRepos = true;
-		remote.SVN = new SvnConfig();
+		remote.GIT = new GitConfig();
+		
+		String[] subStrs = remoteStorage.split(";");
+		
+		String url = subStrs[0];
+		parseGitUrl(remote, url.trim());
+		if(remote.GIT.isRemote == 1)
+		{
+			String localVerReposRootPath = repos.getLocalSvnPath(); 
+			localVerReposRootPath = Path.dirPathFormat(localVerReposRootPath);
+			String verReposName = repos.getId() + "_GIT_RemoteStorage";			
+			String localVerReposPath = localVerReposRootPath + verReposName + "/";
+			remote.GIT.localVerReposPath = localVerReposPath;
+		}
+
+		//Parse sftpConfigs
+		if(subStrs.length > 1)
+		{
+			JSONObject config = new JSONObject();
+			for(int i=1; i<subStrs.length; i++)
+			{
+				String[] param = subStrs[i].split("=");
+				if(param.length > 1)
+				{
+					config.put(param[0].trim(), param[1].trim());
+				}
+			}
+			remote.autoPull = config.getInteger("autoPull");
+			remote.SFTP.userName = config.getString("userName");
+			remote.SFTP.pwd = config.getString("pwd");
+			remote.rootPath = config.getString("rootPath");
+			if(remote.rootPath == null)
+			{
+				remote.rootPath = "";
+			}
+			Log.println("parseRemoteStorageConfigForGit userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+		}
 		
 		//add remote config to hashmap
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
@@ -361,11 +396,34 @@ public class BaseFunction{
 	}
 
 	private static RemoteStorage parseRemoteStorageConfigForSvn(Repos repos, String remoteStorage) {
-		// TODO Auto-generated method stub
 		RemoteStorage remote = new RemoteStorage();
-		remote.protocol = "git";
+		remote.protocol = "svn";
 		remote.isVerRepos = true;
-		remote.GIT = new GitConfig();
+		remote.SVN = new SvnConfig();
+		
+		String[] subStrs = remoteStorage.split(";");
+		
+		String url = subStrs[0];
+		parseSvnUrl(remote, url.trim());
+
+		//Parse sftpConfigs
+		if(subStrs.length > 1)
+		{
+			JSONObject config = new JSONObject();
+			for(int i=1; i<subStrs.length; i++)
+			{
+				String[] param = subStrs[i].split("=");
+				if(param.length > 1)
+				{
+					config.put(param[0].trim(), param[1].trim());
+				}
+			}
+			remote.autoPull = config.getInteger("autoPull");
+			remote.SFTP.userName = config.getString("userName");
+			remote.SFTP.pwd = config.getString("pwd");
+			
+			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull);
+		}
 		
 		//add remote config to hashmap
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
@@ -587,6 +645,35 @@ public class BaseFunction{
 
 		remote.SMB.host = host;
 		remote.SMB.port = port;
+		remote.rootPath = rootPath;
+	}
+	
+
+	private static void parseGitUrl(RemoteStorage remote, String url) {
+		Log.println("parseGitUrl url:" + url);
+		
+		String tmpStr = url.substring("git://".length());
+		
+		String realUrl = tmpStr;
+		
+		remote.GIT.url = realUrl;
+		remote.GIT.isRemote = 1;
+		if(realUrl.indexOf("file://") == 0)
+		{
+			remote.GIT.isRemote = 0;
+			remote.GIT.localVerReposPath = realUrl.substring("file://".length());
+		}
+	}
+	
+	private static void parseSvnUrl(RemoteStorage remote, String url) {
+		Log.println("parseSvnUrl url:" + url);
+		
+		String tmpStr = url.substring("svn://".length());
+		
+		String rootPath = "";
+		String realUrl = tmpStr;
+		
+		remote.SVN.url = realUrl;
 		remote.rootPath = rootPath;
 	}
 
