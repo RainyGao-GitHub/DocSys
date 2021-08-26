@@ -380,9 +380,9 @@ public class BaseFunction{
 				}
 			}
 			remote.autoPull = config.getInteger("autoPull");
-			remote.SFTP.userName = config.getString("userName");
-			remote.SFTP.pwd = config.getString("pwd");
-			Log.println("parseRemoteStorageConfigForGit userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+			remote.GIT.userName = config.getString("userName");
+			remote.GIT.pwd = config.getString("pwd");
+			Log.println("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
 		//add remote config to hashmap
@@ -414,10 +414,10 @@ public class BaseFunction{
 				}
 			}
 			remote.autoPull = config.getInteger("autoPull");
-			remote.SFTP.userName = config.getString("userName");
-			remote.SFTP.pwd = config.getString("pwd");
+			remote.SVN.userName = config.getString("userName");
+			remote.SVN.pwd = config.getString("pwd");
 			
-			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+			Log.println("parseRemoteStorageConfigForSvn userName:" + remote.SVN.userName + " pwd:" + remote.SVN.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
 		//add remote config to hashmap
