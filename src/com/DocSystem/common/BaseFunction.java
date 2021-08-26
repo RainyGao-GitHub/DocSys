@@ -656,7 +656,7 @@ public class BaseFunction{
 		if(realUrl.indexOf("file://") == 0)
 		{
 			remote.GIT.isRemote = 0;
-			remote.GIT.localVerReposPath = realUrl.substring("file://".length());
+			remote.GIT.localVerReposPath = Path.dirPathFormat(realUrl.substring("file://".length()));	
 		}
 		remote.rootPath = "";
 	}
