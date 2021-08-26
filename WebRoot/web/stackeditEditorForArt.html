@@ -196,8 +196,10 @@
 				artDialog.close();
 				break;
 			case 'saveChange':
-				//执行文档保存操作
-				saveDoc();
+				if(isContentChanged) {
+					//执行文档保存操作
+					saveDoc();	
+				}
 				break;
 			default:
 		}
@@ -241,16 +243,7 @@
 	/**
 	 * 保存文档
 	 */
-    function saveDoc()
-	{
-    	console.log("saveDoc docInfo.docId:" + docInfo.docId);
-		
-    	if(isContentChanged == false)
-    	{
-    	   	console.log("saveDoc there is no change");
-    		return;
-    	}
-    	
+    function saveDoc() {
 		$.ajax({
             url : "/DocSystem/Doc/updateDocContent.do",
             type : "post",
@@ -265,8 +258,7 @@
                 shareId: docInfo.shareId,
             },
             success : function (ret) {
-                if( "ok" == ret.status ){
-                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
+                if( "ok" === ret.status ){
                     isContentChanged = false;	
                     bootstrapQ.msg({
 								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
