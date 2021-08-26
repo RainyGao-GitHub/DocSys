@@ -4741,7 +4741,7 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
-			if(!dbDoc.getSize().equals(remoteEntry.getSize()) || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
+			if(dbDoc.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
 				Log.println("getRemoteDocChangeType " + DocChangeType.REMOTECHANGE); 
 				return DocChangeType.REMOTECHANGE;
@@ -7261,6 +7261,30 @@ public class BaseController  extends BaseFunction{
 			{
 				rt.setError("您无权访问该文件，请联系管理员");
 				return false;
+			}
+		}
+		return true;
+	}
+	
+	protected boolean checkUserAdminRight(Repos repos, Integer userId, Doc doc,  DocAuth authMask, ReturnAjax rt) 
+	{		
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
+		if(docUserAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			return false;
+		}
+		else
+		{
+			if(docUserAuth.getIsAdmin() == 0)
+			{
+				rt.setError("您无权管理该目录，请联系管理员");
+				return false;
+			}
+			else if(docUserAuth.getIsAdmin() == null || docUserAuth.getIsAdmin() != 1)
+			{
+				rt.setError("您没有该目录的管理权限，请联系管理员");
+				return false;				
 			}
 		}
 		return true;
