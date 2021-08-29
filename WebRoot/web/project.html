@@ -5335,6 +5335,15 @@
 		case "ftp":
 			serverInfo = getTargetServerDispInfoForFtp(remote);
 			break;
+		case "smb":
+			serverInfo = getTargetServerDispInfoForSmb(remote);
+			break;
+		case "svn":
+			serverInfo = getTargetServerDispInfoForSvn(remote);
+			break;
+		case "git":
+			serverInfo = getTargetServerDispInfoForGit(remote);
+			break;
 		}
 		return serverInfo;
 	}
@@ -5354,6 +5363,33 @@
 		console.log("getTargetServerDispInfoForFtp ftp:", ftp);
 		var url = "ftp://" + ftp.host + ":" + ftp.port + "" + remote.rootPath;	
 		console.log("getTargetServerDispInfoForFtp ftpUrl:", url);
+		return url;
+	}
+	
+	function getTargetServerDispInfoForSmb(remote)
+	{
+		var smb = remote.SMB;
+		console.log("getTargetServerDispInfoForSmb smb:", smb);
+		var url = "smb://" + smb.host + remote.rootPath;	
+		console.log("getTargetServerDispInfoForSmb smbUrl:", url);
+		return url;
+	}
+	
+	function getTargetServerDispInfoForSvn(remote)
+	{
+		var svn = remote.SVN;
+		console.log("getTargetServerDispInfoForSvn svn:", svn);
+		var url = svn.url + remote.rootPath;	
+		console.log("getTargetServerDispInfoForSvn svnUrl:", url);
+		return url;
+	}
+	
+	function getTargetServerDispInfoForGit(remote)
+	{
+		var git = remote.GIT;
+		console.log("getTargetServerDispInfoForGit git:", git);
+		var url = git.url + remote.rootPath;	
+		console.log("getTargetServerDispInfoForGit gitUrl:", url);
 		return url;
 	}
 	
