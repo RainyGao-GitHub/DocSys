@@ -40,7 +40,7 @@ public interface Channel {
 	
 	//加解密算法实现
 	boolean encryptFile(Repos repos, String filePath);	
-	boolean decryptFile(Repos repos, String filePath);	
+	boolean decryptFile(Repos repos, String filePath);
 	byte [] encryptData(Repos repos, byte data[]);	
 	byte [] decryptData(Repos repos, byte data[]);	
 }
