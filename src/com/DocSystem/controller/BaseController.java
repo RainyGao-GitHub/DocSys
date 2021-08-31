@@ -72,12 +72,14 @@ import util.DateFormat;
 import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
+import util.Encrypt.DES;
 import util.Encrypt.MD5;
 
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.DocChangeType;
+import com.DocSystem.common.EncryptConfig;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
@@ -9718,8 +9720,68 @@ public class BaseController  extends BaseFunction{
 			//Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
 			parseRemoteStorageConfig(repos, repos.getRemoteStorage());
 			initReposTextSearchConfig(repos);
+			initReposEncryptConfig(repos);
 		}
 	}	
+	
+	protected void initReposEncryptConfig(Repos repos) {
+		EncryptConfig config = getReposEncryptConfig(repos);
+		reposEncryptHashMap.put(repos.getId(), config);
+	}
+
+	protected EncryptConfig getReposEncryptConfig(Repos repos) {
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		
+		EncryptConfig config = new EncryptConfig();
+		String jsonStr = FileUtil.readDocContentFromFile(path, name, "UTF-8");
+		if(jsonStr != null && !jsonStr.isEmpty())
+		{
+			JSONObject json = JSON.parseObject(jsonStr);
+			config.type = json.getInteger("type");
+			if(config.type == null)
+			{
+				return null;
+			}
+			config.key = json.getString("key");
+			if(config.key == null)
+			{
+				return null;
+			}			
+			return config;
+		}
+		return null;
+	}
+	
+	protected EncryptConfig generateReposEncryptConfig(Repos repos, Integer encryptType) {
+		EncryptConfig config = new EncryptConfig();
+		config.type = encryptType;
+		String key = null;
+		switch(encryptType)
+		{
+		case EncryptConfig.TYPE_XOR:
+			
+		case EncryptConfig.TYPE_DES:
+			key = DES.getKey();
+			break;
+		}
+		if(key == null)
+		{
+			return null;
+		}
+		config.key = key;
+		
+		//Save Config
+		String jsonStr = JSON.toJSONString(config);
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		if(FileUtil.saveDocContentToFile(jsonStr, path, name, "UTF-8") == false)
+    	{
+    		System.out.println("generateReposEncryptConfig() 密钥保存失败");
+    		return null;
+    	}
+		return config;
+	}
 	
 	protected void initReposTextSearchConfig(Repos repos) {
 		//add TextSearchConfig For repos
