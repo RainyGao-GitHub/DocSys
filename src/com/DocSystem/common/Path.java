@@ -558,6 +558,15 @@ public class Path {
 		Long pid = buildDocIdByName(level-1, path, "");
 		return pid;
 	}
+	
+	public static String getReposEncryptConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/encryptSetting/";
+		return path;
+	}
+	
+	public static String getReposEncryptConfigFileName() {
+		return "encryptConfig.txt";
+	}
 
 	public static String getReposTextSearchConfigPath(Repos repos) {
 		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/";
@@ -573,5 +582,4 @@ public class Path {
 		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/VirtualDoc/";
 		return reposPwdPath;
 	}
-
 }

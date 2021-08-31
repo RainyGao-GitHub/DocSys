@@ -21,6 +21,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.common.EncryptConfig;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
@@ -152,6 +153,7 @@ public class ReposController extends BaseController{
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, 
 			Long createTime,
 			Integer isTextSearchEnabled,
+			Integer encryptType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
 		System.out.println("\n****************** addRepos.do ***********************");
@@ -293,12 +295,16 @@ public class ReposController extends BaseController{
 			return;			
 		}
 		
+		if(remoteStorage != null)
+		{
+			parseRemoteStorageConfig(repos, remoteStorage);
+		}
+		
 		//初始化倉庫的全文搜索
 		initReposTextSearchConfig(repos);
-		if(isTextSearchEnabled == null || isTextSearchEnabled == 0)
-		{	
-			setReposTextSearch(repos, isTextSearchEnabled);			
-		}
+		setReposTextSearch(repos, isTextSearchEnabled);			
+		
+		setReposEncrypt(repos, encryptType);			
 
 		InitReposAuthInfo(repos,login_user,rt);		
 		unlockRepos(repos, lockType, login_user); 
@@ -319,6 +325,22 @@ public class ReposController extends BaseController{
 		
 		repos.textSearchConfig.realDocTextSearchDisableHashMap.put("0", "disabled");		
 		return FileUtil.saveDocContentToFile("disabled", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
+	}
+	
+	private void setReposEncrypt(Repos reposInfo, Integer encryptType) {
+		if(encryptType == null || encryptType == 0)
+		{
+			reposEncryptHashMap.put(reposInfo.getId(), null);			
+		}
+		else
+		{
+			EncryptConfig config = getReposEncryptConfig(reposInfo);
+			if(config == null)
+			{
+				config = generateReposEncryptConfig(reposInfo, encryptType);
+			}
+			reposEncryptHashMap.put(reposInfo.getId(), config);
+		}
 	}
 
 	/****************   delete a Repository ******************/
@@ -399,6 +421,7 @@ public class ReposController extends BaseController{
 			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
 			Integer isTextSearchEnabled,
+			Integer encryptType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** updateReposInfo.do ***********************");
@@ -500,6 +523,14 @@ public class ReposController extends BaseController{
 			}
 		}
 		
+		if(encryptType != null)
+		{			
+			if(encryptType != reposInfo.encryptType)
+			{
+				setReposEncrypt(reposInfo, encryptType);				
+			}			
+		}
+		
 		//Update ReposInfo
 		if(reposService.updateRepos(newReposInfo) == 0)
 		{
@@ -582,7 +613,7 @@ public class ReposController extends BaseController{
 			}
 		}
 	}
-	
+
 	private boolean isReposVerCtrlChanged(Repos newReposInfo, Repos reposInfo) {
 		Integer newVerCtrl = newReposInfo.getVerCtrl();
 		Integer verCtrl = reposInfo.getVerCtrl();
