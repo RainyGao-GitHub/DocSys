@@ -5,6 +5,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8152,6 +8153,9 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
+			//文件加密（不能改变文件大小）
+			encryptFile(repos, localDocParentPath, name);
+			
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
 			Log.docSysDebugLog(e.toString(), rt);
@@ -8168,6 +8172,55 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	//文件加密
+	private void encryptFile(Repos repos, String localPath, String name) {
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+			if(channel != null)
+	        {	
+				channel.encryptFile(repos, localPath + name);
+	        }
+		}
+	}
+	
+	private byte[] encryptData(Repos repos, byte[] data) {
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+			if(channel != null)
+	        {	
+				return channel.encryptData(repos, data);
+	        }
+		}
+		return data;
+	}
+
+	
+	//文件解密
+	private void decryptFile(Repos repos, String localPath, String name) {
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+			if(channel != null)
+	        {	
+				channel.decryptFile(repos, localPath + name);
+	        }
+		}
+	}
+
+	private byte[] decryptData(Repos repos, byte [] data) {
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+			if(channel != null)
+	        {	
+				return channel.decryptData(repos, data);
+	        }
+		}
+		return data;
+	}
+
 	//Function: updateRealDoc
 	//Pramams:
 	//chunkNum: null:非分片上传(直接用uploadFile存为文件)  1: 单文件或单分片文件  >1:多分片文件（需要进行合并）
@@ -8478,34 +8531,47 @@ public class BaseController  extends BaseFunction{
 	{
 		String userTmpDir = Path.getReposTmpPathForOfficeText(repos, doc);
 		String officeTextFileName = Path.getOfficeTextFileName(doc);
-		return FileUtil.readDocContentFromFile(userTmpDir, officeTextFileName, offset, size);
+		return FileUtil.readDocContentFromFile(userTmpDir, officeTextFileName, (long) offset, size);
 	}
 	
 	//RealDoc读取采用自动检测的方案，在线编辑时返回给前端时必须全部转换成UTF-8格式
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
+		byte [] buff = null;
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
-			return FileUtil.saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
+			buff = FileUtil.getBytes(doc.getContent(), doc.getLocalRootPath() + doc.getPath() + doc.getName());
 		}
-		return FileUtil.saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset());
+		else
+		{
+			buff = FileUtil.getBytes(doc.getContent(), doc.getCharset());	
+		}
+		
+		//数据加密
+		buff = encryptData(repos, buff);
+		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
+
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
+		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		buff = decryptData(repos, buff);
+		
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
-			return FileUtil.readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
+			return FileUtil.getString(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
 		}
-		return FileUtil.readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset());
+		return FileUtil.getString(buff, doc.getCharset());
 	}
 	
+	//读取文件部分数据无法解密
 	protected String readRealDocContent(Repos repos, Doc doc, int offset, int size) 
 	{
 		if(doc.getCharset() == null  && doc.autoCharsetDetect)
 		{
-			return FileUtil.readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), offset, size);
+			return FileUtil.readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), (long) offset, size);
 		}
-		return FileUtil.readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset(), offset, size);
+		return FileUtil.readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset(), (long) offset, size);
 	}
 	
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
@@ -8577,7 +8643,7 @@ public class BaseController  extends BaseFunction{
 				encode = "UTF-8";
 			}
 		}
-		return FileUtil.readDocContentFromFile(localVRootPath + docVName + "/", "content.md", encode, offset, size);
+		return FileUtil.readDocContentFromFile(localVRootPath + docVName + "/", "content.md", encode, (long) offset, size);
 	}
 
 	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
