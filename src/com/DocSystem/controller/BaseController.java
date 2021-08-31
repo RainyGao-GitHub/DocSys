@@ -9726,7 +9726,14 @@ public class BaseController  extends BaseFunction{
 	
 	protected void initReposEncryptConfig(Repos repos) {
 		EncryptConfig config = getReposEncryptConfig(repos);
-		reposEncryptHashMap.put(repos.getId(), config);
+		if(config == null)
+		{
+			reposEncryptHashMap.remove(repos.getId());
+		}
+		else
+		{
+			reposEncryptHashMap.put(repos.getId(), config);
+		}
 	}
 
 	protected EncryptConfig getReposEncryptConfig(Repos repos) {
