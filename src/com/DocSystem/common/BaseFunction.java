@@ -286,7 +286,7 @@ public class BaseFunction{
 	protected static ShareThread shareThread = null;
 
 	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
-	
+	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
 	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();	
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.println("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());

@@ -1,5 +1,6 @@
 package com.DocSystem.entity;
 
+import com.DocSystem.common.EncryptConfig;
 import com.DocSystem.common.RemoteStorage;
 import com.DocSystem.common.TextSearchConfig;
 import com.DocSystem.websocket.RemoteStorageSession;
@@ -73,6 +74,9 @@ public class Repos {
 	public RemoteStorage remoteStorageConfig;
 	public RemoteStorageSession remoteStorageSession;
 	public TextSearchConfig textSearchConfig;
+	
+	public Integer encryptType;
+	public EncryptConfig encryptConfig;
 	
     public Integer getId() {
         return id;
