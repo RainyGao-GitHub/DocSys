@@ -21,6 +21,8 @@ import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.DocSystem.entity.Repos;
+
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
 import info.monitorenter.cpdetector.io.JChardetFacade;
@@ -32,7 +34,85 @@ import util.Encrypt.Base64File;
 import util.FileUtil.CompressPic;
 
 public class FileUtil {
-    //自动检测文件字符编辑
+	
+	//convert string to buffer with charset
+	public static byte[] getBytes(String content, String charset) {
+		if(content == null)
+		{
+			return null;
+		}
+
+		byte[] buff = null;
+		try {
+			if(charset == null)
+			{
+				buff = content.getBytes();
+			}
+			else
+			{
+				buff = content.getBytes(charset);
+			}			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+		return buff;
+	}
+	
+	//convert string to buffer with charset of file
+	public static byte[] getBytes(String content, String path, String name) {
+		if(content == null)
+		{
+			return null;
+		}
+
+		String encode = getCharset(path + name);
+		if(encode == null)
+		{
+			encode = "UTF-8";
+		}
+		
+		return getBytes(content, encode);
+	}
+	
+	public static String getString(byte [] buffer, String charset) {
+		if(buffer == null)
+		{
+			return null;
+		}
+		
+		String content = null;
+		if(charset == null)
+		{
+			content = new String(buffer);
+		}
+		else
+		{
+			try {
+				content = new String(buffer, charset);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+		return content;		
+	}
+	
+	public static String getString(byte [] buffer, String path, String name) {
+		if(buffer == null)
+		{
+			return null;
+		}
+
+		String encode = getCharset(path + name);
+		if(encode == null)
+		{
+			encode = "UTF-8";
+		}
+		
+		return getString(buffer, encode);
+	}
+	
+	
+	//自动检测文件字符编辑
 	public static boolean saveDocContentToFile(String content, String path, String name) {
 		String filePath = path + name;
 		String encode = getCharset(filePath);
@@ -63,40 +143,10 @@ public class FileUtil {
 				return false;
 			}
 		}
-		
-		//创建文件输入流
-		String filePath = path + name;
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(filePath);
-		} catch (FileNotFoundException e) {
-			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
-			e.printStackTrace();
-			return false;
-		}
-		try {
-			byte[] buff = null;
-			System.out.println("saveDocContentToFile " +path+ " encode:" + encode);	
-
-			if(encode == null)
-			{
-				buff = content.getBytes();
-			}
-			else
-			{
-				buff = content.getBytes(encode); //将String转成指定charset的字节内容
-			}
 			
-			out.write(buff, 0, buff.length);
-			//关闭输出流
-			out.close();
-		} catch (IOException e) {
-			System.out.println("saveDocContentToFile() out.write exception");
-			e.printStackTrace();
-			return false;
-		}		
-		return true;
-		
+		System.out.println("saveDocContentToFile " +path+ " encode:" + encode);
+		byte[] buff = getBytes(content, encode);
+		return saveDataToFile(buff, path, name);		
 	}
 	
 	public static boolean saveDataToFile(byte[] buff, String path, String name)
@@ -124,10 +174,6 @@ public class FileUtil {
 			out = new FileOutputStream(filePath);
 			out.write(buff, 0, buff.length);
 			ret = true;
-			
-			//关闭输出流
-			out.close();
-			out = null;
 		} catch (Exception e) {
 			System.out.println("saveDataToFile() new FileOutputStream failed");
 			e.printStackTrace();
@@ -228,7 +274,6 @@ public class FileUtil {
 				try {
 					in.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}	
 			}
@@ -244,24 +289,10 @@ public class FileUtil {
 			return null;
 		}
 		
-		String content = null;
-		if(encode == null)
-		{
-			content = new String(buffer);
-		}
-		else
-		{
-			try {
-				content = new String(buffer, encode);
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return content;		
+		return getString(buffer, encode);
 	}
 	
-	public static String readDocContentFromFile(String path, String name, int offset, int size) 
+	public static String readDocContentFromFile(String path, String name, Long offset, int size) 
 	{	
 		String filePath = path + name;
 		String encode = getCharset(filePath);
@@ -269,53 +300,13 @@ public class FileUtil {
 	}
 	
 	
-	public static String readDocContentFromFile(String path, String name, String encode, int offset, int size) 
+	public static String readDocContentFromFile(String path, String name, String encode, Long offset, int size) 
 	{	
-		
 		System.out.println("readDocContentFromFile() encode:" + encode);
-		String filePath = path + name;
-		try 
-		{			
-			File file = new File(filePath);
-			if(!file.exists() || !file.isFile())
-			{
-				//System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
-				return null;
-			}
-			
-			int fileSize = (int) file.length();
-			//System.out.println("fileSize:[" + fileSize + "]");
-			if(fileSize  <= 0)
-			{
-				return null;
-			}
-			
-			int readSize = fileSize > (offset + size) ? size: (fileSize - offset);
-					
-			byte buffer[] = new byte[readSize];
-			FileInputStream in;
-			in = new FileInputStream(filePath);
-			in.read(buffer, offset, readSize);
-			in.close();	
-
-			String content = null;
-			if(encode == null)
-			{
-				content = new String(buffer);
-			}
-			else
-			{
-				content = new String(buffer, encode);
-			}
-			//System.out.println("content:[" + content + "]");
-			return content;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+		byte buffer[] = readBufferFromFile(path, name, offset, size);
+		return getString(buffer, encode);			
 	}
 	
-    
     private static String getEncodeOfBuffer(byte[] buffer, int size) {
 		// TODO Auto-generated method stub
 		int encodeDetectBufLen = 0;
