@@ -6461,7 +6461,7 @@ public class BaseController  extends BaseFunction{
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);	
 		
-		if(saveRealDocContent(repos, doc, rt) == true)
+		if(saveRealDocContentEx(repos, doc, rt) == true)
 		{
 			doc.setLatestEditor(login_user.getId());
 			doc.setLatestEditorName(login_user.getName());
@@ -8198,13 +8198,13 @@ public class BaseController  extends BaseFunction{
 
 	
 	//文件解密
-	private void decryptFile(Repos repos, String localPath, String name) {
+	protected void decryptFile(Repos repos, String path, String name) {
 		if(repos.encryptType != null && repos.encryptType != 0)
 		{
 	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 			if(channel != null)
 	        {	
-				channel.decryptFile(repos, localPath + name);
+				channel.decryptFile(repos, path + name);
 	        }
 		}
 	}
@@ -8547,12 +8547,38 @@ public class BaseController  extends BaseFunction{
 			buff = FileUtil.getBytes(doc.getContent(), doc.getCharset());	
 		}
 		
+		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+	}
+	
+	protected boolean saveRealDocContentEx(Repos repos, Doc doc, ReturnAjax rt) 
+	{	
+		byte [] buff = null;
+		if(doc.getCharset() == null && doc.autoCharsetDetect)
+		{
+			buff = FileUtil.getBytes(doc.getContent(), doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		}
+		else
+		{
+			buff = FileUtil.getBytes(doc.getContent(), doc.getCharset());	
+		}
+		
 		//数据加密
 		buff = encryptData(repos, buff);
 		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 
 	protected String readRealDocContent(Repos repos, Doc doc) 
+	{
+		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		
+		if(doc.getCharset() == null && doc.autoCharsetDetect)
+		{
+			return FileUtil.getString(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
+		}
+		return FileUtil.getString(buff, doc.getCharset());
+	}
+	
+	protected String readRealDocContentEx(Repos repos, Doc doc) 
 	{
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 		buff = decryptData(repos, buff);

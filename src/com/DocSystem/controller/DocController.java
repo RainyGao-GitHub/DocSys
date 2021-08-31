@@ -1657,6 +1657,7 @@ public class DocController extends BaseController{
 				
 		if(dbDoc.getType() == 1)
 		{
+			decryptFile(repos, targetPath, targetName);
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
@@ -1746,16 +1747,35 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
-			rt.setData(downloadDoc);
-			rt.setMsgData(0);	//下载完成后不能删除下载的文件
-			Log.docSysDebugLog("本地文件: 原始路径下载", rt);
+			if(repos.encryptType == 0)
+			{
+				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+				rt.setData(downloadDoc);
+				rt.setMsgData(0);	//下载完成后不能删除下载的文件
+				Log.docSysDebugLog("本地文件: 原始路径下载", rt);
+			}
+			else
+			{
+				targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
+				if(FileUtil.copyFile(doc.getLocalRootPath() + doc.getPath() + doc.getName(), targetPath + doc.getName(), true) == false)
+				{
+					Log.println("downloadDocPrepare_FSM() 文件解密：创建临时文件失败");
+					Log.docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "解密失败！", rt);
+					return;
+				}
+				decryptFile(repos, targetPath, doc.getName());
+				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+				rt.setData(downloadDoc);
+				rt.setMsgData(1);
+				Log.docSysDebugLog("本地文件: 解密后下载", rt);
+			}
 			return;
 		}
 
 		targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
 		if(localEntry.getType() == 2)
 		{	
+			//TODO: 如果是加密文件需要先解密再下载
 			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
 			{
 				Log.docSysErrorLog("空目录无法下载！", rt);
@@ -1810,6 +1830,7 @@ public class DocController extends BaseController{
 				
 			if(remoteEntry.getType() == 1)
 			{
+				decryptFile(repos, targetPath, targetName);
 				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 				rt.setData(downloadDoc);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
@@ -2350,11 +2371,11 @@ public class DocController extends BaseController{
 			String fileSuffix = FileUtil.getFileSuffix(name);
 			if(FileUtil.isText(fileSuffix))
 			{
-				content = readRealDocContent(repos, tmpDoc);
+				content = readRealDocContentEx(repos, tmpDoc);
 			}
 			else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
 			{
-				if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
+				if(checkAndGenerateOfficeContentEx(repos, tmpDoc, fileSuffix))
 				{
 					content = readOfficeContent(repos, tmpDoc);
 				}
@@ -2367,7 +2388,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					content = readRealDocContent(repos, tmpDoc);
+					content = readRealDocContentEx(repos, tmpDoc);
 				}
 			}
 		}
@@ -2562,24 +2583,73 @@ public class DocController extends BaseController{
 			return true;
 		}
 		
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		
 		//文件需要转换
 		FileUtil.clearDir(userTmpDir);
 		switch(fileSuffix)
 		{
 		case "doc":
-			return OfficeExtract.extractToFileForWord(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
+			return OfficeExtract.extractToFileForWord(filePath, userTmpDir, officeTextFileName);
 		case "docx":
-			return OfficeExtract.extractToFileForWord2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
+			return OfficeExtract.extractToFileForWord2007(filePath, userTmpDir, officeTextFileName);
 		case "ppt":
-			return OfficeExtract.extractToFileForPPT(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
+			return OfficeExtract.extractToFileForPPT(filePath, userTmpDir, officeTextFileName);
 		case "pptx":
-			return OfficeExtract.extractToFileForPPT2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
+			return OfficeExtract.extractToFileForPPT2007(filePath, userTmpDir, officeTextFileName);
 		case "xls":
-			return OfficeExtract.extractToFileForExcel(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
+			return OfficeExtract.extractToFileForExcel(filePath, userTmpDir, officeTextFileName);
 		case "xlsx":
-			return OfficeExtract.extractToFileForExcel2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
+			return OfficeExtract.extractToFileForExcel2007(filePath, userTmpDir, officeTextFileName);
 		case "pdf":
-			return OfficeExtract.extractToFileForPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, officeTextFileName);
+			return OfficeExtract.extractToFileForPdf(filePath, userTmpDir, officeTextFileName);
+		}
+		return false;
+	}
+	
+	private boolean checkAndGenerateOfficeContentEx(Repos repos, Doc doc, String fileSuffix) 
+	{
+		
+		String userTmpDir = Path.getReposTmpPathForOfficeText(repos, doc);
+		String officeTextFileName = Path.getOfficeTextFileName(doc);
+		File file = new File(userTmpDir, officeTextFileName);
+		if(file.exists() == true)
+		{
+			return true;
+		}
+		
+		//文件需要转换
+		FileUtil.clearDir(userTmpDir);
+		
+		//进行提取文件内容前先进行解密
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		if(repos.encryptType != 0)
+		{
+			String tmpFilePath = userTmpDir + doc.getName();
+			if(FileUtil.copyFile(filePath, tmpFilePath, true) == false)
+			{
+				return false;
+			}
+			decryptFile(repos, userTmpDir, doc.getName());
+			filePath = tmpFilePath;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "doc":
+			return OfficeExtract.extractToFileForWord(filePath, userTmpDir, officeTextFileName);
+		case "docx":
+			return OfficeExtract.extractToFileForWord2007(filePath, userTmpDir, officeTextFileName);
+		case "ppt":
+			return OfficeExtract.extractToFileForPPT(filePath, userTmpDir, officeTextFileName);
+		case "pptx":
+			return OfficeExtract.extractToFileForPPT2007(filePath, userTmpDir, officeTextFileName);
+		case "xls":
+			return OfficeExtract.extractToFileForExcel(filePath, userTmpDir, officeTextFileName);
+		case "xlsx":
+			return OfficeExtract.extractToFileForExcel2007(filePath, userTmpDir, officeTextFileName);
+		case "pdf":
+			return OfficeExtract.extractToFileForPdf(filePath, userTmpDir, officeTextFileName);
 		}
 		return false;
 	}
@@ -2686,12 +2756,12 @@ public class DocController extends BaseController{
 				String tmpDocText = null;
 				if(FileUtil.isText(fileSuffix))
 				{
-					docText = readRealDocContent(repos, doc);
+					docText = readRealDocContentEx(repos, doc);
 					tmpDocText= readTmpRealDocContent(repos, doc, reposAccess.getAccessUser());
 				}
 				else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
 				{
-					if(checkAndGenerateOfficeContent(repos, doc, fileSuffix))
+					if(checkAndGenerateOfficeContentEx(repos, doc, fileSuffix))
 					{
 						docText = readOfficeContent(repos, doc);
 					}
