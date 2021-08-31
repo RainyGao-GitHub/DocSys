@@ -327,19 +327,24 @@ public class ReposController extends BaseController{
 		return FileUtil.saveDocContentToFile("disabled", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
 	}
 	
-	private void setReposEncrypt(Repos reposInfo, Integer encryptType) {
-		if(encryptType == null || encryptType == 0)
+	private void setReposEncrypt(Repos repos, Integer encryptType) {
+		EncryptConfig config = null;
+		if(encryptType != null && encryptType != 0)
 		{
-			reposEncryptHashMap.put(reposInfo.getId(), null);			
+			config = getReposEncryptConfig(repos);
+			if(config == null)
+			{
+				config = generateReposEncryptConfig(repos, encryptType);
+			}
+		}
+		
+		if(config == null)
+		{
+			reposEncryptHashMap.remove(repos.getId());
 		}
 		else
 		{
-			EncryptConfig config = getReposEncryptConfig(reposInfo);
-			if(config == null)
-			{
-				config = generateReposEncryptConfig(reposInfo, encryptType);
-			}
-			reposEncryptHashMap.put(reposInfo.getId(), config);
+			reposEncryptHashMap.put(repos.getId(), config);
 		}
 	}
 
