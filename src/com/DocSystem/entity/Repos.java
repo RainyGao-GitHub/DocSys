@@ -3,7 +3,6 @@ package com.DocSystem.entity;
 import com.DocSystem.common.EncryptConfig;
 import com.DocSystem.common.RemoteStorage;
 import com.DocSystem.common.TextSearchConfig;
-import com.DocSystem.websocket.RemoteStorageSession;
 
 public class Repos {    
 	public static final Integer FSM = 1;
@@ -72,7 +71,6 @@ public class Repos {
 	public Long totalSize;
 	public Long freeSize;
 	public RemoteStorage remoteStorageConfig;
-	public RemoteStorageSession remoteStorageSession;
 	public TextSearchConfig textSearchConfig;
 	
 	public Integer encryptType;

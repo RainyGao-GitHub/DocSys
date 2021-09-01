@@ -89,14 +89,12 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 	public void afterCompletion(HttpServletRequest request,
 			HttpServletResponse response, Object handler, Exception ex)
 			throws Exception {
-		// TODO Auto-generated method stub
 		super.afterCompletion(request, response, handler, ex);
 	}
 
 	@Override
 	public void afterConcurrentHandlingStarted(HttpServletRequest request,
 			HttpServletResponse response, Object handler) throws Exception {
-		// TODO Auto-generated method stub
 		super.afterConcurrentHandlingStarted(request, response, handler);
 	}
 
@@ -104,7 +102,6 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 	public void postHandle(HttpServletRequest request,
 			HttpServletResponse response, Object handler,
 			ModelAndView modelAndView) throws Exception {
-		// TODO Auto-generated method stub
 		super.postHandle(request, response, handler, modelAndView);
 	}
 
@@ -138,7 +135,6 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 			}
 		}
 		
-		// TODO Auto-generated method stub
 		response.sendRedirect("tologin.do?option=reload");
 		return false;
 	}

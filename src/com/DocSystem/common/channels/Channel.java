@@ -20,10 +20,6 @@ public interface Channel {
 
     String channelName();
         
-    RemoteStorageSession remoteStorageLogin(Repos repos);
-    
-    boolean remoteStorageLogout(Repos repos);
-    
 	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc);
 
 	Doc remoteStorageGetEntry(Repos repos, Doc doc);
