@@ -5,7 +5,6 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9846,7 +9845,28 @@ public class BaseController  extends BaseFunction{
 			if(config.key == null)
 			{
 				return null;
+			}
+			config.firstBlockSize = json.getInteger("firstBlockSize");
+			if(config.firstBlockSize == null)
+			{
+				config.firstBlockSize = 1024; //default first block size
 			}			
+			config.blockSize = json.getInteger("blockSize");
+			if(config.blockSize == null)
+			{
+				config.blockSize = 0; //default block size
+			}			
+			
+			config.skipSize = json.getInteger("skipSize");
+			if(config.skipSize == null)
+			{
+				config.skipSize = 0;
+			}	
+			config.maxSize = json.getInteger("maxSize");
+			if(config.maxSize == null)
+			{
+				config.maxSize = 50*1024*1024;	//默认最大加密50M
+			}	
 			return config;
 		}
 		return null;
@@ -9855,20 +9875,11 @@ public class BaseController  extends BaseFunction{
 	protected EncryptConfig generateReposEncryptConfig(Repos repos, Integer encryptType) {
 		EncryptConfig config = new EncryptConfig();
 		config.type = encryptType;
-		String key = null;
-		switch(encryptType)
-		{
-		case EncryptConfig.TYPE_XOR:
-			
-		case EncryptConfig.TYPE_DES:
-			key = DES.getKey();
-			break;
-		}
-		if(key == null)
-		{
-			return null;
-		}
-		config.key = key;
+		config.key = DES.getKey();
+		config.firstBlockSize = 1024; 
+		config.blockSize = null;
+		config.maxSize = null;
+		config.skipSize = null;
 		
 		//Save Config
 		String jsonStr = JSON.toJSONString(config);
