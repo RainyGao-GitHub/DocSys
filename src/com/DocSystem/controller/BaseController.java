@@ -495,15 +495,8 @@ public class BaseController  extends BaseFunction{
 			return null;        	
         }
         
-        if(channel.remoteStorageLogin(repos) == null)
-        {
-			Log.println("远程存储登录失败！");
-			return null;    
-        }
-        
         Doc remoteDoc = channel.remoteStorageGetEntry(repos, doc);
-        channel.remoteStorageLogout(repos);
-        
+
         return remoteDoc;
 	}
 
@@ -544,14 +537,7 @@ public class BaseController  extends BaseFunction{
 			return null;
         }
         
-        if(channel.remoteStorageLogin(repos) == null)
-        {
-			Log.println("远程存储登录失败！");
-			return null;
-        }
-        
 		List<Doc> list = channel.remoteStorageGetEntryList(repos, doc);
-        channel.remoteStorageLogout(repos);
         return list;
 	}
 	
@@ -3856,7 +3842,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.println("syncupForDocChange() 远程自动拉取");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null && channel.remoteStorageLogin(repos) != null)
+				if(channel != null)
 		        {	
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
@@ -3866,8 +3852,7 @@ public class BaseController  extends BaseFunction{
 					{
 						channel.remoteStoragePush(repos, doc, login_user,  "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPushForce, true, rt);
 					}					
-					channel.remoteStorageLogout(repos);
-		        }
+				}
 			}
 		}
 		
