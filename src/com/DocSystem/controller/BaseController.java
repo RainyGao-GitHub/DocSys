@@ -360,8 +360,7 @@ public class BaseController  extends BaseFunction{
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
-		//System.out.println("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );
-						
+		System.out.println("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );				
 		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
 	
 		if(docList != null)
