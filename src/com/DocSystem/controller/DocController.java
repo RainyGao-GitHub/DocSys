@@ -1738,7 +1738,7 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			if(repos.encryptType == 0)
+			if(repos.encryptType == null || repos.encryptType == 0)
 			{
 				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 				rt.setData(downloadDoc);
@@ -2612,7 +2612,7 @@ public class DocController extends BaseController{
 		
 		//进行提取文件内容前先进行解密
 		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
-		if(repos.encryptType != 0)
+		if(repos.encryptType != null && repos.encryptType != 0)
 		{
 			String tmpFilePath = userTmpDir + doc.getName();
 			if(FileUtil.copyFile(filePath, tmpFilePath, true) == false)

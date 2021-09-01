@@ -527,7 +527,7 @@ public class ReposController extends BaseController{
 		
 		if(encryptType != null)
 		{			
-			if(encryptType != reposInfo.encryptType)
+			if(reposInfo.encryptType == null || encryptType != reposInfo.encryptType)
 			{
 				setReposEncrypt(reposInfo, encryptType);				
 			}			
