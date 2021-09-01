@@ -190,6 +190,66 @@ public class FileUtil {
 		return ret;
 	}
 	
+	public static boolean saveDataToFile(byte[] buff, String path, String name, long offset, int size) {
+		if(buff == null)
+		{
+			System.out.println("saveDataToFile() buff is null");
+			return false;
+		}
+
+		boolean ret = false;
+		RandomAccessFile in = null;
+		String filePath = path + name;
+		byte[] buffer = null;
+		try 
+		{			
+			File file = new File(filePath);
+			if(!file.exists() || !file.isFile())
+			{
+				System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				return false;
+			}
+
+			long fileSize = file.length();
+			System.out.println("readBufferFromFile fileSize:[" + fileSize + "]");
+			
+			if(offset >= fileSize)
+			{
+				return false;
+			}
+			
+			System.out.println("readBufferFromFile size:[" + size + "]");
+			if(offset + size > fileSize)
+			{
+				size = (int) (fileSize - offset);
+			}
+			System.out.println("readBufferFromFile size:[" + size + "]");
+			if(size  <= 0)
+			{
+				return false;
+			}
+			
+			in = new RandomAccessFile(filePath, "r");
+			buffer = new byte[size];
+			System.arraycopy(buff, 0, buffer, 0, size);
+			in.seek(offset);
+			in.write(buffer);	
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(in != null)
+			{
+				try {
+					in.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}	
+			}
+		}
+		return ret;
+	}
+	
 	public static String readDocContentFromFile(String path, String name) 
 	{	
 		String filePath = path + name;

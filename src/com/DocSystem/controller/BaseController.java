@@ -8163,7 +8163,7 @@ public class BaseController  extends BaseFunction{
 	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 			if(channel != null)
 	        {	
-				channel.encryptFile(repos, localPath + name);
+				channel.encryptFile(repos, localPath, name);
 	        }
 		}
 	}
@@ -8188,7 +8188,7 @@ public class BaseController  extends BaseFunction{
 	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 			if(channel != null)
 	        {	
-				channel.decryptFile(repos, path + name);
+				channel.decryptFile(repos, path, name);
 	        }
 		}
 	}

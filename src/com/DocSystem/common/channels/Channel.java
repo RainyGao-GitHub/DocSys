@@ -35,8 +35,8 @@ public interface Channel {
 	void remoteStoragePush(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
 	
 	//加解密算法实现
-	boolean encryptFile(Repos repos, String filePath);	
-	boolean decryptFile(Repos repos, String filePath);
+	void encryptFile(Repos repos, String path, String name);	
+	void decryptFile(Repos repos, String path, String name);
 	byte [] encryptData(Repos repos, byte data[]);	
 	byte [] decryptData(Repos repos, byte data[]);	
 }
