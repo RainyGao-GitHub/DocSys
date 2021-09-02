@@ -334,6 +334,10 @@ public class ReposController extends BaseController{
 				config = generateReposEncryptConfig(repos, encryptType);
 			}
 		}
+		else
+		{
+			removeReposEncryptConfig(repos);
+		}
 		
 		if(config == null)
 		{

@@ -9814,7 +9814,7 @@ public class BaseController  extends BaseFunction{
 	protected EncryptConfig getReposEncryptConfig(Repos repos) {
 		String path = Path.getReposEncryptConfigPath(repos);
 		String name = Path.getReposEncryptConfigFileName();
-		
+			
 		EncryptConfig config = new EncryptConfig();
 		String jsonStr = FileUtil.readDocContentFromFile(path, name, "UTF-8");
 		if(jsonStr != null && !jsonStr.isEmpty())
@@ -9856,8 +9856,54 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	protected boolean removeReposEncryptConfig(Repos repos)
+	{
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		File file = new File(path, name);
+		if(file.exists() == false)
+		{
+			return true;
+		}
+		
+		return FileUtil.moveFileOrDir(path, name, path, "olde" + name, true);
+	}
+	
+	protected EncryptConfig recoverReposEncryptConfig(Repos repos) 
+	{
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		File file = new File(path, "old" + name);
+		if(file.exists() == false)
+		{
+			return null;
+		}
+		if(FileUtil.moveFileOrDir(path, "old" + name, path, name, true) == false)
+		{
+			return null;
+		}
+		
+		return getReposEncryptConfig(repos);
+	}
+	
 	protected EncryptConfig generateReposEncryptConfig(Repos repos, Integer encryptType) {
-		EncryptConfig config = new EncryptConfig();
+		EncryptConfig config = null;
+		
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		File file = new File(path, name);
+		if(file.exists() == false)
+		{
+			//Try to recover the file
+			config = recoverReposEncryptConfig(repos);
+		}
+		if(config != null)
+		{
+			return config;
+		}
+		
+		//重新生成		
+		config = new EncryptConfig();
 		config.type = encryptType;
 		config.key = DES.getKey();
 		config.firstBlockSize = 1024; 
@@ -9867,8 +9913,6 @@ public class BaseController  extends BaseFunction{
 		
 		//Save Config
 		String jsonStr = JSON.toJSONString(config);
-		String path = Path.getReposEncryptConfigPath(repos);
-		String name = Path.getReposEncryptConfigFileName();
 		if(FileUtil.saveDocContentToFile(jsonStr, path, name, "UTF-8") == false)
     	{
     		System.out.println("generateReposEncryptConfig() 密钥保存失败");
@@ -12235,6 +12279,14 @@ public class BaseController  extends BaseFunction{
 			repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
 			repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 			repos.isBussiness = systemLicenseInfo.hasLicense;
+			//get encrypt Config
+			repos.encryptType = 0;
+			EncryptConfig encryptConfig = reposEncryptHashMap.get(repos.getId());
+			if(encryptConfig != null && encryptConfig.type != null)
+			{
+				repos.encryptType = encryptConfig.type;
+				repos.encryptConfig = encryptConfig;
+			}			
 		}
 		return repos;
 	}

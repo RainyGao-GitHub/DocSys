@@ -72,6 +72,10 @@
 			<div id="RBStextSearchEnablelDiv" style="margin-top:10px">
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="RBSisTextSearchEnabled" value="0"></span></label>
 			</div>
+			
+			<div id="RBSencryptEnablelDiv" style="margin-top:10px">
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="RBSisEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+			</div>
         </div>
         <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
 </div>
@@ -209,6 +213,24 @@
 		}  
 	}
 	
+	function doSetEncryptConfirm()
+	{
+		var en = $("#RBSisEncryptEnabled").is(':checked')? 1: 0;
+		if(en == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'setEncryptConfirm',
+		        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
+		    },function(){
+		    	//确认
+		    	$("#RBSisEncryptEnabled").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#RBSisEncryptEnabled").attr("checked",false);			
+		    });
+		}
+	}
+	
 //显示仓库公开访问权限设置
 var gReposBasicSetting = [];
 function getReposBasicSetting()
@@ -289,7 +311,16 @@ function getReposBasicSetting()
 	   	else
 	   	{
 		   	$("#RBSisTextSearchEnabled").attr("checked","checked");
-	   	}	   	
+	   	}	
+	   	
+	   	if(reposInfo.encryptType == 0)
+	   	{
+		   	$("#RBSisEncryptEnabled").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#RBSisEncryptEnabled").attr("checked","checked");
+	   	}
 	}
 }
 
@@ -342,6 +373,8 @@ function saveReposBasicSetting()
 	newReposSetting.svnUser1 = $("#RBSsvnUser1").val();
 	newReposSetting.svnPwd1 = $("#RBSsvnPwd1").val();
 	newReposSetting.isTextSearchEnabled =  $("#RBSisTextSearchEnabled").is(':checked')? 1: 0;
+	newReposSetting.encryptType =  $("#RBSisEncryptEnabled").is(':checked')? 1: 0;
+	
 	console.log(newReposSetting);
 	
 	if(newReposSetting.isRemote == 0)
@@ -381,6 +414,7 @@ function saveReposBasicSetting()
                     svnUser1 : newReposSetting.svnUser1,
                     svnPwd1 : newReposSetting.svnPwd1,
                     isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
+                    encryptType: encryptType,
                 },
                 success : function (ret) {
                 	if(ret.status == "ok")
@@ -492,6 +526,10 @@ function saveReposBasicSetting()
        			return true;
        		} 
        		if(oldSetting.isTextSearchEnabled != newSetting.isTextSearchEnabled)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.encryptType != newSetting.encryptType)
        		{
        			return true;
        		}

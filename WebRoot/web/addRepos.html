@@ -76,6 +76,9 @@
 			<div name="textSearchEnablelDiv" style="margin-top:10px">
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" name="isTextSearchEnabled" value="0" onclick="doSetTextSearch()"></span></label>
 			</div>
+			<div name="encryptEnablelDiv" style="margin-top:10px">
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+			</div>
         </div>
     </div>
     
@@ -178,6 +181,8 @@
 	    var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
 	    var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
 	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
+	    var encryptType = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+	    
 	    var createTime = new Date().getTime();	//获取时间戳
 	    
 	    //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
@@ -232,6 +237,7 @@
 	                svnPwd1: svnPwd1,
 	                createTime:createTime,
 	                isTextSearchEnabled: isTextSearchEnabled,
+	                encryptType : encryptType,
 	            },
 	            success : function (ret) {
 	            	if(ret.status == "ok")
@@ -423,6 +429,24 @@
 			$("#dialog-new-repos span[name='isRemoteSetting1']").hide();
 			$("#dialog-new-repos div[name='verReposSetting1']").hide();				
 		}     
+	}
+	
+	function doSetEncryptConfirm()
+	{
+		var en = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+		if(en == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'setEncryptConfirm',
+		        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
+		    },function(){
+		    	//确认
+		    	$("#dialog-new-repos input[name='isEncryptEnabled']").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#dialog-new-repos input[name='isEncryptEnabled']").attr("checked",false);			
+		    });
+		}
 	}
 </script>
 
