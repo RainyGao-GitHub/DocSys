@@ -229,7 +229,7 @@ public class FileUtil {
 				return false;
 			}
 			
-			in = new RandomAccessFile(filePath, "r");
+			in = new RandomAccessFile(filePath, "rw");
 			buffer = new byte[size];
 			System.arraycopy(buff, 0, buffer, 0, size);
 			in.seek(offset);
