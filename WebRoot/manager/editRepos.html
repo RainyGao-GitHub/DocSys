@@ -76,6 +76,7 @@
 		newReposSetting.svnUser1 = $("#svnUser1").val();
 		newReposSetting.svnPwd1 = $("#svnPwd1").val();
 		newReposSetting.isTextSearchEnabled =  $("#isTextSearchEnabled").is(':checked')? 1: 0;
+		newReposSetting.encryptType =  $("#isEncryptEnabled").is(':checked')? 1: 0;
 		
 		if(newReposSetting.isRemote == 0)
 		{
@@ -115,6 +116,7 @@
 	                    svnUser1 : newReposSetting.svnUser1,
 	                    svnPwd1 : newReposSetting.svnPwd1,
 	                    isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
+	                    encryptType : newReposSetting.encryptType,
 	                },
 	                success : function (ret) {
 	                	if(ret.status == "ok")
@@ -242,6 +244,12 @@
 	       			console.log("verifyReposSetting isTextSearchEnabled changed");	       			
 	       			return true;
 	       		}
+	       		
+	       		if(oldSetting.encryptType != newSetting.encryptType)
+	       		{
+	       			console.log("verifyReposSetting encryptType changed");	       			
+	       			return true;
+	       		}
 	       		alert("仓库信息未变化！");
 	       		return false;
 	       }  
@@ -300,7 +308,17 @@
 	   	else
 	   	{
 		   	$("#isTextSearchEnabled").attr("checked","checked");
-	   	}	
+	   	}
+	   	
+	   	if(reposInfo.encryptType == 0)
+	   	{
+		   	$("#isEncryptEnabled").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#isEncryptEnabled").attr("checked","checked");
+	   	}
+	   	
 	   	
 	   	doSelectVerCtrl();
 	   	doSelectVerCtrl1();
@@ -444,6 +462,24 @@
 		}     
 	}
 	
+	function doSetEncryptConfirm()
+	{
+		var en = $("#isEncryptEnabled").is(':checked')? 1: 0;
+		if(en == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'setEncryptConfirm',
+		        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
+		    },function(){
+		    	//确认
+		    	$("#isEncryptEnabled").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#isEncryptEnabled").attr("checked",false);			
+		    });
+		}
+	}
+	
 	//页面初始化代码    
     $(function(){
     	console.log("editRepos Page init");
@@ -560,6 +596,13 @@
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0"></span></label>
 		</div>
 	</div>
+	
+	<div class="form-group">
+		<div name="encryptEnablelDiv" style="margin-top:10px;padding-left:30px;">
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+		</div>
+	</div>
+              
                     
     <!-- Buttons -->
     <div class="form-group">
