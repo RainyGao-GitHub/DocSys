@@ -8523,7 +8523,8 @@ public class BaseController  extends BaseFunction{
 		byte [] buff = null;
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
-			buff = FileUtil.getBytes(doc.getContent(), doc.getLocalRootPath() + doc.getPath() + doc.getName());
+			String charset = FileUtil.getCharset(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+			buff = FileUtil.getBytes(doc.getContent(), charset);
 		}
 		else
 		{
@@ -8533,12 +8534,14 @@ public class BaseController  extends BaseFunction{
 		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 	
+	//更新加密文件的内容
 	protected boolean saveRealDocContentEx(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		byte [] buff = null;
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
-			buff = FileUtil.getBytes(doc.getContent(), doc.getLocalRootPath() + doc.getPath() + doc.getName());
+			String charset = getEncryptFileCharset(repos, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			buff = FileUtil.getBytes(doc.getContent(), charset);
 		}
 		else
 		{
@@ -8556,7 +8559,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
-			return FileUtil.getString(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
+			String charset = FileUtil.getCharset(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+			return FileUtil.getString(buff, charset);
 		}
 		return FileUtil.getString(buff, doc.getCharset());
 	}
@@ -8564,15 +8568,22 @@ public class BaseController  extends BaseFunction{
 	protected String readRealDocContentEx(Repos repos, Doc doc) 
 	{
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
-		buff = decryptData(repos, buff);
+		decryptData(repos, buff);
 		
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
-			return FileUtil.getString(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName()); //自动检测编码
+			String charset = getEncryptFileCharset(repos, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return FileUtil.getString(buff, charset);
 		}
 		return FileUtil.getString(buff, doc.getCharset());
 	}
 	
+	private String getEncryptFileCharset(Repos repos, String path, String name) {
+		byte[] buff = FileUtil.readBufferFromFile(path, name, (long)0, 20*1024);	//最大只读取20M的内容用于确定字符集
+		decryptData(repos, buff);
+		return FileUtil.getCharset(buff);
+	}
+
 	//读取文件部分数据无法解密
 	protected String readRealDocContent(Repos repos, Doc doc, int offset, int size) 
 	{
@@ -12285,7 +12296,6 @@ public class BaseController  extends BaseFunction{
 			if(encryptConfig != null && encryptConfig.type != null)
 			{
 				repos.encryptType = encryptConfig.type;
-				repos.encryptConfig = encryptConfig;
 			}			
 		}
 		return repos;
