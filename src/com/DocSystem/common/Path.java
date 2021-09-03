@@ -219,6 +219,13 @@ public class Path {
 		return tmpDir;
 	}
 	
+	//加解密临时目录，用完不删除
+	public static String getReposUserTmpPathForEncrypt(Repos repos, User accessUser, Doc doc) {
+		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/encrypt/" + accessUser.getId() + "/" + doc.getDocId() + "_" + doc.getName() + "/";
+		FileUtil.createDir(tmpDir);
+		return tmpDir;
+	}
+	
 	//根据路径来获取上层路径 
 	protected static String getParentPath(String path) {
 		if(path == null || path.length() < 2)
