@@ -4866,7 +4866,7 @@ public class DocController extends BaseController{
 		{
 			String docEncryptPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
 			File rootFile = new File(rootDoc.getLocalRootPath() + rootDoc.getPath(), rootDoc.getName());
-			String tmpLocalRootPath = docEncryptPath + "/" + rootFile.lastModified() + "/";
+			String tmpLocalRootPath = docEncryptPath + rootFile.lastModified() + "/";
 			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + docName) == false)
 			{
 				FileUtil.clearDir(docEncryptPath);	//删除旧的临时文件
@@ -4925,7 +4925,7 @@ public class DocController extends BaseController{
 		{
 			String docEncryptPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
 			File rootFile = new File(rootDoc.getLocalRootPath() + rootDoc.getPath(), rootDoc.getName());
-			String tmpLocalRootPath = docEncryptPath + "/" + rootFile.lastModified() + "/";
+			String tmpLocalRootPath = docEncryptPath + rootFile.lastModified() + "/";
 			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + docName) == false)
 			{
 				FileUtil.clearDir(docEncryptPath);	//删除旧的临时文件
