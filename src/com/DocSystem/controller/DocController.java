@@ -4870,6 +4870,7 @@ public class DocController extends BaseController{
 			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + docName) == false)
 			{
 				FileUtil.clearDir(docEncryptPath);	//删除旧的临时文件
+				FileUtil.createDir(tmpLocalRootPath);
 				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath + docName, true);
 				decryptFile(repos, tmpLocalRootPath + docPath, docName);
 			}
@@ -4929,6 +4930,7 @@ public class DocController extends BaseController{
 			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + docName) == false)
 			{
 				FileUtil.clearDir(docEncryptPath);	//删除旧的临时文件
+				FileUtil.createDir(tmpLocalRootPath);
 				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath + docName, true);
 				decryptFile(repos, tmpLocalRootPath + docPath, docName);
 			}
