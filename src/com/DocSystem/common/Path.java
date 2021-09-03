@@ -1,6 +1,7 @@
 package com.DocSystem.common;
 
 import java.io.File;
+import java.util.Date;
 
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
@@ -208,6 +209,14 @@ public class Path {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/upload/" + login_user.getId() + "/";
 		FileUtil.createDir(userTmpDir);
 		return userTmpDir;
+	}
+	
+	//加解密临时目录，用完删除
+	public static String getReposTmpPathForEncrypt(Repos repos) {
+		long curTime = new Date().getTime();
+		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/encrypt/" + curTime + "/";
+		FileUtil.createDir(tmpDir);
+		return tmpDir;
 	}
 	
 	//根据路径来获取上层路径 
