@@ -8534,7 +8534,7 @@ public class BaseController  extends BaseFunction{
 		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 	
-	//更新加密文件的内容
+	//支持加密文件的内容保存
 	protected boolean saveRealDocContentEx(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		byte [] buff = null;
@@ -8565,6 +8565,7 @@ public class BaseController  extends BaseFunction{
 		return FileUtil.getString(buff, doc.getCharset());
 	}
 	
+	//支持加密文件的内容读取
 	protected String readRealDocContentEx(Repos repos, Doc doc) 
 	{
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
