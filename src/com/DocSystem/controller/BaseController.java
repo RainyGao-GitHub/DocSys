@@ -9842,26 +9842,28 @@ public class BaseController  extends BaseFunction{
 			{
 				return null;
 			}
-			config.firstBlockSize = json.getInteger("firstBlockSize");
-			if(config.firstBlockSize == null)
+			
+			Integer firstBlockSize = json.getInteger("firstBlockSize");
+			if(firstBlockSize != null)
 			{
-				config.firstBlockSize = 1024; //default first block size
-			}			
-			config.blockSize = json.getInteger("blockSize");
-			if(config.blockSize == null)
+				config.firstBlockSize = firstBlockSize;
+			}		
+			
+			Integer blockSize = json.getInteger("blockSize");
+			if(blockSize != null)
 			{
-				config.blockSize = 0; //default block size
+				config.blockSize = blockSize; //default block size
 			}			
 			
-			config.skipSize = json.getInteger("skipSize");
-			if(config.skipSize == null)
+			Integer skipSize = json.getInteger("skipSize");
+			if(skipSize != null)
 			{
-				config.skipSize = 0;
+				config.skipSize = skipSize;
 			}	
-			config.maxSize = json.getInteger("maxSize");
-			if(config.maxSize == null)
+			Integer maxSize = json.getInteger("maxSize");
+			if(maxSize != null)
 			{
-				config.maxSize = 50*1024*1024;	//默认最大加密50M
+				config.maxSize = maxSize;	//默认最大加密100M
 			}	
 			return config;
 		}
@@ -9918,10 +9920,10 @@ public class BaseController  extends BaseFunction{
 		config = new EncryptConfig();
 		config.type = encryptType;
 		config.key = DES.getKey();
-		config.firstBlockSize = 1024; 
-		config.blockSize = null;
-		config.maxSize = null;
-		config.skipSize = null;
+		//config.firstBlockSize = 1024; 
+		//config.blockSize = 1024;
+		//config.maxSize = 100*1024*1024;
+		//config.skipSize = 4096;
 		
 		//Save Config
 		String jsonStr = JSON.toJSONString(config);
