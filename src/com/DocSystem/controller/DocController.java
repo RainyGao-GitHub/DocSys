@@ -63,6 +63,7 @@ import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.EncryptConfig;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
@@ -1650,7 +1651,6 @@ public class DocController extends BaseController{
 				
 		if(dbDoc.getType() == 1)
 		{
-			decryptFile(repos, targetPath, targetName);
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
@@ -1663,19 +1663,6 @@ public class DocController extends BaseController{
 			{
 				Log.docSysErrorLog("空目录无法下载！", rt);
 				return;				
-			}
-				
-			//doCompressDir and save the zip File under userTmpDir
-			targetName = doc.getName() + ".zip";
-			if(doc.getDocId() == 0)
-			{
-				targetName = repos.getName() + ".zip";
-			}
-			
-			if(doCompressDir(targetPath, doc.getName(), targetPath, targetName, rt) == false)
-			{
-				rt.setError("压缩远程目录失败！");
-				return;
 			}
 					
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
@@ -1738,52 +1725,20 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			if(repos.encryptType == null || repos.encryptType == 0)
-			{
-				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
-				rt.setData(downloadDoc);
-				rt.setMsgData(0);	//下载完成后不能删除下载的文件
-				Log.docSysDebugLog("本地文件: 原始路径下载", rt);
-			}
-			else
-			{
-				targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
-				if(FileUtil.copyFile(doc.getLocalRootPath() + doc.getPath() + doc.getName(), targetPath + doc.getName(), true) == false)
-				{
-					Log.println("downloadDocPrepare_FSM() 文件解密：创建临时文件失败");
-					Log.docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "解密失败！", rt);
-					return;
-				}
-				decryptFile(repos, targetPath, doc.getName());
-				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
-				rt.setData(downloadDoc);
-				rt.setMsgData(1);
-				Log.docSysDebugLog("本地文件: 解密后下载", rt);
-			}
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+			rt.setData(downloadDoc);
+			rt.setMsgData(0);	//下载完成后不能删除下载的文件
+			Log.docSysDebugLog("本地文件: 原始路径下载", rt);
 			return;
 		}
 
 		targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
 		if(localEntry.getType() == 2)
 		{	
-			//TODO: 如果是加密文件需要先解密再下载
 			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
 			{
 				Log.docSysErrorLog("空目录无法下载！", rt);
 				return;				
-			}
-			
-			//doCompressDir and save the zip File under userTmpDir
-			targetName = doc.getName() + ".zip";	
-			if(doc.getDocId() == 0)
-			{
-				targetName = repos.getName() + ".zip";
-			}
-
-			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), doc.getName(), targetPath, targetName, rt) == false)
-			{
-				Log.docSysErrorLog("压缩本地目录失败！", rt);
-				return;
 			}
 			
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
@@ -1821,7 +1776,6 @@ public class DocController extends BaseController{
 				
 			if(remoteEntry.getType() == 1)
 			{
-				decryptFile(repos, targetPath, targetName);
 				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
 				rt.setData(downloadDoc);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
@@ -1833,14 +1787,6 @@ public class DocController extends BaseController{
 			{
 				Log.docSysErrorLog("空目录无法下载！", rt);
 				return;				
-			}
-			
-			//doCompressDir and save the zip File under userTmpDir
-			targetName = doc.getName() + ".zip";		
-			if(doCompressDir(targetPath, doc.getName(), targetPath, targetName, rt) == false)
-			{
-				rt.setError("压缩远程目录失败！");
-				return;
 			}
 				
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
@@ -1897,7 +1843,7 @@ public class DocController extends BaseController{
 	
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc.do")
-	public void downloadDoc(String reposPath, String targetPath, String targetName, 
+	public void downloadDoc(Integer vid, String reposPath, String targetPath, String targetName, 
 			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
 			Integer shareId,
 			String authCode,
@@ -1957,8 +1903,40 @@ public class DocController extends BaseController{
 	
 		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
-		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
-		
+		if(vid == null )
+		{
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+		}
+		else
+		{
+			Repos repos = getReposEx(vid);
+			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
+			{
+				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			}
+			else
+			{
+				if(deleteFlag != null && deleteFlag == 1)	//临时文件和目录可以直接加密
+				{
+					decryptFileOrDir(repos, targetPath, targetName);					
+					sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+				}
+				else
+				{
+					String tmpTargetPath = Path.getReposTmpPathForEncrypt(repos);
+					String tmpTargetName = targetName;
+					if(tmpTargetName == null || tmpTargetName.isEmpty())
+					{
+						tmpTargetName = repos.getName(); //用仓库名作为下载名字
+					}
+					FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
+					decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
+					sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
+					//tmpDirForDecrypt need to delete
+					FileUtil.delDir(tmpTargetPath);
+				}
+			}
+		}
 		Doc doc = new Doc();
 		doc.setPath(targetPath);
 		doc.setName(targetName);
@@ -1972,7 +1950,7 @@ public class DocController extends BaseController{
 	
 	/**************** download Doc Without LoginCheck ******************/
 	@RequestMapping("/downloadDocEx.do")
-	public void downloadDocEx(String reposPath, String targetPath, String targetName, 
+	public void downloadDocEx(Integer vid, String reposPath, String targetPath, String targetName, 
 			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
 			Integer shareId,
 			String authCode,
@@ -2009,7 +1987,40 @@ public class DocController extends BaseController{
 	
 		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
-		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+		if(vid == null )
+		{
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+		}
+		else
+		{
+			Repos repos = getReposEx(vid);
+			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
+			{
+				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			}
+			else
+			{
+				if(deleteFlag != null && deleteFlag == 1)	//临时文件和目录可以直接加密
+				{
+					decryptFileOrDir(repos, targetPath, targetName);					
+					sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+				}
+				else
+				{
+					String tmpTargetPath = Path.getReposTmpPathForEncrypt(repos);
+					String tmpTargetName = targetName;
+					if(tmpTargetName == null || tmpTargetName.isEmpty())
+					{
+						tmpTargetName = repos.getName(); //用仓库名作为下载名字
+					}
+					FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
+					decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
+					sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
+					//tmpDirForDecrypt need to delete
+					FileUtil.delDir(tmpTargetPath);
+				}
+			}
+		}
 		
 		if(deleteFlag != null && deleteFlag == 1)
 		{
@@ -2083,7 +2094,32 @@ public class DocController extends BaseController{
 		}
 	
 		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
-		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, disposition);
+		if(vid == null )
+		{
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+		}
+		else
+		{
+			Repos repos = getReposEx(vid);
+			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
+			{
+				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			}
+			else
+			{
+				String tmpTargetPath = Path.getReposTmpPathForEncrypt(repos);
+				String tmpTargetName = targetName;
+				if(tmpTargetName == null || tmpTargetName.isEmpty())
+				{
+					tmpTargetName = repos.getName(); //用仓库名作为下载名字
+				}
+				FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
+				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
+				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
+				//tmpDirForDecrypt need to delete
+				FileUtil.delDir(tmpTargetPath);
+			}
+		}
 		
 		Doc doc = new Doc();
 		doc.setPath(targetPath);
@@ -2935,6 +2971,7 @@ public class DocController extends BaseController{
 			}
 			
 			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
+			tmpDoc.setShareId(shareId);
 		}
 		
 		String authCode = addDocDownloadAuthCode();
