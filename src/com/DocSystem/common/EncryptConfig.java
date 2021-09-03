@@ -5,8 +5,8 @@ public class EncryptConfig {
 	public final static int TYPE_DES = 2;	
 	public Integer type;
 	public String key;
-	public Integer firstBlockSize;
-	public Integer blockSize;
-	public Integer skipSize;
-	public Integer maxSize;
+	public Integer firstBlockSize = 1024;
+	public Integer blockSize = 1024;
+	public Integer skipSize = 4096;
+	public Integer maxSize = 100*1024*1024; //100M
 }
