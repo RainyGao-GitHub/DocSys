@@ -3,7 +3,6 @@ package com.DocSystem.common;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -20,8 +19,6 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.DocSystem.entity.Repos;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
@@ -58,22 +55,6 @@ public class FileUtil {
 		return buff;
 	}
 	
-	//convert string to buffer with charset of file
-	public static byte[] getBytes(String content, String path, String name) {
-		if(content == null)
-		{
-			return null;
-		}
-
-		String encode = getCharset(path + name);
-		if(encode == null)
-		{
-			encode = "UTF-8";
-		}
-		
-		return getBytes(content, encode);
-	}
-	
 	public static String getString(byte [] buffer, String charset) {
 		if(buffer == null)
 		{
@@ -94,21 +75,6 @@ public class FileUtil {
 			}
 		}
 		return content;		
-	}
-	
-	public static String getString(byte [] buffer, String path, String name) {
-		if(buffer == null)
-		{
-			return null;
-		}
-
-		String encode = getCharset(path + name);
-		if(encode == null)
-		{
-			encode = "UTF-8";
-		}
-		
-		return getString(buffer, encode);
 	}
 	
 	
@@ -367,33 +333,6 @@ public class FileUtil {
 		return getString(buffer, encode);			
 	}
 	
-    private static String getEncodeOfBuffer(byte[] buffer, int size) {
-		// TODO Auto-generated method stub
-		int encodeDetectBufLen = 0;
-		byte [] encodeDetectBuf = null;
-
-		if(size < 2)
-		{
-			return null;
-		}
-		
-		if(size < 600)
-		{
-			encodeDetectBufLen = size;
-			encodeDetectBuf = new byte[encodeDetectBufLen];
-		}
-		else
-		{
-			encodeDetectBufLen = 600;
-			encodeDetectBuf = new byte[encodeDetectBufLen];
-		}
-		System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
-		String encode = getEncoding(encodeDetectBuf);
-		System.out.println("getEncodeOfBuffer encode:[" + encode + "]");	
-
-		return encode;
-	}
-
 	public static boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
         File srcFile=new File(srcFilePath);
         if(srcFile.exists() == false)
@@ -1379,7 +1318,7 @@ public class FileUtil {
 		return null;
     }
 	
-	//This interface was supplied by 寞寞柒柒
+	//get charset by file content
 	public static String getCharset(String path) {
 		File file = new File(path);
 		if(file.exists() == false)
@@ -1444,6 +1383,101 @@ public class FileUtil {
 		}
 		System.out.println("getCharset() charset:" + charset);
 		return charset;
+	}
+	
+	//get charset by buff
+	public static String getCharset(byte[] buff) {
+		String charset = "GBK";
+		int buffSize = buff.length;
+		if(buffSize <= 0)
+		{
+			return charset;
+		}
+		
+		try {
+			boolean checked = false;			
+			if (buffSize >= 2 && buff[0] == (byte) 0xFF && buff[1] == (byte) 0xFE) {
+				charset = "UTF-16LE"; // 文件编码为 Unicode
+				checked = true;
+			} else if (buffSize >=2 && buff[0] == (byte) 0xFE && buff[1] == (byte) 0xFF) {
+				charset = "UTF-16BE"; // 文件编码为 Unicode big endian
+				checked = true;
+			} else if (buffSize >= 3 && buff[0] == (byte) 0xEF && buff[1] == (byte) 0xBB && buff[2] == (byte) 0xBF) {
+				charset = "UTF-8"; // 文件编码为 UTF-8
+				checked = true;
+			}
+			
+			if (!checked) {
+				int index = 0;
+				while (index < buffSize) {
+					byte read = readByte(buff, buffSize, index++);
+					if (read >= 0xF0)
+						break;
+					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
+						break;
+					if (0xC0 <= read && read <= 0xDF) {
+						read = readByte(buff, buffSize, index++);
+						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
+							// (0x80 - 0xBF),也可能在GB编码内
+							continue;
+						else
+							break;
+					} else if (0xE0 <= read && read <= 0xEF) { // 也有可能出错，但是几率较小
+						read = readByte(buff, buffSize, index++);
+						if (0x80 <= read && read <= 0xBF) {
+							read = buff[index++];
+							if (0x80 <= read && read <= 0xBF) {
+								charset = "UTF-8";
+								break;
+							} else
+								break;
+						} else
+							break;
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			charset = null;
+		}
+		System.out.println("getCharset() charset:" + charset);
+		return charset;		
+	}
+	
+	private static byte readByte(byte [] buff, int buffSize, int index)
+	{
+		if(index < buffSize)
+		{
+			return buff[index];
+		}
+		return -1;
+	}
+	
+    private static String getEncodeOfBuffer(byte[] buffer, int size) {
+		// TODO Auto-generated method stub
+		int encodeDetectBufLen = 0;
+		byte [] encodeDetectBuf = null;
+
+		if(size < 2)
+		{
+			return null;
+		}
+		
+		if(size < 600)
+		{
+			encodeDetectBufLen = size;
+			encodeDetectBuf = new byte[encodeDetectBufLen];
+		}
+		else
+		{
+			encodeDetectBufLen = 600;
+			encodeDetectBuf = new byte[encodeDetectBufLen];
+		}
+		System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
+		String encode = getEncoding(encodeDetectBuf);
+		System.out.println("getEncodeOfBuffer encode:[" + encode + "]");	
+
+		return encode;
 	}
 	
 	/**
