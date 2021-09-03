@@ -8179,6 +8179,59 @@ public class BaseController  extends BaseFunction{
 		return data;
 	}
 
+	protected void decryptFileOrDir(Repos repos, String path, String name) {
+		Channel channel = null;
+		if(repos.encryptType == null || repos.encryptType != 0)
+		{
+			return;
+		}
+	    channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {	
+				return;
+		}
+		
+		if(name == null || name.isEmpty())
+		{
+			decryptDir(channel, repos, path);	
+			return;
+		}
+	
+		File file = new File(path, name);
+		if(file.isFile())
+		{
+			decryptFile(channel, repos, path, name);
+		}
+		else
+		{
+			decryptDir(channel, repos, path + name + "/");
+		}
+	}
+
+	private void decryptDir(Channel channel, Repos repos, String dirPath) {
+		File dir = new File(dirPath);
+		File[] list = dir.listFiles();
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				if(subFile.isFile())
+				{
+					decryptFile(channel, repos, dirPath, subFile.getName());
+				}
+				else
+				{
+					decryptDir(channel, repos, dirPath + subFile.getName() + "/");
+				}
+			}
+		}
+	}
+
+	//文件解密
+	protected void decryptFile(Channel channel, Repos repos, String path, String name) {
+		channel.decryptFile(repos, path, name);
+	}
 	
 	//文件解密
 	protected void decryptFile(Repos repos, String path, String name) {
