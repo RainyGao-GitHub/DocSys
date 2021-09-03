@@ -4842,7 +4842,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Get Repos
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -4860,13 +4860,112 @@ public class DocController extends BaseController{
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
 		docList.add(rootDoc);
 		
+		//decrypt file
+		Doc tempRootDoc = rootDoc;
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			String tmpLocalRootPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
+			String tmpDocName = docName + rootDoc.getLatestEditTime();
+			if(FileUtil.isFileExist(tmpLocalRootPath + tmpDocName) == false)
+			{
+				FileUtil.clearDir(tmpLocalRootPath);	//删除旧的临时文件
+				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath + tmpDocName, true);
+				decryptFile(repos, tmpLocalRootPath, tmpDocName);
+			}
+			tempRootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, tmpDocName, null, 1, true, tmpLocalRootPath, localVRootPath, null, null);
+		}
+		
 		List <Doc> subDocList = null;
-		subDocList = getZipSubDocList(repos, rootDoc, docPath, docName, rt);
+		subDocList = getZipSubDocList(repos, tempRootDoc, tempRootDoc.getPath(), tempRootDoc.getName(), rt);
 		if(subDocList != null)
 		{
 			docList.addAll(subDocList);
 		}	
 		rt.setData(docList);	
+		writeJson(rt, response);
+	}
+	
+	/****************   get Zip SubDocList ******************/
+	@RequestMapping("/getZipSubDocList.do")
+	public void getZipSubDocList(Integer reposId, String docPath, String docName, //zip File Info
+			String path, String name,	//relative path in zipFile
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{		
+		Log.println("\n ******* getZipSubDocList ******");
+		Log.println("getZipSubDocList reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, docPath, docName, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		//Get Repos
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
+
+		//decrypt file
+		Doc tempRootDoc = rootDoc;
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			String tmpLocalRootPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
+			String tmpRootDocName = docName + rootDoc.getLatestEditTime();
+			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + tmpRootDocName) == false)
+			{
+				FileUtil.clearDir(tmpLocalRootPath);	//删除旧的临时文件
+				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath +tmpRootDocName, true);
+				decryptFile(repos, tmpLocalRootPath + docPath, tmpRootDocName);
+			}
+			tempRootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, tmpRootDocName, null, 1, true, tmpLocalRootPath, localVRootPath, null, null);
+		}
+		
+		List <Doc> subDocList = null;
+		if(FileUtil.isCompressFile(name) == false)
+		{
+			String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
+			Log.println("getZipSubDocList relativePath: " + relativePath);
+			subDocList = getZipSubDocList(repos, tempRootDoc, tempRootDoc.getPath(), tempRootDoc.getName(), rt);
+		}
+		else
+		{
+			//Build ZipDoc Info
+			Doc zipDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, null, null, null, null);
+			if(zipDoc.getDocId().equals(rootDoc.getDocId()))
+			{
+				zipDoc = tempRootDoc;
+			}
+			else
+			{
+				//检查zipDoc是否已存在并解压（如果是rootDoc不需要解压，否则需要解压）
+				String tmpLocalRootPath = Path.getReposTmpPathForDoc(repos, zipDoc);	
+				zipDoc.setLocalRootPath(tmpLocalRootPath);
+				checkAndExtractEntryFromCompressDoc(repos, tempRootDoc, zipDoc);
+			}	
+			subDocList = getZipSubDocList(repos, zipDoc, path, name, rt);
+		}	
+		
+		if(subDocList == null)
+		{
+			rt.setData("");
+		}
+		else
+		{
+			rt.setData(subDocList);	
+		}
 		writeJson(rt, response);
 	}
 
@@ -5611,73 +5710,5 @@ public class DocController extends BaseController{
         }
         return -1;
     }
-
-	/****************   get Zip SubDocList ******************/
-	@RequestMapping("/getZipSubDocList.do")
-	public void getZipSubDocList(Integer reposId, String docPath, String docName, //zip File Info
-			String path, String name,	//relative path in zipFile
-			Integer shareId,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{		
-		Log.println("getZipSubDocList reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
-		
-		ReturnAjax rt = new ReturnAjax();
-		
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, docPath, docName, false, rt);
-		if(reposAccess == null)
-		{
-			writeJson(rt, response);			
-			return;	
-		}
-		
-		//Get Repos
-		Repos repos = getRepos(reposId);
-		if(repos == null)
-		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
-		
-		List <Doc> subDocList = null;
-		if(FileUtil.isCompressFile(name) == false)
-		{
-			String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
-			Log.println("getZipSubDocList relativePath: " + relativePath);
-			subDocList = getZipSubDocList(repos, rootDoc, path, name, rt);
-		}
-		else
-		{
-			//Build ZipDoc Info
-			Doc zipDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, null, null, null, null);
-			if(zipDoc.getDocId().equals(rootDoc.getDocId()))
-			{
-				zipDoc = rootDoc;
-			}
-			else
-			{
-				//检查zipDoc是否已存在并解压（如果是rootDoc不需要解压，否则需要解压）
-				String tmpLocalRootPath = Path.getReposTmpPathForDoc(repos, zipDoc);	
-				zipDoc.setLocalRootPath(tmpLocalRootPath);
-				checkAndExtractEntryFromCompressDoc(repos, rootDoc, zipDoc);
-			}	
-			subDocList = getZipSubDocList(repos, zipDoc, path, name, rt);
-		}	
-		
-		if(subDocList == null)
-		{
-			rt.setData("");
-		}
-		else
-		{
-			rt.setData(subDocList);	
-		}
-		writeJson(rt, response);
-	}
 }
 	
