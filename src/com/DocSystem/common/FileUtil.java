@@ -177,19 +177,19 @@ public class FileUtil {
 			}
 
 			long fileSize = file.length();
-			System.out.println("readBufferFromFile fileSize:[" + fileSize + "]");
+			//System.out.println("readBufferFromFile fileSize:[" + fileSize + "]");
 			
 			if(offset >= fileSize)
 			{
 				return false;
 			}
 			
-			System.out.println("readBufferFromFile size:[" + size + "]");
+			//System.out.println("readBufferFromFile size:[" + size + "]");
 			if(offset + size > fileSize)
 			{
 				size = (int) (fileSize - offset);
 			}
-			System.out.println("readBufferFromFile size:[" + size + "]");
+			//System.out.println("readBufferFromFile size:[" + size + "]");
 			if(size  <= 0)
 			{
 				return false;
