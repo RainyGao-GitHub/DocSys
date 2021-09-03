@@ -1849,7 +1849,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("\n************** downloadDoc ****************");
+		Log.println("\n************** downloadDoc.do ****************");
 		Log.println("downloadDoc  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1985,7 +1985,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
+		Log.println("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);
 		
 		if(vid == null )
 		{
@@ -2117,7 +2117,7 @@ public class DocController extends BaseController{
 				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
 				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
 				//tmpDirForDecrypt need to delete
-				FileUtil.delDir(tmpTargetPath);
+				//FileUtil.delDir(tmpTargetPath);
 			}
 		}
 		
