@@ -2117,7 +2117,7 @@ public class DocController extends BaseController{
 				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
 				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
 				//tmpDirForDecrypt need to delete
-				//FileUtil.delDir(tmpTargetPath);
+				FileUtil.delDir(tmpTargetPath);
 			}
 		}
 		
