@@ -8134,11 +8134,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error");
 				return false;
-			}
-			
-			//文件加密（不能改变文件大小）
-			encryptFile(repos, localDocParentPath, name);
-			
+			}			
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
 			Log.docSysDebugLog(e.toString(), rt);
@@ -8152,6 +8148,8 @@ public class BaseController  extends BaseFunction{
 			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" Failed！");
 			return false;
 		}
+		
+		encryptFile(repos, localDocParentPath, name);
 		return true;
 	}
 	
@@ -8178,10 +8176,34 @@ public class BaseController  extends BaseFunction{
 		}
 		return data;
 	}
+	
+	//文件解密
+	protected void decryptFile(Repos repos, String path, String name) {
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+			if(channel != null)
+	        {	
+				channel.decryptFile(repos, path, name);
+	        }
+		}
+	}
+
+	private byte[] decryptData(Repos repos, byte [] data) {
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+			if(channel != null)
+	        {	
+				return channel.decryptData(repos, data);
+	        }
+		}
+		return data;
+	}
 
 	protected void decryptFileOrDir(Repos repos, String path, String name) {
 		Channel channel = null;
-		if(repos.encryptType == null || repos.encryptType != 0)
+		if(repos.encryptType == null || repos.encryptType == 0)
 		{
 			return;
 		}
@@ -8231,30 +8253,6 @@ public class BaseController  extends BaseFunction{
 	//文件解密
 	protected void decryptFile(Channel channel, Repos repos, String path, String name) {
 		channel.decryptFile(repos, path, name);
-	}
-	
-	//文件解密
-	protected void decryptFile(Repos repos, String path, String name) {
-		if(repos.encryptType != null && repos.encryptType != 0)
-		{
-	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-			if(channel != null)
-	        {	
-				channel.decryptFile(repos, path, name);
-	        }
-		}
-	}
-
-	private byte[] decryptData(Repos repos, byte [] data) {
-		if(repos.encryptType != null && repos.encryptType != 0)
-		{
-	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-			if(channel != null)
-	        {	
-				return channel.decryptData(repos, data);
-	        }
-		}
-		return data;
 	}
 
 	//Function: updateRealDoc
@@ -8321,9 +8319,7 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
-			}
-
-			
+			}			
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
 			Log.docSysDebugLog(e.toString(), rt);
@@ -8337,6 +8333,8 @@ public class BaseController  extends BaseFunction{
 			System.out.println("updateRealDoc() FileUtil.saveFile " + name +" Failed！");
 			return false;
 		}
+		
+		encryptFile(repos, localDocParentPath, name);
 		return true;
 	}
 	
@@ -8626,7 +8624,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
-			String charset = getEncryptFileCharset(repos, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			String charset = FileUtil.getCharset(buff);
 			return FileUtil.getString(buff, charset);
 		}
 		return FileUtil.getString(buff, doc.getCharset());
