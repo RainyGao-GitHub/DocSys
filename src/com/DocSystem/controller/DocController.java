@@ -4864,15 +4864,16 @@ public class DocController extends BaseController{
 		Doc tempRootDoc = rootDoc;
 		if(repos.encryptType != null && repos.encryptType != 0)
 		{
-			String tmpLocalRootPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
-			String tmpDocName = docName + rootDoc.getLatestEditTime();
-			if(FileUtil.isFileExist(tmpLocalRootPath + tmpDocName) == false)
+			String docEncryptPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
+			File rootFile = new File(rootDoc.getLocalRootPath() + rootDoc.getPath(), rootDoc.getName());
+			String tmpLocalRootPath = docEncryptPath + "/" + rootFile.lastModified() + "/";
+			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + docName) == false)
 			{
-				FileUtil.clearDir(tmpLocalRootPath);	//删除旧的临时文件
-				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath + tmpDocName, true);
-				decryptFile(repos, tmpLocalRootPath, tmpDocName);
+				FileUtil.clearDir(docEncryptPath);	//删除旧的临时文件
+				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath + docName, true);
+				decryptFile(repos, tmpLocalRootPath + docPath, docName);
 			}
-			tempRootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, tmpDocName, null, 1, true, tmpLocalRootPath, localVRootPath, null, null);
+			tempRootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 1, true, tmpLocalRootPath, localVRootPath, null, null);
 		}
 		
 		List <Doc> subDocList = null;
@@ -4922,15 +4923,16 @@ public class DocController extends BaseController{
 		Doc tempRootDoc = rootDoc;
 		if(repos.encryptType != null && repos.encryptType != 0)
 		{
-			String tmpLocalRootPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
-			String tmpRootDocName = docName + rootDoc.getLatestEditTime();
-			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + tmpRootDocName) == false)
+			String docEncryptPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
+			File rootFile = new File(rootDoc.getLocalRootPath() + rootDoc.getPath(), rootDoc.getName());
+			String tmpLocalRootPath = docEncryptPath + "/" + rootFile.lastModified() + "/";
+			if(FileUtil.isFileExist(tmpLocalRootPath + docPath + docName) == false)
 			{
-				FileUtil.clearDir(tmpLocalRootPath);	//删除旧的临时文件
-				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath +tmpRootDocName, true);
-				decryptFile(repos, tmpLocalRootPath + docPath, tmpRootDocName);
+				FileUtil.clearDir(docEncryptPath);	//删除旧的临时文件
+				FileUtil.copyFile(localRootPath + docPath + docName, tmpLocalRootPath + docPath + docName, true);
+				decryptFile(repos, tmpLocalRootPath + docPath, docName);
 			}
-			tempRootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, tmpRootDocName, null, 1, true, tmpLocalRootPath, localVRootPath, null, null);
+			tempRootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 1, true, tmpLocalRootPath, localVRootPath, null, null);
 		}
 		
 		List <Doc> subDocList = null;
