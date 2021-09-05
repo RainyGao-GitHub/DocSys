@@ -627,6 +627,15 @@ function buildDocDownloadLink(downloadDocInfo, urlStyle)
    		{
    			docRestLink += "/0";
    		}
+   		if(downloadDocInfo.encryptEn)
+   		{
+   			docRestLink +=  "/"  + downloadDocInfo.encryptEnd;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";   			
+   		}
+   		
    		return docRestLink;
    	}
    	
@@ -643,6 +652,11 @@ function buildDocDownloadLink(downloadDocInfo, urlStyle)
 	{
 		docLink += "&deleteFlag="+ downloadDocInfo.deleteFlag;	
 	}
+	if(downloadDocInfo.encryptEn)
+	{
+		docLink += "&encryptEn="+ downloadDocInfo.encryptEn;	
+	}
+	
 	return docLink;
 }
 
