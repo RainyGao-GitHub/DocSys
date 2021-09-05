@@ -82,6 +82,9 @@ public class Doc  implements Comparable<Doc>{
     //文件本地信息
     public String targetPath;
     public String targetName;
+
+    //用于标记当前doc是否已加密	
+	public Integer encryptEn;
     
     public Integer getId() {
         return id;
