@@ -1953,7 +1953,7 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
-	protected Doc buildDownloadDocInfo(Integer vid, String path, String name, String targetPath, String targetName)
+	protected Doc buildDownloadDocInfo(Integer vid, String path, String name, String targetPath, String targetName, Integer encryptEn)
 	{
 		System.out.println("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
 		
@@ -1985,6 +1985,7 @@ public class BaseController  extends BaseFunction{
 		doc.targetName = encTargetName;
 		doc.setPath(encPath);
 		doc.setName(encName);
+		doc.encryptEn = encryptEn;
 		if(vid != null)
 		{
 			doc.setVid(vid);
@@ -13419,7 +13420,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected String buildSaveDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), 1);
 		if(downloadDoc == null)
 		{
 			System.out.println("buildSaveDocLink() buildDownloadDocInfo failed");
@@ -13455,8 +13456,8 @@ public class BaseController  extends BaseFunction{
 		return fileLink;
 	}
 	
-	protected String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+	protected String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), encryptEn);
 		if(downloadDoc == null)
 		{
 			System.out.println("buildDownloadDocLink() buildDownloadDocInfo failed");
@@ -13475,11 +13476,11 @@ public class BaseController  extends BaseFunction{
 			{
 				shareId = 0;
 			}
-			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId;
+			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId + "/" + doc.encryptEn;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;	
+			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName + "&encryptEn="+downloadDoc.encryptEn;	
 			if(authCode != null)
 			{
 				fileLink += "&authCode=" + authCode;
