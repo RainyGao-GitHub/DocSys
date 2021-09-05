@@ -1651,7 +1651,7 @@ public class DocController extends BaseController{
 				
 		if(dbDoc.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			Log.docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1665,7 +1665,7 @@ public class DocController extends BaseController{
 				return;				
 			}
 					
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			Log.docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1725,7 +1725,7 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(0);	//下载完成后不能删除下载的文件
 			Log.docSysDebugLog("本地文件: 原始路径下载", rt);
@@ -1741,7 +1741,7 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			Log.docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
@@ -1776,7 +1776,7 @@ public class DocController extends BaseController{
 				
 			if(remoteEntry.getType() == 1)
 			{
-				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 				rt.setData(downloadDoc);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
 				Log.docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
@@ -1789,7 +1789,7 @@ public class DocController extends BaseController{
 				return;				
 			}
 				
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			Log.docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1834,7 +1834,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName);
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 0);
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
 		Log.docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
@@ -1847,6 +1847,7 @@ public class DocController extends BaseController{
 			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
 			Integer shareId,
 			String authCode,
+			Integer encryptEn,	//是否检查文件被加密
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.println("\n************** downloadDoc.do ****************");
@@ -1903,9 +1904,9 @@ public class DocController extends BaseController{
 	
 		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
-		if(vid == null )
+		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
-			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
 		}
 		else
 		{
@@ -2222,11 +2223,27 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, rootPath, rootName, null, 1, true, localRootPath, localVRootPath, null, null);
+		Doc tempRootDoc = rootDoc;
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			String docEncryptPath = Path.getReposUserTmpPathForEncrypt(repos, reposAccess.getAccessUser(), rootDoc);
+			File rootFile = new File(rootDoc.getLocalRootPath() + rootDoc.getPath(), rootDoc.getName());
+			String tmpLocalRootPathForEncryptZip = docEncryptPath + rootFile.lastModified() + "/";
+			if(FileUtil.isFileExist(tmpLocalRootPathForEncryptZip + rootDoc.getPath() + rootDoc.getName()) == false)
+			{
+				FileUtil.clearDir(docEncryptPath);	//删除旧的临时文件
+				FileUtil.createDir(tmpLocalRootPathForEncryptZip);
+				FileUtil.copyFile(localRootPath + rootDoc.getPath() + rootDoc.getName(), tmpLocalRootPathForEncryptZip + rootDoc.getPath() + rootDoc.getName(), true);
+				decryptFile(repos, tmpLocalRootPathForEncryptZip + rootDoc.getPath(), rootDoc.getName());
+			}
+			tempRootDoc = buildBasicDoc(reposId, null, null, reposPath, rootDoc.getPath(), rootDoc.getName(), null, 1, true, tmpLocalRootPathForEncryptZip, localVRootPath, null, null);
+		}
+		
 		
 		String tmpLocalRootPath = Path.getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
 		Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
+		checkAndExtractEntryFromCompressDoc(repos, tempRootDoc, tmpDoc);
 		
 		//根据文件类型获取文件内容或者文件链接			
 		String status = "ok";
@@ -2769,11 +2786,8 @@ public class DocController extends BaseController{
 		if(doc.getType() == 1)
 		{
 			String fileSuffix = FileUtil.getFileSuffix(name);
-			//if(isPicture(fileSuffix) || isVideo(fileSuffix))
-			//{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), 1);
 			rt.setDataEx(downloadDoc);
-			//}
 			
 			if(docType == 1 || docType == 3)	//docType { 1: get docText only, 2: get content only 3: get docText and content } 
 			{
@@ -2863,7 +2877,7 @@ public class DocController extends BaseController{
 		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
 		
 		String authCode = addDocDownloadAuthCode();
-		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, rt);
+		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
 		if(fileLink == null)
 		{
 			Log.println("getZipDocFileLink() buildDocFileLink failed");
@@ -2975,7 +2989,7 @@ public class DocController extends BaseController{
 		}
 		
 		String authCode = addDocDownloadAuthCode();
-		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, rt);
+		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
 		if(fileLink == null)
 		{
 			Log.println("getDocFileLink() buildDocFileLink failed");
@@ -3425,36 +3439,9 @@ public class DocController extends BaseController{
 		}
 		
 		Log.printObject("downloadHistoryDocPrepare checkOut successDocList:", successDocList);
-		
-		File localEntry = new File(userTmpDir,targetName);
-		if(false == localEntry.exists())
-		{
-			Log.docSysErrorLog("文件 " + userTmpDir + targetName + " 不存在！", rt);
-			writeJson(rt, response);
-			return;
-		}
-
-		//For dir 
-		if(localEntry.isDirectory()) //目录
-		{
-			//doCompressDir and save the zip File under userTmpDir
-			String zipFileName = targetName + ".zip";
-			if(doCompressDir(userTmpDir, targetName, userTmpDir, zipFileName, rt) == false)
-			{
-				Log.docSysErrorLog("压缩目录 " + userTmpDir + targetName + " 失败！", rt);
-				writeJson(rt, response);
-				return;
-			}			
-			
-			//删除CheckOut出来的目录
-			FileUtil.delFileOrDir(userTmpDir+targetName);
-			
-			targetName = zipFileName;
-		}
-		
+				
 		Log.println("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
-		
-		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), userTmpDir, targetName);		
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), userTmpDir, targetName, isRealDoc?1:0);	
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);
 		writeJson(rt, response);	

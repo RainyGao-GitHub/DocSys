@@ -643,7 +643,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		Doc downloadDoc = buildDownloadDocInfo(0, "","", targetPath, targetName);
+		Doc downloadDoc = buildDownloadDocInfo(0, "","", targetPath, targetName, 0);
 		String downloadLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDoc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;	
 		rt.setData(downloadLink);
 		writeJson(rt, response);
