@@ -33,10 +33,17 @@ import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
+import com.DocSystem.common.entity.EncryptConfig;
+import com.DocSystem.common.entity.FtpConfig;
+import com.DocSystem.common.entity.GitConfig;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.License;
 import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
+import com.DocSystem.common.entity.RemoteStorage;
+import com.DocSystem.common.entity.SftpConfig;
+import com.DocSystem.common.entity.SmbConfig;
+import com.DocSystem.common.entity.SvnConfig;
 import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.commonService.ProxyThread;

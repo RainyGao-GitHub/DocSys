@@ -1,4 +1,4 @@
-package com.DocSystem.common;
+package com.DocSystem.common.entity;
 
 public class EncryptConfig {
 	public final static int TYPE_XOR = 1;
