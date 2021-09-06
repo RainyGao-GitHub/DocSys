@@ -1851,7 +1851,7 @@ public class DocController extends BaseController{
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.println("\n************** downloadDoc.do ****************");
-		Log.println("downloadDoc  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath);
+		Log.println("downloadDoc  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = null;
@@ -1955,10 +1955,11 @@ public class DocController extends BaseController{
 			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
 			Integer shareId,
 			String authCode,
+			Integer encryptEn,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.println("\n************** downloadDocEx ****************");
-		Log.println("downloadDocEx  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath);
+		Log.println("downloadDocEx  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(targetPath == null || targetName == null)
@@ -1988,9 +1989,9 @@ public class DocController extends BaseController{
 	
 		Log.println("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);
 		
-		if(vid == null )
+		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
-			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
 		}
 		else
 		{
@@ -2031,12 +2032,12 @@ public class DocController extends BaseController{
 	
 	@RequestMapping(value="/downloadDoc/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
-			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
+			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId, @PathVariable("encryptEn") Integer encryptEn,
 			String disposition,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.println("\n************** downloadDoc ****************");
-		Log.println("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
+		Log.println("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2095,9 +2096,9 @@ public class DocController extends BaseController{
 		}
 	
 		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
-		if(vid == null )
+		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
-			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
 		}
 		else
 		{
