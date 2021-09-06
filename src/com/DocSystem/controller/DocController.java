@@ -2837,7 +2837,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -2860,7 +2860,8 @@ public class DocController extends BaseController{
 		}
 		Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		checkAndExtractEntryFromCompressDoc(repos, rootDoc, tmpDoc);
+		Doc tempRootDoc = decryptRootZipDoc(repos, rootDoc);
+		checkAndExtractEntryFromCompressDoc(repos, tempRootDoc, tmpDoc);
 		
 		String authCode = addDocDownloadAuthCode();
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
