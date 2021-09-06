@@ -1668,7 +1668,7 @@ public class DocController extends BaseController{
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
+			Log.docSysDebugLog("远程目录: 已下载并存储在用户临时目录", rt);
 			return;
 		}
 	
@@ -1721,6 +1721,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
+		//原始路径下载，禁止删除原始文件
 		String targetName = doc.getName();
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
@@ -1731,8 +1732,7 @@ public class DocController extends BaseController{
 			Log.docSysDebugLog("本地文件: 原始路径下载", rt);
 			return;
 		}
-
-		targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
+		
 		if(localEntry.getType() == 2)
 		{	
 			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
@@ -1741,14 +1741,16 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
+			//TODO: 这里存在越权下载文件的风险，需要增加权限检查，避免下载了不应该下载的文件
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
-			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
+			rt.setMsgData(0);	//下载完成后删除已下载的文件
+			Log.docSysDebugLog("本地目录: 原始路径下载", rt);
 			return;						
 		}
 		
 		//本地文件不存在（尝试从版本仓库中下载）
+		targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
 		if(localEntry.getType() == 0)
 		{
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
@@ -1792,7 +1794,7 @@ public class DocController extends BaseController{
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
+			Log.docSysDebugLog("远程目录: 已下载并存储在用户临时目录", rt);
 			return;
 		}
 		
