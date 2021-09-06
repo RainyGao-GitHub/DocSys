@@ -1,8 +1,8 @@
 package com.DocSystem.entity;
 
-import com.DocSystem.common.EncryptConfig;
-import com.DocSystem.common.RemoteStorage;
 import com.DocSystem.common.TextSearchConfig;
+import com.DocSystem.common.entity.EncryptConfig;
+import com.DocSystem.common.entity.RemoteStorage;
 
 public class Repos {    
 	public static final Integer FSM = 1;
