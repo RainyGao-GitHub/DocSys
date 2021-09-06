@@ -287,11 +287,12 @@
                 	    name = encodeURI(name);
                 	    targetName = encodeURI(targetName);
             		   	targetPath = encodeURI(targetPath);
-            		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
+            		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&encryptEn=1";
             		   	if(gShareId)
             		   	{
             		   		url += "&shareId=" + gShareId;
             		   	}
+            		   	
             		   	
             		   	if(index != 0)
             		   	{
