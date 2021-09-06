@@ -690,15 +690,18 @@ public class FileUtil {
     //Clear Directory
     public static boolean clearDir(String path){
         File file=new File(path);
-        File[] tmp=file.listFiles();            
-        for(int i=0;i<tmp.length;i++)
+        File[] tmp=file.listFiles();
+        if(tmp != null)
         {
-        	String subDirPath = path+"/"+tmp[i].getName();
-            if(delFileOrDir(subDirPath) == false)
-            {
-            	System.out.println("delFileOrDir() delete subDir Failed:" + subDirPath);
-                return false;
-            }
+	        for(int i=0;i<tmp.length;i++)
+	        {
+	        	String subDirPath = path+"/"+tmp[i].getName();
+	            if(delFileOrDir(subDirPath) == false)
+	            {
+	            	System.out.println("delFileOrDir() delete subDir Failed:" + subDirPath);
+	                return false;
+	            }
+	        }
         }
         return true;
     }
