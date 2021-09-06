@@ -191,7 +191,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
 {	
 	var fileLink = "";
 	var errorInfo = "";
-	console.log("getDocFileLink()  docInfo:", docInfo);
+	console.log("getDocFileLinkBasic()  docInfo:", docInfo);
     if(!docInfo || docInfo == null || docInfo.id == 0)
     {
     	//未定义需要显示的文件
@@ -213,7 +213,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
             urlStyle: urlStyle,
         },
         success : function (ret) {
-        	console.log("getDocFileLink ret",ret);
+        	console.log("getDocFileLinkBasic ret",ret);
         	if( "ok" == ret.status )
         	{
         		var docLink = ret.data;
@@ -640,7 +640,7 @@ function buildDocDownloadLink(downloadDocInfo, urlStyle)
    		return docRestLink;
    	}
    	
-	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDocInfo.vid + "&path=" + path + " &name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName;
+	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDocInfo.vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName;
 	if(downloadDocInfo.authCode)
    	{
 		docLink += "&authCode=" + downloadDocInfo.authCode;
