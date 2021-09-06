@@ -1,6 +1,6 @@
-package com.DocSystem.common;
+package com.DocSystem.common.entity;
 
-public class SftpConfig {
+public class FtpConfig {
 
 	public String userName;
 	public String pwd;

@@ -21,13 +21,13 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
-import com.DocSystem.common.EncryptConfig;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.controller.BaseController;
 
