@@ -603,6 +603,7 @@ function getDocShareLink(reposId, docShare, IpAddress)
 
 function buildDocDownloadLink(downloadDocInfo, urlStyle)
 {	
+	console.log("buildDocDownloadLink downloadDocInfo:", downloadDocInfo);
 	var name = encodeURI(downloadDocInfo.name);
    	var path = encodeURI(downloadDocInfo.path);
    	var targetName = encodeURI(downloadDocInfo.targetName);
