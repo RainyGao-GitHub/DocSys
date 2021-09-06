@@ -212,7 +212,7 @@ public class Path {
 	}
 	
 	//加解密临时目录，用完删除
-	public static String getReposTmpPathForEncrypt(Repos repos) {
+	public static String getReposTmpPathForDecrypt(Repos repos) {
 		long curTime = new Date().getTime();
 		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/encrypt/" + curTime + "/";
 		FileUtil.createDir(tmpDir);
@@ -220,8 +220,8 @@ public class Path {
 	}
 	
 	//加解密临时目录，用完不删除
-	public static String getReposUserTmpPathForEncrypt(Repos repos, User accessUser, Doc doc) {
-		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/encrypt/" + accessUser.getId() + "/" + doc.getDocId() + "_" + doc.getName() + "/";
+	public static String getReposTmpPathForZipDecrypt(Repos repos, Doc doc) {
+		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/zipDecrypt/" + doc.getDocId() + "_" + doc.getName() + "/";
 		FileUtil.createDir(tmpDir);
 		return tmpDir;
 	}
