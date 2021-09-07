@@ -20,10 +20,24 @@
             		<option value="4">GIT前置</option>   
             	</select>
             </div>
-            
+			
+            <div id="RBSreposStorageConfig" style="margin-top:20px">
+            	<label>仓库存储位置</label>
+				<input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
+               	
+               	<label style="margin-top:10px">文件存储位置</label>
+				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+			    
+			    <label style="margin-top:10px">远程存储</label>
+				<div id="RBSremoteStorageConfig">
+					<input class="form-control" type="text" id="RBSremoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
+		        	<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="RBSautoPull" value="0"></span></label>
+		        </div>
+			</div>
+
             <div id="RBSverCtrlConfigDiv"  style="margin-top:20px;">
 	            <div id="RBSrealDocVerCtrlDiv">
-		            <label>版本仓库类型 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
+		            <label>版本管理 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 		            <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
@@ -75,20 +89,6 @@
 			
 			<div id="RBSencryptEnablelDiv" style="margin-top:20px">
 	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="RBSisEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
-			</div>
-
-            <div id="RBSreposStorageConfig" style="margin-top:20px">
-            	<label>仓库存储位置</label>
-				<input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
-               	
-               	<label style="margin-top:10px">文件存储位置</label>
-				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
-			    
-			    <label style="margin-top:10px">远程存储</label>
-				<div id="RBSremoteStorageConfig" style="margin-left:20px;">
-					<input class="form-control" type="text" id="RBSremoteStorage"  placeholder=""  value="" style="width: 100%"/>
-		        	<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="RBSautoPull" value="0"></span></label>
-		        </div>
 			</div>
 		</div>	
         <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
