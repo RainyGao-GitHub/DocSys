@@ -1,39 +1,43 @@
 <div id="dialog-new-repos" class="form-horizontal">
 	<div class="modal-body">
         <div class="form-group">
-            <label>名字<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="name" style="width: 100%"/>
-            <label>简介<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="info" style="width: 100%"/>
-            <label>仓库位置<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
-            <label>类型<span style="color:#F00">*</span></label>
-            <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
-            	<option value="1" selected="selected">文件管理系统</option>   
-            	<!-- <option value="2">文件系统前置</option> -->
-            	<option value="3">SVN前置</option>   
-            	<option value="4">GIT前置</option>   
-            </select>
-            <div name="realDocPathDiv">
-		        <label>文件存储位置</label>
-				<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+        	<div style="margin-top:10px">
+	        	<label>仓库名字</label>
+            	<input class="form-control" type="text" name="name" style="width: 100%"/>
+            </div>
+
+        	<div style="margin-top:10px">            
+	            <label>仓库简介</label>
+    	        <textarea class="form-control" type="text" name="info" style="width: 100%"/>
+        	</div>
+        	
+        	<div style="margin-top:10px">            
+	        	<label>仓库类型</label>
+            	<select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
+            		<option value="1" selected="selected">文件管理系统</option>   
+            		<!-- <option value="2">文件系统前置</option> -->
+            		<option value="3">SVN前置</option>   
+            		<option value="4">GIT前置</option>   
+            	</select>
 			</div>
-            <div name="remoteStorageDiv">
-		        <label>远程存储 <span name="isAutoPullEnable" style="margin-left:20px"><input type="checkbox" name="autoPull" value="0">自动拉取</span></label>
-				<input class="form-control" type="text" name="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
-			</div>			
+					
 			<div name="verCtrlEnablelDiv" style="margin-top:10px">
-	            <label>版本管理 <span style="margin-left:5px"><input type="checkbox" name="verCtrlEnable" value="0" onclick="doSelectVerCtrl()"></span></label>
+	            <label>版本管理 
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" name="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnalbe()">
+	            	</span>
+	            </label>
+	            <span name="verCtrlConfigEnable" value="0" style="margin-left:20px;display:none" onclick="doSelectVerCtrlConfigEnable()">显示高级选项</span>
 			</div>
 			
-			<div name="verCtrlDiv" style="margin-top:10px">
+			<div name="verCtrlConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
 	            <label>版本仓库类型 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 	            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 	            	<option value="0">无</option>   
 	            	<option value="1">SVN</option>   
 	            	<option value="2">GIT</option>   
 	            </select>
-	            <div name="realDocVerCtrlDiv">
+	            <div name="realDocVerCtrlConfigDiv">
 		            <div name="verReposSetting">
 			            <div name="localVerRepos">
 				            <label>版本仓库所在目录</label>
@@ -49,7 +53,7 @@
 			            </div>
 		            </div>
 	            </div>
-	            <div name="virtualDocVerCtrlDiv">
+	            <div name="virtualDocVerCtrlConfigDiv" style="display:none">
 		            <label>备注版本管理<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
 		            <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
 		            	<option value="0">无</option>   
@@ -74,10 +78,36 @@
 			</div>
 
 			<div name="textSearchEnablelDiv" style="margin-top:10px">
-	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" name="isTextSearchEnabled" value="0" onclick="doSetTextSearch()"></span></label>
+	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" name="isTextSearchEnabled" value="0"></span></label>
 			</div>
 			<div name="encryptEnablelDiv" style="margin-top:10px">
-	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+			</div>
+			
+			<div name="reposStorageDiv"  style="margin-top:10px">
+	            <label>仓库存储
+	            	<span style="margin-left:5px">
+		            	<input type="checkbox" name="reposStorageConfigEnable" value="0" onclick="doSelectReposStorageConfigEnable()">
+		            </span>
+	            </label>
+	            <div name="reposStorageConfig" style="margin-left:20px;display:none">
+					<label>仓库存储位置</label>
+					<input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
+			        <label style="margin-top:10px">文件存储位置</label>
+					<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+					
+					<div name="remoteStorageDiv" style="margin-top:10px">
+			        	<label>远程存储
+		            		<span style="margin-left:5px">
+			            		<input type="checkbox" name="remoteStorageConfigEnable" value="0" onclick="doSelectRemoteStorageConfigEnable()">
+			            	</span>
+						</label>
+						<div name="remoteStorageConfig" style="margin-left:20px;display:none">
+							<input class="form-control" type="text" name="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
+		            		<label>自动拉取 <span name="isAutoPullEnable" style="margin-left:5px"><input type="checkbox" name="autoPull" value="0"></span></label>
+						</div>
+					</div>
+				</div>
 			</div>
         </div>
     </div>
@@ -138,7 +168,7 @@
 	function doAddRepos()
 	{
 	    var name = $("#dialog-new-repos input[name='name']").val();
-	    var info = $("#dialog-new-repos input[name='info']").val();
+	    var info = $("#dialog-new-repos textarea[name='info']").val();
 	    var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
 	    var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
@@ -265,105 +295,84 @@
 	function doSelectFS()
 	{
 		var type = $("#dialog-new-repos select[name='type']").val();
-		
+		console.log("doSelectFS type:" + type);
 		if(type == 1)
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").show();
-			//RealDoc verCtrl
-			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").show(); //显示 版本管理 复选框
+			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked",false); //取消 版本管理 勾选	
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();	//隐藏 高级选项
+
+			//设置 RealDoc VerCtrl
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',false);
 			
-			//virtualDoc verCtrl
+			//设置 VirtualDoc VerCtrl
+			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();	//隐藏 备注版本仓库设置
 			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
-			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
-
-			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
 		}
 		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();
-			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();	//隐藏 版本管理 复选框
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
 			
-			//virtualDoc verCtrl 默认总是Git
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
+			//设置 RealDoc VerCtrl
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭版本管理
+			
+			//设置 VirtualDoc VerCtrl
 			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
-
-			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
 		}
 		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();	//隐藏 版本管理 复选框
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
 			
-			//RealDoc verCtrl
-			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();	//显示高级选项
+			
+			//设置 RealDoc VerCtrl
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=1;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
 
-			//virtualDoc verCtrl 默认总是Git
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
+			//设置 VirtualDoc VerCtrl
 			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
-
-			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
 		}
 		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();
+			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();	//隐藏 版本管理 复选框
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
+
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();	//显示高级选项
 			
-			//RealDoc verCtrl
-			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			//设置 RealDoc VerCtrl
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
 			
-			//virtualDoc verCtrl 默认总是Git
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
+			//设置 VirtualDoc VerCtrl
 			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
-
-			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
 		}
 		doSelectVerCtrl();
 		doSelectVerCtrl1();			
 	}
-
+	
+	
 	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
 	{
-		console.log("doSelectVerCtrl ");
-		var type = $("#dialog-new-repos select[name='type']").val();	
-		console.log("doSelectVerCtrl fsType:" + type);
-		var verCtrlEnable = 1;
-		if(type == 1)
-		{
-			verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
-			console.log("doSelectVerCtrl verCtrlEnable:" + verCtrlEnable);
-			if(verCtrlEnable == 0)
-			{
-				$("#dialog-new-repos div[name='verCtrlDiv']").hide();
-				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
-			}
-			else
-			{
-				$("#dialog-new-repos div[name='verCtrlDiv']").show();
-				if($("#dialog-new-repos select[name='verCtrl']").val() == 0)
-				{
-					$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
-				}
-			}
-		}
-		else if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
-		{
-			verCtrlEnable = 0;
-			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
-		}
-		else
-		{
-			verCtrlEnable = 1;
-			$("#dialog-new-repos div[name='verCtrlDiv']").show();
-		}
-		
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
 		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
+		console.log("doSelectVerCtrl verCtrl:" + verCtrl + " isRemote:" + isRemote);
 		
 		//alert(verCtrl);
 		if(verCtrl != 0) 			//show verRepos info
@@ -398,9 +407,9 @@
 	//According verCtrl1 value to disale the svnPath1 or not
 	function doSelectVerCtrl1()
 	{
-		console.log("doSelectVerCtrl1");
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl1']").val();
 		var isRemote = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 1: 0;
+		console.log("doSelectVerCtrl1 verCtrl:" + verCtrl + " isRemote:" + isRemote);
 
 		if(verCtrl != 0) 			//show verRepos info
 		{
@@ -429,6 +438,84 @@
 			$("#dialog-new-repos span[name='isRemoteSetting1']").hide();
 			$("#dialog-new-repos div[name='verReposSetting1']").hide();				
 		}     
+	}
+
+	function doSelectReposStorageConfigEnable()
+	{
+		var reposStorageConfigEnable = $("#dialog-new-repos input[name='reposStorageConfigEnable']").is(':checked')? 1: 0;
+		console.log("doSelectReposStorageConfigEnable reposStorageConfigEnable:" + reposStorageConfigEnable);
+		if(reposStorageConfigEnable == 0)
+		{
+			$("#dialog-new-repos div[name='reposStorageConfig']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='reposStorageConfig']").show();
+		}
+	}
+	
+	function doSelectRemoteStorageConfigEnable()
+	{
+		var remoteStorageConfigEnable = $("#dialog-new-repos input[name='remoteStorageConfigEnable']").is(':checked')? 1: 0;
+		console.log("doSelectRemoteStorageConfigEnable remoteStorageConfigEnable:" + remoteStorageConfigEnable);
+		if(remoteStorageConfigEnable == 0)
+		{
+			$("#dialog-new-repos div[name='remoteStorageConfig']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='remoteStorageConfig']").show();
+		}
+		
+	}
+	
+	function doSelectVerCtrlEnalbe()
+	{
+		var verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
+		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
+		if(verCtrlEnable == 0)
+		{
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭verCtrl
+
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
+			
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide();	//隐藏 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
+		}
+		else
+		{	
+			if($("#dialog-new-repos select[name='verCtrl']").val() == 0)	//设置版本控制为GIT
+			{
+				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+			}
+			
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();			//隐藏 高级选项
+			
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").show();		//显示 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");						
+		}
+	}
+
+	function doSelectVerCtrlConfigEnable()
+	{
+		var verCtrlConfigEnable = $("#dialog-new-repos span[name='verCtrlConfigEnable']").val();
+		console.log("doSelectVerCtrlConfigEnable verCtrlConfigEnable:" + verCtrlConfigEnable);
+		if(verCtrlConfigEnable == 0)
+		{
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(1);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("隐藏高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();			
+		}
+		else
+		{
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();						
+		}
+		doSelectVerCtrl();
+		doSelectVerCtrl1();	
 	}
 	
 	function doSetEncryptConfirm()
