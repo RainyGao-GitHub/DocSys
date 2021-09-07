@@ -1,36 +1,35 @@
 <!-- Share Modal -->
 <div id="reposBasicSetting">
         <div class="form-group">
-            <label>名字</label>
-            <input class="form-control" type="text" id="RBSname" value="" style="width: 100%"></input>
-            <label>简介</label>
-            <input class="form-control" type="text" id="RBSinfo" value="" style="width: 100%"></input>
-            <label>位置</label>
-            <input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
-            <label>类型<span style="color:#F00">*</span></label>
-            <select class="form-control" id="RBStype" onchange="doSelectFS();" disabled="disabled" style="width: 100%">   
-            	<option value="1" selected="selected">文件管理系统</option>   
-            	<option value="2">文件系统前置</option>
-            	<option value="3">SVN前置</option>   
-            	<option value="4">GIT前置</option>   
-            </select>
-            <div id="RBSrealDocPathDiv">
-		        <label>文件存储位置</label>
-				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
-			</div>
-            <div id="RBSremoteStorageDiv">
-		        <label>远程存储  <span style="margin-left:20px"><input type="checkbox" id="RBSautoPull" value="0">自动拉取</span></label>
-				<input class="form-control" type="text" id="RBSremoteStorage"  placeholder=""  value="" style="width: 100%"/>
-			</div>			
-            <div id="RBSverCtrlDiv">
+        	<div style="margin-top:10px">
+            	<label>仓库名字</label>
+            	<input class="form-control" type="text" id="RBSname" value="" style="width: 100%"></input>
+            </div>
+            
+            <div style="margin-top:10px">
+            	<label>仓库简介</label>
+            	<input class="form-control" type="text" id="RBSinfo" value="" style="width: 100%"></input>
+            </div>
+            
+            <div style="margin-top:10px">
+            	<label>仓库类型</label>
+            	<select class="form-control" id="RBStype" onchange="doSelectFS();" disabled="disabled" style="width: 100%">   
+            		<option value="1" selected="selected">文件管理系统</option>   
+            		<option value="2">文件系统前置</option>
+            		<option value="3">SVN前置</option>   
+            		<option value="4">GIT前置</option>   
+            	</select>
+            </div>
+            
+            <div id="RBSverCtrlConfigDiv"  style="margin-top:20px;">
 	            <div id="RBSrealDocVerCtrlDiv">
-		            <label>版本管理 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
+		            <label>版本仓库类型 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 		            <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
 		            	<option value="2">GIT</option> 
 		            </select>
-		            <div id="RBSverReposSetting">
+		            <div id="RBSverReposSetting" style="margin-left:20px">
 			            <div id="RBSlocalVerRepos">
 				            <label>版本仓库所在目录</label>
 				            <input class="form-control" type="text" id="RBSlocalSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
@@ -45,7 +44,8 @@
 						</div>
 					</div>
 				</div>
-				<div id="RBSvirtualDocVerCtrlDiv">
+				
+				<div id="RBSvirtualDocVerCtrlDiv" style="margin-left:20px; display:none">
 					<label>备注版本管理<span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
 		            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1()" style="width: 100%">   
 		            	<option value="0">无</option>   
@@ -68,15 +68,29 @@
 					</div>
 				</div>
 			</div>
-
-			<div id="RBStextSearchEnablelDiv" style="margin-top:10px">
+			
+			<div id="RBStextSearchEnablelDiv" style="margin-top:20px">
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="RBSisTextSearchEnabled" value="0"></span></label>
 			</div>
 			
-			<div id="RBSencryptEnablelDiv" style="margin-top:10px">
+			<div id="RBSencryptEnablelDiv" style="margin-top:20px">
 	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="RBSisEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
 			</div>
-        </div>
+
+            <div id="RBSreposStorageConfig" style="margin-top:20px">
+            	<label>仓库存储位置</label>
+				<input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
+               	
+               	<label style="margin-top:10px">文件存储位置</label>
+				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+			    
+			    <label style="margin-top:10px">远程存储</label>
+				<div id="RBSremoteStorageConfig" style="margin-left:20px;">
+					<input class="form-control" type="text" id="RBSremoteStorage"  placeholder=""  value="" style="width: 100%"/>
+		        	<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="RBSautoPull" value="0"></span></label>
+		        </div>
+			</div>
+		</div>	
         <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
 </div>
 
@@ -136,7 +150,7 @@
 		
 		//virtualDoc verCtrl
 		//$("#RBSverCtrl1").get(0).selectedIndex=2;
-		$("#RBSvirtualDocVerCtrlDiv").show();
+		//$("#RBSvirtualDocVerCtrlDiv").show();
 		
 		doSelectVerCtrl();
 		doSelectVerCtrl1();
