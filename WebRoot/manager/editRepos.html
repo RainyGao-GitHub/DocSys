@@ -505,18 +505,12 @@
   
   	<!-- info -->
     <div class="form-group">
-    	<label class="control-label col-lg-3" for="info">简介</label>
+    	<label class="control-label col-lg-3" for="info">仓库简介</label>
        	<div class="col-lg-9">
-        	<input type="text" class="form-control" id="info" name="info">
+        	<textarea type="text" class="form-control" id="info" name="info"/>
        	</div>
 	</div>
     
-    <div class="form-group">
-		<label class="control-label col-lg-3" for="path">仓库位置</label>
-		<div class="col-lg-9">
-        	<input type="text" class="form-control" id="path" name="path">
-       	</div>
-	</div>
     <div class="form-group">
 		<label class="control-label col-lg-3" for="type">仓库类型</label>
        	<div class="col-lg-9">
@@ -528,21 +522,31 @@
 			</select>
        </div>
 	</div>
-                    
+              
+    <div class="form-group">
+		<label class="control-label col-lg-3" for="path">仓库位置</label>
+		<div class="col-lg-9">
+        	<input type="text" class="form-control" id="path" name="path">
+       	</div>
+	</div>      
+   	
    	<div class="form-group">
     	<label class="control-label col-lg-3" for="realDocPath">存储位置</label>
         <div class="col-lg-9">
         	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
         </div>
     </div>
-
-   	<div class="form-group">
-		<div style="margin-top:10px;padding-left:30px">
-   			<label>远程存储 <span style="margin-left:20px"><input type="checkbox" id="autoPull" value="0">自动拉取</span></label>
-        	<input class="form-control" type="text" id="remoteStorage"  placeholder=""  value="" style="width: 86%"/>
-        </div>
-    </div>
     
+    <div class="form-group">
+		<div id="remoteStorageDiv" style="margin-top:10px;padding-left:30px">
+	    	<label>远程存储</label>
+	 	    <div id="remoteStorageConfig">
+	        	<input class="form-control" type="text" id="remoteStorage"  placeholder=""  value="" style="width: 86%"/>
+	    		<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
+			</div>
+	     </div>
+    </div>    
+
     <div class="form-group">
 		<div id="realDocVerCtrlDiv" style="padding-left:30px">
 	    	<label>版本管理 <span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
@@ -567,7 +571,7 @@
 			</div>
 	     </div>
 	       	
-	     <div id="virtualDocVerCtrlDiv"  style="margin-top:10px;padding-left:30px;">
+	     <div id="virtualDocVerCtrlDiv"  style="margin-top:10px;padding-left:30px;display:none">
 	     	<label >备注版本管理<span id="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" id="isRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
 		    <select class="form-control" id="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 86%">   
 		    	<option value="0">无</option>   
@@ -590,7 +594,7 @@
 			</div>
 		</div>
 	</div>                
-
+    
 	<div class="form-group">
 		<div name="textSearchEnablelDiv" style="margin-top:10px;padding-left:30px;">
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0"></span></label>
