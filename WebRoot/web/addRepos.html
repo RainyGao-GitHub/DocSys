@@ -77,13 +77,6 @@
 			    </div>
 			</div>
 
-			<div name="textSearchEnablelDiv" style="margin-top:10px">
-	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" name="isTextSearchEnabled" value="0"></span></label>
-			</div>
-			<div name="encryptEnablelDiv" style="margin-top:10px">
-	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
-			</div>
-			
 			<div name="reposStorageDiv"  style="margin-top:10px">
 	            <label>仓库存储
 	            	<span style="margin-left:5px">
@@ -102,12 +95,19 @@
 			            		<input type="checkbox" name="remoteStorageConfigEnable" value="0" onclick="doSelectRemoteStorageConfigEnable()">
 			            	</span>
 						</label>
-						<div name="remoteStorageConfig" style="margin-left:20px;display:none">
+						<div name="remoteStorageConfig" style="display:none">
 							<input class="form-control" type="text" name="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
 		            		<label>自动拉取 <span name="isAutoPullEnable" style="margin-left:5px"><input type="checkbox" name="autoPull" value="0"></span></label>
 						</div>
 					</div>
 				</div>
+			</div>
+
+			<div name="textSearchEnablelDiv" style="margin-top:10px">
+	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" name="isTextSearchEnabled" value="0"></span></label>
+			</div>
+			<div name="encryptEnablelDiv" style="margin-top:10px">
+	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
 			</div>
         </div>
     </div>
