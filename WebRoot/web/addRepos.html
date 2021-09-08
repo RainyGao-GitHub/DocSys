@@ -177,29 +177,13 @@
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
 	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
 		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
-	    if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
+		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
+		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
+		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
+	    if(remoteStorage != undefined && remoteStorage != "")
 		{
-	    	if(remoteStorage.indexOf("autoPull") == -1)
-	    	{
-	    		remoteStorage += ";autoPull=1";
-	    	}
-	    	else
-	    	{
-	    		remoteStorage = remoteStorage.split("autoPull=0").join("autoPull=1");
-	    	}
-		}
-	    else
-	    {
-	    	if(remoteStorage.indexOf("autoPull") == -1)
-	    	{
-	    		remoteStorage += ";autoPull=0";
-	    	}
-	    	else
-	    	{
-	    		remoteStorage = remoteStorage.split("autoPull=1").join("autoPull=0");
-	    	}
-	    }
-	    
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+		}	    
 	    var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
 	    var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
 	    var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();

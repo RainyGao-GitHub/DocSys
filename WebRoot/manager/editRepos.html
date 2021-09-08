@@ -39,27 +39,12 @@
 		newReposSetting.realDocPath = $("#realDocPath").val();
 	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
 		var autoPull = $("#autoPull").is(':checked')? 1: 0;
-	    if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
+		var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
+		var autoPush = $("#autoPush").is(':checked')? 1: 0;
+		var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
+		if(remoteStorage != undefined && remoteStorage != "")
 		{
-	    	if(remoteStorage.indexOf("autoPull") == -1)
-	    	{
-	    		remoteStorage += ";autoPull=1";
-	    	}
-	    	else
-	    	{
-	    		remoteStorage = remoteStorage.split("autoPull=0").join("autoPull=1");
-	    	}
-		}
-	    else
-	    {
-	    	if(remoteStorage.indexOf("autoPull") == -1)
-	    	{
-	    		remoteStorage += ";autoPull=0";
-	    	}
-	    	else
-	    	{
-	    		remoteStorage = remoteStorage.split("autoPull=1").join("autoPull=0");
-	    	}
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
 	    }
 	    $("#remoteStorage").val(remoteStorage);
 	    newReposSetting.remoteStorage = remoteStorage;
@@ -262,16 +247,8 @@
 	   	$("#path").val(reposInfo.path);
 	   	$("#type option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#realDocPath").val(reposInfo.realDocPath);
-	   	$("#remoteStorage").val(reposInfo.remoteStorage);
-	   	console.log("remoteStorageConfig:", reposInfo.remoteStorageConfig);
-	   	if(reposInfo.remoteStorageConfig != undefined && reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
-	   	{
-		   	$("#autoPull").attr("checked","checked");
-	   	}
-	   	else
-	   	{
-		   	$("#autoPull").attr("checked",false);
-	   	}		   	
+	   	
+	   	showRemoteStorageConfig(reposInfo);
 	   	
 	   	$("#verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
@@ -372,6 +349,68 @@
 		}
 		doSelectVerCtrl();
 		doSelectVerCtrl1();			
+	}
+	
+	function showRemoteStorageConfig(reposInfo)
+	{
+	   	//对remoteStorage进行预处理，去掉autoPull部分
+	   	var remoteStorage = reposInfo.remoteStorage;
+   		console.log("showRemoteStorageConfig remoteStorage:" + remoteStorage)
+	   	if(remoteStorage)
+	   	{
+	   		var index = remoteStorage.indexOf(";autoPull=");
+	   		if(index <= 0)
+	   		{
+	   			index = remoteStorage.indexOf("; autoPull=");
+	   		}
+	   		
+	   		if(index > 0)
+	   		{
+	   			remoteStorage = remoteStorage.substring(0, index);
+	   		}	   		
+	   		console.log("showRemoteStorageConfig handled remoteStorage:" + remoteStorage)
+	   	}
+	   	$("#remoteStorage").val(remoteStorage);
+	   	
+	   	console.log("showRemoteStorageConfig remoteStorageConfig:", reposInfo.remoteStorageConfig);
+	   	if(reposInfo.remoteStorageConfig != undefined)
+	   	{
+	   		if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
+	   		{
+		   		$("#autoPull").attr("checked","checked");
+	   		}
+	   		else
+	   		{
+		   		$("#autoPull").attr("checked",false);
+	   		}
+	   		
+	   		if(reposInfo.remoteStorageConfig.autoPullForce != undefined && reposInfo.remoteStorageConfig.autoPullForce == 1)
+	   		{
+		   		$("#autoPullForce").attr("checked","checked");
+	   		}
+	   		else
+	   		{
+		   		$("#autoPullForce").attr("checked",false);
+	   		}
+	   		
+	   		if(reposInfo.remoteStorageConfig.autoPush != undefined && reposInfo.remoteStorageConfig.autoPush == 1)
+	   		{
+		   		$("#autoPush").attr("checked","checked");
+	   		}
+	   		else
+	   		{
+		   		$("#autoPush").attr("checked",false);
+	   		}
+	   		
+	   		if(reposInfo.remoteStorageConfig.autoPushForce != undefined && reposInfo.remoteStorageConfig.autoPushForce == 1)
+	   		{
+		   		$("#autoPushForce").attr("checked","checked");
+	   		}
+	   		else
+	   		{
+		   		$("#autoPushForce").attr("checked",false);
+	   		}
+	   	}
 	}
 	
 	//According verCtrl value to disale the svnPath or not
@@ -543,6 +582,9 @@
 	 	    <div id="remoteStorageConfig">
 	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 86%"/>
 	    		<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
+		        <label>强制拉取 <span id="isAutoPullForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
+		        <label style="margin-left:5px">自动推送 <span id="isAutoPushEnable" style="margin-left:5px"><input type="checkbox" id="autoPush" value="0"></span></label>
+		        <label>强制推送 <span id="isAutoPushForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPushForce" value="0"></span></label>
 			</div>
 	     </div>
     </div>    
