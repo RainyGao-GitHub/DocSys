@@ -47,15 +47,8 @@
 		var path = $("#path").val();
 	    var type = $("#type").val();
 	    var realDocPath = $("#realDocPath").val();	//realDocPath
-	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
-		var autoPull = $("#autoPull").is(':checked')? 1: 0;
-		var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
-		var autoPush = $("#autoPush").is(':checked')? 1: 0;
-		var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
-		if(remoteStorage != undefined && remoteStorage != "")
-		{
-	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-	    }
+	    
+	    var remoteStorage = getRemoteStorageConfig();	    
 	    
 	    var verCtrl = $("#verCtrl").val();
 	    var isRemote = $("#isRemote").is(':checked')? 1: 0;
@@ -143,6 +136,56 @@
             	alert("服务器异常:新增失败");
             }
         });
+	}
+	
+	function doSelectRemoteStorageProtocol()
+	{
+		var protocol = $("#remoteStorageProtocol").val();
+		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+		switch(protocol)
+		{
+		case "ftp":
+			$("#remoteStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
+			break;
+		case "sftp":
+			$("#remoteStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
+			break;
+		case "smb":
+			$("#remoteStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
+			break;
+		case "svn":
+			$("#remoteStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
+			break;
+		case "git":
+			$("#remoteStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+			break;
+		}
+	}
+	
+	function getRemoteStorageConfig()
+	{   
+	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
+		var autoPull = $("#autoPul").is(':checked')? 1: 0;
+		var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
+		var autoPush = $("#autoPush").is(':checked')? 1: 0;
+		var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
+	    if(remoteStorage != undefined && remoteStorage != "")
+		{
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+			var protocol = $("#remoteStorageProtocol").val();
+			console.log("getRemoteStorageConfig protocol:" + protocol);
+			switch(protocol)
+			{
+			case "svn":
+				remoteStorage = "svn://" + remoteStorage;
+				break;
+			case "git":
+				remoteStorage = "git://" + remoteStorage;
+				break;
+			}
+		}
+	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+		return remoteStorage;
 	}
 	
 	function doSelectFS()
@@ -325,7 +368,7 @@
         	<textarea type="text" class="form-control" id="info" name="info"/>
         </div>
     </div>
-        
+
     <div class="form-group">
     	<label class="control-label col-lg-3" for="type">仓库类型</label>
         <div class="col-lg-9">
@@ -337,7 +380,7 @@
 			</select>
      	</div>
     </div>
-        
+    
     <div class="form-group" style="margin-top:10px;">
     	<label class="control-label col-lg-3" for="path">仓库位置</label>
         <div class="col-lg-9">
@@ -351,17 +394,23 @@
         	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
         </div>
     </div>
-
     
     <div class="form-group">
 		<div id="remoteStorageDiv" style="margin-top:10px;padding-left:30px">
 	    	<label>远程存储</label>
 	 	    <div id="remoteStorageConfig">
-	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 86%"/>
-	    		<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
-		        <label>强制拉取 <span id="isAutoPullForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
-		        <label style="margin-left:5px">自动推送 <span id="isAutoPushEnable" style="margin-left:5px"><input type="checkbox" id="autoPush" value="0"></span></label>
-		        <label>强制推送 <span id="isAutoPushForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPushForce" value="0"></span></label>	    		
+		        <select class="form-control" name="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:86%">   
+		            <option value="ftp">FTP</option>   
+		            <option value="sftp">SFTP</option>   
+		            <option value="smb">SMB</option>  
+		            <option value="svn">SVN</option>  
+		            <option value="git">GIT</option>  
+		        </select>
+	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
+	    		<label>自动拉取<span style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
+		        <label>强制拉取<span style="margin-left:5px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
+		        <label>自动推送<span style="margin-left:5px"><input type="checkbox" id="autoPush" value="0"></span></label>
+		        <label>强制推送<span style="margin-left:5px"><input type="checkbox" id="autoPushForce" value="0"></span></label>	    		
 			</div>
 	     </div>
     </div>
