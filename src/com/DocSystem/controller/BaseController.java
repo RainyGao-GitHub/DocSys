@@ -3844,14 +3844,14 @@ public class BaseController  extends BaseFunction{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
-					if(remote.autoPull != null && remote.autoPull == 1)
-					{
-						channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPullForce, true, rt);
-					}
 					if(remote.autoPush != null && remote.autoPush == 1)
 					{
-						channel.remoteStoragePush(repos, doc, login_user,  "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPushForce, true, rt);
+						channel.remoteStoragePush(repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, true, rt);
 					}					
+					if(remote.autoPull != null && remote.autoPull == 1)
+					{
+						channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPullForce == 1, true, rt);
+					}
 				}
 			}
 		}
@@ -4665,7 +4665,8 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.LOCALDIRTOFILE;
 			}
 			
-			if(!dbDoc.getSize().equals(localEntry.getSize()) || !dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
+			if(dbDoc.getSize() == null || localEntry.getSize() == null || !dbDoc.getSize().equals(localEntry.getSize()) ||
+				dbDoc.getLatestEditTime() == null || localEntry.getLatestEditTime() == null ||!dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
 			{
 				Log.println("getLocalDocChangeType " +  localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALCHANGE); 
 				return DocChangeType.LOCALCHANGE;
@@ -4728,7 +4729,7 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
-			if(dbDoc.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
+			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
 				Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTECHANGE); 
 				return DocChangeType.REMOTECHANGE;

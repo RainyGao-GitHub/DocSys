@@ -35,6 +35,7 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.constants;
+import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.controller.BaseController;
 
@@ -1453,6 +1454,13 @@ public class ManageController extends BaseController{
 				repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
 				repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 				repos.isBussiness = systemLicenseInfo.hasLicense;
+				//get encrypt Config
+				repos.encryptType = 0;
+				EncryptConfig encryptConfig = reposEncryptHashMap.get(repos.getId());
+				if(encryptConfig != null && encryptConfig.type != null)
+				{
+					repos.encryptType = encryptConfig.type;
+				}
 			}
 		}
 		
