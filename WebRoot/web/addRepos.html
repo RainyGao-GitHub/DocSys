@@ -1,7 +1,7 @@
 <div id="dialog-new-repos" class="form-horizontal">
 	<div class="modal-body">
         <div class="form-group">
-        	<div style="margin-top:10px">
+        	<div>
 	        	<label>仓库名字</label>
             	<input class="form-control" type="text" name="name" style="width: 100%"/>
             </div>
@@ -10,7 +10,7 @@
 	            <label>仓库简介</label>
     	        <textarea class="form-control" type="text" name="info" style="width: 100%"/>
         	</div>
-        	
+
         	<div style="margin-top:10px">            
 	        	<label>仓库类型</label>
             	<select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
@@ -20,8 +20,52 @@
             		<option value="4">GIT前置</option>   
             	</select>
 			</div>
-					
-			<div name="verCtrlEnablelDiv" style="margin-top:10px">
+			
+	        <div name="reposStorageConfig" style="margin-top:10px">
+				<label>仓库位置</label>
+				<input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
+			    <label style="margin-top:10px">文件存储位置</label>
+				<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+			</div>
+			
+			<!-- <div name="reposStorageDiv"  style="margin-top:10px">
+	            <label>仓库存储
+	            	<span style="margin-left:5px">
+		            	<input type="checkbox" name="reposStorageConfigEnable" value="0" onclick="doSelectReposStorageConfigEnable()">
+		            </span>
+	            </label>
+	            <div name="reposStorageConfig" style="margin-left:20px;display:none">
+					<label>仓库存储位置</label>
+					<input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
+			        <label style="margin-top:10px">文件存储位置</label>
+					<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+				</div>
+			</div> -->
+			
+        	<div name="remoteStorageDiv" style="margin-top:10px">
+	        	<label>远程存储
+            		<!-- <span style="margin-left:5px">
+	            		<input type="checkbox" name="remoteStorageConfigEnable" value="0" onclick="doSelectRemoteStorageConfigEnable()">
+	            	</span>  -->
+				</label>
+				<select class="form-control" name="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:100%">   
+		        	<option value="">无</option>
+		            <option value="ftp">FTP</option>   
+		            <option value="sftp">SFTP</option>   
+		            <option value="smb">SMB</option>  
+		            <option value="svn">SVN</option>  
+		            <option value="git">GIT</option>  
+		        </select>		            
+				<div name="remoteStorageConfig" style="margin-top:10px; display:none">
+		           	<input class="form-control" type="text" name="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
+            		<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" name="autoPull" value="0"></span></label>
+            		<label>强制拉取 <span style="margin-left:5px"><input type="checkbox" name="autoPullForce" value="0"></span></label>
+            		<label>自动推送 <span style="margin-left:5px"><input type="checkbox" name="autoPush" value="0"></span></label>
+            		<label>强制推送 <span style="margin-left:5px"><input type="checkbox" name="autoPushForce" value="0"></span></label>
+				</div>
+			</div>        	
+        	
+        	<div name="verCtrlEnablelDiv" style="margin-top:20px">
 	            <label>版本管理 
 	            	<span style="margin-left:5px">
 	            		<input type="checkbox" name="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnalbe()">
@@ -76,41 +120,12 @@
 				   </div>
 			    </div>
 			</div>
-
-			<div name="reposStorageDiv"  style="margin-top:10px">
-	            <label>仓库存储
-	            	<span style="margin-left:5px">
-		            	<input type="checkbox" name="reposStorageConfigEnable" value="0" onclick="doSelectReposStorageConfigEnable()">
-		            </span>
-	            </label>
-	            <div name="reposStorageConfig" style="margin-left:20px;display:none">
-					<label>仓库存储位置</label>
-					<input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
-			        <label style="margin-top:10px">文件存储位置</label>
-					<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 					
-					<div name="remoteStorageDiv" style="margin-top:10px">
-			        	<label>远程存储
-		            		<span style="margin-left:5px">
-			            		<input type="checkbox" name="remoteStorageConfigEnable" value="0" onclick="doSelectRemoteStorageConfigEnable()">
-			            	</span>
-						</label>
-						<div name="remoteStorageConfig" style="display:none">
-							<input class="form-control" type="text" name="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
-		            		<label>自动拉取 <span name="isAutoPullEnable" style="margin-left:5px"><input type="checkbox" name="autoPull" value="0"></span></label>
-		            		<label>强制拉取 <span name="isAutoPullForceEnable" style="margin-left:5px"><input type="checkbox" name="autoPullForce" value="0"></span></label>
-		            		<label style="margin-left:5px">自动推送 <span name="isAutoPushEnable" style="margin-left:5px"><input type="checkbox" name="autoPush" value="0"></span></label>
-		            		<label>强制推送 <span name="isAutoPushForceEnable" style="margin-left:5px"><input type="checkbox" name="autoPushForce" value="0"></span></label>
-						</div>
-					</div>
-				</div>
-			</div>
-
 			<div name="textSearchEnablelDiv" style="margin-top:10px">
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" name="isTextSearchEnabled" value="0"></span></label>
 			</div>
 			<div name="encryptEnablelDiv" style="margin-top:10px">
-	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0"></span></label>
 			</div>
         </div>
     </div>
@@ -175,15 +190,7 @@
 	    var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
 	    var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
-	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
-		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
-		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
-		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
-		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
-	    if(remoteStorage != undefined && remoteStorage != "")
-		{
-	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-		}	    
+	    var remoteStorage = getRemoteStorageConfig();	//remoteStorage
 	    var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
 	    var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
 	    var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
@@ -278,6 +285,72 @@
 	    return true;
 	}
 	
+	function doSelectRemoteStorageProtocol()
+	{
+		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
+		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#dialog-new-repos div[name='remoteStorageConfig']").hide();
+			return;
+		}
+
+		switch(protocol)
+		{
+		case "ftp":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
+			break;
+		case "sftp":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
+			break;
+		case "smb":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
+			break;
+		case "svn":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
+			break;
+		case "git":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+			break;
+		}
+		$("#dialog-new-repos div[name='remoteStorageConfig']").show();
+		
+	}
+	
+	function getRemoteStorageConfig()
+	{   
+		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
+		console.log("getRemoteStorageConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		}
+		
+	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
+		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
+		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
+		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
+		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
+	    if(remoteStorage != undefined && remoteStorage != "")
+		{
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+			remoteStorage = prefix + remoteStorage;
+		}
+	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+		return remoteStorage;
+	}
+	
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
 	function doSelectFS()
 	{
@@ -285,7 +358,6 @@
 		console.log("doSelectFS type:" + type);
 		if(type == 1)
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").show(); //显示 版本管理 复选框
 			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked",false); //取消 版本管理 勾选	
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
@@ -302,7 +374,8 @@
 		}
 		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();	//隐藏 版本管理 复选框
+			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked",false); //取消 版本管理 勾选	
+
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
@@ -317,7 +390,7 @@
 		}
 		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();	//隐藏 版本管理 复选框
+			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked","checked"); //版本管理 勾选 并禁用	
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
@@ -334,7 +407,7 @@
 		}
 		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
 		{
-			$("#dialog-new-repos div[name='verCtrlEnablelDiv']").hide();	//隐藏 版本管理 复选框
+			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked","checked"); //版本管理 勾选 并禁用	
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
 			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
