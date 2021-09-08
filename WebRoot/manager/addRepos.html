@@ -49,27 +49,12 @@
 	    var realDocPath = $("#realDocPath").val();	//realDocPath
 	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
 		var autoPull = $("#autoPull").is(':checked')? 1: 0;
-	    if(autoPull == 1 && remoteStorage != undefined && remoteStorage != "")
+		var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
+		var autoPush = $("#autoPush").is(':checked')? 1: 0;
+		var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
+		if(remoteStorage != undefined && remoteStorage != "")
 		{
-	    	if(remoteStorage.indexOf("autoPull") == -1)
-	    	{
-	    		remoteStorage += ";autoPull=1";
-	    	}
-	    	else
-	    	{
-	    		remoteStorage = remoteStorage.split("autoPull=0").join("autoPull=1");
-	    	}
-		}
-	    else
-	    {
-	    	if(remoteStorage.indexOf("autoPull") == -1)
-	    	{
-	    		remoteStorage += ";autoPull=0";
-	    	}
-	    	else
-	    	{
-	    		remoteStorage = remoteStorage.split("autoPull=1").join("autoPull=0");
-	    	}
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
 	    }
 	    
 	    var verCtrl = $("#verCtrl").val();
@@ -374,6 +359,9 @@
 	 	    <div id="remoteStorageConfig">
 	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 86%"/>
 	    		<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
+		        <label>强制拉取 <span id="isAutoPullForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
+		        <label style="margin-left:5px">自动推送 <span id="isAutoPushEnable" style="margin-left:5px"><input type="checkbox" id="autoPush" value="0"></span></label>
+		        <label>强制推送 <span id="isAutoPushForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPushForce" value="0"></span></label>	    		
 			</div>
 	     </div>
     </div>
