@@ -386,7 +386,9 @@ public class BaseFunction{
 					config.put(param[0].trim(), param[1].trim());
 				}
 			}
-			remote.autoPull = config.getInteger("autoPull");
+			setRemoteAutoPushPull(remote, config);
+
+			
 			remote.GIT.userName = config.getString("userName");
 			remote.GIT.pwd = config.getString("pwd");
 			Log.println("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
@@ -420,7 +422,9 @@ public class BaseFunction{
 					config.put(param[0].trim(), param[1].trim());
 				}
 			}
-			remote.autoPull = config.getInteger("autoPull");
+			setRemoteAutoPushPull(remote, config);
+
+			
 			remote.SVN.userName = config.getString("userName");
 			remote.SVN.pwd = config.getString("pwd");
 			
@@ -455,7 +459,9 @@ public class BaseFunction{
 					config.put(param[0].trim(), param[1].trim());
 				}
 			}
-			remote.autoPull = config.getInteger("autoPull");
+			setRemoteAutoPushPull(remote, config);
+
+			
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
 			
@@ -490,7 +496,8 @@ public class BaseFunction{
 					config.put(param[0].trim(), param[1].trim());
 				}
 			}
-			remote.autoPull = config.getInteger("autoPull");
+			setRemoteAutoPushPull(remote, config);
+			
 			remote.FTP.userName = config.getString("userName");
 			remote.FTP.pwd = config.getString("pwd");
 			
@@ -523,7 +530,9 @@ public class BaseFunction{
 					config.put(param[0].trim(), param[1].trim());
 				}
 			}
-			remote.autoPull = config.getInteger("autoPull");
+			
+			setRemoteAutoPushPull(remote, config);
+			
 			remote.SMB.userDomain = config.getString("userDomain");
 			if(remote.SMB.userDomain == null)
 			{
@@ -549,7 +558,33 @@ public class BaseFunction{
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
 	}
+	
+	private static void setRemoteAutoPushPull(RemoteStorage remote, JSONObject config) {
+		remote.autoPull = config.getInteger("autoPull");
+		if(remote.autoPull == null)
+		{
+			remote.autoPull = 0;
+		}
+		remote.autoPullForce = config.getInteger("autoPullForce");
+		if(remote.autoPullForce == null)
+		{
+			remote.autoPullForce = 0;
+		}
 
+		remote.autoPush = config.getInteger("autoPush");
+		if(remote.autoPush == null)
+		{
+			remote.autoPush = 0;
+		}
+		
+		remote.autoPushForce = config.getInteger("autoPushForce");
+		if(remote.autoPushForce == null)
+		{
+			remote.autoPushForce = 0;
+		}
+	}
+
+	
 	private static void parseSftpUrl(RemoteStorage remote, String sftpUrl) {
 		Log.println("parseSftpUrl sftpUrl:" + sftpUrl);
 		
