@@ -4,10 +4,10 @@ public class RemoteStorage {
 
 	public String protocol;
 	public String rootPath;	//remote root path
-	public Integer autoPull;
-	public boolean autoPullForce = false;
-	public Integer autoPush;
-	public boolean autoPushForce = false;
+	public Integer autoPull = 0;
+	public Integer autoPullForce = 0;
+	public Integer autoPush = 0;
+	public Integer autoPushForce = 0;
 	public SftpConfig SFTP;
 	public FtpConfig FTP;
 	public SmbConfig SMB = null;
