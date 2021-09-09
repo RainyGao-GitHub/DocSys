@@ -21,20 +21,30 @@
             	</select>
             </div>
 			
-            <div id="RBSreposStorageConfig" style="margin-top:20px">
+            <div id="RBSreposStorageConfigDiv" style="margin-top:20px">
             	<label>仓库存储位置</label>
 				<input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
                	
                	<label style="margin-top:10px">文件存储位置</label>
 				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
-			    
-			    <label style="margin-top:10px">远程存储</label>
-				<div id="RBSremoteStorageConfig">
-					<input class="form-control" type="text" id="RBSremoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
-		        	<label>自动拉取 <span id="isAutoPullEnable" style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
-		            <label>强制拉取 <span id="isAutoPullForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
-		            <label style="margin-left:5px">自动推送 <span id="isAutoPushEnable" style="margin-left:5px"><input type="checkbox" id="autoPush" value="0"></span></label>
-		            <label>强制推送 <span id="isAutoPushForceEnable" style="margin-left:5px"><input type="checkbox" id="autoPushForce" value="0"></span></label>
+			</div>
+			
+			<div id="remoteStorageDiv" style="margin-top:20px">
+                <label style="margin-top:10px">远程存储</label>
+				<select class="form-control" id="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:100%">   
+		        	<option value="">无</option>
+		            <option value="ftp">FTP</option>   
+		            <option value="sftp">SFTP</option>   
+		            <option value="smb">SMB</option>  
+		            <option value="svn">SVN</option>  
+		            <option value="git">GIT</option>  
+		        </select>			
+				<div id="remoteStorageConfig"  style="margin-top:10px; display:none">
+					<input class="form-control" type="text" id="remoteStorage"  placeholder="ftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
+		        	<label>自动拉取 <span style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
+		            <label>强制拉取 <span style="margin-left:5px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
+		            <label>自动推送 <span style="margin-left:5px"><input type="checkbox" id="autoPush" value="0"></span></label>
+		            <label>强制推送 <span style="margin-left:5px"><input type="checkbox" id="autoPushForce" value="0"></span></label>
 		        </div>
 			</div>
 
@@ -336,64 +346,212 @@ function getReposBasicSetting()
 
 function showRemoteStorageConfig(reposInfo)
 {
-   	//对remoteStorage进行预处理，去掉autoPull部分
-   	var remoteStorage = reposInfo.remoteStorage;
-	console.log("showRemoteStorageConfig remoteStorage:" + remoteStorage)
-   	if(remoteStorage)
+	var remoteStorage = "";
+	if(reposInfo.remoteStorageConfig == undefined)
    	{
-   		var index = remoteStorage.indexOf(";autoPull=");
-   		if(index <= 0)
-   		{
-   			index = remoteStorage.indexOf("; autoPull=");
-   		}
-   		
-   		if(index > 0)
-   		{
-   			remoteStorage = remoteStorage.substring(0, index);
-   		}	   		
-   		console.log("showRemoteStorageConfig handled remoteStorage:" + remoteStorage)
+		$("#remoteStorageConfig").hide();
+		$("#remoteStorageProtocol option[value='']").attr("selected","selected");		
+		return;
    	}
-   	$("#RBSremoteStorage").val(remoteStorage);
-   	console.log("showRemoteStorageConfig remoteStorageConfig:", reposInfo.remoteStorageConfig);
-   	if(reposInfo.remoteStorageConfig != undefined)
+	
+	var protocol = reposInfo.remoteStorageConfig.protocol;
+	if(protocol == undefined || protocol == "")
+	{
+		$("#remoteStorageProtocol option[value='']").attr("selected","selected");			
+		$("#remoteStorageConfig").hide();
+		return;
+	}
+	
+	$("#remoteStorageConfig").show();			
+	$("#remoteStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
+	
+	var remoteStorage = "";
+	switch(protocol)
+	{
+	case "ftp":
+		remoteStorage = protocol + "://" + reposInfo.remoteStorageConfig.FTP.host;
+		if(reposInfo.remoteStorageConfig.FTP.port)
+		{
+			remoteStorage += ":" + reposInfo.remoteStorageConfig.FTP.port;
+		}
+		if(reposInfo.remoteStorageConfig.rootPath)
+		{
+			remoteStorage += reposInfo.remoteStorageConfig.rootPath;
+		}
+		if(reposInfo.remoteStorageConfig.FTP.userName)
+		{
+			remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.FTP.userName;
+		}
+		if(reposInfo.remoteStorageConfig.FTP.pwd)
+		{
+			remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.FTP.pwd;
+		}
+		break;
+	case "sftp":
+		remoteStorage = protocol + "://" + reposInfo.remoteStorageConfig.SFTP.host;
+		if(reposInfo.remoteStorageConfig.SFTP.port)
+		{
+			remoteStorage += ":" + reposInfo.remoteStorageConfig.SFTP.port;
+		}
+		if(reposInfo.remoteStorageConfig.rootPath)
+		{
+			remoteStorage += reposInfo.remoteStorageConfig.rootPath;
+		}
+		if(reposInfo.remoteStorageConfig.SFTP.userName)
+		{
+			remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.SFTP.userName;
+		}
+		if(reposInfo.remoteStorageConfig.SFTP.pwd)
+		{
+			remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.SFTP.pwd;
+		}
+		break;
+	case "smb":
+		remoteStorage = protocol + "://" + reposInfo.remoteStorageConfig.SMB.host;
+		if(reposInfo.remoteStorageConfig.rootPath)
+		{
+			remoteStorage += reposInfo.remoteStorageConfig.rootPath;
+		}
+		if(reposInfo.remoteStorageConfig.SMB.userDomain)
+		{
+			remoteStorage += ";userDomain=" + reposInfo.remoteStorageConfig.SMB.userDomain;
+		}
+		if(reposInfo.remoteStorageConfig.SMB.userName)
+		{
+			remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.SMB.userName;
+		}
+		if(reposInfo.remoteStorageConfig.SMB.pwd)
+		{
+			remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.SMB.pwd;
+		}
+		break;
+	case "svn":
+		remoteStorage = reposInfo.remoteStorageConfig.SVN.url;
+		if(reposInfo.remoteStorageConfig.SVN.userName)
+		{
+			remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.SVN.userName;
+		}
+		if(reposInfo.remoteStorageConfig.SVN.pwd)
+		{
+			remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.SVN.pwd;
+		}
+		break;
+	case "git":
+		remoteStorage = reposInfo.remoteStorageConfig.GIT.url;
+		if(reposInfo.remoteStorageConfig.GIT.userName)
+		{
+			remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.GIT.userName;
+		}
+		if(reposInfo.remoteStorageConfig.GIT.pwd)
+		{
+			remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.GIT.pwd;
+		}
+		break;
+	}	
+	$("#remoteStorage").val(remoteStorage);
+	
+   	if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
    	{
-   		if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
-   		{
-	   		$("#autoPull").attr("checked","checked");
-   		}
-   		else
-   		{
-	   		$("#autoPull").attr("checked",false);
-   		}
+   		$("#autoPull").attr("checked","checked");
+   	}
+   	else
+   	{
+   		$("#autoPull").attr("checked",false);
+   	}
    		
-   		if(reposInfo.remoteStorageConfig.autoPullForce != undefined && reposInfo.remoteStorageConfig.autoPullForce == 1)
-   		{
-	   		$("#autoPullForce").attr("checked","checked");
-   		}
-   		else
-   		{
-	   		$("#autoPullForce").attr("checked",false);
-   		}
+   	if(reposInfo.remoteStorageConfig.autoPullForce != undefined && reposInfo.remoteStorageConfig.autoPullForce == 1)
+   	{
+		$("#autoPullForce").attr("checked","checked");
+   	}
+   	else
+   	{
+   		$("#autoPullForce").attr("checked",false);
+   	}
    		
-   		if(reposInfo.remoteStorageConfig.autoPush != undefined && reposInfo.remoteStorageConfig.autoPush == 1)
-   		{
-	   		$("#autoPush").attr("checked","checked");
-   		}
-   		else
-   		{
-	   		$("#autoPush").attr("checked",false);
-   		}
-   		
-   		if(reposInfo.remoteStorageConfig.autoPushForce != undefined && reposInfo.remoteStorageConfig.autoPushForce == 1)
-   		{
-	   		$("#autoPushForce").attr("checked","checked");
-   		}
-   		else
-   		{
-	   		$("#autoPushForce").attr("checked",false);
-   		}
+   	if(reposInfo.remoteStorageConfig.autoPush != undefined && reposInfo.remoteStorageConfig.autoPush == 1)
+   	{
+   		$("#autoPush").attr("checked","checked");
+   	}
+   	else
+   	{
+		$("#autoPush").attr("checked",false);
+   	}
+   	
+   	if(reposInfo.remoteStorageConfig.autoPushForce != undefined && reposInfo.remoteStorageConfig.autoPushForce == 1)
+   	{
+   		$("#autoPushForce").attr("checked","checked");
+   	}
+   	else
+   	{
+   		$("#autoPushForce").attr("checked",false);
    	}
 }
+
+function doSelectRemoteStorageProtocol()
+{
+	var protocol = $("#remoteStorageProtocol").val();
+	console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+	if(protocol == undefined || protocol == "")
+	{
+		$("#remoteStorageConfig").hide();
+		return;
+	}
+	
+	switch(protocol)
+	{
+	case "ftp":
+		$("#remoteStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
+		break;
+	case "sftp":
+		$("#remoteStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
+		break;
+	case "smb":
+		$("#remoteStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
+		break;
+	case "svn":
+		$("#remoteStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
+		break;
+	case "git":
+		$("#remoteStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+		break;
+	}
+	$("#remoteStorageConfig").show();
+}
+
+function getRemoteStorageConfig()
+{   
+	var protocol = $("#remoteStorageProtocol").val();
+	console.log("getRemoteStorageConfig protocol:" + protocol);
+	if(protocol == undefined || protocol == "")
+	{
+		return "none";
+	}
+	
+	var prefix = "";
+	switch(protocol)
+	{
+	case "svn":
+		prefix = "svn://";
+		break;
+	case "git":
+		prefix = "git://";
+		break;
+	}
+	
+    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
+	var autoPull = $("#autoPull").is(':checked')? 1: 0;
+	var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
+	var autoPush = $("#autoPush").is(':checked')? 1: 0;
+	var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
+    if(remoteStorage != undefined && remoteStorage != "")
+	{
+    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+		remoteStorage = prefix + remoteStorage;
+	}
+    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+	return remoteStorage;
+}
+
 
 function saveReposBasicSetting()
 {
@@ -405,15 +563,7 @@ function saveReposBasicSetting()
 	newReposSetting.type =  $("#RBStype").val();	//Real DocSystem
 	newReposSetting.path = $("#RBSpath").val();
 	newReposSetting.realDocPath = $("#RBSrealDocPath").val();
-    var remoteStorage = $("#RBSremoteStorage").val();	//remoteStorage
-	var autoPull = $("#autoPull").is(':checked')? 1: 0;
-	var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
-	var autoPush = $("#autoPush").is(':checked')? 1: 0;
-	var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
-	if(remoteStorage != undefined && remoteStorage != "")
-	{
-    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-    }
+	var remoteStorage = getRemoteStorageConfig();
 	newReposSetting.remoteStorage = remoteStorage;
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;

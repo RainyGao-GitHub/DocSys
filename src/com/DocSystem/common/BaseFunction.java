@@ -308,6 +308,12 @@ public class BaseFunction{
 			return null;
 		}
 		
+		if(remoteStorage.equals("none"))
+		{
+			reposRemoteStorageHashMap.remove(repos.getId());
+			return null;
+		}
+		
 		//格式化远程存储配置
 		remoteStorage = remoteStorage.replace('\\','/');
 		
