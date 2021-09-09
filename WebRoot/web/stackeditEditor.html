@@ -155,6 +155,7 @@ var StackeditEditor = (function () {
 		window.addEventListener('message', messageHandler);
 		// 设置定时0.5s后设置页面为只读
 		setTimeout(function () {
+			editState = false;
 			setStaticEditReaOnly(false);
 		},500)
 	}
@@ -168,6 +169,7 @@ var StackeditEditor = (function () {
 		switch (event.data.type) {
 			case 'ready':
 				// iframe 页面加载完成,设置当前页面为只读
+				editState = false;
 				setStaticEditReaOnly(false);
 				break;
 			case 'fileChange':
@@ -189,9 +191,21 @@ var StackeditEditor = (function () {
 				break;
 			case 'changeView':
 				//当文档处于编辑状态要切换只读时触发
-				if (isContentChanged && event.data.flag) {
-					console.log("要切换到编辑状态了。。。");	
-					setStaticEditReaOnly(false);					
+				if(event.data.flag) 
+				{
+					console.log("编辑器退出入编辑状态...");
+					if(editState == true)
+					{
+						exitEdit();
+					}
+				}
+				else
+				{
+					console.log("编辑器已进入编辑状态...");
+					if(editState == false)
+					{
+						enableEdit();
+					}
 				}
 				break;
 			default:
@@ -292,7 +306,21 @@ var StackeditEditor = (function () {
 		console.log("enableEdit()");
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			showErrorMessage("请选择文件!");
+			editState = false;
+			setStaticEditReaOnly(false);
+			return;
+		}
+		
+		if(docInfo.isZip && docInfo.isZip == 1)
+		{
+			editState = false;
+			setStaticEditReaOnly(false);
+			return;
+		}
+		if(docInfo.isHistory && docInfo.isHistory == 1)
+		{
+			editState = false;
+			setStaticEditReaOnly(false);
 			return;
 		}
 
@@ -315,19 +343,21 @@ var StackeditEditor = (function () {
 					console.log("enableEdit() ret.data",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
 
-					//显示工具条和退出编辑按键
-					switchEditMode(true);
+					editState = true; //编辑器已处于编辑状态不需要切换
 					return;
  				}
 				else
 				{
-					showErrorMessage("lockDoc Error:" + ret.msgInfo);
+					//锁定失败，切换编辑状态，但要避免触发exitEdit
+					editState = false;
+					setStaticEditReaOnly(false);				
 					return;
 				}
 			},
 			error : function () 
 			{
-				showErrorMessage("lockDoc 异常");
+				editState = false;
+				setStaticEditReaOnly(false);				
 				return;
 			}
 		});
@@ -338,8 +368,8 @@ var StackeditEditor = (function () {
 		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			showErrorMessage("文件不存在");
-			switchEditMode(false);
+			editState = false;
+			setStaticEditReaOnly(false);
 			return;
 		}
 		
@@ -361,53 +391,23 @@ var StackeditEditor = (function () {
 				{
 					console.log("exitEdit() ret:",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
-					switchEditMode(false);
+					editState = false;
 					return;
  				}
 				else
 				{
-					showErrorMessage("exitEdit() unlockDoc Error:" + ret.msgInfo);
+					editState = true;
+					setStaticEditReaOnly(true);
 					return;
 				}
 			},
 			error : function () 
 			{
-				showErrorMessage("exitEdit() unlockDoc 异常");
+				editState = true;
+				setStaticEditReaOnly(true);
 				return;
 			}
 		});
-	}
-
-	function switchEditMode(edit)
-	{
-		if(edit == true)
-		{
-			//显示工具条
-			$("#toolBarMenu").show();
-			
-			//显示退出编辑按键
-			$("#textEditorCloseBtn").show();
-			
-			//隐藏编辑按键
-			$("#textEditorEditBtn").hide();
-
-			//Enable Edit
-			editor.setReadOnly(false);
-		}
-		else
-		{
-			//隐藏工具条
-			$("#toolBarMenu").hide();
-			
-			//隐藏退出编辑按键
-			$("#textEditorCloseBtn").hide();
-		
-			//显示编辑按键
-			$("#textEditorEditBtn").show();			
-			
-			//Disable Edit
-			editor.setReadOnly(true);
-		}
 	}
     //开放给外部的接口
     return {
