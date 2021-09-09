@@ -1,11 +1,8 @@
 CACHE MANIFEST
-#ver:2021/8/5上午4:20:47
+#ver:2021/9/8上午12:01:25
 #plugin:5.0.7
 
 CACHE:
-./icons-c75a9472175cc17394ba6428d867fbcf/favicon.ico
-./icons-c75a9472175cc17394ba6428d867fbcf/manifest.json
-./icons-c75a9472175cc17394ba6428d867fbcf/manifest.webapp
 ./321d087894e863b182db.worker.js
 ./static/fonts/RobotoMono-Bold.819f3b2.woff
 ./static/fonts/RobotoMono-Regular.0b6a547.woff
@@ -14,24 +11,24 @@ CACHE:
 ./static/fonts/lato-normal-italic.f28f2d6.woff
 ./static/fonts/lato-normal.27bd77b.woff
 ./static/js/vendor.521b30d6e97c900930bb.js
-./static/js/app.fca04eb7f5dd8d30cf9b.js
-./static/js/manifest.42aa211b04531f8dde30.js
+./static/js/app.d080914ac0a66dd9187e.js
+./static/js/manifest.f38b3f90ed5766806995.js
 ./static/css/app.479248f3eca1f0e5c00dafb71add178c.css
 ./static/landing/abc.png
-./static/landing/gfm.png
 ./static/landing/discussion.png
-./static/landing/favicon.ico
+./static/landing/gfm.png
 ./static/landing/logo.svg
 ./static/landing/katex.gif
 ./static/landing/mermaid.gif
-./static/landing/navigation-bar.png
-./static/landing/smart-layout.png
-./static/landing/syntax-highlighting.gif
 ./static/landing/providers.png
-./static/landing/scroll-sync.gif
+./static/landing/smart-layout.png
 ./static/landing/twemoji.png
+./static/landing/scroll-sync.gif
+./static/landing/syntax-highlighting.gif
 ./static/landing/workspace.png
+./static/landing/navigation-bar.png
 ./static/sitemap.xml
+./static/landing/favicon.ico
 ./manifest.bac9ef5de71b3a60b8760bdf6ac62ec7.json
 ./icon_512x512.bc1452c3b77b59eb0d8c449de1c77310.png
 ./icon_384x384.3f55b77300c8b37b4aa380c8460ee0a2.png
