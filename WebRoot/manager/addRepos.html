@@ -142,6 +142,12 @@
 	{
 		var protocol = $("#remoteStorageProtocol").val();
 		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#remoteStorageConfig").hide();
+			return;
+		}
+		
 		switch(protocol)
 		{
 		case "ftp":
@@ -160,10 +166,29 @@
 			$("#remoteStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
 			break;
 		}
+		$("#remoteStorageConfig").show();
 	}
 	
 	function getRemoteStorageConfig()
 	{   
+		var protocol = $("#remoteStorageProtocol").val();
+		console.log("getRemoteStorageConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		}
+		
 	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
 		var autoPull = $("#autoPul").is(':checked')? 1: 0;
 		var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
@@ -172,17 +197,7 @@
 	    if(remoteStorage != undefined && remoteStorage != "")
 		{
 	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-			var protocol = $("#remoteStorageProtocol").val();
-			console.log("getRemoteStorageConfig protocol:" + protocol);
-			switch(protocol)
-			{
-			case "svn":
-				remoteStorage = "svn://" + remoteStorage;
-				break;
-			case "git":
-				remoteStorage = "git://" + remoteStorage;
-				break;
-			}
+			remoteStorage = prefix + remoteStorage;
 		}
 	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
 		return remoteStorage;
@@ -398,14 +413,15 @@
     <div class="form-group">
 		<div id="remoteStorageDiv" style="margin-top:10px;padding-left:30px">
 	    	<label>远程存储</label>
-	 	    <div id="remoteStorageConfig">
-		        <select class="form-control" name="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:86%">   
-		            <option value="ftp">FTP</option>   
-		            <option value="sftp">SFTP</option>   
-		            <option value="smb">SMB</option>  
-		            <option value="svn">SVN</option>  
-		            <option value="git">GIT</option>  
-		        </select>
+	    	<select class="form-control" id="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:86%">   
+	            <option value="">无</option>  
+	            <option value="ftp">FTP</option>   
+	            <option value="sftp">SFTP</option>   
+	            <option value="smb">SMB</option>  
+	            <option value="svn">SVN</option>  
+	            <option value="git">GIT</option>  
+		    </select>
+	 	    <div id="remoteStorageConfig" style="margin-top:10px; display:none">
 	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
 	    		<label>自动拉取<span style="margin-left:5px"><input type="checkbox" id="autoPull" value="0"></span></label>
 		        <label>强制拉取<span style="margin-left:5px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
