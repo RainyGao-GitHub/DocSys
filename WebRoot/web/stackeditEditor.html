@@ -191,6 +191,7 @@ var StackeditEditor = (function () {
 				//当文档处于编辑状态要切换只读时触发
 				if (isContentChanged && event.data.flag) {
 					console.log("要切换到编辑状态了。。。");	
+					setStaticEditReaOnly(false);					
 				}
 				break;
 			default:
