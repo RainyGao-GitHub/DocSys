@@ -201,6 +201,12 @@
 					saveDoc();	
 				}
 				break;
+			case 'changeView':
+				//当文档处于编辑状态要切换只读时触发
+				if (isContentChanged && event.data.flag) {
+					console.log("要切换到编辑状态了。。。");	
+				}
+				break;
 			default:
 		}
 	}
@@ -241,6 +247,18 @@
 	}
 
 	/**
+	 * 设置编辑器的保存按钮的开启和禁用
+	 *
+	 * @param editFlag false代表编辑状态，true代表只读状态
+	 */
+	function disabledEditState(editFlag) {
+		var stackeditEl = $(".stackedit-iframe");
+		if (stackeditEl !== undefined) {
+			stackeditEl[0].contentWindow.postMessage({"type":"updateEditState","flag":editFlag},"*")
+		}
+	}
+
+	/**
 	 * 保存文档
 	 */
     function saveDoc() {
@@ -259,7 +277,8 @@
             },
             success : function (ret) {
                 if( "ok" === ret.status ){
-                    isContentChanged = false;	
+                    isContentChanged = false;
+					disabledEditState(true);
                     bootstrapQ.msg({
 								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
 								type : 'success',
