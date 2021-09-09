@@ -2273,6 +2273,8 @@ public class DocController extends BaseController{
 	public void getDocContent(Integer reposId, String path, String name, Integer docType, String commitId,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
+
+		Log.println("\n ************** getDocContent ************");
 		Log.println("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId);
 
 		//注意该接口支持name是空的的情况
