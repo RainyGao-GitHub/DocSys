@@ -416,7 +416,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
 	var docText = "";
 	var tmpSavedDocText = "";
 	var errorInfo = "";
-	console.log("getDocText()  docInfo:", docInfo);
+	console.log("getDocTextBasic()  docInfo:", docInfo);
     if(!docInfo || docInfo == null || docInfo.id == 0)
     {
     	//未定义需要显示的文件
