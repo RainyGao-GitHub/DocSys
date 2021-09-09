@@ -401,6 +401,7 @@ function getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, 
 //文件文本内容获取接口
 function getDocText(docInfo, successCallback, errorCallback)
 {
+	console.log("getDocText()");
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
 		getZipDocText(docInfo, successCallback, errorCallback);
