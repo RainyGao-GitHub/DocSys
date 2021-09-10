@@ -2048,10 +2048,79 @@ public class BaseController  extends BaseFunction{
 		case "ogg":
 		case "mp3":
 			sendVideoFileToWebPage(localParentPath, file_name, file_name, suffix, rt, response, request, disposition);
+			break;
+		case "svg":
+			sendSvgFileToWebPage(localParentPath, file_name, file_name, rt, response, request, disposition);
+			break;
 		default:
-			sendFileToWebPage(localParentPath, file_name, file_name, rt, response, request, disposition);			
+			sendFileToWebPage(localParentPath, file_name, file_name, rt, response, request, disposition);
+			break;
 		}
 	}
+	
+	protected void sendSvgFileToWebPage(String localParentPath, String fileName, String showName, ReturnAjax rt,HttpServletResponse response,HttpServletRequest request, String disposition) throws Exception{	
+		String dstPath = localParentPath + fileName;
+
+		//检查文件是否存在
+		File file = new File(dstPath);
+		if(!file.exists())
+		{	
+			Log.docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		response.setHeader("Accept-Ranges", "bytes");
+		
+		System.out.println("sendFileToWebPage() showName befor convert:" + showName);
+		showName = getFileNameForWeb(request, showName);
+		if(disposition == null || disposition.isEmpty())
+		{
+			response.setHeader("content-disposition", "attachment;filename=\"" + showName +"\"");
+		}
+		else
+		{
+			response.setHeader("content-disposition", disposition + ";filename=\"" + showName +"\"");			
+		}
+		
+		response.setContentType("image/svg+xml");
+
+		//读取要下载的文件，保存到文件输入流
+		FileInputStream in = null;
+		//创建输出流
+		OutputStream out = null;
+		try {
+			//读取要下载的文件，保存到文件输入流
+			in = new FileInputStream(dstPath);
+			//创建输出流
+			out = response.getOutputStream();
+			//创建缓冲区
+			byte buffer[] = new byte[1024];
+			int len = 0;
+			//循环将输入流中的内容读取到缓冲区当中
+			while((len=in.read(buffer))>0){
+				//输出缓冲区的内容到浏览器，实现文件下载
+				out.write(buffer, 0, len);
+			}
+			
+			in.close();
+			in = null;
+			out.close();
+			out = null;
+		}catch (Exception e) {
+			if(in != null)
+			{
+				in.close();
+			}
+			if(out != null)
+			{
+				out.close();						
+			}
+			e.printStackTrace();
+			System.out.println("sendFileToWebPage() Exception");
+		}
+	}
+
 	
 	protected void sendFileToWebPage(String localParentPath, String fileName, String showName, ReturnAjax rt,HttpServletResponse response,HttpServletRequest request, String disposition) throws Exception{
 		
