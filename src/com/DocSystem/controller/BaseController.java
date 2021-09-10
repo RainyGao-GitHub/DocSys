@@ -10212,7 +10212,7 @@ public class BaseController  extends BaseFunction{
 			// 从class目录下直接读取
     		
     		Statement statement = conn.createStatement();
-    		statement.execute("drop table if exists doc");
+    		//statement.execute("drop table if exists doc");
     		statement.execute("CREATE TABLE `doc` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `NAME` varchar(200) DEFAULT NULL,\n" +
@@ -10232,7 +10232,7 @@ public class BaseController  extends BaseFunction{
     				"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
     				")");
 
-    		statement.execute("drop table if exists doc_auth");
+    		//statement.execute("drop table if exists doc_auth");
     		statement.execute("CREATE TABLE `doc_auth` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `USER_ID` int(11) DEFAULT NULL,\n" +
@@ -10253,7 +10253,7 @@ public class BaseController  extends BaseFunction{
     				"  `DOC_NAME` varchar(200) DEFAULT NULL\n" +
     				"  );");
 
-    		statement.execute("drop table if exists doc_share");
+    		//statement.execute("drop table if exists doc_share");
     		statement.execute("CREATE TABLE `doc_share` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `SHARE_ID` int(11) NOT NULL,\n" +
@@ -10267,7 +10267,7 @@ public class BaseController  extends BaseFunction{
     				"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
     				")");
 
-    		statement.execute("drop table if exists doc_lock");
+    		//statement.execute("drop table if exists doc_lock");
     		statement.execute("CREATE TABLE `doc_lock` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `TYPE` int(10) DEFAULT NULL,\n" +
@@ -10282,14 +10282,14 @@ public class BaseController  extends BaseFunction{
     				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
     				")");
 
-    		statement.execute("drop table if exists group_member");
+    		//statement.execute("drop table if exists group_member");
     		statement.execute("CREATE TABLE `group_member` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
     				"  `USER_ID` int(11) DEFAULT NULL\n" +
     				")");
 
-    		statement.execute("drop table if exists repos");
+    		//statement.execute("drop table if exists repos");
     		statement.execute("CREATE TABLE `repos` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `NAME` varchar(255) DEFAULT NULL,\n" +
@@ -10320,7 +10320,7 @@ public class BaseController  extends BaseFunction{
     				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
     				")");
 
-    		statement.execute("drop table if exists repos_auth");
+    		//statement.execute("drop table if exists repos_auth");
     		statement.execute("CREATE TABLE `repos_auth` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `USER_ID` int(11) DEFAULT NULL,\n" +
@@ -10338,21 +10338,21 @@ public class BaseController  extends BaseFunction{
     				"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
     				")");
 
-    		statement.execute("drop table if exists role;");
+    		//statement.execute("drop table if exists role;");
     		statement.execute("CREATE TABLE `role` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `NAME` varchar(50) NOT NULL,\n" +
     				"  `ROLE_ID` int(11) NOT NULL\n" +
     				")");
 
-    		statement.execute("drop table if exists sys_config");
+    		//statement.execute("drop table if exists sys_config");
     		statement.execute("CREATE TABLE `sys_config` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
     				"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
     				")");
 
-    		statement.execute("drop table if exists user");
+    		//statement.execute("drop table if exists user");
     		statement.execute("CREATE TABLE user (\n" +
     				"    ID              INTEGER       PRIMARY KEY,\n" +
     				"    NAME            VARCHAR (40)  DEFAULT NULL,\n" +
@@ -10378,7 +10378,7 @@ public class BaseController  extends BaseFunction{
     				"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
     				")");
 
-    		statement.execute("drop table if exists user_group");
+    		//statement.execute("drop table if exists user_group");
     		statement.execute("CREATE TABLE `user_group` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `NAME` varchar(200) DEFAULT NULL,\n" +
