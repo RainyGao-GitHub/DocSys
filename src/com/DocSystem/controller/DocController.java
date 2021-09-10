@@ -2130,6 +2130,106 @@ public class DocController extends BaseController{
 		doc.setName(targetName);
 		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
 	}
+	
+	//downloadDocEx is for office-editor
+	@RequestMapping(value="/downloadDocEx/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}/{encryptEn}/{orgName}", method=RequestMethod.GET)
+	public void downloadDocEx(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId, @PathVariable("encryptEn") Integer encryptEn, @PathVariable("orgName") String orgName,
+			String disposition,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		Log.println("\n************** downloadDoc ****************");
+		Log.println("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = null;
+		//Convert authCode and shareId same with Non Rest Style request
+		if(authCode.equals("0"))
+		{
+			authCode = null;
+		}
+		if(shareId == 0)
+		{
+			shareId = null;
+		}
+	
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode, null) == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+			//reposAccess = authCodeMap.get(authCode).getReposAccess();
+		}
+		else
+		{
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
+			if(reposAccess == null)
+			{
+				Log.docSysErrorLog("非法仓库访问！", rt);
+				writeJson(rt, response);
+				return;	
+			}
+		}
+		
+		if(targetPath == null || targetName == null)
+		{
+			Log.docSysErrorLog("目标路径不能为空！", rt);
+			return;
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = Base64Util.base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			Log.docSysErrorLog("目标路径解码失败！", rt);
+			return;
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = Base64Util.base64Decode(targetName);
+		if(targetName == null)
+		{
+			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			return;
+		}
+	
+		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		if(encryptEn == null || encryptEn == 0 || vid == null)
+		{
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
+		}
+		else
+		{
+			Repos repos = getReposEx(vid);
+			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
+			{
+				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			}
+			else
+			{
+				String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
+				String tmpTargetName = targetName;
+				if(tmpTargetName == null || tmpTargetName.isEmpty())
+				{
+					tmpTargetName = repos.getName(); //用仓库名作为下载名字
+				}
+				FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
+				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
+				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
+				//tmpDirForDecrypt need to delete
+				FileUtil.delDir(tmpTargetPath);
+			}
+		}
+		
+		Doc doc = new Doc();
+		doc.setPath(targetPath);
+		doc.setName(targetName);
+		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
+	}
 
 	/**************** get Tmp File ******************/
 	@RequestMapping("/doGetTmpFile.do")
