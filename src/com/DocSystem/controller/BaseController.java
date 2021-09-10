@@ -10191,7 +10191,7 @@ public class BaseController  extends BaseFunction{
 	 * @return 
 	 * @throws Exception e
 	 */
-	private static boolean initSqliteTables(String type, String url, String user, String pwd) {
+	private static boolean initDBTables(String type, String url, String user, String pwd) {
     	boolean ret = false;
     	Connection conn = null;
     	ScriptRunner runner = null;
@@ -10215,13 +10215,13 @@ public class BaseController  extends BaseFunction{
     		//statement.execute("drop table if exists doc");
     		statement.execute("CREATE TABLE `doc` (\n" +
     				"  `ID` integer primary key ,\n" +
-    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
+    				"  `NAME` varchar(300) DEFAULT NULL,\n" +
     				"  `TYPE` int(10) DEFAULT NULL,\n" +
     				"  `SIZE` bigint(20) NOT NULL DEFAULT '0',\n" +
     				"  `CHECK_SUM` varchar(32) DEFAULT NULL,\n" +
     				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
     				"  `CONTENT` varchar(10000) default null,\n" +
-    				"  `PATH` varchar(2000) NOT NULL DEFAULT '',\n" +
+    				"  `PATH` varchar(6000) NOT NULL DEFAULT '',\n" +
     				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
     				"  `PID` bigint(20) NOT NULL DEFAULT '0',\n" +
     				"  `VID` int(11) DEFAULT NULL,\n" +
@@ -10249,16 +10249,16 @@ public class BaseController  extends BaseFunction{
     				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
     				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
     				"  `HERITABLE` int(1) NOT NULL DEFAULT '0',\n" +
-    				"  `DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
-    				"  `DOC_NAME` varchar(200) DEFAULT NULL\n" +
+    				"  `DOC_PATH` varchar(6000) DEFAULT NULL,\n" +
+    				"  `DOC_NAME` varchar(300) DEFAULT NULL\n" +
     				"  );");
 
     		//statement.execute("drop table if exists doc_share");
     		statement.execute("CREATE TABLE `doc_share` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `SHARE_ID` int(11) NOT NULL,\n" +
-    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
-    				"  `PATH` varchar(2000) NOT NULL DEFAULT '',\n" +
+    				"  `NAME` varchar(300) DEFAULT NULL,\n" +
+    				"  `PATH` varchar(6000) NOT NULL DEFAULT '',\n" +
     				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
     				"  `VID` int(11) DEFAULT NULL,\n" +
     				"  `SHARE_AUTH` varchar(2000) DEFAULT NULL,\n" +
@@ -10271,8 +10271,8 @@ public class BaseController  extends BaseFunction{
     		statement.execute("CREATE TABLE `doc_lock` (\n" +
     				"  `ID` integer primary key ,\n" +
     				"  `TYPE` int(10) DEFAULT NULL,\n" +
-    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
-    				"  `PATH` varchar(2000) NOT NULL DEFAULT '/',\n" +
+    				"  `NAME` varchar(300) DEFAULT NULL,\n" +
+    				"  `PATH` varchar(6000) NOT NULL DEFAULT '/',\n" +
     				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
     				"  `PID` bigint(20) DEFAULT NULL,\n" +
     				"  `VID` int(10) DEFAULT NULL,\n" +
@@ -10390,7 +10390,7 @@ public class BaseController  extends BaseFunction{
     				")");
             ret = true;
         } catch (Exception e) {
-            System.out.println("sql脚本执行发生异常");
+            System.out.println("initDBTables 数据库表初始化发生异常");
             e.printStackTrace();
         }finally{
 	        // 关闭资源
@@ -11235,19 +11235,22 @@ public class BaseController  extends BaseFunction{
 	protected static boolean initDBForSqlite(String type, String url, String user, String pwd) 
 	{
 		System.out.println("initDBForSqlite() url:" + url);
-		return initSqliteTables(type, url, user, pwd);
+		return initDBTables(type, url, user, pwd);
 	}
 	
 	protected static boolean initDBForMysql(String type, String url, String user, String pwd) 
 	{
-		System.out.println("initDBForMysql()");
-		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/docsystem.sql";
-		if(FileUtil.isFileExist(sqlScriptPath) == false)
-		{
-			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
-			return false;
-		}
-		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
+		System.out.println("initDBForMysql() url:" + url);
+		
+		return initDBTables(type, url, user, pwd);
+		
+		//String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/docsystem.sql";
+		//if(FileUtil.isFileExist(sqlScriptPath) == false)
+		//{
+		//	System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
+		//	return false;
+		//}
+		//return executeSqlScript(sqlScriptPath, type, url, user, pwd);
 	}
 
 	private static List<Integer> getDBTabListForUpgarde(Integer oldVersion, Integer newVersion) 
