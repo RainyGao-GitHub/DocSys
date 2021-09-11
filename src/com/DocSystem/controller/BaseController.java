@@ -9912,9 +9912,19 @@ public class BaseController  extends BaseFunction{
 			initReposExtentionConfig();
 		}
 		
+		initBusinessChannel();
+		
 		return ret;
 	}
 	
+	private void initBusinessChannel() {
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel != null)
+        {	
+			channel.initBussinessChannel();
+	    }
+	}
+
 	protected void initReposExtentionConfig() {
 		Log.println("initReposExtentionConfig for All Repos");
 		List <Repos> list = reposService.getAllReposList();
@@ -13549,7 +13559,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean isOfficeEditorApiConfiged(HttpServletRequest request) {
-		System.out.println("FileUtil.isOfficeEditorApiConfiged() officeEditorApi:" + officeEditorApi);
+		System.out.println("isOfficeEditorApiConfiged() officeEditorApi:" + officeEditorApi);
 		String officeEditor = getOfficeEditor(request);
 		if(officeEditor == null)
 		{
