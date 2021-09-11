@@ -593,9 +593,10 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		//重置数据库表不删除数据库（因为删除了需要重新创建数据库，需要利用其他数据库，避免不必要的麻烦）
 		//String dbName = getDBNameFromUrl(type, url);
 		//deleteDB(type, dbName, url, user, pwd);
-		//重置数据库表不删除数据库
+		//createDB(type, dbName, url, user, pwd);
 		deleteDBTabsEx(type, url, user, pwd);
 		if(initDB(type, url, user, pwd) == false)
 		{
