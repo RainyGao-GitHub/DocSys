@@ -1656,7 +1656,7 @@ public class BaseFunction{
 		return path;
 	}
 	
-	protected String getIndexLibPathForPreferLink() {
+	protected static String getIndexLibPathForPreferLink() {
 		return getDBStorePath() + "UserPreferLink/";
 	}
 	
