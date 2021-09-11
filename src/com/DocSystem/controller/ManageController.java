@@ -593,9 +593,10 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String dbName = getDBNameFromUrl(type, url);
-		deleteDB(type, dbName, url, user, pwd);
-		//deleteDBTabsEx(type, url, user, pwd);
+		//String dbName = getDBNameFromUrl(type, url);
+		//deleteDB(type, dbName, url, user, pwd);
+		//重置数据库表不删除数据库
+		deleteDBTabsEx(type, url, user, pwd);
 		if(initDB(type, url, user, pwd) == false)
 		{
 			System.out.println("resetDatabase() reset database failed: initDB error");
