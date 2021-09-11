@@ -10281,9 +10281,43 @@ public class BaseController  extends BaseFunction{
 			// 从class目录下直接读取
     		
     		Statement statement = conn.createStatement();
+    		initDBTable("doc", statement);
+    		initDBTable("doc_auth", statement);
+    		initDBTable("doc_share", statement);
+    		initDBTable("doc_lock", statement);
+    		initDBTable("group_member", statement);
+    		initDBTable("repos", statement);
+    		initDBTable("repos_auth", statement);
+    		initDBTable("role", statement);
+    		initDBTable("sys_config", statement);
+    		initDBTable("user", statement);
+    		initDBTable("user_group", statement);
+            ret = true;
+        } catch (Exception e) {
+            System.out.println("initDBTables 数据库表初始化发生异常");
+            e.printStackTrace();
+        }finally{
+	        // 关闭资源
+	        try{
+	            if(runner!=null) runner.closeConnection();
+	            if(conn!=null) conn.close();
+	            if(in!=null) in.close();
+	            if(read!=null) read.close();
+	        }catch(Exception se){
+	            se.printStackTrace();
+	        }
+	    }
+        
+		return ret;
+	}
+	
+	private static void initDBTable(String tabName, Statement statement) throws Exception {
+    	switch(tabName)
+    	{
+    	case "doc":
     		//statement.execute("drop table if exists doc");
     		statement.execute("CREATE TABLE `doc` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `NAME` varchar(300) DEFAULT NULL,\n" +
     				"  `TYPE` int(10) DEFAULT NULL,\n" +
     				"  `SIZE` bigint(20) NOT NULL DEFAULT '0',\n" +
@@ -10300,10 +10334,11 @@ public class BaseController  extends BaseFunction{
     				"  `LATEST_EDITOR` int(11) DEFAULT NULL,\n" +
     				"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
     				")");
-
+    		break;
+    	case "doc_auth":
     		//statement.execute("drop table if exists doc_auth");
     		statement.execute("CREATE TABLE `doc_auth` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `USER_ID` int(11) DEFAULT NULL,\n" +
     				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
     				"  `TYPE` int(1) DEFAULT NULL,\n" +
@@ -10321,10 +10356,11 @@ public class BaseController  extends BaseFunction{
     				"  `DOC_PATH` varchar(6000) DEFAULT NULL,\n" +
     				"  `DOC_NAME` varchar(300) DEFAULT NULL\n" +
     				"  );");
-
+    		break;
+    	case "doc_share":	
     		//statement.execute("drop table if exists doc_share");
     		statement.execute("CREATE TABLE `doc_share` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `SHARE_ID` int(11) NOT NULL,\n" +
     				"  `NAME` varchar(300) DEFAULT NULL,\n" +
     				"  `PATH` varchar(6000) NOT NULL DEFAULT '',\n" +
@@ -10335,10 +10371,11 @@ public class BaseController  extends BaseFunction{
     				"  `SHARED_BY` int(11) DEFAULT NULL,\n" +
     				"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
     				")");
-
+    		break;
+    	case "doc_lock":
     		//statement.execute("drop table if exists doc_lock");
     		statement.execute("CREATE TABLE `doc_lock` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `TYPE` int(10) DEFAULT NULL,\n" +
     				"  `NAME` varchar(300) DEFAULT NULL,\n" +
     				"  `PATH` varchar(6000) NOT NULL DEFAULT '/',\n" +
@@ -10350,17 +10387,19 @@ public class BaseController  extends BaseFunction{
     				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
     				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
     				")");
-
+    		break;
+    	case "group_member":
     		//statement.execute("drop table if exists group_member");
     		statement.execute("CREATE TABLE `group_member` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
     				"  `USER_ID` int(11) DEFAULT NULL\n" +
     				")");
-
+    		break;
+    	case "repos":
     		//statement.execute("drop table if exists repos");
     		statement.execute("CREATE TABLE `repos` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `NAME` varchar(255) DEFAULT NULL,\n" +
     				"  `TYPE` int(10) DEFAULT '1',\n" +
     				"  `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes',\n" +
@@ -10388,10 +10427,11 @@ public class BaseController  extends BaseFunction{
     				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
     				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
     				")");
-
+    		break;
+    	case "repos_auth":
     		//statement.execute("drop table if exists repos_auth");
     		statement.execute("CREATE TABLE `repos_auth` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `USER_ID` int(11) DEFAULT NULL,\n" +
     				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
     				"  `TYPE` int(1) DEFAULT '0',\n" +
@@ -10406,24 +10446,27 @@ public class BaseController  extends BaseFunction{
     				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
     				"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
     				")");
-
+    		break;
+    	case "role":
     		//statement.execute("drop table if exists role;");
     		statement.execute("CREATE TABLE `role` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `NAME` varchar(50) NOT NULL,\n" +
     				"  `ROLE_ID` int(11) NOT NULL\n" +
     				")");
-
+    		break;
+    	case "sys_config":
     		//statement.execute("drop table if exists sys_config");
     		statement.execute("CREATE TABLE `sys_config` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
     				"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
     				")");
-
+    		break;
+    	case "user":
     		//statement.execute("drop table if exists user");
     		statement.execute("CREATE TABLE user (\n" +
-    				"    ID              INTEGER       PRIMARY KEY,\n" +
+    				"    ID              INTEGER       PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
     				"    NAME            VARCHAR (40)  DEFAULT NULL,\n" +
     				"    PWD             VARCHAR (40)  NOT NULL,\n" +
     				"    TYPE            INT (1)       NOT NULL\n" +
@@ -10446,10 +10489,11 @@ public class BaseController  extends BaseFunction{
     				"                                  DEFAULT '0',\n" +
     				"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
     				")");
-
+    		break;
+    	case "user_group":
     		//statement.execute("drop table if exists user_group");
     		statement.execute("CREATE TABLE `user_group` (\n" +
-    				"  `ID` integer primary key ,\n" +
+    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `NAME` varchar(200) DEFAULT NULL,\n" +
     				"  `TYPE` int(1) DEFAULT NULL,\n" +
     				"  `INFO` varchar(1000) DEFAULT NULL,\n" +
@@ -10457,25 +10501,10 @@ public class BaseController  extends BaseFunction{
     				"  `PRIORITY` int(2) DEFAULT NULL,\n" +
     				"  `CREATE_TIME` varchar(50) DEFAULT NULL\n" +
     				")");
-            ret = true;
-        } catch (Exception e) {
-            System.out.println("initDBTables 数据库表初始化发生异常");
-            e.printStackTrace();
-        }finally{
-	        // 关闭资源
-	        try{
-	            if(runner!=null) runner.closeConnection();
-	            if(conn!=null) conn.close();
-	            if(in!=null) in.close();
-	            if(read!=null) read.close();
-	        }catch(Exception se){
-	            se.printStackTrace();
-	        }
-	    }
-        
-		return ret;
+    		break;
+    	}
 	}
-
+	
 	protected static boolean createDB(String dbType, String dbName,String url, String user, String pwd) 
     {
         try {
@@ -10995,26 +11024,66 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
-			String dbTabName = getNameByObjType(dbTabId);
-			
-			//更新数据库表结构
-			//check if init script exists
-			String dbTabInitSqlScriptName = "docsystem_" + dbTabName.toUpperCase() + ".sql";
-			String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/" + dbTabInitSqlScriptName;
-			if(FileUtil.isFileExist(sqlScriptPath) == false)
-			{
-				System.out.println("DBUpgrade() sqlScriptPath:" + sqlScriptPath + " 不存在");
-				continue;
-			}
-			//delete tab
-			deleteDBTab(dbTabName, type, url, user, pwd);
-			//init tab
-			executeSqlScript(sqlScriptPath, type, url, user, pwd);
+			String dbTabName = getNameByObjType(dbTabId);			
+			resetDBTable(dbTabName, type, url, user, pwd);
 		}
 		
 		//导入数据
 		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, backUpPath, "docsystem_data.json", type, url, user, pwd);
 		return true;
+	}
+	
+	private static boolean resetDBTable(String dbTabName, String type, String url, String user, String pwd) {
+    	boolean ret = false;
+    	Connection conn = null;
+    	ScriptRunner runner = null;
+    	InputStream in = null;
+        Reader read = null;
+    	
+        try {
+        	Class.forName(getJdbcDriverName(type));
+        	conn = getDBConnection(type, url,user,pwd);
+            runner = new ScriptRunner(conn);
+	    		
+    		
+            Statement statement = conn.createStatement();
+    		//delete db tab
+            statement.execute("drop table if exists " + dbTabName);
+    		//init db tab
+            initDBTable(dbTabName, statement);
+    	    ret = true;
+        } catch (Exception e) {
+            System.out.println("initDBTables 数据库表初始化发生异常");
+            e.printStackTrace();
+        }finally{
+	        // 关闭资源
+	        try{
+	            if(runner!=null) runner.closeConnection();
+	            if(conn!=null) conn.close();
+	            if(in!=null) in.close();
+	            if(read!=null) read.close();
+	        }catch(Exception se){
+	            se.printStackTrace();
+	        }
+	    }
+        
+		return ret;
+	}
+
+	private static void resetDBTableWithSqlFile(String dbTabName, String type, String url, String user, String pwd) {
+		//更新数据库表结构
+		//check if init script exists
+		String dbTabInitSqlScriptName = "docsystem_" + dbTabName.toUpperCase() + ".sql";
+		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/" + dbTabInitSqlScriptName;
+		if(FileUtil.isFileExist(sqlScriptPath) == false)
+		{
+			System.out.println("DBUpgrade() sqlScriptPath:" + sqlScriptPath + " 不存在");
+			return;
+		}
+		//delete tab
+		deleteDBTab(dbTabName, type, url, user, pwd);
+		//init tab
+		executeSqlScript(sqlScriptPath, type, url, user, pwd);
 	}
 
 	private static List<Integer> buildBackUpTabList(boolean skipDocTab) {
