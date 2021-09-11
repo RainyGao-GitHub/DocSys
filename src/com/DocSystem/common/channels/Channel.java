@@ -19,7 +19,9 @@ import util.ReturnAjax;
 public interface Channel {
 
     String channelName();
-        
+
+	void initBussinessChannel();	
+    
 	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc);
 
 	Doc remoteStorageGetEntry(Repos repos, Doc doc);
@@ -38,5 +40,5 @@ public interface Channel {
 	void encryptFile(Repos repos, String path, String name);	
 	void decryptFile(Repos repos, String path, String name);
 	byte [] encryptData(Repos repos, byte data[]);	
-	byte [] decryptData(Repos repos, byte data[]);	
+	byte [] decryptData(Repos repos, byte data[]);
 }
