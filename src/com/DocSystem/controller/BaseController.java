@@ -9861,6 +9861,7 @@ public class BaseController  extends BaseFunction{
 			docSysIniDir.mkdirs();	
 		}
 		
+		//初始化数据库表对象（注意：不能简单使用反射，因为变化的字段未必是数据库表的成员）
 		if(initObjMemberListMap() == false)
 		{
 			System.out.println("docSysInit() initObjMemberListMap Faield!");
