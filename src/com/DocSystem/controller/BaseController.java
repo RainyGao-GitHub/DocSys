@@ -486,7 +486,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	protected Doc getRemoteStorageEntry(Repos repos, Doc doc) {
+	protected static Doc getRemoteStorageEntry(Repos repos, Doc doc) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel == null)
         {
@@ -554,7 +554,7 @@ public class BaseController  extends BaseFunction{
     	return subEntryList;
 	}
 	
-	protected List<Doc> getLocalEntryList(Repos repos, Doc doc) 
+	protected static List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
 		//System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
@@ -623,7 +623,7 @@ public class BaseController  extends BaseFunction{
     	}
 	}
 	
-	protected HashMap<String, Doc> getLocalEntryHashMap(Repos repos, Doc doc) 
+	protected static HashMap<String, Doc> getLocalEntryHashMap(Repos repos, Doc doc) 
 	{
     	try {
     		String reposPath = Path.getReposPath(repos);
@@ -691,7 +691,7 @@ public class BaseController  extends BaseFunction{
     	}
 	}
 
-	protected Integer getSubDocLevel(Doc doc) {
+	protected static Integer getSubDocLevel(Doc doc) {
 		if(doc.getLevel() == null)
 		{
 			doc.setLevel(Path.getLevelByParentPath(doc.getPath()));
@@ -4698,7 +4698,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//确定Doc localChangeType
-	protected DocChangeType getLocalDocChangeType(Doc dbDoc, Doc localEntry) 
+	protected static DocChangeType getLocalDocChangeType(Doc dbDoc, Doc localEntry) 
 	{						
 		if(dbDoc == null)
 		{
@@ -4761,7 +4761,7 @@ public class BaseController  extends BaseFunction{
 		return DocChangeType.UNDEFINED;
 	}
 	
-	protected DocChangeType getRemoteDocChangeType(Doc dbDoc, Doc remoteEntry) 
+	protected static DocChangeType getRemoteDocChangeType(Doc dbDoc, Doc remoteEntry) 
 	{						
 		//dbDoc不存在
 		if(dbDoc == null)
@@ -5180,7 +5180,7 @@ public class BaseController  extends BaseFunction{
 		return DocChangeType.UNDEFINED;
 	}
 
-	protected Doc fsGetDoc(Repos repos, Doc doc) 
+	protected static Doc fsGetDoc(Repos repos, Doc doc) 
 	{
 		Doc localDoc = new Doc();
 		localDoc.setVid(repos.getId());
