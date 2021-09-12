@@ -9810,8 +9810,6 @@ public class BaseController  extends BaseFunction{
 		}
 		System.out.println("docSysInit() officeEditorApi:" + officeEditorApi);
 		
-		initBusinessChannel();
-		
 		serverIP = IPUtil.getIpAddress();
 		System.out.println("docSysInit() serverIP:" + serverIP);
 		
@@ -9914,14 +9912,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return ret;
-	}
-	
-	private void initBusinessChannel() {
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
-		if(channel != null)
-        {	
-			channel.initBussinessChannel();
-	    }
 	}
 
 	protected void initReposExtentionConfig() {
