@@ -10338,7 +10338,7 @@ public class BaseController  extends BaseFunction{
     				"  `CREATE_TIME` bigint(20) NOT NULL DEFAULT '0',\n" +
     				"  `LATEST_EDITOR` int(11) DEFAULT NULL,\n" +
     				"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "doc_auth":
     		//statement.execute("drop table if exists doc_auth");
@@ -10360,7 +10360,7 @@ public class BaseController  extends BaseFunction{
     				"  `HERITABLE` int(1) NOT NULL DEFAULT '0',\n" +
     				"  `DOC_PATH` varchar(6000) DEFAULT NULL,\n" +
     				"  `DOC_NAME` varchar(300) DEFAULT NULL\n" +
-    				"  );");
+    				"  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
     		break;
     	case "doc_share":	
     		//statement.execute("drop table if exists doc_share");
@@ -10375,7 +10375,7 @@ public class BaseController  extends BaseFunction{
     				"  `SHARE_PWD` varchar(20) DEFAULT NULL,\n" +
     				"  `SHARED_BY` int(11) DEFAULT NULL,\n" +
     				"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "doc_lock":
     		//statement.execute("drop table if exists doc_lock");
@@ -10391,7 +10391,7 @@ public class BaseController  extends BaseFunction{
     				"  `LOCKER` varchar(200) DEFAULT NULL,\n" +
     				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
     				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "group_member":
     		//statement.execute("drop table if exists group_member");
@@ -10399,7 +10399,7 @@ public class BaseController  extends BaseFunction{
     				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
     				"  `USER_ID` int(11) DEFAULT NULL\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "repos":
     		//statement.execute("drop table if exists repos");
@@ -10431,7 +10431,7 @@ public class BaseController  extends BaseFunction{
     				"  `STATE` int(1) NOT NULL DEFAULT '0',\n" +
     				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
     				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "repos_auth":
     		//statement.execute("drop table if exists repos_auth");
@@ -10450,7 +10450,7 @@ public class BaseController  extends BaseFunction{
     				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
     				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
     				"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "role":
     		//statement.execute("drop table if exists role;");
@@ -10458,7 +10458,7 @@ public class BaseController  extends BaseFunction{
     				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `NAME` varchar(50) NOT NULL,\n" +
     				"  `ROLE_ID` int(11) NOT NULL\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "sys_config":
     		//statement.execute("drop table if exists sys_config");
@@ -10466,7 +10466,7 @@ public class BaseController  extends BaseFunction{
     				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
     				"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
     				"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "user":
     		//statement.execute("drop table if exists user");
@@ -10493,7 +10493,7 @@ public class BaseController  extends BaseFunction{
     				"    CREATE_TYPE     INT (1)       NOT NULL\n" +
     				"                                  DEFAULT '0',\n" +
     				"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	case "user_group":
     		//statement.execute("drop table if exists user_group");
@@ -10505,7 +10505,7 @@ public class BaseController  extends BaseFunction{
     				"  `IMG` varchar(200) DEFAULT NULL,\n" +
     				"  `PRIORITY` int(2) DEFAULT NULL,\n" +
     				"  `CREATE_TIME` varchar(50) DEFAULT NULL\n" +
-    				")");
+    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     		break;
     	}
 	}
