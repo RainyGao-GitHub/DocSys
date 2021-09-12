@@ -1397,7 +1397,8 @@ public class FileUtil {
 			return null;
 		}
 
-		String charset = "GBK";
+		//String charset = "GBK";
+		String charset = "UTF-8";
 		try {
 			boolean checked = false;			
 			if (buffSize >= 2 && buff[0] == (byte) 0xFF && buff[1] == (byte) 0xFE) {
