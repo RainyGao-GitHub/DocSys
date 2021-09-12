@@ -1326,7 +1326,7 @@ public class FileUtil {
 		File file = new File(path);
 		if(file.exists() == false)
 		{
-			System.out.println("getCharset() file not exist");
+			System.out.println("getCharset() file [" + path + "] not exist");
 			return null;
 		}
 		
@@ -1384,19 +1384,20 @@ public class FileUtil {
 			e.printStackTrace();
 			charset = null;
 		}
-		System.out.println("getCharset() charset:" + charset);
+		System.out.println("getCharset() file [" + path + "] charset:" + charset);
 		return charset;
 	}
 	
 	//get charset by buff
 	public static String getCharset(byte[] buff) {
-		String charset = "GBK";
 		int buffSize = buff.length;
 		if(buffSize <= 0)
 		{
-			return charset;
+			System.out.println("getCharset() buffSize:" + buffSize);
+			return null;
 		}
-		
+
+		String charset = "GBK";
 		try {
 			boolean checked = false;			
 			if (buffSize >= 2 && buff[0] == (byte) 0xFF && buff[1] == (byte) 0xFE) {
