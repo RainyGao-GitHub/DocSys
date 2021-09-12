@@ -9610,7 +9610,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected static Integer isReposTextSearchEnabled(Repos repos) {
-		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("0") == null)
+		if(repos.textSearchConfig != null && repos.textSearchConfig.realDocTextSearchDisableHashMap.get("0") == null)
 		{
 			return 1;
 		}
@@ -9810,6 +9810,7 @@ public class BaseController  extends BaseFunction{
 		}
 		System.out.println("docSysInit() officeEditorApi:" + officeEditorApi);
 		
+		initBusinessChannel();
 		
 		serverIP = IPUtil.getIpAddress();
 		System.out.println("docSysInit() serverIP:" + serverIP);
@@ -9912,8 +9913,6 @@ public class BaseController  extends BaseFunction{
 			initReposExtentionConfig();
 		}
 		
-		initBusinessChannel();
-		
 		return ret;
 	}
 	
@@ -9927,22 +9926,27 @@ public class BaseController  extends BaseFunction{
 
 	protected void initReposExtentionConfig() {
 		Log.println("initReposExtentionConfig for All Repos");
-		List <Repos> list = reposService.getAllReposList();
-		if(list == null)
-		{
-			Log.println("initReposExtentionConfig there is no repos");
-			return;
-		}
-		
-		for(int i=0; i<list.size(); i++)
-		{
-			Repos repos = list.get(i);
-			//Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
-			parseRemoteStorageConfig(repos, repos.getRemoteStorage());
-			initReposTextSearchConfig(repos);
-			initReposEncryptConfig(repos);
-		}
-	}	
+		try {
+			List <Repos> list = reposService.getAllReposList();
+			if(list == null)
+			{
+				Log.println("initReposExtentionConfig there is no repos");
+				return;
+			}
+			
+			for(int i=0; i<list.size(); i++)
+			{
+				Repos repos = list.get(i);
+				//Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
+				parseRemoteStorageConfig(repos, repos.getRemoteStorage());
+				initReposTextSearchConfig(repos);
+				initReposEncryptConfig(repos);
+			}
+	    } catch (Exception e) {
+	        System.out.println("initReposExtentionConfig 异常");
+	        e.printStackTrace();
+		}	
+	}
 	
 	protected void initReposEncryptConfig(Repos repos) {
 		EncryptConfig config = getReposEncryptConfig(repos);
