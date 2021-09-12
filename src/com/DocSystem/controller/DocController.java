@@ -2374,7 +2374,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 
-		Log.println("\n ************** getDocContent ************");
+		Log.println("\n************** getDocContent ************");
 		Log.println("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId);
 
 		//注意该接口支持name是空的的情况
