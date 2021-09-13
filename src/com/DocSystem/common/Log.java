@@ -5,11 +5,23 @@ import com.alibaba.fastjson.JSON;
 import util.ReturnAjax;
 
 public class Log {
+	final static int debug = 0;
+	final static int warn = 1;
+	final static int error = 2;
+	static int logLevel = warn;
+	
+	public static boolean isLogEnable(int level)
+	{
+		return level > logLevel;
+	}
+	
+	
+	
 	//To print the obj by convert it to json format
 	public static void printObject(String Head,Object obj)
 	{
 		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
-		System.out.println(Head + json);		
+		System.out.println(Head + json);
 	}
 	
 	public static void printObject(String Head,Object obj, String filePath, boolean enableConsole)
@@ -99,6 +111,13 @@ public class Log {
 	
 	public static void println(String content) {
 		System.out.println(content);
+	}
+	
+	public static void println(int level, String content) {
+		if(isLogEnable(level))
+		{
+			System.out.println(content);
+		}
 	}
 	
 	public static void println(String content, String filePath, boolean enableConsole) {
