@@ -10286,17 +10286,17 @@ public class BaseController  extends BaseFunction{
 			// 从class目录下直接读取
     		
     		Statement statement = conn.createStatement();
-    		initDBTable("doc", statement);
-    		initDBTable("doc_auth", statement);
-    		initDBTable("doc_share", statement);
-    		initDBTable("doc_lock", statement);
-    		initDBTable("group_member", statement);
-    		initDBTable("repos", statement);
-    		initDBTable("repos_auth", statement);
-    		initDBTable("role", statement);
-    		initDBTable("sys_config", statement);
-    		initDBTable("user", statement);
-    		initDBTable("user_group", statement);
+    		initDBTable("doc", statement, type);
+    		initDBTable("doc_auth", statement, type);
+    		initDBTable("doc_share", statement, type);
+    		initDBTable("doc_lock", statement, type);
+    		initDBTable("group_member", statement, type);
+    		initDBTable("repos", statement, type);
+    		initDBTable("repos_auth", statement, type);
+    		initDBTable("role", statement, type);
+    		initDBTable("sys_config", statement, type);
+    		initDBTable("user", statement, type);
+    		initDBTable("user_group", statement, type);
             ret = true;
         } catch (Exception e) {
             System.out.println("initDBTables 数据库表初始化发生异常");
@@ -10316,196 +10316,298 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	private static void initDBTable(String tabName, Statement statement) throws Exception {
-    	switch(tabName)
+	private static void initDBTable(String tabName, Statement statement, String type) throws Exception {
+		String sqlCmd = "";
+		switch(tabName)
     	{
     	case "doc":
+    		sqlCmd = "CREATE TABLE `doc` (\n";
+			if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+			"  `NAME` varchar(300) DEFAULT NULL,\n" +
+			"  `TYPE` int(10) DEFAULT NULL,\n" +
+			"  `SIZE` bigint(20) NOT NULL DEFAULT '0',\n" +
+			"  `CHECK_SUM` varchar(32) DEFAULT NULL,\n" +
+			"  `REVISION` varchar(100) DEFAULT NULL,\n" +
+			"  `CONTENT` varchar(10000) default null,\n" +
+			"  `PATH` varchar(6000) NOT NULL DEFAULT '',\n" +
+			"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+			"  `PID` bigint(20) NOT NULL DEFAULT '0',\n" +
+			"  `VID` int(11) DEFAULT NULL,\n" +
+			"  `PWD` varchar(20) DEFAULT NULL,\n" +
+			"  `CREATOR` int(11) DEFAULT NULL,\n" +
+			"  `CREATE_TIME` bigint(20) NOT NULL DEFAULT '0',\n" +
+			"  `LATEST_EDITOR` int(11) DEFAULT NULL,\n" +
+			"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     		//statement.execute("drop table if exists doc");
-    		statement.execute("CREATE TABLE `doc` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `NAME` varchar(300) DEFAULT NULL,\n" +
-    				"  `TYPE` int(10) DEFAULT NULL,\n" +
-    				"  `SIZE` bigint(20) NOT NULL DEFAULT '0',\n" +
-    				"  `CHECK_SUM` varchar(32) DEFAULT NULL,\n" +
-    				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
-    				"  `CONTENT` varchar(10000) default null,\n" +
-    				"  `PATH` varchar(6000) NOT NULL DEFAULT '',\n" +
-    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-    				"  `PID` bigint(20) NOT NULL DEFAULT '0',\n" +
-    				"  `VID` int(11) DEFAULT NULL,\n" +
-    				"  `PWD` varchar(20) DEFAULT NULL,\n" +
-    				"  `CREATOR` int(11) DEFAULT NULL,\n" +
-    				"  `CREATE_TIME` bigint(20) NOT NULL DEFAULT '0',\n" +
-    				"  `LATEST_EDITOR` int(11) DEFAULT NULL,\n" +
-    				"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			statement.execute(sqlCmd);
     		break;
     	case "doc_auth":
+    		sqlCmd = "CREATE TABLE `doc_auth` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+			"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
+			"  `USER_ID` int(11) DEFAULT NULL,\n" +
+			"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
+			"  `TYPE` int(1) DEFAULT NULL,\n" +
+			"  `PRIORITY` int(1) NOT NULL DEFAULT '0',\n" +
+			"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+			"  `REPOS_ID` int(11) NOT NULL DEFAULT '0',\n" +
+			"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
+			"  `ACCESS` int(1) NOT NULL DEFAULT '0',\n" +
+			"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
+			"  `ADD_EN` int(1) DEFAULT NULL,\n" +
+			"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
+			"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
+			"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
+			"  `HERITABLE` int(1) NOT NULL DEFAULT '0',\n" +
+			"  `DOC_PATH` varchar(6000) DEFAULT NULL,\n" +
+			"  `DOC_NAME` varchar(300) DEFAULT NULL\n" +
+			"  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+					
     		//statement.execute("drop table if exists doc_auth");
-    		statement.execute("CREATE TABLE `doc_auth` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `USER_ID` int(11) DEFAULT NULL,\n" +
-    				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
-    				"  `TYPE` int(1) DEFAULT NULL,\n" +
-    				"  `PRIORITY` int(1) NOT NULL DEFAULT '0',\n" +
-    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-    				"  `REPOS_ID` int(11) NOT NULL DEFAULT '0',\n" +
-    				"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
-    				"  `ACCESS` int(1) NOT NULL DEFAULT '0',\n" +
-    				"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
-    				"  `ADD_EN` int(1) DEFAULT NULL,\n" +
-    				"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
-    				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
-    				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
-    				"  `HERITABLE` int(1) NOT NULL DEFAULT '0',\n" +
-    				"  `DOC_PATH` varchar(6000) DEFAULT NULL,\n" +
-    				"  `DOC_NAME` varchar(300) DEFAULT NULL\n" +
-    				"  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+    		statement.execute(sqlCmd);
     		break;
     	case "doc_share":	
+    		sqlCmd = "CREATE TABLE `doc_share` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+			"  `SHARE_ID` int(11) NOT NULL,\n" +
+			"  `NAME` varchar(300) DEFAULT NULL,\n" +
+			"  `PATH` varchar(6000) NOT NULL DEFAULT '',\n" +
+			"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+			"  `VID` int(11) DEFAULT NULL,\n" +
+			"  `SHARE_AUTH` varchar(2000) DEFAULT NULL,\n" +
+			"  `SHARE_PWD` varchar(20) DEFAULT NULL,\n" +
+			"  `SHARED_BY` int(11) DEFAULT NULL,\n" +
+			"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";					
     		//statement.execute("drop table if exists doc_share");
-    		statement.execute("CREATE TABLE `doc_share` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `SHARE_ID` int(11) NOT NULL,\n" +
-    				"  `NAME` varchar(300) DEFAULT NULL,\n" +
-    				"  `PATH` varchar(6000) NOT NULL DEFAULT '',\n" +
-    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-    				"  `VID` int(11) DEFAULT NULL,\n" +
-    				"  `SHARE_AUTH` varchar(2000) DEFAULT NULL,\n" +
-    				"  `SHARE_PWD` varchar(20) DEFAULT NULL,\n" +
-    				"  `SHARED_BY` int(11) DEFAULT NULL,\n" +
-    				"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		statement.execute(sqlCmd);
     		break;
     	case "doc_lock":
+    		sqlCmd = "CREATE TABLE `doc_lock` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=    		
+    		"  `TYPE` int(10) DEFAULT NULL,\n" +
+			"  `NAME` varchar(300) DEFAULT NULL,\n" +
+			"  `PATH` varchar(6000) NOT NULL DEFAULT '/',\n" +
+			"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
+			"  `PID` bigint(20) DEFAULT NULL,\n" +
+			"  `VID` int(10) DEFAULT NULL,\n" +
+			"  `STATE` int(1) NOT NULL DEFAULT '1',\n" +
+			"  `LOCKER` varchar(200) DEFAULT NULL,\n" +
+			"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
+			"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     		//statement.execute("drop table if exists doc_lock");
-    		statement.execute("CREATE TABLE `doc_lock` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `TYPE` int(10) DEFAULT NULL,\n" +
-    				"  `NAME` varchar(300) DEFAULT NULL,\n" +
-    				"  `PATH` varchar(6000) NOT NULL DEFAULT '/',\n" +
-    				"  `DOC_ID` bigint(20) DEFAULT NULL,\n" +
-    				"  `PID` bigint(20) DEFAULT NULL,\n" +
-    				"  `VID` int(10) DEFAULT NULL,\n" +
-    				"  `STATE` int(1) NOT NULL DEFAULT '1',\n" +
-    				"  `LOCKER` varchar(200) DEFAULT NULL,\n" +
-    				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
-    				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		statement.execute(sqlCmd);
     		break;
     	case "group_member":
+    		sqlCmd = "CREATE TABLE `group_member` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+    		"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
+			"  `USER_ID` int(11) DEFAULT NULL\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     		//statement.execute("drop table if exists group_member");
-    		statement.execute("CREATE TABLE `group_member` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
-    				"  `USER_ID` int(11) DEFAULT NULL\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		statement.execute(sqlCmd);
     		break;
     	case "repos":
+    		sqlCmd = "CREATE TABLE `repos` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+			"  `NAME` varchar(255) DEFAULT NULL,\n" +
+			"  `TYPE` int(10) DEFAULT '1',\n" +
+			"  `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes',\n" +
+			"  `REAL_DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
+			"  `REMOTE_STORAGE` varchar(5000) DEFAULT NULL,\n" +
+			"  `VER_CTRL` int(2) NOT NULL DEFAULT '0',\n" +
+			"  `IS_REMOTE` int(1) NOT NULL DEFAULT '1',\n" +
+			"  `LOCAL_SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
+			"  `SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
+			"  `SVN_USER` varchar(50) DEFAULT NULL,\n" +
+			"  `SVN_PWD` varchar(20) DEFAULT NULL,\n" +
+			"  `REVISION` varchar(100) DEFAULT NULL,\n" +
+			"  `VER_CTRL1` int(2) NOT NULL DEFAULT '0',\n" +
+			"  `IS_REMOTE1` int(1) NOT NULL DEFAULT '1',\n" +
+			"  `LOCAL_SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
+			"  `SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
+			"  `SVN_USER1` varchar(50) DEFAULT NULL,\n" +
+			"  `SVN_PWD1` varchar(20) DEFAULT NULL,\n" +
+			"  `REVISION1` varchar(100) DEFAULT NULL,\n" +
+			"  `INFO` varchar(1000) DEFAULT NULL,\n" +
+			"  `PWD` varchar(20) DEFAULT NULL,\n" +
+			"  `OWNER` int(11) DEFAULT NULL,\n" +
+			"  `CREATE_TIME` bigint(20) DEFAULT '0',\n" +
+			"  `STATE` int(1) NOT NULL DEFAULT '0',\n" +
+			"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
+			"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     		//statement.execute("drop table if exists repos");
-    		statement.execute("CREATE TABLE `repos` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `NAME` varchar(255) DEFAULT NULL,\n" +
-    				"  `TYPE` int(10) DEFAULT '1',\n" +
-    				"  `PATH` varchar(2000) NOT NULL DEFAULT 'D:/DocSysReposes',\n" +
-    				"  `REAL_DOC_PATH` varchar(2000) DEFAULT NULL,\n" +
-    				"  `REMOTE_STORAGE` varchar(5000) DEFAULT NULL,\n" +
-    				"  `VER_CTRL` int(2) NOT NULL DEFAULT '0',\n" +
-    				"  `IS_REMOTE` int(1) NOT NULL DEFAULT '1',\n" +
-    				"  `LOCAL_SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
-    				"  `SVN_PATH` varchar(2000) DEFAULT NULL,\n" +
-    				"  `SVN_USER` varchar(50) DEFAULT NULL,\n" +
-    				"  `SVN_PWD` varchar(20) DEFAULT NULL,\n" +
-    				"  `REVISION` varchar(100) DEFAULT NULL,\n" +
-    				"  `VER_CTRL1` int(2) NOT NULL DEFAULT '0',\n" +
-    				"  `IS_REMOTE1` int(1) NOT NULL DEFAULT '1',\n" +
-    				"  `LOCAL_SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
-    				"  `SVN_PATH1` varchar(2000) DEFAULT NULL,\n" +
-    				"  `SVN_USER1` varchar(50) DEFAULT NULL,\n" +
-    				"  `SVN_PWD1` varchar(20) DEFAULT NULL,\n" +
-    				"  `REVISION1` varchar(100) DEFAULT NULL,\n" +
-    				"  `INFO` varchar(1000) DEFAULT NULL,\n" +
-    				"  `PWD` varchar(20) DEFAULT NULL,\n" +
-    				"  `OWNER` int(11) DEFAULT NULL,\n" +
-    				"  `CREATE_TIME` bigint(20) DEFAULT '0',\n" +
-    				"  `STATE` int(1) NOT NULL DEFAULT '0',\n" +
-    				"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
-    				"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		statement.execute(sqlCmd);
     		break;
     	case "repos_auth":
-    		//statement.execute("drop table if exists repos_auth");
-    		statement.execute("CREATE TABLE `repos_auth` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `USER_ID` int(11) DEFAULT NULL,\n" +
-    				"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
-    				"  `TYPE` int(1) DEFAULT '0',\n" +
-    				"  `PRIORITY` int(1) DEFAULT '0',\n" +
-    				"  `REPOS_ID` int(11) DEFAULT NULL,\n" +
-    				"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
-    				"  `ACCESS` int(1) DEFAULT NULL,\n" +
-    				"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
-    				"  `ADD_EN` int(1) DEFAULT NULL,\n" +
-    				"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
-    				"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
-    				"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
-    				"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		sqlCmd = "CREATE TABLE `repos_auth` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+			"  `USER_ID` int(11) DEFAULT NULL,\n" +
+			"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
+			"  `TYPE` int(1) DEFAULT '0',\n" +
+			"  `PRIORITY` int(1) DEFAULT '0',\n" +
+			"  `REPOS_ID` int(11) DEFAULT NULL,\n" +
+			"  `IS_ADMIN` int(1) DEFAULT NULL,\n" +
+			"  `ACCESS` int(1) DEFAULT NULL,\n" +
+			"  `EDIT_EN` int(1) DEFAULT NULL,\n" +
+			"  `ADD_EN` int(1) DEFAULT NULL,\n" +
+			"  `DELETE_EN` int(1) DEFAULT NULL,\n" +
+			"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
+			"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
+			"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			//statement.execute("drop table if exists repos_auth");
+    		statement.execute(sqlCmd);
     		break;
     	case "role":
+    		sqlCmd = "CREATE TABLE `repos_auth` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+		    "  `NAME` varchar(50) NOT NULL,\n" +
+		    "  `ROLE_ID` int(11) NOT NULL\n" +
+		    ") ENGINE=InnoDB DEFAULT CHARSET=utf8";					
     		//statement.execute("drop table if exists role;");
-    		statement.execute("CREATE TABLE `role` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `NAME` varchar(50) NOT NULL,\n" +
-    				"  `ROLE_ID` int(11) NOT NULL\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		statement.execute(sqlCmd);
     		break;
     	case "sys_config":
-    		//statement.execute("drop table if exists sys_config");
-    		statement.execute("CREATE TABLE `sys_config` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
-    				"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		sqlCmd = "CREATE TABLE `sys_config` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=
+			"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
+			"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			//statement.execute("drop table if exists sys_config");
+    		statement.execute(sqlCmd);
     		break;
     	case "user":
+    		sqlCmd = "CREATE TABLE `user` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=    				
+			"    NAME            VARCHAR (40)  DEFAULT NULL,\n" +
+			"    PWD             VARCHAR (40)  NOT NULL,\n" +
+			"    TYPE            INT (1)       NOT NULL\n" +
+			"                                  DEFAULT '0',\n" +
+			"    ROLE            INT (11)      DEFAULT NULL,\n" +
+			"    REAL_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
+			"    NICK_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
+			"    INTRO           VARCHAR (10000) DEFAULT NULL,\n" +
+			"    IMG             VARCHAR (200) DEFAULT NULL,\n" +
+			"    EMAIL           VARCHAR (50)  DEFAULT '',\n" +
+			"    EMAIL_VALID     INT (1)       NOT NULL\n" +
+			"                                  DEFAULT '0',\n" +
+			"    TEL             VARCHAR (20)  DEFAULT NULL,\n" +
+			"    TEL_VALID       INT (1)       NOT NULL\n" +
+			"                                  DEFAULT '0',\n" +
+			"    LAST_LOGIN_TIME VARCHAR (50)  DEFAULT NULL,\n" +
+			"    LAST_LOGIN_IP   VARCHAR (50)  DEFAULT NULL,\n" +
+			"    LAST_LOGIN_CITY VARCHAR (100) DEFAULT NULL,\n" +
+			"    CREATE_TYPE     INT (1)       NOT NULL\n" +
+			"                                  DEFAULT '0',\n" +
+			"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     		//statement.execute("drop table if exists user");
-    		statement.execute("CREATE TABLE user (\n" +
-    				"    ID              INTEGER       PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" +
-    				"    NAME            VARCHAR (40)  DEFAULT NULL,\n" +
-    				"    PWD             VARCHAR (40)  NOT NULL,\n" +
-    				"    TYPE            INT (1)       NOT NULL\n" +
-    				"                                  DEFAULT '0',\n" +
-    				"    ROLE            INT (11)      DEFAULT NULL,\n" +
-    				"    REAL_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
-    				"    NICK_NAME       VARCHAR (50)  DEFAULT NULL,\n" +
-    				"    INTRO           VARCHAR (10000) DEFAULT NULL,\n" +
-    				"    IMG             VARCHAR (200) DEFAULT NULL,\n" +
-    				"    EMAIL           VARCHAR (50)  DEFAULT '',\n" +
-    				"    EMAIL_VALID     INT (1)       NOT NULL\n" +
-    				"                                  DEFAULT '0',\n" +
-    				"    TEL             VARCHAR (20)  DEFAULT NULL,\n" +
-    				"    TEL_VALID       INT (1)       NOT NULL\n" +
-    				"                                  DEFAULT '0',\n" +
-    				"    LAST_LOGIN_TIME VARCHAR (50)  DEFAULT NULL,\n" +
-    				"    LAST_LOGIN_IP   VARCHAR (50)  DEFAULT NULL,\n" +
-    				"    LAST_LOGIN_CITY VARCHAR (100) DEFAULT NULL,\n" +
-    				"    CREATE_TYPE     INT (1)       NOT NULL\n" +
-    				"                                  DEFAULT '0',\n" +
-    				"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		statement.execute(sqlCmd);
     		break;
     	case "user_group":
-    		//statement.execute("drop table if exists user_group");
-    		statement.execute("CREATE TABLE `user_group` (\n" +
-    				"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
-    				"  `NAME` varchar(200) DEFAULT NULL,\n" +
-    				"  `TYPE` int(1) DEFAULT NULL,\n" +
-    				"  `INFO` varchar(1000) DEFAULT NULL,\n" +
-    				"  `IMG` varchar(200) DEFAULT NULL,\n" +
-    				"  `PRIORITY` int(2) DEFAULT NULL,\n" +
-    				"  `CREATE_TIME` varchar(50) DEFAULT NULL\n" +
-    				") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    		sqlCmd = "CREATE TABLE `user_group` (\n";
+    		if(type.equals("sqlite"))
+			{
+	    		sqlCmd += "  `ID` integer primary key,\n";				
+			}
+			else
+			{
+	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
+			}
+			sqlCmd +=    
+			"  `NAME` varchar(200) DEFAULT NULL,\n" +
+			"  `TYPE` int(1) DEFAULT NULL,\n" +
+			"  `INFO` varchar(1000) DEFAULT NULL,\n" +
+			"  `IMG` varchar(200) DEFAULT NULL,\n" +
+			"  `PRIORITY` int(2) DEFAULT NULL,\n" +
+			"  `CREATE_TIME` varchar(50) DEFAULT NULL\n" +
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			//statement.execute("drop table if exists user_group");
+    		statement.execute(sqlCmd);
     		break;
     	}
 	}
@@ -11055,7 +11157,7 @@ public class BaseController  extends BaseFunction{
     		//delete db tab
             statement.execute("drop table if exists " + dbTabName);
     		//init db tab
-            initDBTable(dbTabName, statement);
+            initDBTable(dbTabName, statement, type);
     	    ret = true;
         } catch (Exception e) {
             System.out.println("initDBTables 数据库表初始化发生异常");
