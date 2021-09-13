@@ -38,6 +38,7 @@ import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.License;
+import com.DocSystem.common.entity.MxsDocConfig;
 import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
 import com.DocSystem.common.entity.RemoteStorage;
@@ -338,6 +339,11 @@ public class BaseFunction{
 		{
 			protocol = "git";
 		}
+		else if(remoteStorage.indexOf("mxsdoc://") == 0)
+		{
+			protocol = "mxsdoc";
+		}
+		
 		
 		if(protocol == null)
 		{
@@ -353,6 +359,8 @@ public class BaseFunction{
 			return parseRemoteStorageConfigForFtp(repos, remoteStorage);
 		case "smb":
 			return parseRemoteStorageConfigForSmb(repos, remoteStorage);
+		case "mxsdoc":
+			return parseRemoteStorageConfigForMxsDoc(repos, remoteStorage);
 		case "svn":
 			return parseRemoteStorageConfigForSvn(repos, remoteStorage);
 		case "git":
@@ -361,6 +369,14 @@ public class BaseFunction{
 		return null;
 	}
 	
+	private static RemoteStorage parseRemoteStorageConfigForMxsDoc(Repos repos, String remoteStorage) {
+		// TODO Auto-generated method stub
+		RemoteStorage remote = new RemoteStorage();
+		remote.protocol = "mxsdoc";
+		remote.MXSDOC = new MxsDocConfig();
+		return remote;
+	}
+
 	private static RemoteStorage parseRemoteStorageConfigForGit(Repos repos, String remoteStorage) {
 		RemoteStorage remote = new RemoteStorage();
 		remote.protocol = "git";

@@ -14,5 +14,6 @@ public class RemoteStorage {
 	public SvnConfig SVN = null;
 	public GitConfig GIT = null;
 	public boolean isVerRepos = false;
+	public MxsDocConfig MXSDOC;
 
 }
