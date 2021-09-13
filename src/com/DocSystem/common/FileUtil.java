@@ -1453,8 +1453,10 @@ public class FileUtil {
 	{
 		if(index < buffSize)
 		{
+			Log.println(Log.debug, "readByte() buff[" + index + "]=" + buff[index]); 
 			return buff[index];
 		}
+		Log.println(Log.debug, "readByte() index:" + index + " buffSize:" + buffSize);
 		return -1;
 	}
 	

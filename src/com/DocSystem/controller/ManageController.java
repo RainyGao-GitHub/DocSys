@@ -733,6 +733,7 @@ public class ManageController extends BaseController{
 		config.put("tomcatPath", tomcatPath);
 		config.put("javaHome", javaHome);
 		config.put("ldapConfig", ldapConfig);
+		config.put("logLevel", Log.logLevel);
 		
 		if(docSysType < 1)
 		{
@@ -790,6 +791,7 @@ public class ManageController extends BaseController{
 			String officeEditorApi,
 			String defaultReposStorePath,
 			String ldapConfig,
+			Integer logLevel,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("\n****************** setSystemInfo.do ***********************");
@@ -797,7 +799,7 @@ public class ManageController extends BaseController{
 		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome 
 				+ " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
 				+ " defaultReposStorePath:" + defaultReposStorePath 
-				+ " ldapConfig:" + ldapConfig);
+				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -874,6 +876,11 @@ public class ManageController extends BaseController{
 				return;
 			}
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
+		}
+		
+		if(logLevel != null)
+		{
+			Log.logLevel = logLevel;
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
