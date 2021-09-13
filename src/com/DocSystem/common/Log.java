@@ -8,14 +8,12 @@ public class Log {
 	final static int debug = 0;
 	final static int warn = 1;
 	final static int error = 2;
-	static int logLevel = warn;
+	public static int logLevel = warn;
 	
 	public static boolean isLogEnable(int level)
 	{
-		return level > logLevel;
+		return level >= logLevel;
 	}
-	
-	
 	
 	//To print the obj by convert it to json format
 	public static void printObject(String Head,Object obj)

@@ -1105,7 +1105,9 @@
 			officeEditorApi:"",
 			defaultReposStorePath:"",
 			ldapConfig:"",
+			logLevel:1,
 	}
+	
 	function enableSystemInfoSet(){
 		$("#btnEnableSystemInfoSet").hide();
 		$("#btnCancelSystemInfoSet").show();
@@ -1116,6 +1118,7 @@
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
+		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
 		
 		$("#tomcatPath").attr('disabled',false);
 		$("#javaHome").attr('disabled',false);
@@ -1123,6 +1126,7 @@
 		$("#officeEditorApi").attr('disabled',false);
 		$("#defaultReposStorePath").attr('disabled',false);
 		$("#ldapConfig").attr('disabled',false);
+		$("#logLevel").attr('disabled',false);
 	}
 	
 	function cancelSystemInfoSet(){
@@ -1136,6 +1140,7 @@
 		$("#officeEditorApi").attr('disabled',true);
 		$("#defaultReposStorePath").attr('disabled',true);
 		$("#ldapConfig").attr('disabled',true);
+		$("#logLevel").attr('disabled',true);
 
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#javaHome").val(systemInfo.javaHome);
@@ -1143,6 +1148,7 @@
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
+		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
 	}
 	
 	function saveSystemInfoSet(){
@@ -1156,6 +1162,8 @@
 		$("#officeEditorApi").attr('disabled',true);
 		$("#defaultReposStorePath").attr('disabled',true);
 		$("#ldapConfig").attr('disabled',true);
+		$("#logLevel").attr('disabled',true);
+
 
 		var tomcatPath = $("#tomcatPath").val();
 		var javaHome = $("#javaHome").val();
@@ -1163,11 +1171,12 @@
 		var officeEditorApi = $("#officeEditorApi").val();
 		var defaultReposStorePath = $("#defaultReposStorePath").val();
 		var ldapConfig = $("#ldapConfig").val();
+		var logLevel = $("#logLevel").val();
 		
-		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig);
+		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel);
 	}
 	
-	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig){
+	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
 	        type : "post",
@@ -1179,6 +1188,7 @@
 	        	officeEditorApi: officeEditorApi,
 	        	defaultReposStorePath: defaultReposStorePath,
 	        	ldapConfig: ldapConfig,
+	        	logLevel: logLevel,
 	        },
 	        success : function (ret) {
 	        	console.log("setSystemInfo ret:",ret);
@@ -1190,6 +1200,7 @@
 	        		systemInfo.officeEditorApi = officeEditorApi;
 	        		systemInfo.defaultReposStorePath = defaultReposStorePath;
 	        		systemInfo.ldapConfig = ldapConfig;
+	        		systemInfo.logLevel = logLevel;
 	        		showErrorMessage("更新成功！");
 	            }
 	            else 
@@ -1203,6 +1214,7 @@
 	        		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 	        		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 	        		$("#ldapConfig").val(systemInfo.ldapConfig);
+	        		$("#logLevel").val(systemInfo.logLevel);
 	            }
 	        },
 	        error : function () {
@@ -1214,6 +1226,7 @@
         		$("#officeEditorApi").val(systemInfo.officeEditorApi);
         		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
         		$("#ldapConfig").val(systemInfo.ldapConfig);
+        		$("#logLevel").val(systemInfo.logLevel);
 	        }
 	    });
 	}
@@ -1230,6 +1243,10 @@
 	            {
 	            	var config = ret.data; 	
 	            	systemInfo = config;
+	            	if(systemInfo.logLevel == undefined)
+	            	{
+	            		systemInfo.logLevel = 1;
+	            	}
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
 	            else 

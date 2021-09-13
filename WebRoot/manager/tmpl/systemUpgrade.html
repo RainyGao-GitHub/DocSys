@@ -101,6 +101,18 @@
 	                    </td>
 	                  </tr>
 	                  {{/if}}
+	                  <tr>
+	                    <td>调试等级</td>
+	                    <td>
+			            	<select class="form-control" id="logLevel" style="width: 100%" disabled="disabled">   
+			            		<option value="0" {{if value.logLevel == 0}} selected="selected" {{/if}}>调试</option>
+			            		<option value="1" {{if value.logLevel == 1}} selected="selected" {{/if}}>警告</option>   
+			            		<option value="2" {{if value.logLevel == 2}} selected="selected" {{/if}}>错误</option>   
+			            	</select>	                    
+			            </td>
+	                    <td class="edit">
+	                    </td>
+	                  </tr>
 	                </tbody>
 	          </table>
               <div class="widget-foot">
