@@ -1606,6 +1606,10 @@ public class ReposController extends BaseController{
 			qDocAuth.setAddEn(addEn);
 			qDocAuth.setDeleteEn(deleteEn);
 			qDocAuth.setDownloadEn(downloadEn);
+			if(uploadSize == null)
+			{
+				uploadSize = Long.MAX_VALUE;
+			}
 			qDocAuth.setUploadSize(uploadSize);			
 			qDocAuth.setHeritable(heritable);
 			qDocAuth.setDocPath(path);
