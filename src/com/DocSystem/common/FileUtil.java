@@ -1451,12 +1451,12 @@ public class FileUtil {
 	
 	private static byte readByte(byte [] buff, int buffSize, int index)
 	{
+		Log.println(Log.debug, "readByte() index:" + index + " buffSize:" + buffSize);
 		if(index < buffSize)
 		{
-			Log.println(Log.debug, "readByte() buff[" + index + "]=" + buff[index]); 
+			Log.printByte(Log.debug, buff[index]); 
 			return buff[index];
 		}
-		Log.println(Log.debug, "readByte() index:" + index + " buffSize:" + buffSize);
 		return -1;
 	}
 	

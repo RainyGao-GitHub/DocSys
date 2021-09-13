@@ -118,6 +118,24 @@ public class Log {
 		}
 	}
 	
+	public static void printByte(int level, byte data) {
+		if(isLogEnable(level))
+		{
+			System.out.printf( "%02X\n", data);
+		}
+	}
+	
+	public static void printBytes(int level, byte[] data) {
+		if(isLogEnable(level))
+		{
+			for(int i=0; i<data.length; i++)
+			{
+				System.out.printf( "%02X ", data[i]);
+			}
+			System.out.printf( "\n");
+		}
+	}
+	
 	public static void println(String content, String filePath, boolean enableConsole) {
 		if(enableConsole)
 		{
