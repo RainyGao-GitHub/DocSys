@@ -10546,7 +10546,7 @@ public class BaseController  extends BaseFunction{
     		statement.execute(sqlCmd);
     		break;
     	case "role":
-    		sqlCmd = "CREATE TABLE `repos_auth` (\n";
+    		sqlCmd = "CREATE TABLE `role` (\n";
     		if(type.equals("sqlite"))
 			{
 	    		sqlCmd += "  `ID` integer primary key,\n";				
