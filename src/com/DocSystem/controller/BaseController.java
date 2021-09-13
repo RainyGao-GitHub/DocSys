@@ -10346,7 +10346,11 @@ public class BaseController  extends BaseFunction{
 			"  `CREATE_TIME` bigint(20) NOT NULL DEFAULT '0',\n" +
 			"  `LATEST_EDITOR` int(11) DEFAULT NULL,\n" +
 			"  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0'\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
     		//statement.execute("drop table if exists doc");
 			statement.execute(sqlCmd);
     		break;
@@ -10361,7 +10365,6 @@ public class BaseController  extends BaseFunction{
 	    		sqlCmd += "  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n";
 			}
 			sqlCmd +=
-			"  `ID` integer primary key NOT NULL AUTO_INCREMENT,\n" +
 			"  `USER_ID` int(11) DEFAULT NULL,\n" +
 			"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
 			"  `TYPE` int(1) DEFAULT NULL,\n" +
@@ -10378,7 +10381,11 @@ public class BaseController  extends BaseFunction{
 			"  `HERITABLE` int(1) NOT NULL DEFAULT '0',\n" +
 			"  `DOC_PATH` varchar(6000) DEFAULT NULL,\n" +
 			"  `DOC_NAME` varchar(300) DEFAULT NULL\n" +
-			"  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
 					
     		//statement.execute("drop table if exists doc_auth");
     		statement.execute(sqlCmd);
@@ -10403,7 +10410,11 @@ public class BaseController  extends BaseFunction{
 			"  `SHARE_PWD` varchar(20) DEFAULT NULL,\n" +
 			"  `SHARED_BY` int(11) DEFAULT NULL,\n" +
 			"  `EXPIRE_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";					
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}				
     		//statement.execute("drop table if exists doc_share");
     		statement.execute(sqlCmd);
     		break;
@@ -10428,7 +10439,11 @@ public class BaseController  extends BaseFunction{
 			"  `LOCKER` varchar(200) DEFAULT NULL,\n" +
 			"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
 			"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
     		//statement.execute("drop table if exists doc_lock");
     		statement.execute(sqlCmd);
     		break;
@@ -10445,7 +10460,11 @@ public class BaseController  extends BaseFunction{
 			sqlCmd +=
     		"  `GROUP_ID` int(11) DEFAULT NULL,\n" +
 			"  `USER_ID` int(11) DEFAULT NULL\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
     		//statement.execute("drop table if exists group_member");
     		statement.execute(sqlCmd);
     		break;
@@ -10486,7 +10505,11 @@ public class BaseController  extends BaseFunction{
 			"  `STATE` int(1) NOT NULL DEFAULT '0',\n" +
 			"  `LOCK_BY` int(11) DEFAULT NULL,\n" +
 			"  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0'\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
     		//statement.execute("drop table if exists repos");
     		statement.execute(sqlCmd);
     		break;
@@ -10514,7 +10537,11 @@ public class BaseController  extends BaseFunction{
 			"  `DOWNLOAD_EN` int(1) DEFAULT NULL,\n" +
 			"  `UPLOAD_SIZE` bigint(20) DEFAULT NULL,\n" +
 			"  `HERITABLE` int(1) NOT NULL DEFAULT '0'\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
 			//statement.execute("drop table if exists repos_auth");
     		statement.execute(sqlCmd);
     		break;
@@ -10531,7 +10558,11 @@ public class BaseController  extends BaseFunction{
 			sqlCmd +=
 		    "  `NAME` varchar(50) NOT NULL,\n" +
 		    "  `ROLE_ID` int(11) NOT NULL\n" +
-		    ") ENGINE=InnoDB DEFAULT CHARSET=utf8";					
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}				
     		//statement.execute("drop table if exists role;");
     		statement.execute(sqlCmd);
     		break;
@@ -10548,7 +10579,11 @@ public class BaseController  extends BaseFunction{
 			sqlCmd +=
 			"  `REG_ENABLE` int(2) NOT NULL DEFAULT '1',\n" +
 			"  `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
 			//statement.execute("drop table if exists sys_config");
     		statement.execute(sqlCmd);
     		break;
@@ -10584,7 +10619,11 @@ public class BaseController  extends BaseFunction{
 			"    CREATE_TYPE     INT (1)       NOT NULL\n" +
 			"                                  DEFAULT '0',\n" +
 			"    CREATE_TIME     VARCHAR (50)  DEFAULT NULL\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
     		//statement.execute("drop table if exists user");
     		statement.execute(sqlCmd);
     		break;
@@ -10605,7 +10644,11 @@ public class BaseController  extends BaseFunction{
 			"  `IMG` varchar(200) DEFAULT NULL,\n" +
 			"  `PRIORITY` int(2) DEFAULT NULL,\n" +
 			"  `CREATE_TIME` varchar(50) DEFAULT NULL\n" +
-			") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+			")";
+			if(type.equals("sqlite") == false)
+			{
+	    		sqlCmd += " ENGINE=InnoDB DEFAULT CHARSET=utf8";				
+			}
 			//statement.execute("drop table if exists user_group");
     		statement.execute(sqlCmd);
     		break;
