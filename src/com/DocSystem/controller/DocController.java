@@ -1167,6 +1167,7 @@ public class DocController extends BaseController{
 		
 		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
 		{
+			Log.println("uploadDoc size:" + size + " max uploadSize:" + docUserAuth.getUploadSize());
 			rt.setError("上传文件大小超限，请联系管理员");
 			writeJson(rt, response);
 			return;							
