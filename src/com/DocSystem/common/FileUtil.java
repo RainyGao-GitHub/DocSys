@@ -1445,18 +1445,18 @@ public class FileUtil {
 			e.printStackTrace();
 			charset = null;
 		}
-		System.out.println("getCharset() charset:" + charset);
+		System.out.println("\ngetCharset() charset:" + charset);
 		return charset;		
 	}
 	
 	private static byte readByte(byte [] buff, int buffSize, int index)
 	{
-		Log.println(Log.debug, "readByte() index:" + index + " buffSize:" + buffSize);
 		if(index < buffSize)
 		{
-			Log.printByte(Log.debug, buff[index]); 
+			Log.printByte(buff[index]); 
 			return buff[index];
 		}
+		Log.debug("readByte() index:" + index + " buffSize:" + buffSize);
 		return -1;
 	}
 	

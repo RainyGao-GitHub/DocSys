@@ -418,20 +418,20 @@ public class BaseController  extends BaseFunction{
 		RemoteStorage remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
-			Log.println("docSysGetDocListWithChangeType remote is null");
+			Log.debug("docSysGetDocListWithChangeType remote is null");
 			return localList;
 		}
 		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc);
 		if(remoteList == null)
 		{
-			Log.println("docSysGetDocListWithChangeType remoteList is null");
+			Log.debug("docSysGetDocListWithChangeType remoteList is null");
 			return localList;
 		}
 		return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
 	}
 
 	private List<Doc> combineLocalListWithRemoteList(Repos repos, Doc doc, List<Doc> localList, List<Doc> remoteList) {
-		Log.println("combineLocalListWithRemoteList");
+		Log.debug("combineLocalListWithRemoteList");
 
 		List<Doc> result = new ArrayList<Doc>();
 		
@@ -490,7 +490,7 @@ public class BaseController  extends BaseFunction{
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel == null)
         {
-			Log.println("非商业版不支持远程存储！");
+			Log.debug("非商业版不支持远程存储！");
 			return null;        	
         }
         
@@ -532,7 +532,7 @@ public class BaseController  extends BaseFunction{
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel == null)
         {
-			Log.println("非商业版不支持远程存储！");
+			Log.debug("非商业版不支持远程存储！");
 			return null;
         }
         
@@ -2417,7 +2417,7 @@ public class BaseController  extends BaseFunction{
 		User tmp_user = new User();
 		tmp_user.setName(userName);
 		String decodedPwd = Base64Util.base64Decode(pwd);
-		Log.println("loginCheck decodedPwd:" + decodedPwd);
+		Log.debug("loginCheck decodedPwd:" + decodedPwd);
 		String md5Pwd = MD5.md5(decodedPwd);
 		tmp_user.setPwd(pwd);
 		
@@ -2434,7 +2434,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//LDAP模式
-		Log.println("loginCheck() LDAP Mode"); 
+		Log.debug("loginCheck() LDAP Mode"); 
 		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd);
 		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
 		{
@@ -2504,7 +2504,7 @@ public class BaseController  extends BaseFunction{
 		LdapContext ctx = getLDAPConnection(userName, pwd);
 		if(ctx == null)
 		{
-			Log.println("ldapLoginCheck() getLDAPConnection 失败"); 
+			Log.debug("ldapLoginCheck() getLDAPConnection 失败"); 
 			return null;
 		}
 		
@@ -2512,7 +2512,7 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("ldapLoginCheck", list);
 		if(list == null || list.size() != 1)
 		{
-			Log.println("ldapLoginCheck() readLdap 失败"); 			
+			Log.debug("ldapLoginCheck() readLdap 失败"); 			
 			return null;
 		}
 		
@@ -2537,7 +2537,7 @@ public class BaseController  extends BaseFunction{
     		String LDAP_URL = systemLdapConfig.url;
     		if(LDAP_URL == null || LDAP_URL.isEmpty())
     		{
-    			Log.println("getLDAPConnection LDAP_URL is null or empty, LDAP_URL" + LDAP_URL);
+    			Log.debug("getLDAPConnection LDAP_URL is null or empty, LDAP_URL" + LDAP_URL);
     			return null;
     		}
     			
@@ -2555,7 +2555,7 @@ public class BaseController  extends BaseFunction{
             {
             	String userAccount = "uid=" + userName + "," + basedn;     
     			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
-            	Log.println("getLDAPConnection() authMode:" + systemLdapConfig.authMode); 
+            	Log.debug("getLDAPConnection() authMode:" + systemLdapConfig.authMode); 
     			if(systemLdapConfig.authMode != null)
     			{
     				switch(systemLdapConfig.authMode)
@@ -2613,17 +2613,17 @@ public class BaseController  extends BaseFunction{
 	                    }else if("uid".equals(attr.getID())){
 	                    	lu.setName(attr.get().toString());
 	                    }else if("displayName".equals(attr.getID())){
-	                    	Log.println("readLdap displayName:" + attr.get().toString());
+	                    	Log.debug("readLdap displayName:" + attr.get().toString());
 	                    	//lu.setRealName(attr.get().toString());
 	                    }
 	                    else if("cn".equals(attr.getID())){
 	                    //	lu.cn = attr.get().toString();
-	                    	Log.println("readLdap cn:" + attr.get().toString());
+	                    	Log.debug("readLdap cn:" + attr.get().toString());
 	                    	lu.setRealName(attr.get().toString());
 	                    }
 	                	else if("sn".equals(attr.getID())){
 	                    //	lu.sn = attr.get().toString();
-	                		Log.println("readLdap sn:" + attr.get().toString());
+	                		Log.debug("readLdap sn:" + attr.get().toString());
 	                    }
 	                    else if("mail".equals(attr.getID())){
 	                    	lu.setEmail(attr.get().toString());
@@ -3909,7 +3909,7 @@ public class BaseController  extends BaseFunction{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && ((remote.autoPull != null && remote.autoPull == 1) || (remote.autoPush != null && remote.autoPush == 1)))
 			{
-				Log.println("syncupForDocChange() 远程自动拉取");
+				Log.debug("syncupForDocChange() 远程自动拉取");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
@@ -4704,24 +4704,24 @@ public class BaseController  extends BaseFunction{
 		{
 			if(localEntry == null || localEntry.getType() == null || localEntry.getType() == 0)
 			{
-				Log.println("getLocalDocChangeType " + DocChangeType.NOCHANGE); 
+				Log.debug("getLocalDocChangeType " + DocChangeType.NOCHANGE); 
 				return DocChangeType.NOCHANGE;
 			}
 			
 			if(localEntry.getType() == 1 || localEntry.getType() == 2)
 			{
-				Log.println("getLocalDocChangeType " + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALADD); 
+				Log.debug("getLocalDocChangeType " + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALADD); 
 				return DocChangeType.LOCALADD;
 			}
 
-			Log.println("getLocalDocChangeType " + localEntry.getPath() + localEntry.getName() + " " +DocChangeType.UNDEFINED); 
+			Log.debug("getLocalDocChangeType " + localEntry.getPath() + localEntry.getName() + " " +DocChangeType.UNDEFINED); 
 			return DocChangeType.UNDEFINED;
 		}
 		
 		//dbDoc存在，localEntry不存在
 		if(localEntry == null || localEntry.getType() == null || localEntry.getType() == 0)
 		{
-			Log.println("getLocalDocChangeType " + dbDoc.getPath() + dbDoc.getName() + " " +DocChangeType.LOCALDELETE); 
+			Log.debug("getLocalDocChangeType " + dbDoc.getPath() + dbDoc.getName() + " " +DocChangeType.LOCALDELETE); 
 			return DocChangeType.LOCALDELETE;
 		}
 		
@@ -4730,17 +4730,17 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc.getType() == 2)
 			{
-				Log.println("getLocalDocChangeType " +  localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALDIRTOFILE); 
+				Log.debug("getLocalDocChangeType " +  localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALDIRTOFILE); 
 				return DocChangeType.LOCALDIRTOFILE;
 			}
 			
 			if(dbDoc.getSize() == null || localEntry.getSize() == null || !dbDoc.getSize().equals(localEntry.getSize()) ||
 				dbDoc.getLatestEditTime() == null || localEntry.getLatestEditTime() == null ||!dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
 			{
-				Log.println("getLocalDocChangeType " +  localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALCHANGE); 
+				Log.debug("getLocalDocChangeType " +  localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALCHANGE); 
 				return DocChangeType.LOCALCHANGE;
 			}	
-			Log.println("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -4749,15 +4749,15 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc.getType() == 1)
 			{
-				Log.println("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALFILETODIR); 
+				Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALFILETODIR); 
 				return DocChangeType.LOCALFILETODIR;
 			}		
-			Log.println("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
 		//未知文件类型(localDoc.type !=1/2)
-		Log.println("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.UNDEFINED); 
+		Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.UNDEFINED); 
 		return DocChangeType.UNDEFINED;
 	}
 	
@@ -4768,24 +4768,24 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteEntry == null || remoteEntry.getType() == null || remoteEntry.getType() == 0)
 			{
-				Log.println("getRemoteDocChangeType " + DocChangeType.NOCHANGE); 
+				Log.debug("getRemoteDocChangeType " + DocChangeType.NOCHANGE); 
 				return DocChangeType.NOCHANGE;				
 			}	
 			
 			if(remoteEntry.getType() == 1 || remoteEntry.getType() == 2)
 			{
-				Log.println("getRemoteDocChangeType "  + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTEADD); 
+				Log.debug("getRemoteDocChangeType "  + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTEADD); 
 				return DocChangeType.REMOTEADD;
 			}
 
-			Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.UNDEFINED); 
+			Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.UNDEFINED); 
 			return DocChangeType.UNDEFINED;
 		}
 		
 		//dbDoc存在，remoteEntry不存在
 		if(remoteEntry == null || remoteEntry.getType() == null || remoteEntry.getType() == 0)
 		{
-			Log.println("getRemoteDocChangeType " + dbDoc.getPath() + dbDoc.getName() + " " + DocChangeType.REMOTEDELETE); 
+			Log.debug("getRemoteDocChangeType " + dbDoc.getPath() + dbDoc.getName() + " " + DocChangeType.REMOTEDELETE); 
 			return DocChangeType.REMOTEDELETE;
 		}
 		
@@ -4794,16 +4794,16 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc.getType() == 2)
 			{
-				Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " +  DocChangeType.REMOTEDIRTOFILE); 
+				Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " +  DocChangeType.REMOTEDIRTOFILE); 
 				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
 			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
-				Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTECHANGE); 
+				Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTECHANGE); 
 				return DocChangeType.REMOTECHANGE;
 			}			
-			Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -4812,15 +4812,15 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc.getType() == 1)
 			{
-				Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTEFILETODIR); 
+				Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTEFILETODIR); 
 				return DocChangeType.REMOTEFILETODIR;
 			}
-			Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
 		//未知文件类型(remoteEntry.type !=1/2)
-		Log.println("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.UNDEFINED); 
+		Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.UNDEFINED); 
 		return DocChangeType.UNDEFINED;
 	}
 	
@@ -4828,7 +4828,7 @@ public class BaseController  extends BaseFunction{
 	{	
 		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localEntry);
 		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteEntry);
-		Log.println("getDocChangeType_FSM " +doc.getPath() + doc.getName()+ " localChangeType:" + localChangeType + " remoteChangeType:" + remoteChangeType);
+		Log.debug("getDocChangeType_FSM " +doc.getPath() + doc.getName()+ " localChangeType:" + localChangeType + " remoteChangeType:" + remoteChangeType);
 		
 		switch(localChangeType)
 		{
@@ -5231,14 +5231,14 @@ public class BaseController  extends BaseFunction{
 		RemoteStorage remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
-			Log.println("docSysGetDocListWithChangeType remote is null");
+			Log.debug("docSysGetDocListWithChangeType remote is null");
 			return localDoc;
 		}
 
 		Doc remoteDoc = getRemoteStorageEntry(repos, doc);
 		if(remoteDoc == null)
 		{
-			Log.println("docSysGetDocListWithChangeType remoteList is null");
+			Log.debug("docSysGetDocListWithChangeType remoteList is null");
 			return localDoc;
 		}
 		
@@ -5246,7 +5246,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private Doc combineLocalDocWithRemoteDoc(Repos repos, Doc localDoc, Doc remoteDoc) {
-		Log.println("combineLocalDocWithRemoteDoc");
+		Log.debug("combineLocalDocWithRemoteDoc");
 
 		if(localDoc == null || localDoc.getType() == 0)
 		{
@@ -9621,7 +9621,7 @@ public class BaseController  extends BaseFunction{
 		ConcurrentHashMap<String, String> hashMap = repos.textSearchConfig.realDocTextSearchDisableHashMap;
 		if(hashMap.get("" + doc.getDocId()) != null)
 		{
-			Log.println("isRealDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " realDocTextSearch disabled");
+			Log.debug("isRealDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " realDocTextSearch disabled");
 			return 0;
 		}
 		
@@ -9651,7 +9651,7 @@ public class BaseController  extends BaseFunction{
 		ConcurrentHashMap<String, String> hashMap = repos.textSearchConfig.virtualDocTextSearchDisablehHashMap;
 		if(hashMap.get("" + doc.getDocId()) != null)
 		{
-			Log.println("isVirtualDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " virtualDocTextSearch disabled");
+			Log.debug("isVirtualDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " virtualDocTextSearch disabled");
 			return 0;
 		}
 
@@ -9810,6 +9810,9 @@ public class BaseController  extends BaseFunction{
 		}
 		System.out.println("docSysInit() officeEditorApi:" + officeEditorApi);
 		
+		//初始化调试等级
+		Log.logLevel = getLogLevelFromFile();
+		
 		serverIP = IPUtil.getIpAddress();
 		System.out.println("docSysInit() serverIP:" + serverIP);
 		
@@ -9913,14 +9916,40 @@ public class BaseController  extends BaseFunction{
 		
 		return ret;
 	}
+	
+	private static int getLogLevelFromFile() {
+		File file = new File(docSysWebPath + "debugLogLevel");
+		if(file.exists())
+		{
+			String logLevelStr = FileUtil.readDocContentFromFile(docSysWebPath, "debugLogLevel", "UTF-8");
+			if(logLevelStr == null || logLevelStr.isEmpty())
+			{
+				return Log.warn;
+			}
+			switch(logLevelStr.trim())
+			{
+			case "0":
+				return Log.debug;
+			case "1":
+				return Log.warn;
+			case "2":
+				return Log.error;
+			}
+		}
+		return Log.warn;
+	}
+	
+	protected static void setLogLevelToFile(Integer logLevel) {
+		FileUtil.saveDocContentToFile(logLevel + "", docSysWebPath, "debugLogLevel", "UTF-8");
+	}
 
 	protected void initReposExtentionConfig() {
-		Log.println("initReposExtentionConfig for All Repos");
+		Log.debug("initReposExtentionConfig for All Repos");
 		try {
 			List <Repos> list = reposService.getAllReposList();
 			if(list == null)
 			{
-				Log.println("initReposExtentionConfig there is no repos");
+				Log.debug("initReposExtentionConfig there is no repos");
 				return;
 			}
 			
@@ -10726,7 +10755,7 @@ public class BaseController  extends BaseFunction{
 		boolean firstFlag = true;	
 		for(int i=0; i< subStrs.length-1; i++)
 		{	
-			Log.println("getDbPathFromUrl subStrs[" + i + "]: " + subStrs[i]);
+			Log.debug("getDbPathFromUrl subStrs[" + i + "]: " + subStrs[i]);
 			if(subStrs[i].isEmpty())
 			{
 				continue;
@@ -10753,7 +10782,7 @@ public class BaseController  extends BaseFunction{
 		
 		
 		String dbPath = rootPath + relativePath;
-		Log.println("getDbPathFromUrl dbPath:" + dbPath);		
+		Log.debug("getDbPathFromUrl dbPath:" + dbPath);		
 		return dbPath;
 	}
 

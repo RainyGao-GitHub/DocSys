@@ -30,7 +30,7 @@ public class LDAPTest {
 			LdapContext ctx = getLDAPConnection();
 			if(ctx == null)
 			{
-				Log.println("LDAPConnectionTest() ctx is null"); 
+				Log.debug("LDAPConnectionTest() ctx is null"); 
 			}
 			else
 			{
