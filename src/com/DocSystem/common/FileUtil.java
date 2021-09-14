@@ -1338,6 +1338,8 @@ public class FileUtil {
 			bis.mark(0); // 注： bis.mark(0);修改为 bis.mark(100);我用过这段代码，需要修改上面标出的地方。
 			// 注：不过暂时使用正常，遂不改之
 			int read = bis.read(first3Bytes, 0, 3);
+			Log.printBytes(first3Bytes);
+			
 			if (read == -1) {
 				bis.close();
 				return charset; // 文件编码为 ANSI
@@ -1354,12 +1356,15 @@ public class FileUtil {
 			bis.reset();
 			if (!checked) {
 				while ((read = bis.read()) != -1) {
+					Log.printByte((byte) read);
+					
 					if (read >= 0xF0)
 						break;
 					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
 						break;
 					if (0xC0 <= read && read <= 0xDF) {
 						read = bis.read();
+						Log.printByte((byte) read);
 						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
 							// (0x80 - 0xBF),也可能在GB编码内
 							continue;
@@ -1367,6 +1372,7 @@ public class FileUtil {
 							break;
 					} else if (0xE0 <= read && read <= 0xEF) { // 也有可能出错，但是几率较小
 						read = bis.read();
+						Log.printByte((byte) read);
 						if (0x80 <= read && read <= 0xBF) {
 							read = bis.read();
 							if (0x80 <= read && read <= 0xBF) {
@@ -1399,6 +1405,7 @@ public class FileUtil {
 
 		String charset = "GBK";
 		//String charset = "UTF-8";
+		int read = -1;
 		try {
 			boolean checked = false;			
 			if (buffSize >= 2 && buff[0] == (byte) 0xFF && buff[1] == (byte) 0xFE) {
@@ -1415,13 +1422,17 @@ public class FileUtil {
 			if (!checked) {
 				int index = 0;
 				while (index < buffSize) {
-					byte read = readByte(buff, buffSize, index++);
+					read = readByte(buff, buffSize, index++);
+					Log.printByte((byte) read);
+					
 					if (read >= 0xF0)
 						break;
 					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
 						break;
 					if (0xC0 <= read && read <= 0xDF) {
 						read = readByte(buff, buffSize, index++);
+						Log.printByte((byte) read);
+						
 						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
 							// (0x80 - 0xBF),也可能在GB编码内
 							continue;
@@ -1429,6 +1440,8 @@ public class FileUtil {
 							break;
 					} else if (0xE0 <= read && read <= 0xEF) { // 也有可能出错，但是几率较小
 						read = readByte(buff, buffSize, index++);
+						Log.printByte((byte) read);
+						
 						if (0x80 <= read && read <= 0xBF) {
 							read = buff[index++];
 							if (0x80 <= read && read <= 0xBF) {
@@ -1449,14 +1462,12 @@ public class FileUtil {
 		return charset;		
 	}
 	
-	private static byte readByte(byte [] buff, int buffSize, int index)
+	private static int readByte(byte [] buff, int buffSize, int index)
 	{
 		if(index < buffSize)
 		{
-			Log.printByte(buff[index]); 
 			return buff[index];
 		}
-		Log.debug("readByte() index:" + index + " buffSize:" + buffSize);
 		return -1;
 	}
 	
