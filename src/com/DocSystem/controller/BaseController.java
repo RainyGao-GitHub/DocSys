@@ -154,6 +154,7 @@ public class BaseController  extends BaseFunction{
     
     static {		
 		initSystemUsers();
+		initLogLevel();
     }
 	private static void initSystemUsers() {
 		//自动同步用户
@@ -165,6 +166,16 @@ public class BaseController  extends BaseFunction{
 		coEditUser.setName("CoEditUser");		
 	}
 	
+	private static void initLogLevel() {
+		//初始化调试等级
+		System.out.println("initLogLevel");
+		Log.logLevel = getLogLevelFromFile();
+		System.out.println("initLogLevel Log.logLevel:" + Log.logLevel);
+
+		//Log.logMask = Log.allowAll;
+		//Log.logFile = Path.getSystemLogParentPath(docSysWebPath); 
+	}
+
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
 		if(systemLicenseInfoCheck(rt) == false)
 		{
@@ -9809,9 +9820,6 @@ public class BaseController  extends BaseFunction{
 			officeEditorApi = Path.getOfficeEditorApi();
 		}
 		System.out.println("docSysInit() officeEditorApi:" + officeEditorApi);
-		
-		//初始化调试等级
-		Log.logLevel = getLogLevelFromFile();
 		
 		serverIP = IPUtil.getIpAddress();
 		System.out.println("docSysInit() serverIP:" + serverIP);
