@@ -103,7 +103,7 @@ public class BaseFunction{
     }
     
 	private static void initSystemLicenseInfo() {
-		System.out.println("initSystemLicenseInfo() ");
+		Log.debug("initSystemLicenseInfo() ");
 		//Default systemLicenseInfo
 		systemLicenseInfo = new License();
 		systemLicenseInfo.type = constants.DocSys_Community_Edition;
@@ -113,7 +113,7 @@ public class BaseFunction{
 	}
 	
 	private static void initLdapConfig() {
-		System.out.println("initLdapConfig() ");
+		Log.debug("initLdapConfig() ");
 		//Default LDAPConfig
 		systemLdapConfig = new LDAPConfig();
 		systemLdapConfig.enabled = false;
@@ -266,7 +266,7 @@ public class BaseFunction{
 	
 	private static int initOSType() {
 		String OSName = System.getProperty("os.name"); 
-		System.out.println("OSName:"+ OSName);
+		Log.debug("OSName:"+ OSName);
 		String os = OSName.toLowerCase();
 		OSType = OS.UNKOWN;
 		if(os.startsWith("win"))
@@ -762,7 +762,7 @@ public class BaseFunction{
 		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
 		if(uniqueAction == null)
 		{
-			//System.out.println("insertUniqueCommonAction create uniqueAction for repos:" + reposId);
+			//Log.debug("insertUniqueCommonAction create uniqueAction for repos:" + reposId);
 			UniqueAction newUniqueAction = new UniqueAction();
 			uniqueActionHashMap.put(reposId, newUniqueAction);
 			uniqueAction = newUniqueAction;
@@ -771,17 +771,17 @@ public class BaseFunction{
 		ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
 		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();		
 
-		//System.out.println("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		//Log.debug("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 		CommonAction tempAction = uniqueCommonActionHashMap.get(srcDoc.getDocId());
 		if(tempAction != null && tempAction.getType() == action.getType() && tempAction.getAction() == action.getAction() && tempAction.getDocType() == action.getDocType())
 		{
-			//System.out.println("insertUniqueCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
+			//Log.debug("insertUniqueCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
 			return false;
 		}
 		
 		uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
 		uniqueCommonActionList.add(action);
-		System.out.println("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		Log.debug("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 		return true;
 	}
 	
@@ -809,7 +809,7 @@ public class BaseFunction{
 			return vDoc;
 		}
 		
-		System.out.println("buildVDoc() doc already is VDoc");
+		Log.debug("buildVDoc() doc already is VDoc");
 		return doc;
 	}
 		
@@ -830,7 +830,7 @@ public class BaseFunction{
 			pw.flush();
 			pw.close();
 		} catch (IOException e) {
-			System.out.println("BaseController>writeJson  ERROR!");
+			Log.debug("BaseController>writeJson  ERROR!");
 			e.printStackTrace();
 		}
 		
@@ -852,7 +852,7 @@ public class BaseFunction{
 			pw.flush();
 			pw.close();
 		} catch (IOException e) {
-			System.out.println("BaseController>writeJson  ERROR!");
+			Log.debug("BaseController>writeJson  ERROR!");
 			e.printStackTrace();
 		}
 		
@@ -874,7 +874,7 @@ public class BaseFunction{
 			pw.flush();
 			pw.close();
 		} catch (IOException e) {
-			System.out.println("BaseController>writeJson  ERROR!");
+			Log.debug("BaseController>writeJson  ERROR!");
 			e.printStackTrace();
 		}
 
@@ -951,7 +951,7 @@ public class BaseFunction{
 						for(int i=0; i< sortMap.size(); i++)
 						{
 							String sortType = sortMap.get(i);
-							System.out.println("sortType:" + sortType);
+							Log.debug("sortType:" + sortType);
 							if(sortType != null)
 							{
 								diff = getSortDiffBySortType(u1, u2, sortType);
@@ -998,7 +998,7 @@ public class BaseFunction{
 						for(int i=0 ; i< sortStrs.length; i++)
 						{
 							String sortStr = sortStrs[i];
-							System.out.println("sortStr:" + sortStr);
+							Log.debug("sortStr:" + sortStr);
 							if(sortStr != null && !sortStr.isEmpty())
 							{
 								sortMap.put(i, sortStr);
@@ -1030,7 +1030,7 @@ public class BaseFunction{
 	
 		if(dstFolder.isFile())
 		{
-			System.out.println(dstPath + " 不是目录！");
+			Log.debug(dstPath + " 不是目录！");
 			return false;
 		}
 
@@ -1049,7 +1049,7 @@ public class BaseFunction{
 				syncUpForAdd(srcParentPath,srcName,dstParentPath,dstName);
 			}
 		} catch (IOException e) {
-			System.out.println("syncUpFolder() Exception!");
+			Log.debug("syncUpFolder() Exception!");
 			e.printStackTrace();
 			return false;
 		}
@@ -1057,7 +1057,7 @@ public class BaseFunction{
 	}
     
     private void syncUpForAdd(String srcParentPath,String srcName, String dstParentPath, String dstName) throws IOException {
-    	System.out.println("syncUpForAddAndModify() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
+    	Log.debug("syncUpForAddAndModify() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
     	String srcPath = srcParentPath + srcName;
     	String dstPath = dstParentPath + dstName;
     	
@@ -1091,7 +1091,7 @@ public class BaseFunction{
 	}
 
 	private void syncUpForAddAndModify(String srcParentPath,String srcName, String dstParentPath, String dstName) throws IOException {
-    	System.out.println("syncUpForAddAndModify() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
+    	Log.debug("syncUpForAddAndModify() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
     	String srcPath = srcParentPath + srcName;
     	String dstPath = dstParentPath + dstName;
     	
@@ -1132,7 +1132,7 @@ public class BaseFunction{
 	}
 
 	private void syncUpForDelete(String srcParentPath, String srcName, String dstParentPath, String dstName) {
-    	System.out.println("syncUpForDelete() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
+    	Log.debug("syncUpForDelete() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
     	String srcPath = srcParentPath + srcName;
     	String dstPath = dstParentPath + dstName;
     	
@@ -1174,13 +1174,13 @@ public class BaseFunction{
 	//WebTmpPath was accessable for web
 	protected String getWebUserTmpPath(User login_user) {
         String webUserTmpPath =  docSysWebPath +  "tmp/" + login_user.getId() + "/";
-        System.out.println("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
+        Log.debug("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
 		return webUserTmpPath;
 	}
 
 	protected String getWebUserTmpPath(User login_user, boolean autoCreate) {
         String webUserTmpPath =  docSysWebPath +  "tmp/" + login_user.getId() + "/";
-        System.out.println("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
+        Log.debug("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
 		if(autoCreate == true)
 		{
 			File dir = new File(webUserTmpPath);
@@ -1195,20 +1195,20 @@ public class BaseFunction{
 	//WebTmpPath was 
 	protected String getWebUploadPath() {
 		String webTmpPath =  docSysWebPath +  "uploads/";
-	    System.out.println("getWebUploadPath() webTmpPath:" + webTmpPath);
+	    Log.debug("getWebUploadPath() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
 	
 	//WebTmpPath was 
 	protected String getWebTmpPath() {
         String webTmpPath =  docSysWebPath +  "tmp/";
-        System.out.println("getWebTmpPath() webTmpPath:" + webTmpPath);
+        Log.debug("getWebTmpPath() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
 	
 	protected String getWebTmpPathForPreview() {
         String webTmpPath =  docSysWebPath +  "tmp/preview/";
-        System.out.println("getWebTmpPathForPreview() webTmpPath:" + webTmpPath);
+        Log.debug("getWebTmpPathForPreview() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
 	
@@ -1362,11 +1362,11 @@ public class BaseFunction{
 	        analyzer = null;
 	        
 			Date date2 = new Date();
-	        System.out.println("updatePreferLinkIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Log.debug("updatePreferLinkIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        System.out.println("updatePreferLinkIndex() 异常");
+	        Log.debug("updatePreferLinkIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -1406,11 +1406,11 @@ public class BaseFunction{
 	        analyzer = null;
 	        
 			Date date2 = new Date();
-	        System.out.println("updateUserPreferServerIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Log.debug("updateUserPreferServerIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        System.out.println("updateUserPreferServerIndex() 异常");
+	        Log.debug("updateUserPreferServerIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -1429,7 +1429,7 @@ public class BaseFunction{
 	
 	protected boolean deleteUserPreferServerIndex(String serverId, String indexLib)
 	{
-    	System.out.println("deleteUserPreferServerIndex() serverId:" + serverId + " indexLib:"+indexLib);
+    	Log.debug("deleteUserPreferServerIndex() serverId:" + serverId + " indexLib:"+indexLib);
     	Analyzer analyzer = null;
     	Directory directory = null;
     	IndexWriter indexWriter = null;
@@ -1451,7 +1451,7 @@ public class BaseFunction{
 	        directory = null;
 	        
 	        Date date2 = new Date();
-	        System.out.println("deleteUserPreferServerIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Log.debug("deleteUserPreferServerIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
@@ -1461,7 +1461,7 @@ public class BaseFunction{
     }  
 
 	private static boolean addUserPreferServerIndex(UserPreferServer server, String indexLib) {
-    	System.out.println("addUserPreferServerIndex() id:" + server.id + " indexLib:"+indexLib);    	
+    	Log.debug("addUserPreferServerIndex() id:" + server.id + " indexLib:"+indexLib);    	
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -1488,11 +1488,11 @@ public class BaseFunction{
 	        analyzer = null;
 	        
 			Date date2 = new Date();
-	        System.out.println("addUserPreferServerIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Log.debug("addUserPreferServerIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        System.out.println("addUserPreferServerIndex() 异常");
+	        Log.debug("addUserPreferServerIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -1500,7 +1500,7 @@ public class BaseFunction{
 	
 	
 	private boolean addPreferLinkIndex(PreferLink link, String indexLib) {
-    	System.out.println("addPreferLinkIndex() id:" + link.id + " indexLib:"+indexLib);    	
+    	Log.debug("addPreferLinkIndex() id:" + link.id + " indexLib:"+indexLib);    	
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -1527,11 +1527,11 @@ public class BaseFunction{
 	        analyzer = null;
 	        
 			Date date2 = new Date();
-	        System.out.println("addPreferLinkIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Log.debug("addPreferLinkIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        System.out.println("addPreferLinkIndex() 异常");
+	        Log.debug("addPreferLinkIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -1597,7 +1597,7 @@ public class BaseFunction{
 	
 	protected static boolean addSystemLogIndex(SystemLog log, String indexLib)
     {	
-    	System.out.println("addSystemLogIndex() id:" + log.id + " indexLib:"+indexLib);    	
+    	Log.debug("addSystemLogIndex() id:" + log.id + " indexLib:"+indexLib);    	
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -1624,11 +1624,11 @@ public class BaseFunction{
 	        analyzer = null;
 	        
 			Date date2 = new Date();
-	        System.out.println("addSystemLogIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Log.debug("addSystemLogIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        System.out.println("addSystemLogIndex() 异常");
+	        Log.debug("addSystemLogIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
