@@ -624,16 +624,18 @@ public class BaseFunction{
 		//seperate host with port
 		String[] subStrs1 = hostWithPort.split(":");
 		String host = subStrs1[0];
-		
+		Log.debug("parseSftpUrl host:" + host);
+
 		Integer port = null;
 		if(subStrs1.length > 1)
 		{
-			port = Integer.getInteger(subStrs1[1]);
+			port = Integer.parseInt(subStrs1[1]);
 		}
 		if(port == null)
 		{
 			port = 22;
 		}
+		Log.debug("parseSftpUrl port:" + port);
 
 		remote.SFTP.host = host;
 		remote.SFTP.port = port;
@@ -657,17 +659,21 @@ public class BaseFunction{
 		//seperate host with port
 		String[] subStrs1 = hostWithPort.split(":");
 		String host = subStrs1[0];
+		Log.debug("parseFtpUrl host:" + host);
 		
 		Integer port = null;
 		if(subStrs1.length > 1)
 		{
-			port = Integer.getInteger(subStrs1[1]);
+			port = Integer.parseInt(subStrs1[1]);
+			Log.debug("parseFtpUrl port:" + port);
 		}
+		
 		if(port == null)
 		{
 			port = 21;
 		}
-
+		Log.debug("parseFtpUrl port:" + port);
+		
 		remote.FTP.host = host;
 		remote.FTP.port = port;
 		remote.rootPath = rootPath;
@@ -686,21 +692,23 @@ public class BaseFunction{
 		{
 			rootPath = buildRemoteStorageRootPath(subStrs);
 		}
-		Log.debug("parseFtpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
+		Log.debug("parseSmbUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		
 		//seperate host with port
 		String[] subStrs1 = hostWithPort.split(":");
 		String host = subStrs1[0];
+		Log.debug("parseSmbUrl host:" + host);
 		
 		Integer port = null;
 		if(subStrs1.length > 1)
 		{
-			port = Integer.getInteger(subStrs1[1]);
+			port = Integer.parseInt(subStrs1[1]);
 		}
 		if(port == null)
 		{
 			port = 139;
 		}
+		Log.debug("parseSmbUrl port:" + port);
 
 		remote.SMB.host = host;
 		remote.SMB.port = port;
