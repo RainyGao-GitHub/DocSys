@@ -77,15 +77,15 @@ public class UserController extends BaseController {
 		
 		
 		//Set session
-		System.out.println("登录成功");
+		Log.debug("登录成功");
 		session.setAttribute("login_user", loginUser);
-		System.out.println("SESSION ID:" + session.getId());
+		Log.debug("SESSION ID:" + session.getId());
 
 		//如果用户点击了保存密码则保存cookies
 		if(rememberMe!=null&&rememberMe.equals("1")){
 			addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
 			addCookie(response, "dstoken", pwd, 7*24*60*60);
-			System.out.println("用户cookie保存成功");
+			Log.debug("用户cookie保存成功");
 		}
 
 		//Feeback to page
@@ -112,7 +112,7 @@ public class UserController extends BaseController {
 		List<User> uList = userService.getUserListByUserInfo(qUser);
 		if(uList == null || uList.size() == 0)
 		{
-			System.out.println("系统管理员不存在!");
+			Log.warn("系统管理员不存在!");
 			rt.setError("系统管理员不存在!");
 			rt.setData("needAddFirstAdmin");
 			writeJson(rt, response);	
@@ -237,7 +237,7 @@ public class UserController extends BaseController {
 		
 		if(userCheck(user, true, true, rt) == false)
 		{
-			System.out.println("用户检查失败!");			
+			Log.debug("用户检查失败!");			
 			writeJson(rt, response);
 			return;			
 		}
@@ -260,8 +260,8 @@ public class UserController extends BaseController {
 		
 		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
 		{
-			System.out.println("注册密码："+pwd);
-			System.out.println("确认注册密码："+pwd2);
+			Log.debug("注册密码："+pwd);
+			Log.debug("确认注册密码："+pwd2);
 			rt.setError("两次密码不一致，请重试！");
 			writeJson(rt, response);
 			return;
@@ -301,7 +301,7 @@ public class UserController extends BaseController {
 		ReturnAjax rt = new ReturnAjax();
 		if(userName == null || "".equals(userName))	//从session中取出用户名??
 		{
-			System.out.println("userName不能为空");
+			Log.debug("userName不能为空");
 			rt.setError("请填写正确的邮箱或手机");
 			writeJson(rt, response);
 			return;
@@ -355,7 +355,7 @@ public class UserController extends BaseController {
 		}
 		else
 		{
-			System.out.println("userName不是邮箱或手机");
+			Log.debug("userName不是邮箱或手机");
 			rt.setError("请使用正确的邮箱手机！");
 			writeJson(rt, response);
 			return;
@@ -516,8 +516,8 @@ public class UserController extends BaseController {
 		
 		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
 		{
-			System.out.println("密码："+pwd);
-			System.out.println("确认密码："+pwd2);
+			Log.debug("密码："+pwd);
+			Log.debug("确认密码："+pwd2);
 			rt.setError("两次密码不一致，请重试！");
 			writeJson(rt, response);
 			return;
@@ -529,7 +529,7 @@ public class UserController extends BaseController {
 		user.setPwd(pwd);
 		if(userService.updateUserInfo(user) == 0)
 		{
-			System.out.println("设置密码失败!");
+			Log.debug("设置密码失败!");
 			rt.setError("设置密码失败！");
 			writeJson(rt, response);
 			return;
@@ -577,8 +577,8 @@ public class UserController extends BaseController {
 		
 		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
 		{
-			System.out.println("密码："+pwd);
-			System.out.println("确认密码："+pwd2);
+			Log.debug("密码："+pwd);
+			Log.debug("确认密码："+pwd2);
 			rt.setError("两次密码不一致，请重试！");
 			writeJson(rt, response);
 			return;
@@ -590,7 +590,7 @@ public class UserController extends BaseController {
 		user.setPwd(pwd);
 		if(userService.updateUserInfo(user) == 0)
 		{
-			System.out.println("设置密码失败!");
+			Log.debug("设置密码失败!");
 			rt.setError("设置密码失败！");
 			writeJson(rt, response);
 			return;
@@ -611,7 +611,7 @@ public class UserController extends BaseController {
 		//检查用户名是否为空，注意用户名真的是用户名，不是指绑定的手机和邮箱
 		if(userName==null||"".equals(userName))
 		{
-			System.out.println("updateUserInfo() userName is empty！");
+			Log.debug("updateUserInfo() userName is empty！");
 			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
@@ -621,7 +621,7 @@ public class UserController extends BaseController {
 		User loginUser = (User) session.getAttribute("login_user");
 		if(loginUser == null)
 		{
-			System.out.println("updateUserInfo() 用户未登陆！");
+			Log.debug("updateUserInfo() 用户未登陆！");
 			rt.setError("用户未登陆！");
 			writeJson(rt, response);
 			return;
@@ -629,7 +629,7 @@ public class UserController extends BaseController {
 		
 		if(!userName.equals(loginUser.getName()))
 		{
-			System.out.println("updateUserInfo() 不能修改其他用户的信息！");
+			Log.debug("updateUserInfo() 不能修改其他用户的信息！");
 			rt.setError("修改用户信息失败！");
 			writeJson(rt, response);
 			return;
@@ -705,7 +705,7 @@ public class UserController extends BaseController {
 		User loginUser = (User) session.getAttribute("login_user");
 		if(loginUser == null)
 		{
-			System.out.println("uploadUserImg() 用户未登陆！");
+			Log.debug("uploadUserImg() 用户未登陆！");
 			rt.setError("用户未登陆！");
 			writeJson(rt, response);
 			return;
@@ -715,19 +715,19 @@ public class UserController extends BaseController {
 		MultipartFile uploadFile = param.getFile();
 		if (uploadFile == null) 
 		{
-			System.out.println("uploadUserImg() uploadFile is null！");
+			Log.debug("uploadUserImg() uploadFile is null！");
 			rt.setError("文件上传失败！");
 			writeJson(rt, response);
 			return;
 		}
 		
 		/*保存文件*/
-		System.out.println("uploadFile size is :" + uploadFile.getSize());
+		Log.debug("uploadFile size is :" + uploadFile.getSize());
 		
 		String userImgName = saveUserImg(uploadFile,loginUser);
 		if(userImgName == null)
 		{
-			System.out.println("uploadUserImg() saveFile Failed！");
+			Log.debug("uploadUserImg() saveFile Failed！");
 			rt.setMsgData("uploadUserImg() saveFile Failed！");
 			rt.setError("文件上传失败！");
 			writeJson(rt, response);
@@ -741,7 +741,7 @@ public class UserController extends BaseController {
 		user.setImg(userImgUrl);
 		if(userService.updateUserInfo(user) == 0)
 		{
-			System.out.println("uploadUserImg() updateUserInfo Failed！");
+			Log.debug("uploadUserImg() updateUserInfo Failed！");
 			rt.setMsgData("uploadUserImg() updateUserInfo Failed！");
 			rt.setError("用户头像更新失败！");
 			writeJson(rt, response);
@@ -757,7 +757,7 @@ public class UserController extends BaseController {
 		String fileName = uploadFile.getOriginalFilename();
         
         String imgDirPath = getUserImgPath(); 
-        System.out.println("imgDirPath:" + imgDirPath);
+        Log.debug("imgDirPath:" + imgDirPath);
         File dir = new File(imgDirPath);
         if (!dir.exists()) {
         	if(dir.mkdirs() == false)
@@ -772,15 +772,15 @@ public class UserController extends BaseController {
 		try {
 			retName = FileUtil.saveFile(uploadFile, imgDirPath,usrImgName);
 		} catch (Exception e) {
-			System.out.println("saveUserImg() saveFile " + usrImgName +" 异常！");
+			Log.debug("saveUserImg() saveFile " + usrImgName +" 异常！");
 			e.printStackTrace();
 			return null;
 		}
 		
-		System.out.println("saveUserImg() saveFile return: " + retName);
+		Log.debug("saveUserImg() saveFile return: " + retName);
 		if(retName == null  || !retName.equals(usrImgName))
 		{
-			System.out.println("updateRealDoc() saveFile " + usrImgName +" Failed！");
+			Log.debug("updateRealDoc() saveFile " + usrImgName +" Failed！");
 			return null;
 		}
 		
@@ -807,7 +807,7 @@ public class UserController extends BaseController {
 		}else{  
 			fileName = new String(fileName.getBytes("UTF-8"),"ISO8859-1");  
 		}  
-		System.out.println("getUserImg fileName:" + fileName);
+		Log.debug("getUserImg fileName:" + fileName);
 		
 		//String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
 		 

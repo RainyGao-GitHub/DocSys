@@ -174,6 +174,7 @@ public class BaseController  extends BaseFunction{
 
 		//Log.logMask = Log.allowAll;
 		//Log.logFile = Path.getSystemLogParentPath(docSysWebPath); 
+		//System.out.println("initLogLevel Log.logFile:" + Log.logFile);
 	}
 
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
@@ -9939,8 +9940,10 @@ public class BaseController  extends BaseFunction{
 			case "0":
 				return Log.debug;
 			case "1":
-				return Log.warn;
+				return Log.info;
 			case "2":
+				return Log.warn;
+			case "3":
 				return Log.error;
 			}
 		}
