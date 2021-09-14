@@ -129,8 +129,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** addDoc ****************");
-		Log.println("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
+		Log.debug("\n************** addDoc ****************");
+		Log.debug("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
 		//Log.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -185,7 +185,7 @@ public class DocController extends BaseController{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
-				Log.println("uploadDoc() 远程自动推送");
+				Log.debug("uploadDoc() 远程自动推送");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
@@ -198,7 +198,7 @@ public class DocController extends BaseController{
 		
 		if(ret == false)
 		{
-			Log.println("add() add Doc Failed");
+			Log.debug("add() add Doc Failed");
 			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, "");
 			return;
 		}
@@ -212,8 +212,8 @@ public class DocController extends BaseController{
 			String content, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** feeback ****************");
-		Log.println("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
+		Log.debug("\n************** feeback ****************");
+		Log.debug("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
 		ReturnAjax rt = new ReturnAjax();
 
 		//设置跨域访问允许
@@ -294,8 +294,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** refreshDoc ****************");
-		Log.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
+		Log.debug("\n************** refreshDoc ****************");
+		Log.debug("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -339,7 +339,7 @@ public class DocController extends BaseController{
 		
 		new Thread(new Runnable() {
 			public void run() {
-				Log.println("refreshDoc() executeUniqueCommonActionList in new thread");
+				Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
 				executeUniqueCommonActionList(actionList, rt);
 			}
 		}).start();
@@ -352,8 +352,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** deleteDoc ****************");
-		Log.println("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
+		Log.debug("\n************** deleteDoc ****************");
+		Log.debug("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -395,7 +395,7 @@ public class DocController extends BaseController{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
-				Log.println("uploadDoc() 远程自动推送");
+				Log.debug("uploadDoc() 远程自动推送");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
@@ -423,8 +423,8 @@ public class DocController extends BaseController{
 							Integer shareId,
 							HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** renameDoc ****************");
-		Log.println("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName+ " shareId:" + shareId);
+		Log.debug("\n************** renameDoc ****************");
+		Log.debug("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName+ " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -499,7 +499,7 @@ public class DocController extends BaseController{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
-				Log.println("uploadDoc() 远程自动推送");
+				Log.debug("uploadDoc() 远程自动推送");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
@@ -527,8 +527,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** moveDoc ****************");
-		Log.println("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
+		Log.debug("\n************** moveDoc ****************");
+		Log.debug("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 
 		if(srcPath == null)
 		{
@@ -602,7 +602,7 @@ public class DocController extends BaseController{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
-				Log.println("uploadDoc() 远程自动推送");
+				Log.debug("uploadDoc() 远程自动推送");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
@@ -630,8 +630,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** copyDoc ****************");
-		Log.println("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
+		Log.debug("\n************** copyDoc ****************");
+		Log.debug("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, srcPath, srcName, true, rt);
@@ -691,7 +691,7 @@ public class DocController extends BaseController{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
-				Log.println("uploadDoc() 远程自动推送");
+				Log.debug("uploadDoc() 远程自动推送");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
@@ -717,8 +717,8 @@ public class DocController extends BaseController{
 			String cmdLine,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** executeDoc ****************");
-		Log.println("executeDoc reposId:" + reposId + " path:" + path + " name:" + name);
+		Log.debug("\n************** executeDoc ****************");
+		Log.debug("executeDoc reposId:" + reposId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
@@ -755,7 +755,7 @@ public class DocController extends BaseController{
 		File dir = new File(runPath);
 		
 		String cmd = buildDocExecuteCmd(repos, doc, cmdLine);
-		Log.println("executeDoc cmd:" + cmd);
+		Log.debug("executeDoc cmd:" + cmd);
 		if(cmd != null)
 		{
 			return run(cmd, null, dir);
@@ -790,8 +790,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** checkDocInfo ****************");
-		Log.println("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId);
+		Log.debug("\n************** checkDocInfo ****************");
+		Log.debug("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -876,7 +876,7 @@ public class DocController extends BaseController{
 			return;				
 		}
 			
-		Log.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
+		Log.debug("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 		if(commitMsg == null)
 		{
 			commitMsg = "上传 " + path + name;
@@ -977,7 +977,7 @@ public class DocController extends BaseController{
 	}
 
 	private boolean isDocCheckSumMatched(Doc doc,Long size, String checkSum) {
-		Log.println("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
+		Log.debug("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
 
 		if(size == 0L)	//对于size==0的情况只要比较原来的doc.getSize() == 0
 		{
@@ -999,8 +999,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
-		Log.println("\n************** checkChunkUploaded ****************");
-		Log.println("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
+		Log.debug("\n************** checkChunkUploaded ****************");
+		Log.debug("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 			
 		ReturnAjax rt = new ReturnAjax();
@@ -1043,7 +1043,7 @@ public class DocController extends BaseController{
 			rt.setMsgData("1");
 			Log.docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);
 			
-			Log.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
+			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
 				if(commitMsg == null)
@@ -1109,8 +1109,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("\n************** uploadDoc ****************");
-		Log.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
+		Log.debug("\n************** uploadDoc ****************");
+		Log.debug("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId + " commitMsg:" + commitMsg);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -1167,7 +1167,7 @@ public class DocController extends BaseController{
 		
 		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
 		{
-			Log.println("uploadDoc size:" + size + " max uploadSize:" + docUserAuth.getUploadSize());
+			Log.debug("uploadDoc size:" + size + " max uploadSize:" + docUserAuth.getUploadSize());
 			rt.setError("上传文件大小超限，请联系管理员");
 			writeJson(rt, response);
 			return;							
@@ -1275,7 +1275,7 @@ public class DocController extends BaseController{
 				RemoteStorage remote = repos.remoteStorageConfig;
 				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 				{
-					Log.println("uploadDoc() 远程自动推送");
+					Log.debug("uploadDoc() 远程自动推送");
 			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 					if(channel != null)
 			        {	
@@ -1300,8 +1300,8 @@ public class DocController extends BaseController{
 			@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception
 	{
-		Log.println("\n************** uploadMarkdownPic ****************");
-		Log.println("uploadMarkdownPic reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name + " imgName:" + imgName);
+		Log.debug("\n************** uploadMarkdownPic ****************");
+		Log.debug("uploadMarkdownPic reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name + " imgName:" + imgName);
 		
 		JSONObject res = new JSONObject();
 
@@ -1339,7 +1339,7 @@ public class DocController extends BaseController{
 			writeJson(res,response);			
 			return;
 		}
-		Log.println("uploadMarkdownPic path:" + path +" name:"+ name);
+		Log.debug("uploadMarkdownPic path:" + path +" name:"+ name);
 
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -1400,8 +1400,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** updateDocContent ****************");
-		Log.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
+		Log.debug("\n************** updateDocContent ****************");
+		Log.debug("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 		//Log.println("updateDocContent content:[" + content + "]");
 		//Log.println("content size: " + content.length());
 			
@@ -1471,7 +1471,7 @@ public class DocController extends BaseController{
 				RemoteStorage remote = repos.remoteStorageConfig;
 				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 				{
-					Log.println("uploadDoc() 远程自动推送");
+					Log.debug("uploadDoc() 远程自动推送");
 			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 					if(channel != null)
 			        {	
@@ -1516,8 +1516,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** tmpSaveDocContent ****************");
-		Log.println("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
+		Log.debug("\n************** tmpSaveDocContent ****************");
+		Log.debug("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		//Log.println("tmpSaveVirtualDocContent content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1566,8 +1566,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
-		Log.println("\n************** downloadDocPrepare ****************");
-		Log.println("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
+		Log.debug("\n************** downloadDocPrepare ****************");
+		Log.debug("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -1634,7 +1634,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
-			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
 			return;
 		}
@@ -1684,7 +1684,7 @@ public class DocController extends BaseController{
 		RemoteStorage remote = repos.remoteStorageConfig;
 		if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 		{
-			Log.println("downloadDocPrepare_FSM() 远程自动拉取");
+			Log.debug("downloadDocPrepare_FSM() 远程自动拉取");
 	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 			if(channel != null)
 	        {	
@@ -1696,7 +1696,7 @@ public class DocController extends BaseController{
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
-			Log.println("downloadDocPrepare_FSM() locaDoc " +doc.getPath() + doc.getName() + " 获取异常");
+			Log.debug("downloadDocPrepare_FSM() locaDoc " +doc.getPath() + doc.getName() + " 获取异常");
 			Log.docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
 			return;
 		}
@@ -1705,7 +1705,7 @@ public class DocController extends BaseController{
 		//本地文件不存在
 		if(localEntry.getType() == 0)
 		{
-			Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			if(autoPullDone == false)
 			{
 				//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
@@ -1764,7 +1764,7 @@ public class DocController extends BaseController{
 				
 			if(remoteEntry.getType() == null || remoteEntry.getType() == 0)
 			{
-				Log.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 				Log.docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
 				return;	
 			}
@@ -1853,8 +1853,8 @@ public class DocController extends BaseController{
 			Integer encryptEn,	//是否检查文件被加密
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("\n************** downloadDoc.do ****************");
-		Log.println("downloadDoc  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath + " encryptEn:" + encryptEn);
+		Log.debug("\n************** downloadDoc.do ****************");
+		Log.debug("downloadDoc  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = null;
@@ -1905,7 +1905,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
+		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
@@ -1961,8 +1961,8 @@ public class DocController extends BaseController{
 			Integer encryptEn,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("\n************** downloadDocEx ****************");
-		Log.println("downloadDocEx  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath + " encryptEn:" + encryptEn);
+		Log.debug("\n************** downloadDocEx ****************");
+		Log.debug("downloadDocEx  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId + " authCode:" + authCode + "reposPath:" + reposPath + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(targetPath == null || targetName == null)
@@ -1990,7 +1990,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.println("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);
+		Log.debug("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);
 		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
@@ -2039,8 +2039,8 @@ public class DocController extends BaseController{
 			String disposition,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("\n************** downloadDoc ****************");
-		Log.println("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
+		Log.debug("\n************** downloadDoc ****************");
+		Log.debug("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2098,7 +2098,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
 			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
@@ -2139,8 +2139,8 @@ public class DocController extends BaseController{
 			String disposition,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("\n************** downloadDoc ****************");
-		Log.println("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
+		Log.debug("\n************** downloadDoc ****************");
+		Log.debug("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2198,7 +2198,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.println("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
 			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
@@ -2238,7 +2238,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("doGetTmpFile  reposId:" + reposId + " path:" + path + " fileName:" + fileName+ " shareId:" + shareId);
+		Log.debug("doGetTmpFile  reposId:" + reposId + " path:" + path + " fileName:" + fileName+ " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -2285,7 +2285,7 @@ public class DocController extends BaseController{
 		} 
 		catch (Exception e) 
 		{
-			Log.println("getCheckSum() Exception"); 
+			Log.debug("getCheckSum() Exception"); 
 			e.printStackTrace();
 			return null;
 		}
@@ -2299,7 +2299,7 @@ public class DocController extends BaseController{
 			String rootName,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		Log.println("getZipDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " shareId:" + shareId);
+		Log.debug("getZipDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -2375,8 +2375,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 
-		Log.println("\n************** getDocContent ************");
-		Log.println("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId);
+		Log.debug("\n************** getDocContent ************");
+		Log.debug("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId);
 
 		//注意该接口支持name是空的的情况
 		if(path == null)
@@ -2433,7 +2433,7 @@ public class DocController extends BaseController{
 					RemoteStorage remote = repos.remoteStorageConfig;
 					if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 					{
-						Log.println("getDocContent() 远程自动拉取");
+						Log.debug("getDocContent() 远程自动拉取");
 				    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 						if(channel != null)
 				        {	
@@ -2446,7 +2446,7 @@ public class DocController extends BaseController{
 					Doc localEntry = fsGetDoc(repos, doc);
 					if(localEntry.getType() == 0)
 					{
-						Log.println("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在");
+						Log.debug("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在");
 						if(autoPullDone == false)
 						{
 							//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
@@ -2612,8 +2612,8 @@ public class DocController extends BaseController{
 	public void getTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		Log.println("\n*************** getTmpSavedDocContent ********************");
-		Log.println("getTmpSavedDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
+		Log.debug("\n*************** getTmpSavedDocContent ********************");
+		Log.debug("getTmpSavedDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -2672,8 +2672,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n*************** deleteTmpSavedDocContent ********************");
-		Log.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
+		Log.debug("\n*************** deleteTmpSavedDocContent ********************");
+		Log.debug("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, false, rt);
@@ -2795,8 +2795,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n*************** getDoc ********************");
-		Log.println("getDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType + " shareId:" + shareId);
+		Log.debug("\n*************** getDoc ********************");
+		Log.debug("getDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType + " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2824,7 +2824,7 @@ public class DocController extends BaseController{
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
-			Log.println("getDoc() you have no access right on doc:" + docId);
+			Log.debug("getDoc() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
 			return;
 		}
@@ -2854,7 +2854,7 @@ public class DocController extends BaseController{
 				RemoteStorage remote = repos.remoteStorageConfig;
 				if(remote == null)
 				{
-					Log.println("docSysGetDocListWithChangeType remote is null");
+					Log.debug("docSysGetDocListWithChangeType remote is null");
 				}
 				else
 				{
@@ -2934,8 +2934,8 @@ public class DocController extends BaseController{
 			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n*************** getZipDocFileLink ********************");		
-		Log.println("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
+		Log.debug("\n*************** getZipDocFileLink ********************");		
+		Log.debug("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2976,7 +2976,7 @@ public class DocController extends BaseController{
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
 		if(fileLink == null)
 		{
-			Log.println("getZipDocFileLink() buildDocFileLink failed");
+			Log.debug("getZipDocFileLink() buildDocFileLink failed");
 			return;
 		}
 			
@@ -2990,8 +2990,8 @@ public class DocController extends BaseController{
 			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n*************** getDocFileLink ********************");		
-		Log.println("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId);
+		Log.debug("\n*************** getDocFileLink ********************");		
+		Log.debug("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId);
 
 		//注意该接口支持name是空的的情况
 		if(path == null)
@@ -3089,7 +3089,7 @@ public class DocController extends BaseController{
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
 		if(fileLink == null)
 		{
-			Log.println("getDocFileLink() buildDocFileLink failed");
+			Log.debug("getDocFileLink() buildDocFileLink failed");
 			return;
 		}
 		
@@ -3105,8 +3105,8 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** lockDoc ****************");
-		Log.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
+		Log.debug("\n************** lockDoc ****************");
+		Log.debug("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = null;
@@ -3114,7 +3114,7 @@ public class DocController extends BaseController{
 		{
 			if(checkAuthCode(authCode, null) == false)
 			{
-				Log.println("lockDoc checkAuthCode Failed");
+				Log.debug("lockDoc checkAuthCode Failed");
 				rt.setError("无效授权码");
 				writeJson(rt, response);		
 				return;
@@ -3127,7 +3127,7 @@ public class DocController extends BaseController{
 		}
 		if(reposAccess == null)
 		{
-			Log.println("lockDoc reposAccess is null");
+			Log.debug("lockDoc reposAccess is null");
 			rt.setError("非法访问");
 			writeJson(rt, response);		
 			return;
@@ -3176,14 +3176,14 @@ public class DocController extends BaseController{
 			if(docLock == null)
 			{
 				SyncLock.unlock(syncLock); //线程锁
-				Log.println("lockDoc() Failed to lock Doc: " + doc.getName());
+				Log.debug("lockDoc() Failed to lock Doc: " + doc.getName());
 				writeJson(rt, response);
 				return;			
 			}
 			SyncLock.unlock(syncLock); //线程锁
 		}
 		
-		Log.println("lockDoc : " + doc.getName() + " success");
+		Log.debug("lockDoc : " + doc.getName() + " success");
 		rt.setData(doc);
 		writeJson(rt, response);	
 		
@@ -3198,8 +3198,8 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** unlockDoc ****************");
-		Log.println("unlockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
+		Log.debug("\n************** unlockDoc ****************");
+		Log.debug("unlockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = null;
@@ -3207,7 +3207,7 @@ public class DocController extends BaseController{
 		{
 			if(checkAuthCode(authCode, null) == false)
 			{
-				Log.println("lockDoc checkAuthCode Failed");
+				Log.debug("lockDoc checkAuthCode Failed");
 				rt.setError("无效授权码");
 				writeJson(rt, response);		
 				return;
@@ -3220,7 +3220,7 @@ public class DocController extends BaseController{
 		}
 		if(reposAccess == null)
 		{
-			Log.println("lockDoc reposAccess is null");
+			Log.debug("lockDoc reposAccess is null");
 			rt.setError("非法访问");
 			writeJson(rt, response);		
 			return;
@@ -3267,7 +3267,7 @@ public class DocController extends BaseController{
 			SyncLock.unlock(syncLock); //线程锁
 		}
 		
-		Log.println("SyncLock.unlockDoc : " + doc.getName() + " success");
+		Log.debug("SyncLock.unlockDoc : " + doc.getName() + " success");
 		rt.setData(doc);
 		writeJson(rt, response);	
 
@@ -3281,8 +3281,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** getDocHistory ****************");
-		Log.println("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType+ " shareId:" + shareId);
+		Log.debug("\n************** getDocHistory ****************");
+		Log.debug("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -3338,8 +3338,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** getHistoryDetail ****************");
-		Log.println("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId+ " shareId:" + shareId);
+		Log.debug("\n************** getHistoryDetail ****************");
+		Log.debug("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -3381,7 +3381,7 @@ public class DocController extends BaseController{
 		
 		if(changedItemList == null)
 		{
-			Log.println("getHistoryDetail 该版本没有文件改动");
+			Log.debug("getHistoryDetail 该版本没有文件改动");
 		}
 		rt.setData(changedItemList);
 		
@@ -3398,8 +3398,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.println("\n************** downloadHistoryDocPrepare ****************");
-		Log.println("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
+		Log.debug("\n************** downloadHistoryDocPrepare ****************");
+		Log.debug("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -3537,7 +3537,7 @@ public class DocController extends BaseController{
 		
 		Log.printObject("downloadHistoryDocPrepare checkOut successDocList:", successDocList);
 				
-		Log.println("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
+		Log.debug("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), userTmpDir, targetName, isRealDoc?1:0);	
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);
@@ -3553,7 +3553,7 @@ public class DocController extends BaseController{
 		
 		if(changedItemList == null)
 		{
-			Log.println("buildDownloadList verReposGetHistoryDetail Failed");
+			Log.debug("buildDownloadList verReposGetHistoryDetail Failed");
 			return;
 		}
 		
@@ -3566,7 +3566,7 @@ public class DocController extends BaseController{
 			if(changeItemEntryPath.contains(docEntryPath))
 			{
 				downloadList.put(changeItemEntryPath, changeItemEntryPath);
-				Log.println("buildDownloadList Add [" +changeItemEntryPath + "]");
+				Log.debug("buildDownloadList Add [" +changeItemEntryPath + "]");
 			}
 		}		
 	}
@@ -3582,8 +3582,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** revertDocHistory ****************");
-		Log.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
+		Log.debug("\n************** revertDocHistory ****************");
+		Log.debug("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
 
 		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
 		ReturnAjax rt = new ReturnAjax();
@@ -3665,7 +3665,7 @@ public class DocController extends BaseController{
 		Doc curDoc = docSysGetDoc(repos, doc, false);
 		if(curDoc == null || curDoc.getType() == 0)
 		{
-			Log.println("revertDocHistory " + curDoc.getPath() + curDoc.getName() + " 不存在！");
+			Log.debug("revertDocHistory " + curDoc.getPath() + curDoc.getName() + " 不存在！");
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 			if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 			{
@@ -3697,7 +3697,7 @@ public class DocController extends BaseController{
 			if(repos.getType() == 3 || repos.getType() == 4)
 			{
 				//前置类型仓库不需要判断本地是否有改动
-				Log.println("revertDocHistory reposId:" + reposId + " SVN或GIT前置仓库不需要检查本地是否有改动");
+				Log.debug("revertDocHistory reposId:" + reposId + " SVN或GIT前置仓库不需要检查本地是否有改动");
 			}
 			else
 			{
@@ -3726,7 +3726,7 @@ public class DocController extends BaseController{
 				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2) == false)
 				{
 					Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
-					Log.println("revertDocHistory() syncupScanForDoc_FSM!");	
+					Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;
@@ -3737,7 +3737,7 @@ public class DocController extends BaseController{
 					//Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 
-					Log.println("revertDocHistory() 本地有改动！");
+					Log.debug("revertDocHistory() 本地有改动！");
 					String localChangeInfo = buildChangeReminderInfo(localChanges);
 					Log.docSysErrorLog(localChangeInfo, rt);
 					writeJson(rt, response);
@@ -3746,7 +3746,7 @@ public class DocController extends BaseController{
 				
 				if(remoteChanges.size() > 0)
 				{
-					Log.println("revertDocHistory() 远程有改动！");
+					Log.debug("revertDocHistory() 远程有改动！");
 					String remoteChangeInfo = buildChangeReminderInfo(remoteChanges);				
 					Log.docSysErrorLog(remoteChangeInfo,rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
@@ -3758,7 +3758,7 @@ public class DocController extends BaseController{
 				{
 					if(commitId.equals(remoteEntry.getRevision()))
 					{
-						Log.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
+						Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
 						Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
 						unlockDoc(doc, lockType, reposAccess.getAccessUser());
 						writeJson(rt, response);
@@ -3776,7 +3776,7 @@ public class DocController extends BaseController{
 				String latestCommitId = verReposGetLatestRevision(repos, false, vDoc);
 				if(latestCommitId != null && latestCommitId.equals(commitId))
 				{
-					Log.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
+					Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
 					Log.docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
@@ -3793,7 +3793,7 @@ public class DocController extends BaseController{
 			RemoteStorage remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
-				Log.println("uploadDoc() 远程自动推送");
+				Log.debug("uploadDoc() 远程自动推送");
 				Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 				{	
@@ -3812,8 +3812,8 @@ public class DocController extends BaseController{
 	public void getReposTextSearchSetting(Integer reposId, String path, String name,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** getReposTextSearchSetting ****************");
-		Log.println("getReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name);
+		Log.debug("\n************** getReposTextSearchSetting ****************");
+		Log.debug("getReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
@@ -3875,8 +3875,8 @@ public class DocController extends BaseController{
 			Integer disableRealDocTextSearch, Integer disableVirtualDocTextSearch,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** updateReposTextSearchSetting ****************");
-		Log.println("updateReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name  + " disableRealDocTextSearch:" + disableRealDocTextSearch + " disableVirtualDocTextSearch:" + disableVirtualDocTextSearch);
+		Log.debug("\n************** updateReposTextSearchSetting ****************");
+		Log.debug("updateReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name  + " disableRealDocTextSearch:" + disableRealDocTextSearch + " disableVirtualDocTextSearch:" + disableVirtualDocTextSearch);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
@@ -3936,8 +3936,8 @@ public class DocController extends BaseController{
 			String pwd,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** setDocPwd ****************");
-		Log.println("setDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
+		Log.debug("\n************** setDocPwd ****************");
+		Log.debug("setDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
@@ -4010,8 +4010,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** verifyDocPwd ****************");
-		Log.println("verifyDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
+		Log.debug("\n************** verifyDocPwd ****************");
+		Log.debug("verifyDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
 		
 		ReturnAjax rt = new ReturnAjax();
 		//密码验证的时候不检查是否进行了非法路径访问，因此path设置为null
@@ -4084,8 +4084,8 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** addRemoteDocShare ****************");
-		Log.println("addRemoteDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		Log.debug("\n************** addRemoteDocShare ****************");
+		Log.debug("addRemoteDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -4156,7 +4156,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/getDocShareList.do")
 	public void getDocShareList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** getDocShareList ****************");
+		Log.debug("\n************** getDocShareList ****************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, true, rt);
@@ -4218,8 +4218,8 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** addDocShare ****************");		
-		Log.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		Log.debug("\n************** addDocShare ****************");		
+		Log.debug("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
@@ -4388,8 +4388,8 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** updateDocShare ****************");		
-		Log.println("updateDocShare() shareId:" + shareId + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		Log.debug("\n************** updateDocShare ****************");		
+		Log.debug("updateDocShare() shareId:" + shareId + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
@@ -4447,8 +4447,8 @@ public class DocController extends BaseController{
 	public void deleteDocShare(Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** deleteDocShare ****************");		
-		Log.println("deleteDocShare() shareId:" + shareId);
+		Log.debug("\n************** deleteDocShare ****************");		
+		Log.debug("deleteDocShare() shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
@@ -4492,8 +4492,8 @@ public class DocController extends BaseController{
 	public void verifyDocSharePwd(Integer shareId, String sharePwd,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** verifyDocSharePwd ****************");		
-		Log.println("getDocShare shareId:" + shareId + " sharePwd:" + sharePwd);
+		Log.debug("\n************** verifyDocSharePwd ****************");		
+		Log.debug("getDocShare shareId:" + shareId + " sharePwd:" + sharePwd);
 		
 		ReturnAjax rt = new ReturnAjax();
 			
@@ -4532,8 +4532,8 @@ public class DocController extends BaseController{
 	public void getDocShare(Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** getDocShare ****************");				
-		Log.println("getDocShare shareId:" + shareId);
+		Log.debug("\n************** getDocShare ****************");				
+		Log.debug("getDocShare shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 			
@@ -4594,8 +4594,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
-		Log.println("\n************** searchDoc ****************");				
-		Log.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort+ " shareId:" + shareId + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
+		Log.debug("\n************** searchDoc ****************");				
+		Log.debug("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort+ " shareId:" + shareId + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, null, null, false, rt);
@@ -4629,7 +4629,7 @@ public class DocController extends BaseController{
 		
 		if(reposList == null)
 		{
-			Log.println("searchDoc reposList is null");
+			Log.debug("searchDoc reposList is null");
 			writeJson(rt, response);			
 			return;	
 		}
@@ -4641,7 +4641,7 @@ public class DocController extends BaseController{
 			List<Doc> result =  searchInRepos(queryRepos, pid, path, searchWord, sort);
 			if(result != null && result.size() > 0)
 			{
-				Log.println("searchDoc() 共 ["+ result.size() +"]结果 hits with " + searchWord + " in reposId:" + queryRepos.getId() + " reposName:" + queryRepos.getName());
+				Log.debug("searchDoc() 共 ["+ result.size() +"]结果 hits with " + searchWord + " in reposId:" + queryRepos.getId() + " reposName:" + queryRepos.getName());
 				searchResult.addAll(result);
 			}
 		}
@@ -4677,7 +4677,7 @@ public class DocController extends BaseController{
 		String pathSuffix = temp[0];
 		searchWord = temp[1];	
 		
-		Log.println("searchInRepos() reposId:" + repos.getId() + " reposName:" + repos.getName() + " pathSuffix:" + pathSuffix + " searchWord:" + searchWord);
+		Log.debug("searchInRepos() reposId:" + repos.getId() + " reposName:" + repos.getName() + " pathSuffix:" + pathSuffix + " searchWord:" + searchWord);
 		
 		if(pathSuffix != null && !pathSuffix.isEmpty())
 		{
@@ -4749,7 +4749,7 @@ public class DocController extends BaseController{
 			
       	    //根据hitType决定是否要取出文件内容或文件备注
       	    int hitType = doc.getHitType();
-    		Log.println("convertSearchResultToDocList() " + doc.getName() + " hitType:" + doc.getHitType());	
+    		Log.debug("convertSearchResultToDocList() " + doc.getName() + " hitType:" + doc.getHitType());	
 
       	    String hitText = "";
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
@@ -4811,7 +4811,7 @@ public class DocController extends BaseController{
 		for(int i=0; i< keyWords.length; i++)
 		{
 			String searchStr = keyWords[i];
-			Log.println("databaseSearch() searchStr:" + searchStr);
+			Log.debug("databaseSearch() searchStr:" + searchStr);
 			
 			if(!searchStr.isEmpty())
 			{
@@ -4913,8 +4913,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.println("\n************** getZipInitMenu ****************");				
-		Log.println("getZipInitMenu reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
+		Log.debug("\n************** getZipInitMenu ****************");				
+		Log.debug("getZipInitMenu reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -4984,8 +4984,8 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
-		Log.println("\n ******* getZipSubDocList ******");
-		Log.println("getZipSubDocList reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
+		Log.debug("\n ******* getZipSubDocList ******");
+		Log.debug("getZipSubDocList reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -5017,7 +5017,7 @@ public class DocController extends BaseController{
 		if(FileUtil.isCompressFile(name) == false)
 		{
 			String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
-			Log.println("getZipSubDocList relativePath: " + relativePath);
+			Log.debug("getZipSubDocList relativePath: " + relativePath);
 			subDocList = getZipSubDocList(repos, tempRootDoc, tempRootDoc.getPath(), tempRootDoc.getName(), rt);
 		}
 		else
@@ -5053,14 +5053,14 @@ public class DocController extends BaseController{
 	{
 		if(name != null && !name.equals(rootDoc.getName()))
 		{
-			Log.println("getZipSubDocList() 目前不支持对压缩文件的子目录的文件列表");
+			Log.debug("getZipSubDocList() 目前不支持对压缩文件的子目录的文件列表");
 			return null;
 		}
 		
 		String compressFileType = FileUtil.getCompressFileType(rootDoc.getName());
 		if(compressFileType == null)
 		{
-			Log.println("getZipSubDocList() " + rootDoc.getName() + " 不是压缩文件！");
+			Log.debug("getZipSubDocList() " + rootDoc.getName() + " 不是压缩文件！");
 			return null;
 		}
 		
@@ -5096,9 +5096,9 @@ public class DocController extends BaseController{
 	
 	//使用SevenZip方式（支持多种格式）
 	private List<Doc> getSubDocListForCompressFile(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForRar() zipFilePath:" + zipFilePath);
 		
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
 
@@ -5163,9 +5163,9 @@ public class DocController extends BaseController{
 	//Unrar解压Rar5存在缺陷
 	@SuppressWarnings({ "unused", "deprecation" })
 	private List<Doc> getSubDocListForRar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForRar() zipFilePath:" + zipFilePath);
 		
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5199,9 +5199,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForBz2() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForBz2() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForBz2() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForBz2() zipFilePath:" + zipFilePath);
 		
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
@@ -5216,9 +5216,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForXz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForXz() path:" + path + " name:" + name);
+		Log.debug("getSubDocListForXz() path:" + path + " name:" + name);
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForXz() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForXz() zipFilePath:" + zipFilePath);
 		
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
@@ -5233,9 +5233,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForGz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForGz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForGz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForGz() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForGz() zipFilePath:" + zipFilePath);
 		
 		List <Doc> subDocList = new ArrayList<Doc>();
 		
@@ -5250,9 +5250,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTarBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForTarBz2() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForTarBz2() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForTarBz2() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForTarBz2() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5271,7 +5271,7 @@ public class DocController extends BaseController{
             TarEntry entry;
             while((entry = tis.getNextEntry()) != null){
 				String subDocPath = rootPath + entry.getName();
-				Log.println("subDoc: " + subDocPath);
+				Log.debug("subDoc: " + subDocPath);
             	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
 				subDocList.add(subDoc);
@@ -5307,9 +5307,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTxz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForTxz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForTxz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForTxz() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForTxz() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5330,7 +5330,7 @@ public class DocController extends BaseController{
             TarEntry entry = null;
             while((entry = tarIn.getNextEntry()) != null){
 				String subDocPath = rootPath + entry.getName();
-				Log.println("subDoc: " + subDocPath);
+				Log.debug("subDoc: " + subDocPath);
             	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
 				subDocList.add(subDoc);
@@ -5369,9 +5369,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTgz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForTgz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForTgz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForTgz() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForTgz() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5444,9 +5444,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListFor7z(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListFor7z() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListFor7z() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListFor7z() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListFor7z() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5461,7 +5461,7 @@ public class DocController extends BaseController{
             SevenZArchiveEntry entry;
             while((entry = sevenZFile.getNextEntry()) != null){
 				String subDocPath = rootPath + entry.getName();
-				Log.println("subDoc: " + subDocPath);
+				Log.debug("subDoc: " + subDocPath);
             	Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
 				subDocList.add(subDoc);
@@ -5553,9 +5553,9 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForTar(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForTar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForRar() zipFilePath:" + zipFilePath);
 		
 		String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         File file = new File(zipFilePath);
@@ -5577,7 +5577,7 @@ public class DocController extends BaseController{
                     break;
                 }
 				String subDocPath = rootPath + entry.getName();
-				Log.println("subDoc: " + subDocPath);
+				Log.debug("subDoc: " + subDocPath);
 				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
 				
@@ -5633,7 +5633,7 @@ public class DocController extends BaseController{
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc doc =  subDocList.get(i);
-			Log.println("sortDocListWithDocId docId:" + doc.getDocId() + " pid:" + doc.getPid() + " " + doc.getPath() + doc.getName());
+			Log.debug("sortDocListWithDocId docId:" + doc.getDocId() + " pid:" + doc.getPid() + " " + doc.getPath() + doc.getName());
 		}
 	}
 
@@ -5672,11 +5672,11 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		List <Doc> subDocList = getSubDocListForZip(repos, rootDoc, path, name, "gbk", true, rt);
         if(subDocList == null)
         {
-        	Log.println("getSubDocListForZip() restart with UTF-8");
+        	Log.debug("getSubDocListForZip() restart with UTF-8");
     		subDocList = getSubDocListForZip(repos, rootDoc, path, name, "UTF-8", false, rt);
         }
 		return subDocList;
@@ -5684,9 +5684,9 @@ public class DocController extends BaseController{
 	
 	@SuppressWarnings("unchecked")
 	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, String charSet, Boolean messCheck, ReturnAjax rt) {
-		Log.println("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName() + " charSet:" + charSet);
+		Log.debug("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName() + " charSet:" + charSet);
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.println("getSubDocListForZip() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForZip() zipFilePath:" + zipFilePath);
 
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
         
@@ -5698,7 +5698,7 @@ public class DocController extends BaseController{
 			zipFile = new ZipFile(new File(zipFilePath), charSet);
 			for (Enumeration<ZipEntry> entries = zipFile.getEntries(); entries.hasMoreElements();) {
 				ZipEntry entry = entries.nextElement();
-				Log.println("getSubDocListForZip() entry: " + entry.getName());
+				Log.debug("getSubDocListForZip() entry: " + entry.getName());
 				if(messCheck)
 				{
 					if(chineseIsOk == false) 
@@ -5707,7 +5707,7 @@ public class DocController extends BaseController{
 						int ret = isMessyCode(entry.getName());
 						if(ret == 1)
 						{
-							Log.println("getSubDocListForZip() chinese is in mess");
+							Log.debug("getSubDocListForZip() chinese is in mess");
 							return null;
 						}
 						else if(ret == 0)
@@ -5739,7 +5739,7 @@ public class DocController extends BaseController{
 	}
 
     private static boolean isChinese(char c) {
-        Log.println("isChinese() c:" + c);
+        Log.debug("isChinese() c:" + c);
     	Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
         if (ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
                 || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
@@ -5776,16 +5776,16 @@ public class DocController extends BaseController{
             }
         }
         float result = count / chLength ;
-       	Log.println("isMessyCode() count:" + count + " chLength:" + chLength + " hasChinese:" + hasChinese);
+       	Log.debug("isMessyCode() count:" + count + " chLength:" + chLength + " hasChinese:" + hasChinese);
         
         if (result > 0.4) {
-           	Log.println("isMessyCode() is mess");
+           	Log.debug("isMessyCode() is mess");
         	return 1;
         }
         
         if(hasChinese)
         {
-        	Log.println("isMessyCode() hasChinese and not mess");
+        	Log.debug("isMessyCode() hasChinese and not mess");
             return 0;
         }
         return -1;

@@ -881,6 +881,7 @@ public class ManageController extends BaseController{
 		if(logLevel != null)
 		{
 			Log.logLevel = logLevel;
+			setLogLevelToFile(logLevel);
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)

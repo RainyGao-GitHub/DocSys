@@ -5,143 +5,29 @@ import com.alibaba.fastjson.JSON;
 import util.ReturnAjax;
 
 public class Log {
-	final static int debug = 0;
-	final static int warn = 1;
-	final static int error = 2;
-	public static int logLevel = warn;
+	//logLevel
+	public final static int debug = 0;
+	public final static int info  = 1;
+	public final static int warn  = 2;
+	public final static int error = 3;
+
+	//logMask
+	public final static int allowGeneral = 1;
+	public final static int allowOffice  = 2;
+	public final static int allowAll  = allowGeneral | allowOffice;
 	
-	public static boolean isLogEnable(int level)
+	
+	public static int logLevel = debug;
+	public static int logMask = allowAll;
+	public static String logFile = null;
+	
+	public static boolean isLogEnable(int level, int mask)
 	{
-		return level >= logLevel;
-	}
-	
-	//To print the obj by convert it to json format
-	public static void printObject(String Head,Object obj)
-	{
-		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
-		System.out.println(Head + json);
-	}
-	
-	public static void printObject(String Head,Object obj, String filePath, boolean enableConsole)
-	{
-		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
-		if(enableConsole)
+		if(level < logLevel)
 		{
-			System.out.println(Head + json);
+			return false;
 		}
-		toFile(Head + json + "\n", filePath);
-	}	
-	
-	public static void docSysDebugLog(String logStr, ReturnAjax rt) {
-		System.out.println(logStr);
-		if(rt != null)
-		{
-			rt.setDebugLog(logStr);
-		}
-	}
-	
-	public static void docSysDebugLog(String logStr, ReturnAjax rt, String filePath, boolean enableConsole) {
-		if(rt != null)
-		{
-			rt.setDebugLog(logStr);
-		}
-
-		if(enableConsole)
-		{
-			System.out.println(logStr);
-		}
-		toFile(logStr + "\n", filePath);	
-	}
-
-	public static void docSysWarningLog(String logStr, ReturnAjax rt) {
-		System.err.println(logStr);
-		if(rt != null)
-		{
-			rt.setWarningMsg(logStr);
-		}
-	}
-	
-	public static void docSysWarningLog(String logStr, ReturnAjax rt, String filePath, boolean enableConsole) {
-		if(rt != null)
-		{
-			rt.setWarningMsg(logStr);
-		}
-
-		if(enableConsole)
-		{
-			System.err.println(logStr);
-		}
-		toFile(logStr + "\n", filePath);
-	}
-
-	public static void docSysErrorLog(String logStr, ReturnAjax rt) {
-		System.err.println(logStr);
-		if(rt != null)
-		{
-			rt.setError(logStr);
-		}
-	}
-	
-	public static void docSysErrorLog(String logStr, ReturnAjax rt, String filePath, boolean enableConsole) {
-		if(rt != null)
-		{
-			rt.setError(logStr);
-		}
-		
-		if(enableConsole)
-		{
-			System.err.println(logStr);			
-		}
-		toFile(logStr + "\n", filePath);
-	}
-
-	public static void info(String Head, String msg) {
-		System.out.println(Head + " " + msg);
-	}
-	
-	public static void info(String Head, String msg, String filePath, boolean enableConsole) {
-		if(enableConsole)
-		{
-			System.out.println(Head + " " + msg);
-		}
-		toFile(Head + " " + msg  + "\n", filePath);
-	}
-	
-	public static void println(String content) {
-		System.out.println(content);
-	}
-	
-	public static void println(int level, String content) {
-		if(isLogEnable(level))
-		{
-			System.out.println(content);
-		}
-	}
-	
-	public static void printByte(int level, byte data) {
-		if(isLogEnable(level))
-		{
-			System.out.printf( "%02X\n", data);
-		}
-	}
-	
-	public static void printBytes(int level, byte[] data) {
-		if(isLogEnable(level))
-		{
-			for(int i=0; i<data.length; i++)
-			{
-				System.out.printf( "%02X ", data[i]);
-			}
-			System.out.printf( "\n");
-		}
-	}
-	
-	public static void println(String content, String filePath, boolean enableConsole) {
-		if(enableConsole)
-		{
-			System.out.println(content);
-		}
-		toFile(content + "\n", filePath);		
+		return (mask & logMask) > 0;
 	}
 	
 	public static void toFile(String content, String filePath) {
@@ -149,5 +35,117 @@ public class Log {
 		{
 			FileUtil.appendContentToFile(filePath, content, "UTF-8");	
 		}
-	}	
+	}
+	
+	public static void debug(String content) {
+		if(isLogEnable(debug, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				System.out.println(content);
+			}
+			else
+			{
+				toFile(content, logFile);
+			}
+		}
+	}
+	
+	public static void info(String content) {
+		if(isLogEnable(info, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				System.out.println(content);
+			}
+			else
+			{
+				toFile(content, logFile);
+			}
+		}
+	}
+	
+	public static void warn(String content) {
+		if(isLogEnable(warn, allowAll))
+		{
+			if(logFile == null)
+			{
+				System.out.println("WARN:" + content);
+			}
+			else
+			{
+				toFile("WARN:" + content, logFile);
+			}
+		}
+	}
+	
+	public static void error(String content) {
+		if(isLogEnable(error, allowAll))
+		{
+			if(logFile == null)
+			{
+				System.err.println("ERROR:" +content);
+			}
+			else
+			{
+				toFile("ERROR:" + content, logFile);
+			}
+		}
+	}
+	
+	public static void info(String Head, String msg) {
+		info(Head + " " + msg);
+	}
+		
+		
+	public static void printByte(byte data) {
+		if(isLogEnable(debug, allowGeneral))
+		{
+			System.out.printf( "%02X ", data);
+		}
+	}
+	
+	public static void printBytes(int level, byte[] data) {
+		if(isLogEnable(debug, allowGeneral))
+		{
+			for(int i=0; i<data.length; i++)
+			{
+				System.out.printf( "%02X ", data[i]);
+			}
+		}
+	}
+	
+	//To print the obj by convert it to json format
+	public static void printObject(String Head,Object obj)
+	{
+		if(isLogEnable(debug, allowGeneral))
+		{
+			String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
+			System.out.println(Head + json);
+		}
+	}
+		
+	public static void docSysDebugLog(String logStr, ReturnAjax rt) {
+		if(rt != null)
+		{
+			rt.setDebugLog(logStr);
+		}
+		debug(logStr);		
+	}
+
+	public static void docSysWarningLog(String logStr, ReturnAjax rt) {
+		if(rt != null)
+		{
+			rt.setWarningMsg(logStr);
+		}
+		warn(logStr);
+	}
+	
+	public static void docSysErrorLog(String logStr, ReturnAjax rt) {
+		if(rt != null)
+		{
+			rt.setError(logStr);
+		}
+		error(logStr);
+	}
 }
