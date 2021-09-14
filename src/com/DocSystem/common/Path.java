@@ -164,7 +164,8 @@ public class Path {
 		int pos = docSysWebPath.indexOf("/tomcat");
 		if(pos <= 0)
 		{
-			return null; //"/docsys/logs/";	//默认放在/docsys/logs目录
+			//return docSysWebPath + "../../../logs/";	//默认放在/docsys/logs目录
+			return null;
 		}
 		
 		return docSysWebPath.substring(0, pos) + "/logs/";
