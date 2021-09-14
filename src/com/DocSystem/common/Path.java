@@ -407,6 +407,15 @@ public class Path {
 		return officeEditorApi;
 	}
 	
+	public static Integer getLogLevel() {
+		String logLevelString = ReadProperties.read("docSysConfig.properties", "logLevel");
+		if(logLevelString != null && !logLevelString.isEmpty())
+		{
+			return Integer.getInteger(logLevelString);
+		}
+		return null;
+	}
+	
 	//系统日志的名字，可以是目录或文件
 	public static String getSystemLogFileName() {
 		String name = "";

@@ -48,8 +48,8 @@ public class UserController extends BaseController {
 	//用户登录接口
 	@RequestMapping("/login.do")
 	public void login(String userName,String pwd,String rememberMe,HttpServletRequest request,HttpSession session,HttpServletResponse response){
-		Log.println("\n************** login ****************");
-		Log.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
+		Log.debug("\n************** login ****************");
+		Log.debug("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -65,7 +65,7 @@ public class UserController extends BaseController {
 				return;
 			}
 		} catch (Exception e) {
-			Log.println("login 异常！");
+			Log.debug("login 异常！");
 			e.printStackTrace();
 			rt.setError("用户登录异常，请检查数据库配置是否正常!");
 			rt.setData("needCheckDBSetting");
@@ -101,8 +101,8 @@ public class UserController extends BaseController {
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
 	public void getLoginUser(HttpServletRequest request,HttpSession session,HttpServletResponse response){
-		Log.println("\n************** getLoginUser ****************");
-		Log.println("getLoginUser SESSION ID:" + session.getId());
+		Log.debug("\n************** getLoginUser ****************");
+		Log.debug("getLoginUser SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -138,8 +138,8 @@ public class UserController extends BaseController {
 	//登出接口
 	@RequestMapping(value="logout")
 	public void logOut(HttpServletRequest request, HttpSession session,HttpServletResponse response,ModelMap model,String type){
-		Log.println("\n************** logout ****************");
-		Log.println("Logout SESSION ID:" + session.getId());
+		Log.debug("\n************** logout ****************");
+		Log.debug("Logout SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
 		User loginUser = (User) session.getAttribute("login_user");
@@ -161,8 +161,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="checkUserRegistered")
 	public void checkUserRegistered(String userName, HttpServletResponse response)
 	{
-		Log.println("\n************** checkUserRegistered ****************");
-		Log.println("checkUserRegistered userName:"+userName);
+		Log.debug("\n************** checkUserRegistered ****************");
+		Log.debug("checkUserRegistered userName:"+userName);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -199,8 +199,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="register")
 	public void register(HttpServletRequest request, HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		Log.println("\n************** register ****************");		
-		Log.println("register userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
+		Log.debug("\n************** register ****************");		
+		Log.debug("register userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -295,8 +295,8 @@ public class UserController extends BaseController {
 	@RequestMapping("/sendVerifyCode.do")
 	public void sendVerifyCode(String userName,Integer type,HttpSession session,HttpServletResponse response)
 	{
-		Log.println("\n************** sendVerifyCode ****************");		
-		Log.println("sendVerifyCode userName:"+userName + " type:" + type);
+		Log.debug("\n************** sendVerifyCode ****************");		
+		Log.debug("sendVerifyCode userName:"+userName + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(userName == null || "".equals(userName))	//从session中取出用户名??
@@ -419,8 +419,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="checkVerifyCode")
 	public void checkVerifyCode(HttpSession session,String userName,Integer type, String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		Log.println("\n************** checkVerifyCode ****************");		
-		Log.println("checkVerifyCode userName:"+userName + " type:"+type + " verifyCode:"+verifyCode);
+		Log.debug("\n************** checkVerifyCode ****************");		
+		Log.debug("checkVerifyCode userName:"+userName + " type:"+type + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -463,8 +463,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="changePwd")
 	public void changePwd(HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		Log.println("\n************** changePwd ****************");		
-		Log.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
+		Log.debug("\n************** changePwd ****************");		
+		Log.debug("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -542,8 +542,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="modifyPwd")
 	public void modifyPwd(HttpSession session,String userName,String pwd,String pwd2,String oldPwd,HttpServletResponse response,ModelMap model)
 	{
-		Log.println("\n************** modifyPwd ****************");		
-		Log.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " oldPwd:"+oldPwd);
+		Log.debug("\n************** modifyPwd ****************");		
+		Log.debug("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " oldPwd:"+oldPwd);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -603,8 +603,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="updateLoginUserInfo")
 	public void updateLoginUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
 	{
-		Log.println("\n************** updateLoginUserInfo ****************");		
-		Log.println("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
+		Log.debug("\n************** updateLoginUserInfo ****************");		
+		Log.debug("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -696,8 +696,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="uploadUserImg")
     public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
-		Log.println("\n************** uploadUserImg ****************");		
-		Log.println("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
+		Log.debug("\n************** uploadUserImg ****************");		
+		Log.debug("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -798,8 +798,8 @@ public class UserController extends BaseController {
 	@RequestMapping(value="getUserImg")
     public  void getUserImg(String fileName, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
-		Log.println("\n************** getUserImg ****************");				
-		Log.println("getUserImg() fileName:" + fileName);
+		Log.debug("\n************** getUserImg ****************");				
+		Log.debug("getUserImg() fileName:" + fileName);
 		
 		//解决中文编码问题
 		if(request.getHeader("User-Agent").toUpperCase().indexOf("MSIE")>0){  

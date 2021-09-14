@@ -145,7 +145,7 @@ public class BaseFunction{
 		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
 		if(urlInfo == null)
 		{
-			Log.println("applySystemLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
+			Log.debug("applySystemLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
 			return;
 		}
 		
@@ -297,13 +297,13 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
 	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();	
 	protected void deleteRemoteStorageConfig(Repos repos) {
-		Log.println("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
+		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		reposRemoteStorageHashMap.remove(repos.getId());
 	}		
 	
 	
 	protected static RemoteStorage parseRemoteStorageConfig(Repos repos, String remoteStorage) {
-		Log.println("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
+		Log.debug("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		if(remoteStorage == null)
 		{
 			return null;
@@ -347,7 +347,7 @@ public class BaseFunction{
 		
 		if(protocol == null)
 		{
-			Log.println("parseRemoteStorageConfig unknown protocol");
+			Log.debug("parseRemoteStorageConfig unknown protocol");
 			return null;
 		}
 		
@@ -413,7 +413,7 @@ public class BaseFunction{
 			
 			remote.GIT.userName = config.getString("userName");
 			remote.GIT.pwd = config.getString("pwd");
-			Log.println("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
 		//add remote config to hashmap
@@ -450,7 +450,7 @@ public class BaseFunction{
 			remote.SVN.userName = config.getString("userName");
 			remote.SVN.pwd = config.getString("pwd");
 			
-			Log.println("parseRemoteStorageConfigForSvn userName:" + remote.SVN.userName + " pwd:" + remote.SVN.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+			Log.debug("parseRemoteStorageConfigForSvn userName:" + remote.SVN.userName + " pwd:" + remote.SVN.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
 		//add remote config to hashmap
@@ -487,7 +487,7 @@ public class BaseFunction{
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
 			
-			Log.println("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull);
+			Log.debug("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull);
 		}
 		
 		//add remote config to hashmap
@@ -523,7 +523,7 @@ public class BaseFunction{
 			remote.FTP.userName = config.getString("userName");
 			remote.FTP.pwd = config.getString("pwd");
 			
-			Log.println("parseRemoteStorageConfigForFtp userName:" + remote.FTP.userName + " pwd:" + remote.FTP.pwd + " autoPull:" + remote.autoPull);
+			Log.debug("parseRemoteStorageConfigForFtp userName:" + remote.FTP.userName + " pwd:" + remote.FTP.pwd + " autoPull:" + remote.autoPull);
 		}
 		
 		//add remote config to hashmap
@@ -573,7 +573,7 @@ public class BaseFunction{
 				remote.SMB.pwd = "";
 			}
 			
-			Log.println("parseRemoteStorageConfigForSmb userDomain:" + remote.SMB.userDomain + " userName:" + remote.SMB.userName + " pwd:" + remote.SMB.pwd + " autoPull:" + remote.autoPull);
+			Log.debug("parseRemoteStorageConfigForSmb userDomain:" + remote.SMB.userDomain + " userName:" + remote.SMB.userName + " pwd:" + remote.SMB.pwd + " autoPull:" + remote.autoPull);
 		}
 		
 		//add remote config to hashmap
@@ -608,7 +608,7 @@ public class BaseFunction{
 
 	
 	private static void parseSftpUrl(RemoteStorage remote, String sftpUrl) {
-		Log.println("parseSftpUrl sftpUrl:" + sftpUrl);
+		Log.debug("parseSftpUrl sftpUrl:" + sftpUrl);
 		
 		String tmpStr = sftpUrl.substring("sftp://".length());
 		String subStrs[] = tmpStr.split("/");
@@ -619,7 +619,7 @@ public class BaseFunction{
 		{
 			rootPath = buildRemoteStorageRootPath(subStrs);
 		}
-		Log.println("parseSftpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
+		Log.debug("parseSftpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		
 		//seperate host with port
 		String[] subStrs1 = hostWithPort.split(":");
@@ -641,7 +641,7 @@ public class BaseFunction{
 	}
 	
 	private static void parseFtpUrl(RemoteStorage remote, String ftpUrl) {
-		Log.println("parseFtpUrl ftpUrl:" + ftpUrl);
+		Log.debug("parseFtpUrl ftpUrl:" + ftpUrl);
 		
 		String tmpStr = ftpUrl.substring("ftp://".length());
 		String subStrs[] = tmpStr.split("/");
@@ -652,7 +652,7 @@ public class BaseFunction{
 		{
 			rootPath = buildRemoteStorageRootPath(subStrs);
 		}
-		Log.println("parseFtpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
+		Log.debug("parseFtpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		
 		//seperate host with port
 		String[] subStrs1 = hostWithPort.split(":");
@@ -675,7 +675,7 @@ public class BaseFunction{
 	
 
 	private static void parseSmbUrl(RemoteStorage remote, String url) {
-		Log.println("parseSmbUrl url:" + url);
+		Log.debug("parseSmbUrl url:" + url);
 		
 		String tmpStr = url.substring("smb://".length());
 		String subStrs[] = tmpStr.split("/");
@@ -686,7 +686,7 @@ public class BaseFunction{
 		{
 			rootPath = buildRemoteStorageRootPath(subStrs);
 		}
-		Log.println("parseFtpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
+		Log.debug("parseFtpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		
 		//seperate host with port
 		String[] subStrs1 = hostWithPort.split(":");
@@ -709,7 +709,7 @@ public class BaseFunction{
 	
 
 	private static void parseGitUrl(RemoteStorage remote, String url) {
-		Log.println("parseGitUrl url:" + url);
+		Log.debug("parseGitUrl url:" + url);
 		
 		String tmpStr = url.substring("git://".length());
 		
@@ -726,7 +726,7 @@ public class BaseFunction{
 	}
 	
 	private static void parseSvnUrl(RemoteStorage remote, String url) {
-		Log.println("parseSvnUrl url:" + url);
+		Log.debug("parseSvnUrl url:" + url);
 		
 		String tmpStr = url.substring("svn://".length());
 		
