@@ -48,7 +48,7 @@ public class UserController extends BaseController {
 	//用户登录接口
 	@RequestMapping("/login.do")
 	public void login(String userName,String pwd,String rememberMe,HttpServletRequest request,HttpSession session,HttpServletResponse response){
-		Log.debug("\n************** login ****************");
+		Log.info("\n************** login ****************");
 		Log.debug("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -101,7 +101,7 @@ public class UserController extends BaseController {
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
 	public void getLoginUser(HttpServletRequest request,HttpSession session,HttpServletResponse response){
-		Log.debug("\n************** getLoginUser ****************");
+		Log.info("\n************** getLoginUser ****************");
 		Log.debug("getLoginUser SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -138,7 +138,7 @@ public class UserController extends BaseController {
 	//登出接口
 	@RequestMapping(value="logout")
 	public void logOut(HttpServletRequest request, HttpSession session,HttpServletResponse response,ModelMap model,String type){
-		Log.debug("\n************** logout ****************");
+		Log.info("\n************** logout ****************");
 		Log.debug("Logout SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -161,7 +161,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="checkUserRegistered")
 	public void checkUserRegistered(String userName, HttpServletResponse response)
 	{
-		Log.debug("\n************** checkUserRegistered ****************");
+		Log.info("\n************** checkUserRegistered ****************");
 		Log.debug("checkUserRegistered userName:"+userName);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -199,7 +199,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="register")
 	public void register(HttpServletRequest request, HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		Log.debug("\n************** register ****************");		
+		Log.info("\n************** register ****************");		
 		Log.debug("register userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -295,7 +295,7 @@ public class UserController extends BaseController {
 	@RequestMapping("/sendVerifyCode.do")
 	public void sendVerifyCode(String userName,Integer type,HttpSession session,HttpServletResponse response)
 	{
-		Log.debug("\n************** sendVerifyCode ****************");		
+		Log.info("\n************** sendVerifyCode ****************");		
 		Log.debug("sendVerifyCode userName:"+userName + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -419,7 +419,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="checkVerifyCode")
 	public void checkVerifyCode(HttpSession session,String userName,Integer type, String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		Log.debug("\n************** checkVerifyCode ****************");		
+		Log.info("\n************** checkVerifyCode ****************");		
 		Log.debug("checkVerifyCode userName:"+userName + " type:"+type + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -463,7 +463,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="changePwd")
 	public void changePwd(HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
-		Log.debug("\n************** changePwd ****************");		
+		Log.info("\n************** changePwd ****************");		
 		Log.debug("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -542,7 +542,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="modifyPwd")
 	public void modifyPwd(HttpSession session,String userName,String pwd,String pwd2,String oldPwd,HttpServletResponse response,ModelMap model)
 	{
-		Log.debug("\n************** modifyPwd ****************");		
+		Log.info("\n************** modifyPwd ****************");		
 		Log.debug("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " oldPwd:"+oldPwd);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -603,7 +603,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="updateLoginUserInfo")
 	public void updateLoginUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
 	{
-		Log.debug("\n************** updateLoginUserInfo ****************");		
+		Log.info("\n************** updateLoginUserInfo ****************");		
 		Log.debug("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -696,7 +696,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="uploadUserImg")
     public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
-		Log.debug("\n************** uploadUserImg ****************");		
+		Log.info("\n************** uploadUserImg ****************");		
 		Log.debug("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -798,7 +798,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="getUserImg")
     public  void getUserImg(String fileName, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
-		Log.debug("\n************** getUserImg ****************");				
+		Log.info("\n************** getUserImg ****************");				
 		Log.debug("getUserImg() fileName:" + fileName);
 		
 		//解决中文编码问题

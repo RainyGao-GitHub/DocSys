@@ -1105,7 +1105,7 @@
 			officeEditorApi:"",
 			defaultReposStorePath:"",
 			ldapConfig:"",
-			logLevel: 2,	//default warn
+			logLevel: 1,	//default info
 	}
 	
 	function enableSystemInfoSet(){
@@ -1245,7 +1245,7 @@
 	            	systemInfo = config;
 	            	if(systemInfo.logLevel == undefined)
 	            	{
-	            		systemInfo.logLevel = 2;	//defulat warn
+	            		systemInfo.logLevel = 1;	//defulat info
 	            	}
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
