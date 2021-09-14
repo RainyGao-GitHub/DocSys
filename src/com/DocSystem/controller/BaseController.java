@@ -8665,6 +8665,11 @@ public class BaseController  extends BaseFunction{
 			buff = FileUtil.getBytes(doc.getContent(), doc.getCharset());	
 		}
 		
+		if(buff == null)
+		{
+			return false;
+		}
+		
 		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 	
@@ -8682,6 +8687,11 @@ public class BaseController  extends BaseFunction{
 			buff = FileUtil.getBytes(doc.getContent(), doc.getCharset());	
 		}
 		
+		if(buff == null)
+		{
+			return false;
+		}
+		
 		//数据加密
 		buff = encryptData(repos, buff);
 		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
@@ -8690,6 +8700,10 @@ public class BaseController  extends BaseFunction{
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		if(buff == null)
+		{
+			return "";
+		}
 		
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
 		{
@@ -8703,6 +8717,11 @@ public class BaseController  extends BaseFunction{
 	protected String readRealDocContentEx(Repos repos, Doc doc) 
 	{
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		if(buff == null)
+		{
+			return "";
+		}
+		
 		decryptData(repos, buff);
 		
 		if(doc.getCharset() == null && doc.autoCharsetDetect)
@@ -8715,6 +8734,10 @@ public class BaseController  extends BaseFunction{
 	
 	private String getEncryptFileCharset(Repos repos, String path, String name) {
 		byte[] buff = FileUtil.readBufferFromFile(path, name, (long)0, 20*1024);	//最大只读取20M的内容用于确定字符集
+		if(buff == null)
+		{
+			return null;
+		}
 		decryptData(repos, buff);
 		return FileUtil.getCharset(buff);
 	}
