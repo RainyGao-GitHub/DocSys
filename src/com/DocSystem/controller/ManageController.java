@@ -53,7 +53,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/docSysInit.do")
 	public void docSysInit(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** docSysInit.do ***********************");
+		Log.debug("\n****************** docSysInit.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -61,10 +61,10 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		System.out.println("docSysInit.do docSysInit() Start docSysInitState:" + docSysIniState);
+		Log.debug("docSysInit.do docSysInit() Start docSysInitState:" + docSysIniState);
 		if(docSysIniState == 1)
 		{
-			System.out.println("docSysInit.do 用户自定义数据库配置文件与系统数据库配置文件不一致，等待重启生效！");
+			Log.debug("docSysInit.do 用户自定义数据库配置文件与系统数据库配置文件不一致，等待重启生效！");
 			rt.setData("needRestart");
 			writeJson(rt, response);
 			return;
@@ -85,7 +85,7 @@ public class ManageController extends BaseController{
 			break;
 		}
 		
-		System.out.println("docSysInit.do docSysInit() End docSysInitState:" + docSysIniState);
+		Log.debug("docSysInit.do docSysInit() End docSysInitState:" + docSysIniState);
 		
 		rt.setData(ret);
 		writeJson(rt, response);
@@ -95,9 +95,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getBannerConfig.do")
 	public void getBannerConfig(String serverIP, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getBannerConfig.do ***********************");
+		Log.debug("\n****************** getBannerConfig.do ***********************");
 
-		System.out.println("getBannerConfig() serverIP:" + serverIP);
+		Log.debug("getBannerConfig() serverIP:" + serverIP);
 		collectDocSysInstallationInfo(serverIP, request);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -138,9 +138,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemEmailConfig.do")
 	public void getSystemEmailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getSystemEmailConfig.do ***********************");
+		Log.debug("\n****************** getSystemEmailConfig.do ***********************");
 
-		System.out.println("getSystemEmailConfig()");
+		Log.debug("getSystemEmailConfig()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -177,9 +177,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/setSystemEmailConfig.do")
 	public void setSystemEmailConfig(String authCode,String host, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** setSystemEmailConfig.do ***********************");
+		Log.debug("\n****************** setSystemEmailConfig.do ***********************");
 		
-		System.out.println("setSystemEmailConfig() host:" + host + " email:" + email + " pwd:" + pwd);
+		Log.debug("setSystemEmailConfig() host:" + host + " email:" + email + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -208,7 +208,7 @@ public class ManageController extends BaseController{
 		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
 		{
 			//Failed to copy 
-			System.out.println("setSystemEmailConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			Log.debug("setSystemEmailConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
 			Log.docSysErrorLog("创建临时配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -229,7 +229,7 @@ public class ManageController extends BaseController{
 		
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
-			System.out.println("setSystemEmailConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			Log.debug("setSystemEmailConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
 			Log.docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -252,9 +252,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemSmsConfig.do")
 	public void getSystemSmsConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getSystemSmsConfig.do ***********************");
+		Log.debug("\n****************** getSystemSmsConfig.do ***********************");
 
-		System.out.println("getSystemSmsConfig()");
+		Log.debug("getSystemSmsConfig()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -293,9 +293,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/setSystemSmsConfig.do")
 	public void setSystemSmsConfig(String authCode,String server, String apikey, String tplid, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** setSystemSmsConfig.do ***********************");
+		Log.debug("\n****************** setSystemSmsConfig.do ***********************");
 		
-		System.out.println("setSystemSmsConfig() server:" + server + " apikey:" + apikey + " tplid:" + tplid);
+		Log.debug("setSystemSmsConfig() server:" + server + " apikey:" + apikey + " tplid:" + tplid);
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -324,7 +324,7 @@ public class ManageController extends BaseController{
 		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
 		{
 			//Failed to copy 
-			System.out.println("setSystemSmsConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			Log.debug("setSystemSmsConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
 			Log.docSysErrorLog("创建临时配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -345,7 +345,7 @@ public class ManageController extends BaseController{
 		
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
-			System.out.println("setSystemSmsConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			Log.debug("setSystemSmsConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
 			Log.docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -357,9 +357,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemDbConfig.do")
 	public void getSystemDbConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getSystemDbConfig.do ***********************");
+		Log.debug("\n****************** getSystemDbConfig.do ***********************");
 
-		System.out.println("getSystemDbConfig()");
+		Log.debug("getSystemDbConfig()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -404,9 +404,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/setSystemDBConfig.do")
 	public void setSystemDBConfig(String authCode, String type, String url, String user, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** setSystemDBConfig.do ***********************");
+		Log.debug("\n****************** setSystemDBConfig.do ***********************");
 
-		System.out.println("setSystemDBConfig() type:"  + type + " url:" + url + " user:" + user  + " pwd:" + pwd);
+		Log.debug("setSystemDBConfig() type:"  + type + " url:" + url + " user:" + user  + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -435,7 +435,7 @@ public class ManageController extends BaseController{
 		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
 		{
 			//Failed to copy 
-			System.out.println("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			Log.debug("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
 			Log.docSysErrorLog("创建临时配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -460,7 +460,7 @@ public class ManageController extends BaseController{
 		
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
-			System.out.println("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			Log.debug("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
 			Log.docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -475,9 +475,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/testDatabase.do")
 	public void testDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** testDatabase.do ***********************");
+		Log.debug("\n****************** testDatabase.do ***********************");
 
-		System.out.println("testDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
+		Log.debug("testDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -487,7 +487,7 @@ public class ManageController extends BaseController{
 
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
+			Log.debug("testDatabase() 连接数据库:" + url + " 失败");
 			Log.docSysErrorLog("连接数据库失败", rt);
 		}
 		writeJson(rt, response);
@@ -497,9 +497,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/deleteDatabase.do")
 	public void deleteDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("\n****************** deleteDatabase.do ***********************");
+		Log.debug("\n****************** deleteDatabase.do ***********************");
 
-		System.out.println("deleteDatabase()");
+		Log.debug("deleteDatabase()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -509,7 +509,7 @@ public class ManageController extends BaseController{
 
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("deleteDatabase() 连接数据库:" + url + " 失败");
+			Log.debug("deleteDatabase() 连接数据库:" + url + " 失败");
 			Log.docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -521,7 +521,7 @@ public class ManageController extends BaseController{
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
 		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
-			System.out.println("deleteDatabase() 数据库备份失败!");
+			Log.debug("deleteDatabase() 数据库备份失败!");
 			Log.docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -529,10 +529,10 @@ public class ManageController extends BaseController{
 		
 		String dbName = getDBNameFromUrl(type, url);
 		String tmpDbName = dbName.toLowerCase();
-		System.out.println("deleteDatabase() dbName:" + dbName + " tmpDbName:" + tmpDbName);
+		Log.debug("deleteDatabase() dbName:" + dbName + " tmpDbName:" + tmpDbName);
 		if(!tmpDbName.contains("docsystem")) //只能删除docsystem相关的数据库
 		{
-			System.out.println("deleteDatabase() 非法删除操作");
+			Log.debug("deleteDatabase() 非法删除操作");
 			Log.docSysErrorLog("非法删除操作：" + dbName, rt);
 			writeJson(rt, response);			
 			return;			
@@ -540,7 +540,7 @@ public class ManageController extends BaseController{
 		
 		if(deleteDB(type, dbName, url, user, pwd) == false)
 		{
-			System.out.println("deleteDatabase() 删除数据库失败");
+			Log.debug("deleteDatabase() 删除数据库失败");
 			Log.docSysErrorLog("数据库初始化失败", rt);
 			writeJson(rt, response);			
 			return;
@@ -552,9 +552,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/resetDatabase.do")
 	public void resetDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("\n****************** resetDatabase.do ***********************");
+		Log.debug("\n****************** resetDatabase.do ***********************");
 
-		System.out.println("resetDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
+		Log.debug("resetDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -565,14 +565,14 @@ public class ManageController extends BaseController{
 
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("resetDatabase() 连接数据库:" + url + " 失败");
+			Log.debug("resetDatabase() 连接数据库:" + url + " 失败");
 			String dbName = getDBNameFromUrl(type, url);
 
 			deleteDB(type, dbName, url, user, pwd);
 			createDB(type, dbName, url, user, pwd);
 			if(initDB(type, url, user, pwd) == false)
 			{
-				System.out.println("resetDatabase() 新建数据库失败");
+				Log.debug("resetDatabase() 新建数据库失败");
 				Log.docSysErrorLog("新建数据库失败", rt);
 				writeJson(rt, response);
 				return;
@@ -587,7 +587,7 @@ public class ManageController extends BaseController{
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
 		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
-			System.out.println("resetDatabase() 数据库备份失败!");
+			Log.debug("resetDatabase() 数据库备份失败!");
 			Log.docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -600,7 +600,7 @@ public class ManageController extends BaseController{
 		deleteDBTabsEx(type, url, user, pwd);
 		if(initDB(type, url, user, pwd) == false)
 		{
-			System.out.println("resetDatabase() reset database failed: initDB error");
+			Log.debug("resetDatabase() reset database failed: initDB error");
 			Log.docSysErrorLog("数据库初始化失败", rt);
 			writeJson(rt, response);			
 			return;
@@ -611,9 +611,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/exportDBData.do")
 	public void exportDBData(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("\n****************** exportDBData.do ***********************");
+		Log.debug("\n****************** exportDBData.do ***********************");
 
-		System.out.println("exportDBData()");
+		Log.debug("exportDBData()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -623,7 +623,7 @@ public class ManageController extends BaseController{
 
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("exportDBData() 连接数据库:" + url + " 失败");
+			Log.debug("exportDBData() 连接数据库:" + url + " 失败");
 			Log.docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -635,7 +635,7 @@ public class ManageController extends BaseController{
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
 		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
-			System.out.println("exportDBData() 数据库备份失败!");
+			Log.debug("exportDBData() 数据库备份失败!");
 			Log.docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -659,9 +659,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/importDBData.do")
 	public void importDBData(MultipartFile uploadFile, String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("\n****************** importDBData.do ***********************");
+		Log.debug("\n****************** importDBData.do ***********************");
 
-		System.out.println("importDBData()");
+		Log.debug("importDBData()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -672,7 +672,7 @@ public class ManageController extends BaseController{
 		//FileUtil.saveFile to tmpPath
 		if(uploadFile == null)
 		{
-			System.out.println("importDBData() uploadFile is null");
+			Log.debug("importDBData() uploadFile is null");
 			Log.docSysErrorLog("上传文件为空", rt);
 			writeJson(rt, response);
 			return;
@@ -684,7 +684,7 @@ public class ManageController extends BaseController{
 		
 		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("importDBData() 连接数据库:" + url + " 失败");
+			Log.debug("importDBData() 连接数据库:" + url + " 失败");
 			Log.docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -692,7 +692,7 @@ public class ManageController extends BaseController{
 
 		if(importDatabase(null, suffix, webTmpPathForImportDBData, fileName, type, url, user, pwd) == false)
 		{
-			System.out.println("importDBData() 数据库导入失败");
+			Log.debug("importDBData() 数据库导入失败");
 			Log.docSysErrorLog("数据库导入失败", rt);
 			writeJson(rt, response);
 			return;			
@@ -703,9 +703,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemInfo.do")
 	public void getSystemInfo(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getSystemInfo.do ***********************");
+		Log.debug("\n****************** getSystemInfo.do ***********************");
 
-		System.out.println("getSystemInfo()");
+		Log.debug("getSystemInfo()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -749,9 +749,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemLicenses.do")
 	public void getSystemLicenses(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getSystemLicenses.do ***********************");
+		Log.debug("\n****************** getSystemLicenses.do ***********************");
 		
-		System.out.println("getSystemLicenses()");
+		Log.debug("getSystemLicenses()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -794,9 +794,9 @@ public class ManageController extends BaseController{
 			Integer logLevel,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** setSystemInfo.do ***********************");
+		Log.debug("\n****************** setSystemInfo.do ***********************");
 
-		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome 
+		Log.debug("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome 
 				+ " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
 				+ " defaultReposStorePath:" + defaultReposStorePath 
 				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel);
@@ -829,7 +829,7 @@ public class ManageController extends BaseController{
 		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
 		{
 			//Failed to copy 
-			System.out.println("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			Log.debug("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
 			Log.docSysErrorLog("创建临时配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -886,7 +886,7 @@ public class ManageController extends BaseController{
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
-			System.out.println("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			Log.debug("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
 			Log.docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
 			return;
@@ -904,9 +904,9 @@ public class ManageController extends BaseController{
 	public void upgradeSystem(MultipartFile uploadFile, String authCode, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("\n****************** upgradeSystem.do ***********************");
+		Log.debug("\n****************** upgradeSystem.do ***********************");
 
-		System.out.println("upgradeSystem()");
+		Log.debug("upgradeSystem()");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -917,7 +917,7 @@ public class ManageController extends BaseController{
 		//FileUtil.saveFile to tmpPath
 		if(uploadFile == null)
 		{
-			System.out.println("upgradeSystem() uploadFile is null");
+			Log.debug("upgradeSystem() uploadFile is null");
 			Log.docSysErrorLog("上传文件为空", rt);
 			writeJson(rt, response);
 			return;
@@ -925,7 +925,7 @@ public class ManageController extends BaseController{
 		String fileName = uploadFile.getOriginalFilename();
 		if(!fileName.equals("DocSystem.war"))
 		{
-			System.out.println("upgradeSystem() 非法升级文件");
+			Log.debug("upgradeSystem() 非法升级文件");
 			Log.docSysErrorLog("非法升级文件:" + fileName, rt);
 			writeJson(rt, response);
 			return;
@@ -933,7 +933,7 @@ public class ManageController extends BaseController{
 		
 		if(FileUtil.saveFile(uploadFile, docSysIniPath, fileName) == null)
 		{
-			System.out.println("upgradeSystem() 保存升级文件失败");
+			Log.debug("upgradeSystem() 保存升级文件失败");
 			Log.docSysErrorLog("保存升级文件失败", rt);
 			writeJson(rt, response);
 			return;
@@ -942,7 +942,7 @@ public class ManageController extends BaseController{
 		//开始解压
 		if(unZip(docSysIniPath + fileName, docSysIniPath + "DocSystem/") == false)
 		{
-			System.out.println("upgradeSystem() 解压失败");
+			Log.debug("upgradeSystem() 解压失败");
 			Log.docSysErrorLog("升级包解压失败", rt);
 			writeJson(rt, response);
 			return;
@@ -951,7 +951,7 @@ public class ManageController extends BaseController{
 		//开始升级
 		if(upgradeServer(rt) == false)
 		{
-			System.out.println("upgradeSystem() 升级系统失败");
+			Log.debug("upgradeSystem() 升级系统失败");
 			writeJson(rt, response);
 			return;
 		}
@@ -963,7 +963,7 @@ public class ManageController extends BaseController{
 	public void restartServer(String authCode, String tomcatPath, String javaHome,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("\n****************** restartServer.do ***********************");
+		Log.debug("\n****************** restartServer.do ***********************");
 
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -975,7 +975,7 @@ public class ManageController extends BaseController{
 		//开始重启
 		if(restartServer(rt) == false)
 		{
-			System.out.println("restartServer() 重启服务失败");
+			Log.debug("restartServer() 重启服务失败");
 			writeJson(rt, response);
 			return;
 		}
@@ -986,9 +986,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getUserList.do")
 	public void getUserList(String userName, Integer pageIndex, Integer pageSize, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getUserList.do ***********************");
+		Log.debug("\n****************** getUserList.do ***********************");
 
-		System.out.println("getUserList() searchWord:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
+		Log.debug("getUserList() searchWord:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		ReturnAjax rt = new ReturnAjax();
 		if(adminAccessCheck(null, null, session, rt) == false)
 		{
@@ -1019,9 +1019,9 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addFirstAdminUser")
 	public void addFirstAdminUser(User user, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** addFirstAdminUser.do ***********************");
+		Log.debug("\n****************** addFirstAdminUser.do ***********************");
 
-		System.out.println("addFirstAdminUser");
+		Log.debug("addFirstAdminUser");
 		ReturnAjax rt = new ReturnAjax();
 		
 		//查询系统中是否存在超级管理员
@@ -1050,7 +1050,7 @@ public class ManageController extends BaseController{
 		
 		if(userCheck(user, true, true, rt) == false)
 		{
-			System.out.println("用户检查失败!");			
+			Log.debug("用户检查失败!");			
 			writeJson(rt, response);
 			return;			
 		}
@@ -1074,9 +1074,9 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addUser")
 	public void addUser(User user, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** addUser.do ***********************");
+		Log.debug("\n****************** addUser.do ***********************");
 
-		System.out.println("addUser");
+		Log.debug("addUser");
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1097,7 +1097,7 @@ public class ManageController extends BaseController{
 		String pwd = user.getPwd();
 		Integer type = user.getType();
 
-		System.out.println("userName:"+userName + " pwd:"+pwd + "type:" + type);
+		Log.debug("userName:"+userName + " pwd:"+pwd + "type:" + type);
 		
 		//检查是否越权设置
 		if(type > login_user.getType())
@@ -1130,7 +1130,7 @@ public class ManageController extends BaseController{
 		
 		if(userCheck(user, true, true, rt) == false)
 		{
-			System.out.println("用户检查失败!");			
+			Log.debug("用户检查失败!");			
 			writeJson(rt, response);
 			return;			
 		}
@@ -1153,7 +1153,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="editUser")
 	public void editUser(User user, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** editUser.do ***********************");
+		Log.debug("\n****************** editUser.do ***********************");
 
 		Log.printObject("editUser inputUser:", user);
 		
@@ -1187,7 +1187,7 @@ public class ManageController extends BaseController{
 		Integer type = user.getType();
 		String pwd = user.getPwd();
 		
-		System.out.println("userId:" + userId + " userName:"+userName + "type:" + type  + " pwd:" + pwd);
+		Log.debug("userId:" + userId + " userName:"+userName + "type:" + type  + " pwd:" + pwd);
 		
 		//检查是否越权设置
 		if(login_user.getType() < type)
@@ -1255,7 +1255,7 @@ public class ManageController extends BaseController{
 		
 		if(userEditCheck(user, rt) == false)
 		{
-			System.out.println("用户检查失败!");			
+			Log.debug("用户检查失败!");			
 			writeJson(rt, response);
 			return;			
 		}
@@ -1274,9 +1274,9 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="resetPwd")
 	public void resetPwd(User user, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** resetPwd.do ***********************");
+		Log.debug("\n****************** resetPwd.do ***********************");
 
-		System.out.println("resetPwd");
+		Log.debug("resetPwd");
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1303,7 +1303,7 @@ public class ManageController extends BaseController{
 		Integer userId = user.getId();
 		String pwd = user.getPwd();
 		
-		System.out.println("userId:" +userId + " pwd:" + pwd);
+		Log.debug("userId:" +userId + " pwd:" + pwd);
 	
 		if(userId == null)
 		{
@@ -1347,9 +1347,9 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="delUser")
 	public void delUser(Integer userId, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** delUser.do ***********************");
+		Log.debug("\n****************** delUser.do ***********************");
 
-		System.out.println("delUser " + userId);
+		Log.debug("delUser " + userId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1437,9 +1437,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getReposList.do")
 	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getReposList.do ***********************");
+		Log.debug("\n****************** getReposList.do ***********************");
 
-		System.out.println("getReposList()");
+		Log.debug("getReposList()");
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1491,9 +1491,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getReposAllUsers.do")
 	public void getReposAllUsers(String searchWord, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getReposAllUsers.do ***********************");
+		Log.debug("\n****************** getReposAllUsers.do ***********************");
 		
-		System.out.println("getReposAllUsers reposId: " + reposId);
+		Log.debug("getReposAllUsers reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1543,9 +1543,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getGroupList.do")
 	public void getGroupList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getGroupList.do ***********************");
+		Log.debug("\n****************** getGroupList.do ***********************");
 		
-		System.out.println("getGroupList()");
+		Log.debug("getGroupList()");
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1577,13 +1577,13 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addGroup")
 	public void addGroup(UserGroup group, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** addGroup.do ***********************");
+		Log.debug("\n****************** addGroup.do ***********************");
 
-		System.out.println("addGroup");
+		Log.debug("addGroup");
 		String name = group.getName();
 		String info = group.getInfo();
 		
-		System.out.println("name:"+name + " info:"+info);
+		Log.debug("name:"+name + " info:"+info);
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = (User) session.getAttribute("login_user");
@@ -1650,9 +1650,9 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="delGroup")
 	public void delGroup(Integer id, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** delGroup.do ***********************");
+		Log.debug("\n****************** delGroup.do ***********************");
 
-		System.out.println("delGroup " + id);
+		Log.debug("delGroup " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1699,15 +1699,15 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="editGroup")
 	public void editGroup(UserGroup group, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** editGroup.do ***********************");
+		Log.debug("\n****************** editGroup.do ***********************");
 
-		System.out.println("editGroup");
+		Log.debug("editGroup");
 
 		Integer groupId = group.getId();
 		String name = group.getName();
 		String info = group.getInfo();
 
-		System.out.println("name:"+name + " info:"+info);
+		Log.debug("name:"+name + " info:"+info);
 	
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1747,9 +1747,9 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getGroupAllUsers.do")
 	public void getGroupAllUsers(String searchWord, Integer groupId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getGroupAllUsers.do ***********************");
+		Log.debug("\n****************** getGroupAllUsers.do ***********************");
 
-		System.out.println("getGroupAllUsers searchWord:" + searchWord + " groupId: " + groupId);
+		Log.debug("getGroupAllUsers searchWord:" + searchWord + " groupId: " + groupId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1797,9 +1797,9 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addGroupMember")
 	public void addGroupMember(Integer groupId,Integer userId, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("\n****************** addGroupMember.do ***********************");
+		Log.debug("\n****************** addGroupMember.do ***********************");
 
-		System.out.println("addGroupMember groupId:" + groupId + " userId:" + userId);
+		Log.debug("addGroupMember groupId:" + groupId + " userId:" + userId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1838,7 +1838,7 @@ public class ManageController extends BaseController{
 		
 		if(isGroupMemberExist(groupMember) == true)
 		{
-			System.out.println("addGroupMember() 用户 " + userId + " 已是该组成员！");
+			Log.debug("addGroupMember() 用户 " + userId + " 已是该组成员！");
 			Log.docSysErrorLog("用户 " + userId + " 已是该组成员！", rt);
 			writeJson(rt, response);
 			return;
@@ -1846,7 +1846,7 @@ public class ManageController extends BaseController{
 	
 		if(userService.addGroupMember(groupMember) == 0)
 		{
-			System.out.println("addGroupMember() Failed to add groupMember");
+			Log.debug("addGroupMember() Failed to add groupMember");
 			Log.docSysErrorLog("Failed to add new GroupMember in DB", rt);
 			writeJson(rt, response);
 			return;
@@ -1868,7 +1868,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="delGroupMember")
 	public void delGroupMember(Integer id, HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("delGroupMember " + id);
+		Log.debug("delGroupMember " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1898,9 +1898,9 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="getSystemLog")
 	public void getSystemLog(String fileName,HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
 
-		System.out.println("\n****************** getSystemLog.do ***********************");
+		Log.debug("\n****************** getSystemLog.do ***********************");
 
-		System.out.println("getSystemLog: " + fileName);
+		Log.debug("getSystemLog: " + fileName);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1917,7 +1917,14 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String localParentPath = Path.getSystemLogParentPath(OSType);
+		String localParentPath = Path.getSystemLogParentPath(docSysWebPath);
+		if(localParentPath == null)
+		{
+			Log.docSysErrorLog("获取日志路径失败！", rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		
 		if(fileName == null || "".equals(fileName))
 		{
 			fileName = Path.getSystemLogFileName();
