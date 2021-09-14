@@ -47,7 +47,7 @@ public class ReposController extends BaseController{
 	/****************** get DocSysConfig **************/
 	@RequestMapping("/getDocSysConfig.do")
 	public void getDocSysConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("\n****************** getDocSysConfig.do ***********************");
+		Log.debug("\n****************** getDocSysConfig.do ***********************");
 		ReturnAjax rt = new ReturnAjax();		
 		
 		JSONObject config = new JSONObject();
@@ -59,7 +59,7 @@ public class ReposController extends BaseController{
 	/****************** get Repository List **************/
 	@RequestMapping("/getReposList.do")
 	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("\n****************** getReposList.do ***********************");
+		Log.debug("\n****************** getReposList.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = getLoginUser(session, request, response, rt);
@@ -76,7 +76,7 @@ public class ReposController extends BaseController{
 		}
 		
 		Integer UserId = login_user.getId();
-		System.out.println("UserId:" + UserId);
+		Log.debug("UserId:" + UserId);
 		List <Repos> accessableReposList = getAccessableReposList(UserId);
 		//Log.printObject("getReposList() accessableReposList",accessableReposList);		
 		rt.setData(accessableReposList);
@@ -85,7 +85,7 @@ public class ReposController extends BaseController{
 
 	@RequestMapping("/getManagerReposList.do")
 	public void getManagerReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("\n****************** getManagerReposList.do ***********************");
+		Log.debug("\n****************** getManagerReposList.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -105,7 +105,7 @@ public class ReposController extends BaseController{
 		else
 		{
 			Integer UserId = login_user.getId();
-			System.out.println("UserId:" + UserId);
+			Log.debug("UserId:" + UserId);
 			List <Repos> accessableReposList = getAccessableReposList(UserId);
 			rt.setData(accessableReposList);
 		}
@@ -118,8 +118,8 @@ public class ReposController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 
-		System.out.println("\n****************** getRepos.do ***********************");
-		System.out.println("getRepos vid: " + vid + " shareId:" + shareId);
+		Log.debug("\n****************** getRepos.do ***********************");
+		Log.debug("getRepos vid: " + vid + " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, vid, null, null, false,rt);
@@ -153,8 +153,8 @@ public class ReposController extends BaseController{
 			Integer encryptType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
-		System.out.println("\n****************** addRepos.do ***********************");
-		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  
+		Log.debug("\n****************** addRepos.do ***********************");
+		Log.debug("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  
 				+ " realDocPath: " + realDocPath 
 				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
@@ -202,7 +202,7 @@ public class ReposController extends BaseController{
 		//仓库位置与RealDoc存储位置不能重复
 		if(isPathConflict(path,realDocPath))
 		{
-			System.out.println("addRepos() 仓库存储路径与文件存储路径冲突");
+			Log.debug("addRepos() 仓库存储路径与文件存储路径冲突");
 			String ErrMsg = "仓库存储路径:" + path + " 与文件存储路径:" + realDocPath + " 冲突";
 			rt.setError(ErrMsg);
 			writeJson(rt, response);		
@@ -238,7 +238,7 @@ public class ReposController extends BaseController{
 		//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 		if(checkReposInfoForAdd(repos, rt) == false)
 		{
-			System.out.println("checkReposInfoForAdd() failed");
+			Log.debug("checkReposInfoForAdd() failed");
 			writeJson(rt, response);		
 			return;			
 		}
@@ -250,7 +250,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		Integer reposId = repos.getId();
-		System.out.println("new ReposId" + reposId);
+		Log.debug("new ReposId" + reposId);
 
 		//Lock the repos
 		DocLock reposLock = null;
@@ -352,8 +352,8 @@ public class ReposController extends BaseController{
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("\n****************** deleteRepos.do ***********************");
-		System.out.println("deleteRepos vid: " + vid);
+		Log.debug("\n****************** deleteRepos.do ***********************");
+		Log.debug("deleteRepos vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -430,8 +430,8 @@ public class ReposController extends BaseController{
 			Integer encryptType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** updateReposInfo.do ***********************");
-		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path 
+		Log.debug("\n****************** updateReposInfo.do ***********************");
+		Log.debug("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path 
 				+ " realDocPath:" + realDocPath 
 				+ " remoteStorage:" + remoteStorage 
 				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
@@ -492,7 +492,7 @@ public class ReposController extends BaseController{
 
 		if(type != null && type != reposInfo.getType())
 		{
-			System.out.println("禁止修改文件系统类型");		
+			Log.debug("禁止修改文件系统类型");		
 		}
 		newReposInfo.setType(reposInfo.getType());
 				
@@ -540,7 +540,7 @@ public class ReposController extends BaseController{
 		//Update ReposInfo
 		if(reposService.updateRepos(newReposInfo) == 0)
 		{
-			System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
+			Log.debug("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
 			rt.setError("仓库信息更新失败！");
 			writeJson(rt, response);	
 			return;
@@ -549,7 +549,7 @@ public class ReposController extends BaseController{
 		if(ChangeReposPath(newReposInfo, reposInfo, login_user, rt) == false)
 		{
 			reposService.updateRepos(reposInfo);	//Revert reposInfo
-			System.out.println("仓库目录修改失败");
+			Log.debug("仓库目录修改失败");
 			writeJson(rt, response);	
 			return;
 		}
@@ -557,7 +557,7 @@ public class ReposController extends BaseController{
 		if(ChangeReposRealDocPath(newReposInfo, reposInfo, login_user, rt) == false)
 		{
 			reposService.updateRepos(reposInfo);	//Revert reposInfo
-			System.out.println("仓库RealDoc目录修改失败");
+			Log.debug("仓库RealDoc目录修改失败");
 			writeJson(rt, response);	
 			return;
 		}
@@ -576,7 +576,7 @@ public class ReposController extends BaseController{
 			if(initVerRepos(repos, true, rt) == false)
 			{
 				reposService.updateRepos(reposInfo);	//Revert reposInfo
-				System.out.println("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
+				Log.debug("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
 				rt.setError("版本仓库初始化失败！");
 				writeJson(rt, response);	
 				return;
@@ -588,7 +588,7 @@ public class ReposController extends BaseController{
 			if(initVerRepos(repos, false, rt) == false)
 			{
 				reposService.updateRepos(reposInfo);	//Revert reposInfo
-				System.out.println("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
+				Log.debug("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
 				rt.setError("版本仓库初始化失败！");
 				writeJson(rt, response);	
 				return;
@@ -601,7 +601,7 @@ public class ReposController extends BaseController{
 		//如果RealDoc版本仓库的类型变化，那么必须删除所有的doc记录并重新同步
 		if(isReposVerCtrlChanged(newReposInfo, reposInfo))
 		{
-			System.out.println("updateReposInfo() 版本仓库类型变更 from " + reposInfo.getVerCtrl() + " to " + newReposInfo.getVerCtrl());
+			Log.debug("updateReposInfo() 版本仓库类型变更 from " + reposInfo.getVerCtrl() + " to " + newReposInfo.getVerCtrl());
 			if(dbDeleteAllDocs(repos) == true)
 			{
 				//Add doc for AutoSync
@@ -615,7 +615,7 @@ public class ReposController extends BaseController{
 			}
 			else
 			{
-				System.out.println("updateReposInfo() dbDeleteAllDocs failed");
+				Log.debug("updateReposInfo() dbDeleteAllDocs failed");
 			}
 		}
 	}
@@ -685,8 +685,8 @@ public class ReposController extends BaseController{
 	@RequestMapping("/clearReposCache.do")
 	public void clearReposCache(Integer reposId, String path,String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** clearReposCache.do ***********************");
-		System.out.println("clearReposCache reposId:" + reposId + " path: " + path + " name: " + name);
+		Log.debug("\n****************** clearReposCache.do ***********************");
+		Log.debug("clearReposCache reposId:" + reposId + " path: " + path + " name: " + name);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -742,8 +742,8 @@ public class ReposController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getReposInitMenu.do ***********************");
-		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId);
+		Log.debug("\n****************** getReposInitMenu.do ***********************");
+		Log.debug("getReposInitMenu reposId: " + reposId + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -775,7 +775,7 @@ public class ReposController extends BaseController{
 		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), rootDoc, reposAccess.getAuthMask());
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
-			System.out.println("getReposInitMenu() 您没有该仓库的访问权限，请联系管理员！");
+			Log.debug("getReposInitMenu() 您没有该仓库的访问权限，请联系管理员！");
 			rt.setError("您没有该仓库的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
@@ -897,8 +897,8 @@ public class ReposController extends BaseController{
 			Integer needLockState,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getSubDocList.do ***********************");
-		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort + " needLockState:" +  needLockState);
+		Log.debug("\n****************** getSubDocList.do ***********************");
+		Log.debug("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort + " needLockState:" +  needLockState);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -982,7 +982,7 @@ public class ReposController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, doc, true);
 		if(tmpDoc == null)
 		{
-			System.out.println("getSubDocList() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
+			Log.debug("getSubDocList() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
 			rt.setData("");
 			rt.setMsgInfo("文件 " + doc.getPath() + doc.getName() + " 不存在！");
 			writeJson(rt, response);			
@@ -991,7 +991,7 @@ public class ReposController extends BaseController{
 		
 		if(tmpDoc.getType() == null || tmpDoc.getType() == 1)
 		{
-			System.out.println("getSubDocList() [" + doc.getPath() + doc.getName() + "] 是文件");
+			Log.debug("getSubDocList() [" + doc.getPath() + doc.getName() + "] 是文件");
 			docList.add(tmpDoc);
 			
 			docList = updateLockStateAndsortDocList(docList, sort, needLockState);
@@ -1004,7 +1004,7 @@ public class ReposController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
 		{
-			System.out.println("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
+			Log.debug("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
 			rt.setError("您没有该目录的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
@@ -1024,7 +1024,7 @@ public class ReposController extends BaseController{
 			docList = updateLockStateAndsortDocList(docList, sort, needLockState);
 			rt.setData(docList);	
 		}
-		System.out.println("getSubDocList() docList ready");
+		Log.debug("getSubDocList() docList ready");
 		writeJson(rt, response);
 		
 		//Add doc for AutoSync
@@ -1032,7 +1032,7 @@ public class ReposController extends BaseController{
 		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null, true);
 		new Thread(new Runnable() {
 				public void run() {
-					System.out.println("getSubDocList() executeUniqueCommonActionList in new thread");
+					Log.debug("getSubDocList() executeUniqueCommonActionList in new thread");
 					executeUniqueCommonActionList(actionList, rt);
 				}
 			}).start();
@@ -1072,8 +1072,8 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,Long docId, Long pid, String path, String name, Integer level, Integer type, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){		
-		System.out.println("\n****************** getReposManagerMenu.do ***********************");
-		System.out.println("getReposManagerMenu vid: " + vid);
+		Log.debug("\n****************** getReposManagerMenu.do ***********************");
+		Log.debug("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -1105,12 +1105,12 @@ public class ReposController extends BaseController{
 			{
 				rootDocAuth = new DocAuth();
 				rootDocAuth.setAccess(1);
-				System.out.println("超级管理员");
+				Log.debug("超级管理员");
 			}
 			else
 			{
 				
-				System.out.println("getReposManagerMenu() 您没有该仓库的访问权限，请联系管理员！");
+				Log.debug("getReposManagerMenu() 您没有该仓库的访问权限，请联系管理员！");
 				rt.setError("您没有该仓库的访问权限，请联系管理员！");
 				writeJson(rt, response);			
 				return;
@@ -1148,8 +1148,8 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposAllUsers.do")
 	public void getReposAllUsers(String searchWord, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getReposAllUsers.do ***********************");
-		System.out.println("getReposAllUsers searchWord:" + searchWord + " reposId: " + reposId);
+		Log.debug("\n****************** getReposAllUsers.do ***********************");
+		Log.debug("getReposAllUsers searchWord:" + searchWord + " reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -1213,8 +1213,8 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposAllGroups.do")
 	public void getReposAllGroups(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getReposAllGroups.do ***********************");
-		System.out.println("getReposAllGroups reposId: " + reposId);
+		Log.debug("\n****************** getReposAllGroups.do ***********************");
+		Log.debug("getReposAllGroups reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -1237,14 +1237,14 @@ public class ReposController extends BaseController{
 	public void getDocAuthList(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getDocAuthList.do ***********************");
-		System.out.println("getDocAuthList reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
+		Log.debug("\n****************** getDocAuthList.do ***********************");
+		Log.debug("getDocAuthList reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			System.out.println("getDocAuthList() 用户未登录，请先登录！");
+			Log.debug("getDocAuthList() 用户未登录，请先登录！");
 			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
 			return;
@@ -1267,7 +1267,7 @@ public class ReposController extends BaseController{
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
-			System.out.println("getDocAuthList() isAdminOfDoc return false");
+			Log.debug("getDocAuthList() isAdminOfDoc return false");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
@@ -1276,7 +1276,7 @@ public class ReposController extends BaseController{
 		//获取DocAuthList
 		//Step1: 获取仓库可访问用户和组列表
 		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
-		System.out.println("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
+		Log.debug("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
 		Log.printObject("reposAuthList:", reposAuthList);
 		
 		//Step2: 获取可访问的用户、组的权限列表
@@ -1287,7 +1287,7 @@ public class ReposController extends BaseController{
 			Integer userId = reposAuth.getUserId();
 			Integer groupId = reposAuth.getGroupId();
 
-			System.out.println("getDocAuthList() userId:" + userId + " groupId:" + groupId);
+			Log.debug("getDocAuthList() userId:" + userId + " groupId:" + groupId);
 			DocAuth docAuth = null;
 			if(groupId != null && groupId != 0)
 			{
@@ -1318,7 +1318,7 @@ public class ReposController extends BaseController{
 //					DocAuth tmpDocAuth = allDocAuthList.get(i);
 //					if(tmpDocAuth == null)
 //					{
-//						System.out.println("getDocAuthList() allDocAuthList[" + i+ "] is null");
+//						Log.debug("getDocAuthList() allDocAuthList[" + i+ "] is null");
 //						continue;
 //					}
 //					
@@ -1345,7 +1345,7 @@ public class ReposController extends BaseController{
 	}
 
 	private List<ReposAuth> getReposAuthList(Integer reposId) {
-		System.out.println("getReposAuthList() reposId:" + reposId);
+		Log.debug("getReposAuthList() reposId:" + reposId);
 		List <ReposAuth> ReposAuthList = reposService.getReposAuthList(reposId);	//注意已经包括了任意用户
 		return ReposAuthList;
 	}
@@ -1357,8 +1357,8 @@ public class ReposController extends BaseController{
 			Integer downloadEn, Long uploadSize, Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** configReposAuth.do ***********************");
-		System.out.println("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin 
+		Log.debug("\n****************** configReposAuth.do ***********************");
+		Log.debug("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin 
 				+ " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn 
 				+ " downloadEn:"+ downloadEn + " uploadSize:"+ uploadSize + " heritable:" + heritable);
 		ReturnAjax rt = new ReturnAjax();
@@ -1467,8 +1467,8 @@ public class ReposController extends BaseController{
 	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** deleteReposAuth.do ***********************");
-		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
+		Log.debug("\n****************** deleteReposAuth.do ***********************");
+		Log.debug("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -1528,8 +1528,8 @@ public class ReposController extends BaseController{
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer downloadEn, Long uploadSize, Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** configDocAuth.do ***********************");
-		System.out.println("configDocAuth reposId:" + reposId + " userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " path:" + path + " name:" + name + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:" + downloadEn + " uploadSize:" + uploadSize + " heritable:" + heritable);
+		Log.debug("\n****************** configDocAuth.do ***********************");
+		Log.debug("configDocAuth reposId:" + reposId + " userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " path:" + path + " name:" + name + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:" + downloadEn + " uploadSize:" + uploadSize + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1557,7 +1557,7 @@ public class ReposController extends BaseController{
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
-			System.out.println("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
+			Log.debug("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
@@ -1566,7 +1566,7 @@ public class ReposController extends BaseController{
 		//login_user不得设置超过自己的权限：超过了则无效
 		if(isUserAuthExpanded(repos, login_user, doc, isAdmin,access,editEn,addEn,deleteEn,downloadEn,uploadSize,heritable,rt) == true)
 		{
-			System.out.println("超过设置者的权限 ！");
+			Log.debug("超过设置者的权限 ！");
 			writeJson(rt, response);			
 			return;			
 		}
@@ -1575,7 +1575,7 @@ public class ReposController extends BaseController{
 		Integer authType = getAuthType(userId,groupId);
 		if(authType == null)
 		{
-			System.out.println("configDocAuth getAuthType failed");
+			Log.debug("configDocAuth getAuthType failed");
 			rt.setError("getAuthType Failed");
 			writeJson(rt, response);			
 			return;
@@ -1670,8 +1670,8 @@ public class ReposController extends BaseController{
 	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** deleteDocAuth.do ***********************");		
-		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
+		Log.debug("\n****************** deleteDocAuth.do ***********************");		
+		Log.debug("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -1722,7 +1722,7 @@ public class ReposController extends BaseController{
 		
 		if(login_user.getType() == 2)
 		{
-			System.out.println("超级管理员");
+			Log.debug("超级管理员");
 			return false;
 		}
 		
@@ -1783,8 +1783,8 @@ public class ReposController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("\n****************** getUserDocAuth.do ***********************");		
-		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " path:" + path + " name:" + name);
+		Log.debug("\n****************** getUserDocAuth.do ***********************");		
+		Log.debug("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
