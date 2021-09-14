@@ -156,20 +156,13 @@ public class Path {
 	}
 	
 	//系统日志所在的目录
-	public static String getSystemLogParentPath(Integer OSType) {
-		String path = "";		
-		path = ReadProperties.read("docSysConfig.properties", "SystemLogParentPath");
-	    if(path == null || "".equals(path))
-	    {
-			if(OS.isWinOS(OSType)){  
-				path = "C:/xampp/tomcat/logs/";
-			}
-			else
-			{
-				path = "/var/lib/tomcat7/logs/";	//Linux系统放在  /data	
-			}
-	    }    
-		return path;
+	public static String getSystemLogParentPath(String docSysWebPath) {
+		if(docSysWebPath == null || docSysWebPath.isEmpty())
+		{
+			return null;
+		}
+		int pos = docSysWebPath.indexOf("/tomcat");
+		return docSysWebPath.substring(0, pos) + "/logs/";
 	}
 	
 	
