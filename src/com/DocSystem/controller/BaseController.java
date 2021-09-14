@@ -9933,7 +9933,7 @@ public class BaseController  extends BaseFunction{
 			String logLevelStr = FileUtil.readDocContentFromFile(docSysWebPath, "debugLogLevel", "UTF-8");
 			if(logLevelStr == null || logLevelStr.isEmpty())
 			{
-				return Log.warn;
+				return Log.info;
 			}
 			switch(logLevelStr.trim())
 			{
@@ -9947,7 +9947,7 @@ public class BaseController  extends BaseFunction{
 				return Log.error;
 			}
 		}
-		return Log.warn;
+		return Log.info;
 	}
 	
 	protected static void setLogLevelToFile(Integer logLevel) {
