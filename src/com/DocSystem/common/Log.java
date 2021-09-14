@@ -112,7 +112,7 @@ public class Log {
 		}
 	}
 	
-	public static void printBytes(int level, byte[] data) {
+	public static void printBytes(byte[] data) {
 		if(isLogEnable(debug, allowGeneral))
 		{
 			for(int i=0; i<data.length; i++)
