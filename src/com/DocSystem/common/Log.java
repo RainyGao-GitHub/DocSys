@@ -96,8 +96,15 @@ public class Log {
 	public static void info(String Head, String msg) {
 		info(Head + " " + msg);
 	}
-		
-		
+	
+	public static void debugForOffice(String content) {
+		debug("OFFICE: " + content);
+	}
+
+	public static void infoForOffice(String content) {
+		info("OFFICE: " + content);
+	}
+	
 	public static void printByte(byte data) {
 		if(isLogEnable(debug, allowGeneral))
 		{
