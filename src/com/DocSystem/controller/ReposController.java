@@ -928,7 +928,7 @@ public class ReposController extends BaseController{
 		if(path == null)
 		{
 			Doc rootDoc = buildBasicDoc(vid, null, null, reposPath, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
-			Log.printObject("getReposInitMenu() rootDoc:", rootDoc);
+			Log.printObject("getSubDocList() rootDoc:", rootDoc);
 			
 			if(rootDoc.getDocId() != 0) //不是仓库根目录
 			{
@@ -1036,6 +1036,127 @@ public class ReposController extends BaseController{
 					executeUniqueCommonActionList(actionList, rt);
 				}
 			}).start();
+	}
+	
+	/* 
+	 * 
+	 该接口用于远程存储
+	 *   
+	 */
+	@RequestMapping("/getSubDocList.do")
+	public void getSubDocList(Integer vid, String rootPath, String path,
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("\n****************** getSubDocList.do ***********************");
+		Log.debug("getSubDocList reposId: " + vid + " path:" + path);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(checkAuthCode(authCode, null) == false)
+		{
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//Get SubDocList From Server Dir
+		if(vid == null)
+		{
+			Repos vRepos = new Repos();			
+			vRepos.setRealDocPath(rootPath);
+			Doc doc = buildBasicDoc(null, null, null, "", path, "", null, 2, true, rootPath, null, null, null);
+			List<Doc> list = getLocalEntryList(vRepos, doc);
+			rt.setData(list);
+			writeJson(rt, response);			
+			return;			
+		}
+		
+		//get SubDocList From Repos
+		Repos repos = getReposEx(vid);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + vid + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		List <Doc> docList = new ArrayList<Doc>();
+		Doc doc = null;
+		if(path == null)
+		{
+			Doc rootDoc = buildBasicDoc(vid, null, null, reposPath, "", "", null, 2, true, localRootPath, localVRootPath, null, null);
+			doc = rootDoc;
+		}
+			
+		if(doc == null)
+		{
+			doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, "", null,2, true, localRootPath, localVRootPath, null, null);
+		}
+			
+		Integer reposId = repos.getId();
+		String pwd = getDocPwd(repos, doc);
+		if(pwd != null && !pwd.isEmpty())
+		{
+			//Do check the sharePwd
+			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
+			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+			{
+				Log.docSysErrorLog("访问密码错误！", rt);
+				rt.setMsgData("1"); //访问密码错误或未提供
+				writeJson(rt, response);
+				return;
+			}
+		}
+			
+		Doc tmpDoc = docSysGetDoc(repos, doc, true);
+		if(tmpDoc == null)
+		{
+			Log.debug("getSubDocList() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
+			rt.setData("");
+			rt.setMsgInfo("文件 " + doc.getPath() + doc.getName() + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+			
+		if(tmpDoc.getType() == null || tmpDoc.getType() == 1)
+		{
+			Log.debug("getSubDocList() [" + doc.getPath() + doc.getName() + "] 是文件");
+			rt.setData("");
+			writeJson(rt, response);			
+			return;			
+		}
+			
+		//get the rootDocAuth
+		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
+		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
+		{
+			Log.debug("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
+			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+			
+		//docAuthHashMap for access_user
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
+			
+		docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
+	
+		if(docList == null)
+		{
+			rt.setData("");
+		}
+		else
+		{
+			rt.setData(docList);	
+		}
+		Log.debug("getSubDocList() docList ready");
+		writeJson(rt, response);
 	}
 	
 	List<Doc> updateLockStateAndsortDocList(List<Doc> docList, String sort, Integer needLockState) 
