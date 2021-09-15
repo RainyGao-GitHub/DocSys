@@ -1330,6 +1330,8 @@ public class FileUtil {
 			return null;
 		}
 		
+		int buffSize = (int)file.length();
+		
 		String charset = "GBK";
 		byte[] first3Bytes = new byte[3];
 		try {
@@ -1343,45 +1345,78 @@ public class FileUtil {
 			if (read == -1) {
 				bis.close();
 				return charset; // 文件编码为 ANSI
-			} else if (first3Bytes[0] == (byte) 0xFF && first3Bytes[1] == (byte) 0xFE) {
+			} else if (readByte(first3Bytes, buffSize, 0) == 0xFF && readByte(first3Bytes, buffSize, 1) == 0xFE) {
 				charset = "UTF-16LE"; // 文件编码为 Unicode
 				checked = true;
-			} else if (first3Bytes[0] == (byte) 0xFE && first3Bytes[1] == (byte) 0xFF) {
+			} else if (readByte(first3Bytes, buffSize, 0) == 0xFE && readByte(first3Bytes, buffSize, 1) == (byte) 0xFF) {
 				charset = "UTF-16BE"; // 文件编码为 Unicode big endian
 				checked = true;
-			} else if (first3Bytes[0] == (byte) 0xEF && first3Bytes[1] == (byte) 0xBB && first3Bytes[2] == (byte) 0xBF) {
+			} else if (readByte(first3Bytes, buffSize, 0) == 0xEF && readByte(first3Bytes, buffSize, 1) == 0xBB && readByte(first3Bytes, buffSize, 2) == 0xBF) {
 				charset = "UTF-8"; // 文件编码为 UTF-8
 				checked = true;
 			}
+
 			bis.reset();
 			if (!checked) {
 				while ((read = bis.read()) != -1) {
 					Log.printByte((byte) read);
 					
 					if (read >= 0xF0)
+					{
+						Log.debug("read >= 0xF0");
 						break;
+					}
+					
 					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
+					{
+						Log.debug("0x80 <= read && read <= 0xBF");					
 						break;
-					if (0xC0 <= read && read <= 0xDF) {
+					}
+					
+					if (0xC0 <= read && read <= 0xDF) 
+					{
+						Log.debug("0xC0 <= read && read <= 0xDF");					
 						read = bis.read();
 						Log.printByte((byte) read);
 						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
+						{
+							Log.debug("0x80 <= read && read <= 0xBF");				
 							// (0x80 - 0xBF),也可能在GB编码内
 							continue;
+						}
 						else
+						{
 							break;
-					} else if (0xE0 <= read && read <= 0xEF) { // 也有可能出错，但是几率较小
+						}
+					} 
+					else if (0xE0 <= read && read <= 0xEF) 
+					{ 
+						// 也有可能出错，但是几率较小
+						Log.debug("0xE0 <= read && read <= 0xEF");				
 						read = bis.read();
 						Log.printByte((byte) read);
+						
 						if (0x80 <= read && read <= 0xBF) {
+							Log.debug("0x80 <= read && read <= 0xBF");				
+
 							read = bis.read();
-							if (0x80 <= read && read <= 0xBF) {
+							Log.printByte((byte) read);
+
+							if (0x80 <= read && read <= 0xBF) 
+							{
+								Log.debug("0x80 <= read && read <= 0xBF");
 								charset = "UTF-8";
 								break;
-							} else
+							} 
+							else
+							{
 								break;
-						} else
+							}
+						} 
+						else
+						{
 							break;
+						}
 					}
 				}
 			}
@@ -1408,49 +1443,84 @@ public class FileUtil {
 		int read = -1;
 		try {
 			boolean checked = false;			
-			if (buffSize >= 2 && buff[0] == (byte) 0xFF && buff[1] == (byte) 0xFE) {
+			if (readByte(buff, buffSize, 0) == 0xFF && readByte(buff, buffSize, 1) == 0xFE) {
 				charset = "UTF-16LE"; // 文件编码为 Unicode
 				checked = true;
-			} else if (buffSize >=2 && buff[0] == (byte) 0xFE && buff[1] == (byte) 0xFF) {
+			} else if (readByte(buff, buffSize, 0) == 0xFE && readByte(buff, buffSize, 1) == (byte) 0xFF) {
 				charset = "UTF-16BE"; // 文件编码为 Unicode big endian
 				checked = true;
-			} else if (buffSize >= 3 && buff[0] == (byte) 0xEF && buff[1] == (byte) 0xBB && buff[2] == (byte) 0xBF) {
+			} else if (readByte(buff, buffSize, 0) == 0xEF && readByte(buff, buffSize, 1) == 0xBB && readByte(buff, buffSize, 2) == 0xBF) {
 				charset = "UTF-8"; // 文件编码为 UTF-8
 				checked = true;
 			}
-			
+
+			//reset to buff 0
+			int index = 0;
 			if (!checked) {
-				int index = 0;
-				while (index < buffSize) {
-					read = readByte(buff, buffSize, index++);
+				while ((read = readByte(buff, buffSize, index++)) != -1) 
+				{
 					Log.printByte((byte) read);
 					
-					if (read >= 0xF0)
+					if (read >= 0xF0) 
+					{
+						Log.debug("read >= 0xF0");
 						break;
+					}
+
 					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
+					{
+						Log.debug("0x80 <= read && read <= 0xBF");
 						break;
-					if (0xC0 <= read && read <= 0xDF) {
+					}
+					
+					if (0xC0 <= read && read <= 0xDF) 
+					{
+						Log.debug("0xC0 <= read && read <= 0xDF");
+						
 						read = readByte(buff, buffSize, index++);
 						Log.printByte((byte) read);
 						
 						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
+						{
+							Log.debug("0x80 <= read && read <= 0xBF");
 							// (0x80 - 0xBF),也可能在GB编码内
 							continue;
+						}
 						else
+						{
 							break;
-					} else if (0xE0 <= read && read <= 0xEF) { // 也有可能出错，但是几率较小
+						}
+					} 
+					else if (0xE0 <= read && read <= 0xEF) 
+					{ 	
+						// 也有可能出错，但是几率较小
+						Log.debug("0xE0 <= read && read <= 0xEF");
+						
 						read = readByte(buff, buffSize, index++);
 						Log.printByte((byte) read);
 						
-						if (0x80 <= read && read <= 0xBF) {
-							read = buff[index++];
-							if (0x80 <= read && read <= 0xBF) {
+						if (0x80 <= read && read <= 0xBF) 
+						{
+							Log.debug("0x80 <= read && read <= 0xBF");
+							
+							read = readByte(buff, buffSize, index++);
+							Log.printByte((byte) read);
+							
+							if (0x80 <= read && read <= 0xBF) 
+							{
+								Log.debug("0x80 <= read && read <= 0xBF");
 								charset = "UTF-8";
 								break;
-							} else
+							} 
+							else
+							{
 								break;
-						} else
+							}
+						} 
+						else
+						{
 							break;
+						}
 					}
 				}
 			}
@@ -1466,7 +1536,7 @@ public class FileUtil {
 	{
 		if(index < buffSize)
 		{
-			return buff[index];
+			return (int)(buff[index] & 0xFF);
 		}
 		return -1;
 	}
