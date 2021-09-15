@@ -1359,28 +1359,28 @@ public class FileUtil {
 			bis.reset();
 			if (!checked) {
 				while ((read = bis.read()) != -1) {
-					Log.printByte((byte) read);
+					//Log.printByte((byte) read);
 					
 					if (read >= 0xF0)
 					{
-						Log.debug("read >= 0xF0");
+						//Log.debug("read >= 0xF0");
 						break;
 					}
 					
 					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
 					{
-						Log.debug("0x80 <= read && read <= 0xBF");					
+						//Log.debug("0x80 <= read && read <= 0xBF");					
 						break;
 					}
 					
 					if (0xC0 <= read && read <= 0xDF) 
 					{
-						Log.debug("0xC0 <= read && read <= 0xDF");					
+						//Log.debug("0xC0 <= read && read <= 0xDF");					
 						read = bis.read();
 						Log.printByte((byte) read);
 						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
 						{
-							Log.debug("0x80 <= read && read <= 0xBF");				
+							//Log.debug("0x80 <= read && read <= 0xBF");				
 							// (0x80 - 0xBF),也可能在GB编码内
 							continue;
 						}
@@ -1392,19 +1392,19 @@ public class FileUtil {
 					else if (0xE0 <= read && read <= 0xEF) 
 					{ 
 						// 也有可能出错，但是几率较小
-						Log.debug("0xE0 <= read && read <= 0xEF");				
+						//Log.debug("0xE0 <= read && read <= 0xEF");				
 						read = bis.read();
 						Log.printByte((byte) read);
 						
 						if (0x80 <= read && read <= 0xBF) {
-							Log.debug("0x80 <= read && read <= 0xBF");				
+							//Log.debug("0x80 <= read && read <= 0xBF");				
 
 							read = bis.read();
 							Log.printByte((byte) read);
 
 							if (0x80 <= read && read <= 0xBF) 
 							{
-								Log.debug("0x80 <= read && read <= 0xBF");
+								//Log.debug("0x80 <= read && read <= 0xBF");
 								charset = "UTF-8";
 								break;
 							} 
@@ -1459,30 +1459,30 @@ public class FileUtil {
 			if (!checked) {
 				while ((read = readByte(buff, buffSize, index++)) != -1) 
 				{
-					Log.printByte((byte) read);
+					//Log.printByte((byte) read);
 					
 					if (read >= 0xF0) 
 					{
-						Log.debug("read >= 0xF0");
+						//Log.debug("read >= 0xF0");
 						break;
 					}
 
 					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
 					{
-						Log.debug("0x80 <= read && read <= 0xBF");
+						//Log.debug("0x80 <= read && read <= 0xBF");
 						break;
 					}
 					
 					if (0xC0 <= read && read <= 0xDF) 
 					{
-						Log.debug("0xC0 <= read && read <= 0xDF");
+						//Log.debug("0xC0 <= read && read <= 0xDF");
 						
 						read = readByte(buff, buffSize, index++);
 						Log.printByte((byte) read);
 						
 						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
 						{
-							Log.debug("0x80 <= read && read <= 0xBF");
+							//Log.debug("0x80 <= read && read <= 0xBF");
 							// (0x80 - 0xBF),也可能在GB编码内
 							continue;
 						}
@@ -1494,21 +1494,21 @@ public class FileUtil {
 					else if (0xE0 <= read && read <= 0xEF) 
 					{ 	
 						// 也有可能出错，但是几率较小
-						Log.debug("0xE0 <= read && read <= 0xEF");
+						//Log.debug("0xE0 <= read && read <= 0xEF");
 						
 						read = readByte(buff, buffSize, index++);
 						Log.printByte((byte) read);
 						
 						if (0x80 <= read && read <= 0xBF) 
 						{
-							Log.debug("0x80 <= read && read <= 0xBF");
+							//Log.debug("0x80 <= read && read <= 0xBF");
 							
 							read = readByte(buff, buffSize, index++);
 							Log.printByte((byte) read);
 							
 							if (0x80 <= read && read <= 0xBF) 
 							{
-								Log.debug("0x80 <= read && read <= 0xBF");
+								//Log.debug("0x80 <= read && read <= 0xBF");
 								charset = "UTF-8";
 								break;
 							} 
