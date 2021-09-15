@@ -3,6 +3,7 @@ package com.DocSystem.controller;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,6 +15,7 @@ import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -13959,5 +13961,222 @@ public class BaseController  extends BaseFunction{
 			FileUtil.saveDocContentToFile("disabled", Path.getReposTextSearchConfigPathForVirtualDoc(repos), "" + doc.getDocId(), "UTF-8");
 		}
 		return true;
+	}
+	
+	protected static JSONObject getRemoteAuthCode(String targetServerUrl,  String userName, String pwd, Integer type, ReturnAjax rt) {
+		String requestUrl = targetServerUrl + "/DocSystem/Bussiness/getAuthCode.do?userName=" + userName + "&pwd="+pwd;
+		if(type != null)
+		{
+			requestUrl += "&type="+type;
+		}
+		JSONObject ret = postJson(requestUrl, null);	//AuthCode
+
+		if(ret == null)
+		{
+			Log.debug("getRemoteAuthCode() ret is null");
+			rt.setError("连接服务器失败");
+			return null;
+		}
+		
+		if(ret.getString("status") == null)
+		{
+			//未知状态
+			Log.debug("getRemoteAuthCode() ret.status is null");
+			rt.setError("连接服务器失败");
+			return null;
+		}
+		
+		if(!ret.getString("status").equals("ok"))
+		{
+			Log.debug("getRemoteAuthCode() ret.status is not ok");
+			rt.setError(ret.getString("msgInfo"));
+			return null;
+		}
+		
+		return ret;
+	}
+	
+    /**
+     * 以流的方式
+     * 发送文件和json对象
+     *
+     * @return
+     */
+    public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, JSONObject json) {
+		JSONObject returnJson = null;
+        try {
+            //开始设置模拟请求的参数，额，不一个个介绍了，根据需要拿
+            String boundary = "------WebKitFormBoundaryUey8ljRiiZqhZHBu";
+            URL u = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setUseCaches(false);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("connection", "Keep-Alive");
+            
+            //这里模拟的是火狐浏览器，具体的可以f12看看请求的user-agent是什么
+            //conn.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+            
+            conn.setRequestProperty("Charsert", "UTF-8");
+            //这里的content-type要设置成表单格式，模拟ajax的表单请求
+            conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+            
+            // 指定流的大小，当内容达到这个值的时候就把流输出
+            //conn.setChunkedStreamingMode(10240000);
+            
+            //定义输出流，有什么数据要发送的，直接后面append就可以，记得转成byte再append
+            DataOutputStream out = new DataOutputStream(conn.getOutputStream());
+            byte[] end_data = ("\r\n--" + boundary + "--\r\n").getBytes();// 定义最后数据分隔线
+ 
+            if(json != null)
+            {
+                String jsonString = json.toJSONString();
+	            StringBuilder sb = new StringBuilder();
+	            //添加form属性
+	            sb.append("--"); 
+	            sb.append(boundary);
+	            sb.append("\r\n");
+	            //这里存放要传输的参数，name = xml
+	            sb.append("Content-Disposition: form-data; name=\"JsonObj\"");
+	            sb.append("\r\n\r\n");
+	            //把要传的json字符串放进来
+	            sb.append(jsonString);
+	            out.write(sb.toString().getBytes("utf-8"));
+	            out.write("\r\n".getBytes("utf-8"));
+            }
+            
+            //add File
+            if(fileData != null)
+            {
+            	StringBuilder sb1 = new StringBuilder();
+            	sb1.append("--");
+            	sb1.append(boundary);
+                sb1.append("\r\n");
+                sb1.append("Content-Disposition: form-data;name=\"File" + "\";filename=\"" + fileName + "\"\r\n");
+                sb1.append("FileName:"+ fileName + "\r\n");
+                //发送文件是以流的方式发送，所以这里的content-type是octet-stream流
+                sb1.append("Content-Type:application/octet-stream\r\n\r\n");
+                out.write(sb1.toString().getBytes());
+                out.write(fileData);
+            }
+            //发送流
+            out.write(end_data);
+            out.flush();
+            out.close();
+            
+			// 读取响应
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					conn.getInputStream(),"utf-8"));//**注意点3**，需要此格式
+			String lines;
+			StringBuffer sb = new StringBuffer("");
+			while ((lines = reader.readLine()) != null) {
+				sb.append(lines);
+			}
+			System.out.println("sb:"+sb);			
+			returnJson = JSONObject.parseObject(sb.toString());
+			reader.close();
+			// 断开连接
+			conn.disconnect();			
+        } catch (Exception e) {
+            System.out.println("发送POST请求出现异常！" + e);
+            e.printStackTrace();
+        }
+        return returnJson;
+    }
+
+	public static JSONObject postData(String urlString ,byte[] data) {
+		JSONObject returnJson = null;
+		try {
+			// 创建连接
+			URL url = new URL(urlString);
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("connection", "Keep-Alive");
+			connection.setDoOutput(true);
+			connection.setDoInput(true);
+			connection.setUseCaches(false);
+			//connection.setInstanceFollowRedirects(true);
+			//connection.setRequestProperty("Charsert", "UTF-8");
+			connection.setRequestProperty("Content-Type","application/octet-stream;");	//字节流
+		    // 指定流的大小，当内容达到这个值的时候就把流输出
+		    //connection.setChunkedStreamingMode(10240000);
+			
+			//connection.getOutputStream会调用connect(因此不调用也可以)
+			connection.connect();
+			
+			DataOutputStream out = new DataOutputStream(
+					connection.getOutputStream());
+			if(data != null)
+			{
+				out.write(data);
+			}
+			out.flush();
+			out.close();
+			// 读取响应
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					connection.getInputStream(),"utf-8"));//**注意点3**，需要此格式
+			String lines;
+			StringBuffer sb = new StringBuffer("");
+			while ((lines = reader.readLine()) != null) {
+				sb.append(lines);
+			}
+			System.out.println("sb:"+sb);			
+			returnJson = JSONObject.parseObject(sb.toString());
+			reader.close();
+			// 断开连接
+			connection.disconnect();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return returnJson;
+	}
+	
+	public static JSONObject postJson(String urlString ,JSONObject jsonObject) {
+		JSONObject returnJson = null;
+		try {
+			// 创建连接
+			URL url = new URL(urlString);
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setDoOutput(true);
+			connection.setDoInput(true);
+			connection.setUseCaches(false);
+			connection.setInstanceFollowRedirects(true);			
+			connection.setRequestProperty("Content-Type","application/json;charset=UTF-8");//**注意点1**，需要此格式，后边这个字符集可以不设置
+			connection.connect();
+			DataOutputStream out = new DataOutputStream(
+					connection.getOutputStream());
+			if(jsonObject != null)
+			{
+				out.write(jsonObject.toString().getBytes("UTF-8"));//**注意点2**，需要此格式
+			}
+			out.flush();
+			out.close();
+			// 读取响应
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					connection.getInputStream(),"utf-8"));//**注意点3**，需要此格式
+			String lines;
+			StringBuffer sb = new StringBuffer("");
+			while ((lines = reader.readLine()) != null) {
+				sb.append(lines);
+			}
+			System.out.println("sb:"+sb);			
+			returnJson = JSONObject.parseObject(sb.toString());
+			reader.close();
+			// 断开连接
+			connection.disconnect();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return returnJson;
 	}
 }
