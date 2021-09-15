@@ -1043,13 +1043,13 @@ public class ReposController extends BaseController{
 	 该接口用于远程存储
 	 *   
 	 */
-	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, String rootPath, String path,
+	@RequestMapping("/getSubDocListEx.do")
+	public void getSubDocListEx(Integer vid, String rootPath, String path,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("\n****************** getSubDocList.do ***********************");
-		Log.debug("getSubDocList reposId: " + vid + " path:" + path);
+		Log.info("\n****************** getSubDocListEx.do ***********************");
+		Log.debug("getSubDocListEx reposId: " + vid + " rootPath:" + rootPath + " path:" + path);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -1116,7 +1116,7 @@ public class ReposController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, doc, true);
 		if(tmpDoc == null)
 		{
-			Log.debug("getSubDocList() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
+			Log.debug("getSubDocListEx() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
 			rt.setData("");
 			rt.setMsgInfo("文件 " + doc.getPath() + doc.getName() + " 不存在！");
 			writeJson(rt, response);			
@@ -1125,7 +1125,7 @@ public class ReposController extends BaseController{
 			
 		if(tmpDoc.getType() == null || tmpDoc.getType() == 1)
 		{
-			Log.debug("getSubDocList() [" + doc.getPath() + doc.getName() + "] 是文件");
+			Log.debug("getSubDocListEx() [" + doc.getPath() + doc.getName() + "] 是文件");
 			rt.setData("");
 			writeJson(rt, response);			
 			return;			
@@ -1136,7 +1136,7 @@ public class ReposController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
 		{
-			Log.debug("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
+			Log.debug("getSubDocListEx() 您没有该目录的访问权限，请联系管理员！");
 			rt.setError("您没有该目录的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
@@ -1155,7 +1155,7 @@ public class ReposController extends BaseController{
 		{
 			rt.setData(docList);	
 		}
-		Log.debug("getSubDocList() docList ready");
+		Log.debug("getSubDocListEx() docList ready");
 		writeJson(rt, response);
 	}
 	
