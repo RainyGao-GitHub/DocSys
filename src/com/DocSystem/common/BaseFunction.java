@@ -1993,7 +1993,7 @@ public class BaseFunction{
 			while ((lines = reader.readLine()) != null) {
 				sb.append(lines);
 			}
-			System.out.println("sb:"+sb);			
+			Log.debug("sb:"+sb);			
 			returnJson = JSONObject.parseObject(sb.toString());
 			reader.close();
 			// 断开连接
