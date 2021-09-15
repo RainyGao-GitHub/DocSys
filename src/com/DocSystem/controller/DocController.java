@@ -2504,7 +2504,8 @@ public class DocController extends BaseController{
 			String fileSuffix = FileUtil.getFileSuffix(name);
 			if(FileUtil.isText(fileSuffix))
 			{
-				content = readRealDocContentEx(repos, tmpDoc);
+				//content = readRealDocContent(repos, tmpDoc);
+				content = readRealDocContentEx(repos, tmpDoc);				
 			}
 			else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
 			{
