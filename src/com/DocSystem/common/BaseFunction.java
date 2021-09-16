@@ -1932,11 +1932,10 @@ public class BaseFunction{
             	sb1.append("--");
             	sb1.append(boundary);
                 sb1.append("\r\n");
-                sb1.append("Content-Disposition: form-data;name=\"File" + "\";filename=\"" + fileName + "\"\r\n");
-                sb1.append("FileName:"+ fileName + "\r\n");
+                sb1.append("Content-Disposition: form-data;name=\"uploadFile\";filename=\"" + fileName + "\"\r\n");
                 //发送文件是以流的方式发送，所以这里的content-type是octet-stream流
                 sb1.append("Content-Type:application/octet-stream\r\n\r\n");
-                out.write(sb1.toString().getBytes());
+                out.write(sb1.toString().getBytes("utf-8"));
                 out.write(fileData);
             }
             //发送流
@@ -1945,8 +1944,7 @@ public class BaseFunction{
             out.close();
             
 			// 读取响应
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					conn.getInputStream(),"utf-8"));//**注意点3**，需要此格式
+			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(),"utf-8"));//**注意点3**，需要此格式
 			String lines;
 			StringBuffer sb = new StringBuffer("");
 			while ((lines = reader.readLine()) != null) {

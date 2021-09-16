@@ -28,6 +28,7 @@ import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.EncryptConfig;
+import com.DocSystem.common.entity.RemoteStorage;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.controller.BaseController;
 
