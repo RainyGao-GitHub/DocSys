@@ -377,11 +377,49 @@ public class BaseFunction{
 	}
 	
 	private static RemoteStorage parseRemoteStorageConfigForMxsDoc(Repos repos, String remoteStorage) {
-		// TODO Auto-generated method stub
 		RemoteStorage remote = new RemoteStorage();
 		remote.protocol = "mxsdoc";
 		remote.MXSDOC = new MxsDocConfig();
+		
+		String[] subStrs = remoteStorage.split(";");
+		
+		String url = subStrs[0];
+		parseMxsDocUrl(remote, url.trim());
+		
+		//Parse sftpConfigs
+		if(subStrs.length > 1)
+		{
+			JSONObject config = new JSONObject();
+			for(int i=1; i<subStrs.length; i++)
+			{
+				String[] param = subStrs[i].split("=");
+				if(param.length > 1)
+				{
+					config.put(param[0].trim(), param[1].trim());
+				}
+			}
+			setRemoteAutoPushPull(remote, config);
+			
+			remote.MXSDOC.userName = config.getString("userName");
+			remote.MXSDOC.pwd = config.getString("pwd");
+			remote.MXSDOC.reposId = config.getInteger("reposId");
+			remote.MXSDOC.remoteDirectory = config.getString("remoteDirectory");
+			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+		}
+		
+		//add remote config to hashmap
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
+	}
+
+	private static void parseMxsDocUrl(RemoteStorage remote, String url) {
+		// TODO Auto-generated method stub
+		Log.debug("parseMxsDocUrl url:" + url);
+		
+		String tmpStr = url.substring("mxsdoc://".length());	
+		String realUrl = tmpStr;
+		remote.MXSDOC.url = realUrl;
+		remote.rootPath = "";
 	}
 
 	private static RemoteStorage parseRemoteStorageConfigForGit(Repos repos, String remoteStorage) {
@@ -490,7 +528,6 @@ public class BaseFunction{
 			}
 			setRemoteAutoPushPull(remote, config);
 
-			
 			remote.SFTP.userName = config.getString("userName");
 			remote.SFTP.pwd = config.getString("pwd");
 			
@@ -1977,8 +2014,7 @@ public class BaseFunction{
 			connection.setInstanceFollowRedirects(true);			
 			connection.setRequestProperty("Content-Type","application/json;charset=UTF-8");//**注意点1**，需要此格式，后边这个字符集可以不设置
 			connection.connect();
-			DataOutputStream out = new DataOutputStream(
-					connection.getOutputStream());
+			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
 			if(jsonObject != null)
 			{
 				out.write(jsonObject.toString().getBytes("UTF-8"));//**注意点2**，需要此格式

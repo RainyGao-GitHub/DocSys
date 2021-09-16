@@ -55,6 +55,7 @@
 		            <option value="smb">SMB</option>  
 		            <option value="svn">SVN</option>  
 		            <option value="git">GIT</option>  
+		            <option value="mxsdoc">MXSDOC</option>  
 		        </select>		            
 				<div name="remoteStorageConfig" style="margin-top:10px; display:none">
 		           	<input class="form-control" type="text" name="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
@@ -312,6 +313,9 @@
 		case "git":
 			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
 			break;
+		case "mxsdoc":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
+			break;
 		}
 		$("#dialog-new-repos div[name='remoteStorageConfig']").show();
 		
@@ -334,6 +338,9 @@
 			break;
 		case "git":
 			prefix = "git://";
+			break;
+		case "mxsdoc":
+			prefix = "mxsdoc://";
 			break;
 		}
 		
