@@ -1044,12 +1044,12 @@ public class ReposController extends BaseController{
 	 *   
 	 */
 	@RequestMapping("/getSubDocListEx.do")
-	public void getSubDocListEx(Integer vid, String rootPath, String path,
+	public void getSubDocListEx(Integer reposId, String remoteDirectory, String path,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("\n****************** getSubDocListEx.do ***********************");
-		Log.debug("getSubDocListEx reposId: " + vid + " rootPath:" + rootPath + " path:" + path);
+		Log.debug("getSubDocListEx reposId: " + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -1061,11 +1061,11 @@ public class ReposController extends BaseController{
 		}
 		
 		//Get SubDocList From Server Dir
-		if(vid == null)
+		if(reposId == null)
 		{
 			Repos vRepos = new Repos();			
-			vRepos.setRealDocPath(rootPath);
-			Doc doc = buildBasicDoc(null, null, null, "", path, "", null, 2, true, rootPath, null, null, null);
+			vRepos.setRealDocPath(remoteDirectory);
+			Doc doc = buildBasicDoc(null, null, null, "", path, "", null, 2, true, remoteDirectory, null, null, null);
 			List<Doc> list = getLocalEntryList(vRepos, doc);
 			rt.setData(list);
 			writeJson(rt, response);			
@@ -1073,10 +1073,10 @@ public class ReposController extends BaseController{
 		}
 		
 		//get SubDocList From Repos
-		Repos repos = getReposEx(vid);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + vid + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -1089,30 +1089,15 @@ public class ReposController extends BaseController{
 		Doc doc = null;
 		if(path == null)
 		{
-			Doc rootDoc = buildBasicDoc(vid, null, null, reposPath, "", "", null, 2, true, localRootPath, localVRootPath, null, null);
+			Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, "", "", null, 2, true, localRootPath, localVRootPath, null, null);
 			doc = rootDoc;
 		}
 			
 		if(doc == null)
 		{
-			doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, "", null,2, true, localRootPath, localVRootPath, null, null);
+			doc = buildBasicDoc(reposId, null, null, reposPath, path, "", null,2, true, localRootPath, localVRootPath, null, null);
 		}
-			
-		Integer reposId = repos.getId();
-		String pwd = getDocPwd(repos, doc);
-		if(pwd != null && !pwd.isEmpty())
-		{
-			//Do check the sharePwd
-			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
-			{
-				Log.docSysErrorLog("访问密码错误！", rt);
-				rt.setMsgData("1"); //访问密码错误或未提供
-				writeJson(rt, response);
-				return;
-			}
-		}
-			
+						
 		Doc tmpDoc = docSysGetDoc(repos, doc, true);
 		if(tmpDoc == null)
 		{
