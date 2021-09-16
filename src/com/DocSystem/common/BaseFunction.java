@@ -399,12 +399,15 @@ public class BaseFunction{
 				}
 			}
 			setRemoteAutoPushPull(remote, config);
+
+			remote.MXSDOC.reposId = config.getInteger("reposId");
+			remote.MXSDOC.remoteDirectory = config.getString("remoteDirectory");
+			Log.debug("parseRemoteStorageConfigForGit reposId:" + remote.MXSDOC.reposId + " remoteDirectory:" + remote.MXSDOC.remoteDirectory);			
+
 			
 			remote.MXSDOC.userName = config.getString("userName");
 			remote.MXSDOC.pwd = config.getString("pwd");
-			remote.MXSDOC.reposId = config.getInteger("reposId");
-			remote.MXSDOC.remoteDirectory = config.getString("remoteDirectory");
-			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.MXSDOC.userName + " pwd:" + remote.MXSDOC.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
 		//add remote config to hashmap
