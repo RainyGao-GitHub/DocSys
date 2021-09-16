@@ -9,19 +9,21 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
@@ -1899,19 +1901,28 @@ public class BaseFunction{
  
             if(json != null)
             {
-                String jsonString = json.toJSONString();
-	            StringBuilder sb = new StringBuilder();
-	            //添加form属性
-	            sb.append("--"); 
-	            sb.append(boundary);
-	            sb.append("\r\n");
-	            //这里存放要传输的参数，name = xml
-	            sb.append("Content-Disposition: form-data; name=\"JsonObj\"");
-	            sb.append("\r\n\r\n");
-	            //把要传的json字符串放进来
-	            sb.append(jsonString);
-	            out.write(sb.toString().getBytes("utf-8"));
-	            out.write("\r\n".getBytes("utf-8"));
+            	Iterator<Entry<String, Object>> iter = json.entrySet().iterator();
+            	while (iter.hasNext()) 
+            	{
+            		Entry<String, Object> entry = iter.next();
+            		String name = entry.getKey();
+            		Log.debug("name:" + name);
+            		String value = entry.getValue().toString();
+            		Log.debug("value:" + value);
+
+            		StringBuilder sb = new StringBuilder();            		
+    	            //添加form属性
+    	            sb.append("--"); 
+    	            sb.append(boundary);
+    	            sb.append("\r\n");
+    	            //这里存放要传输的参数，name = xml
+    	            sb.append("Content-Disposition: form-data; name=\"" + name + "\"");
+    	            sb.append("\r\n\r\n");
+    	            //把要传的json字符串放进来
+    	            sb.append(value);
+    	            out.write(sb.toString().getBytes("utf-8"));
+    	            out.write("\r\n".getBytes("utf-8"));
+            	}
             }
             
             //add File
