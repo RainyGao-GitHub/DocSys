@@ -5211,6 +5211,7 @@ public class BaseController  extends BaseFunction{
 		{
 			localDoc.setSize(localEntry.length());
 			localDoc.setLatestEditTime(localEntry.lastModified());
+			localDoc.setCreateTime(localEntry.lastModified());			
 			localDoc.setType(localEntry.isDirectory()? 2 : 1);
 		}
 		return localDoc;
