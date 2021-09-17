@@ -1909,10 +1909,15 @@ public class BaseFunction{
             	while (iter.hasNext()) 
             	{
             		Entry<String, Object> entry = iter.next();
+            		if(entry.getValue() == null)
+            		{
+            			continue;
+            		}
+            		
             		String name = entry.getKey();
-            		Log.debug("name:" + name);
+            		Log.debug("postFileStreamAndJsonObj name:" + name);            		
             		String value = entry.getValue().toString();
-            		Log.debug("value:" + value);
+            		Log.debug("postFileStreamAndJsonObj value:" + value);
 
             		StringBuilder sb = new StringBuilder();            		
     	            //添加form属性
@@ -1954,13 +1959,13 @@ public class BaseFunction{
 			while ((lines = reader.readLine()) != null) {
 				sb.append(lines);
 			}
-			System.out.println("sb:"+sb);			
+			Log.debug("postFileStreamAndJsonObj sb:"+sb);			
 			returnJson = JSONObject.parseObject(sb.toString());
 			reader.close();
 			// 断开连接
 			conn.disconnect();			
         } catch (Exception e) {
-            System.out.println("发送POST请求出现异常！" + e);
+            Log.debug("postFileStreamAndJsonObj 发送POST请求出现异常！" + e);
             e.printStackTrace();
         }
         return returnJson;
