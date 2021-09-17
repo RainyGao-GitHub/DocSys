@@ -1,10 +1,14 @@
 package com.DocSystem.common;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -2054,6 +2058,137 @@ public class BaseFunction{
 			e.printStackTrace();
 		}
 		return returnJson;
+	}
+	
+    public static boolean downloadFromUrl(String urlStr, OutputStream os) {
+    	boolean ret = false;
+    	InputStream is = null;
+		String token="v32Eo2Tw+qWI/eiKW3D8ye7l19mf1NngRLushO6CumLMHIO1aryun0/Y3N3YQCv/TqzaO/TFHw4=";
+		int timeOut = 20*1000; //20秒
+    	try {
+	    	URL url = new URL(urlStr);
+	        HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+	
+	        conn.setConnectTimeout(timeOut);
+	        
+	        //防止屏蔽程序抓取而返回403错误
+	        conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
+	        conn.setRequestProperty("lfwywxqyh_token",token);
+	
+	        is = conn.getInputStream();
+	        readInputStream(is, os);
+	        ret = true;
+        } catch (Exception e) {
+        	e.printStackTrace();        	
+        } finally {
+        	if(is != null)
+        	{
+        		try {
+					is.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        	}
+        }
+        
+        return ret;
+    }
+    
+    public static void readInputStream(InputStream is, OutputStream os) throws Exception {
+        byte[] buffer = new byte[1024];
+        int len = 0;
+        while((len = is.read(buffer)) != -1) {
+            os.write(buffer, 0, len);
+        }
+    }
+    
+    public static  byte[] readInputStream(InputStream inputStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int len = 0;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        while((len = inputStream.read(buffer)) != -1) {
+            bos.write(buffer, 0, len);
+        }
+        bos.close();
+        return bos.toByteArray();
+    }
+    
+	protected String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), encryptEn);
+		if(downloadDoc == null)
+		{
+			Log.debug("buildDownloadDocLink() buildDownloadDocInfo failed");
+			return null;
+		}
+		
+		String fileLink  = null;
+		if(urlStyle != null && urlStyle.equals("REST"))
+		{
+			if(authCode == null)
+			{
+				authCode = "0";
+			}
+			Integer shareId = doc.getShareId();
+			if(shareId == null)
+			{
+				shareId = 0;
+			}
+			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId + "/" + downloadDoc.encryptEn;
+		}
+		else
+		{
+			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName + "&encryptEn="+downloadDoc.encryptEn;	
+			if(authCode != null)
+			{
+				fileLink += "&authCode=" + authCode;
+			}
+			if(doc.getShareId() != null)
+			{
+				fileLink += "&shareId=" + doc.getShareId();				
+			}
+		}
+		return fileLink;
+	}
+	
+	protected Doc buildDownloadDocInfo(Integer vid, String path, String name, String targetPath, String targetName, Integer encryptEn)
+	{
+		Log.debug("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
+		
+		String encPath = Base64Util.base64EncodeURLSafe(path);
+		if(encPath == null)
+		{
+			return null;			
+		}
+		
+		String encName = Base64Util.base64EncodeURLSafe(name);
+		if(encName == null)
+		{
+			return null;			
+		}	
+		
+		String encTargetName = Base64Util.base64EncodeURLSafe(targetName);
+		if(encTargetName == null)
+		{
+			return null;			
+		}	
+		String encTargetPath = Base64Util.base64EncodeURLSafe(targetPath);
+		if(encTargetPath == null)
+		{
+			return null;			
+		}	
+		
+		Doc doc = new Doc();
+		doc.targetPath = encTargetPath;
+		doc.targetName = encTargetName;
+		doc.setPath(encPath);
+		doc.setName(encName);
+		doc.encryptEn = encryptEn;
+		if(vid != null)
+		{
+			doc.setVid(vid);
+		}
+		return doc;
 	}
 	
 }
