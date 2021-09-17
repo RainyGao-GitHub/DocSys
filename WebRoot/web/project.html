@@ -5400,7 +5400,20 @@
 	{
 		var mxsdoc = remote.MXSDOC;
 		console.log("getTargetServerDispInfoForMxsDoc mxsdoc:", mxsdoc);
-		var url = mxsdoc.url + mxsdoc.rootPath;	
+		var url = mxsdoc.url;
+		if(mxsdoc.reposId)
+		{
+			url += ";reposId=" + mxsdoc.reposId;
+		}
+		if(mxsdoc.remoteDirectory)
+		{
+			url += ";remoteDirectory=" + mxsdoc.remoteDirectory;
+		}
+		if(remote.rootPath)
+		{
+			url += ";rootPath=" + remote.rootPath;
+		}
+		
 		console.log("getTargetServerDispInfoForMxsDoc mxsdocUrl:", url);
 		return url;
 	}
