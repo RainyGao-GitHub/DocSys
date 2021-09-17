@@ -205,6 +205,89 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功",  repos, doc, null, "");
 		executeCommonActionList(actionList, rt);
 	}
+	
+	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
+	public void addDocRS(Integer reposId, String remoteDirectory, String path, String name,  Integer type,
+			String commitMsg,
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("\n************** addDocRS ****************");
+		Log.debug("addDocRS reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " name:" + name  + " type:" + type + " content:" + " authCode:" + authCode);
+		//Log.println(Charset.defaultCharset());
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(checkAuthCode(authCode, null) == false)
+		{
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//upload to server directory
+		if(reposId == null)
+		{
+			if(remoteDirectory == null)
+			{
+				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			//TODO: save File to server dir
+			return;			
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, type, true,localRootPath,localVRootPath, 0L, "");
+
+		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+
+		Doc tmpDoc = docSysGetDoc(repos, doc, false);
+		if(tmpDoc != null && tmpDoc.getType() != 0)
+		{
+			Log.docSysErrorLog(doc.getName() + " 已存在", rt);
+			rt.setMsgData(1);
+			rt.setData(tmpDoc);
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(commitMsg == null)
+		{
+			commitMsg = "新增 " + path + name;
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, actionList); 
+				
+		writeJson(rt, response);
+		
+		if(ret == false)
+		{
+			Log.debug("add() add Doc Failed");
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, "");
+			return;
+		}
+		addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "成功",  repos, doc, null, "");
+		executeCommonActionList(actionList, rt);
+	}
 
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
@@ -413,6 +496,78 @@ public class DocController extends BaseController{
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, "");
+	}
+	
+	@RequestMapping("/deleteDocRS.do")
+	public void deleteDocRS(Integer reposId, String remoteDirectory, String path, String name,
+			String commitMsg,
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("\n************** deleteDocRS ****************");
+		Log.debug("deleteDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name + " authCode:" + authCode);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		
+		if(checkAuthCode(authCode, null) == false)
+		{
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//upload to server directory
+		if(reposId == null)
+		{
+			if(remoteDirectory == null)
+			{
+				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			//TODO: delete File from server dir
+			return;			
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+
+		if(commitMsg == null)
+		{
+			commitMsg = "删除 " + doc.getPath() + doc.getName();
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		
+		writeJson(rt, response);
+		
+		if(ret != null)
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", "成功",  repos, doc, null, "");
+			executeCommonActionList(actionList, rt);
+			return;
+		}
+		addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, "");
 	}
 	
 
@@ -1323,7 +1478,7 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			//save File to server dir
+			//TODO: save File to server dir
 			return;			
 		}
 		
