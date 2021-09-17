@@ -1609,7 +1609,7 @@ public class DocController extends BaseController{
 			{
 			case 1:
 			case 2:
-				downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), rt);				
+				downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), true, rt);				
 				break;
 			case 3:
 			case 4:
@@ -1677,20 +1677,24 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
+	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
-		//远程存储自动拉取
 		boolean autoPullDone = false;
-		RemoteStorage remote = repos.remoteStorageConfig;
-		if(remote != null && remote.autoPull != null && remote.autoPull == 1)
+		RemoteStorage remote = null;
+		if(remoteStorageEn)
 		{
-			Log.debug("downloadDocPrepare_FSM() 远程自动拉取");
-	    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-			if(channel != null)
-	        {	
-				channel.remoteStoragePull(repos, doc, accessUser, "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
-	        }
-			autoPullDone = true;
+			//远程存储自动拉取
+			remote = repos.remoteStorageConfig;
+			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
+			{
+				Log.debug("downloadDocPrepare_FSM() 远程自动拉取");
+				Channel channel = ChannelFactory.getByChannelName("businessChannel");
+				if(channel != null)
+				{	
+					channel.remoteStoragePull(repos, doc, accessUser, "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
+				}
+				autoPullDone = true;
+			}
 		}
 
 		Doc localEntry = fsGetDoc(repos, doc);
@@ -1706,18 +1710,21 @@ public class DocController extends BaseController{
 		if(localEntry.getType() == 0)
 		{
 			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			if(autoPullDone == false)
+			if(remoteStorageEn)
 			{
-				//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
-		        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel == null)
-		        {
-					Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
-				}
-				else
+				if(autoPullDone == false)
 				{
-					channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, remote.autoPullForce == 1, true, rt);
-					localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
+					//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
+			        Channel channel = ChannelFactory.getByChannelName("businessChannel");
+					if(channel == null)
+			        {
+						Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+					}
+					else
+					{
+						channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, remote.autoPullForce == 1, true, rt);
+						localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
+					}
 				}
 			}
 		}
@@ -1907,16 +1914,27 @@ public class DocController extends BaseController{
 	
 		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
-		if(encryptEn == null || encryptEn == 0 || vid == null)
+		if(encryptEn == null || encryptEn == 0 || vid == null)	//此时表明，targetPath肯定是临时目录
 		{
 			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
 		}
 		else
 		{
 			Repos repos = getReposEx(vid);
-			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
+			if(repos == null)	//表明这是一个虚拟仓库，targetPath可以直接作为临时目录
 			{
-				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);				
+			}
+			
+			
+			if(repos.encryptType == null || repos.encryptType == 0)
+			{
+				String tmpDir = targetPath;
+				if(deleteFlag == null || deleteFlag == 0)	//targetPath不是临时目录，不能用于目录压缩
+				{
+					tmpDir = Path.getReposTmpPathForDownload(repos);			
+				}
+				sendTargetToWebPage(targetPath, targetName, tmpDir, rt, response, request,false, null);
 			}
 			else
 			{
@@ -2933,7 +2951,7 @@ public class DocController extends BaseController{
 	public void getDocRS(Integer reposId, String remoteDirectory, String path, String name,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)	{
-		Log.info("\n*************** getDocInfoEx ********************");
+		Log.info("\n*************** getDocRS ********************");
 		Log.debug("getDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -2995,7 +3013,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		Doc dbDoc = docSysGetDoc(repos, doc, true);
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
@@ -3008,7 +3026,7 @@ public class DocController extends BaseController{
 	}
 	
 	@RequestMapping("/downloadDocRS.do")
-	public void getDocEx(Integer reposId, String remoteDirectory, String path, String name,
+	public void downloadDocRS(Integer reposId, String remoteDirectory, String path, String name,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)	throws Exception
 	{
@@ -3068,29 +3086,87 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		Doc dbDoc = docSysGetDoc(repos, doc, true);
-		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
+		switch(repos.getType())
 		{
-			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+		case 1:
+		case 2:
+			downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), false, rt);				
+			break;
+		case 3:
+		case 4:
+			downloadDocPrepare_VRP(repos, doc, reposAccess.getAccessUser(), rt);				
+			break;
+		}
+		
+		//rt里保存了下载文件的信息
+		String status = rt.getStatus();
+		if(status.equals("ok") == false)
+		{
+			Log.debug("downloadDocRS downloadDocPrepare failed:" + rt.getMsgInfo());
 			writeJson(rt, response);
 			return;
 		}
 		
-		String targetPath = dbDoc.getLocalRootPath() + doc.getPath();
-		String tmpPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
-		if(repos == null || repos.encryptType == null || repos.encryptType == 0)
+		//注意downloadDoc中的targetPath和targetName都是Base64加密的，所以必须先解密（下面的流程与downloadDoc相同）
+		Doc downloadDoc = (Doc) rt.getData();
+		String targetPath = downloadDoc.targetPath;
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = Base64Util.base64Decode(targetPath);
+		if(targetPath == null)
 		{
-			sendTargetToWebPage(targetPath, doc.getName(), tmpPath, rt, response, request,false, null);
+			Log.docSysErrorLog("目标路径解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String targetName = downloadDoc.targetName;	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = Base64Util.base64Decode(targetName);
+		if(targetName == null)
+		{
+			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
+		Integer deleteFlag = (Integer) rt.getMsgData();
+		if(repos.encryptType == null || repos.encryptType == 0)
+		{
+			String tmpDir = targetPath;
+			if(deleteFlag == null || deleteFlag == 0)	//targetPath不是临时目录，不能用于目录压缩
+			{
+				tmpDir = Path.getReposTmpPathForDownload(repos);			
+			}
+			sendTargetToWebPage(targetPath, targetName, tmpDir, rt, response, request,false, null);
 		}
 		else
 		{
-			String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
-			FileUtil.copyFileOrDir(targetPath + doc.getName(),  tmpTargetPath + doc.getName(), true);
-			decryptFileOrDir(repos, tmpTargetPath, doc.getName());
-			sendTargetToWebPage(tmpTargetPath, doc.getName(), tmpPath, rt, response, request,false, null);
-			//tmpDirForDecrypt need to delete
-			FileUtil.delDir(tmpTargetPath);
+			if(deleteFlag != null && deleteFlag == 1)	//临时文件和目录可以直接加密
+			{
+				decryptFileOrDir(repos, targetPath, targetName);					
+				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
+			}
+			else
+			{
+				String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
+				String tmpTargetName = targetName;
+				if(tmpTargetName == null || tmpTargetName.isEmpty())
+				{
+					tmpTargetName = repos.getName(); //用仓库名作为下载名字
+				}
+				FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
+				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
+				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
+				//tmpDirForDecrypt need to delete
+				FileUtil.delDir(tmpTargetPath);
+			}
 		}
+		
+		if(deleteFlag != null && deleteFlag == 1)
+		{
+			FileUtil.delFileOrDir(targetPath+targetName);
+		}		
 	}
 	
 	@RequestMapping("/getZipDocFileLink.do")

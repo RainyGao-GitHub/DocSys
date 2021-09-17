@@ -373,7 +373,7 @@ public class BaseController  extends BaseFunction{
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
 		Log.debug("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );				
-		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
+		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, true, rt);
 	
 		if(docList != null)
 		{
@@ -385,10 +385,10 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, boolean remoteStorageEn, ReturnAjax rt)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
-		List<Doc> tmpDocList = docSysGetDocList(repos, doc, true);
+		List<Doc> tmpDocList = docSysGetDocList(repos, doc, remoteStorageEn);
 
 		if(tmpDocList != null)
     	{
