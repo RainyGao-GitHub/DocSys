@@ -2937,9 +2937,48 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(path == null || name == null)
+		{
+			Log.docSysErrorLog("目标路径不能为空！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+		path = Base64Util.base64Decode(path);
+		if(path == null)
+		{
+			Log.docSysErrorLog("目标路径解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+		name = Base64Util.base64Decode(name);
+		if(name == null)
+		{
+			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//Get SubDocList From Server Dir
 		if(reposId == null)
-		{	
+		{
+			if(remoteDirectory == null)
+			{
+				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			remoteDirectory = new String(remoteDirectory.getBytes("ISO8859-1"),"UTF-8");	
+			remoteDirectory = Base64Util.base64Decode(remoteDirectory);
+			if(remoteDirectory == null)
+			{
+				Log.docSysErrorLog("服务器路径解码失败！", rt);
+				writeJson(rt, response);			
+				return;
+			}
 			sendTargetToWebPage(remoteDirectory + path, name, remoteDirectory + path, rt, response, request,false, null);
 			return;			
 		}
