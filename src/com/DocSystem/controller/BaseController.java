@@ -1965,46 +1965,6 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
-	protected Doc buildDownloadDocInfo(Integer vid, String path, String name, String targetPath, String targetName, Integer encryptEn)
-	{
-		Log.debug("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
-		
-		String encPath = Base64Util.base64EncodeURLSafe(path);
-		if(encPath == null)
-		{
-			return null;			
-		}
-		
-		String encName = Base64Util.base64EncodeURLSafe(name);
-		if(encName == null)
-		{
-			return null;			
-		}	
-		
-		String encTargetName = Base64Util.base64EncodeURLSafe(targetName);
-		if(encTargetName == null)
-		{
-			return null;			
-		}	
-		String encTargetPath = Base64Util.base64EncodeURLSafe(targetPath);
-		if(encTargetPath == null)
-		{
-			return null;			
-		}	
-		
-		Doc doc = new Doc();
-		doc.targetPath = encTargetPath;
-		doc.targetName = encTargetName;
-		doc.setPath(encPath);
-		doc.setName(encName);
-		doc.encryptEn = encryptEn;
-		if(vid != null)
-		{
-			doc.setVid(vid);
-		}
-		return doc;
-	}
-	
 	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request, boolean deleteEnable, String disposition) throws Exception 
 	{
 		File localEntry = new File(localParentPath,targetName);
@@ -13811,44 +13771,6 @@ public class BaseController  extends BaseFunction{
 		}
 		return fileLink;
 	}
-	
-	protected String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {
-		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), encryptEn);
-		if(downloadDoc == null)
-		{
-			Log.debug("buildDownloadDocLink() buildDownloadDocInfo failed");
-			return null;
-		}
-		
-		String fileLink  = null;
-		if(urlStyle != null && urlStyle.equals("REST"))
-		{
-			if(authCode == null)
-			{
-				authCode = "0";
-			}
-			Integer shareId = doc.getShareId();
-			if(shareId == null)
-			{
-				shareId = 0;
-			}
-			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId + "/" + downloadDoc.encryptEn;
-		}
-		else
-		{
-			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName + "&encryptEn="+downloadDoc.encryptEn;	
-			if(authCode != null)
-			{
-				fileLink += "&authCode=" + authCode;
-			}
-			if(doc.getShareId() != null)
-			{
-				fileLink += "&shareId=" + doc.getShareId();				
-			}
-		}
-		return fileLink;
-	}
-	
 	
 	protected String buildOfficeEditorKey(Doc doc) {
 		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode() + "";
