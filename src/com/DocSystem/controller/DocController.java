@@ -1921,53 +1921,12 @@ public class DocController extends BaseController{
 		else
 		{
 			Repos repos = getReposEx(vid);
-			if(repos == null)	//表明这是一个虚拟仓库，targetPath可以直接作为临时目录
-			{
-				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);				
-			}
-			
-			
-			if(repos.encryptType == null || repos.encryptType == 0)
-			{
-				String tmpDir = targetPath;
-				if(deleteFlag == null || deleteFlag == 0)	//targetPath不是临时目录，不能用于目录压缩
-				{
-					tmpDir = Path.getReposTmpPathForDownload(repos);			
-				}
-				sendTargetToWebPage(targetPath, targetName, tmpDir, rt, response, request,false, null);
-			}
-			else
-			{
-				if(deleteFlag != null && deleteFlag == 1)	//临时文件和目录可以直接加密
-				{
-					decryptFileOrDir(repos, targetPath, targetName);					
-					sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
-				}
-				else
-				{
-					String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
-					String tmpTargetName = targetName;
-					if(tmpTargetName == null || tmpTargetName.isEmpty())
-					{
-						tmpTargetName = repos.getName(); //用仓库名作为下载名字
-					}
-					FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
-					decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
-					sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
-					//tmpDirForDecrypt need to delete
-					FileUtil.delDir(tmpTargetPath);
-				}
-			}
+			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, deleteFlag, null);						
 		}
 		Doc doc = new Doc();
 		doc.setPath(targetPath);
 		doc.setName(targetName);
-		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
-		
-		if(deleteFlag != null && deleteFlag == 1)
-		{
-			FileUtil.delFileOrDir(targetPath+targetName);
-		}
+		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");			
 	}
 	
 	/**************** download Doc Without LoginCheck ******************/
@@ -2017,37 +1976,7 @@ public class DocController extends BaseController{
 		else
 		{
 			Repos repos = getReposEx(vid);
-			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
-			{
-				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
-			}
-			else
-			{
-				if(deleteFlag != null && deleteFlag == 1)	//临时文件和目录可以直接加密
-				{
-					decryptFileOrDir(repos, targetPath, targetName);					
-					sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
-				}
-				else
-				{
-					String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
-					String tmpTargetName = targetName;
-					if(tmpTargetName == null || tmpTargetName.isEmpty())
-					{
-						tmpTargetName = repos.getName(); //用仓库名作为下载名字
-					}
-					FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
-					decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
-					sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
-					//tmpDirForDecrypt need to delete
-					FileUtil.delDir(tmpTargetPath);
-				}
-			}
-		}
-		
-		if(deleteFlag != null && deleteFlag == 1)
-		{
-			FileUtil.delFileOrDir(targetPath+targetName);
+			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, deleteFlag, null);						
 		}
 	}
 	
@@ -2124,24 +2053,7 @@ public class DocController extends BaseController{
 		else
 		{
 			Repos repos = getReposEx(vid);
-			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
-			{
-				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
-			}
-			else
-			{
-				String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
-				String tmpTargetName = targetName;
-				if(tmpTargetName == null || tmpTargetName.isEmpty())
-				{
-					tmpTargetName = repos.getName(); //用仓库名作为下载名字
-				}
-				FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
-				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
-				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
-				//tmpDirForDecrypt need to delete
-				FileUtil.delDir(tmpTargetPath);
-			}
+			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, null, null);						
 		}
 		
 		Doc doc = new Doc();
@@ -2224,24 +2136,7 @@ public class DocController extends BaseController{
 		else
 		{
 			Repos repos = getReposEx(vid);
-			if(repos == null || repos.encryptType == null || repos.encryptType == 0)
-			{
-				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
-			}
-			else
-			{
-				String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
-				String tmpTargetName = targetName;
-				if(tmpTargetName == null || tmpTargetName.isEmpty())
-				{
-					tmpTargetName = repos.getName(); //用仓库名作为下载名字
-				}
-				FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
-				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
-				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
-				//tmpDirForDecrypt need to delete
-				FileUtil.delDir(tmpTargetPath);
-			}
+			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, null, null);						
 		}
 		
 		Doc doc = new Doc();
@@ -3129,44 +3024,9 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
+		Log.debug("downloadDocRS targetPath:" + targetPath + " targetName:" + targetName);
 		Integer deleteFlag = (Integer) rt.getMsgData();
-		if(repos.encryptType == null || repos.encryptType == 0)
-		{
-			String tmpDir = targetPath;
-			if(deleteFlag == null || deleteFlag == 0)	//targetPath不是临时目录，不能用于目录压缩
-			{
-				tmpDir = Path.getReposTmpPathForDownload(repos);			
-			}
-			sendTargetToWebPage(targetPath, targetName, tmpDir, rt, response, request,false, null);
-		}
-		else
-		{
-			if(deleteFlag != null && deleteFlag == 1)	//临时文件和目录可以直接加密
-			{
-				decryptFileOrDir(repos, targetPath, targetName);					
-				sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);
-			}
-			else
-			{
-				String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
-				String tmpTargetName = targetName;
-				if(tmpTargetName == null || tmpTargetName.isEmpty())
-				{
-					tmpTargetName = repos.getName(); //用仓库名作为下载名字
-				}
-				FileUtil.copyFileOrDir(targetPath + targetName,  tmpTargetPath + tmpTargetName, true);
-				decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
-				sendTargetToWebPage(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request,false, null);
-				//tmpDirForDecrypt need to delete
-				FileUtil.delDir(tmpTargetPath);
-			}
-		}
-		
-		if(deleteFlag != null && deleteFlag == 1)
-		{
-			FileUtil.delFileOrDir(targetPath+targetName);
-		}		
+		sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, deleteFlag, null);		
 	}
 	
 	@RequestMapping("/getZipDocFileLink.do")
