@@ -5344,6 +5344,9 @@
 		case "git":
 			serverInfo = getTargetServerDispInfoForGit(remote);
 			break;
+		case "mxsdoc":
+			serverInfo = getTargetServerDispInfoForMxsDoc(remote);
+			break;
 		}
 		return serverInfo;
 	}
@@ -5392,6 +5395,17 @@
 		console.log("getTargetServerDispInfoForGit gitUrl:", url);
 		return url;
 	}
+
+	function getTargetServerDispInfoForMxsDoc(remote)
+	{
+		var mxsdoc = remote.MXSDOC;
+		console.log("getTargetServerDispInfoForMxsDoc mxsdoc:", mxsdoc);
+		var url = mxsdoc.url + mxsdoc.rootPath;	
+		console.log("getTargetServerDispInfoForMxsDoc mxsdocUrl:", url);
+		return url;
+	}
+
+	
 	
 	function showDocSharePanel(docShare, docName, url)
 	{
