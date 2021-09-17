@@ -1293,6 +1293,214 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, "");	
 	}
 	
+	@RequestMapping("/uploadDocRS.do")
+	public void uploadDoc(Integer reposId, String remoteDirectory, String path, String name, Long size, String checkSum,
+			MultipartFile uploadFile,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
+			String commitMsg,
+			String authCode,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		Log.info("\n************** uploadDocRS ****************");
+		Log.debug("uploadDocRS  reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " name:" + name  + " size:" + size + " checkSum:" + checkSum
+							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " authCode:" + authCode + " commitMsg:" + commitMsg);
+		ReturnAjax rt = new ReturnAjax();
+
+		if(checkAuthCode(authCode, null) == false)
+		{
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//upload to server directory
+		if(reposId == null)
+		{
+			if(remoteDirectory == null)
+			{
+				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			//save File to server dir
+			return;			
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+
+		String localParentPath = localRootPath + path;
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			localParentDir.mkdirs();
+		}
+		
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
+		
+		//Check Edit Right
+		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
+		if(docUserAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		if(docUserAuth.getAccess() == 0)
+		{
+			rt.setError("您无权访问该目录，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
+		{
+			rt.setError("您没有该文件的编辑权限，请联系管理员");
+			writeJson(rt, response);
+			return;				
+		}
+		
+		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
+		{
+			Log.debug("uploadDocRS size:" + size + " max uploadSize:" + docUserAuth.getUploadSize());
+			rt.setError("上传文件大小超限，请联系管理员");
+			writeJson(rt, response);
+			return;							
+		}
+
+		//Check Add Right
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
+		{
+			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+			DocAuth parentDocUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask());
+			if(parentDocUserAuth == null)
+			{
+				rt.setError("您无此操作权限，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}
+			if(parentDocUserAuth.getAccess() == 0)
+			{
+				rt.setError("您无权访问该目录，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(parentDocUserAuth.getAddEn() == null || parentDocUserAuth.getAddEn() != 1)
+			{
+				rt.setError("您没有该目录的新增权限，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(parentDocUserAuth.getUploadSize() != null && parentDocUserAuth.getUploadSize() < size)
+			{
+				rt.setError("上传文件大小超限，请联系管理员");
+				writeJson(rt, response);
+				return;							
+			}
+		}
+		
+		//如果是分片文件，则保存分片文件
+		if(null != chunkIndex)
+		{
+			//Save File chunk to tmp dir with name_chunkIndex
+			String fileChunkName = name + "_" + chunkIndex;
+			String userTmpDir = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
+			if(FileUtil.saveFile(uploadFile,userTmpDir,fileChunkName) == null)
+			{
+				Log.docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(chunkIndex < (chunkNum-1))
+			{
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;
+				
+			}
+		}
+		
+		//非分片上传或LastChunk Received
+		if(uploadFile != null) 
+		{
+			if(commitMsg == null)
+			{
+				commitMsg = "上传 " + path + name;
+			}
+			String commitUser = reposAccess.getAccessUser().getName();
+			String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
+			List<CommonAction> actionList = new ArrayList<CommonAction>();
+			boolean ret = false;
+			if(dbDoc == null || dbDoc.getType() == 0)
+			{
+				ret = addDoc(repos, doc, 
+						uploadFile,
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+				writeJson(rt, response);
+
+				if(ret == true)
+				{
+					executeCommonActionList(actionList, rt);
+					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				}					
+			}
+			else
+			{
+				ret = updateDoc(repos, doc, 
+						uploadFile,  
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+			
+				writeJson(rt, response);	
+				if(ret == true)
+				{
+					executeCommonActionList(actionList, rt);
+					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+					deletePreviewFile(doc);
+				}
+			}
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, "");	
+
+			if(ret == true)
+			{
+				//远程存储自动推送
+				RemoteStorage remote = repos.remoteStorageConfig;
+				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
+				{
+					Log.debug("uploadDocRS() 远程自动推送");
+			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
+					if(channel != null)
+			        {	
+						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			        }
+				}
+			}
+			return;
+		}
+		else
+		{
+			Log.docSysErrorLog("文件上传失败！", rt);
+		}
+		writeJson(rt, response);
+		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, "");	
+	}
+	
+	
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
 	public void uploadMarkdownPic(
