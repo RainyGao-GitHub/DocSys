@@ -1130,9 +1130,8 @@ public class ReposController extends BaseController{
 			
 		//docAuthHashMap for access_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
-			
-		docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
-	
+		
+		docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, false, rt);
 		if(docList == null)
 		{
 			rt.setData("");
