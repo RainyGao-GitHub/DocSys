@@ -204,6 +204,13 @@ public class Path {
 		return userTmpDir;
 	}
 	
+	public static String getReposTmpPathForDownload(Repos repos) {
+		long curTime = new Date().getTime();
+		String tmpDir = repos.getPath() + repos.getId() +  "/tmp/download/" + curTime + "/";
+		FileUtil.createDir(tmpDir);
+		return tmpDir;
+	}
+	
 	public static String getReposTmpPathForUpload(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/upload/" + login_user.getId() + "/";
 		FileUtil.createDir(userTmpDir);
