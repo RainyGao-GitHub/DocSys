@@ -1103,7 +1103,6 @@ public class ReposController extends BaseController{
 		if(tmpDoc == null)
 		{
 			Log.debug("getSubDocListRS() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
-			rt.setData("");
 			rt.setMsgInfo("文件 " + doc.getPath() + doc.getName() + " 不存在！");
 			writeJson(rt, response);			
 			return;
@@ -1112,7 +1111,6 @@ public class ReposController extends BaseController{
 		if(tmpDoc.getType() == null || tmpDoc.getType() == 1)
 		{
 			Log.debug("getSubDocListRS() [" + doc.getPath() + doc.getName() + "] 是文件");
-			rt.setData("");
 			writeJson(rt, response);			
 			return;			
 		}
@@ -1132,14 +1130,7 @@ public class ReposController extends BaseController{
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		
 		docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, false, rt);
-		if(docList == null)
-		{
-			rt.setData("");
-		}
-		else
-		{
-			rt.setData(docList);	
-		}
+		rt.setData(docList);	
 		Log.debug("getSubDocListRS() docList ready");
 		writeJson(rt, response);
 	}
