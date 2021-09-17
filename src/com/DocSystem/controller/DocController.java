@@ -2929,12 +2929,12 @@ public class DocController extends BaseController{
 	}	
 	
 	//get DocInfo for remoteStorage
-	@RequestMapping("/getDocEx.do")
-	public void getDocEx(Integer reposId, String remoteDirectory, String path, String name,
+	@RequestMapping("/getDocRS.do")
+	public void getDocRS(Integer reposId, String remoteDirectory, String path, String name,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)	{
 		Log.info("\n*************** getDocInfoEx ********************");
-		Log.debug("getDocInfoEx reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name);
+		Log.debug("getDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2975,7 +2975,7 @@ public class DocController extends BaseController{
 		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
 		if(checkUseAccessRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
-			Log.debug("getDoc() you have no access right on doc:" + doc.getDocId());
+			Log.debug("getDocRS() you have no access right on doc:" + doc.getDocId());
 			writeJson(rt, response);	
 			return;
 		}
@@ -2995,32 +2995,102 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		Doc dbDoc = fsGetDoc(repos, doc);
+		Doc dbDoc = docSysGetDoc(repos, doc, true);
 		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
 		{
-			switch(repos.getType())
-			{
-			case 1:
-			case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
-				RemoteStorage remote = repos.remoteStorageConfig;
-				if(remote == null)
-				{
-					Log.debug("docSysGetDocListWithChangeType remote is null");
-				}
-				else
-				{
-					dbDoc = getRemoteStorageEntry(repos, doc);
-				}
-				break;
-			case 3:
-			case 4:
-				dbDoc = verReposGetDoc(repos, doc, null);
-				break;
-			}
-			
+			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+			writeJson(rt, response);
+			return;
 		}
+		
 		rt.setData(dbDoc);
 		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/downloadDocRS.do")
+	public void getDocEx(Integer reposId, String remoteDirectory, String path, String name,
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)	throws Exception
+	{
+		Log.info("\n*************** downloadDocRS ********************");
+		Log.debug("downloadDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name);
+
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(checkAuthCode(authCode, null) == false)
+		{
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//Get SubDocList From Server Dir
+		if(reposId == null)
+		{	
+			sendTargetToWebPage(remoteDirectory + path, name, remoteDirectory + path, rt, response, request,false, null);
+			return;			
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath, localVRootPath, null, null);
+		
+		//检查用户是否有权限下载文件
+		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
+		String pwd = getDocPwd(repos, doc);
+		if(pwd != null && !pwd.isEmpty())
+		{
+			//Do check the sharePwd
+			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
+			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+			{
+				Log.docSysErrorLog("访问密码错误！", rt);
+				rt.setMsgData("1"); //访问密码错误或未提供
+				rt.setData(doc);
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		Doc dbDoc = docSysGetDoc(repos, doc, true);
+		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
+		{
+			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		String targetPath = dbDoc.getLocalRootPath() + doc.getPath();
+		String tmpPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+		if(repos == null || repos.encryptType == null || repos.encryptType == 0)
+		{
+			sendTargetToWebPage(targetPath, doc.getName(), tmpPath, rt, response, request,false, null);
+		}
+		else
+		{
+			String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
+			FileUtil.copyFileOrDir(targetPath + doc.getName(),  tmpTargetPath + doc.getName(), true);
+			decryptFileOrDir(repos, tmpTargetPath, doc.getName());
+			sendTargetToWebPage(tmpTargetPath, doc.getName(), tmpPath, rt, response, request,false, null);
+			//tmpDirForDecrypt need to delete
+			FileUtil.delDir(tmpTargetPath);
+		}
 	}
 	
 	@RequestMapping("/getZipDocFileLink.do")
