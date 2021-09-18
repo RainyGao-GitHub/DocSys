@@ -124,13 +124,16 @@ fc-cache
 #### 5、重新生成office字体库
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 ### 五、什么是分布式远程存储
-1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、oss、网盘等文件存储系统）
+1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、MxsDoc等文件存储系统）
 
-2、可以从远程文件服务器拉取文件到仓库
+2、在当前仓库可查看远程文件服务器文件
 
-3、可以将仓库文件推送到远程文件服务器
+3、可将当前仓库文件推送到远程服务器
 
-4、仓库可以脱离远程文件服务器进行文件操作和版本管理
+4、可将远程服务器文件拉取到当前仓库
+
+5、仓库可以独立于远程文件服务器进行文件操作和版本管理
+
 ### 六、日志获取
 1. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
 2. Linux系统： start.sh > docSys.log
