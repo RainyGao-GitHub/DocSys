@@ -1294,7 +1294,6 @@ public class FileUtil {
 	        	return true;    
 	        }
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         return false;
