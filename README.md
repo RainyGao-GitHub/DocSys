@@ -131,3 +131,7 @@ fc-cache
 3、可以将仓库文件推送到远程文件服务器
 
 4、仓库可以脱离远程文件服务器进行文件操作和版本管理
+### 六、日志获取
+1. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
+2. Linux系统： start.sh > docSys.log
+3. 设置日志等级：管理后台 -> 系统设置 -> 日志等级 -> debug
