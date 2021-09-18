@@ -19,7 +19,6 @@ public class Base64Util {
 			String base64Str = Base64.encodeBase64String(textByte);
 			return base64Str;
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}		
@@ -43,7 +42,6 @@ public class Base64Util {
 			String base64Str = Base64.encodeBase64URLSafeString(textByte);
 			return base64Str;
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}		
@@ -66,7 +64,6 @@ public class Base64Util {
 			String str =  new String(data,"UTF-8");
 			return str;
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			System.out.println("base64Decode new String Error");
 			e.printStackTrace();
 			return null;

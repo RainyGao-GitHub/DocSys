@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -422,7 +421,6 @@ public class BaseFunction{
 	}
 
 	private static void parseMxsDocUrl(RemoteStorage remote, String url) {
-		// TODO Auto-generated method stub
 		Log.debug("parseMxsDocUrl url:" + url);
 		
 		String tmpStr = url.substring("mxsdoc://".length());	
@@ -1725,6 +1723,7 @@ public class BaseFunction{
 		return getIndexLibPathForSystemLog(curTime);
 	}
 		
+	@SuppressWarnings("deprecation")
 	protected static String getIndexLibPathForSystemLog(Date date) 
 	{
 		//按月创建Log
@@ -2091,7 +2090,6 @@ public class BaseFunction{
         		try {
 					is.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
         	}

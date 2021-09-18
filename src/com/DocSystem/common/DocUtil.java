@@ -1,7 +1,6 @@
 package com.DocSystem.common;
 
 import com.DocSystem.entity.Doc;
-import com.DocSystem.entity.Repos;
 
 public class DocUtil {
 	public static Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 

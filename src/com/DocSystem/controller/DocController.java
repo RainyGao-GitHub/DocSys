@@ -74,7 +74,6 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
-import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorage;
 import com.DocSystem.common.entity.ReposAccess;
