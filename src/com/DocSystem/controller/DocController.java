@@ -220,29 +220,57 @@ public class DocController extends BaseController{
 		
 		if(checkAuthCode(authCode, null) == false)
 		{
+			Log.debug("addDocRS checkAuthCode return false");
 			rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
 			return;
 		}
 		
-		//upload to server directory
+		//add Doc on Server Directory
 		if(reposId == null)
 		{
 			if(remoteDirectory == null)
 			{
-				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				Log.debug("addDocRS remoteDirectory is null");
+				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
 				return;				
 			}
 			
-			//TODO: save File to server dir
+			if(type == null)
+			{
+				Log.debug("addDocRS type is null");
+				rt.setError("文件类型不能为空！");
+				writeJson(rt, response);			
+				return;			
+			}
+			
+			if(type == 2) //目录
+			{
+				if(false == FileUtil.createDir(remoteDirectory + path + name))
+				{
+					Log.debug("addDocRS() 目录 " +remoteDirectory + path + name + " 创建失败！");
+					rt.setError("新增目录失败");
+				}				
+			}
+			else
+			{
+				if(false == FileUtil.createFile(remoteDirectory + path, name))
+				{
+					Log.debug("addDocRS() 文件 " + remoteDirectory + path + name + "创建失败！");
+					rt.setError("新建文件失败");
+				}
+			}
+			writeJson(rt, response);	
 			return;			
 		}
 		
+		//Add Doc On Repos
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			Log.debug("addDocRS 仓库 " + reposId + " 不存在！");
+			rt.setError("仓库不存在！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -262,7 +290,8 @@ public class DocController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, doc, false);
 		if(tmpDoc != null && tmpDoc.getType() != 0)
 		{
-			Log.docSysErrorLog(doc.getName() + " 已存在", rt);
+			Log.debug("addDocRS 文件:" + doc.getPath() + doc.getName() + " 已存在");
+			rt.setError("文件已存在");
 			rt.setMsgData(1);
 			rt.setData(tmpDoc);
 			writeJson(rt, response);
@@ -281,7 +310,7 @@ public class DocController extends BaseController{
 		
 		if(ret == false)
 		{
-			Log.debug("add() add Doc Failed");
+			Log.debug("addDocRS addDoc Failed");
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, "");
 			return;
 		}
@@ -517,20 +546,27 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//upload to server directory
+		//delete file from server directory
 		if(reposId == null)
 		{
 			if(remoteDirectory == null)
 			{
-				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				Log.debug("deleteDocRS remoteDirectory is null");
+				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
 				return;				
 			}
 			
-			//TODO: delete File from server dir
+			if(FileUtil.delFileOrDir(remoteDirectory + path + name) == false)
+			{
+				Log.debug("deleteDocRS() " + remoteDirectory + path + name + "删除失败！");
+				rt.setError("删除失败");
+			}
+			writeJson(rt, response);			
 			return;			
 		}
 		
+		//delete file from repos
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
@@ -1478,7 +1514,66 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			//TODO: save File to server dir
+			//如果是分片文件，则保存分片文件
+			String localParentPath = remoteDirectory + path;
+			String chunkTmpPath = localParentPath;
+			if(null != chunkIndex)
+			{
+				String fileChunkName = name + "_" + chunkIndex;
+				if(FileUtil.saveFile(uploadFile, chunkTmpPath, fileChunkName) == null)
+				{
+					Log.debug("uploadDocRS 分片文件 " + fileChunkName +  " 暂存失败!");
+					rt.setError("分片文件 " + fileChunkName +  " 暂存失败!");
+					writeJson(rt, response);
+					return;
+				}
+				
+				if(chunkIndex < (chunkNum-1))
+				{
+					rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+					writeJson(rt, response);
+					return;					
+				}
+			}
+			
+			//非分片或者是已经收到最后一个分片文件
+			if(null == chunkNum)	//非分片上传
+			{
+				if(FileUtil.saveFile(uploadFile, remoteDirectory + path, name) == null)
+				{
+					Log.debug("uploadDocRS 文件 " + name +  " 保存失败!");
+					rt.setError("文件 " + name +  " 保存失败!");
+				}
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(chunkNum == 1)	//单个分片文件直接复制
+			{
+				String chunk0Path = chunkTmpPath + name + "_0";
+				if(new File(chunk0Path).exists() == false)
+				{
+					chunk0Path =  chunkTmpPath + name;
+				}
+				if(FileUtil.moveFileOrDir(chunkTmpPath, name + "_0", localParentPath, name, true) == false)
+				{
+					Log.debug("uploadDocRS 文件 " + name +  " 保存失败!");
+					rt.setError("文件 " + name +  " 保存失败!");
+				}
+				writeJson(rt, response);
+				return;
+			}
+			
+			//多个则需要进行合并
+			combineChunks(localParentPath,name,chunkNum,chunkSize,chunkTmpPath);
+			deleteChunks(name,chunkIndex, chunkNum,chunkTmpPath);
+			//Verify the size and FileCheckSum
+			if(false == checkFileSizeAndCheckSum(localParentPath,name, size, checkSum))
+			{
+				Log.debug("uploadDocRS 文件校验失败");
+				rt.setError("文件校验失败");
+			}
+			writeJson(rt, response);
 			return;			
 		}
 		
