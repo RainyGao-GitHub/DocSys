@@ -1475,6 +1475,7 @@ public class ManageController extends BaseController{
 				{
 					repos.encryptType = encryptConfig.type;
 				}
+				repos.backupConfig = reposBackupConfigHashMap.get(repos.getId());
 			}
 		}
 		
