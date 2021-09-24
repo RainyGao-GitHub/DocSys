@@ -75,7 +75,7 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.QueryCondition;
-import com.DocSystem.common.entity.RemoteStorage;
+import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.commonService.ProxyThread;
@@ -181,7 +181,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorage remote = repos.remoteStorageConfig;
+			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
 				Log.debug("uploadDoc() 远程自动推送");
@@ -503,7 +503,7 @@ public class DocController extends BaseController{
 		if(ret != null)
 		{
 			//远程存储自动推送
-			RemoteStorage remote = repos.remoteStorageConfig;
+			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
 				Log.debug("uploadDoc() 远程自动推送");
@@ -686,7 +686,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorage remote = repos.remoteStorageConfig;
+			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
 				Log.debug("uploadDoc() 远程自动推送");
@@ -789,7 +789,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorage remote = repos.remoteStorageConfig;
+			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
 				Log.debug("uploadDoc() 远程自动推送");
@@ -878,7 +878,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorage remote = repos.remoteStorageConfig;
+			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
 				Log.debug("uploadDoc() 远程自动推送");
@@ -1462,7 +1462,7 @@ public class DocController extends BaseController{
 			if(ret == true)
 			{
 				//远程存储自动推送
-				RemoteStorage remote = repos.remoteStorageConfig;
+				RemoteStorageConfig remote = repos.remoteStorageConfig;
 				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 				{
 					Log.debug("uploadDoc() 远程自动推送");
@@ -1728,7 +1728,7 @@ public class DocController extends BaseController{
 			if(ret == true)
 			{
 				//远程存储自动推送
-				RemoteStorage remote = repos.remoteStorageConfig;
+				RemoteStorageConfig remote = repos.remoteStorageConfig;
 				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 				{
 					Log.debug("uploadDocRS() 远程自动推送");
@@ -1925,7 +1925,7 @@ public class DocController extends BaseController{
 			if(ret == true)
 			{
 				//远程存储自动推送
-				RemoteStorage remote = repos.remoteStorageConfig;
+				RemoteStorageConfig remote = repos.remoteStorageConfig;
 				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 				{
 					Log.debug("uploadDoc() 远程自动推送");
@@ -2137,7 +2137,7 @@ public class DocController extends BaseController{
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
 		boolean autoPullDone = false;
-		RemoteStorage remote = null;
+		RemoteStorageConfig remote = null;
 		if(remoteStorageEn)
 		{
 			//远程存储自动拉取
@@ -2800,7 +2800,7 @@ public class DocController extends BaseController{
 				{
 					//远程存储自动拉取
 					boolean autoPullDone = false;
-					RemoteStorage remote = repos.remoteStorageConfig;
+					RemoteStorageConfig remote = repos.remoteStorageConfig;
 					if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 					{
 						Log.debug("getDocContent() 远程自动拉取");
@@ -3222,7 +3222,7 @@ public class DocController extends BaseController{
 			{
 			case 1:
 			case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
-				RemoteStorage remote = repos.remoteStorageConfig;
+				RemoteStorageConfig remote = repos.remoteStorageConfig;
 				if(remote == null)
 				{
 					Log.debug("docSysGetDocListWithChangeType remote is null");
@@ -4388,7 +4388,7 @@ public class DocController extends BaseController{
 		if(isRealDoc == true && (repos.getType() == 1 || repos.getType() == 2))
 		{
 			//远程存储自动推送
-			RemoteStorage remote = repos.remoteStorageConfig;
+			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
 			{
 				Log.debug("uploadDoc() 远程自动推送");

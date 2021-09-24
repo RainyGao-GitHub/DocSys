@@ -1,8 +1,9 @@
 package com.DocSystem.entity;
 
 import com.DocSystem.common.TextSearchConfig;
+import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.EncryptConfig;
-import com.DocSystem.common.entity.RemoteStorage;
+import com.DocSystem.common.entity.RemoteStorageConfig;
 
 public class Repos {    
 	public static final Integer FSM = 1;
@@ -70,11 +71,12 @@ public class Repos {
 	
 	public Long totalSize;
 	public Long freeSize;
-	public RemoteStorage remoteStorageConfig;
+	public RemoteStorageConfig remoteStorageConfig;
 	public TextSearchConfig textSearchConfig;
 	
 	public Integer encryptType;
 	public EncryptConfig encryptConfig;
+	public BackupConfig backupConfig;
 	
     public Integer getId() {
         return id;
