@@ -45,6 +45,7 @@ import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
+import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
@@ -53,7 +54,7 @@ import com.DocSystem.common.entity.License;
 import com.DocSystem.common.entity.MxsDocConfig;
 import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
-import com.DocSystem.common.entity.RemoteStorage;
+import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
@@ -307,14 +308,15 @@ public class BaseFunction{
 
 	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
 	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
-	protected static ConcurrentHashMap<Integer, RemoteStorage> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorage>();	
+	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
+	protected static ConcurrentHashMap<Integer, BackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, BackupConfig>();	
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		reposRemoteStorageHashMap.remove(repos.getId());
 	}		
 	
 	
-	protected static RemoteStorage parseRemoteStorageConfig(Repos repos, String remoteStorage) {
+	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage) {
 		Log.debug("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		if(remoteStorage == null)
 		{
@@ -381,8 +383,8 @@ public class BaseFunction{
 		return null;
 	}
 	
-	private static RemoteStorage parseRemoteStorageConfigForMxsDoc(Repos repos, String remoteStorage) {
-		RemoteStorage remote = new RemoteStorage();
+	private static RemoteStorageConfig parseRemoteStorageConfigForMxsDoc(Repos repos, String remoteStorage) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "mxsdoc";
 		remote.MXSDOC = new MxsDocConfig();
 		
@@ -420,7 +422,7 @@ public class BaseFunction{
 		return remote;
 	}
 
-	private static void parseMxsDocUrl(RemoteStorage remote, String url) {
+	private static void parseMxsDocUrl(RemoteStorageConfig remote, String url) {
 		Log.debug("parseMxsDocUrl url:" + url);
 		
 		String tmpStr = url.substring("mxsdoc://".length());	
@@ -429,8 +431,8 @@ public class BaseFunction{
 		remote.rootPath = "";
 	}
 
-	private static RemoteStorage parseRemoteStorageConfigForGit(Repos repos, String remoteStorage) {
-		RemoteStorage remote = new RemoteStorage();
+	private static RemoteStorageConfig parseRemoteStorageConfigForGit(Repos repos, String remoteStorage) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "git";
 		remote.isVerRepos = true;
 		remote.GIT = new GitConfig();
@@ -473,8 +475,8 @@ public class BaseFunction{
 		return remote;
 	}
 
-	private static RemoteStorage parseRemoteStorageConfigForSvn(Repos repos, String remoteStorage) {
-		RemoteStorage remote = new RemoteStorage();
+	private static RemoteStorageConfig parseRemoteStorageConfigForSvn(Repos repos, String remoteStorage) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "svn";
 		remote.isVerRepos = true;
 		remote.SVN = new SvnConfig();
@@ -510,8 +512,8 @@ public class BaseFunction{
 		return remote;
 	}
 
-	private static RemoteStorage parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
-		RemoteStorage remote = new RemoteStorage();
+	private static RemoteStorageConfig parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "sftp";
 		remote.SFTP = new SftpConfig();
 
@@ -546,8 +548,8 @@ public class BaseFunction{
 		return remote;
 	}
 	
-	private static RemoteStorage parseRemoteStorageConfigForFtp(Repos repos, String remoteStorage) {
-		RemoteStorage remote = new RemoteStorage();
+	private static RemoteStorageConfig parseRemoteStorageConfigForFtp(Repos repos, String remoteStorage) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "ftp";
 		remote.FTP = new FtpConfig();
 
@@ -582,8 +584,8 @@ public class BaseFunction{
 		return remote;
 	}
 	
-	private static RemoteStorage parseRemoteStorageConfigForSmb(Repos repos, String remoteStorage) {
-		RemoteStorage remote = new RemoteStorage();
+	private static RemoteStorageConfig parseRemoteStorageConfigForSmb(Repos repos, String remoteStorage) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "smb";
 		remote.SMB = new SmbConfig();
 
@@ -632,7 +634,7 @@ public class BaseFunction{
 		return remote;
 	}
 	
-	private static void setRemoteAutoPushPull(RemoteStorage remote, JSONObject config) {
+	private static void setRemoteAutoPushPull(RemoteStorageConfig remote, JSONObject config) {
 		remote.autoPull = config.getInteger("autoPull");
 		if(remote.autoPull == null)
 		{
@@ -658,7 +660,7 @@ public class BaseFunction{
 	}
 
 	
-	private static void parseSftpUrl(RemoteStorage remote, String sftpUrl) {
+	private static void parseSftpUrl(RemoteStorageConfig remote, String sftpUrl) {
 		Log.debug("parseSftpUrl sftpUrl:" + sftpUrl);
 		
 		String tmpStr = sftpUrl.substring("sftp://".length());
@@ -693,7 +695,7 @@ public class BaseFunction{
 		remote.rootPath = rootPath;
 	}
 	
-	private static void parseFtpUrl(RemoteStorage remote, String ftpUrl) {
+	private static void parseFtpUrl(RemoteStorageConfig remote, String ftpUrl) {
 		Log.debug("parseFtpUrl ftpUrl:" + ftpUrl);
 		
 		String tmpStr = ftpUrl.substring("ftp://".length());
@@ -731,7 +733,7 @@ public class BaseFunction{
 	}
 	
 
-	private static void parseSmbUrl(RemoteStorage remote, String url) {
+	private static void parseSmbUrl(RemoteStorageConfig remote, String url) {
 		Log.debug("parseSmbUrl url:" + url);
 		
 		String tmpStr = url.substring("smb://".length());
@@ -767,7 +769,7 @@ public class BaseFunction{
 	}
 	
 
-	private static void parseGitUrl(RemoteStorage remote, String url) {
+	private static void parseGitUrl(RemoteStorageConfig remote, String url) {
 		Log.debug("parseGitUrl url:" + url);
 		
 		String tmpStr = url.substring("git://".length());
@@ -784,7 +786,7 @@ public class BaseFunction{
 		remote.rootPath = "";
 	}
 	
-	private static void parseSvnUrl(RemoteStorage remote, String url) {
+	private static void parseSvnUrl(RemoteStorageConfig remote, String url) {
 		Log.debug("parseSvnUrl url:" + url);
 		
 		String tmpStr = url.substring("svn://".length());

@@ -105,7 +105,7 @@ import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.QueryResult;
-import com.DocSystem.common.entity.RemoteStorage;
+import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -427,7 +427,7 @@ public class BaseController  extends BaseFunction{
 	
 	private List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
 		List<Doc> localList = getLocalEntryList(repos, doc);
-		RemoteStorage remote = repos.remoteStorageConfig;
+		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
 			Log.debug("docSysGetDocListWithChangeType remote is null");
@@ -3925,7 +3925,7 @@ public class BaseController  extends BaseFunction{
 		if(remoteStorageEnable)
 		{
 			//远程存储自动拉取/推送
-			RemoteStorage remote = repos.remoteStorageConfig;
+			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && ((remote.autoPull != null && remote.autoPull == 1) || (remote.autoPush != null && remote.autoPush == 1)))
 			{
 				Log.debug("syncupForDocChange() 远程自动拉取");
@@ -5248,7 +5248,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected Doc docSysGetDocWithChangeType(Repos repos, Doc doc) {
 		Doc localDoc = fsGetDoc(repos, doc);
-		RemoteStorage remote = repos.remoteStorageConfig;
+		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
 			Log.debug("docSysGetDocListWithChangeType remote is null");
@@ -12715,6 +12715,7 @@ public class BaseController  extends BaseFunction{
 			{
 				repos.encryptType = encryptConfig.type;
 			}			
+			repos.backupConfig = reposBackupConfigHashMap.get(repos.getId());
 		}
 		return repos;
 	}

@@ -1,6 +1,6 @@
 package com.DocSystem.common.entity;
 
-public class RemoteStorage {
+public class RemoteStorageConfig {
 
 	public String protocol;
 	public String rootPath;	//remote root path
