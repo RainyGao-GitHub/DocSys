@@ -191,6 +191,9 @@ public class DocController extends BaseController{
 					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
 			    }
 			}
+			
+			//TODO: 实时备份
+			realTimeBackup();
 		}
 		
 		writeJson(rt, response);
@@ -205,6 +208,11 @@ public class DocController extends BaseController{
 		executeCommonActionList(actionList, rt);
 	}
 	
+	private void realTimeBackup() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
 	public void addDocRS(Integer reposId, String remoteDirectory, String path, String name,  Integer type,
 			String commitMsg,
