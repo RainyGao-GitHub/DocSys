@@ -328,7 +328,7 @@
         
         <div class="manual-right">
             <div class="searchBox" style="white-space:nowrap">
-         		<div class="back" onclick="showCenterDiv();"> 
+         		<div class="back" onclick="backToParentDocEx();"> 
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
          		</div>
         		<div class="filetitle nowrap ellipsis" id="filetitle"></div>
@@ -3414,6 +3414,19 @@
 
 		return;
    	}         
+	
+	function backToParentDocEx()
+	{
+		if(gIsPC == true)
+		{
+			backToParentDoc();
+		}
+		else
+		{
+			showCenterDiv();
+		}
+	}
+	
 	
 	//回车键监听函数，该event已经过兼容性处理 
 	function EnterKeyListenerForSearchDoc(event){
