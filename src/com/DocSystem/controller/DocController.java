@@ -74,6 +74,7 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
+import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -180,11 +181,8 @@ public class DocController extends BaseController{
 		
 		if(ret == true)
 		{
-			//远程存储自动推送
 			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "addDoc");
-			
-			//TODO: 实时备份
-			realTimeBackup();
+			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "addDoc");
 		}
 		
 		writeJson(rt, response);
@@ -242,7 +240,26 @@ public class DocController extends BaseController{
 		}			
 	}
 
-	private void realTimeBackup() {
+	private void realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
+	{
+		// TODO Auto-generated method stub
+		BackupConfig backupConfig = repos.backupConfig;
+		if(backupConfig == null)
+		{
+			Log.debug("realTimeBackup() backupConfig not configured");			
+			return;
+		}
+		
+		realTimeLocalBackup();
+		realTimeRemoteBackup();
+	}
+
+	private void realTimeRemoteBackup() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void realTimeLocalBackup() {
 		// TODO Auto-generated method stub
 		
 	}
@@ -544,8 +561,8 @@ public class DocController extends BaseController{
 		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		if(ret != null)
 		{
-			//远程存储自动推送
 			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "deleteDoc");
+			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "deleteDoc");
 		}
 		
 		writeJson(rt, response);
@@ -718,8 +735,8 @@ public class DocController extends BaseController{
 		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		if(ret == true)
 		{
-			//远程存储自动推送
 			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "renameDoc");
+			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "renameDoc");
 		}
 		
 		writeJson(rt, response);
@@ -811,8 +828,8 @@ public class DocController extends BaseController{
 		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		if(ret == true)
 		{
-			//远程存储自动推送
 			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "moveDoc");
+			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "moveDoc");
 		}
 		
 		writeJson(rt, response);
@@ -890,8 +907,8 @@ public class DocController extends BaseController{
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		if(ret == true)
 		{
-			//远程存储自动推送
 			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
+			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
 		}
 		
 		writeJson(rt, response);
@@ -1465,8 +1482,8 @@ public class DocController extends BaseController{
 
 			if(ret == true)
 			{
-				//远程存储自动推送
 				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "uploadDoc");
+				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "uploadDoc");
 			}
 			return;
 		}
@@ -1479,7 +1496,7 @@ public class DocController extends BaseController{
 	}
 	
 	@RequestMapping("/uploadDocRS.do")
-	public void uploadDoc(Integer reposId, String remoteDirectory, String path, String name, Long size, String checkSum,
+	public void uploadDocRS(Integer reposId, String remoteDirectory, String path, String name, Long size, String checkSum,
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
 			String commitMsg,
@@ -1722,8 +1739,8 @@ public class DocController extends BaseController{
 
 			if(ret == true)
 			{
-				//远程存储自动推送
 				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "uploadDocRS");
+				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "uploadDocRS");
 			}
 			return;
 		}
@@ -1910,8 +1927,8 @@ public class DocController extends BaseController{
 			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 			if(ret == true)
 			{
-				//远程存储自动推送
 				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "updateDocContent");
+				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "updateDocContent");
 			}
 			
 			writeJson(rt, response);
@@ -4364,8 +4381,8 @@ public class DocController extends BaseController{
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		if(isRealDoc == true && (repos.getType() == 1 || repos.getType() == 2))
 		{
-			//远程存储自动推送
 			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
+			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
 		}
 		
 		writeJson(rt, response);
