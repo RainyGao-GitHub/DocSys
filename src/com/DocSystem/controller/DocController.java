@@ -181,16 +181,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorageConfig remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-			{
-				Log.debug("uploadDoc() 远程自动推送");
-		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null)
-		        {	
-					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			    }
-			}
+			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "addDoc");
 			
 			//TODO: 实时备份
 			realTimeBackup();
@@ -208,6 +199,49 @@ public class DocController extends BaseController{
 		executeCommonActionList(actionList, rt);
 	}
 	
+	private void realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+		// TODO Auto-generated method stub
+		RemoteStorageConfig remote = repos.remoteStorageConfig;
+		if(remote == null || remote.autoPush == null || remote.autoPush != 1)
+		{
+			Log.debug("realTimeRemoteStoragPush() remoteStorageConfig autoPush not configured");			
+			return;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("realTimeRemoteStoragPush 非商业版本不支持远程存储");
+			return;
+	    }
+			
+		switch(action)
+		{
+		case "copyDoc":
+			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			break;
+		case "moveDoc":
+			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			break;
+		case "renameDoc":
+			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			break;
+		//case "addDoc":
+		//case "deleteDoc":
+		//case "updateDocContent":
+		//case "uploadDoc":
+		//case "uploadDocRS":
+		//case "revertDocHistory":
+		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+		//	break;
+		default:
+			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			break;
+		}			
+	}
+
 	private void realTimeBackup() {
 		// TODO Auto-generated method stub
 		
@@ -511,16 +545,7 @@ public class DocController extends BaseController{
 		if(ret != null)
 		{
 			//远程存储自动推送
-			RemoteStorageConfig remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-			{
-				Log.debug("uploadDoc() 远程自动推送");
-		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null)
-		        {	
-					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-		        }
-			}
+			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "deleteDoc");
 		}
 		
 		writeJson(rt, response);
@@ -694,17 +719,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorageConfig remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-			{
-				Log.debug("uploadDoc() 远程自动推送");
-		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null)
-		        {	
-					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-		        }
-			}
+			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "renameDoc");
 		}
 		
 		writeJson(rt, response);
@@ -797,17 +812,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorageConfig remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-			{
-				Log.debug("uploadDoc() 远程自动推送");
-		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null)
-		        {	
-					channel.remoteStoragePush(repos, srcDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-		        }
-			}
+			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "moveDoc");
 		}
 		
 		writeJson(rt, response);
@@ -886,16 +891,7 @@ public class DocController extends BaseController{
 		if(ret == true)
 		{
 			//远程存储自动推送
-			RemoteStorageConfig remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-			{
-				Log.debug("uploadDoc() 远程自动推送");
-		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null)
-		        {	
-					channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-		        }
-			}
+			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
 		}
 		
 		writeJson(rt, response);
@@ -1470,16 +1466,7 @@ public class DocController extends BaseController{
 			if(ret == true)
 			{
 				//远程存储自动推送
-				RemoteStorageConfig remote = repos.remoteStorageConfig;
-				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-				{
-					Log.debug("uploadDoc() 远程自动推送");
-			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-					if(channel != null)
-			        {	
-						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			        }
-				}
+				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "uploadDoc");
 			}
 			return;
 		}
@@ -1736,16 +1723,7 @@ public class DocController extends BaseController{
 			if(ret == true)
 			{
 				//远程存储自动推送
-				RemoteStorageConfig remote = repos.remoteStorageConfig;
-				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-				{
-					Log.debug("uploadDocRS() 远程自动推送");
-			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-					if(channel != null)
-			        {	
-						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			        }
-				}
+				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "uploadDocRS");
 			}
 			return;
 		}
@@ -1933,16 +1911,7 @@ public class DocController extends BaseController{
 			if(ret == true)
 			{
 				//远程存储自动推送
-				RemoteStorageConfig remote = repos.remoteStorageConfig;
-				if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-				{
-					Log.debug("uploadDoc() 远程自动推送");
-			    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-					if(channel != null)
-			        {	
-						channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			        }
-				}			
+				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "updateDocContent");
 			}
 			
 			writeJson(rt, response);
@@ -4396,16 +4365,7 @@ public class DocController extends BaseController{
 		if(isRealDoc == true && (repos.getType() == 1 || repos.getType() == 2))
 		{
 			//远程存储自动推送
-			RemoteStorageConfig remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPush != null && remote.autoPush == 1)
-			{
-				Log.debug("uploadDoc() 远程自动推送");
-				Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null)
-				{	
-					channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-				}
-			}
+			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
 		}
 		
 		writeJson(rt, response);
