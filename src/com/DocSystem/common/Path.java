@@ -613,4 +613,34 @@ public class Path {
 		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/VirtualDoc/";
 		return reposPwdPath;
 	}
+	
+	protected String getOfficeEditRootPath(Doc doc) {
+		String path = doc.getReposPath() + "tmp/OfficeEdit/";
+		return path;
+	}
+	
+	public static String getOfficeEditPath(String dockey, Doc doc) {
+		String path = doc.getReposPath() + "tmp/OfficeEdit/" + dockey + "/";
+		return path;
+	}
+
+	public static String getOrgChangesPath(String dockey, Doc doc) {
+		String path = getOfficeEditPath(dockey, doc) + "data/orgChanges/";
+		return path;
+	}
+
+	public static String getChangesPath(String dockey, Doc doc) {
+		String path = getOfficeEditPath(dockey, doc) + "data/changes/";
+		return path;
+	}
+	
+	public static String getIndexLibPathForChanges(String dockey,  Doc doc) {
+		String path = getOfficeEditPath(dockey, doc) + "changesIndex/";
+		return path;
+	}
+	
+	public String getLocalPathForSave(String dockey, Doc doc) {
+		String path = getOfficeEditPath(dockey, doc) + "save/";
+		return path;
+	}
 }
