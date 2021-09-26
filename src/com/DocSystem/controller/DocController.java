@@ -2185,6 +2185,16 @@ public class DocController extends BaseController{
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
+			//If it is office file, need try to get the latest save office file
+			Doc downloadDocForOffice = getDownloadDocInfoForOffice(repos, localEntry);
+			if(downloadDocForOffice != null)
+			{
+				rt.setData(downloadDocForOffice);
+				rt.setMsgData(1);	//下载完成后删除已下载的文件
+				Log.docSysDebugLog("本地文件: 非原始路径下载", rt);
+				return;
+			}
+			
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(0);	//下载完成后不能删除下载的文件
@@ -2261,6 +2271,18 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
+	private Doc getDownloadDocInfoForOffice(Repos repos, Doc doc) {
+		// TODO Auto-generated method stub
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("getDownloadDocInfoForOffice 非商业版本不支持远程存储");
+			return null;
+	    }
+		
+		return channel.getDownloadDocInfoForOffice(repos, doc);
+	}
+
 	public void downloadVDocPrepare_FSM(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
 		Doc vDoc = buildVDoc(doc);

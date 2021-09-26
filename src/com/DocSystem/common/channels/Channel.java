@@ -39,4 +39,7 @@ public interface Channel {
 	void decryptFile(Repos repos, String path, String name);
 	byte [] encryptData(Repos repos, byte data[]);	
 	byte [] decryptData(Repos repos, byte data[]);
+	
+	//获取最新保存的Office文件下载信息
+	Doc getDownloadDocInfoForOffice(Repos repos, Doc doc);
 }

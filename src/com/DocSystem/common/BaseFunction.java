@@ -2156,7 +2156,7 @@ public class BaseFunction{
 		return fileLink;
 	}
 	
-	protected Doc buildDownloadDocInfo(Integer vid, String path, String name, String targetPath, String targetName, Integer encryptEn)
+	protected static Doc buildDownloadDocInfo(Integer vid, String path, String name, String targetPath, String targetName, Integer encryptEn)
 	{
 		Log.debug("buildDownloadDocInfo() targetPath:" + targetPath + " targetName:"  + targetName);
 		

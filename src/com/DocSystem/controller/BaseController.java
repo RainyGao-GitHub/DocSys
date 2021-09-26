@@ -13820,8 +13820,10 @@ public class BaseController  extends BaseFunction{
 		return fileLink;
 	}
 	
-	protected String buildOfficeEditorKey(Doc doc) {
-		return (doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime()).hashCode() + "";
+	protected static String buildOfficeEditorKey(Doc doc) {
+		String keystr = doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime();
+		Log.debug(keystr);
+		return keystr.hashCode() + "";
 	}
 	
 	@SuppressWarnings("rawtypes")
