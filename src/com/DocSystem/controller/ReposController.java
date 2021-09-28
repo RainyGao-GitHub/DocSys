@@ -1486,6 +1486,11 @@ public class ReposController extends BaseController{
 		Integer type = getAuthType(userId,groupId);
 		Integer priority = getPriorityByAuthType(type);
 		
+		if(uploadSize == null)
+		{
+			uploadSize = Long.MAX_VALUE;
+		}
+		
 		//检查该用户是否设置了仓库权限
 		ReposAuth qReposAuth = new ReposAuth();
 		if(type == 2)
@@ -1533,10 +1538,6 @@ public class ReposController extends BaseController{
 			reposAuth.setAddEn(addEn);
 			reposAuth.setDeleteEn(deleteEn);
 			reposAuth.setDownloadEn(downloadEn);
-			if(uploadSize == null)
-			{
-				uploadSize = Long.MAX_VALUE;
-			}
 			reposAuth.setUploadSize(uploadSize);
 			reposAuth.setHeritable(heritable);
 			if(reposService.updateReposAuth(reposAuth) == 0)
@@ -1659,6 +1660,11 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		if(uploadSize == null)
+		{
+			uploadSize = Long.MAX_VALUE;
+		}
+		
 		//login_user不得设置超过自己的权限：超过了则无效
 		if(isUserAuthExpanded(repos, login_user, doc, isAdmin,access,editEn,addEn,deleteEn,downloadEn,uploadSize,heritable,rt) == true)
 		{
@@ -1702,10 +1708,6 @@ public class ReposController extends BaseController{
 			qDocAuth.setAddEn(addEn);
 			qDocAuth.setDeleteEn(deleteEn);
 			qDocAuth.setDownloadEn(downloadEn);
-			if(uploadSize == null)
-			{
-				uploadSize = Long.MAX_VALUE;
-			}
 			qDocAuth.setUploadSize(uploadSize);			
 			qDocAuth.setHeritable(heritable);
 			qDocAuth.setDocPath(path);
@@ -1733,10 +1735,6 @@ public class ReposController extends BaseController{
 			docAuth.setAddEn(addEn);
 			docAuth.setDeleteEn(deleteEn);
 			docAuth.setDownloadEn(downloadEn);
-			if(uploadSize == null)
-			{
-				uploadSize = Long.MAX_VALUE;
-			}
 			docAuth.setUploadSize(uploadSize);
 			
 			docAuth.setHeritable(heritable);
@@ -1859,7 +1857,7 @@ public class ReposController extends BaseController{
 			rt.setError("您无权设置下载权限");
 			return true;
 		}
-		if(docAuth.getUploadSize() != null && uploadSize > docAuth.getUploadSize())
+		if(docAuth.getUploadSize() != null && (uploadSize == null || uploadSize > docAuth.getUploadSize()))
 		{
 			rt.setError("您设置上传大小超出您的权限");
 			return true;
