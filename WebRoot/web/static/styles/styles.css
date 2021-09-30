@@ -44,14 +44,16 @@ body {
 .line-search-input{
     width: 100% !important;
     display: block !important;
+    padding: 6px 34px 6px 12px;
 }
 
 .line-search-btn{
     float: right;
-    margin-top: -30px;
-    margin-right: 5px;
+    margin-top: -33px;
     background-color: transparent;
     border: 0;
+    height: 34px;
+    width: 34px;
 }
 
 .navbar-header .searchbar .search-btn>i.fa{
