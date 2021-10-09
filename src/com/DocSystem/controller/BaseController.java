@@ -433,7 +433,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("docSysGetDocListWithChangeType remote is null");
 			return localList;
 		}
-		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc);
+		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote);
 		if(remoteList == null)
 		{
 			Log.debug("docSysGetDocListWithChangeType remoteList is null");
@@ -506,7 +506,7 @@ public class BaseController  extends BaseFunction{
 			return null;        	
         }
         
-        Doc remoteDoc = channel.remoteStorageGetEntry(repos, doc);
+        Doc remoteDoc = channel.remoteStorageGetEntry(repos, doc, repos.remoteStorageConfig);
 
         return remoteDoc;
 	}
@@ -526,7 +526,7 @@ public class BaseController  extends BaseFunction{
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel != null)
         {
-        	return channel.remoteStorageGetDBEntryList(repos, doc);
+        	return channel.remoteStorageGetDBEntryList(repos, doc, repos.remoteStorageConfig);
         }
         return null;
 	}
@@ -535,12 +535,12 @@ public class BaseController  extends BaseFunction{
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel != null)
         {
-        	return channel.remoteStorageGetDBHashMap(repos, doc);
+        	return channel.remoteStorageGetDBHashMap(repos, doc, repos.remoteStorageConfig);
         }
         return null;
 	}
 	
-	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc) {
+	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel == null)
         {
@@ -548,7 +548,7 @@ public class BaseController  extends BaseFunction{
 			return null;
         }
         
-		List<Doc> list = channel.remoteStorageGetEntryList(repos, doc);
+		List<Doc> list = channel.remoteStorageGetEntryList(repos, doc, remote);
         return list;
 	}
 	
@@ -566,13 +566,15 @@ public class BaseController  extends BaseFunction{
     	return subEntryList;
 	}
 	
+	//注意：该接口调用前doc的localRootPath和LocalVRootPath必须正确设置
 	protected static List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
 		//Log.debug("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
     		String reposPath = Path.getReposPath(repos);
-			String localRootPath = Path.getReposRealPath(repos);
-			String localVRootPath = Path.getReposVirtualPath(repos);
+    		//由于该接口可以被重用于获取非仓库相对路径的目录，所以需要冲doc中获取rootpath
+			String localRootPath = doc.getLocalRootPath();
+			String localVRootPath = doc.getLocalVRootPath();
 			
 			String docName = doc.getName();
 			if(doc.getDocId() == 0)
@@ -5287,7 +5289,7 @@ public class BaseController  extends BaseFunction{
 		Doc remoteDoc = null;
 		if(channel != null)
         {
-			return channel.remoteStorageGetDBEntry(repos, doc);
+			return channel.remoteStorageGetDBEntry(repos, doc, repos.remoteStorageConfig);
         }
 		return remoteDoc;
 	}

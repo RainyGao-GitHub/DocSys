@@ -1742,7 +1742,12 @@ public class BaseFunction{
 		return getDBStorePath() + "UserPreferServer/";
 	}
 	
-	protected static String getIndexLibPathForRemoteStorageDoc(Repos repos) {
+	protected static String getIndexLibPathForRemoteStorageDoc(Repos repos, RemoteStorageConfig remote) {
+		if(remote.remoteStorageIndexLib != null)
+		{
+			return remote.remoteStorageIndexLib;
+		}
+		
 		return getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
 	}
 	
