@@ -73,7 +73,7 @@ public class Repos {
 	public Long freeSize;
 	public RemoteStorageConfig remoteStorageConfig;
 	public TextSearchConfig textSearchConfig;
-	
+		
 	public Integer encryptType;
 	public EncryptConfig encryptConfig;
 	public BackupConfig backupConfig;

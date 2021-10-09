@@ -3,6 +3,7 @@ package com.DocSystem.common.channels;
 import java.util.HashMap;
 import java.util.List;
 
+import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -20,20 +21,24 @@ public interface Channel {
 
 	void initBussinessChannel();	
     
-	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc);
+	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc, RemoteStorageConfig remote);
 
-	Doc remoteStorageGetEntry(Repos repos, Doc doc);
+	Doc remoteStorageGetEntry(Repos repos, Doc doc,  RemoteStorageConfig remote);
 
-	List<Doc> remoteStorageGetDBEntryList(Repos repos, Doc doc);
+	List<Doc> remoteStorageGetDBEntryList(Repos repos, Doc doc, RemoteStorageConfig remote);
 
-	HashMap<String, Doc> remoteStorageGetDBHashMap(Repos repos, Doc doc);
+	HashMap<String, Doc> remoteStorageGetDBHashMap(Repos repos, Doc doc,  RemoteStorageConfig remote);
 
-	Doc remoteStorageGetDBEntry(Repos repos, Doc doc);	
+	Doc remoteStorageGetDBEntry(Repos repos, Doc doc,  RemoteStorageConfig remote);	
 	
 	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt);
 
 	void remoteStoragePush(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
 	
+	//AutoBackUp
+	void remoteBackUp(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+	void localBackUp(Repos repos,  Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+
 	//加解密算法实现
 	void encryptFile(Repos repos, String path, String name);	
 	void decryptFile(Repos repos, String path, String name);
