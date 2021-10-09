@@ -15,5 +15,6 @@ public class RemoteStorageConfig {
 	public GitConfig GIT = null;
 	public boolean isVerRepos = false;
 	public MxsDocConfig MXSDOC;
+	public String remoteStorageIndexLib;
 
 }
