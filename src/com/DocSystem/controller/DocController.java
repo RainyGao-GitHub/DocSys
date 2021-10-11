@@ -219,15 +219,15 @@ public class DocController extends BaseController{
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -235,10 +235,10 @@ public class DocController extends BaseController{
 		//case "uploadDoc":
 		//case "uploadDocRS":
 		//case "revertDocHistory":
-		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+		//	channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
 		//	break;
 		default:
-			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
 			break;
 		}			
 	}
@@ -265,7 +265,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		RemoteStorageConfig remote = repos.backupConfig.remoteBackupConfig.remoteStorageConfig;
+		RemoteStorageConfig remote = remoteBackupConfig.remoteStorageConfig;
 		if(remote == null)
 		{
 			Log.debug("realTimeRemoteBackup() remoteStorageConfig not configured");			
@@ -289,15 +289,15 @@ public class DocController extends BaseController{
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -308,49 +308,52 @@ public class DocController extends BaseController{
 		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 		//	break;
 		default:
-			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
 		}		
 	}
 
 	private void realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		// TODO Auto-generated method stub
 		LocalBackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
 		if(localBackupConfig == null || localBackupConfig.realTimeBackupEn == null || localBackupConfig.realTimeBackupEn == 0)
 		{
 			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			
 			return;
 		}
-				
+		
+		RemoteStorageConfig remote = localBackupConfig.remoteStorageConfig;
+		if(remote == null)
+		{
+			Log.debug("realTimeLocalBackup() remoteStorageConfig not configured");			
+			return;
+		}
+		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
-			Log.debug("realTimeRemoteBackup 非商业版本不支持本地备份");
+			Log.debug("realTimeLocalBackup 非商业版本不支持本地备份");
 			return;
 	    }
-
-		String offsetPath = Path.getLocalOffsetPathForRealDoc(repos);
+		
+		String offsetPath = Path.getRemoteOffsetPathForRealDoc(repos);
 		doc.offsetPath = offsetPath;
 		if(dstDoc != null)
 		{
 			dstDoc.offsetPath = offsetPath;
 		}
-
+		
 		switch(action)
 		{
 		case "copyDoc":
-			FileUtil.copyFileOrDir(dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getPath(), 
-					localBackupConfig.rootPath + dstDoc.offsetPath + dstDoc.getPath() + dstDoc.getName(), true);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
 		case "moveDoc":
-			FileUtil.delFileOrDir(localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName());
-			FileUtil.copyFileOrDir(dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getPath(), 
-					localBackupConfig.rootPath + dstDoc.offsetPath + dstDoc.getPath() + dstDoc.getName(), true);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
 		case "renameDoc":
-			FileUtil.delFileOrDir(localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName());
-			FileUtil.copyFileOrDir(dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getPath(), 
-					localBackupConfig.rootPath + dstDoc.offsetPath + dstDoc.getPath() + dstDoc.getName(), true);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -358,14 +361,12 @@ public class DocController extends BaseController{
 		//case "uploadDoc":
 		//case "uploadDocRS":
 		//case "revertDocHistory":
-		//	FileUtil.copyFileOrDir(doc.getLocalRootPath() + doc.getPath() + doc.getPath(), 
-		//			localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), true);
+		//	channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 		//	break;
 		default:
-			FileUtil.copyFileOrDir(doc.getLocalRootPath() + doc.getPath() + doc.getPath(), 
-						localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), true);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 			break;
-		}		
+		}			
 	}
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
@@ -2246,7 +2247,7 @@ public class DocController extends BaseController{
 				Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 				{	
-					channel.remoteStoragePull(repos, doc, accessUser, "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
+					channel.remoteStoragePull(remote, repos, doc, accessUser, "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
 				}
 				autoPullDone = true;
 			}
@@ -2277,7 +2278,7 @@ public class DocController extends BaseController{
 					}
 					else
 					{
-						channel.remoteStoragePull(repos, localEntry, accessUser, "文件下载拉取", true, remote.autoPullForce == 1, true, rt);
+						channel.remoteStoragePull(remote, repos, localEntry, accessUser, "文件下载拉取", true, remote.autoPullForce == 1, true, rt);
 						localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
 					}
 				}
@@ -2927,7 +2928,7 @@ public class DocController extends BaseController{
 				    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 						if(channel != null)
 				        {	
-							channel.remoteStoragePull(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
+							channel.remoteStoragePull(remote, repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
 				        }
 						autoPullDone = true;
 					}
@@ -2943,7 +2944,7 @@ public class DocController extends BaseController{
 					        Channel channel = ChannelFactory.getByChannelName("businessChannel");
 							if(channel != null)
 							{
-								channel.remoteStoragePull(repos, localEntry, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
+								channel.remoteStoragePull(remote, repos, localEntry, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
 								localEntry = fsGetDoc(repos, doc); //重新读取文件信息
 							}
 						}
