@@ -498,7 +498,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	protected static Doc getRemoteStorageEntry(Repos repos, Doc doc) {
+	protected static Doc getRemoteStorageEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel == null)
         {
@@ -506,7 +506,7 @@ public class BaseController  extends BaseFunction{
 			return null;        	
         }
         
-        Doc remoteDoc = channel.remoteStorageGetEntry(repos, doc, repos.remoteStorageConfig);
+        Doc remoteDoc = channel.remoteStorageGetEntry(repos, doc, remote);
 
         return remoteDoc;
 	}
@@ -5257,7 +5257,7 @@ public class BaseController  extends BaseFunction{
 			return localDoc;
 		}
 
-		Doc remoteDoc = getRemoteStorageEntry(repos, doc);
+		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote);
 		if(remoteDoc == null)
 		{
 			Log.debug("docSysGetDocListWithChangeType remoteList is null");
