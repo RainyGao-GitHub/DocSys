@@ -3245,7 +3245,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					dbDoc = getRemoteStorageEntry(repos, doc);
+					dbDoc = getRemoteStorageEntry(repos, doc, remote);
 				}
 				break;
 			case 3:
