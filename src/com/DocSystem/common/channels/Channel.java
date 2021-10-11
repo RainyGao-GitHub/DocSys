@@ -21,23 +21,23 @@ public interface Channel {
 
 	void initBussinessChannel();	
     
-	List<Doc> remoteStorageGetEntryList(Repos repos, Doc doc, RemoteStorageConfig remote);
+	List<Doc> remoteStorageGetEntryList( RemoteStorageConfig remote, Repos repos, Doc doc);
 
-	Doc remoteStorageGetEntry(Repos repos, Doc doc,  RemoteStorageConfig remote);
+	Doc remoteStorageGetEntry(RemoteStorageConfig remote, Repos repos, Doc doc);
 
-	List<Doc> remoteStorageGetDBEntryList(Repos repos, Doc doc, RemoteStorageConfig remote);
+	List<Doc> remoteStorageGetDBEntryList(RemoteStorageConfig remote, Repos repos, Doc doc);
 
-	HashMap<String, Doc> remoteStorageGetDBHashMap(Repos repos, Doc doc,  RemoteStorageConfig remote);
+	HashMap<String, Doc> remoteStorageGetDBHashMap(RemoteStorageConfig remote, Repos repos, Doc doc);
 
-	Doc remoteStorageGetDBEntry(Repos repos, Doc doc,  RemoteStorageConfig remote);	
+	Doc remoteStorageGetDBEntry(RemoteStorageConfig remote, Repos repos, Doc doc);	
 	
-	void remoteStoragePull(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt);
+	void remoteStoragePull(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt);
 
-	void remoteStoragePush(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
+	void remoteStoragePush(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
 	
 	//AutoBackUp
-	void remoteBackUp(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
-	void localBackUp(Repos repos,  Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+	void remoteBackUp(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+	void localBackUp(RemoteStorageConfig remote, Repos repos,  Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
 
 	//加解密算法实现
 	void encryptFile(Repos repos, String path, String name);	

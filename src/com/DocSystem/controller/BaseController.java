@@ -506,7 +506,7 @@ public class BaseController  extends BaseFunction{
 			return null;        	
         }
         
-        Doc remoteDoc = channel.remoteStorageGetEntry(repos, doc, remote);
+        Doc remoteDoc = channel.remoteStorageGetEntry(remote, repos, doc);
 
         return remoteDoc;
 	}
@@ -526,7 +526,7 @@ public class BaseController  extends BaseFunction{
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel != null)
         {
-        	return channel.remoteStorageGetDBEntryList(repos, doc, repos.remoteStorageConfig);
+        	return channel.remoteStorageGetDBEntryList(repos.remoteStorageConfig, repos, doc);
         }
         return null;
 	}
@@ -535,7 +535,7 @@ public class BaseController  extends BaseFunction{
         Channel channel = ChannelFactory.getByChannelName("businessChannel");
         if(channel != null)
         {
-        	return channel.remoteStorageGetDBHashMap(repos, doc, repos.remoteStorageConfig);
+        	return channel.remoteStorageGetDBHashMap(repos.remoteStorageConfig, repos, doc);
         }
         return null;
 	}
@@ -548,7 +548,7 @@ public class BaseController  extends BaseFunction{
 			return null;
         }
         
-		List<Doc> list = channel.remoteStorageGetEntryList(repos, doc, remote);
+		List<Doc> list = channel.remoteStorageGetEntryList(remote, repos, doc);
         return list;
 	}
 	
@@ -3936,11 +3936,11 @@ public class BaseController  extends BaseFunction{
 		        {	
 					if(remote.autoPush != null && remote.autoPush == 1)
 					{
-						channel.remoteStoragePush(repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, true, rt);
+						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, true, rt);
 					}					
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
-						channel.remoteStoragePull(repos, doc, login_user, "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPullForce == 1, true, rt);
+						channel.remoteStoragePull(remote, repos, doc, login_user, "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPullForce == 1, true, rt);
 					}
 				}
 			}
@@ -5289,7 +5289,7 @@ public class BaseController  extends BaseFunction{
 		Doc remoteDoc = null;
 		if(channel != null)
         {
-			return channel.remoteStorageGetDBEntry(repos, doc, repos.remoteStorageConfig);
+			return channel.remoteStorageGetDBEntry(repos.remoteStorageConfig, repos, doc);
         }
 		return remoteDoc;
 	}
