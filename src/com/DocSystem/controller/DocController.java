@@ -50,6 +50,7 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alipay.api.internal.util.file.FileUtils;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jzlib.GZIPInputStream;
@@ -75,7 +76,9 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.BackupConfig;
+import com.DocSystem.common.entity.LocalBackupConfig;
 import com.DocSystem.common.entity.QueryCondition;
+import com.DocSystem.common.entity.RemoteBackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.controller.BaseController;
@@ -249,19 +252,120 @@ public class DocController extends BaseController{
 			Log.debug("realTimeBackup() backupConfig not configured");			
 			return;
 		}
-		
-		realTimeLocalBackup();
-		realTimeRemoteBackup();
+				
+		realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
 	}
 
-	private void realTimeRemoteBackup() {
-		// TODO Auto-generated method stub
+	private void realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+		RemoteBackupConfig remoteBackupConfig = repos.backupConfig.remoteBackupConfig;
+		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackupEn == null || remoteBackupConfig.realTimeBackupEn == 0)
+		{
+			Log.debug("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured");			
+			return;
+		}
 		
+		RemoteStorageConfig remote = repos.backupConfig.remoteBackupConfig.remoteStorageConfig;
+		if(remote == null)
+		{
+			Log.debug("realTimeRemoteBackup() remoteStorageConfig not configured");			
+			return;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("realTimeRemoteBackup 非商业版本不支持远程备份");
+			return;
+	    }
+		
+		String offsetPath = Path.getRemoteOffsetPathForRealDoc(repos);
+		doc.offsetPath = offsetPath;
+		if(dstDoc != null)
+		{
+			dstDoc.offsetPath = offsetPath;
+		}
+		
+		switch(action)
+		{
+		case "copyDoc":
+			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			break;
+		case "moveDoc":
+			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			break;
+		case "renameDoc":
+			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			break;
+		//case "addDoc":
+		//case "deleteDoc":
+		//case "updateDocContent":
+		//case "uploadDoc":
+		//case "uploadDocRS":
+		//case "revertDocHistory":
+		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+		//	break;
+		default:
+			channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			break;
+		}		
 	}
 
-	private void realTimeLocalBackup() {
+	private void realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
 		// TODO Auto-generated method stub
-		
+		LocalBackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
+		if(localBackupConfig == null || localBackupConfig.realTimeBackupEn == null || localBackupConfig.realTimeBackupEn == 0)
+		{
+			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			
+			return;
+		}
+				
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("realTimeRemoteBackup 非商业版本不支持本地备份");
+			return;
+	    }
+
+		String offsetPath = Path.getLocalOffsetPathForRealDoc(repos);
+		doc.offsetPath = offsetPath;
+		if(dstDoc != null)
+		{
+			dstDoc.offsetPath = offsetPath;
+		}
+
+		switch(action)
+		{
+		case "copyDoc":
+			FileUtil.copyFileOrDir(dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getPath(), 
+					localBackupConfig.rootPath + dstDoc.offsetPath + dstDoc.getPath() + dstDoc.getName(), true);
+			break;
+		case "moveDoc":
+			FileUtil.delFileOrDir(localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName());
+			FileUtil.copyFileOrDir(dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getPath(), 
+					localBackupConfig.rootPath + dstDoc.offsetPath + dstDoc.getPath() + dstDoc.getName(), true);
+			break;
+		case "renameDoc":
+			FileUtil.delFileOrDir(localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName());
+			FileUtil.copyFileOrDir(dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getPath(), 
+					localBackupConfig.rootPath + dstDoc.offsetPath + dstDoc.getPath() + dstDoc.getName(), true);
+			break;
+		//case "addDoc":
+		//case "deleteDoc":
+		//case "updateDocContent":
+		//case "uploadDoc":
+		//case "uploadDocRS":
+		//case "revertDocHistory":
+		//	FileUtil.copyFileOrDir(doc.getLocalRootPath() + doc.getPath() + doc.getPath(), 
+		//			localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), true);
+		//	break;
+		default:
+			FileUtil.copyFileOrDir(doc.getLocalRootPath() + doc.getPath() + doc.getPath(), 
+						localBackupConfig.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), true);
+			break;
+		}		
 	}
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点

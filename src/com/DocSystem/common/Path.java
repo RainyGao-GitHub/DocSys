@@ -643,4 +643,21 @@ public class Path {
 		String path = getOfficeEditPath(dockey, doc) + "save/";
 		return path;
 	}
+	
+	public static String getRemoteOffsetPathForRealDoc(Repos repos) {
+		return "remoteBackup/" + repos.getId() + "/latest/rdata/"; 
+	}
+
+	public static String getRemoteOffsetPathForVirtualDoc(Repos repos) {
+		return "remoteBackup/" + repos.getId() + "/latest/vdata/"; 
+	}
+
+	public static String getLocalOffsetPathForRealDoc(Repos repos) {
+		return "localBackup/" + repos.getId() + "/latest/rdata/"; 
+	}
+
+	public static String getLocalOffsetPathForVirtualDoc(Repos repos) {
+		return "localBackup/" + repos.getId() + "/latest/vdata/"; 
+	}
+
 }
