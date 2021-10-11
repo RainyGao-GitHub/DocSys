@@ -139,7 +139,7 @@ public class CommitAction{
 	    {
 	    	File localEntry = tmp[i];
 	    	int subDocType = localEntry.isFile()? 1: 2;
-	    	Doc subDoc = DocUtil.buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "");
+	    	Doc subDoc = DocUtil.buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "", doc.offsetPath);
 	    	if(localEntry.isDirectory())
 	    	{	
 	    		insertAddDirAction(subActionList,subDoc,true, isGit);
