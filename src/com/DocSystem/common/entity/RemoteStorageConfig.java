@@ -8,6 +8,7 @@ public class RemoteStorageConfig {
 	public Integer autoPullForce = 0;
 	public Integer autoPush = 0;
 	public Integer autoPushForce = 0;
+	public LocalConfig FILE;
 	public SftpConfig SFTP;
 	public FtpConfig FTP;
 	public SmbConfig SMB = null;
@@ -15,7 +16,6 @@ public class RemoteStorageConfig {
 	public GitConfig GIT = null;
 	public boolean isVerRepos = false;
 	public MxsDocConfig MXSDOC;
-	public String remoteStorageIndexLib;
-	
+	public String remoteStorageIndexLib;	
 
 }
