@@ -22,25 +22,23 @@
 			</div>
 			
 	        <div name="reposStorageConfig" style="margin-top:10px">
-				<label>仓库位置</label>
-				<input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
-			    <label style="margin-top:10px">文件存储位置</label>
-				<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
-			</div>
-			
-			<!-- <div name="reposStorageDiv"  style="margin-top:10px">
-	            <label>仓库存储
-	            	<span style="margin-left:5px">
-		            	<input type="checkbox" name="reposStorageConfigEnable" value="0" onclick="doSelectReposStorageConfigEnable()">
-		            </span>
-	            </label>
-	            <div name="reposStorageConfig" style="margin-left:20px;display:none">
-					<label>仓库存储位置</label>
+				<label>仓库位置 
+					<!-- <span style="margin-left:20px">
+						<input type="checkbox" name="reposStoragePathEnable" value="0" onclick="doSelectReposStoragePathEnable()">自定义
+					</span>  --> 
+				</label>
+				<div name="reposStoragePathConfig">
 					<input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
-			        <label style="margin-top:10px">文件存储位置</label>
+			    </div>
+			    <label>文件存储位置
+			    	<span style="margin-left:20px">
+						<input type="checkbox" name="reposStorageRealDocPathEnable" value="0" onclick="doSelectReposStorageRealDocPathEnable()">自定义
+					</span> 
+			    </label>
+				<div name="reposStorageRealDocPathConfig" style="display:none">
 					<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 				</div>
-			</div> -->
+			</div>
 			
         	<div name="remoteStorageDiv" style="margin-top:10px">
 	        	<label>远程存储
@@ -127,6 +125,132 @@
 			</div>
 			<div name="encryptEnablelDiv" style="margin-top:10px">
 	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0"></span></label>
+			</div>
+			
+			<div name="autoBackupEnablelDiv" style="margin-top:10px">
+	            <label>自动备份 
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" name="autoBackupConfigEnable" value="0" onclick="doSelectAutoBackupConfigEanble()">
+	            	</span>
+	            </label>
+			</div>
+			
+			<div name="autoBackupConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
+	            <label>本地备份
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" name="localBackupEnable" value="0" onclick="doSelectLocalBackupEnable()">
+	            	</span>
+	            </label>
+	            <div name="localBackupConfig" style="display:none">
+				    <input class="form-control" type="text" name="localRootPath"  placeholder="请填写备份存储路径！" value="" style="width: 100%"/>
+    				<label style="margin-top:5px">备份时间</label>
+		        	<select class="form-control" name="localBackupTime" style="width:100%">   
+				        <option value="0">0:00</option>   
+				        <option value="60">1:00</option>   
+				        <option value="120">2:00</option>   
+				        <option value="180">3:00</option>  
+				        <option value="240">4:00</option>  
+				        <option value="300">5:00</option>  
+				        <option value="360">6:00</option>  
+				        <option value="420">7:00</option>  
+				        <option value="480">8:00</option>  
+				        <option value="540">9:00</option>  
+				        <option value="600">10:00</option>
+				        <option value="660">11:00</option>
+				        <option value="720">12:00</option>
+				        <option value="780">13:00</option>
+				        <option value="840">14:00</option>
+				        <option value="900">15:00</option>
+				        <option value="960">16:00</option>
+				        <option value="1020">17:00</option>
+				        <option value="1080">18:00</option>
+				        <option value="1140">19:00</option>
+				        <option value="1200">20:00</option>
+				        <option value="1260">21:00</option>
+				        <option value="1320">22:00</option>
+				        <option value="1380">23:00</option>
+				    </select>
+					<label style="margin-top:5px">备份周期</label>
+					<div>
+						<span><input type="checkbox" name="localBackupWeekDay1" value="0">周一</span>
+						<span style="margin-left:20px"><input type="checkbox" name="localBackupWeekDay2" value="0">周二</span>
+						<span style="margin-left:20px"><input type="checkbox" name="localBackupWeekDay3" value="0">周三</span>
+						<span style="margin-left:20px"><input type="checkbox" name="localBackupWeekDay4" value="0">周四</span>
+						<span style="margin-left:20px"><input type="checkbox" name="localBackupWeekDay5" value="0">周五</span>
+						<span style="margin-left:20px"><input type="checkbox" name="localBackupWeekDay6" value="0">周六</span>
+						<span style="margin-left:20px"><input type="checkbox" name="localBackupWeekDay7" value="0">周日</span>
+					</div>				    
+		            <label style="margin-top:5px">本地实时备份		            	
+		            	<span style="margin-left:5px">
+	            			<input type="checkbox" name="localRealTimeBackupEnable" value="0"">
+	            		</span>
+		            </label>		            
+	            </div>
+
+				<br>
+
+	            <label style="margin-top:10px">异地备份 
+	            	<span style="margin-left:5px;">
+	            		<input type="checkbox" name="remoteBackupEnable" value="0" onclick="doSelectRemoteBackupEnable()">
+	            	</span>
+	            </label>
+	            <div name="remoteBackupConfig" style="display:none">
+		        	<select class="form-control" name="remoteBackupStorageProtocol" onchange="doSelectRemoteBackupStorageProtocol();" style="width:100%">   
+				        <option value="">无</option>
+				        <option value="ftp">FTP</option>   
+				        <option value="sftp">SFTP</option>   
+				        <option value="smb">SMB</option>  
+				        <option value="svn">SVN</option>  
+				        <option value="git">GIT</option>  
+				        <option value="mxsdoc">MXSDOC</option>  
+				    </select>
+				    <div name="remoteBackupStorageConfig" style="margin-top:10px; display:none">
+		           		<input class="form-control" type="text" name="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
+	    				<label style="margin-top:5px">备份时间</label>
+			        	<select class="form-control" name="remoteBackupTime" style="width:100%">   
+					        <option value="0">0:00</option>   
+					        <option value="60">1:00</option>   
+					        <option value="120">2:00</option>   
+					        <option value="180">3:00</option>  
+					        <option value="240">4:00</option>  
+					        <option value="300">5:00</option>  
+					        <option value="360">6:00</option>  
+					        <option value="420">7:00</option>  
+					        <option value="480">8:00</option>  
+					        <option value="540">9:00</option>  
+					        <option value="600">10:00</option>
+					        <option value="660">11:00</option>
+					        <option value="720">12:00</option>
+					        <option value="780">13:00</option>
+					        <option value="840">14:00</option>
+					        <option value="900">15:00</option>
+					        <option value="960">16:00</option>
+					        <option value="1020">17:00</option>
+					        <option value="1080">18:00</option>
+					        <option value="1140">19:00</option>
+					        <option value="1200">20:00</option>
+					        <option value="1260">21:00</option>
+					        <option value="1320">22:00</option>
+					        <option value="1380">23:00</option>
+					    </select>
+						<label style="margin-top:5px">备份周期</label>
+						<div>
+							<span><input type="checkbox" name="remoteBackupWeekDay1" value="0">周一</span>
+							<span style="margin-left:20px"><input type="checkbox" name="remoteBackupWeekDay2" value="0">周二</span>
+							<span style="margin-left:20px"><input type="checkbox" name="remoteBackupWeekDay3" value="0">周三</span>
+							<span style="margin-left:20px"><input type="checkbox" name="remoteBackupWeekDay4" value="0">周四</span>
+							<span style="margin-left:20px"><input type="checkbox" name="remoteBackupWeekDay5" value="0">周五</span>
+							<span style="margin-left:20px"><input type="checkbox" name="remoteBackupWeekDay6" value="0">周六</span>
+							<span style="margin-left:20px"><input type="checkbox" name="remoteBackupWeekDay7" value="0">周日</span>
+						</div>
+	
+			            <label style="margin-top:5px">异地实时备份
+			            	<span style="margin-left:5px">
+		            			<input type="checkbox" name="remoteRealTimeBackupEnable" value="0"">
+		            		</span>
+		            	</label>		      
+		            </div>      
+	            </div>
 			</div>
         </div>
     </div>
@@ -521,6 +645,35 @@
 		}
 	}
 	
+	function doSelectReposStoragePathEnable()
+	{
+		var reposStoragePathEnable = $("#dialog-new-repos input[name='reposStoragePathEnable']").is(':checked')? 1: 0;
+		console.log("doSelectReposStoragePathEnable reposStoragePathEnable:" + reposStoragePathEnable);
+		if(reposStoragePathEnable == 0)
+		{
+			$("#dialog-new-repos div[name='reposStoragePathConfig']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='reposStoragePathConfig']").show();
+		}
+	}
+	
+	function doSelectReposStorageRealDocPathEnable()
+	{
+		var reposStorageRealDocPathEnable = $("#dialog-new-repos input[name='reposStorageRealDocPathEnable']").is(':checked')? 1: 0;
+		console.log("doSelectReposStorageRealDocPathEnable reposStorageRealDocPathEnable:" + reposStorageRealDocPathEnable);
+		if(reposStorageRealDocPathEnable == 0)
+		{
+			$("#dialog-new-repos div[name='reposStorageRealDocPathConfig']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='reposStorageRealDocPathConfig']").show();
+		}
+	}
+	
+	
 	function doSelectRemoteStorageConfigEnable()
 	{
 		var remoteStorageConfigEnable = $("#dialog-new-repos input[name='remoteStorageConfigEnable']").is(':checked')? 1: 0;
@@ -534,6 +687,82 @@
 			$("#dialog-new-repos div[name='remoteStorageConfig']").show();
 		}
 		
+	}
+	
+	function doSelectAutoBackupConfigEanble()
+	{
+		var autoBackupConfigEnable = $("#dialog-new-repos input[name='autoBackupConfigEnable']").is(':checked')? 1: 0;
+		console.log("doSelectAutoBackupConfigEanble autoBackupConfigEnable:" + autoBackupConfigEnable);
+		if(autoBackupConfigEnable == 0)
+		{
+			$("#dialog-new-repos div[name='autoBackupConfigDiv']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='autoBackupConfigDiv']").show();
+		}		
+	}
+	
+	function doSelectLocalBackupEnable()
+	{
+		var localBackupEnable = $("#dialog-new-repos input[name='localBackupEnable']").is(':checked')? 1: 0;
+		console.log("doSelectLocalBackupEnable localBackupEnable:" + localBackupEnable);
+		if(localBackupEnable == 0)
+		{
+			$("#dialog-new-repos div[name='localBackupConfig']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='localBackupConfig']").show();
+		}		
+	}
+	
+	function doSelectRemoteBackupEnable()
+	{
+		var remoteBackupEnable = $("#dialog-new-repos input[name='remoteBackupEnable']").is(':checked')? 1: 0;
+		console.log("doSelectRemoteBackupEnable remoteBackupEnable:" + remoteBackupEnable);
+		if(remoteBackupEnable == 0)
+		{
+			$("#dialog-new-repos div[name='remoteBackupConfig']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='remoteBackupConfig']").show();
+		}		
+	}
+	
+	function doSelectRemoteBackupStorageProtocol()
+	{
+		var protocol = $("#dialog-new-repos select[name='remoteBackupStorageProtocol']").val();
+		console.log("doSelectRemoteBackupStorageProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#dialog-new-repos div[name='remoteBackupStorageConfig']").hide();
+			return;
+		}
+
+		switch(protocol)
+		{
+		case "ftp":
+			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
+			break;
+		case "sftp":
+			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
+			break;
+		case "smb":
+			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
+			break;
+		case "svn":
+			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
+			break;
+		case "git":
+			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+			break;
+		case "mxsdoc":
+			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
+			break;
+		}
+		$("#dialog-new-repos div[name='remoteBackupStorageConfig']").show();
 	}
 	
 	function doSelectVerCtrlEnalbe()
