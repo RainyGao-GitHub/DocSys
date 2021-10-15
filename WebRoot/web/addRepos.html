@@ -315,7 +315,9 @@
 	    var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
 	    var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
+	    
 	    var remoteStorage = getRemoteStorageConfig();	//remoteStorage
+	    
 	    var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
 	    var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
 	    var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
@@ -329,8 +331,11 @@
 	    var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
 	    var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
 	    var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
+	    
 	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
 	    var encryptType = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+	    
+	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig	    
 	    
 	    var createTime = new Date().getTime();	//获取时间戳
 	    
@@ -387,6 +392,7 @@
 	                createTime:createTime,
 	                isTextSearchEnabled: isTextSearchEnabled,
 	                encryptType : encryptType,
+	                autoBackup : autoBackupConfig,	                
 	            },
 	            success : function (ret) {
 	            	if(ret.status == "ok")
@@ -481,6 +487,81 @@
 	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
 		return remoteStorage;
 	}
+	
+	
+	function getAutoBackupConfig()
+	{   
+		var autoBackupConfig = "";
+		var localBackupConfig = getLocalBackupConfig();
+		var remoteBackupConfig = getRemoteBackupConfig();
+		autoBackupConfig = "{autoBackup:{localBackup:" + localBackupConfig + ", remoteBackup:" + remoteBackupConfig + "}}";
+		return autoBackupConfig;
+	}
+		
+	function getLocalBackupConfig()
+	{
+		var localBackupConfig = "";
+		localBackupConfig = "{backupTime:" + backupTime + ",";
+		localBackupConfig += "weekDay1:" + weekDay1En +",";
+		localBackupConfig += "weekDay2:" + weekDay2En +",";
+		localBackupConfig += "weekDay3:" + weekDay3En +",";
+		localBackupConfig += "weekDay4:" + weekDay4En +",";
+		localBackupConfig += "weekDay5:" + weekDay5En +",";
+		localBackupConfig += "weekDay6:" + weekDay6En +",";
+		localBackupConfig += "weekDay7:" + weekDay7En +",";
+		localBackupConfig += "localRootPath:" + localRootPath +"}";
+	}
+	
+	function getRemoteBackupConfig()
+	{
+		var remoteBackupConfig = "";
+		remoteBackupConfig = "{backupTime:" + backupTime + ",";
+		remoteBackupConfig += "weekDay1:" + weekDay1En +",";
+		remoteBackupConfig += "weekDay2:" + weekDay2En +",";
+		remoteBackupConfig += "weekDay3:" + weekDay3En +",";
+		remoteBackupConfig += "weekDay4:" + weekDay4En +",";
+		remoteBackupConfig += "weekDay5:" + weekDay5En +",";
+		remoteBackupConfig += "weekDay6:" + weekDay6En +",";
+		remoteBackupConfig += "weekDay7:" + weekDay7En +",";
+		remoteBackupConfig += "remoteStorage:" + remoteStorage +"}";
+	}
+	
+	function getRemoteBackupRemoteStorageConfig()
+	{
+		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
+		console.log("getRemoteStorageConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		case "mxsdoc":
+			prefix = "mxsdoc://";
+			break;
+		}
+		
+	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
+		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
+		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
+		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
+		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
+	    if(remoteStorage != undefined && remoteStorage != "")
+		{
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+			remoteStorage = prefix + remoteStorage;
+		}
+	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+		return remoteStorage;
+	}	
 	
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
 	function doSelectFS()
