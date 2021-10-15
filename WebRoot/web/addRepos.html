@@ -130,7 +130,7 @@
 			<div name="autoBackupEnablelDiv" style="margin-top:10px">
 	            <label>自动备份 
 	            	<span style="margin-left:5px">
-	            		<input type="checkbox" name="autoBackupConfigEnable" value="0" onclick="doSelectAutoBackupConfigEanble()">
+	            		<input type="checkbox" name="autoBackupEnable" value="0" onclick="doSelectAutoBackupConfigEanble()">
 	            	</span>
 	            </label>
 			</div>
@@ -142,7 +142,7 @@
 	            	</span>
 	            </label>
 	            <div name="localBackupConfig" style="display:none">
-				    <input class="form-control" type="text" name="localRootPath"  placeholder="请填写备份存储路径！" value="" style="width: 100%"/>
+				    <input class="form-control" type="text" name="localBackupRootPath"  placeholder="请填写备份存储路径！" value="" style="width: 100%"/>
     				<label style="margin-top:5px">备份时间</label>
 		        	<select class="form-control" name="localBackupTime" style="width:100%">   
 				        <option value="0">0:00</option>   
@@ -335,8 +335,9 @@
 	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
 	    var encryptType = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
 	    
-	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig	    
-	    
+	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
+	    console.log("autoBackupConfig = " + autoBackupConfig);
+	    	    
 	    var createTime = new Date().getTime();	//获取时间戳
 	    
 	    //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
@@ -491,45 +492,119 @@
 	
 	function getAutoBackupConfig()
 	{   
-		var autoBackupConfig = "";
+		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
+		console.log("getAutoBackupConfig autoBackupEnable:" + autoBackupEnable);
+		if(autoBackupEnable == 0)
+		{
+			return "";
+		}
+		
 		var localBackupConfig = getLocalBackupConfig();
 		var remoteBackupConfig = getRemoteBackupConfig();
-		autoBackupConfig = "{autoBackup:{localBackup:" + localBackupConfig + ", remoteBackup:" + remoteBackupConfig + "}}";
-		return autoBackupConfig;
+		if(localBackupConfig == "" && remoteBackupConfig == "")
+		{
+			return "";
+		}
+			
+		if(localBackupConfig == "")
+		{
+			return "{remoteBackup:" + remoteBackupConfig + "}";
+		}
+		
+		if(remoteBackupConfig == "")
+		{
+			return  "{localBackup:" + localBackupConfig + "}";
+		}
+		
+		return "{localBackup:" + localBackupConfig + ",remoteBackup:" + remoteBackupConfig + "}";
 	}
 		
 	function getLocalBackupConfig()
 	{
-		var localBackupConfig = "";
-		localBackupConfig = "{backupTime:" + backupTime + ",";
-		localBackupConfig += "weekDay1:" + weekDay1En +",";
-		localBackupConfig += "weekDay2:" + weekDay2En +",";
-		localBackupConfig += "weekDay3:" + weekDay3En +",";
-		localBackupConfig += "weekDay4:" + weekDay4En +",";
-		localBackupConfig += "weekDay5:" + weekDay5En +",";
-		localBackupConfig += "weekDay6:" + weekDay6En +",";
-		localBackupConfig += "weekDay7:" + weekDay7En +",";
-		localBackupConfig += "localRootPath:" + localRootPath +"}";
+		var localBackupEnable = $("#dialog-new-repos input[name='localBackupEnable']").is(':checked')? 1: 0;
+		console.log("getLocalBackupConfig localBackupEnable:" + localBackupEnable);
+		if(localBackupEnable == 0)
+		{
+			return "";
+		}
+		
+		var localRootPath = $("#dialog-new-repos input[name='localBackupRootPath']").val();
+		if(localRootPath == undefined || localRootPath == "")
+		{
+			return "";
+		}
+
+		var backupTime = $("#dialog-new-repos select[name='localBackupTime']").val();;
+	    var weekDay1 = $("#dialog-new-repos input[name='localBackupWeekDay1']").is(':checked')? 1: 0;
+	    var weekDay2 = $("#dialog-new-repos input[name='localBackupWeekDay2']").is(':checked')? 1: 0;
+	    var weekDay3 = $("#dialog-new-repos input[name='localBackupWeekDay3']").is(':checked')? 1: 0;
+	    var weekDay4 = $("#dialog-new-repos input[name='localBackupWeekDay4']").is(':checked')? 1: 0;
+	    var weekDay5 = $("#dialog-new-repos input[name='localBackupWeekDay5']").is(':checked')? 1: 0;
+	    var weekDay6 = $("#dialog-new-repos input[name='localBackupWeekDay6']").is(':checked')? 1: 0;
+	    var weekDay7 = $("#dialog-new-repos input[name='localBackupWeekDay7']").is(':checked')? 1: 0;
+	    var realTimeBackup = $("#dialog-new-repos input[name='localRealTimeBackupEnable']").is(':checked')? 1: 0;
+
+		var localBackupConfig = 
+		"{" +
+			"backupTime:" + backupTime + "," +
+			"weekDay1:" + weekDay1 +"," + 
+			"weekDay2:" + weekDay2 +"," + 
+			"weekDay3:" + weekDay3 +"," + 
+			"weekDay4:" + weekDay4 +"," + 
+			"weekDay5:" + weekDay5 +"," + 
+			"weekDay6:" + weekDay6 +"," + 
+			"weekDay7:" + weekDay7 +"," + 
+			"realTimeBackup:" + realTimeBackup + "," +
+			"localRootPath:" + localRootPath +
+		"}";
+		return localBackupConfig;
 	}
 	
 	function getRemoteBackupConfig()
 	{
-		var remoteBackupConfig = "";
-		remoteBackupConfig = "{backupTime:" + backupTime + ",";
-		remoteBackupConfig += "weekDay1:" + weekDay1En +",";
-		remoteBackupConfig += "weekDay2:" + weekDay2En +",";
-		remoteBackupConfig += "weekDay3:" + weekDay3En +",";
-		remoteBackupConfig += "weekDay4:" + weekDay4En +",";
-		remoteBackupConfig += "weekDay5:" + weekDay5En +",";
-		remoteBackupConfig += "weekDay6:" + weekDay6En +",";
-		remoteBackupConfig += "weekDay7:" + weekDay7En +",";
-		remoteBackupConfig += "remoteStorage:" + remoteStorage +"}";
+		var remoteBackupEnable = $("#dialog-new-repos input[name='remoteBackupEnable']").is(':checked')? 1: 0;
+		console.log("getRemoteBackupConfig remoteBackupEnable:" + remoteBackupEnable);
+		if(remoteBackupEnable == 0)
+		{
+			return "";
+		}
+		
+		var remoteStorage = getRemoteBackupRemoteStorageConfig();
+		if(remoteStorage == "")
+		{
+			return "";
+		}
+		
+		var backupTime = $("#dialog-new-repos select[name='remoteBackupTime']").val();
+	    var weekDay1 = $("#dialog-new-repos input[name='remoteBackupWeekDay1']").is(':checked')? 1: 0;
+	    var weekDay2 = $("#dialog-new-repos input[name='remoteBackupWeekDay2']").is(':checked')? 1: 0;
+	    var weekDay3 = $("#dialog-new-repos input[name='remoteBackupWeekDay3']").is(':checked')? 1: 0;
+	    var weekDay4 = $("#dialog-new-repos input[name='remoteBackupWeekDay4']").is(':checked')? 1: 0;
+	    var weekDay5 = $("#dialog-new-repos input[name='remoteBackupWeekDay5']").is(':checked')? 1: 0;
+	    var weekDay6 = $("#dialog-new-repos input[name='remoteBackupWeekDay6']").is(':checked')? 1: 0;
+	    var weekDay7 = $("#dialog-new-repos input[name='remoteBackupWeekDay7']").is(':checked')? 1: 0;
+	    var realTimeBackup = $("#dialog-new-repos input[name='remoteRealTimeBackupEnable']").is(':checked')? 1: 0;
+			
+		var remoteBackupConfig = 
+		"{" +
+			"backupTime:" + backupTime + ","  + 
+			"weekDay1:" + weekDay1 +"," + 
+			"weekDay2:" + weekDay2 +"," + 
+			"weekDay3:" + weekDay3 +"," + 
+			"weekDay4:" + weekDay4 +"," + 
+			"weekDay5:" + weekDay5 +"," + 
+			"weekDay6:" + weekDay6 +"," + 
+			"weekDay7:" + weekDay7 +"," + 
+			"realTimeBackup:" + realTimeBackup + "," +
+			"remoteStorage:" + remoteStorage +
+		"}";
+		return remoteBackupConfig;
 	}
 	
 	function getRemoteBackupRemoteStorageConfig()
 	{
-		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
-		console.log("getRemoteStorageConfig protocol:" + protocol);
+		var protocol = $("#dialog-new-repos select[name='remoteBackupStorageProtocol']").val();
+		console.log("getRemoteBackupRemoteStorageConfig protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
 			return "";
@@ -549,17 +624,12 @@
 			break;
 		}
 		
-	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
-		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
-		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
-		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
-		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
+	    var remoteStorage = $("#dialog-new-repos input[name='remoteBackupStorage']").val();	//remoteStorage
 	    if(remoteStorage != undefined && remoteStorage != "")
 		{
-	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-			remoteStorage = prefix + remoteStorage;
+	    	remoteStorage = prefix + remoteStorage;
 		}
-	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+	    console.log("getRemoteBackupRemoteStorageConfig remoteStorage:" + remoteStorage);
 		return remoteStorage;
 	}	
 	
@@ -772,9 +842,9 @@
 	
 	function doSelectAutoBackupConfigEanble()
 	{
-		var autoBackupConfigEnable = $("#dialog-new-repos input[name='autoBackupConfigEnable']").is(':checked')? 1: 0;
-		console.log("doSelectAutoBackupConfigEanble autoBackupConfigEnable:" + autoBackupConfigEnable);
-		if(autoBackupConfigEnable == 0)
+		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
+		console.log("doSelectAutoBackupConfigEanble autoBackupEnable:" + autoBackupEnable);
+		if(autoBackupEnable == 0)
 		{
 			$("#dialog-new-repos div[name='autoBackupConfigDiv']").hide();
 		}
