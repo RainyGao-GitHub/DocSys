@@ -10001,7 +10001,8 @@ public class BaseController  extends BaseFunction{
 			{
 				Repos repos = list.get(i);
 				//Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
-				parseRemoteStorageConfig(repos, repos.getRemoteStorage());
+				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
+				initReposAutoBackupConfig(repos, repos.getAutoBackup());
 				initReposTextSearchConfig(repos);
 				initReposEncryptConfig(repos);
 			}

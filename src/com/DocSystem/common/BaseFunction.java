@@ -51,9 +51,11 @@ import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.License;
+import com.DocSystem.common.entity.LocalBackupConfig;
 import com.DocSystem.common.entity.MxsDocConfig;
 import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
+import com.DocSystem.common.entity.RemoteBackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
@@ -315,7 +317,70 @@ public class BaseFunction{
 		reposRemoteStorageHashMap.remove(repos.getId());
 	}		
 	
+	protected static void initReposAutoBackupConfig(Repos repos, String autoBackup)
+	{
+		BackupConfig config = parseAutoBackupConfig(repos, autoBackup);
+		if(config == null)
+		{
+			reposBackupConfigHashMap.remove(repos.getId());
+			return;
+		}
+		
+		//add backup config to hashmap
+		reposBackupConfigHashMap.put(repos.getId(), config);
+	}
 	
+	protected static BackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
+		JSONObject jsonObj = JSON.parseObject(autoBackup);
+		if(jsonObj == null)
+		{
+			return null;
+		}
+		
+		LocalBackupConfig localBackupConfig = null;
+		JSONObject localBackupObj = jsonObj.getJSONObject("localBackup");
+		if(localBackupObj != null)
+		{
+			localBackupConfig = getLocalBackupConfig(localBackupObj);
+		}
+		
+		
+		RemoteBackupConfig remoteBackupConfig = null;
+		JSONObject remoteBackupObj = jsonObj.getJSONObject("remoteBackup");
+		if(remoteBackupObj != null)
+		{
+			remoteBackupConfig = getRemoteBackupConfig(remoteBackupObj);
+		}
+		
+		BackupConfig backupConfig = new BackupConfig();
+		backupConfig.localBackupConfig = localBackupConfig;
+		backupConfig.remoteBackupConfig = remoteBackupConfig;
+		return backupConfig;				
+	}
+	
+	private static RemoteBackupConfig getRemoteBackupConfig(JSONObject remoteBackupObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static LocalBackupConfig getLocalBackupConfig(JSONObject localBackupObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
+	{
+		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage);
+		if(remote == null)
+		{
+			reposRemoteStorageHashMap.remove(repos.getId());
+			return;
+		}
+		
+		//add remote config to hashmap
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
+	}
+
 	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage) {
 		Log.debug("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		if(remoteStorage == null)
@@ -417,8 +482,6 @@ public class BaseFunction{
 			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.MXSDOC.userName + " pwd:" + remote.MXSDOC.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
-		//add remote config to hashmap
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
 	}
 
@@ -470,8 +533,6 @@ public class BaseFunction{
 			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
-		//add remote config to hashmap
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
 	}
 
@@ -507,8 +568,6 @@ public class BaseFunction{
 			Log.debug("parseRemoteStorageConfigForSvn userName:" + remote.SVN.userName + " pwd:" + remote.SVN.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
-		//add remote config to hashmap
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
 	}
 
@@ -543,8 +602,6 @@ public class BaseFunction{
 			Log.debug("parseRemoteStorageConfigForSftp userName:" + remote.SFTP.userName + " pwd:" + remote.SFTP.pwd + " autoPull:" + remote.autoPull);
 		}
 		
-		//add remote config to hashmap
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
 	}
 	
@@ -579,8 +636,6 @@ public class BaseFunction{
 			Log.debug("parseRemoteStorageConfigForFtp userName:" + remote.FTP.userName + " pwd:" + remote.FTP.pwd + " autoPull:" + remote.autoPull);
 		}
 		
-		//add remote config to hashmap
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
 	}
 	
@@ -629,8 +684,6 @@ public class BaseFunction{
 			Log.debug("parseRemoteStorageConfigForSmb userDomain:" + remote.SMB.userDomain + " userName:" + remote.SMB.userName + " pwd:" + remote.SMB.pwd + " autoPull:" + remote.autoPull);
 		}
 		
-		//add remote config to hashmap
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
 		return remote;
 	}
 	
