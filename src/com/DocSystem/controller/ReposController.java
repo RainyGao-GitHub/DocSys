@@ -151,6 +151,7 @@ public class ReposController extends BaseController{
 			Long createTime,
 			Integer isTextSearchEnabled,
 			Integer encryptType,
+			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
 		Log.info("\n****************** addRepos.do ***********************");
@@ -234,6 +235,7 @@ public class ReposController extends BaseController{
 		repos.setSvnPath1(svnPath1);
 		repos.setSvnUser1(svnUser1);
 		repos.setSvnPwd1(svnPwd1);
+		repos.setAutoBackup(autoBackup);
 		
 		//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 		if(checkReposInfoForAdd(repos, rt) == false)
@@ -294,7 +296,13 @@ public class ReposController extends BaseController{
 		
 		if(remoteStorage != null)
 		{
-			parseRemoteStorageConfig(repos, remoteStorage);
+			initReposRemoteStorageConfig(repos, remoteStorage);
+		}
+		
+		if(autoBackup != null)
+		{
+			setReposAutoBackup(repos, autoBackup);
+			initReposAutoBackupConfig(repos, autoBackup);
 		}
 		
 		//初始化倉庫的全文搜索
@@ -322,6 +330,17 @@ public class ReposController extends BaseController{
 		
 		repos.textSearchConfig.realDocTextSearchDisableHashMap.put("0", "disabled");		
 		return FileUtil.saveDocContentToFile("disabled", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
+	}
+	
+	private boolean setReposAutoBackup(Repos repos, String autoBackup) {
+		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);
+		
+		if(autoBackup == null || autoBackup.isEmpty())
+		{
+			return FileUtil.delFile(reposAutoBackupConfigPath + "autoBackup.json");
+		}
+		
+		return FileUtil.saveDocContentToFile(autoBackup, reposAutoBackupConfigPath, "autoBackup.json", "UTF-8");
 	}
 	
 	private void setReposEncrypt(Repos repos, Integer encryptType) {
@@ -428,6 +447,7 @@ public class ReposController extends BaseController{
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
 			Integer isTextSearchEnabled,
 			Integer encryptType,
+			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("\n****************** updateReposInfo.do ***********************");
@@ -484,6 +504,7 @@ public class ReposController extends BaseController{
 		newReposInfo.setSvnPath1(svnPath1);
 		newReposInfo.setSvnUser1(svnUser1);
 		newReposInfo.setSvnPwd1(svnPwd1);
+		newReposInfo.setAutoBackup(autoBackup);
 		formatReposInfo(newReposInfo);
 		
 		//Get reposInfo (It will be used to revert the reposInfo)
@@ -517,7 +538,13 @@ public class ReposController extends BaseController{
 		
 		if(remoteStorage != null)
 		{
-			parseRemoteStorageConfig(reposInfo, remoteStorage);
+			initReposRemoteStorageConfig(reposInfo, remoteStorage);
+		}
+		
+		if(autoBackup != null)
+		{
+			setReposAutoBackup(reposInfo, autoBackup);
+			initReposAutoBackupConfig(reposInfo, autoBackup);
 		}
 		
 		//设置全文搜索

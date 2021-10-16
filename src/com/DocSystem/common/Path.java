@@ -600,18 +600,23 @@ public class Path {
 	}
 
 	public static String getReposTextSearchConfigPath(Repos repos) {
-		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/";
-		return reposPwdPath;
+		String path = getReposPath(repos) + "data/textSearchSetting/";
+		return path;
 	}
 	
 	public static String getReposTextSearchConfigPathForRealDoc(Repos repos) {
-		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/RealDoc/";
-		return reposPwdPath;
+		String path = getReposPath(repos) + "data/textSearchSetting/RealDoc/";
+		return path;
 	}
 
 	public static String getReposTextSearchConfigPathForVirtualDoc(Repos repos) {
-		String reposPwdPath = getReposPath(repos) + "data/textSearchSetting/VirtualDoc/";
-		return reposPwdPath;
+		String path = getReposPath(repos) + "data/textSearchSetting/VirtualDoc/";
+		return path;
+	}
+	
+	public static String getReposAutoBackupConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/autoBackupSetting/";
+		return path;
 	}
 	
 	protected String getOfficeEditRootPath(Doc doc) {
