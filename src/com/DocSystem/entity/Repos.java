@@ -23,6 +23,8 @@ public class Repos {
 
 	private String remoteStorage;
 
+	private String autoBackup;
+
     private Integer verCtrl;
 
     private Integer isRemote;
@@ -292,5 +294,13 @@ public class Repos {
     
 	public void setRemoteStorage(String remoteStorage) {
         this.remoteStorage = remoteStorage;		
+	}
+	
+    public String getAutoBackup() {
+        return autoBackup;
+    }
+    
+	public void setAutoBackup(String autoBackup) {
+        this.autoBackup = autoBackup;		
 	}
 }
