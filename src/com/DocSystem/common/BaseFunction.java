@@ -52,6 +52,7 @@ import com.DocSystem.common.entity.GitConfig;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.License;
 import com.DocSystem.common.entity.LocalBackupConfig;
+import com.DocSystem.common.entity.LocalConfig;
 import com.DocSystem.common.entity.MxsDocConfig;
 import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
@@ -337,10 +338,13 @@ public class BaseFunction{
 			return null;
 		}
 		
+		Log.printObject("parseAutoBackupConfig() ", jsonObj);
+		
 		LocalBackupConfig localBackupConfig = null;
 		JSONObject localBackupObj = jsonObj.getJSONObject("localBackup");
 		if(localBackupObj != null)
 		{
+			Log.printObject("parseAutoBackupConfig() ", localBackupObj);
 			localBackupConfig = getLocalBackupConfig(localBackupObj);
 		}
 		
@@ -349,7 +353,8 @@ public class BaseFunction{
 		JSONObject remoteBackupObj = jsonObj.getJSONObject("remoteBackup");
 		if(remoteBackupObj != null)
 		{
-			remoteBackupConfig = getRemoteBackupConfig(remoteBackupObj);
+			Log.printObject("parseAutoBackupConfig() ", remoteBackupObj);
+			remoteBackupConfig = getRemoteBackupConfig(repos, remoteBackupObj);
 		}
 		
 		BackupConfig backupConfig = new BackupConfig();
@@ -358,14 +363,40 @@ public class BaseFunction{
 		return backupConfig;				
 	}
 	
-	private static RemoteBackupConfig getRemoteBackupConfig(JSONObject remoteBackupObj) {
-		// TODO Auto-generated method stub
+	private static RemoteBackupConfig getRemoteBackupConfig(Repos repos, JSONObject remoteBackupObj) {
+		RemoteBackupConfig remoteBackupConfig = new RemoteBackupConfig();
+		remoteBackupConfig.realTimeBackup = remoteBackupObj.getInteger("realTimeBackup");
+		remoteBackupConfig.bakcupTime = remoteBackupObj.getInteger("backupTime");
+		remoteBackupConfig.weekDay1 = remoteBackupObj.getInteger("weekDay1");
+		remoteBackupConfig.weekDay2 = remoteBackupObj.getInteger("weekDay2");
+		remoteBackupConfig.weekDay3 = remoteBackupObj.getInteger("weekDay3");
+		remoteBackupConfig.weekDay4 = remoteBackupObj.getInteger("weekDay4");
+		remoteBackupConfig.weekDay5 = remoteBackupObj.getInteger("weekDay5");
+		remoteBackupConfig.weekDay6 = remoteBackupObj.getInteger("weekDay6");
+		remoteBackupConfig.weekDay7 = remoteBackupObj.getInteger("weekDay7");
+
+		remoteBackupConfig.remoteStorageConfig = parseRemoteStorageConfig(repos, remoteBackupObj.getString("remoteStorage"));
 		return null;
 	}
 
 	private static LocalBackupConfig getLocalBackupConfig(JSONObject localBackupObj) {
-		// TODO Auto-generated method stub
-		return null;
+		LocalBackupConfig localBackupConfig = new LocalBackupConfig();
+		localBackupConfig.realTimeBackup = localBackupObj.getInteger("realTimeBackup");
+		localBackupConfig.bakcupTime = localBackupObj.getInteger("backupTime");
+		localBackupConfig.weekDay1 = localBackupObj.getInteger("weekDay1");
+		localBackupConfig.weekDay2 = localBackupObj.getInteger("weekDay2");
+		localBackupConfig.weekDay3 = localBackupObj.getInteger("weekDay3");
+		localBackupConfig.weekDay4 = localBackupObj.getInteger("weekDay4");
+		localBackupConfig.weekDay5 = localBackupObj.getInteger("weekDay5");
+		localBackupConfig.weekDay6 = localBackupObj.getInteger("weekDay6");
+		localBackupConfig.weekDay7 = localBackupObj.getInteger("weekDay7");
+		
+		RemoteStorageConfig remote = new RemoteStorageConfig();
+		remote.protocol = "file";
+		remote.FILE = new LocalConfig();
+		remote.FILE.localRootPath = localBackupObj.getString("localRootPath");
+		localBackupConfig.remoteStorageConfig = remote;		
+		return localBackupConfig;
 	}
 	
 	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
@@ -382,7 +413,6 @@ public class BaseFunction{
 	}
 
 	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage) {
-		Log.debug("parseRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		if(remoteStorage == null)
 		{
 			return null;
@@ -390,7 +420,6 @@ public class BaseFunction{
 		
 		if(remoteStorage.equals("none"))
 		{
-			reposRemoteStorageHashMap.remove(repos.getId());
 			return null;
 		}
 		
