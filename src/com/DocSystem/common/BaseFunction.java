@@ -348,7 +348,7 @@ public class BaseFunction{
 			if(localBackupObj != null)
 			{
 				Log.printObject("parseAutoBackupConfig() ", localBackupObj);
-				localBackupConfig = getLocalBackupConfig(localBackupObj);
+				localBackupConfig = getLocalBackupConfig(repos, localBackupObj);
 			}
 			
 			
@@ -383,11 +383,16 @@ public class BaseFunction{
 		remoteBackupConfig.weekDay6 = remoteBackupObj.getInteger("weekDay6");
 		remoteBackupConfig.weekDay7 = remoteBackupObj.getInteger("weekDay7");
 
-		remoteBackupConfig.remoteStorageConfig = parseRemoteStorageConfig(repos, remoteBackupObj.getString("remoteStorage"));
-		return null;
+		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteBackupObj.getString("remoteStorage"));
+		if(remote != null)
+		{
+			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/Doc";
+		}
+		remoteBackupConfig.remoteStorageConfig = remote;
+		return remoteBackupConfig;
 	}
 
-	private static LocalBackupConfig getLocalBackupConfig(JSONObject localBackupObj) {
+	private static LocalBackupConfig getLocalBackupConfig(Repos repos, JSONObject localBackupObj) {
 		LocalBackupConfig localBackupConfig = new LocalBackupConfig();
 		localBackupConfig.realTimeBackup = localBackupObj.getInteger("realTimeBackup");
 		localBackupConfig.bakcupTime = localBackupObj.getInteger("backupTime");
@@ -403,6 +408,11 @@ public class BaseFunction{
 		remote.protocol = "file";
 		remote.FILE = new LocalConfig();
 		remote.FILE.localRootPath = localBackupObj.getString("localRootPath");
+		if(remote != null)
+		{
+			remote.remoteStorageIndexLib = getDBStorePath() + "LocalBackup/" + repos.getId() + "/Doc";
+		}
+		
 		localBackupConfig.remoteStorageConfig = remote;		
 		return localBackupConfig;
 	}
@@ -416,6 +426,9 @@ public class BaseFunction{
 			return;
 		}
 		
+		//设置索引库位置
+		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
+
 		//add remote config to hashmap
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
 	}
@@ -1840,12 +1853,12 @@ public class BaseFunction{
 	}
 	
 	protected static String getIndexLibPathForRemoteStorageDoc(Repos repos, RemoteStorageConfig remote) {
-		if(remote.remoteStorageIndexLib != null)
+		if(remote.remoteStorageIndexLib == null)
 		{
-			return remote.remoteStorageIndexLib;
+			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
 		}
-		
-		return getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
+		return remote.remoteStorageIndexLib;
+
 	}
 	
 	protected static String getDBStorePath() {
