@@ -543,6 +543,8 @@ function getReposBasicSetting()
 	   	{
 		   	$("#RBSisEncryptEnabled").attr("checked","checked");
 	   	}
+	   	
+	   	showAutoBackupConfig(reposInfo);
 	}
 }
 
@@ -690,6 +692,11 @@ function showRemoteStorageConfig(reposInfo)
    	}
 }
 
+function showAutoBackupConfig(reposInfo)
+{
+	
+}
+
 function doSelectRemoteStorageProtocol()
 {
 	var protocol = $("#remoteStorageProtocol").val();
@@ -755,6 +762,149 @@ function getRemoteStorageConfig()
 	return remoteStorage;
 }
 
+function getAutoBackupConfig()
+{   
+	var autoBackupEnable = $("#autoBackupEnable").is(':checked')? 1: 0;
+	console.log("getAutoBackupConfig autoBackupEnable:" + autoBackupEnable);
+	if(autoBackupEnable == 0)
+	{
+		return "";
+	}
+	
+	var localBackupConfig = getLocalBackupConfig();
+	var remoteBackupConfig = getRemoteBackupConfig();
+	if(localBackupConfig == "" && remoteBackupConfig == "")
+	{
+		return "";
+	}
+		
+	if(localBackupConfig == "")
+	{
+		return "{remoteBackup:" + remoteBackupConfig + "}";
+	}
+	
+	if(remoteBackupConfig == "")
+	{
+		return  "{localBackup:" + localBackupConfig + "}";
+	}
+	
+	return "{localBackup:" + localBackupConfig + ",remoteBackup:" + remoteBackupConfig + "}";
+}
+	
+function getLocalBackupConfig()
+{
+	var localBackupEnable = $("#localBackupEnable").is(':checked')? 1: 0;
+	console.log("getLocalBackupConfig localBackupEnable:" + localBackupEnable);
+	if(localBackupEnable == 0)
+	{
+		return "";
+	}
+	
+	var localRootPath = $("#localBackupRootPath").val();
+	if(localRootPath == undefined || localRootPath == "")
+	{
+		return "";
+	}
+
+	var backupTime = $("#localBackupTime").val();;
+    var weekDay1 = $("#localBackupWeekDay1").is(':checked')? 1: 0;
+    var weekDay2 = $("#localBackupWeekDay2").is(':checked')? 1: 0;
+    var weekDay3 = $("#localBackupWeekDay3").is(':checked')? 1: 0;
+    var weekDay4 = $("#localBackupWeekDay4").is(':checked')? 1: 0;
+    var weekDay5 = $("#localBackupWeekDay5").is(':checked')? 1: 0;
+    var weekDay6 = $("#localBackupWeekDay6").is(':checked')? 1: 0;
+    var weekDay7 = $("#localBackupWeekDay7").is(':checked')? 1: 0;
+    var realTimeBackup = $("#localRealTimeBackupEnable").is(':checked')? 1: 0;
+
+	var localBackupConfig = 
+	"{" +
+		"backupTime:" + backupTime + "," +
+		"weekDay1:" + weekDay1 +"," + 
+		"weekDay2:" + weekDay2 +"," + 
+		"weekDay3:" + weekDay3 +"," + 
+		"weekDay4:" + weekDay4 +"," + 
+		"weekDay5:" + weekDay5 +"," + 
+		"weekDay6:" + weekDay6 +"," + 
+		"weekDay7:" + weekDay7 +"," + 
+		"realTimeBackup:" + realTimeBackup + "," +
+		"localRootPath:" + localRootPath +
+	"}";
+	return localBackupConfig;
+}
+
+function getRemoteBackupConfig()
+{
+	var remoteBackupEnable = $("#remoteBackupEnable").is(':checked')? 1: 0;
+	console.log("getRemoteBackupConfig remoteBackupEnable:" + remoteBackupEnable);
+	if(remoteBackupEnable == 0)
+	{
+		return "";
+	}
+	
+	var remoteStorage = getRemoteBackupRemoteStorageConfig();
+	if(remoteStorage == "")
+	{
+		return "";
+	}
+	
+	var backupTime = $("#remoteBackupTime").val();
+    var weekDay1 = $("#remoteBackupWeekDay1").is(':checked')? 1: 0;
+    var weekDay2 = $("#remoteBackupWeekDay2").is(':checked')? 1: 0;
+    var weekDay3 = $("#remoteBackupWeekDay3").is(':checked')? 1: 0;
+    var weekDay4 = $("#remoteBackupWeekDay4").is(':checked')? 1: 0;
+    var weekDay5 = $("#remoteBackupWeekDay5").is(':checked')? 1: 0;
+    var weekDay6 = $("#remoteBackupWeekDay6").is(':checked')? 1: 0;
+    var weekDay7 = $("#remoteBackupWeekDay7").is(':checked')? 1: 0;
+    var realTimeBackup = $("#remoteRealTimeBackupEnable").is(':checked')? 1: 0;
+		
+	var remoteBackupConfig = 
+	"{" +
+		"backupTime:" + backupTime + ","  + 
+		"weekDay1:" + weekDay1 +"," + 
+		"weekDay2:" + weekDay2 +"," + 
+		"weekDay3:" + weekDay3 +"," + 
+		"weekDay4:" + weekDay4 +"," + 
+		"weekDay5:" + weekDay5 +"," + 
+		"weekDay6:" + weekDay6 +"," + 
+		"weekDay7:" + weekDay7 +"," + 
+		"realTimeBackup:" + realTimeBackup + "," +
+		"remoteStorage:" + remoteStorage +
+	"}";
+	return remoteBackupConfig;
+}
+
+function getRemoteBackupRemoteStorageConfig()
+{
+	var protocol = $("#remoteBackupStorageProtocol").val();
+	console.log("getRemoteBackupRemoteStorageConfig protocol:" + protocol);
+	if(protocol == undefined || protocol == "")
+	{
+		return "";
+	}
+	
+	var prefix = "";
+	switch(protocol)
+	{
+	case "svn":
+		prefix = "svn://";
+		break;
+	case "git":
+		prefix = "git://";
+		break;
+	case "mxsdoc":
+		prefix = "mxsdoc://";
+		break;
+	}
+	
+    var remoteStorage = $("#remoteBackupStorage").val();	//remoteStorage
+    if(remoteStorage != undefined && remoteStorage != "")
+	{
+    	remoteStorage = prefix + remoteStorage;
+	}
+    console.log("getRemoteBackupRemoteStorageConfig remoteStorage:" + remoteStorage);
+	return remoteStorage;
+}	
+
 
 function saveReposBasicSetting()
 {
@@ -768,6 +918,8 @@ function saveReposBasicSetting()
 	newReposSetting.realDocPath = $("#RBSrealDocPath").val();
 	var remoteStorage = getRemoteStorageConfig();
 	newReposSetting.remoteStorage = remoteStorage;
+	var autoBackup = getAutoBackupConfig();
+	newReposSetting.autoBackup = autoBackup;
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;
 	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
@@ -877,6 +1029,11 @@ function saveReposBasicSetting()
        		}
 
        		if(oldSetting.remoteStorage != newSetting.remoteStorage)
+       		{
+       			return true;
+       		}
+       		
+       		if(oldSetting.autoBackup != newSetting.autoBackup)
        		{
        			return true;
        		}
