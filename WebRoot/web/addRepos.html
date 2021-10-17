@@ -840,6 +840,73 @@
 		
 	}
 	
+	function doSelectVerCtrlEnalbe()
+	{
+		var verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
+		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
+		if(verCtrlEnable == 0)
+		{
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭verCtrl
+
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
+			
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide();	//隐藏 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
+		}
+		else
+		{	
+			if($("#dialog-new-repos select[name='verCtrl']").val() == 0)	//设置版本控制为GIT
+			{
+				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+			}
+			
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();			//隐藏 高级选项
+			
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").show();		//显示 高级选项提示
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");						
+		}
+	}
+
+	function doSelectVerCtrlConfigEnable()
+	{
+		var verCtrlConfigEnable = $("#dialog-new-repos span[name='verCtrlConfigEnable']").val();
+		console.log("doSelectVerCtrlConfigEnable verCtrlConfigEnable:" + verCtrlConfigEnable);
+		if(verCtrlConfigEnable == 0)
+		{
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(1);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("隐藏高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();			
+		}
+		else
+		{
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
+			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();						
+		}
+		doSelectVerCtrl();
+		doSelectVerCtrl1();	
+	}
+	
+	function doSetEncryptConfirm()
+	{
+		var en = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+		if(en == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'setEncryptConfirm',
+		        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
+		    },function(){
+		    	//确认
+		    	$("#dialog-new-repos input[name='isEncryptEnabled']").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#dialog-new-repos input[name='isEncryptEnabled']").attr("checked",false);			
+		    });
+		}
+	}
+	
 	function doSelectAutoBackupConfigEanble()
 	{
 		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
@@ -914,73 +981,6 @@
 			break;
 		}
 		$("#dialog-new-repos div[name='remoteBackupStorageConfig']").show();
-	}
-	
-	function doSelectVerCtrlEnalbe()
-	{
-		var verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
-		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
-		if(verCtrlEnable == 0)
-		{
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭verCtrl
-
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
-			
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide();	//隐藏 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-		}
-		else
-		{	
-			if($("#dialog-new-repos select[name='verCtrl']").val() == 0)	//设置版本控制为GIT
-			{
-				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
-			}
-			
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();			//隐藏 高级选项
-			
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").show();		//显示 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");						
-		}
-	}
-
-	function doSelectVerCtrlConfigEnable()
-	{
-		var verCtrlConfigEnable = $("#dialog-new-repos span[name='verCtrlConfigEnable']").val();
-		console.log("doSelectVerCtrlConfigEnable verCtrlConfigEnable:" + verCtrlConfigEnable);
-		if(verCtrlConfigEnable == 0)
-		{
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(1);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("隐藏高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();			
-		}
-		else
-		{
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();						
-		}
-		doSelectVerCtrl();
-		doSelectVerCtrl1();	
-	}
-	
-	function doSetEncryptConfirm()
-	{
-		var en = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
-		if(en == 1)
-		{
-			qiao.bs.confirm({
-		        id: 'setEncryptConfirm',
-		        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
-		    },function(){
-		    	//确认
-		    	$("#dialog-new-repos input[name='isEncryptEnabled']").attr("checked","checked");
-		    },function(){
-				//取消
-		    	$("#dialog-new-repos input[name='isEncryptEnabled']").attr("checked",false);			
-		    });
-		}
 	}
 </script>
 
