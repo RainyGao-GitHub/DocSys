@@ -331,18 +331,7 @@ public class ReposController extends BaseController{
 		repos.textSearchConfig.realDocTextSearchDisableHashMap.put("0", "disabled");		
 		return FileUtil.saveDocContentToFile("disabled", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
 	}
-	
-	private boolean setReposAutoBackup(Repos repos, String autoBackup) {
-		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);
-		
-		if(autoBackup == null || autoBackup.isEmpty())
-		{
-			return FileUtil.delFile(reposAutoBackupConfigPath + "autoBackup.json");
-		}
-		
-		return FileUtil.saveDocContentToFile(autoBackup, reposAutoBackupConfigPath, "autoBackup.json", "UTF-8");
-	}
-	
+
 	private void setReposEncrypt(Repos repos, Integer encryptType) {
 		EncryptConfig config = null;
 		if(encryptType != null && encryptType != 0)

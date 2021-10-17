@@ -10002,7 +10002,12 @@ public class BaseController  extends BaseFunction{
 				Repos repos = list.get(i);
 				//Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
 				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
-				initReposAutoBackupConfig(repos, repos.getAutoBackup());
+				
+				//init autoBackupConfig
+				String autoBackup = getReposAutoBackup(repos);
+				repos.setAutoBackup(autoBackup);
+				initReposAutoBackupConfig(repos, autoBackup);
+				
 				initReposTextSearchConfig(repos);
 				initReposEncryptConfig(repos);
 			}
@@ -10010,6 +10015,22 @@ public class BaseController  extends BaseFunction{
 	        Log.debug("initReposExtentionConfig 异常");
 	        e.printStackTrace();
 		}	
+	}
+	
+	protected boolean setReposAutoBackup(Repos repos, String autoBackup) {
+		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);
+		
+		if(autoBackup == null || autoBackup.isEmpty())
+		{
+			return FileUtil.delFile(reposAutoBackupConfigPath + "autoBackup.json");
+		}
+		
+		return FileUtil.saveDocContentToFile(autoBackup, reposAutoBackupConfigPath, "autoBackup.json", "UTF-8");
+	}
+	
+	protected String getReposAutoBackup(Repos repos) {
+		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);		
+		return FileUtil.readDocContentFromFile(reposAutoBackupConfigPath, "autoBackup.json", "UTF-8");
 	}
 	
 	protected void initReposEncryptConfig(Repos repos) {
