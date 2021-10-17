@@ -2,7 +2,15 @@ package com.DocSystem.common.entity;
 
 public class RemoteBackupConfig 
 {
-	public Integer realTimeBackupEn = 0; //默认不进行实时备份
-	public Integer fullBackupEn = 0;	//默认增量备份（如果是版本仓库或者MxsDoc仓库该标记无效）	
 	public RemoteStorageConfig remoteStorageConfig;
+	public Integer fullBackupEn = 0;
+	public Integer realTimeBackup;
+	public Integer bakcupTime;
+	public Integer weekDay1;
+	public Integer weekDay2;
+	public Integer weekDay3;
+	public Integer weekDay4;
+	public Integer weekDay5;
+	public Integer weekDay6;
+	public Integer weekDay7;	
 }

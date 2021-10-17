@@ -160,7 +160,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ "isTextSearchEnabled:" + isTextSearchEnabled);
+				+ "isTextSearchEnabled:" + isTextSearchEnabled + " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
