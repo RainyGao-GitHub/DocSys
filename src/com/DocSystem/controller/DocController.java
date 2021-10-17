@@ -245,7 +245,7 @@ public class DocController extends BaseController{
 
 	private void realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
 	{
-		// TODO Auto-generated method stub
+		Log.debug("realTimeBackup()");
 		BackupConfig backupConfig = repos.backupConfig;
 		if(backupConfig == null)
 		{
@@ -258,8 +258,10 @@ public class DocController extends BaseController{
 	}
 
 	private void realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+		Log.debug("realTimeRemoteBackup()");
+
 		RemoteBackupConfig remoteBackupConfig = repos.backupConfig.remoteBackupConfig;
-		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackupEn == null || remoteBackupConfig.realTimeBackupEn == 0)
+		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackup == null || remoteBackupConfig.realTimeBackup == 0)
 		{
 			Log.debug("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured");			
 			return;
@@ -314,8 +316,10 @@ public class DocController extends BaseController{
 	}
 
 	private void realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+		Log.debug("realTimeLocalBackup()");
+
 		LocalBackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
-		if(localBackupConfig == null || localBackupConfig.realTimeBackupEn == null || localBackupConfig.realTimeBackupEn == 0)
+		if(localBackupConfig == null || localBackupConfig.realTimeBackup == null || localBackupConfig.realTimeBackup == 0)
 		{
 			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			
 			return;
