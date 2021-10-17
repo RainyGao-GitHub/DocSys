@@ -7,7 +7,6 @@ import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
-import com.DocSystem.websocket.BussinessBase;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
@@ -295,7 +294,7 @@ public class MxsDocUtil {
 					//reqObj.put("chunkNum", chunkNum);
 					reqObj.put("chunkSize", size);					
 				}				
-				JSONObject ret = BussinessBase.postFileStreamAndJsonObj(requestUrl, name, docData, reqObj);
+				JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, name, docData, reqObj);
 				if(ret == null)
 				{
 					Log.debug("remoteUploadFile() ret is null");

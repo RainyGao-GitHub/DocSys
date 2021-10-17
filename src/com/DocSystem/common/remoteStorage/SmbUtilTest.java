@@ -1,7 +1,5 @@
 package com.DocSystem.common.remoteStorage;
 
-import java.io.FileInputStream;
-
 import com.DocSystem.common.Log;
 
 import jcifs.smb.SmbFile;
