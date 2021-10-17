@@ -320,6 +320,8 @@ public class BaseFunction{
 	
 	protected static void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
+		Log.debug("initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup:" + autoBackup);
+		
 		BackupConfig config = parseAutoBackupConfig(repos, autoBackup);
 		if(config == null)
 		{
@@ -332,35 +334,41 @@ public class BaseFunction{
 	}
 	
 	protected static BackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
-		JSONObject jsonObj = JSON.parseObject(autoBackup);
-		if(jsonObj == null)
-		{
+		try {
+			JSONObject jsonObj = JSON.parseObject(autoBackup);
+			if(jsonObj == null)
+			{
+				return null;
+			}
+			
+			Log.printObject("parseAutoBackupConfig() ", jsonObj);
+			
+			LocalBackupConfig localBackupConfig = null;
+			JSONObject localBackupObj = jsonObj.getJSONObject("localBackup");
+			if(localBackupObj != null)
+			{
+				Log.printObject("parseAutoBackupConfig() ", localBackupObj);
+				localBackupConfig = getLocalBackupConfig(localBackupObj);
+			}
+			
+			
+			RemoteBackupConfig remoteBackupConfig = null;
+			JSONObject remoteBackupObj = jsonObj.getJSONObject("remoteBackup");
+			if(remoteBackupObj != null)
+			{
+				Log.printObject("parseAutoBackupConfig() ", remoteBackupObj);
+				remoteBackupConfig = getRemoteBackupConfig(repos, remoteBackupObj);
+			}
+			
+			BackupConfig backupConfig = new BackupConfig();
+			backupConfig.localBackupConfig = localBackupConfig;
+			backupConfig.remoteBackupConfig = remoteBackupConfig;
+			return backupConfig;				
+		}
+		catch(Exception e) {
+			e.printStackTrace();
 			return null;
 		}
-		
-		Log.printObject("parseAutoBackupConfig() ", jsonObj);
-		
-		LocalBackupConfig localBackupConfig = null;
-		JSONObject localBackupObj = jsonObj.getJSONObject("localBackup");
-		if(localBackupObj != null)
-		{
-			Log.printObject("parseAutoBackupConfig() ", localBackupObj);
-			localBackupConfig = getLocalBackupConfig(localBackupObj);
-		}
-		
-		
-		RemoteBackupConfig remoteBackupConfig = null;
-		JSONObject remoteBackupObj = jsonObj.getJSONObject("remoteBackup");
-		if(remoteBackupObj != null)
-		{
-			Log.printObject("parseAutoBackupConfig() ", remoteBackupObj);
-			remoteBackupConfig = getRemoteBackupConfig(repos, remoteBackupObj);
-		}
-		
-		BackupConfig backupConfig = new BackupConfig();
-		backupConfig.localBackupConfig = localBackupConfig;
-		backupConfig.remoteBackupConfig = remoteBackupConfig;
-		return backupConfig;				
 	}
 	
 	private static RemoteBackupConfig getRemoteBackupConfig(Repos repos, JSONObject remoteBackupObj) {
