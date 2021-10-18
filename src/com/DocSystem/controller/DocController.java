@@ -201,7 +201,7 @@ public class DocController extends BaseController{
 	}
 	
 	private void realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		// TODO Auto-generated method stub
+		Log.debug("\n********* realTimeRemoteStoragPush() ***********");
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null || remote.autoPush == null || remote.autoPush != 1)
 		{
@@ -258,7 +258,7 @@ public class DocController extends BaseController{
 	}
 
 	private void realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("realTimeRemoteBackup()");
+		Log.debug("\n************* realTimeRemoteBackup() ***************");
 
 		RemoteBackupConfig remoteBackupConfig = repos.backupConfig.remoteBackupConfig;
 		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackup == null || remoteBackupConfig.realTimeBackup == 0)
@@ -316,7 +316,7 @@ public class DocController extends BaseController{
 	}
 
 	private void realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("realTimeLocalBackup()");
+		Log.debug("\n********** realTimeLocalBackup() ****************");
 
 		LocalBackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
 		if(localBackupConfig == null || localBackupConfig.realTimeBackup == null || localBackupConfig.realTimeBackup == 0)
