@@ -374,7 +374,7 @@ public class BaseFunction{
 	private static RemoteBackupConfig getRemoteBackupConfig(Repos repos, JSONObject remoteBackupObj) {
 		RemoteBackupConfig remoteBackupConfig = new RemoteBackupConfig();
 		remoteBackupConfig.realTimeBackup = remoteBackupObj.getInteger("realTimeBackup");
-		remoteBackupConfig.bakcupTime = remoteBackupObj.getInteger("backupTime");
+		remoteBackupConfig.backupTime = remoteBackupObj.getInteger("backupTime");
 		remoteBackupConfig.weekDay1 = remoteBackupObj.getInteger("weekDay1");
 		remoteBackupConfig.weekDay2 = remoteBackupObj.getInteger("weekDay2");
 		remoteBackupConfig.weekDay3 = remoteBackupObj.getInteger("weekDay3");
@@ -395,7 +395,7 @@ public class BaseFunction{
 	private static LocalBackupConfig getLocalBackupConfig(Repos repos, JSONObject localBackupObj) {
 		LocalBackupConfig localBackupConfig = new LocalBackupConfig();
 		localBackupConfig.realTimeBackup = localBackupObj.getInteger("realTimeBackup");
-		localBackupConfig.bakcupTime = localBackupObj.getInteger("backupTime");
+		localBackupConfig.backupTime = localBackupObj.getInteger("backupTime");
 		localBackupConfig.weekDay1 = localBackupObj.getInteger("weekDay1");
 		localBackupConfig.weekDay2 = localBackupObj.getInteger("weekDay2");
 		localBackupConfig.weekDay3 = localBackupObj.getInteger("weekDay3");
