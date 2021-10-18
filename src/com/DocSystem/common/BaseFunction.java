@@ -407,7 +407,9 @@ public class BaseFunction{
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "file";
 		remote.FILE = new LocalConfig();
-		remote.FILE.localRootPath = localBackupObj.getString("localRootPath");
+		String localRootPath = localBackupObj.getString("localRootPath");
+		localRootPath = Path.localDirPathFormat(localRootPath, OSType);
+		remote.FILE.localRootPath = localRootPath;
 		if(remote != null)
 		{
 			remote.remoteStorageIndexLib = getDBStorePath() + "LocalBackup/" + repos.getId() + "/Doc";
