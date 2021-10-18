@@ -694,8 +694,316 @@ function showRemoteStorageConfig(reposInfo)
 
 function showAutoBackupConfig(reposInfo)
 {
+	var autoBackup = "";
+	if(reposInfo.backupConfig == undefined)
+   	{
+		$("#autoBackupConfigDiv").hide();
+   		$("#autoBackupEnable").attr("checked",false);
+		return;
+   	}
 	
+	$("#autoBackupConfigDiv").show();
+	$("#autoBackupEnable").attr("checked", "checked");
+	
+	showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
+	showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
 }
+
+function showLocalBackupConfig(localBackupConfig)
+{
+	if(localBackupConfig == undefined)
+   	{
+		$("#localBackupConfig").hide();
+   		$("#localBackupEnable").attr("checked",false);
+		return;
+   	}
+	
+	$("#localBackupConfig").show();
+	$("#localBackupEnable").attr("checked", "checked");	
+	
+	if(localBackupConfig.remoteStorageConfig && localBackupConfig.remoteStorageConfig.FILE &&  localBackupConfig.remoteStorageConfig.FILE.localRootPath)
+	{
+		$("#localBackupRootPath").val(localBackupConfig.remoteStorageConfig.FILE.localRootPath);
+	}
+	
+	if(localBackupConfig.backupTime)
+	{
+		$("#localBackupTime option[value='" + localBackupConfig.backupTime + "']").attr("selected","selected");	
+	}
+	
+	if(localBackupConfig.realTimeBackup == undefined || localBackupConfig.realTimeBackup == 0)
+	{
+		$("#localRealTimeBackupEnable").attr("checked", false);		
+	}	
+	else
+	{
+		$("#localRealTimeBackupEnable").attr("checked", "checked");				
+	}
+	
+	if(localBackupConfig.weekDay1 == undefined || localBackupConfig.weekDay1 == 0)
+	{	
+		$("#localBackupWeekDay1").attr("checked", false);
+	}
+	else
+	{
+		$("#localBackupWeekDay1").attr("checked", "checked");		
+	}
+	
+	if(localBackupConfig.weekDay2 == undefined || localBackupConfig.weekDay2 == 0)
+	{	
+		$("#localBackupWeekDay2").attr("checked", false);
+	}
+	else
+	{
+		$("#localBackupWeekDay2").attr("checked", "checked");		
+	}
+	
+	if(localBackupConfig.weekDay3 == undefined || localBackupConfig.weekDay3 == 0)
+	{	
+		$("#localBackupWeekDay3").attr("checked", false);
+	}
+	else
+	{
+		$("#localBackupWeekDay3").attr("checked", "checked");		
+	}
+	
+	if(localBackupConfig.weekDay4 == undefined || localBackupConfig.weekDay4 == 0)
+	{	
+		$("#localBackupWeekDay4").attr("checked", false);
+	}
+	else
+	{
+		$("#localBackupWeekDay4").attr("checked", "checked");		
+	}
+	
+	if(localBackupConfig.weekDay5 == undefined || localBackupConfig.weekDay5 == 0)
+	{	
+		$("#localBackupWeekDay5").attr("checked", false);
+	}
+	else
+	{
+		$("#localBackupWeekDay5").attr("checked", "checked");		
+	}
+	
+	if(localBackupConfig.weekDay6 == undefined || localBackupConfig.weekDay6 == 0)
+	{	
+		$("#localBackupWeekDay6").attr("checked", false);
+	}
+	else
+	{
+		$("#localBackupWeekDay6").attr("checked", "checked");		
+	}
+	
+	if(localBackupConfig.weekDay7 == undefined || localBackupConfig.weekDay7 == 0)
+	{	
+		$("#localBackupWeekDay7").attr("checked", false);
+	}
+	else
+	{
+		$("#localBackupWeekDay7").attr("checked", "checked");		
+	}
+}
+
+function showRemoteBackupConfig(remoteBackupConfig)
+{
+	if(remoteBackupConfig == undefined)
+   	{
+		$("#remoteBackupConfig").hide();
+   		$("#remoteBackupEnable").attr("checked",false);
+		return;
+   	}
+	
+	if(remoteBackupConfig.remoteStorageConfig == undefined)
+   	{
+		$("#remoteBackupStorageConfig").hide();
+		$("#remoteBackupStorageProtocol option[value='']").attr("selected","selected");		
+		return;
+   	}
+	
+	$("#remoteBackupConfig").show();
+	$("#remoteBackupEnable").attr("checked", "checked");
+	
+	showRemoteBackupRemoteStorageConfig(remoteBackupConfig.remoteStorageConfig);
+	
+	var backupTime = remoteBackupConfig.backupTime;
+	console.log("showRemoteBackupConfig() backupTime:" + backupTime);
+	if(backupTime)
+	{
+		$("#remoteBackupTime option[value='" + backupTime + "']").attr("selected","selected");		
+	}
+	
+	if(remoteBackupConfig.realTimeBackup == undefined || remoteBackupConfig.realTimeBackup == 0)
+	{
+		$("#remoteRealTimeBackupEnable").attr("checked", false);		
+	}	
+	else
+	{
+		$("#remoteRealTimeBackupEnable").attr("checked", "checked");				
+	}
+	
+	if(remoteBackupConfig.weekDay1 == undefined || remoteBackupConfig.weekDay1 == 0)
+	{	
+		$("#remoteBackupWeekDay1").attr("checked", false);
+	}
+	else
+	{
+		$("#remoteBackupWeekDay1").attr("checked", "checked");		
+	}
+	
+	if(remoteBackupConfig.weekDay2 == undefined || remoteBackupConfig.weekDay2 == 0)
+	{	
+		$("#remoteBackupWeekDay2").attr("checked", false);
+	}
+	else
+	{
+		$("#remoteBackupWeekDay2").attr("checked", "checked");		
+	}
+	
+	if(remoteBackupConfig.weekDay3 == undefined || remoteBackupConfig.weekDay3 == 0)
+	{	
+		$("#remoteBackupWeekDay3").attr("checked", false);
+	}
+	else
+	{
+		$("#remoteBackupWeekDay3").attr("checked", "checked");		
+	}
+	
+	if(remoteBackupConfig.weekDay4 == undefined || remoteBackupConfig.weekDay4 == 0)
+	{	
+		$("#remoteBackupWeekDay4").attr("checked", false);
+	}
+	else
+	{
+		$("#remoteBackupWeekDay4").attr("checked", "checked");		
+	}
+	
+	if(remoteBackupConfig.weekDay5 == undefined || remoteBackupConfig.weekDay5 == 0)
+	{	
+		$("#remoteBackupWeekDay5").attr("checked", false);
+	}
+	else
+	{
+		$("#remoteBackupWeekDay5").attr("checked", "checked");		
+	}
+	
+	if(remoteBackupConfig.weekDay6 == undefined || remoteBackupConfig.weekDay6 == 0)
+	{	
+		$("#remoteBackupWeekDay6").attr("checked", false);
+	}
+	else
+	{
+		$("#remoteBackupWeekDay6").attr("checked", "checked");		
+	}
+	
+	if(remoteBackupConfig.weekDay7 == undefined || remoteBackupConfig.weekDay7 == 0)
+	{	
+		$("#remoteBackupWeekDay7").attr("checked", false);
+	}
+	else
+	{
+		$("#remoteBackupWeekDay7").attr("checked", "checked");		
+	}
+}
+
+function showRemoteBackupRemoteStorageConfig(remoteStorageConfig)
+{
+	var protocol = remoteStorageConfig.protocol;
+	if(protocol == undefined || protocol == "")
+	{
+		$("#remoteBackupStorageConfig").hide();
+		$("#remoteBackupStorageProtocol option[value='']").attr("selected","selected");			
+		return;
+	}
+	
+	$("#remoteBackupStorageConfig").show();			
+	$("#remoteBackupStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
+	
+	var remoteStorage = "";
+	switch(protocol)
+	{
+	case "ftp":
+		remoteStorage = protocol + "://" + remoteStorageConfig.FTP.host;
+		if(remoteStorageConfig.FTP.port)
+		{
+			remoteStorage += ":" + remoteStorageConfig.FTP.port;
+		}
+		if(remoteStorageConfig.rootPath)
+		{
+			remoteStorage += remoteStorageConfig.rootPath;
+		}
+		if(remoteStorageConfig.FTP.userName)
+		{
+			remoteStorage += ";userName=" + remoteStorageConfig.FTP.userName;
+		}
+		if(remoteStorageConfig.FTP.pwd)
+		{
+			remoteStorage += ";pwd=" + remoteStorageConfig.FTP.pwd;
+		}
+		break;
+	case "sftp":
+		remoteStorage = protocol + "://" + remoteStorageConfig.SFTP.host;
+		if(remoteStorageConfig.SFTP.port)
+		{
+			remoteStorage += ":" + remoteStorageConfig.SFTP.port;
+		}
+		if(remoteStorageConfig.rootPath)
+		{
+			remoteStorage += remoteStorageConfig.rootPath;
+		}
+		if(remoteStorageConfig.SFTP.userName)
+		{
+			remoteStorage += ";userName=" + remoteStorageConfig.SFTP.userName;
+		}
+		if(remoteStorageConfig.SFTP.pwd)
+		{
+			remoteStorage += ";pwd=" + remoteStorageConfig.SFTP.pwd;
+		}
+		break;
+	case "smb":
+		remoteStorage = protocol + "://" + remoteStorageConfig.SMB.host;
+		if(remoteStorageConfig.rootPath)
+		{
+			remoteStorage += remoteStorageConfig.rootPath;
+		}
+		if(remoteStorageConfig.SMB.userDomain)
+		{
+			remoteStorage += ";userDomain=" + remoteStorageConfig.SMB.userDomain;
+		}
+		if(remoteStorageConfig.SMB.userName)
+		{
+			remoteStorage += ";userName=" + remoteStorageConfig.SMB.userName;
+		}
+		if(remoteStorageConfig.SMB.pwd)
+		{
+			remoteStorage += ";pwd=" + remoteStorageConfig.SMB.pwd;
+		}
+		break;
+	case "svn":
+		remoteStorage = remoteStorageConfig.SVN.url;
+		if(remoteStorageConfig.SVN.userName)
+		{
+			remoteStorage += ";userName=" + remoteStorageConfig.SVN.userName;
+		}
+		if(remoteStorageConfig.SVN.pwd)
+		{
+			remoteStorage += ";pwd=" + remoteStorageConfig.SVN.pwd;
+		}
+		break;
+	case "git":
+		remoteStorage = remoteStorageConfig.GIT.url;
+		if(remoteStorageConfig.GIT.userName)
+		{
+			remoteStorage += ";userName=" + remoteStorageConfig.GIT.userName;
+		}
+		if(remoteStorageConfig.GIT.pwd)
+		{
+			remoteStorage += ";pwd=" + remoteStorageConfig.GIT.pwd;
+		}
+		break;
+	}	
+	$("#remoteBackupStorage").val(remoteStorage);
+}
+
 
 function doSelectRemoteStorageProtocol()
 {
