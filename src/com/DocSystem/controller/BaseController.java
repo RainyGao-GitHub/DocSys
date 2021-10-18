@@ -5213,6 +5213,7 @@ public class BaseController  extends BaseFunction{
 		localDoc.setPath(doc.getPath());
 		localDoc.setName(doc.getName());
 		localDoc.setType(0);	//不存在
+		localDoc.offsetPath = doc.offsetPath;
 	
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File localEntry = new File(localParentPath,doc.getName());

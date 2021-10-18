@@ -245,7 +245,7 @@ public class DocController extends BaseController{
 
 	private void realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
 	{
-		Log.debug("realTimeBackup()");
+		Log.debug("\n************ realTimeBackup() **************");
 		BackupConfig backupConfig = repos.backupConfig;
 		if(backupConfig == null)
 		{
