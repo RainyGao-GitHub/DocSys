@@ -4,7 +4,7 @@ public class LocalBackupConfig {
 	public RemoteStorageConfig remoteStorageConfig;
 	public Integer fullBackupEn = 0;
 	public Integer realTimeBackup;
-	public Integer bakcupTime;
+	public Integer backupTime;
 	public Integer weekDay1;
 	public Integer weekDay2;
 	public Integer weekDay3;
