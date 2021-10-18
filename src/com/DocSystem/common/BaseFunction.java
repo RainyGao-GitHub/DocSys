@@ -406,6 +406,7 @@ public class BaseFunction{
 		
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "file";
+		remote.rootPath = "";
 		remote.FILE = new LocalConfig();
 		String localRootPath = localBackupObj.getString("localRootPath");
 		localRootPath = Path.localDirPathFormat(localRootPath, OSType);
