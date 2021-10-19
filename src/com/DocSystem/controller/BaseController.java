@@ -14205,17 +14205,6 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected static RemoteStorageSession doRemoteStorageLogin(Repos repos, RemoteStorageConfig remote) {
-		if(docSysType == constants.DocSys_Community_Edition)
-		{
-			Log.debug("开源版不支持远程存储！");
-			return null;
-		}
-		else if(docSysType == constants.DocSys_Professional_Edition)
-		{
-			Log.debug("专业版不支持远程存储！");
-			return null;
-		}	
-		
 		if(remote == null)
 		{
 			Log.debug("doRemoteStorageLogin remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
@@ -16767,5 +16756,64 @@ public class BaseController  extends BaseFunction{
 		{
 			updateRemoteStorageDbEntry(remote, repos, pushResult, pushResult.actionList, revision);
 		}
+	}
+	
+	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt) {
+		Log.debug(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "]");
+
+		boolean ret = false;
+		DocPullResult pullResult = new DocPullResult();
+		pullResult.totalCount = 0;
+		pullResult.failCount = 0;
+		pullResult.successCount = 0;
+	
+		Doc localDoc = fsGetDoc(repos, doc);
+		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
+		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote); 
+		
+		Integer subEntryPullFlag = 1;
+		if(recurcive)
+		{
+			subEntryPullFlag = 2;
+		}
+
+		ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);
+		
+		rt.setDataEx(pullResult);
+		return ret;
+	}
+	
+	protected static boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt) {
+		boolean ret = false;
+		DocPushResult pushResult = new DocPushResult();
+		pushResult.totalCount = 0;
+		pushResult.failCount = 0;
+		pushResult.successCount = 0;
+		pushResult.actionList = new ArrayList<CommitAction>();
+				
+		Doc localDoc = fsGetDoc(repos, doc);
+		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
+		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote); 
+
+		if(remoteDoc.getType() == 0 && doc.offsetPath != null)
+		{
+			addDirsToRemoteStorage(session, remote, remote.rootPath + doc.offsetPath);
+		}
+		
+		Integer subEntryPushFlag = 1;
+		if(recurcive)
+		{
+			subEntryPushFlag = 2;
+		}
+		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, pushResult.actionList, false);
+		if(ret == true && remote.isVerRepos)
+		{
+			if(pushResult.actionList.size() > 0)
+			{
+				remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult); 
+			}
+		}
+		rt.setDataEx(pushResult);
+		return ret;	
 	}
 }
