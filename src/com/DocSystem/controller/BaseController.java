@@ -16795,7 +16795,7 @@ public class BaseController  extends BaseFunction{
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
 		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote); 
 
-		if(remoteDoc.getType() == 0 && doc.offsetPath != null)
+		if((remoteDoc == null || remoteDoc.getType() == 0) && doc.offsetPath != null)
 		{
 			addDirsToRemoteStorage(session, remote, remote.rootPath + doc.offsetPath);
 		}
