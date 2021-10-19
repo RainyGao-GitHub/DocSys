@@ -372,6 +372,12 @@ public class BaseFunction{
 	}
 	
 	private static RemoteBackupConfig getRemoteBackupConfig(Repos repos, JSONObject remoteBackupObj) {
+		String remoteStorageStr = remoteBackupObj.getString("remoteStorage");
+		if(remoteStorageStr == null || remoteStorageStr.isEmpty())
+		{
+			return null;
+		}
+		
 		RemoteBackupConfig remoteBackupConfig = new RemoteBackupConfig();
 		remoteBackupConfig.realTimeBackup = remoteBackupObj.getInteger("realTimeBackup");
 		remoteBackupConfig.backupTime = remoteBackupObj.getInteger("backupTime");
@@ -383,7 +389,7 @@ public class BaseFunction{
 		remoteBackupConfig.weekDay6 = remoteBackupObj.getInteger("weekDay6");
 		remoteBackupConfig.weekDay7 = remoteBackupObj.getInteger("weekDay7");
 
-		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteBackupObj.getString("remoteStorage"));
+		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr);
 		if(remote != null)
 		{
 			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/Doc";
@@ -393,6 +399,12 @@ public class BaseFunction{
 	}
 
 	private static LocalBackupConfig getLocalBackupConfig(Repos repos, JSONObject localBackupObj) {
+		String localRootPath = localBackupObj.getString("localRootPath");
+		if(localRootPath == null)
+		{
+			return null;
+		}
+			
 		LocalBackupConfig localBackupConfig = new LocalBackupConfig();
 		localBackupConfig.realTimeBackup = localBackupObj.getInteger("realTimeBackup");
 		localBackupConfig.backupTime = localBackupObj.getInteger("backupTime");
@@ -408,7 +420,6 @@ public class BaseFunction{
 		remote.protocol = "file";
 		remote.rootPath = "";
 		remote.FILE = new LocalConfig();
-		String localRootPath = localBackupObj.getString("localRootPath");
 		localRootPath = Path.localDirPathFormat(localRootPath, OSType);
 		remote.FILE.localRootPath = localRootPath;
 		if(remote != null)

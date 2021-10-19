@@ -496,26 +496,11 @@
 		console.log("getAutoBackupConfig autoBackupEnable:" + autoBackupEnable);
 		if(autoBackupEnable == 0)
 		{
-			return "";
+			return "{localBackup:{},remoteBackup:{}}";
 		}
 		
 		var localBackupConfig = getLocalBackupConfig();
 		var remoteBackupConfig = getRemoteBackupConfig();
-		if(localBackupConfig == "" && remoteBackupConfig == "")
-		{
-			return "";
-		}
-			
-		if(localBackupConfig == "")
-		{
-			return "{remoteBackup:" + remoteBackupConfig + "}";
-		}
-		
-		if(remoteBackupConfig == "")
-		{
-			return  "{localBackup:" + localBackupConfig + "}";
-		}
-		
 		return "{localBackup:" + localBackupConfig + ",remoteBackup:" + remoteBackupConfig + "}";
 	}
 		
@@ -525,13 +510,13 @@
 		console.log("getLocalBackupConfig localBackupEnable:" + localBackupEnable);
 		if(localBackupEnable == 0)
 		{
-			return "";
+			return "{}";
 		}
 		
 		var localRootPath = $("#dialog-new-repos input[name='localBackupRootPath']").val();
 		if(localRootPath == undefined || localRootPath == "")
 		{
-			return "";
+			return "{}";
 		}
 
 		var backupTime = $("#dialog-new-repos select[name='localBackupTime']").val();;
@@ -566,13 +551,13 @@
 		console.log("getRemoteBackupConfig remoteBackupEnable:" + remoteBackupEnable);
 		if(remoteBackupEnable == 0)
 		{
-			return "";
+			return "{}";
 		}
 		
 		var remoteStorage = getRemoteBackupRemoteStorageConfig();
 		if(remoteStorage == "")
 		{
-			return "";
+			return "{}";
 		}
 		
 		var backupTime = $("#dialog-new-repos select[name='remoteBackupTime']").val();

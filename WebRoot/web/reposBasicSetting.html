@@ -477,7 +477,7 @@ function getReposBasicSetting()
            success : function (ret) {
                if( "ok" == ret.status ){
                		gReposBasicSetting = ret.data;
-               		console.log(gReposBasicSetting);
+               		console.log("gReposBasicSetting", gReposBasicSetting);
                		showReposBasicSetting(ret.data);
                		doSelectFS();
                }else {
@@ -491,7 +491,6 @@ function getReposBasicSetting()
     
 	function showReposBasicSetting(reposInfo)
 	{
-		console.log(reposInfo);
 	   	$("#RBSname").val(reposInfo.name);
 	   	$("#RBSinfo").val(reposInfo.info);
 	   	$("#RBSpath").val(reposInfo.path);
@@ -551,7 +550,6 @@ function getReposBasicSetting()
 
 function showRemoteStorageConfig(reposInfo)
 {
-	var remoteStorage = "";
 	if(reposInfo.remoteStorageConfig == undefined)
    	{
 		$("#remoteStorageConfig").hide();
@@ -694,19 +692,23 @@ function showRemoteStorageConfig(reposInfo)
 
 function showAutoBackupConfig(reposInfo)
 {
-	var autoBackup = "";
 	if(reposInfo.backupConfig == undefined)
    	{
 		$("#autoBackupConfigDiv").hide();
    		$("#autoBackupEnable").attr("checked",false);
-		return;
-   	}
+	}
+	else
+	{		
+		$("#autoBackupConfigDiv").show();
+		$("#autoBackupEnable").attr("checked", "checked");
+		
+		showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
+		showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
+	}
 	
-	$("#autoBackupConfigDiv").show();
-	$("#autoBackupEnable").attr("checked", "checked");
-	
-	showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
-	showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
+	//init autoBackup
+	reposInfo.autoBackup = getAutoBackupConfig();
+	console.log("reposInfo.autoBackup:" + reposInfo.autoBackup);
 }
 
 function showLocalBackupConfig(localBackupConfig)
@@ -1004,7 +1006,6 @@ function showRemoteBackupRemoteStorageConfig(remoteStorageConfig)
 	$("#remoteBackupStorage").val(remoteStorage);
 }
 
-
 function doSelectRemoteStorageProtocol()
 {
 	var protocol = $("#remoteStorageProtocol").val();
@@ -1035,6 +1036,7 @@ function doSelectRemoteStorageProtocol()
 	}
 	$("#remoteStorageConfig").show();
 }
+
 
 function getRemoteStorageConfig()
 {   
@@ -1076,26 +1078,11 @@ function getAutoBackupConfig()
 	console.log("getAutoBackupConfig autoBackupEnable:" + autoBackupEnable);
 	if(autoBackupEnable == 0)
 	{
-		return "";
+		return "{localBackup:{},remoteBackup:{}}";
 	}
 	
 	var localBackupConfig = getLocalBackupConfig();
 	var remoteBackupConfig = getRemoteBackupConfig();
-	if(localBackupConfig == "" && remoteBackupConfig == "")
-	{
-		return "";
-	}
-		
-	if(localBackupConfig == "")
-	{
-		return "{remoteBackup:" + remoteBackupConfig + "}";
-	}
-	
-	if(remoteBackupConfig == "")
-	{
-		return  "{localBackup:" + localBackupConfig + "}";
-	}
-	
 	return "{localBackup:" + localBackupConfig + ",remoteBackup:" + remoteBackupConfig + "}";
 }
 	
@@ -1105,13 +1092,13 @@ function getLocalBackupConfig()
 	console.log("getLocalBackupConfig localBackupEnable:" + localBackupEnable);
 	if(localBackupEnable == 0)
 	{
-		return "";
+		return "{}";
 	}
 	
 	var localRootPath = $("#localBackupRootPath").val();
 	if(localRootPath == undefined || localRootPath == "")
 	{
-		return "";
+		return "{}";
 	}
 
 	var backupTime = $("#localBackupTime").val();;
@@ -1135,7 +1122,7 @@ function getLocalBackupConfig()
 		"weekDay6:" + weekDay6 +"," + 
 		"weekDay7:" + weekDay7 +"," + 
 		"realTimeBackup:" + realTimeBackup + "," +
-		"localRootPath:" + localRootPath +
+		"localRootPath:\"" + localRootPath + "\"" + 
 	"}";
 	return localBackupConfig;
 }
@@ -1146,13 +1133,13 @@ function getRemoteBackupConfig()
 	console.log("getRemoteBackupConfig remoteBackupEnable:" + remoteBackupEnable);
 	if(remoteBackupEnable == 0)
 	{
-		return "";
+		return "{}";
 	}
 	
 	var remoteStorage = getRemoteBackupRemoteStorageConfig();
 	if(remoteStorage == "")
 	{
-		return "";
+		return "{}";
 	}
 	
 	var backupTime = $("#remoteBackupTime").val();
@@ -1176,7 +1163,7 @@ function getRemoteBackupConfig()
 		"weekDay6:" + weekDay6 +"," + 
 		"weekDay7:" + weekDay7 +"," + 
 		"realTimeBackup:" + realTimeBackup + "," +
-		"remoteStorage:" + remoteStorage +
+		"remoteStorage:\"" + remoteStorage + "\"" +
 	"}";
 	return remoteBackupConfig;
 }
@@ -1228,6 +1215,8 @@ function saveReposBasicSetting()
 	newReposSetting.remoteStorage = remoteStorage;
 	var autoBackup = getAutoBackupConfig();
 	newReposSetting.autoBackup = autoBackup;
+	console.log("newReposSetting.autoBackup:" + autoBackup);
+
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;
 	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
@@ -1283,6 +1272,7 @@ function saveReposBasicSetting()
                     svnPwd1 : newReposSetting.svnPwd1,
                     isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
                     encryptType: newReposSetting.encryptType,
+                    autoBackup : newReposSetting.autoBackup,                    
                 },
                 success : function (ret) {
                 	if(ret.status == "ok")
