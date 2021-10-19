@@ -630,7 +630,7 @@ public class Path {
 	}
 
 	public static String getOrgChangesPath(String dockey, Doc doc) {
-		String path = getOfficeEditPath(dockey, doc) + "data/orgChanges/";
+		String path = getOfficeEditPath(dockey, doc) + "orgChanges/";
 		return path;
 	}
 
