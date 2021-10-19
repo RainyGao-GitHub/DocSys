@@ -20,17 +20,7 @@ public interface Channel {
     String channelName();
 
 	void initBussinessChannel();	
-    
-	List<Doc> remoteStorageGetEntryList( RemoteStorageConfig remote, Repos repos, Doc doc);
-
-	Doc remoteStorageGetEntry(RemoteStorageConfig remote, Repos repos, Doc doc);
-
-	List<Doc> remoteStorageGetDBEntryList(RemoteStorageConfig remote, Repos repos, Doc doc);
-
-	HashMap<String, Doc> remoteStorageGetDBHashMap(RemoteStorageConfig remote, Repos repos, Doc doc);
-
-	Doc remoteStorageGetDBEntry(RemoteStorageConfig remote, Repos repos, Doc doc);	
-	
+    	
 	void remoteStoragePull(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt);
 
 	void remoteStoragePush(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
