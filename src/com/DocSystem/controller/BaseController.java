@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Vector;
 import java.util.Map.Entry;
 
 import javax.naming.AuthenticationException;
@@ -57,15 +58,19 @@ import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.util.HttpURLConnection;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
+import org.eclipse.jgit.lib.FileMode;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
+import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tukaani.xz.XZInputStream;
 
 import util.DateFormat;
@@ -103,10 +108,19 @@ import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.DocPullResult;
+import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
+import com.DocSystem.common.remoteStorage.FtpUtil;
+import com.DocSystem.common.remoteStorage.GitUtil;
+import com.DocSystem.common.remoteStorage.MxsDocUtil;
+import com.DocSystem.common.remoteStorage.RemoteStorageSession;
+import com.DocSystem.common.remoteStorage.SFTPUtil;
+import com.DocSystem.common.remoteStorage.SmbUtil;
+import com.DocSystem.common.remoteStorage.SvnUtil;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -127,8 +141,12 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
+import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jzlib.GZIPInputStream;
 
+import jcifs.smb.SmbException;
+import jcifs.smb.SmbFile;
 import net.sf.sevenzipjbinding.IInArchive;
 import net.sf.sevenzipjbinding.PropID;
 import net.sf.sevenzipjbinding.SevenZip;
@@ -499,16 +517,7 @@ public class BaseController  extends BaseFunction{
 	
 
 	protected static Doc getRemoteStorageEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
-        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-        if(channel == null)
-        {
-			Log.debug("非商业版不支持远程存储！");
-			return null;        	
-        }
-        
-        Doc remoteDoc = channel.remoteStorageGetEntry(remote, repos, doc);
-
-        return remoteDoc;
+        return remoteStorageGetEntry(remote, repos, doc);
 	}
 
 	private DocChangeType getRemoteChangeType(HashMap<String, Doc> dbHashMap, Doc remoteDoc) {
@@ -523,32 +532,15 @@ public class BaseController  extends BaseFunction{
 
 	@SuppressWarnings("unused")
 	private List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc) {
-        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-        if(channel != null)
-        {
-        	return channel.remoteStorageGetDBEntryList(repos.remoteStorageConfig, repos, doc);
-        }
-        return null;
+        return remoteStorageGetDBEntryList(repos.remoteStorageConfig, repos, doc);
 	}
 	
 	private HashMap<String, Doc> getRemoteStorageDBHashMap(Repos repos, Doc doc) {
-        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-        if(channel != null)
-        {
-        	return channel.remoteStorageGetDBHashMap(repos.remoteStorageConfig, repos, doc);
-        }
-        return null;
+        return remoteStorageGetDBHashMap(repos.remoteStorageConfig, repos, doc);
 	}
 	
 	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
-        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-        if(channel == null)
-        {
-			Log.debug("非商业版不支持远程存储！");
-			return null;
-        }
-        
-		List<Doc> list = channel.remoteStorageGetEntryList(remote, repos, doc);
+		List<Doc> list = remoteStorageGetEntryList(remote, repos, doc);
         return list;
 	}
 	
@@ -5286,13 +5278,7 @@ public class BaseController  extends BaseFunction{
 	
 
 	private Doc getRemoteStorageDBEntry(Repos repos, Doc doc) {
-        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-		Doc remoteDoc = null;
-		if(channel != null)
-        {
-			return channel.remoteStorageGetDBEntry(repos.remoteStorageConfig, repos, doc);
-        }
-		return remoteDoc;
+        return remoteStorageGetDBEntry(repos.remoteStorageConfig, repos, doc);
 	}
 
 	protected boolean verReposPullPush(Repos repos, boolean isRealDoc, ReturnAjax rt)
@@ -13990,5 +13976,2796 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return ret;
+	}
+	
+	/************* RemoteStorage Interfaces *******************************/
+	public List<Doc> remoteStorageGetEntryList( RemoteStorageConfig remote, Repos repos, Doc doc) {
+		Log.debug("remoteStorageGetEntryList() " + doc.getPath() + doc.getName());
+        RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+    	List<Doc> list = null;
+        if(session != null)
+        {
+        	list = getRemoteStorageEntryList(session, remote, repos, doc);
+        	doRemoteStorageLogout(session);
+        }
+        return list;
+	}
+
+	public static Doc remoteStorageGetEntry(RemoteStorageConfig remote, Repos repos, Doc doc) {
+		Log.debug("remoteStorageGetEntry() " + doc.getPath() + doc.getName());
+		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+    	Doc remoteDoc = null;
+        if(session != null)
+        {
+        	remoteDoc = getRemoteStorageEntry(session, remote, repos, doc);
+        	doRemoteStorageLogout(session);
+        }
+		return remoteDoc;
+	}
+	
+	public List<Doc> remoteStorageGetDBEntryList(RemoteStorageConfig remote, Repos repos, Doc doc) {
+		Log.debug("getRemoteStorageDBEntryList() " + doc.getPath() + doc.getName());
+		return getRemoteStorageDBEntryList(repos, doc, remote);
+	}
+	
+	public HashMap<String, Doc> remoteStorageGetDBHashMap(RemoteStorageConfig remote, Repos repos, Doc doc) {
+		Log.debug("remoteStorageGetDBHashMap() " + doc.getPath() + doc.getName());
+		return getRemoteStorageDBHashMap(repos, doc, remote);
+	}
+	
+	public Doc remoteStorageGetDBEntry(RemoteStorageConfig remote, Repos repos, Doc doc) {
+		Log.debug("remoteStorageGetDBEntry() " + doc.getPath() + doc.getName());
+		return getRemoteStorageDBEntry(repos, doc, false, remote);
+	}
+	
+	//******************* 远程存储 接口 *********************************
+	//Remote Storage DB Interfaces
+	protected static List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
+		//查询数据库
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setPid(doc.getDocId());
+		
+		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
+		return list;
+	}
+
+	protected static HashMap<String,Doc> getRemoteStorageDBHashMap(Repos repos, Doc doc, RemoteStorageConfig remote) {
+		//查询数据库
+		List<Doc> list = getRemoteStorageDBEntryList(repos, doc, remote);
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();
+		if(list != null)
+		{
+			docHashMap = new HashMap<String, Doc>();
+			for(int i=0; i<list.size(); i++)
+			{
+				Doc subDoc = list.get(i);
+				docHashMap.put(subDoc.getName(), subDoc);
+			}
+		}
+		return docHashMap;
+	}
+	
+	protected static Doc getRemoteStorageDBEntry(Repos repos, Doc doc, boolean dupCheck, RemoteStorageConfig remote) {
+		//查询数据库
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setDocId(doc.getDocId());
+		
+		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
+		if(list == null || list.size() == 0)
+		{
+			return null;
+		}
+		
+		if(dupCheck)
+		{
+			if(list.size() > 1)
+			{
+				System.out.println("getRemoteStorageDBEntry() 数据库存在多个DOC记录(" + doc.getName() + ")，自动清理"); 
+				for(int i=0; i <list.size(); i++)
+				{
+					//delete Doc directly
+					LuceneUtil2.deleteDoc(list.get(i), indexLib);
+				}
+				return null;
+			}
+		}
+	
+		return list.get(0);
+	}
+	
+	protected static boolean addRemoteStorageDBEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
+		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		return LuceneUtil2.addIndex(doc, null, indexLib);
+	}
+
+	protected static boolean updateRemoteStorageDBEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
+		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		return LuceneUtil2.updateIndex(doc, null, indexLib);
+	}
+	
+	protected static boolean deleteRemoteStorageDBEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
+		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		//return LuceneUtil2.deleteIndex(doc, indexLib);
+		return LuceneUtil2.deleteIndexEx(doc, indexLib, 2);
+	}
+
+	//Remote Storage remoteEntry Interfaces
+	protected static List<Doc> getRemoteStorageEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		switch(remote.protocol)
+		{
+		case "file":
+			return getRemoteStorageEntryListForLocal(session, remote, repos, doc);
+		case "sftp":
+			return getRemoteStorageEntryListForSftp(session, remote, repos, doc);
+		case "ftp":
+			return getRemoteStorageEntryListForFtp(session, remote, repos, doc);
+		case "smb":
+			return getRemoteStorageEntryListForSmb(session, remote, repos, doc);
+		case "mxsdoc":
+			return getRemoteStorageEntryListForMxsDoc(session, remote, repos, doc);
+		case "svn":
+			return getRemoteStorageEntryListForSvn(session, remote, repos, doc);
+		case "git":
+			return getRemoteStorageEntryListForGit(session, remote, repos, doc);
+		default:
+			Log.debug("getRemoteStorageEntryList unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return null;
+	}
+
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMap(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		if(remote == null)
+		{
+			Log.debug("getRemoteStorageEntryHashMap remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return null;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return getRemoteStorageEntryHashMapForLocal(session, remote, repos, doc);
+		case "sftp":
+			return getRemoteStorageEntryHashMapForSftp(session, remote, repos, doc);
+		case "ftp":
+			return getRemoteStorageEntryHashMapForFtp(session, remote, repos, doc);
+		case "smb":
+			return getRemoteStorageEntryHashMapForSmb(session, remote, repos, doc);
+		case "mxsdoc":
+			return getRemoteStorageEntryHashMapForMxsDoc(session, remote, repos, doc);
+		case "svn":
+			return getRemoteStorageEntryHashMapForSvn(session, remote, repos, doc);
+		case "git":
+			return getRemoteStorageEntryHashMapForGit(session, remote, repos, doc);
+		default:
+			Log.debug("getRemoteStorageEntryHashMap unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return null;
+	}
+
+	protected static Doc getRemoteStorageEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		if(remote == null)
+		{
+			Log.debug("getRemoteStorageEntry remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return null;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return getRemoteStorageEntryForLocal( session, remote,repos, doc);
+		case "sftp":
+			return getRemoteStorageEntryForSftp( session, remote,repos, doc);
+		case "ftp":
+			return getRemoteStorageEntryForFtp(session, remote, repos, doc);
+		case "smb":
+			return getRemoteStorageEntryForSmb(session, remote, repos, doc);
+		case "mxsdoc":
+			return getRemoteStorageEntryForMxsDoc(session, remote, repos, doc);
+		case "svn":
+			return getRemoteStorageEntryForSvn(session, remote, repos, doc);
+		case "git":
+			return getRemoteStorageEntryForGit(session, remote, repos, doc);
+
+		default:
+			Log.debug("getRemoteStorageEntry unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return null;
+	}
+	
+	private static void updateRemoteStorageDbEntry( RemoteStorageConfig remote, Repos repos, DocPushResult pushResult, List<CommitAction> actionList, String revision) {
+		for(int i=0; i<actionList.size(); i++)
+		{
+			CommitAction action = actionList.get(i);
+			pushResult.successCount ++;
+			Doc doc = action.getDoc();
+			doc.setRevision(revision);
+			
+			switch(action.getAction())
+    		{
+    		case ADD:	//add
+    			addRemoteStorageDBEntry(repos, doc, remote);    			
+    			break;
+    		case DELETE: //delete
+    			deleteRemoteStorageDBEntry(repos, doc, remote);
+    			break;
+    		case MODIFY: //modify
+    			updateRemoteStorageDBEntry(repos, doc, remote);
+    			break;
+			default:
+				break;
+    		}
+		}
+	}
+
+	protected static RemoteStorageSession doRemoteStorageLogin(Repos repos, RemoteStorageConfig remote) {
+		if(docSysType == constants.DocSys_Community_Edition)
+		{
+			Log.debug("开源版不支持远程存储！");
+			return null;
+		}
+		else if(docSysType == constants.DocSys_Professional_Edition)
+		{
+			Log.debug("专业版不支持远程存储！");
+			return null;
+		}	
+		
+		if(remote == null)
+		{
+			Log.debug("doRemoteStorageLogin remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return null;
+		}
+		
+		RemoteStorageSession session = new RemoteStorageSession();
+		session.protocol = remote.protocol;
+		switch(remote.protocol)
+		{
+		case "file":
+			return session;
+		case "sftp":
+			return remoteStorageLoginForSftp(repos, remote, session);
+		case "ftp":
+			return remoteStorageLoginForFtp(repos, remote, session);      
+		case "smb":
+			return remoteStorageLoginForSmb(repos, remote, session);      
+		case "mxsdoc":
+			return remoteStorageLoginForMxsDoc(repos, remote, session);			
+		case "svn":
+			return remoteStorageLoginForSvn(repos, remote, session);      
+		case "git":
+			return remoteStorageLoginForGit(repos, remote, session);      
+		default:
+			Log.debug("doRemoteStorageLogin unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return null;
+	}
+
+	private static RemoteStorageSession remoteStorageLoginForSftp(Repos repos, RemoteStorageConfig remote, RemoteStorageSession session) {
+    	SFTPUtil sftp = new SFTPUtil(remote.SFTP.userName, remote.SFTP.pwd, remote.SFTP.host, remote.SFTP.port);
+        if(sftp.login() == false)
+        {
+        	Log.debug("doRemoteStorageLogin login failed");
+        	return null;
+        }
+        session.sftp = sftp; 
+        return session;
+	}
+	
+	private static RemoteStorageSession remoteStorageLoginForFtp(Repos repos, RemoteStorageConfig remote,
+			RemoteStorageSession session) {
+    	FtpUtil ftp = new FtpUtil(remote.FTP.userName, remote.FTP.pwd, remote.FTP.host, remote.FTP.port);
+        if(ftp.login() == false)
+        {
+        	Log.debug("doRemoteStorageLogin login failed");
+        	return null;
+        }
+        session.ftp = ftp; 
+        return session;
+	}
+	
+
+	private static RemoteStorageSession remoteStorageLoginForSmb(Repos repos, RemoteStorageConfig remote,
+			RemoteStorageSession session) {
+    	SmbUtil smb = new SmbUtil(remote.SMB.userDomain, remote.SMB.userName, remote.SMB.pwd, remote.SMB.host);
+        if(smb.login() == false)
+        {
+        	Log.debug("doRemoteStorageLogin login failed");
+        	return null;
+        }
+        session.smb = smb; 
+        return session;
+	}
+	
+
+	private static RemoteStorageSession remoteStorageLoginForSvn(Repos repos, RemoteStorageConfig remote,
+			RemoteStorageSession session) {
+		SvnUtil svn = new SvnUtil(remote.SVN.userName, remote.SVN.pwd, remote.SVN.url);
+		if(false == svn.login())
+		{
+			System.out.println("remoteStorageLoginForSvn() svnUtil.Init Failed");
+			return null;
+		}
+		
+        session.svn = svn; 
+        return session;
+	}
+
+	private static RemoteStorageSession remoteStorageLoginForGit(Repos repos, RemoteStorageConfig remote,
+			RemoteStorageSession session) {
+		GitUtil git = new GitUtil(remote.GIT.userName, remote.GIT.pwd, remote.GIT.url, remote.GIT.localVerReposPath, remote.GIT.isRemote);
+		if(false == git.login())
+		{
+			System.out.println("remoteStorageLoginForGit() gitUtil.Init Failed");
+			return null;
+		}
+		
+        session.git = git; 
+        return session;
+	}
+
+	private static RemoteStorageSession remoteStorageLoginForMxsDoc(Repos repos, RemoteStorageConfig remote, RemoteStorageSession session) {
+        MxsDocUtil mxsdoc = new MxsDocUtil(remote.MXSDOC.userName, remote.MXSDOC.pwd, remote.MXSDOC.url, remote.MXSDOC.reposId, remote.MXSDOC.remoteDirectory);
+        if(mxsdoc.login() == false)
+        {
+        	Log.debug("doRemoteStorageLogin login failed");
+        	return null;
+        }
+        session.mxsdoc = mxsdoc;
+		return session;
+	}
+
+	protected static boolean doRemoteStorageLogout(RemoteStorageSession session) {
+		switch(session.protocol)
+		{
+		case "file":
+			return true;
+		case "sftp":
+            session.sftp.logout();
+            session.sftp = null;
+            return true;
+		case "ftp":
+            session.ftp.logout();
+            session.ftp = null;
+            return true;
+		case "smb":
+            session.smb.logout();
+            session.smb = null;
+            return true;
+		case "svn":
+            session.svn.logout();
+            session.svn = null;
+            return true;
+		case "git":
+            session.git.logout();
+            session.git = null;
+            return true;
+		case "mxsdoc":
+            session.mxsdoc.logout();
+            session.mxsdoc = null;
+            return true;
+		default:
+			Log.debug("doRemoteStorageLogout unknown remoteStorage protocol:" + session.protocol);
+			break;
+		}
+		return false;
+	}
+
+	protected static boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
+		
+		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
+		{
+			System.out.println("doPullEntryFromRemoteStorage() 拉取根目录");
+			return doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);					
+		}
+		
+		boolean ret = false;		
+		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+		
+		Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " localChangeType:" + localChangeType + " remoteChangeType:" + remoteChangeType);
+
+		//本地未改动
+		if(localChangeType == DocChangeType.NOCHANGE)
+		{
+			//远程删除
+			if(remoteChangeType == DocChangeType.REMOTEDELETE)
+			{
+				if(force == true && isAutoPull == false) //删除比较特殊，一定要手动强制推送才可以删除
+				{
+					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动, 远程删除, 手动强制拉取模式， 拉取");
+					ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+				}
+				else
+				{
+					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动, 远程删除, 非手动强制拉取模式，不拉取");					
+				}
+				return ret;				
+			}
+			
+			//远程有改动
+			if(remoteChangeType != DocChangeType.NOCHANGE)
+			{
+				if(remoteChangeType == DocChangeType.REMOTEADD)
+				{
+					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，拉取");
+					ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+				}
+				else if(force == true)
+				{
+					if(remoteChangeType == DocChangeType.REMOTECHANGE)
+					{
+						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，强制拉取模式，拉取");
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);						
+					}
+					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE && isAutoPull == false)
+					{
+						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程目录->文件，手动强制拉取模式，拉取");							
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);						
+					}
+					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE && isAutoPull == false)
+					{
+						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程文件->目录，手动强制拉取模式，拉取");
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+					}
+				}
+				else
+				{
+					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，非强制模式，不拉取");
+				}
+			}
+			else
+			{
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地未改动");
+				ret = true;
+			}
+			
+			//pullSubEntries
+			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
+			{
+				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);					
+			}
+			return true;
+		}
+		
+		//本地改动（强制拉取）
+		if(force == true) 
+		{
+			if(remoteChangeType == DocChangeType.REMOTECHANGE)
+			{
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 拉取");
+				return remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+			}
+			else if(remoteChangeType == DocChangeType.REMOTEDELETE && isAutoPull == false)
+			{
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程删除, 手动强制拉取模式，拉取");
+				ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);					
+			}
+			else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE && isAutoPull == false)
+			{
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程目录->文件, 手动强制拉取模式，拉取");
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);					
+			}
+			else if(remoteChangeType == DocChangeType.REMOTEFILETODIR && isAutoPull == false)
+			{
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程文件->目录, 手动强制拉取模式，拉取");
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);					
+			}
+			
+			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
+			{
+				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);
+			}
+		}		
+		else
+		{
+			Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 非强制模式，不拉取");
+			return true;		
+		}
+		return ret;		
+	}
+	
+	protected static boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
+		{
+			System.out.println("doPushEntryToRemoteStorage() 推送根目录");
+			
+			return doPushSubEntriesToRemoteStorage(session, remote, repos, doc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);			
+		}
+		
+		boolean ret = false;
+		
+		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+		
+		//远程没有改动
+		if(remoteChangeType == DocChangeType.NOCHANGE)
+		{
+			//本地删除
+			if(localChangeType == DocChangeType.LOCALDELETE)
+			{
+				if(force == true && isAutoPush == false) //删除比较特殊，一定要手动强制推送才可以删除
+				{
+					Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动, 本地删除, 手动强制推送模式， 推送");
+					ret = remoteStoragePushEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
+				}
+				else
+				{
+					Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动, 本地删除, 非手动强制推送模式，不推送");					
+				}
+				return ret;
+			}
+			
+			//本地有改动
+			if(localChangeType != DocChangeType.NOCHANGE)
+			{
+				if(localChangeType == DocChangeType.LOCALADD)
+				{
+					Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地新增，推送");
+					ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
+				}
+				else if(force == true)
+				{
+					if(localChangeType == DocChangeType.LOCALCHANGE)
+					{
+						Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地改动，强制推送模式，推送");
+						ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);						
+					}
+					else if(localChangeType == DocChangeType.LOCALDIRTOFILE && isAutoPush == false)
+					{
+						Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地目录->文件，手动强制推送模式，推送");							
+						ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);						
+					}
+					else if(localChangeType == DocChangeType.LOCALDIRTOFILE && isAutoPush == false)
+					{
+						Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地文件->目录，手动强制推送模式，推送");
+						ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
+					}
+				}
+				else
+				{
+					Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地改动，非强制模式，不推送");
+				}
+			}
+			else
+			{
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地未改动");
+				ret = true;
+			}
+			
+			//pushSubEntries
+			if(ret == true && localDoc != null && localDoc.getType() != null && localDoc.getType() == 2)
+			{
+				if(pushResult.action != null)	//it is new add dir
+				{
+					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true);	
+					if(subActionList.size() > 0)
+					{
+						CommitAction action = pushResult.action;
+						action.setSubActionList(subActionList);
+					}
+				}
+				else
+				{
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);						
+				}
+			}
+			return true;
+		}
+		
+		//远程改动（强制推送）
+		if(force == true) 
+		{
+			if(localChangeType == DocChangeType.LOCALCHANGE)
+			{
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地改动, 推送");
+				return remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
+			}
+			else if(localChangeType == DocChangeType.LOCALDELETE && isAutoPush == false)
+			{
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地删除, 手动强制推送模式，推送");
+				ret = remoteStoragePushEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);					
+			}
+			else if(localChangeType == DocChangeType.LOCALDIRTOFILE && isAutoPush == false)
+			{
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地目录->文件, 手动强制推送模式，推送");
+				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);					
+			}
+			else if(localChangeType == DocChangeType.LOCALFILETODIR && isAutoPush == false)
+			{
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地文件->目录, 手动强制推送模式，推送");
+				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
+			}
+			
+			if(ret == true && localDoc != null && localDoc.getType() != null && localDoc.getType() == 2)
+			{
+				if(pushResult.action != null)	//it is new add dir
+				{
+					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true);	
+					if(subActionList.size() > 0)
+					{
+						CommitAction action = pushResult.action;
+						action.setSubActionList(subActionList);
+					}
+				}
+				else
+				{
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);						
+				}
+			}
+		}
+		else
+		{
+			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动,本地改动, 非强制模式，不推送");
+		}
+		return ret;		
+	}
+	
+	private static boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
+		//子目录不递归
+		if(subEntryPullFlag == 0)
+		{
+			return true;
+		}
+		
+		//子目录递归不继承
+		if(subEntryPullFlag == 1)
+		{
+			subEntryPullFlag = 0;
+		}
+		
+		List<Doc> remoteList = getRemoteStorageEntryList(session, remote, repos, doc);
+		if(remoteList == null)
+		{
+			return false;
+		}
+		
+		HashMap<String, Doc> dbHashMap = getRemoteStorageDBHashMap(repos, doc, remote);
+		HashMap<String, Doc>  localHashMap = getLocalEntryHashMap(repos, doc);
+		
+		for(int i=0; i<remoteList.size(); i++)
+		{
+			Doc subRemoteDoc = remoteList.get(i);
+			//Log.println("doPullSubEntriesFromRemoteStorage subDocName:" + subRemoteDoc.getName());
+			Doc subDbDoc = dbHashMap.get(subRemoteDoc.getName());
+			Doc subLocalDoc = localHashMap.get(subRemoteDoc.getName());
+			doPullEntryFromRemoteStorage(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);
+		}
+		return true;
+	}
+	
+	//actionList and isSubAction is for Gvn/Git RemoteStorage
+	private static boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		//子目录不递归
+		if(subEntryPushFlag == 0)
+		{
+			return true;
+		}
+		
+		//子目录递归不继承
+		if(subEntryPushFlag == 1)
+		{
+			subEntryPushFlag = 0;
+		}
+		
+		List<Doc> localList = getLocalEntryList(repos, doc);
+		if(localList == null)
+		{
+			return false;
+		}
+		
+		HashMap<String, Doc> dbHashMap = getRemoteStorageDBHashMap(repos, doc, remote);
+
+		HashMap<String, Doc>  remoteHashMap = getRemoteStorageEntryHashMap(session, remote, repos, doc);
+		
+		for(int i=0; i<localList.size(); i++)
+		{
+			Doc subLocalDoc  = localList.get(i);
+			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
+			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());
+			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
+		}
+		return true;
+	}
+
+	private static boolean remoteStoragePushEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPushResult pushResult,
+			DocChangeType localChangeType, List<CommitAction> actionList, boolean isSubAction) {
+		
+		Log.printObject("remoteStoragePushEntry() doc:", doc);
+		Log.printObject("remoteStoragePushEntry() dbDoc:", dbDoc);
+		Log.printObject("remoteStoragePushEntry() localDoc:", localDoc);
+		Log.printObject("remoteStoragePushEntry() remoteDoc:", remoteDoc);
+		
+		boolean ret = false;
+		pushResult.action = null;	//清空action,只能在新增Dir成功的时候被设置
+		
+		switch(localChangeType)
+		{
+		case LOCALCHANGE:
+			ret = remoteStorageUploadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+			break;
+		case LOCALADD:
+			ret = remoteStorageAddEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+			break;
+		case LOCALDELETE:
+			ret = remoteStorageDeleteEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+			break;
+		case LOCALFILETODIR:
+			ret = remoteStorageChangeFileToDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+			break;
+		case LOCALDIRTOFILE:
+			ret = remoteStorageChangeDirToFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+			break;
+		default:
+			break;						
+		}
+		return ret;
+	}
+	
+	private static boolean remoteStoragePullEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult, 
+			DocChangeType remoteChangeType) 
+	{
+		boolean ret = false;
+		switch(remoteChangeType)
+		{
+		case REMOTECHANGE:
+			ret = remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			break;
+		case REMOTEADD:
+			ret = remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			break;
+		case REMOTEDELETE:
+			ret = remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			break;
+		case REMOTEFILETODIR:
+			ret = remoteStorageChangeLocalFileToDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			break;
+		case REMOTEDIRTOFILE:
+			ret = remoteStorageChangeLocalDirToFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			break;
+		default:
+			break;						
+		}
+		return ret;
+	}
+
+	private static boolean remoteStorageChangeLocalDirToFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
+			User accessUser, DocPullResult pullResult) {
+		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult) == true)
+		{
+			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+		}
+		return false;
+	}
+
+	private static boolean remoteStorageChangeLocalFileToDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
+			User accessUser, DocPullResult pullResult) {
+		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult) == true)
+		{
+			return remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+		}
+		return false;
+	}
+
+	private static boolean remoteStorageChangeDirToFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
+			User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		
+		if(deleteEntryFromRemoteStorage(session, remote, repos, doc, pushResult, actionList, isSubAction) == true)
+		{
+			return remoteStorageAddFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+		}
+		return false;
+	}
+
+	private static boolean remoteStorageChangeFileToDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
+			User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		if(deleteEntryFromRemoteStorage(session, remote, repos, doc, pushResult, actionList, isSubAction) == true)
+		{
+			return remoteStorageAddDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+		}
+		return false;
+	}
+
+	private static boolean remoteStorageDeleteEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
+			User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		boolean ret = false;
+		
+		pushResult.totalCount ++;
+
+		ret = deleteEntryFromRemoteStorage(session, remote, repos, doc, pushResult, actionList, ret);
+		if(ret == true && remote.isVerRepos == false)
+		{
+			pushResult.successCount ++;	
+			if(dbDoc != null)
+			{
+				deleteRemoteStorageDBEntry(repos, doc, remote);
+			}
+		}
+		else
+		{
+			pushResult.failCount ++;
+		}
+		return ret;
+	}
+
+	private static boolean remoteStorageDownloadFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	{
+		boolean ret = false;
+		pullResult.totalCount ++;
+		ret = downloadFileFromRemoteStorage(session, remote, repos, doc);
+		if(ret == true)
+		{
+			pullResult.successCount ++;
+			//add or update DB
+			Doc newLocalDoc = fsGetDoc(repos, doc);
+			doc.setSize(newLocalDoc.getSize());
+			doc.setLatestEditTime(newLocalDoc.getLatestEditTime());
+			if(dbDoc == null)
+			{
+				addRemoteStorageDBEntry(repos, doc, remote);
+			}
+			else
+			{
+				updateRemoteStorageDBEntry(repos, doc, remote);
+			}
+		}
+		else
+		{
+			pullResult.failCount ++;
+		}
+		return ret;
+	}
+	
+	private static boolean remoteStorageAddLocalEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	{
+		if(doc.getType() == 1)
+		{
+			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+		}
+		return remoteStorageAddLocalDir(remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+	}
+	
+	private static boolean remoteStorageAddLocalDir(RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	{
+		boolean ret = false;
+		pullResult.totalCount ++;
+		
+		ret = FileUtil.createDir(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		if(ret == true)
+		{
+			pullResult.successCount ++;
+			if(dbDoc == null)
+			{
+				addRemoteStorageDBEntry(repos, doc, remote);
+			}
+			else
+			{
+				updateRemoteStorageDBEntry(repos, doc, remote);
+			}
+		}
+		else
+		{
+			pullResult.failCount ++;		
+		}
+		return ret;
+	}
+	
+	private static boolean remoteStorageDeleteLocalEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	{
+		boolean ret = false;
+		pullResult.totalCount ++;
+		
+		ret = FileUtil.delFileOrDir(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		if(ret == true)
+		{
+			pullResult.successCount ++;
+			deleteRemoteStorageDBEntry(repos, doc, remote);
+		}
+		else
+		{
+			pullResult.failCount ++;		
+		}
+		return ret;
+	}
+
+	private static boolean remoteStorageUploadFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		boolean ret = false;
+		pushResult.totalCount ++;
+
+		ret = uploadFileToRemoteStorage(session, remote, repos, doc, pushResult, actionList, ret);
+		if(ret == true && remote.isVerRepos == false)
+		{
+			//获取并更新remoteDoc Info
+			Doc newRemoteDoc = getRemoteStorageEntry(repos, doc, remote);
+			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
+			{
+				pushResult.successCount ++;
+
+				doc.setRevision(newRemoteDoc.getRevision());
+				if(dbDoc == null)
+				{
+					addRemoteStorageDBEntry(repos, doc, remote);
+				}
+				else
+				{
+					updateRemoteStorageDBEntry(repos, doc, remote);
+				}
+			}
+			else
+			{
+				pushResult.failCount ++;					
+			}
+		}
+		else
+		{
+			pushResult.failCount ++;
+		}
+		return ret;
+	}
+	
+	private static boolean remoteStorageAddFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser,
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		boolean ret = false;
+		pushResult.totalCount ++;
+
+		
+		ret = addFileToRemoteStorage(session, remote, repos, doc, pushResult, actionList, ret);
+		if(ret == true && remote.isVerRepos == false)
+		{
+			//获取并更新remoteDoc Info
+			Doc newRemoteDoc = getRemoteStorageEntry(repos, doc, remote);
+			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
+			{
+				pushResult.successCount ++;
+
+				doc.setRevision(newRemoteDoc.getRevision());
+				if(dbDoc == null)
+				{
+					addRemoteStorageDBEntry(repos, doc, remote);
+				}
+				else
+				{
+					updateRemoteStorageDBEntry(repos, doc, remote);
+				}
+			}
+			else
+			{
+				pushResult.failCount ++;					
+			}
+		}
+		else
+		{
+			pushResult.failCount ++;
+		}
+		return ret;
+	}
+
+
+	private static boolean remoteStorageAddDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser,
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		boolean ret = false;
+		pushResult.totalCount ++;
+
+		ret = addDirToRemoteStorage(session, remote, repos, doc, pushResult, actionList, isSubAction);
+		if(ret == true && remote.isVerRepos == false)
+		{
+			//获取并更新remoteDoc Info
+			Doc newRemoteDoc = getRemoteStorageEntry(repos, doc, remote);
+			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
+			{
+				pushResult.successCount ++;
+
+				doc.setRevision(newRemoteDoc.getRevision());
+				if(dbDoc == null)
+				{
+					addRemoteStorageDBEntry(repos, doc, remote);
+				}
+				else
+				{
+					updateRemoteStorageDBEntry(repos, doc, remote);
+				}
+			}
+			else
+			{
+				pushResult.failCount ++;					
+			}
+		}
+		else
+		{
+			pushResult.failCount ++;
+		}
+		return ret;
+	}
+
+	private static boolean remoteStorageAddEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		if(localDoc.getType() == 1)
+		{
+			return remoteStorageAddFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+		}
+		
+		//locaDoc is dir
+		return remoteStorageAddDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
+	}
+
+	private static boolean downloadFileFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		if(remote == null)
+		{
+			Log.debug("downloadFileFromRemoteStorage remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return false;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return downloadFileFromLocalDisk(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "sftp":
+			return downloadFileFromSftpServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "ftp":
+			return downloadFileFromFtpServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "smb":
+			return downloadFileFromSmbServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "mxsdoc":
+			return downloadFileFromMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "svn":
+			return downloadFileFromSvnServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "git":
+			return downloadFileFromGitServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		default:
+			Log.debug("downloadFileFromRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return false;
+	}
+
+	private static boolean uploadFileToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		if(remote == null)
+		{
+			Log.debug("uploadFileToRemoteStorage remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return false;
+		}
+		
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return uploadFileToLocalDisk(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "sftp":
+			return uploadFileToSftpServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "ftp":
+			return uploadFileToFtpServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "smb":
+			return uploadFileToSmbServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "mxsdoc":
+			return uploadFileToMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "svn":
+			return uploadFileToSvnServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+		case "git":
+			return uploadFileToGitServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+		default:
+			Log.debug("uploadFileToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return false;
+	}
+
+	private static boolean addFileToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		if(remote == null)
+		{
+			Log.debug("addFileToRemoteStorage remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return false;
+		}
+		
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return uploadFileToLocalDisk(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "sftp":
+			return uploadFileToSftpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "ftp":
+			return uploadFileToFtpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "smb":
+			return uploadFileToSmbServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "mxsdoc":
+			return uploadFileToMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "svn":
+			return addFileToSvnServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+		case "git":
+			return addFileToGitServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+		default:
+			Log.debug("addFileToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return false;
+	}
+
+	private static boolean addDirToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		if(remote == null)
+		{
+			Log.debug("addDirToRemoteStorage remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return false;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return addDirToLocalDisk(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "sftp":
+			return addDirToSftpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "ftp":
+			return addDirToFtpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "smb":
+			return addDirToSmbServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "mxsdoc":
+			return addDirToMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		case "svn":
+			return addDirToSvnServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+		case "git":
+			return addDirToGitServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+		default:
+			Log.debug("addDirToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return false;
+	}
+	
+	//这个函数只是添加远程目录
+	protected static boolean addDirsToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, String offsetPath) {
+		switch(remote.protocol)
+		{
+		case "file":
+			return addDirsToLocalDisk(session, remote, offsetPath);
+		case "sftp":
+			return addDirsToSftpServer(session, remote, offsetPath);
+		case "ftp":
+			return addDirsToFtpServer(session, remote, offsetPath);
+		case "smb":
+			return addDirsToSmbServer(session, remote, offsetPath);
+		case "mxsdoc":
+			return addDirsToMxsDocServer(session, remote, offsetPath);
+		
+		//svn和git会自动添加parentDir所以不需要添加
+		//case "svn":
+		//	return addDirsToSvnServer(session, remote, offsetPath);
+		//case "git":
+		//	return addDirsToGitServer(session, remote, offsetPath);
+		default:
+			Log.debug("addDirsToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return false;
+	}
+
+	private static boolean addDirsToLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath) {
+		File dir = new File(remote.FILE.localRootPath + remotePath);
+		return dir.mkdirs();
+	}
+		
+	private static boolean addDirsToSftpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
+        boolean ret = false;
+		try {
+			ret = session.sftp.mkdir(remotePath); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirsToFtpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
+        boolean ret = false;
+		try {
+			ret = session.ftp.mkdir(remotePath); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean addDirsToSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
+        boolean ret = false;
+        
+		try {
+			ret = session.smb.mkdir(remotePath); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirsToMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
+        boolean ret = false;
+
+        try {
+			ret = session.mxsdoc.add(remotePath, "", 2); 	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean deleteEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		if(remote == null)
+		{
+			Log.debug("deleteEntryFromRemoteStorage remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return false;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return deleteEntryFromeLocalDisk(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getType());
+		case "sftp":
+			return deleteEntryFromeSftpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getType());
+		case "ftp":
+			return deleteEntryFromeFtpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getType());
+		case "smb":
+			return deleteEntryFromeSmbServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getType());
+		case "mxsdoc":
+			return deleteEntryFromMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getType());
+		case "svn":
+			return deleteEntryFromeSvnServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+		case "git":
+			return deleteEntryFromeGitServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
+
+		default:
+			Log.debug("deleteEntryFromRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return false;
+	}
+
+	private static boolean uploadFileToSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		boolean ret = false;
+		try {
+			session.svn.modifyFile(doc, isSubAction, commitActionList);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean uploadFileToGitServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		boolean ret = false;
+		try {
+			session.git.modifyFile(doc, isSubAction, commitActionList);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean downloadFileFromLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+        
+        Log.debug("downloadFileFromLocalDisk remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		try {
+ 			FileUtil.copyFile(remote.FILE.localRootPath + remotePath + fileName, localPath + fileName, true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean downloadFileFromSftpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+        
+        Log.debug("downloadFileFromSftpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		try {
+ 			ret = session.sftp.download(remotePath, localPath, fileName);			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean downloadFileFromFtpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+        
+        Log.debug("downloadFileFromFtpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		try {
+ 			ret = session.ftp.download(remotePath, localPath, fileName);			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+
+	private static boolean downloadFileFromSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+        
+        Log.debug("downloadFileFromSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		try {
+ 			ret = session.smb.download(remotePath, localPath, fileName);			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean downloadFileFromMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+        
+        Log.debug("downloadFileFromMxsDocServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		try {
+ 			ret = session.mxsdoc.download(remotePath, localPath, fileName);			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean downloadFileFromSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+		boolean ret = false;
+		try {
+			session.svn.getRemoteFile(remotePath + fileName, localPath, fileName, -1L, true);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean downloadFileFromGitServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+		boolean ret = false;
+		try {
+			session.git.getRemoteFile(remotePath + fileName, localPath, fileName, null, true);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+
+	private static boolean addDirToLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+		Log.debug("addDirToLocalDisk remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			File dir = new File(remote.FILE.localRootPath + remotePath + fileName);
+			ret = dir.mkdir();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirToSftpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+        boolean ret = false;
+		Log.debug("addDirToSftpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.sftp.mkdir(remotePath + fileName); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirToFtpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+        boolean ret = false;
+		Log.debug("addDirToFtpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.ftp.mkdir(remotePath + fileName); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean addDirToSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+        boolean ret = false;
+		Log.debug("addDirToSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.smb.mkdir(remotePath + fileName); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirToMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+        boolean ret = false;
+		Log.debug("addDirToSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.mxsdoc.add(remotePath, fileName, 2); 	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean addFileToSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		boolean ret = false;
+		try {
+			session.svn.addEntry(doc, isSubAction, commitActionList);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addFileToGitServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		boolean ret = false;
+		try {
+			session.git.addEntry(doc, isSubAction, commitActionList);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirToSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		boolean ret = false;
+		CommitAction action = null;
+		try {
+			action  = session.svn.addEntry(doc, isSubAction, commitActionList);
+			pushResult.action = action;
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirToGitServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		boolean ret = false;
+		CommitAction action = null;
+		try {
+			action  = session.git.addEntry(doc, isSubAction, commitActionList);
+			pushResult.action = action;
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+
+	private static boolean deleteEntryFromeLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName, Integer type) {
+        boolean ret = false;
+		Log.debug("deleteEntryFromeLocalDisk remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = FileUtil.delFileOrDir(remote.FILE.localRootPath + remotePath + fileName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+
+	}
+	
+	private static boolean deleteEntryFromeSftpServer(RemoteStorageSession session, RemoteStorageConfig remote,  String remotePath, String localPath, String fileName, Integer type) {
+        boolean ret = false;
+		Log.debug("deleteEntryFromeSftpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.sftp.delete(remotePath, fileName); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+
+	private static boolean deleteEntryFromeFtpServer(RemoteStorageSession session, RemoteStorageConfig remote,  String remotePath, String localPath, String fileName, Integer type)  {
+        boolean ret = false;
+		Log.debug("deleteEntryFromeFtpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.ftp.delete(remotePath, fileName); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean deleteEntryFromeSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName, Integer type)  {
+        boolean ret = false;
+		Log.debug("deleteEntryFromeSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.smb.delete(remotePath, fileName); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean deleteEntryFromMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName, Integer type)  {
+        boolean ret = false;
+		Log.debug("deleteEntryFromMxsDocServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = session.mxsdoc.delete(remotePath, fileName); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean deleteEntryFromeSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
+		boolean ret = false;
+		try {
+			session.svn.deleteEntry(doc, isSubAction, commitActionList);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean deleteEntryFromeGitServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction){
+		boolean ret = false;
+		try {
+			session.git.deleteEntry(doc, isSubAction, commitActionList);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean uploadFileToLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+		Log.debug("uploadFileToLocalDisk remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+			ret = FileUtil.copyFile(localPath + fileName, remote.FILE.localRootPath + remotePath + fileName, true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean uploadFileToSftpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+		FileInputStream is = null;
+
+		Log.debug("uploadFileToSftpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+        	is = new FileInputStream(localPath + fileName);
+        	ret = session.sftp.upload(remotePath, fileName, is);        	
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+        return ret;
+	}
+	
+	
+	private static boolean uploadFileToFtpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName){
+        boolean ret = false;
+		FileInputStream is = null;
+
+		Log.debug("uploadFileToFtpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+        	is = new FileInputStream(localPath + fileName);
+        	ret = session.ftp.upload(remotePath, fileName, is);        	
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+        return ret;
+	}
+	
+
+	private static boolean uploadFileToSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+		FileInputStream is = null;
+
+		Log.debug("uploadFileToSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+        	is = new FileInputStream(localPath + fileName);
+        	ret = session.smb.upload(remotePath, fileName, is);        	
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+        return ret;
+	}
+	
+	private static boolean uploadFileToMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+		Log.debug("uploadFileToMxsDocServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+        return session.mxsdoc.upload(remotePath, localPath, fileName);        	
+	}
+	
+
+	private static List<Doc> getRemoteStorageEntryListForLocal(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		List <Doc> subEntryList =  null;
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		
+        Log.debug("getRemoteStorageEntryListForLocal doc:" + doc.getPath() + doc.getName());
+		try {
+        	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+            Log.debug("getRemoteStorageEntryListForLocal fileRemotePath:" + remote.FILE.localRootPath +fileRemotePath);
+                    	
+            File file = new File(remote.FILE.localRootPath + fileRemotePath);
+			File[] list = file.listFiles();
+			if(list != null)
+			{
+				subEntryList = new ArrayList<Doc>();
+				//Log.printObject("list:", list);
+				for(int i=0; i<list.length; i++)
+				{
+					File subEntry = list[i];
+					String subEntryName = subEntry.getName();
+					int subEntryType = getEntryType(file);
+					String subEntryRevision = subEntry.lastModified() + "";
+			    	long subEntrySize = subEntry.length();
+			    	long lastChangeTime = subEntry.lastModified();
+			    	long createTime = subEntry.lastModified();
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, null, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.add(subDoc);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+        return subEntryList;
+	}
+	
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForLocal(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		
+        Log.debug("getRemoteStorageEntryHashMapForLocal doc:" + doc.getPath() + doc.getName());
+		try {
+        	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+            Log.debug("getRemoteStorageEntryHashMapForLocal fileRemotePath:" + remote.FILE.localRootPath +fileRemotePath);
+                    	
+            File file = new File(remote.FILE.localRootPath + fileRemotePath);
+			File[] list = file.listFiles();
+			if(list != null)
+			{
+				//Log.printObject("list:", list);
+				for(int i=0; i<list.length; i++)
+				{
+					File subEntry = list[i];
+					String subEntryName = subEntry.getName();
+					int subEntryType = getEntryType(file);
+					String subEntryRevision = subEntry.lastModified() + "";
+			    	long subEntrySize = subEntry.length();
+			    	long lastChangeTime = subEntry.lastModified();
+			    	long createTime = subEntry.lastModified();
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, null, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.put(subEntryName,subDoc);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
+        return subEntryList;
+	}
+
+	private static List<Doc> getRemoteStorageEntryListForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		List <Doc> subEntryList =  null;
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		
+        Log.debug("getRemoteStorageEntryListForSftp doc:" + doc.getPath() + doc.getName());
+		try {
+        	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+            Log.debug("getRemoteStorageEntryListForSftp fileRemotePath:" + fileRemotePath);
+                    	
+			Vector<?> list = session.sftp.listFiles(fileRemotePath);
+			if(list != null)
+			{
+				subEntryList = new ArrayList<Doc>();
+				//Log.printObject("list:", list);
+				for(int i=0; i<list.size(); i++)
+				{
+					LsEntry subEntry = (LsEntry) list.get(i);
+					String subEntryName = subEntry.getFilename();
+					if(subEntryName.equals(".") || subEntryName.equals(".."))
+					{
+						continue;
+					}
+					
+					//Log.println(fileRemotePath + subEntryName);
+					
+					int subEntryType = getEntryType(subEntry);
+					String subEntryRevision = subEntry.getAttrs().getMtimeString();
+			    	long subEntrySize = subEntry.getAttrs().getSize();
+			    	long lastChangeTime = subEntry.getAttrs().getMTime();
+			    	long createTime = subEntry.getAttrs().getATime();
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, null, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.add(subDoc);
+				}
+			}
+		} catch (SftpException e) {
+			e.printStackTrace();
+		}		
+        return subEntryList;
+	}
+	
+	private static List<Doc> getRemoteStorageEntryListForFtp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		List <Doc> subEntryList =  null;
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		
+        Log.debug("getRemoteStorageEntryListForFtp doc:" + doc.getPath() + doc.getName());
+		try {
+        	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+            Log.debug("getRemoteStorageEntryListForFtp fileRemotePath:" + fileRemotePath);
+                    	
+			FTPFile[] list = session.ftp.listFiles(fileRemotePath);
+			if(list != null)
+			{
+				subEntryList = new ArrayList<Doc>();
+				//Log.printObject("list:", list);
+				for(int i=0; i<list.length; i++)
+				{
+					FTPFile subEntry = list[i];
+					String subEntryName = subEntry.getName();
+					if(subEntryName.equals(".") || subEntryName.equals(".."))
+					{
+						continue;
+					}
+					
+					//Log.println(fileRemotePath + subEntryName);
+					
+					int subEntryType = getEntryType(subEntry);
+					String subEntryRevision = subEntry.getTimestamp() + "";
+			    	long subEntrySize = subEntry.getSize();
+			    	long lastChangeTime = subEntry.getTimestamp().getTimeInMillis();
+			    	long createTime = lastChangeTime;
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, null, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.add(subDoc);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+        return subEntryList;
+	}
+	
+
+	private static List<Doc> getRemoteStorageEntryListForSmb(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		List <Doc> subEntryList =  null;
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		
+        Log.debug("getRemoteStorageEntryListForSmb doc:" + doc.getPath() + doc.getName());
+		try {
+        	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+            Log.debug("getRemoteStorageEntryListForSmb fileRemotePath:" + fileRemotePath);
+                    	
+			SmbFile[] list = session.smb.listFiles(fileRemotePath);
+			if(list != null)
+			{
+				subEntryList = new ArrayList<Doc>();
+				//Log.printObject("list:", list);
+				for(int i=0; i<list.length; i++)
+				{
+					SmbFile subEntry = list[i];
+					String subEntryName = subEntry.getName();
+					if(subEntryName.equals(".") || subEntryName.equals(".."))
+					{
+						continue;
+					}
+					
+					//Log.println(fileRemotePath + subEntryName);
+					
+					int subEntryType = getEntryType(subEntry);
+					String subEntryRevision = subEntry.lastModified() + "";
+			    	long subEntrySize = subEntry.length();
+			    	long lastChangeTime = subEntry.lastModified();
+			    	long createTime = subEntry.createTime();
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, null, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.add(subDoc);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+        return subEntryList;
+	}
+
+	private static List<Doc> getRemoteStorageEntryListForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		List <Doc> subEntryList =  null;
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		
+        Log.debug("getRemoteStorageEntryListForMxsDoc doc:" + doc.getPath() + doc.getName());
+		try {
+        	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+            Log.debug("getRemoteStorageEntryListForMxsDoc fileRemotePath:" + fileRemotePath);
+                    	
+			JSONArray list = session.mxsdoc.listFiles(fileRemotePath);
+			if(list != null)
+			{
+				subEntryList = new ArrayList<Doc>();
+				//Log.printObject("list:", list);
+				for(int i=0; i<list.size(); i++)
+				{
+					JSONObject subEntry = list.getJSONObject(i);
+					String subEntryName = subEntry.getString("name");
+					int subEntryType = subEntry.getInteger("type");
+					long subEntrySize = subEntry.getLong("size");
+			    	long lastChangeTime = subEntry.getLong("latestEditTime");
+			    	String subEntryRevision = lastChangeTime + "";
+			    	long createTime = subEntry.getLong("createTime");
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, null, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.add(subDoc);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+        return subEntryList;
+	}
+	
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc)
+	{
+		String entryPath = doc.getPath() + doc.getName();
+		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		
+        Log.debug("getRemoteStorageEntryHashMapForMxsDoc doc:" + doc.getPath() + doc.getName());
+		try {
+        	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+            Log.debug("getRemoteStorageEntryHashMapForMxsDoc fileRemotePath:" + fileRemotePath);
+                    	
+			JSONArray list = session.mxsdoc.listFiles(fileRemotePath);
+			if(list != null)
+			{
+				//Log.printObject("list:", list);
+				for(int i=0; i<list.size(); i++)
+				{
+					JSONObject subEntry = list.getJSONObject(i);
+					String subEntryName = subEntry.getString("name");
+					int subEntryType = subEntry.getInteger("type");
+					long subEntrySize = subEntry.getLong("size");
+			    	long lastChangeTime = subEntry.getLong("latestEditTime");
+			    	String subEntryRevision = lastChangeTime + "";
+			    	long createTime = subEntry.getLong("createTime");
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, null, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.put(subDoc.getName(), subDoc);
+
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+        return subEntryList;
+	}
+	
+	private static Doc getRemoteStorageEntryForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+        Doc remoteDoc = null;
+        
+        if(doc.getDocId() == 0)	//rootDoc
+        {
+        	Log.debug("getRemoteStorageEntryForMxsDoc it is rootDoc");
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
+	    	return remoteDoc;
+        }	
+        
+        if(doc.getName().isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForMxsDoc name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForMxsDoc doc:" + doc.getPath() + doc.getName());
+		try {
+        	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	JSONObject entry = session.mxsdoc.getEntry(remoteParentPath, doc.getName());
+        	if(entry != null)
+        	{
+				int subEntryType = entry.getInteger("type");
+				long subEntrySize = entry.getLong("size");
+		    	long lastChangeTime = entry.getLong("latestEditTime");
+		    	String subEntryRevision = lastChangeTime + "";
+		    	long createTime = entry.getLong("createTime");
+		    	remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    remoteDoc.setSize(subEntrySize);
+			    remoteDoc.setCreateTime(createTime);
+			    remoteDoc.setLatestEditTime(lastChangeTime);
+			    remoteDoc.setRevision(subEntryRevision);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return remoteDoc;	
+    }
+	
+	private static List<Doc> getRemoteStorageEntryListForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		List <Doc> subEntryList =  null;
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		
+        Log.debug("getRemoteStorageEntryHashMapForGit doc:" + doc.getPath() + doc.getName());
+		try {       	        	
+        	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+        	Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
+            
+			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, null);
+			//Log.printObject("list:", list);
+			if(treeWalk != null)
+			{
+				subEntryList = new ArrayList<Doc>();
+				while(treeWalk.next())
+				{
+					int type = getEntryType(treeWalk.getFileMode(0));
+					if(type <= 0)
+					{
+						continue;
+					}
+		    	
+					String name = treeWalk.getNameString();            			
+					Doc subDoc = new Doc();
+					subDoc.setVid(repos.getId());
+		    		subDoc.setDocId(Path.buildDocIdByName(subDocLevel,subDocParentPath,name));
+		    		subDoc.setPid(doc.getDocId());
+		    		subDoc.setPath(subDocParentPath);
+		    		subDoc.setName(name);
+		    		subDoc.setLevel(subDocLevel);
+		    		subDoc.setType(type);
+		    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+		    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+		    		subEntryList.add(subDoc);
+		    	}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return subEntryList;
+	}
+
+	private static List<Doc> getRemoteStorageEntryListForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		List <Doc> subEntryList =  null;
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		
+        Log.debug("getRemoteStorageEntryHashMapForSvn doc:" + doc.getPath() + doc.getName());
+		try {       	        	
+        	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+        	Log.debug("getRemoteStorageEntryHashMapForSvn fileRemotePath:" + fileRemotePath);
+            
+			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath);
+			if(list != null)
+			{
+				subEntryList = new ArrayList<Doc>();
+			    Iterator<SVNDirEntry> iterator = list.iterator();
+			    while (iterator.hasNext()) 
+			    {
+			    	SVNDirEntry subEntry = iterator.next();
+			    	int subEntryType = getEntryType(subEntry.getKind());
+			    	if(subEntryType <= 0)
+			    	{
+			    		System.out.println("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
+			    		continue;
+			    	}
+					
+			    	String subEntryName = subEntry.getName();
+			    	Long lastChangeTime = subEntry.getDate().getTime();
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "", doc.offsetPath);
+			    	subDoc.setSize(subEntry.getSize());
+			    	subDoc.setCreateTime(lastChangeTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setCreatorName(subEntry.getAuthor());
+			    	subDoc.setLatestEditorName(subEntry.getAuthor());
+			    	subDoc.setRevision(subEntry.getRevision()+"");
+		    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+		    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+			        subEntryList.add(subDoc);
+			    }	
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return subEntryList;
+	}
+	
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		
+        Log.debug("getRemoteStorageEntryHashMapForSftp doc:" + doc.getPath() + doc.getName());
+		try {       	        	
+        	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+        	Log.debug("getRemoteStorageEntryHashMapForSftp fileRemotePath:" + fileRemotePath);
+            
+			Vector<?> list = session.sftp.listFiles(fileRemotePath);
+			//Log.printObject("list:", list);
+			for(int i=0; i<list.size(); i++)
+			{
+				LsEntry subEntry = (LsEntry) list.get(i);
+				String subEntryName = subEntry.getFilename();
+				if(subEntryName.equals(".") || subEntryName.equals(".."))
+				{
+					continue;
+				}
+				
+				//Log.println(fileRemotePath + subEntryName);
+				
+				int subEntryType = getEntryType(subEntry);
+				String subEntryRevision = subEntry.getAttrs().getMtimeString();
+		    	long subEntrySize = subEntry.getAttrs().getSize();
+		    	long lastChangeTime = subEntry.getAttrs().getMTime();
+		    	long createTime = subEntry.getAttrs().getATime();
+		    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+		    	subDoc.setSize(subEntrySize);
+		    	subDoc.setCreateTime(createTime);
+		    	subDoc.setLatestEditTime(lastChangeTime);
+		    	subDoc.setRevision(subEntryRevision);
+	    		subEntryList.put(subDoc.getName(), subDoc);
+			}			
+		} catch (SftpException e) {
+			e.printStackTrace();
+		}
+        return subEntryList;
+	}
+	
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForFtp(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		
+        Log.debug("getRemoteStorageEntryHashMapForFtp doc:" + doc.getPath() + doc.getName());
+		try {       	        	
+        	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+        	Log.debug("getRemoteStorageEntryHashMapForFtp fileRemotePath:" + fileRemotePath);
+            
+			FTPFile[] list = session.ftp.listFiles(fileRemotePath);
+			//Log.printObject("list:", list);
+			for(int i=0; i<list.length; i++)
+			{
+				FTPFile subEntry = list[i];
+				String subEntryName = subEntry.getName();
+				if(subEntryName.equals(".") || subEntryName.equals(".."))
+				{
+					continue;
+				}
+				
+				//Log.println(fileRemotePath + subEntryName);
+				
+				int subEntryType = getEntryType(subEntry);
+				String subEntryRevision = subEntry.getTimestamp() + "";
+		    	long subEntrySize = subEntry.getSize();
+		    	long lastChangeTime = subEntry.getTimestamp().getTimeInMillis();
+		    	long createTime = lastChangeTime;
+		    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+		    	subDoc.setSize(subEntrySize);
+		    	subDoc.setCreateTime(createTime);
+		    	subDoc.setLatestEditTime(lastChangeTime);
+		    	subDoc.setRevision(subEntryRevision);
+	    		subEntryList.put(subDoc.getName(), subDoc);
+			}			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return subEntryList;
+	}
+	
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSmb(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) {
+		String entryPath = doc.getPath() + doc.getName();
+		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		
+        Log.debug("getRemoteStorageEntryHashMapForSmb doc:" + doc.getPath() + doc.getName());
+		try {       	        	
+        	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+        	Log.debug("getRemoteStorageEntryHashMapForSmb fileRemotePath:" + fileRemotePath);
+            
+			SmbFile[] list = session.smb.listFiles(fileRemotePath);
+			//Log.printObject("list:", list);
+			for(int i=0; i<list.length; i++)
+			{
+				SmbFile subEntry = list[i];
+				String subEntryName = subEntry.getName();
+				if(subEntryName.equals(".") || subEntryName.equals(".."))
+				{
+					continue;
+				}
+				
+				//Log.println(fileRemotePath + subEntryName);				
+				int subEntryType = getEntryType(subEntry);
+				String subEntryRevision = subEntry.lastModified() + "";
+		    	long subEntrySize = subEntry.length();
+		    	long lastChangeTime = subEntry.lastModified();
+		    	long createTime = subEntry.createTime();
+		    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+		    	subDoc.setSize(subEntrySize);
+		    	subDoc.setCreateTime(createTime);
+		    	subDoc.setLatestEditTime(lastChangeTime);
+		    	subDoc.setRevision(subEntryRevision);
+	    		subEntryList.put(subDoc.getName(), subDoc);
+			}			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return subEntryList;
+	}
+	
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForGit(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc)
+	{
+		String entryPath = doc.getPath() + doc.getName();
+		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		
+        Log.debug("getRemoteStorageEntryHashMapForGit doc:" + doc.getPath() + doc.getName());
+		try {       	        	
+        	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+        	Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
+            
+			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, null);
+			//Log.printObject("list:", list);
+			while(treeWalk.next())
+	    	{
+	    		int type = getEntryType(treeWalk.getFileMode(0));
+		    	if(type <= 0)
+		    	{
+		    		continue;
+		    	}
+		    	
+	    		String name = treeWalk.getNameString();            			
+	    		Doc subDoc = new Doc();
+	    		subDoc.setVid(repos.getId());
+	    		subDoc.setDocId(Path.buildDocIdByName(subDocLevel,subDocParentPath,name));
+	    		subDoc.setPid(doc.getDocId());
+	    		subDoc.setPath(subDocParentPath);
+	    		subDoc.setName(name);
+	    		subDoc.setLevel(subDocLevel);
+	    		subDoc.setType(type);
+	    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+	    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+	    		subEntryList.put(subDoc.getName(), subDoc);
+	    	}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return subEntryList;
+	}
+
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSvn(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) 
+	{
+		String entryPath = doc.getPath() + doc.getName();
+		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
+
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
+		{
+			subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		
+        Log.debug("getRemoteStorageEntryHashMapForSvn doc:" + doc.getPath() + doc.getName());
+		try {       	        	
+        	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
+        	if(doc.getName() != null && doc.getName().isEmpty() == false)
+        	{
+        		fileRemotePath += doc.getName() + "/";
+        	}
+        	Log.debug("getRemoteStorageEntryHashMapForSvn fileRemotePath:" + fileRemotePath);
+            
+			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath);
+
+		    Iterator<SVNDirEntry> iterator = list.iterator();
+		    while (iterator.hasNext()) 
+		    {
+		    	SVNDirEntry subEntry = iterator.next();
+		    	int subEntryType = getEntryType(subEntry.getKind());
+		    	if(subEntryType <= 0)
+		    	{
+		    		System.out.println("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
+		    		continue;
+		    	}
+				
+		    	String subEntryName = subEntry.getName();
+		    	Long lastChangeTime = subEntry.getDate().getTime();
+		    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "", doc.offsetPath);
+		    	subDoc.setSize(subEntry.getSize());
+		    	subDoc.setCreateTime(lastChangeTime);
+		    	subDoc.setLatestEditTime(lastChangeTime);
+		    	subDoc.setCreatorName(subEntry.getAuthor());
+		    	subDoc.setLatestEditorName(subEntry.getAuthor());
+		    	subDoc.setRevision(subEntry.getRevision()+"");
+	    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+	    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+		        subEntryList.put(subDoc.getName(), subDoc);
+		    }	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return subEntryList;
+	}
+
+	
+	private static Doc getRemoteStorageEntryForLocal(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc)	
+	{
+        Doc remoteDoc = null;
+        
+        if(doc.getDocId() == 0)	//rootDoc
+        {
+        	Log.debug("getRemoteStorageEntryForLocal it is rootDoc");
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
+	    	return remoteDoc;
+        }	
+        
+        if(doc.getName().isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForLocal name 不能为空");
+			return null;
+		}
+
+        Log.debug("getRemoteStorageEntryForLocal doc:" + doc.getPath() + doc.getName());
+        String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
+        Log.debug("getRemoteStorageEntryForLocal remoteParentPath:" + remoteParentPath);	    
+        String entryName = doc.getName();
+        
+        Log.debug("getRemoteStorageEntryForLocal remoteFilePath:" + remote.FILE.localRootPath + remoteParentPath + entryName);
+
+        File entry = new File(remote.FILE.localRootPath + remoteParentPath, entryName);
+        int subEntryType = getEntryType(entry);
+        String subEntryRevision = null;
+		long subEntrySize = 0L;
+		long lastChangeTime = 0L;
+		long createTime = 0L;
+		if(subEntryType != 0)
+		{
+			subEntryRevision = entry.lastModified() + "";
+			subEntrySize = entry.length();
+			lastChangeTime = entry.lastModified();
+			createTime = entry.lastModified();
+		}
+		
+		remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), entryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+		remoteDoc.setSize(subEntrySize);
+		remoteDoc.setCreateTime(createTime);
+		remoteDoc.setLatestEditTime(lastChangeTime);
+		remoteDoc.setRevision(subEntryRevision);			    	
+		return remoteDoc;
+	}
+	
+	private static Doc getRemoteStorageEntryForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
+	{
+        Doc remoteDoc = null;
+        
+        if(doc.getDocId() == 0)	//rootDoc
+        {
+        	Log.debug("getRemoteStorageEntryForSftp it is rootDoc");
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
+	    	return remoteDoc;
+        }	
+        
+        if(doc.getName().isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForSftp name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForSftp doc:" + doc.offsetPath + doc.getPath() + doc.getName());
+		try {
+        	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	Vector<?> list = session.sftp.listFiles(remoteParentPath);
+			//Log.printObject("list:", list);
+			for(int i=0; i<list.size(); i++)
+			{
+				LsEntry entry = (LsEntry) list.get(i);
+				String entryName = entry.getFilename();
+				if(entryName.equals(doc.getName()))
+				{
+					int subEntryType = getEntryType(entry);
+					String subEntryRevision = entry.getAttrs().getMtimeString();
+			    	long subEntrySize = entry.getAttrs().getSize();
+			    	long lastChangeTime = entry.getAttrs().getMTime();
+			    	long createTime = entry.getAttrs().getATime();
+			    	remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), entryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	remoteDoc.setSize(subEntrySize);
+			    	remoteDoc.setCreateTime(createTime);
+			    	remoteDoc.setLatestEditTime(lastChangeTime);
+			    	remoteDoc.setRevision(subEntryRevision);			    	
+					break;
+				}
+			}
+		} catch (SftpException e) {
+			e.printStackTrace();
+		}
+        return remoteDoc;
+	}
+	
+	private static Doc getRemoteStorageEntryForFtp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
+	{
+        Doc remoteDoc = null;
+        
+        if(doc.getDocId() == 0)	//rootDoc
+        {
+        	Log.debug("getRemoteStorageEntryForFtp it is rootDoc");
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
+	    	return remoteDoc;
+        }	
+        
+        if(doc.getName().isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForFtp name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForFtp doc:" + doc.offsetPath +  doc.getPath() + doc.getName());
+		try {
+        	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
+
+        	FTPFile[] list = session.ftp.listFiles(remoteParentPath);
+			//Log.printObject("list:", list);
+			for(int i=0; i<list.length; i++)
+			{
+				FTPFile entry = list[i];
+				String entryName = entry.getName();
+				if(entryName.equals(doc.getName()))
+				{
+					int subEntryType = getEntryType(entry);
+					String subEntryRevision = entry.getTimestamp() + "";
+			    	long subEntrySize = entry.getSize();
+			    	long lastChangeTime = entry.getTimestamp().getTimeInMillis();
+			    	long createTime = lastChangeTime;
+			    	remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), entryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	remoteDoc.setSize(subEntrySize);
+			    	remoteDoc.setCreateTime(createTime);
+			    	remoteDoc.setLatestEditTime(lastChangeTime);
+			    	remoteDoc.setRevision(subEntryRevision);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return remoteDoc;
+	}
+	
+	private static Doc getRemoteStorageEntryForSmb(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
+	{
+        Doc remoteDoc = null;
+        
+        if(doc.getDocId() == 0)	//rootDoc
+        {
+        	Log.debug("getRemoteStorageEntryForSmb it is rootDoc");
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
+	    	return remoteDoc;
+        }	
+        
+        if(doc.getName().isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForSmb name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForSmb doc:" + doc.offsetPath + doc.getPath() + doc.getName());
+		try {
+        	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
+
+        	SmbFile entry = session.smb.getEntry(remoteParentPath, doc.getName());
+        	if(entry != null)
+        	{
+				int subEntryType = getEntryType(entry);
+				String subEntryRevision = entry.lastModified() + "";
+			    long subEntrySize = entry.length();
+			    long lastChangeTime = entry.lastModified();
+			    long createTime = entry.createTime();
+			    remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    remoteDoc.setSize(subEntrySize);
+			    remoteDoc.setCreateTime(createTime);
+			    remoteDoc.setLatestEditTime(lastChangeTime);
+			    remoteDoc.setRevision(subEntryRevision);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return remoteDoc;
+	}
+	
+	private static Doc getRemoteStorageEntryForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
+	{
+        Doc remoteDoc = null;
+        
+        if(doc.getDocId() == 0)	//rootDoc
+        {
+        	Log.debug("getRemoteStorageEntryForFtp it is rootDoc");
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
+	    	return remoteDoc;
+        }	
+        
+        if(doc.getName().isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForFtp name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForFtp doc:" + doc.offsetPath + doc.getPath() + doc.getName());
+		try {
+        	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
+
+        	Collection<SVNDirEntry> list = session.svn.listFiles(remoteParentPath);
+			
+    	    Iterator<SVNDirEntry> iterator = list.iterator();
+    	    while (iterator.hasNext()) 
+    	    {
+    	    	SVNDirEntry subEntry = iterator.next();
+    	    	int subEntryType = getEntryType(subEntry.getKind());
+    	    	if(subEntryType <= 0)
+    	    	{
+    	    		continue;
+    	    	}
+    	    	
+    	    	String subEntryName = subEntry.getName();
+    	    	if(subEntryName.equals(doc.getName()))
+    	    	{
+    	    		Long lastChangeTime = subEntry.getDate().getTime();
+    	    		remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null, doc.offsetPath);
+    	    		remoteDoc.setSize(subEntry.getSize());
+    	    		remoteDoc.setCreateTime(lastChangeTime);
+    	    		remoteDoc.setLatestEditTime(lastChangeTime);
+    	    		remoteDoc.setCreatorName(subEntry.getAuthor());
+    	    		remoteDoc.setLatestEditorName(subEntry.getAuthor());
+    	    		remoteDoc.setRevision(subEntry.getRevision()+"");
+    	    		break;
+    	    	}
+    	    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return remoteDoc;
+	}
+
+	private static Doc getRemoteStorageEntryForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
+	{
+        Doc remoteDoc = null;
+        
+        if(doc.getDocId() == 0)	//rootDoc
+        {
+        	Log.debug("getRemoteStorageEntryForGit it is rootDoc");
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
+	    	return remoteDoc;
+        }	
+        
+        if(doc.getName().isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForGit name 不能为空");
+			return null;
+		}
+        
+        Log.debug("getRemoteStorageEntryForGit doc:" + doc.getPath() + doc.getName());
+		try {
+			
+        	String remoteEntryPath = doc.offsetPath + doc.getPath() + doc.getName();        	        	
+        	Integer type = session.git.checkPath(remoteEntryPath, null);
+        	if(type == null)
+        	{
+        		return null;
+        	}
+        	
+            if(type ==  0) 
+    		{
+    	    	return null;
+    		}
+
+            RevCommit commit = session.git.getLatestRevCommit(doc);
+            if(commit == null)
+            {
+            	System.out.println("getLatestRevision() Failed to getLatestRevCommit");
+            	return null;
+            }
+    		
+            String commitId=commit.getName();  //revision
+    	    String author=commit.getAuthorIdent().getName();  //作者
+    	    String commitUser=commit.getCommitterIdent().getName();
+    	    long commitTime = session.git.convertCommitTime(commit.getCommitTime());
+    	            
+    	    //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+            remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null, doc.offsetPath);
+    		remoteDoc.setRevision(commitId);
+            remoteDoc.setCreatorName(author);
+            remoteDoc.setLatestEditorName(commitUser);
+            remoteDoc.setLatestEditTime(commitTime);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return remoteDoc;
+	}
+
+
+	private static int getEntryType(FileMode fileMode) {
+		if(fileMode == null)
+		{
+			return -1;
+		}
+		
+		int bits = fileMode.getBits();
+		switch(bits & FileMode.TYPE_MASK)
+		{
+		case FileMode.TYPE_FILE:
+			return 1;
+		case FileMode.TYPE_TREE:
+			return 2;
+		case FileMode.TYPE_MISSING:
+			return 0;
+		}
+		return -1;
+	}
+
+
+	private static int getEntryType(SVNNodeKind nodeKind) {
+		if(nodeKind == null)
+		{
+			return -1;
+		}
+    	
+    	if(nodeKind == SVNNodeKind.NONE) 
+		{
+			return 0;
+		}
+		else if(nodeKind == SVNNodeKind.FILE)
+		{
+			return 1;
+		}
+		else if(nodeKind == SVNNodeKind.DIR)
+		{
+			return 2;
+		}
+		return -1;
+	}
+	
+	private static int getEntryType(SmbFile entry) {
+		try {
+			if(entry.isDirectory())
+			{
+				return 2;
+			}
+			else
+			{
+				return 1;
+			}
+		} catch (SmbException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	private static int getEntryType(FTPFile entry) {
+		if(entry.isDirectory())
+		{
+			return 2;
+		}
+		return 1;
+	}
+
+	private static int getEntryType(LsEntry subEntry) {
+		if(subEntry.getAttrs().isDir())
+		{
+			return 2;
+		}
+		return 1;
+	}
+	
+	private static int getEntryType(File file) {
+		if(file.exists() == false)
+		{
+			return 0;
+		}
+		
+		if(file.isDirectory())
+		{
+			return 2;
+		}
+		return 1;
+	}
+	
+
+	protected static void remoteStorageVerReposCommitAndPush(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, String commitUser, String commitMsg, DocPushResult pushResult) {
+		String revision = null;
+		switch(session.protocol)
+		{
+		case "svn":
+			revision = session.svn.doCommit(commitMsg, commitUser, pushResult, pushResult.actionList);
+			break;
+		case "git":
+			revision = session.git.doCommit(commitMsg, commitUser, pushResult, pushResult.actionList);
+			break;
+		}
+		
+		if(revision != null)
+		{
+			updateRemoteStorageDbEntry(remote, repos, pushResult, pushResult.actionList, revision);
+		}
 	}
 }
