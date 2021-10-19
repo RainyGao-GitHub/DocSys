@@ -16765,10 +16765,16 @@ public class BaseController  extends BaseFunction{
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
 		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote); 
-
-		if((remoteDoc == null || remoteDoc.getType() == 0) && doc.offsetPath != null)
+		
+		if(doc.offsetPath != null)	//Means It is backup Action
 		{
-			addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath);
+			if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
+			{
+				if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
+				{
+					addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath());
+				}
+			}
 		}
 		
 		Integer subEntryPushFlag = 1;
