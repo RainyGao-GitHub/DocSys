@@ -15088,15 +15088,15 @@ public class BaseController  extends BaseFunction{
 		switch(remote.protocol)
 		{
 		case "file":
-			return addDirToLocalDisk(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return addDirToLocalDisk(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getName());
 		case "sftp":
-			return addDirToSftpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return addDirToSftpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getName());
 		case "ftp":
-			return addDirToFtpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return addDirToFtpServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getName());
 		case "smb":
-			return addDirToSmbServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return addDirToSmbServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getName());
 		case "mxsdoc":
-			return addDirToMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return addDirToMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath+ doc.getPath(), doc.getName());
 		case "svn":
 			return addDirToSvnServer(session, remote,  doc, pushResult, commitActionList, isSubAction);
 		case "git":
@@ -15109,77 +15109,48 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//这个函数只是添加远程目录
-	protected static boolean addDirsToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, String offsetPath) {
-		switch(remote.protocol)
-		{
-		case "file":
-			return addDirsToLocalDisk(session, remote, offsetPath);
-		case "sftp":
-			return addDirsToSftpServer(session, remote, offsetPath);
-		case "ftp":
-			return addDirsToFtpServer(session, remote, offsetPath);
-		case "smb":
-			return addDirsToSmbServer(session, remote, offsetPath);
-		case "mxsdoc":
-			return addDirsToMxsDocServer(session, remote, offsetPath);
+	protected static boolean addDirsToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, String basePath, String offsetPath) {
 		
-		//svn和git会自动添加parentDir所以不需要添加
-		//case "svn":
-		//	return addDirsToSvnServer(session, remote, offsetPath);
-		//case "git":
-		//	return addDirsToGitServer(session, remote, offsetPath);
-		default:
-			Log.debug("addDirsToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
-			break;
+		String remotePath = basePath;
+		String path[] = offsetPath.split("/");
+		for(int i=0; i<path.length; i++)
+		{			
+			if(path[i].equals(""))
+			{
+				continue;
+			}
+			
+			Log.debug("addDirsToRemoteStorage() path[" + i+ "]:" + path[i]);
+			switch(remote.protocol)
+			{
+			case "file":
+				addDirToLocalDisk(session, remote, remotePath, path[i]);
+				break;
+			case "sftp":
+				addDirToSftpServer(session, remote, remotePath, path[i]);
+				break;
+			case "ftp":
+				addDirToFtpServer(session, remote, remotePath, path[i]);
+				break;
+			case "smb":
+				addDirToSmbServer(session, remote, remotePath, path[i]);
+				break;
+			case "mxsdoc":
+				addDirToMxsDocServer(session, remote, remotePath, path[i]);
+				break;
+			//svn和git会自动添加parentDir所以不需要添加
+			//case "svn":
+			//	return addDirsToSvnServer(session, remote, remotePath, path[i]);
+			//case "git":
+			//	return addDirsToGitServer(session, remote, remotePath, path[i]);
+			default:
+				Log.debug("addDirsToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+				return false;
+			}
+			
+			remotePath = remotePath + path[i] + "/";
 		}
 		return false;
-	}
-
-	private static boolean addDirsToLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath) {
-		File dir = new File(remote.FILE.localRootPath + remotePath);
-		return dir.mkdirs();
-	}
-		
-	private static boolean addDirsToSftpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
-        boolean ret = false;
-		try {
-			ret = session.sftp.mkdir(remotePath); 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        return ret;
-	}
-	
-	private static boolean addDirsToFtpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
-        boolean ret = false;
-		try {
-			ret = session.ftp.mkdir(remotePath); 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        return ret;
-	}
-
-	private static boolean addDirsToSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
-        boolean ret = false;
-        
-		try {
-			ret = session.smb.mkdir(remotePath); 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        return ret;
-	}
-	
-	private static boolean addDirsToMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath)  {
-        boolean ret = false;
-
-        try {
-			ret = session.mxsdoc.add(remotePath, "", 2); 	
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        return ret;
 	}
 
 	private static boolean deleteEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
@@ -15319,9 +15290,9 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	private static boolean addDirToLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+	private static boolean addDirToLocalDisk(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String fileName) {
         boolean ret = false;
-		Log.debug("addDirToLocalDisk remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		Log.debug("addDirToLocalDisk remotePath:" + remotePath + " fileName:" + fileName);
 
 		try {
 			File dir = new File(remote.FILE.localRootPath + remotePath + fileName);
@@ -15332,9 +15303,9 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 	
-	private static boolean addDirToSftpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+	private static boolean addDirToSftpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String fileName)  {
         boolean ret = false;
-		Log.debug("addDirToSftpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		Log.debug("addDirToSftpServer remotePath:" + remotePath + " fileName:" + fileName);
 
 		try {
 			ret = session.sftp.mkdir(remotePath + fileName); 
@@ -15344,9 +15315,9 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 	
-	private static boolean addDirToFtpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+	private static boolean addDirToFtpServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String fileName)  {
         boolean ret = false;
-		Log.debug("addDirToFtpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		Log.debug("addDirToFtpServer remotePath:" + remotePath + " fileName:" + fileName);
 
 		try {
 			ret = session.ftp.mkdir(remotePath + fileName); 
@@ -15356,9 +15327,9 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private static boolean addDirToSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+	private static boolean addDirToSmbServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String fileName)  {
         boolean ret = false;
-		Log.debug("addDirToSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		Log.debug("addDirToSmbServer remotePath:" + remotePath + " fileName:" + fileName);
 
 		try {
 			ret = session.smb.mkdir(remotePath + fileName); 
@@ -15368,9 +15339,9 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 	
-	private static boolean addDirToMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+	private static boolean addDirToMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String fileName)  {
         boolean ret = false;
-		Log.debug("addDirToSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+		Log.debug("addDirToSmbServer remotePath:" + remotePath + " fileName:" + fileName);
 
 		try {
 			ret = session.mxsdoc.add(remotePath, fileName, 2); 	
@@ -16797,7 +16768,7 @@ public class BaseController  extends BaseFunction{
 
 		if((remoteDoc == null || remoteDoc.getType() == 0) && doc.offsetPath != null)
 		{
-			addDirsToRemoteStorage(session, remote, remote.rootPath + doc.offsetPath);
+			addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath);
 		}
 		
 		Integer subEntryPushFlag = 1;
