@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -34,6 +35,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.Vector;
@@ -108,10 +112,13 @@ import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.common.entity.EncryptConfig;
+import com.DocSystem.common.entity.LocalBackupConfig;
 import com.DocSystem.common.entity.QueryResult;
+import com.DocSystem.common.entity.RemoteBackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.remoteStorage.FtpUtil;
@@ -167,17 +174,17 @@ public class BaseController  extends BaseFunction{
 	protected EmailService emailService;
         
 	//系统默认用户
-    protected static User coEditUser = new User();
-    protected static User autoSyncUser = new User();
+	protected static User coEditUser = new User();
+    protected static User systemUser = new User();
     
     static {		
 		initSystemUsers();
 		initLogLevel();
     }
 	private static void initSystemUsers() {
-		//自动同步用户
-		autoSyncUser.setId(0);
-		autoSyncUser.setName("AutoSync");		
+		//系统用户
+		systemUser.setId(0);
+		systemUser.setName("System");		
 		
 		//协同编辑用户
 		coEditUser.setId(-1);
@@ -992,7 +999,7 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("addDocToSyncUpList() syncType:" + syncType + " doc:", doc);
 		if(user == null)
 		{
-			user = autoSyncUser;
+			user = systemUser;
 		}
 		
 		if(checkLock == false || false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
@@ -3904,7 +3911,7 @@ public class BaseController  extends BaseFunction{
 		User login_user = action.getUser();
 		if(login_user == null)
 		{
-			login_user = autoSyncUser;
+			login_user = systemUser;
 		}
 		
 		Repos repos =  action.getRepos();
@@ -10004,6 +10011,302 @@ public class BaseController  extends BaseFunction{
 		}	
 	}
 	
+	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
+	{
+		Log.debug("initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup:" + autoBackup);
+		
+		BackupConfig config = parseAutoBackupConfig(repos, autoBackup);
+		if(config == null)
+		{
+			reposBackupConfigHashMap.remove(repos.getId());
+			return;
+		}
+		
+		//add backup config to hashmap
+		reposBackupConfigHashMap.put(repos.getId(), config);	
+		
+		addDelayTaskForLocalBackup(repos, config.localBackupConfig);
+		addDelayTaskForRemoteBackup(repos, config.remoteBackupConfig);	
+	}
+	
+	private void addDelayTaskForLocalBackup(Repos repos, LocalBackupConfig localBackupConfig) {
+		if(localBackupConfig == null)
+		{
+			return;
+		}
+		
+		Long delayTime = getDelayTimeForNextLocalBackupTask(localBackupConfig);
+		if(delayTime == null)
+		{
+			return;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("addDelayTaskForLocalBackup 非商业版本不支持自动备份");
+			return;
+	    }
+				
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
+                        
+                        //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
+                		Repos latestReposInfo = getReposEx(repos.getId());
+                        BackupConfig backupConfig = latestReposInfo.backupConfig;
+                        if(backupConfig == null)
+                        {
+                        	return;
+                        }
+                        
+                        LocalBackupConfig latestLocalBackupConfig = backupConfig.localBackupConfig;
+                        if(latestLocalBackupConfig == null)
+                        {
+                        	return;
+                        }
+                        
+                        //确认当前时间是否仍然在当天的备份窗口内(配置发生变化都将导致该任务无效)
+                        
+                        if(checkCurrentTimeForLocalBackup(latestLocalBackupConfig) == true)
+                        {
+                        	ReturnAjax rt = new ReturnAjax();
+                            String localRootPath = Path.getReposRealPath(latestReposInfo);
+                    		String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+                    		Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
+                        	channel.localBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+                        }
+                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig);                      
+                    }
+                },
+                delayTime,
+                TimeUnit.SECONDS);
+	}
+	
+	protected boolean checkCurrentTimeForLocalBackup(LocalBackupConfig localBackupConfig) {
+		//初始化weekDayBackupEnTab
+		int weekDayBackupEnTab[] = new int[7];
+		weekDayBackupEnTab[0] = localBackupConfig.weekDay1;
+		weekDayBackupEnTab[1] = localBackupConfig.weekDay2;
+		weekDayBackupEnTab[2] = localBackupConfig.weekDay3;
+		weekDayBackupEnTab[3] = localBackupConfig.weekDay4;
+		weekDayBackupEnTab[4] = localBackupConfig.weekDay5;
+		weekDayBackupEnTab[5] = localBackupConfig.weekDay6;
+		weekDayBackupEnTab[6] = localBackupConfig.weekDay7;
+		
+		Calendar calendar = Calendar.getInstance();
+		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK);
+		int curHour = calendar.get(Calendar.HOUR_OF_DAY);		
+		Log.debug("checkCurrentTimeForLocalBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour);
+
+		if(weekDayBackupEnTab[curWeekDay] == 0)
+		{
+			//当天没有备份任务
+			Log.debug("checkCurrentTimeForLocalBackup() Today have no local backup task");
+			return false;
+		}
+		
+		if(curHour*60 > (localBackupConfig.backupTime + 120))
+		{
+			Log.debug("checkCurrentTimeForLocalBackup() 备份任务已超时两小时!");
+			return false;
+		}
+		
+		return true;
+	}
+
+	private Long getDelayTimeForNextLocalBackupTask(LocalBackupConfig localBackupConfig) {
+		//初始化weekDayBackupEnTab
+		int weekDayBackupEnTab[] = new int[7];
+		weekDayBackupEnTab[0] = localBackupConfig.weekDay1;
+		weekDayBackupEnTab[1] = localBackupConfig.weekDay2;
+		weekDayBackupEnTab[2] = localBackupConfig.weekDay3;
+		weekDayBackupEnTab[3] = localBackupConfig.weekDay4;
+		weekDayBackupEnTab[4] = localBackupConfig.weekDay5;
+		weekDayBackupEnTab[5] = localBackupConfig.weekDay6;
+		weekDayBackupEnTab[6] = localBackupConfig.weekDay7;
+		
+		Calendar calendar = Calendar.getInstance();
+		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
+		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK);
+		
+		Log.debug("getDelayTimeForNextLocalBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour);
+		
+		Integer delayDays = null;
+		int index = curWeekDay;
+		if(curHour*60 > localBackupConfig.backupTime)
+		{
+			index = (index + 1) % 7;
+		}
+		
+		for(int i = 0; i < 7; i++)
+		{
+			if(weekDayBackupEnTab[index % 7] == 1)
+			{
+				if(delayDays == null)
+				{
+					delayDays = 0;
+				}
+				else
+				{
+					delayDays++;
+				}
+				break;
+			}
+		}
+		
+		if(delayDays == null)
+		{
+			return null;
+		}
+		
+		long delayTime =  delayDays*24*60*60 + localBackupConfig.backupTime * 60;
+		Log.debug("getDelayTimeForNextLocalBackupTask() delayTime:" + delayTime);
+		return delayTime;
+	}
+
+	private void addDelayTaskForRemoteBackup(Repos repos, RemoteBackupConfig remoteBackupConfig) {
+		if(remoteBackupConfig == null)
+		{
+			return;
+		}
+		
+		Long delayTime = getDelayTimeForNextRemoteBackupTask(remoteBackupConfig);
+		if(delayTime == null)
+		{
+			return;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("addDelayTaskForRemoteBackup 非商业版本不支持自动备份");
+			return;
+	    }
+				
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.debug("\n*************** RemoteBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
+                        
+                        
+                        //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
+                		Repos latestReposInfo = getReposEx(repos.getId());
+                        BackupConfig backupConfig = latestReposInfo.backupConfig;
+                        if(backupConfig == null)
+                        {
+                        	return;
+                        }
+                        
+                        RemoteBackupConfig latestRemoteBackupConfig = backupConfig.remoteBackupConfig;
+                        if(latestRemoteBackupConfig == null)
+                        {
+                        	return;
+                        }
+                        
+                        //确认当前时间是否仍然在当天的备份窗口内(配置发生变化都将导致该任务无效)
+                        if(checkCurrentTimeForRemoteBackup(latestRemoteBackupConfig) == true)
+                        {
+                        	ReturnAjax rt = new ReturnAjax();
+                            String localRootPath = Path.getReposRealPath(latestReposInfo);
+                    		String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+                    		Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
+                        	channel.remoteBackUp(latestRemoteBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "异地定时备份", true, true, rt );
+                        }
+                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig);                      
+                    }
+                },
+                delayTime,
+                TimeUnit.SECONDS);
+	}
+	
+	protected boolean checkCurrentTimeForRemoteBackup(RemoteBackupConfig remoteBackupConfig) {
+		//初始化weekDayBackupEnTab
+		int weekDayBackupEnTab[] = new int[7];
+		weekDayBackupEnTab[0] = remoteBackupConfig.weekDay1;
+		weekDayBackupEnTab[1] = remoteBackupConfig.weekDay2;
+		weekDayBackupEnTab[2] = remoteBackupConfig.weekDay3;
+		weekDayBackupEnTab[3] = remoteBackupConfig.weekDay4;
+		weekDayBackupEnTab[4] = remoteBackupConfig.weekDay5;
+		weekDayBackupEnTab[5] = remoteBackupConfig.weekDay6;
+		weekDayBackupEnTab[6] = remoteBackupConfig.weekDay7;
+		
+		Calendar calendar = Calendar.getInstance();
+		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK);
+		int curHour = calendar.get(Calendar.HOUR_OF_DAY);		
+		Log.debug("checkCurrentTimeForRemoteBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour);
+
+		if(weekDayBackupEnTab[curWeekDay] == 0)
+		{
+			//当天没有备份任务
+			Log.debug("checkCurrentTimeForRemoteBackup() Today have no remote backup task");
+			return false;
+		}
+		
+		if(curHour*60 > (remoteBackupConfig.backupTime + 120))
+		{
+			Log.debug("checkCurrentTimeForRemoteBackup() 备份任务已超时两小时!");
+			return false;
+		}
+		
+		return true;
+	}
+
+	private Long getDelayTimeForNextRemoteBackupTask(RemoteBackupConfig remoteBackupConfig) {
+		//初始化weekDayBackupEnTab
+		int weekDayBackupEnTab[] = new int[7];
+		weekDayBackupEnTab[0] = remoteBackupConfig.weekDay1;
+		weekDayBackupEnTab[1] = remoteBackupConfig.weekDay2;
+		weekDayBackupEnTab[2] = remoteBackupConfig.weekDay3;
+		weekDayBackupEnTab[3] = remoteBackupConfig.weekDay4;
+		weekDayBackupEnTab[4] = remoteBackupConfig.weekDay5;
+		weekDayBackupEnTab[5] = remoteBackupConfig.weekDay6;
+		weekDayBackupEnTab[6] = remoteBackupConfig.weekDay7;
+		
+		Calendar calendar = Calendar.getInstance();
+		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
+		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK);
+		
+		Log.debug("getDelayTimeForNextRemoteBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour);
+		
+		Integer delayDays = null;
+		int index = curWeekDay;
+		if(curHour*60 > remoteBackupConfig.backupTime)
+		{
+			index = (index + 1) % 7;
+		}
+		
+		for(int i = 0; i < 7; i++)
+		{
+			if(weekDayBackupEnTab[index % 7] == 1)
+			{
+				if(delayDays == null)
+				{
+					delayDays = 0;
+				}
+				else
+				{
+					delayDays++;
+				}
+				break;
+			}
+		}
+		
+		if(delayDays == null)
+		{
+			return null;
+		}
+		
+		long delayTime =  delayDays*24*60*60 + remoteBackupConfig.backupTime * 60;
+		Log.debug("getDelayTimeForNextRemoteBackupTask() delayTime:" + delayTime);
+		return delayTime;
+	}
+
 	protected boolean setReposAutoBackup(Repos repos, String autoBackup) {
 		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);
 		
@@ -12730,8 +13033,6 @@ public class BaseController  extends BaseFunction{
 		}
 		return repos;
 	}
-
-	
 	
 	//注意：该接口需要返回真正的parentZipDoc
 	protected Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 

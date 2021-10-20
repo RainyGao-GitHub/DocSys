@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -44,6 +47,8 @@ import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.channels.Channel;
+import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.EncryptConfig;
@@ -70,6 +75,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.DocData;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -317,21 +323,6 @@ public class BaseFunction{
 		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		reposRemoteStorageHashMap.remove(repos.getId());
 	}		
-	
-	protected static void initReposAutoBackupConfig(Repos repos, String autoBackup)
-	{
-		Log.debug("initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup:" + autoBackup);
-		
-		BackupConfig config = parseAutoBackupConfig(repos, autoBackup);
-		if(config == null)
-		{
-			reposBackupConfigHashMap.remove(repos.getId());
-			return;
-		}
-		
-		//add backup config to hashmap
-		reposBackupConfigHashMap.put(repos.getId(), config);
-	}
 	
 	protected static BackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
 		try {
