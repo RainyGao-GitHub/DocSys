@@ -623,7 +623,7 @@ public class BaseController  extends BaseFunction{
 	    		String name = file.getName();
 	    		//Log.debug("getLocalEntryList subFile:" + name);
 	
-	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, doc.offsetPath);
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc.offsetPath);
 	    		subDoc.setLatestEditTime(file.lastModified());
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryList.add(subDoc);
@@ -691,7 +691,7 @@ public class BaseController  extends BaseFunction{
 	    		String name = file.getName();
 	    		//Log.debug("getLocalEntryList subFile:" + name);
 	
-	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, doc.offsetPath);
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc.offsetPath);
 	    		subDoc.setLatestEditTime(file.lastModified());
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryHashMap.put(subDoc.getName(), subDoc);
@@ -14986,6 +14986,8 @@ public class BaseController  extends BaseFunction{
 			subEntryPushFlag = 0;
 		}
 		
+		Log.printObject("doPushSubEntriesToRemoteStorage() doc:", doc);
+		
 		List<Doc> localList = getLocalEntryList(repos, doc);
 		if(localList == null)
 		{
@@ -14993,7 +14995,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		HashMap<String, Doc> dbHashMap = getRemoteStorageDBHashMap(repos, doc, remote);
-
 		HashMap<String, Doc>  remoteHashMap = getRemoteStorageEntryHashMap(session, remote, repos, doc);
 		
 		for(int i=0; i<localList.size(); i++)
@@ -15001,6 +15002,10 @@ public class BaseController  extends BaseFunction{
 			Doc subLocalDoc  = localList.get(i);
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
 			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());
+			Log.printObject("doPushSubEntriesToRemoteStorage() subLocalDoc:", subLocalDoc);
+			Log.printObject("doPushSubEntriesToRemoteStorage() subDbDoc:", subDbDoc);
+			Log.printObject("doPushSubEntriesToRemoteStorage() subRemoteDoc:", subRemoteDoc);
+			
 			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
 		}
 		return true;
@@ -17104,6 +17109,11 @@ public class BaseController  extends BaseFunction{
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
 		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote); 
+		
+		Log.printObject("doPushToRemoteStorage doc:", doc);
+		Log.printObject("doPushToRemoteStorage localDoc:", localDoc);
+		Log.printObject("doPushToRemoteStorage dbDoc:", dbDoc);
+		Log.printObject("doPushToRemoteStorage remoteDoc:", remoteDoc);
 		
 		if(doc.offsetPath != null)	//Means It is backup Action
 		{
