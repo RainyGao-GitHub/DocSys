@@ -701,7 +701,7 @@
 		<div id="autoBackupEnablelDiv" style="margin-top:10px;padding-left:30px;">
 	    	<label>自动备份 
 	            	<span style="margin-left:5px">
-	            		<input type="checkbox" name="autoBackupEnable" value="0" onclick="doSelectAutoBackupConfigEanble()">
+	            		<input type="checkbox"id="autoBackupEnable" value="0" onclick="doSelectAutoBackupConfigEanble()">
 	            	</span>
 	        </label>
 		</div>
@@ -715,7 +715,7 @@
             <div id="localBackupConfig" style="display:none">
 			    <input class="form-control" type="text" id="localBackupRootPath"  placeholder="请填写备份存储路径！" value="" style="width: 85%"/>
    				<label style="margin-top:5px">备份时间</label>
-	        	<select class="form-control" id="localBackupTime" style="width:100%">   
+	        	<select class="form-control" id="localBackupTime" style="width:85%">   
 			        <option value="0">0:00</option>   
 			        <option value="60">1:00</option>   
 			        <option value="120">2:00</option>   
@@ -778,7 +778,7 @@
 			    <div id="remoteBackupStorageConfig" style="margin-top:10px; display:none">
 	           		<input class="form-control" type="text" id="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:85%"/>
     				<label style="margin-top:5px">备份时间</label>
-		        	<select class="form-control" id="remoteBackupTime" style="width:100%">   
+		        	<select class="form-control" id="remoteBackupTime" style="width:85%">   
 				        <option value="0">0:00</option>   
 				        <option value="60">1:00</option>   
 				        <option value="120">2:00</option>   
@@ -824,8 +824,6 @@
             </div>
 		</div>
 	</div>	
-	
-	
 	        
     <!-- Buttons -->
     <div class="form-group">
