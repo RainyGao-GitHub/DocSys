@@ -468,11 +468,6 @@ function saveReposBasicSetting()
        			return true;
        		}
        		
-       		if(oldSetting.autoBackup != newSetting.autoBackup)
-       		{
-       			return true;
-       		}
-       		
        		if(oldSetting.info != newSetting.info)
        		{
        			return true;
@@ -530,6 +525,11 @@ function saveReposBasicSetting()
        			return true;
        		}
        		if(oldSetting.encryptType != newSetting.encryptType)
+       		{
+       			return true;
+       		}
+       		
+       		if(oldSetting.autoBackup != newSetting.autoBackup)
        		{
        			return true;
        		}
