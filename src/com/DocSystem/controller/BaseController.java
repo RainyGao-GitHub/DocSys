@@ -10086,104 +10086,6 @@ public class BaseController  extends BaseFunction{
                 delayTime,
                 TimeUnit.SECONDS);
 	}
-	
-	protected boolean checkCurrentTimeForLocalBackup(LocalBackupConfig localBackupConfig) {
-		//初始化weekDayBackupEnTab
-		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = localBackupConfig.weekDay1;
-		weekDayBackupEnTab[2] = localBackupConfig.weekDay2;
-		weekDayBackupEnTab[3] = localBackupConfig.weekDay3;
-		weekDayBackupEnTab[4] = localBackupConfig.weekDay4;
-		weekDayBackupEnTab[5] = localBackupConfig.weekDay5;
-		weekDayBackupEnTab[6] = localBackupConfig.weekDay6;
-		weekDayBackupEnTab[0] = localBackupConfig.weekDay7;
-		
-		Calendar calendar = Calendar.getInstance();
-		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-		int curHour = calendar.get(Calendar.HOUR_OF_DAY);		
-		Log.debug("checkCurrentTimeForLocalBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour);
-
-		if(weekDayBackupEnTab[curWeekDay] == 0)
-		{
-			//当天没有备份任务
-			Log.debug("checkCurrentTimeForLocalBackup() Today have no local backup task");
-			return false;
-		}
-		
-		if(curHour*60 > (localBackupConfig.backupTime + 120))
-		{
-			Log.debug("checkCurrentTimeForLocalBackup() 备份任务已超时两小时!");
-			return false;
-		}
-		
-		return true;
-	}
-
-	private Long getDelayTimeForNextLocalBackupTask(LocalBackupConfig localBackupConfig) {
-		//初始化weekDayBackupEnTab
-		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = localBackupConfig.weekDay1;
-		weekDayBackupEnTab[2] = localBackupConfig.weekDay2;
-		weekDayBackupEnTab[3] = localBackupConfig.weekDay3;
-		weekDayBackupEnTab[4] = localBackupConfig.weekDay4;
-		weekDayBackupEnTab[5] = localBackupConfig.weekDay5;
-		weekDayBackupEnTab[6] = localBackupConfig.weekDay6;
-		weekDayBackupEnTab[0] = localBackupConfig.weekDay7;
-		
-		Calendar calendar = Calendar.getInstance();
-		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
-		int curMinute = calendar.get(Calendar.MINUTE);
-		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-		
-		Log.debug("getDelayTimeForNextLocalBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + " backupTime:" + localBackupConfig.backupTime);
-		
-		Integer delayDays = null;
-		int index = curWeekDay;
-		
-		if(curHour*60 > localBackupConfig.backupTime)
-		{
-			index = (index + 1) % 7;
-		}
-		Log.debug("getDelayTimeForNextLocalBackupTask() index:" + index);		
-		
-		for(int i = 0; i < 7; i++)
-		{
-			if(weekDayBackupEnTab[index % 7] == 1)
-			{
-				Log.debug("getDelayTimeForNextLocalBackupTask() curWeekDay:" + index % 7 + " backup enabled");
-				if(delayDays == null)
-				{
-					delayDays = 0;
-				}
-				else
-				{
-					delayDays++;
-				}
-				break;
-			}
-			index++;
-		}
-		
-		if(delayDays == null)
-		{
-			return null;
-		}
-		
-		Long delayTime = null;
-		if(curHour*60 > localBackupConfig.backupTime)
-		{
-			delayDays += 1;
-			delayTime = (long) (delayDays*24*60*60 - (curHour * 60 + curMinute - localBackupConfig.backupTime) * 60);
-		}
-		else
-		{
-			delayTime = (long) (delayDays*24*60*60 + (localBackupConfig.backupTime - curHour * 60 - curMinute) * 60);
-		}
-		
-		
-		Log.debug("getDelayTimeForNextLocalBackupTask() delayDays" + delayDays + " delayTime:" + delayTime);
-		return delayTime;
-	}
 
 	private void addDelayTaskForRemoteBackup(Repos repos, RemoteBackupConfig remoteBackupConfig) {
 		if(remoteBackupConfig == null)
@@ -10242,6 +10144,40 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
+	protected boolean checkCurrentTimeForLocalBackup(LocalBackupConfig localBackupConfig) {
+		//初始化weekDayBackupEnTab
+		int weekDayBackupEnTab[] = new int[7];
+		weekDayBackupEnTab[1] = localBackupConfig.weekDay1;
+		weekDayBackupEnTab[2] = localBackupConfig.weekDay2;
+		weekDayBackupEnTab[3] = localBackupConfig.weekDay3;
+		weekDayBackupEnTab[4] = localBackupConfig.weekDay4;
+		weekDayBackupEnTab[5] = localBackupConfig.weekDay5;
+		weekDayBackupEnTab[6] = localBackupConfig.weekDay6;
+		weekDayBackupEnTab[0] = localBackupConfig.weekDay7;
+		
+		Calendar calendar = Calendar.getInstance();
+		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+		int curMinute = calendar.get(Calendar.MINUTE);
+		int curHour = calendar.get(Calendar.HOUR_OF_DAY);	
+		int curMinuteOfDay = curHour*60 + curMinute;
+		Log.debug("checkCurrentTimeForLocalBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMiute:" + curMinute + " curMinuteOfDay:" + curMinuteOfDay);
+
+		if(weekDayBackupEnTab[curWeekDay] == 0)
+		{
+			//当天没有备份任务
+			Log.debug("checkCurrentTimeForLocalBackup() Today have no local backup task");
+			return false;
+		}
+		
+		if(curMinuteOfDay > (localBackupConfig.backupTime + 120))
+		{
+			Log.debug("checkCurrentTimeForLocalBackup() 备份任务已超时两小时!");
+			return false;
+		}
+		
+		return true;
+	}
+	
 	protected boolean checkCurrentTimeForRemoteBackup(RemoteBackupConfig remoteBackupConfig) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
@@ -10255,8 +10191,10 @@ public class BaseController  extends BaseFunction{
 		
 		Calendar calendar = Calendar.getInstance();
 		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-		int curHour = calendar.get(Calendar.HOUR_OF_DAY);		
-		Log.debug("checkCurrentTimeForRemoteBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour);
+		int curMinute = calendar.get(Calendar.MINUTE);
+		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
+		int curMinuteOfDay = curHour*60 + curMinute;
+		Log.debug("checkCurrentTimeForRemoteBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMiute:" + curMinute + " curMinuteOfDay:" + curMinuteOfDay);
 
 		if(weekDayBackupEnTab[curWeekDay] == 0)
 		{
@@ -10265,13 +10203,80 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		if(curHour*60 > (remoteBackupConfig.backupTime + 120))
+		if(curMinuteOfDay > (remoteBackupConfig.backupTime + 120))
 		{
 			Log.debug("checkCurrentTimeForRemoteBackup() 备份任务已超时两小时!");
 			return false;
 		}
 		
 		return true;
+	}
+	
+	private Long getDelayTimeForNextLocalBackupTask(LocalBackupConfig localBackupConfig) {
+		//初始化weekDayBackupEnTab
+		int weekDayBackupEnTab[] = new int[7];
+		weekDayBackupEnTab[1] = localBackupConfig.weekDay1;
+		weekDayBackupEnTab[2] = localBackupConfig.weekDay2;
+		weekDayBackupEnTab[3] = localBackupConfig.weekDay3;
+		weekDayBackupEnTab[4] = localBackupConfig.weekDay4;
+		weekDayBackupEnTab[5] = localBackupConfig.weekDay5;
+		weekDayBackupEnTab[6] = localBackupConfig.weekDay6;
+		weekDayBackupEnTab[0] = localBackupConfig.weekDay7;
+		
+		Calendar calendar = Calendar.getInstance();
+		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
+		int curMinute = calendar.get(Calendar.MINUTE);
+		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+		int curMinuteOfDay = curHour*60 + curMinute;		
+		Log.debug("getDelayTimeForNextLocalBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
+				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + localBackupConfig.backupTime);
+		
+		Integer delayDays = null;
+		int index = curWeekDay;
+		
+		if(curMinuteOfDay > localBackupConfig.backupTime)
+		{
+			index = (index + 1) % 7;
+		}
+		Log.debug("getDelayTimeForNextLocalBackupTask() index:" + index);		
+		
+		for(int i = 0; i < 7; i++)
+		{
+			if(weekDayBackupEnTab[index % 7] == 1)
+			{
+				Log.debug("getDelayTimeForNextLocalBackupTask() curWeekDay:" + index % 7 + " backup enabled");
+				if(delayDays == null)
+				{
+					delayDays = 0;
+				}
+				else
+				{
+					delayDays++;
+				}
+				break;
+			}
+			index++;
+		}
+		
+		if(delayDays == null)
+		{
+			return null;
+		}
+		
+		Long delayTime = null;
+		if(curMinuteOfDay > localBackupConfig.backupTime)
+		{
+			delayDays += 1;
+			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - localBackupConfig.backupTime) * 60);
+		}
+		else
+		{
+			delayTime = (long) (delayDays*24*60*60 + (localBackupConfig.backupTime - curMinuteOfDay) * 60);
+		}
+		
+		
+		Log.debug("getDelayTimeForNextLocalBackupTask() delayDays:" + delayDays + " delayTime:" + delayTime);
+		return delayTime;
 	}
 
 	private Long getDelayTimeForNextRemoteBackupTask(RemoteBackupConfig remoteBackupConfig) {
@@ -10289,12 +10294,13 @@ public class BaseController  extends BaseFunction{
 		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
 		int curMinute = calendar.get(Calendar.MINUTE);
 		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-		
-		Log.debug("getDelayTimeForNextRemoteBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + " backupTime:" +  remoteBackupConfig.backupTime);
+		int curMinuteOfDay = curHour*60 + curMinute;		
+		Log.debug("getDelayTimeForNextRemoteBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
+				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + remoteBackupConfig.backupTime);
 		
 		Integer delayDays = null;
 		int index = curWeekDay;
-		if(curHour*60 > remoteBackupConfig.backupTime)
+		if(curMinuteOfDay > remoteBackupConfig.backupTime)
 		{
 			index = (index + 1) % 7;
 		}
@@ -10325,14 +10331,14 @@ public class BaseController  extends BaseFunction{
 		}
 
 		Long delayTime = null;
-		if(curHour*60 > remoteBackupConfig.backupTime)
+		if(curMinuteOfDay > remoteBackupConfig.backupTime)
 		{
 			delayDays += 1;
-			delayTime = (long) (delayDays*24*60*60 - (curHour * 60 + curMinute - remoteBackupConfig.backupTime) * 60);
+			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - remoteBackupConfig.backupTime) * 60);
 		}
 		else
 		{
-			delayTime = (long) (delayDays*24*60*60 + (remoteBackupConfig.backupTime - curHour * 60 - curMinute) * 60);
+			delayTime = (long) (delayDays*24*60*60 + (remoteBackupConfig.backupTime - curMinuteOfDay) * 60);
 		}
 		
 		Log.debug("getDelayTimeForNextRemoteBackupTask() delayDays:" + delayDays + " delayTime:" + delayTime);
