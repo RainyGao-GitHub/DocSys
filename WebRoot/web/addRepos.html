@@ -417,207 +417,6 @@
 	    return true;
 	}
 	
-	function doSelectRemoteStorageProtocol()
-	{
-		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
-		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
-		if(protocol == undefined || protocol == "")
-		{
-			$("#dialog-new-repos div[name='remoteStorageConfig']").hide();
-			return;
-		}
-
-		switch(protocol)
-		{
-		case "ftp":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
-			break;
-		case "sftp":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
-			break;
-		case "smb":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
-			break;
-		case "svn":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
-			break;
-		case "git":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
-			break;
-		case "mxsdoc":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
-			break;
-		}
-		$("#dialog-new-repos div[name='remoteStorageConfig']").show();
-		
-	}
-	
-	function getRemoteStorageConfig()
-	{   
-		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
-		console.log("getRemoteStorageConfig protocol:" + protocol);
-		if(protocol == undefined || protocol == "")
-		{
-			return "";
-		}
-		
-		var prefix = "";
-		switch(protocol)
-		{
-		case "svn":
-			prefix = "svn://";
-			break;
-		case "git":
-			prefix = "git://";
-			break;
-		case "mxsdoc":
-			prefix = "mxsdoc://";
-			break;
-		}
-		
-	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
-		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
-		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
-		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
-		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
-	    if(remoteStorage != undefined && remoteStorage != "")
-		{
-	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-			remoteStorage = prefix + remoteStorage;
-		}
-	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
-		return remoteStorage;
-	}
-	
-	
-	function getAutoBackupConfig()
-	{   
-		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
-		console.log("getAutoBackupConfig autoBackupEnable:" + autoBackupEnable);
-		if(autoBackupEnable == 0)
-		{
-			return "{localBackup:{},remoteBackup:{}}";
-		}
-		
-		var localBackupConfig = getLocalBackupConfig();
-		var remoteBackupConfig = getRemoteBackupConfig();
-		return "{localBackup:" + localBackupConfig + ",remoteBackup:" + remoteBackupConfig + "}";
-	}
-		
-	function getLocalBackupConfig()
-	{
-		var localBackupEnable = $("#dialog-new-repos input[name='localBackupEnable']").is(':checked')? 1: 0;
-		console.log("getLocalBackupConfig localBackupEnable:" + localBackupEnable);
-		if(localBackupEnable == 0)
-		{
-			return "{}";
-		}
-		
-		var localRootPath = $("#dialog-new-repos input[name='localBackupRootPath']").val();
-		if(localRootPath == undefined || localRootPath == "")
-		{
-			return "{}";
-		}
-
-		var backupTime = $("#dialog-new-repos select[name='localBackupTime']").val();;
-	    var weekDay1 = $("#dialog-new-repos input[name='localBackupWeekDay1']").is(':checked')? 1: 0;
-	    var weekDay2 = $("#dialog-new-repos input[name='localBackupWeekDay2']").is(':checked')? 1: 0;
-	    var weekDay3 = $("#dialog-new-repos input[name='localBackupWeekDay3']").is(':checked')? 1: 0;
-	    var weekDay4 = $("#dialog-new-repos input[name='localBackupWeekDay4']").is(':checked')? 1: 0;
-	    var weekDay5 = $("#dialog-new-repos input[name='localBackupWeekDay5']").is(':checked')? 1: 0;
-	    var weekDay6 = $("#dialog-new-repos input[name='localBackupWeekDay6']").is(':checked')? 1: 0;
-	    var weekDay7 = $("#dialog-new-repos input[name='localBackupWeekDay7']").is(':checked')? 1: 0;
-	    var realTimeBackup = $("#dialog-new-repos input[name='localRealTimeBackupEnable']").is(':checked')? 1: 0;
-
-		var localBackupConfig = 
-		"{" +
-			"backupTime:" + backupTime + "," +
-			"weekDay1:" + weekDay1 +"," + 
-			"weekDay2:" + weekDay2 +"," + 
-			"weekDay3:" + weekDay3 +"," + 
-			"weekDay4:" + weekDay4 +"," + 
-			"weekDay5:" + weekDay5 +"," + 
-			"weekDay6:" + weekDay6 +"," + 
-			"weekDay7:" + weekDay7 +"," + 
-			"realTimeBackup:" + realTimeBackup + "," +
-			"localRootPath:\"" + localRootPath + "\"" +
-		"}";
-		return localBackupConfig;
-	}
-	
-	function getRemoteBackupConfig()
-	{
-		var remoteBackupEnable = $("#dialog-new-repos input[name='remoteBackupEnable']").is(':checked')? 1: 0;
-		console.log("getRemoteBackupConfig remoteBackupEnable:" + remoteBackupEnable);
-		if(remoteBackupEnable == 0)
-		{
-			return "{}";
-		}
-		
-		var remoteStorage = getRemoteBackupRemoteStorageConfig();
-		if(remoteStorage == "")
-		{
-			return "{}";
-		}
-		
-		var backupTime = $("#dialog-new-repos select[name='remoteBackupTime']").val();
-	    var weekDay1 = $("#dialog-new-repos input[name='remoteBackupWeekDay1']").is(':checked')? 1: 0;
-	    var weekDay2 = $("#dialog-new-repos input[name='remoteBackupWeekDay2']").is(':checked')? 1: 0;
-	    var weekDay3 = $("#dialog-new-repos input[name='remoteBackupWeekDay3']").is(':checked')? 1: 0;
-	    var weekDay4 = $("#dialog-new-repos input[name='remoteBackupWeekDay4']").is(':checked')? 1: 0;
-	    var weekDay5 = $("#dialog-new-repos input[name='remoteBackupWeekDay5']").is(':checked')? 1: 0;
-	    var weekDay6 = $("#dialog-new-repos input[name='remoteBackupWeekDay6']").is(':checked')? 1: 0;
-	    var weekDay7 = $("#dialog-new-repos input[name='remoteBackupWeekDay7']").is(':checked')? 1: 0;
-	    var realTimeBackup = $("#dialog-new-repos input[name='remoteRealTimeBackupEnable']").is(':checked')? 1: 0;
-			
-		var remoteBackupConfig = 
-		"{" +
-			"backupTime:" + backupTime + ","  + 
-			"weekDay1:" + weekDay1 +"," + 
-			"weekDay2:" + weekDay2 +"," + 
-			"weekDay3:" + weekDay3 +"," + 
-			"weekDay4:" + weekDay4 +"," + 
-			"weekDay5:" + weekDay5 +"," + 
-			"weekDay6:" + weekDay6 +"," + 
-			"weekDay7:" + weekDay7 +"," + 
-			"realTimeBackup:" + realTimeBackup + "," +
-			"remoteStorage:\"" + remoteStorage + "\"" +
-		"}";
-		return remoteBackupConfig;
-	}
-	
-	function getRemoteBackupRemoteStorageConfig()
-	{
-		var protocol = $("#dialog-new-repos select[name='remoteBackupStorageProtocol']").val();
-		console.log("getRemoteBackupRemoteStorageConfig protocol:" + protocol);
-		if(protocol == undefined || protocol == "")
-		{
-			return "";
-		}
-		
-		var prefix = "";
-		switch(protocol)
-		{
-		case "svn":
-			prefix = "svn://";
-			break;
-		case "git":
-			prefix = "git://";
-			break;
-		case "mxsdoc":
-			prefix = "mxsdoc://";
-			break;
-		}
-		
-	    var remoteStorage = $("#dialog-new-repos input[name='remoteBackupStorage']").val();	//remoteStorage
-	    if(remoteStorage != undefined && remoteStorage != "")
-		{
-	    	remoteStorage = prefix + remoteStorage;
-		}
-	    console.log("getRemoteBackupRemoteStorageConfig remoteStorage:" + remoteStorage);
-		return remoteStorage;
-	}	
-	
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
 	function doSelectFS()
 	{
@@ -892,6 +691,81 @@
 		}
 	}
 	
+	
+	/**** 远程存储 ***/
+	function doSelectRemoteStorageProtocol()
+	{
+		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
+		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#dialog-new-repos div[name='remoteStorageConfig']").hide();
+			return;
+		}
+
+		switch(protocol)
+		{
+		case "ftp":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
+			break;
+		case "sftp":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
+			break;
+		case "smb":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
+			break;
+		case "svn":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
+			break;
+		case "git":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+			break;
+		case "mxsdoc":
+			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
+			break;
+		}
+		$("#dialog-new-repos div[name='remoteStorageConfig']").show();
+		
+	}
+	
+	function getRemoteStorageConfig()
+	{   
+		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
+		console.log("getRemoteStorageConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		case "mxsdoc":
+			prefix = "mxsdoc://";
+			break;
+		}
+		
+	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
+		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
+		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
+		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
+		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
+	    if(remoteStorage != undefined && remoteStorage != "")
+		{
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+			remoteStorage = prefix + remoteStorage;
+		}
+	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+		return remoteStorage;
+	}	
+	
+	/********* 自动备份 *****************/
 	function doSelectAutoBackupConfigEanble()
 	{
 		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
@@ -967,5 +841,134 @@
 		}
 		$("#dialog-new-repos div[name='remoteBackupStorageConfig']").show();
 	}
+	
+	
+	function getAutoBackupConfig()
+	{   
+		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
+		console.log("getAutoBackupConfig autoBackupEnable:" + autoBackupEnable);
+		if(autoBackupEnable == 0)
+		{
+			return "{localBackup:{},remoteBackup:{}}";
+		}
+		
+		var localBackupConfig = getLocalBackupConfig();
+		var remoteBackupConfig = getRemoteBackupConfig();
+		return "{localBackup:" + localBackupConfig + ",remoteBackup:" + remoteBackupConfig + "}";
+	}
+		
+	function getLocalBackupConfig()
+	{
+		var localBackupEnable = $("#dialog-new-repos input[name='localBackupEnable']").is(':checked')? 1: 0;
+		console.log("getLocalBackupConfig localBackupEnable:" + localBackupEnable);
+		if(localBackupEnable == 0)
+		{
+			return "{}";
+		}
+		
+		var localRootPath = $("#dialog-new-repos input[name='localBackupRootPath']").val();
+		if(localRootPath == undefined || localRootPath == "")
+		{
+			return "{}";
+		}
+
+		var backupTime = $("#dialog-new-repos select[name='localBackupTime']").val();;
+	    var weekDay1 = $("#dialog-new-repos input[name='localBackupWeekDay1']").is(':checked')? 1: 0;
+	    var weekDay2 = $("#dialog-new-repos input[name='localBackupWeekDay2']").is(':checked')? 1: 0;
+	    var weekDay3 = $("#dialog-new-repos input[name='localBackupWeekDay3']").is(':checked')? 1: 0;
+	    var weekDay4 = $("#dialog-new-repos input[name='localBackupWeekDay4']").is(':checked')? 1: 0;
+	    var weekDay5 = $("#dialog-new-repos input[name='localBackupWeekDay5']").is(':checked')? 1: 0;
+	    var weekDay6 = $("#dialog-new-repos input[name='localBackupWeekDay6']").is(':checked')? 1: 0;
+	    var weekDay7 = $("#dialog-new-repos input[name='localBackupWeekDay7']").is(':checked')? 1: 0;
+	    var realTimeBackup = $("#dialog-new-repos input[name='localRealTimeBackupEnable']").is(':checked')? 1: 0;
+
+		var localBackupConfig = 
+		"{" +
+			"backupTime:" + backupTime + "," +
+			"weekDay1:" + weekDay1 +"," + 
+			"weekDay2:" + weekDay2 +"," + 
+			"weekDay3:" + weekDay3 +"," + 
+			"weekDay4:" + weekDay4 +"," + 
+			"weekDay5:" + weekDay5 +"," + 
+			"weekDay6:" + weekDay6 +"," + 
+			"weekDay7:" + weekDay7 +"," + 
+			"realTimeBackup:" + realTimeBackup + "," +
+			"localRootPath:\"" + localRootPath + "\"" +
+		"}";
+		return localBackupConfig;
+	}
+	
+	function getRemoteBackupConfig()
+	{
+		var remoteBackupEnable = $("#dialog-new-repos input[name='remoteBackupEnable']").is(':checked')? 1: 0;
+		console.log("getRemoteBackupConfig remoteBackupEnable:" + remoteBackupEnable);
+		if(remoteBackupEnable == 0)
+		{
+			return "{}";
+		}
+		
+		var remoteStorage = getRemoteBackupRemoteStorageConfig();
+		if(remoteStorage == "")
+		{
+			return "{}";
+		}
+		
+		var backupTime = $("#dialog-new-repos select[name='remoteBackupTime']").val();
+	    var weekDay1 = $("#dialog-new-repos input[name='remoteBackupWeekDay1']").is(':checked')? 1: 0;
+	    var weekDay2 = $("#dialog-new-repos input[name='remoteBackupWeekDay2']").is(':checked')? 1: 0;
+	    var weekDay3 = $("#dialog-new-repos input[name='remoteBackupWeekDay3']").is(':checked')? 1: 0;
+	    var weekDay4 = $("#dialog-new-repos input[name='remoteBackupWeekDay4']").is(':checked')? 1: 0;
+	    var weekDay5 = $("#dialog-new-repos input[name='remoteBackupWeekDay5']").is(':checked')? 1: 0;
+	    var weekDay6 = $("#dialog-new-repos input[name='remoteBackupWeekDay6']").is(':checked')? 1: 0;
+	    var weekDay7 = $("#dialog-new-repos input[name='remoteBackupWeekDay7']").is(':checked')? 1: 0;
+	    var realTimeBackup = $("#dialog-new-repos input[name='remoteRealTimeBackupEnable']").is(':checked')? 1: 0;
+			
+		var remoteBackupConfig = 
+		"{" +
+			"backupTime:" + backupTime + ","  + 
+			"weekDay1:" + weekDay1 +"," + 
+			"weekDay2:" + weekDay2 +"," + 
+			"weekDay3:" + weekDay3 +"," + 
+			"weekDay4:" + weekDay4 +"," + 
+			"weekDay5:" + weekDay5 +"," + 
+			"weekDay6:" + weekDay6 +"," + 
+			"weekDay7:" + weekDay7 +"," + 
+			"realTimeBackup:" + realTimeBackup + "," +
+			"remoteStorage:\"" + remoteStorage + "\"" +
+		"}";
+		return remoteBackupConfig;
+	}
+	
+	function getRemoteBackupRemoteStorageConfig()
+	{
+		var protocol = $("#dialog-new-repos select[name='remoteBackupStorageProtocol']").val();
+		console.log("getRemoteBackupRemoteStorageConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		case "mxsdoc":
+			prefix = "mxsdoc://";
+			break;
+		}
+		
+	    var remoteStorage = $("#dialog-new-repos input[name='remoteBackupStorage']").val();	//remoteStorage
+	    if(remoteStorage != undefined && remoteStorage != "")
+		{
+	    	remoteStorage = prefix + remoteStorage;
+		}
+	    console.log("getRemoteBackupRemoteStorageConfig remoteStorage:" + remoteStorage);
+		return remoteStorage;
+	}	
 </script>
 
