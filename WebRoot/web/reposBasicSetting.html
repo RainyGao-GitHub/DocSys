@@ -25,8 +25,14 @@
             	<label>仓库存储位置</label>
 				<input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
                	
-               	<label style="margin-top:10px">文件存储位置</label>
-				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+               	<label style="margin-top:10px">文件存储位置
+               		<span style="margin-left:20px">
+						<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="doSelectReposStorageRealDocPathEnable()">自定义
+					</span> 
+               	</label>
+               	<div id="reposStorageRealDocPathConfig" style="display:none">
+					<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+				</div>
 			</div>
 			
 			<div id="remoteStorageDiv" style="margin-top:20px">
@@ -495,7 +501,18 @@ function getReposBasicSetting()
 	   	$("#RBSinfo").val(reposInfo.info);
 	   	$("#RBSpath").val(reposInfo.path);
 	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
-	   	$("#RBSrealDocPath").val(reposInfo.realDocPath);
+
+	   	if(reposInfo.realDocPath == null || reposInfo.realDocPath == "")
+	   	{
+			$("#reposStorageRealDocPathEnable").attr("checked",false);
+	   		$("#reposStorageRealDocPathConfig").hide();
+	   	}
+	   	else
+	   	{
+	   		$("#reposStorageRealDocPathEnable").attr("checked","checked");
+			$("#reposStorageRealDocPathConfig").show();
+	   		$("#RBSrealDocPath").val(reposInfo.realDocPath);
+	   	}
 	   	
 	   	showRemoteStorageConfig(reposInfo);
 	   	
@@ -547,6 +564,19 @@ function getReposBasicSetting()
 	}
 }
 
+function doSelectReposStorageRealDocPathEnable()
+{
+	var reposStorageRealDocPathEnable = $("#reposStorageRealDocPathEnable").is(':checked')? 1: 0;
+	console.log("doSelectReposStorageRealDocPathEnable reposStorageRealDocPathEnable:" + reposStorageRealDocPathEnable);
+	if(reposStorageRealDocPathEnable == 0)
+	{
+		$("#reposStorageRealDocPathConfig").hide();
+	}
+	else
+	{	
+		$("#reposStorageRealDocPathConfig").show();
+	}
+}
 
 function showRemoteStorageConfig(reposInfo)
 {
