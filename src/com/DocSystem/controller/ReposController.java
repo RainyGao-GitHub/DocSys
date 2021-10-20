@@ -502,10 +502,13 @@ public class ReposController extends BaseController{
 
 		if(type != null && type != reposInfo.getType())
 		{
-			Log.debug("禁止修改文件系统类型");		
+			Log.debug("Warning: 正在修改文件系统类型");		
 		}
-		newReposInfo.setType(reposInfo.getType());
-				
+		else
+		{
+			newReposInfo.setType(reposInfo.getType());
+		}
+		
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
 		{	
 			if(isTextSearchEnabled != null)
