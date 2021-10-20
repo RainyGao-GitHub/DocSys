@@ -15002,9 +15002,9 @@ public class BaseController  extends BaseFunction{
 			Doc subLocalDoc  = localList.get(i);
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
 			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());
-			Log.printObject("doPushSubEntriesToRemoteStorage() subLocalDoc:", subLocalDoc);
-			Log.printObject("doPushSubEntriesToRemoteStorage() subDbDoc:", subDbDoc);
-			Log.printObject("doPushSubEntriesToRemoteStorage() subRemoteDoc:", subRemoteDoc);
+			//Log.printObject("doPushSubEntriesToRemoteStorage() subLocalDoc:", subLocalDoc);
+			//Log.printObject("doPushSubEntriesToRemoteStorage() subDbDoc:", subDbDoc);
+			//Log.printObject("doPushSubEntriesToRemoteStorage() subRemoteDoc:", subRemoteDoc);
 			
 			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
 		}
@@ -15014,10 +15014,10 @@ public class BaseController  extends BaseFunction{
 	private static boolean remoteStoragePushEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPushResult pushResult,
 			DocChangeType localChangeType, List<CommitAction> actionList, boolean isSubAction) {
 		
-		Log.printObject("remoteStoragePushEntry() doc:", doc);
-		Log.printObject("remoteStoragePushEntry() dbDoc:", dbDoc);
-		Log.printObject("remoteStoragePushEntry() localDoc:", localDoc);
-		Log.printObject("remoteStoragePushEntry() remoteDoc:", remoteDoc);
+		//Log.printObject("remoteStoragePushEntry() doc:", doc);
+		//Log.printObject("remoteStoragePushEntry() dbDoc:", dbDoc);
+		//Log.printObject("remoteStoragePushEntry() localDoc:", localDoc);
+		//Log.printObject("remoteStoragePushEntry() remoteDoc:", remoteDoc);
 		
 		boolean ret = false;
 		pushResult.action = null;	//清空action,只能在新增Dir成功的时候被设置
