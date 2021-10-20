@@ -39,6 +39,10 @@
 		newReposSetting.realDocPath = $("#realDocPath").val();
 		var remoteStorage = getRemoteStorageConfig();
 	    newReposSetting.remoteStorage = remoteStorage;
+		var autoBackup = getAutoBackupConfig();
+		newReposSetting.autoBackup = autoBackup;
+		console.log("newReposSetting.autoBackup:" + autoBackup);
+
 		newReposSetting.verCtrl = $("#verCtrl").val();
 		newReposSetting.isRemote =  $("#isRemote").is(':checked')? 1: 0;
 		newReposSetting.localSvnPath = $("#localSvnPath").val();
@@ -93,6 +97,7 @@
 	                    svnPwd1 : newReposSetting.svnPwd1,
 	                    isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
 	                    encryptType : newReposSetting.encryptType,
+	                    autoBackup : newReposSetting.autoBackup,
 	                },
 	                success : function (ret) {
 	                	if(ret.status == "ok")
@@ -226,6 +231,12 @@
 	       			console.log("verifyReposSetting encryptType changed");	       			
 	       			return true;
 	       		}
+	       		
+	       		if(oldSetting.autoBackup != newSetting.autoBackup)
+	       		{
+	       			return true;
+	       		}
+	       		
 	       		alert("仓库信息未变化！");
 	       		return false;
 	       }  
@@ -287,6 +298,7 @@
 		   	$("#isEncryptEnabled").attr("checked","checked");
 	   	}
 	   	
+	   	showAutoBackupConfig(reposInfo);
 	   	
 	   	doSelectVerCtrl();
 	   	doSelectVerCtrl1();
