@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -252,8 +254,21 @@ public class DocController extends BaseController{
 			return;
 		}
 				
-		realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
-		realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		//realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		//realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		
+		//TODO: 备份测试
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("realTimeBackup 非商业版本不支持自动备份");
+			return;
+	    }
+        String localRootPath = Path.getReposRealPath(repos);
+        String localVRootPath = Path.getReposVirtualPath(repos);
+        Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
+        channel.localBackUp(repos.backupConfig.localBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "本地定时备份", true, true, rt );
+        //channel.remoteBackUp(repos.backupConfig.remoteBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "异地定时备份", true, true, rt );
 	}
 
 	private void realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
