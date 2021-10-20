@@ -254,10 +254,11 @@ public class DocController extends BaseController{
 			return;
 		}
 				
-		//realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
-		//realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
 		
-		//TODO: 备份测试
+		/*
+		 * //TODO: 备份测试
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
@@ -268,7 +269,8 @@ public class DocController extends BaseController{
         String localVRootPath = Path.getReposVirtualPath(repos);
         Doc rootDoc = buildRootDoc(repos, localRootPath, localVRootPath);
         channel.localBackUp(repos.backupConfig.localBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "本地定时备份", true, true, rt );
-        //channel.remoteBackUp(repos.backupConfig.remoteBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "异地定时备份", true, true, rt );
+        channel.remoteBackUp(repos.backupConfig.remoteBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "异地定时备份", true, true, rt );
+        */
 	}
 
 	private void realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
