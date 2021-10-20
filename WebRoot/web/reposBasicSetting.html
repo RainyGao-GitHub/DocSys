@@ -240,232 +240,16 @@
 </div>
 
 <script type="text/javascript">	
-	function reposBasicSettingPageInit()
-	{
-	    console.log("reposBasicSettingPageInit");
-		getReposBasicSetting();
-	}
+function reposBasicSettingPageInit()
+{
+	console.log("reposBasicSettingPageInit");
+	getReposBasicSetting();
+}
         
-    //页面初始化代码    
-    $(function(){
-		reposBasicSettingPageInit();
-	});
-
-	//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
-	function doSelectFS()
-	{
-		var type = $("#RBStype").val();
-		console.log("doSelectFS type:" + type);
-		
-		if(type == 1)
-		{
-			$("#RBSverCtrlDiv").show();
-			//RealDoc verCtrl
-			//$("#RBSverCtrl").get(0).selectedIndex=0;
-			//$("#RBSverCtrl").attr('disabled',false);
-
-			//$("#RBSrealDocPathDiv").hide();
-		}
-		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
-		{
-			$("#RBSverCtrlDiv").hide();
-			$("#RBSverCtrl").get(0).selectedIndex=0;
-
-			//$("#RBSrealDocPathDiv").show();
-		
-		}
-		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
-		{
-			$("#RBSverCtrlDiv").show();
-			//RealDoc verCtrl
-			$("#RBSverCtrl").get(0).selectedIndex=1;
-			$("#RBSverCtrl").attr('disabled',true);
-
-			//$("#RBSrealDocPathDiv").hide();
-		}
-		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
-		{
-			$("#RBSverCtrlDiv").show();
-			//RealDoc verCtrl
-			$("#RBSverCtrl").get(0).selectedIndex=2;
-			$("#RBSverCtrl").attr('disabled',true);
-
-			//$("#RBSrealDocPathDiv").hide();
-		}
-		
-		//virtualDoc verCtrl
-		//$("#RBSverCtrl1").get(0).selectedIndex=2;
-		//$("#RBSvirtualDocVerCtrlDiv").show();
-		
-		doSelectVerCtrl();
-		doSelectVerCtrl1();
-	}
-	
-	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
-	function doSelectVerCtrl()
-	{
-		console.log("doSelectVerCtrl");
-		var verCtrl = $("#RBSverCtrl").val();
-		var isRemote = $("#RBSisRemote").is(':checked')? 1: 0;
-		
-		if(verCtrl != 0) 			//show verRepos info
-		{
-			if(isRemote == 0)
-			{
-				$("#RBSlocalVerRepos").hide();
-				$("#RBSremoteVerRepos").hide();
-			}
-			else
-			{
-				if(verCtrl == 1)
-				{
-					$("#RBSlocalVerRepos").hide();
-				}
-				else
-				{
-					$("#RBSlocalVerRepos").show();
-				}
-				$("#RBSremoteVerRepos").show();				
-			}
-			$("#RBSisRemoteSetting").show();							
-			$("#RBSverReposSetting").show();				
-		}
-		else	//hide verRepos info
-		{
-			$("#RBSisRemoteSetting").hide();
-			$("#RBSverReposSetting").hide();				
-		}    
-	}
-	
-	function doSelectVerCtrl1()
-	{
-		console.log("doSelectVerCtrl1");
-		var verCtrl = $("#RBSverCtrl1").val();
-		var isRemote = $("#RBSisRemote1").is(':checked')? 1: 0;
-		
-		if(verCtrl != 0) 			//show verRepos info
-		{
-			if(isRemote == 0)
-			{
-				$("#RBSlocalVerRepos1").hide();
-				$("#RBSremoteVerRepos1").hide();
-			}
-			else
-			{
-				if(verCtrl == 1)
-				{
-					$("#RBSlocalVerRepos1").hide();
-				}
-				else
-				{
-					$("#RBSlocalVerRepos1").show();
-				}
-				$("#RBSremoteVerRepos1").show();				
-			}
-			$("#RBSisRemoteSetting1").show();
-			$("#RBSverReposSetting1").show();				
-		}
-		else	//hide verRepos info
-		{
-			$("#RBSisRemoteSetting1").hide();
-			$("#RBSverReposSetting1").hide();				
-		}  
-	}
-	
-	function doSetEncryptConfirm()
-	{
-		var en = $("#RBSisEncryptEnabled").is(':checked')? 1: 0;
-		if(en == 1)
-		{
-			qiao.bs.confirm({
-		        id: 'setEncryptConfirm',
-		        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
-		    },function(){
-		    	//确认
-		    	$("#RBSisEncryptEnabled").attr("checked","checked");
-		    },function(){
-				//取消
-		    	$("#RBSisEncryptEnabled").attr("checked",false);			
-		    });
-		}
-	}
-	
-	
-	function doSelectAutoBackupConfigEanble()
-	{
-		var autoBackupEnable = $("#autoBackupEnable").is(':checked')? 1: 0;
-		console.log("doSelectAutoBackupConfigEanble autoBackupEnable:" + autoBackupEnable);
-		if(autoBackupEnable == 0)
-		{
-			$("#autoBackupConfigDiv").hide();
-		}
-		else
-		{	
-			$("#autoBackupConfigDiv").show();
-		}		
-	}
-	
-	function doSelectLocalBackupEnable()
-	{
-		var localBackupEnable = $("#localBackupEnable").is(':checked')? 1: 0;
-		console.log("doSelectLocalBackupEnable localBackupEnable:" + localBackupEnable);
-		if(localBackupEnable == 0)
-		{
-			$("#localBackupConfig").hide();
-		}
-		else
-		{	
-			$("#localBackupConfig").show();
-		}		
-	}
-	
-	function doSelectRemoteBackupEnable()
-	{
-		var remoteBackupEnable = $("#remoteBackupEnable").is(':checked')? 1: 0;
-		console.log("doSelectRemoteBackupEnable remoteBackupEnable:" + remoteBackupEnable);
-		if(remoteBackupEnable == 0)
-		{
-			$("#remoteBackupConfig").hide();
-		}
-		else
-		{	
-			$("#remoteBackupConfig").show();
-		}		
-	}
-	
-	function doSelectRemoteBackupStorageProtocol()
-	{
-		var protocol = $("#remoteBackupStorageProtocol").val();
-		console.log("doSelectRemoteBackupStorageProtocol protocol:" + protocol);
-		if(protocol == undefined || protocol == "")
-		{
-			$("#remoteBackupStorageConfig").hide();
-			return;
-		}
-
-		switch(protocol)
-		{
-		case "ftp":
-			$("#remoteBackupStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
-			break;
-		case "sftp":
-			$("#remoteBackupStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
-			break;
-		case "smb":
-			$("#remoteBackupStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
-			break;
-		case "svn":
-			$("#remoteBackupStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
-			break;
-		case "git":
-			$("#remoteBackupStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
-			break;
-		case "mxsdoc":
-			$("#remoteBackupStorage").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
-			break;
-		}
-		$("#remoteBackupStorageConfig").show();
-	}
+//页面初始化代码    
+$(function(){
+	reposBasicSettingPageInit();
+});
 	
 //显示仓库公开访问权限设置
 var gReposBasicSetting = [];
@@ -502,17 +286,7 @@ function getReposBasicSetting()
 	   	$("#RBSpath").val(reposInfo.path);
 	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
 
-	   	if(reposInfo.realDocPath == null || reposInfo.realDocPath == "")
-	   	{
-			$("#reposStorageRealDocPathEnable").attr("checked",false);
-	   		$("#reposStorageRealDocPathConfig").hide();
-	   	}
-	   	else
-	   	{
-	   		$("#reposStorageRealDocPathEnable").attr("checked","checked");
-			$("#reposStorageRealDocPathConfig").show();
-	   		$("#RBSrealDocPath").val(reposInfo.realDocPath);
-	   	}
+	   	showReposStorageRealDocPath(reposInfo);
 	   	
 	   	showRemoteStorageConfig(reposInfo);
 	   	
@@ -564,6 +338,342 @@ function getReposBasicSetting()
 	}
 }
 
+function saveReposBasicSetting()
+{
+	console.log("saveReposBasicSetting");
+	var newReposSetting = [];
+	newReposSetting.vid = getQueryString("vid");
+	newReposSetting.name = $("#RBSname").val();
+	newReposSetting.info = $("#RBSinfo").val();
+	newReposSetting.type =  $("#RBStype").val();	//Real DocSystem
+	newReposSetting.path = $("#RBSpath").val();
+	newReposSetting.realDocPath = $("#RBSrealDocPath").val();
+	var remoteStorage = getRemoteStorageConfig();
+	newReposSetting.remoteStorage = remoteStorage;
+	var autoBackup = getAutoBackupConfig();
+	newReposSetting.autoBackup = autoBackup;
+	console.log("newReposSetting.autoBackup:" + autoBackup);
+
+	newReposSetting.verCtrl = $("#RBSverCtrl").val();
+	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;
+	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
+	newReposSetting.svnPath = $("#RBSsvnPath").val();
+	newReposSetting.svnUser = $("#RBSsvnUser").val();
+	newReposSetting.svnPwd = $("#RBSsvnPwd").val();
+	newReposSetting.verCtrl1 = $("#RBSverCtrl1").val();
+	newReposSetting.isRemote1 =  $("#RBSisRemote1").is(':checked')? 1: 0;
+	newReposSetting.localSvnPath1 = $("#RBSlocalSvnPath1").val();
+	newReposSetting.svnPath1 = $("#RBSsvnPath1").val();
+	newReposSetting.svnUser1 = $("#RBSsvnUser1").val();
+	newReposSetting.svnPwd1 = $("#RBSsvnPwd1").val();
+	newReposSetting.isTextSearchEnabled =  $("#RBSisTextSearchEnabled").is(':checked')? 1: 0;
+	newReposSetting.encryptType =  $("#RBSisEncryptEnabled").is(':checked')? 1: 0;
+	
+	console.log(newReposSetting);
+	
+	if(newReposSetting.isRemote == 0)
+	{
+		newReposSetting.localSvnPath = newReposSetting.path + "DocSysVerReposes/";
+	}
+	
+	if(newReposSetting.isRemote1 == 0)
+	{
+		newReposSetting.localSvnPath1 = newReposSetting.path + "DocSysVerReposes/";        		
+	}
+	
+	if(verifyReposSetting(gReposBasicSetting,newReposSetting) == true)
+	{	
+   		$.ajax({
+                url : "/DocSystem/Repos/updateReposInfo.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                	reposId : newReposSetting.vid,
+                    name : newReposSetting.name,
+                    info : newReposSetting.info,
+                    type : newReposSetting.type,
+                    path : newReposSetting.path,
+                    realDocPath : newReposSetting.realDocPath,
+                    remoteStorage : newReposSetting.remoteStorage,
+                    verCtrl : newReposSetting.verCtrl,
+                    isRemote : newReposSetting.isRemote,
+                    localSvnPath : newReposSetting.localSvnPath,
+                    svnPath : newReposSetting.svnPath,
+                    svnUser : newReposSetting.svnUser,
+                    svnPwd : newReposSetting.svnPwd,
+                    verCtrl1 : newReposSetting.verCtrl1,
+                    isRemote1 : newReposSetting.isRemote1,
+                    localSvnPath1 : newReposSetting.localSvnPath1,
+                    svnPath1 : newReposSetting.svnPath1,
+                    svnUser1 : newReposSetting.svnUser1,
+                    svnPwd1 : newReposSetting.svnPwd1,
+                    isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
+                    encryptType: newReposSetting.encryptType,
+                    autoBackup : newReposSetting.autoBackup,                    
+                },
+                success : function (ret) {
+                	if(ret.status == "ok")
+                	{
+                		console.log("更新仓库设置成功");
+                		getReposBasicSetting();     
+                		// 普通消息提示条
+						bootstrapQ.msg({
+						msg : '设置完成！',
+						type : 'success',
+						time : 2000,
+					    });
+	                }
+                    else
+                    {
+                    	alert(ret.msgInfo);
+                    }
+                },
+                error : function () {
+                    alert('服务器异常: 设置失败');
+                }
+            });
+            return true;
+       }
+       else
+       {
+            return false;
+       }    
+       
+       function verifyReposSetting(oldSetting, newSetting)
+       {
+       		if(oldSetting.name != newSetting.name)
+       		{
+       			//alert("仓库名字不能修改");
+       			return true;
+       		}
+       		
+       		if(oldSetting.type != newSetting.type)
+       		{
+       			alert("仓库类型不能修改");
+       			return false;
+       		}
+       		
+       		if(oldSetting.path != newSetting.path)
+       		{
+       			return true;
+       		}
+       		
+       		if(oldSetting.realDocPath != newSetting.realDocPath)
+       		{
+       			return true;
+       		}
+
+       		if(oldSetting.remoteStorage != newSetting.remoteStorage)
+       		{
+       			return true;
+       		}
+       		
+       		if(oldSetting.autoBackup != newSetting.autoBackup)
+       		{
+       			return true;
+       		}
+       		
+       		if(oldSetting.info != newSetting.info)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.verCtrl != newSetting.verCtrl)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.isRemote != newSetting.isRemote)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.localSvnPath != newSetting.localSvnPath)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnPath != newSetting.svnPath)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnUser != newSetting.svnUser)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnPwd != newSetting.svnPwd)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.verCtrl1 != newSetting.verCtrl1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.isRemote1 != newSetting.isRemote1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.localSvnPath1 != newSetting.localSvnPath1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnPath1 != newSetting.svnPath1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnUser1 != newSetting.svnUser1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnPwd1 != newSetting.svnPwd1)
+       		{
+       			return true;
+       		} 
+       		if(oldSetting.isTextSearchEnabled != newSetting.isTextSearchEnabled)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.encryptType != newSetting.encryptType)
+       		{
+       			return true;
+       		}
+       		alert("仓库信息未变化！");
+       		return false;
+       }  
+}
+
+//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
+function doSelectFS()
+{
+	var type = $("#RBStype").val();
+	console.log("doSelectFS type:" + type);
+	
+	if(type == 1)
+	{
+		$("#RBSverCtrlDiv").show();
+		//RealDoc verCtrl
+		//$("#RBSverCtrl").get(0).selectedIndex=0;
+		//$("#RBSverCtrl").attr('disabled',false);
+
+		//$("#RBSrealDocPathDiv").hide();
+	}
+	if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
+	{
+		$("#RBSverCtrlDiv").hide();
+		$("#RBSverCtrl").get(0).selectedIndex=0;
+
+		//$("#RBSrealDocPathDiv").show();
+	
+	}
+	else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
+	{
+		$("#RBSverCtrlDiv").show();
+		//RealDoc verCtrl
+		$("#RBSverCtrl").get(0).selectedIndex=1;
+		$("#RBSverCtrl").attr('disabled',true);
+
+		//$("#RBSrealDocPathDiv").hide();
+	}
+	else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
+	{
+		$("#RBSverCtrlDiv").show();
+		//RealDoc verCtrl
+		$("#RBSverCtrl").get(0).selectedIndex=2;
+		$("#RBSverCtrl").attr('disabled',true);
+
+		//$("#RBSrealDocPathDiv").hide();
+	}
+	
+	//virtualDoc verCtrl
+	//$("#RBSverCtrl1").get(0).selectedIndex=2;
+	//$("#RBSvirtualDocVerCtrlDiv").show();
+	
+	doSelectVerCtrl();
+	doSelectVerCtrl1();
+}
+
+//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
+function doSelectVerCtrl()
+{
+	console.log("doSelectVerCtrl");
+	var verCtrl = $("#RBSverCtrl").val();
+	var isRemote = $("#RBSisRemote").is(':checked')? 1: 0;
+	
+	if(verCtrl != 0) 			//show verRepos info
+	{
+		if(isRemote == 0)
+		{
+			$("#RBSlocalVerRepos").hide();
+			$("#RBSremoteVerRepos").hide();
+		}
+		else
+		{
+			if(verCtrl == 1)
+			{
+				$("#RBSlocalVerRepos").hide();
+			}
+			else
+			{
+				$("#RBSlocalVerRepos").show();
+			}
+			$("#RBSremoteVerRepos").show();				
+		}
+		$("#RBSisRemoteSetting").show();							
+		$("#RBSverReposSetting").show();				
+	}
+	else	//hide verRepos info
+	{
+		$("#RBSisRemoteSetting").hide();
+		$("#RBSverReposSetting").hide();				
+	}    
+}
+
+function doSelectVerCtrl1()
+{
+	console.log("doSelectVerCtrl1");
+	var verCtrl = $("#RBSverCtrl1").val();
+	var isRemote = $("#RBSisRemote1").is(':checked')? 1: 0;
+	
+	if(verCtrl != 0) 			//show verRepos info
+	{
+		if(isRemote == 0)
+		{
+			$("#RBSlocalVerRepos1").hide();
+			$("#RBSremoteVerRepos1").hide();
+		}
+		else
+		{
+			if(verCtrl == 1)
+			{
+				$("#RBSlocalVerRepos1").hide();
+			}
+			else
+			{
+				$("#RBSlocalVerRepos1").show();
+			}
+			$("#RBSremoteVerRepos1").show();				
+		}
+		$("#RBSisRemoteSetting1").show();
+		$("#RBSverReposSetting1").show();				
+	}
+	else	//hide verRepos info
+	{
+		$("#RBSisRemoteSetting1").hide();
+		$("#RBSverReposSetting1").hide();				
+	}  
+}
+
+function showReposStorageRealDocPath(reposInfo)
+{
+   	if(reposInfo.realDocPath == null || reposInfo.realDocPath == "")
+   	{
+		$("#reposStorageRealDocPathEnable").attr("checked",false);
+   		$("#reposStorageRealDocPathConfig").hide();
+   	}
+   	else
+   	{
+   		$("#reposStorageRealDocPathEnable").attr("checked","checked");
+		$("#reposStorageRealDocPathConfig").show();
+   		$("#RBSrealDocPath").val(reposInfo.realDocPath);
+   	}	
+}
+
 function doSelectReposStorageRealDocPathEnable()
 {
 	var reposStorageRealDocPathEnable = $("#reposStorageRealDocPathEnable").is(':checked')? 1: 0;
@@ -578,6 +688,25 @@ function doSelectReposStorageRealDocPathEnable()
 	}
 }
 
+function doSetEncryptConfirm()
+{
+	var en = $("#RBSisEncryptEnabled").is(':checked')? 1: 0;
+	if(en == 1)
+	{
+		qiao.bs.confirm({
+	        id: 'setEncryptConfirm',
+	        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
+	    },function(){
+	    	//确认
+	    	$("#RBSisEncryptEnabled").attr("checked","checked");
+	    },function(){
+			//取消
+	    	$("#RBSisEncryptEnabled").attr("checked",false);			
+	    });
+	}
+}
+
+/*** 远程存储 ****/
 function showRemoteStorageConfig(reposInfo)
 {
 	if(reposInfo.remoteStorageConfig == undefined)
@@ -720,6 +849,72 @@ function showRemoteStorageConfig(reposInfo)
    	}
 }
 
+function doSelectRemoteStorageProtocol()
+{
+	var protocol = $("#remoteStorageProtocol").val();
+	console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+	if(protocol == undefined || protocol == "")
+	{
+		$("#remoteStorageConfig").hide();
+		return;
+	}
+	
+	switch(protocol)
+	{
+	case "ftp":
+		$("#remoteStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
+		break;
+	case "sftp":
+		$("#remoteStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
+		break;
+	case "smb":
+		$("#remoteStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
+		break;
+	case "svn":
+		$("#remoteStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
+		break;
+	case "git":
+		$("#remoteStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+		break;
+	}
+	$("#remoteStorageConfig").show();
+}
+
+function getRemoteStorageConfig()
+{   
+	var protocol = $("#remoteStorageProtocol").val();
+	console.log("getRemoteStorageConfig protocol:" + protocol);
+	if(protocol == undefined || protocol == "")
+	{
+		return "none";
+	}
+	
+	var prefix = "";
+	switch(protocol)
+	{
+	case "svn":
+		prefix = "svn://";
+		break;
+	case "git":
+		prefix = "git://";
+		break;
+	}
+	
+    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
+	var autoPull = $("#autoPull").is(':checked')? 1: 0;
+	var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
+	var autoPush = $("#autoPush").is(':checked')? 1: 0;
+	var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
+    if(remoteStorage != undefined && remoteStorage != "")
+	{
+    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+		remoteStorage = prefix + remoteStorage;
+	}
+    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+	return remoteStorage;
+}
+
+/******* 自动备份 *************/
 function showAutoBackupConfig(reposInfo)
 {
 	if(reposInfo.backupConfig == undefined)
@@ -1036,70 +1231,80 @@ function showRemoteBackupRemoteStorageConfig(remoteStorageConfig)
 	$("#remoteBackupStorage").val(remoteStorage);
 }
 
-function doSelectRemoteStorageProtocol()
+function doSelectAutoBackupConfigEanble()
 {
-	var protocol = $("#remoteStorageProtocol").val();
-	console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+	var autoBackupEnable = $("#autoBackupEnable").is(':checked')? 1: 0;
+	console.log("doSelectAutoBackupConfigEanble autoBackupEnable:" + autoBackupEnable);
+	if(autoBackupEnable == 0)
+	{
+		$("#autoBackupConfigDiv").hide();
+	}
+	else
+	{	
+		$("#autoBackupConfigDiv").show();
+	}		
+}
+
+function doSelectLocalBackupEnable()
+{
+	var localBackupEnable = $("#localBackupEnable").is(':checked')? 1: 0;
+	console.log("doSelectLocalBackupEnable localBackupEnable:" + localBackupEnable);
+	if(localBackupEnable == 0)
+	{
+		$("#localBackupConfig").hide();
+	}
+	else
+	{	
+		$("#localBackupConfig").show();
+	}		
+}
+
+function doSelectRemoteBackupEnable()
+{
+	var remoteBackupEnable = $("#remoteBackupEnable").is(':checked')? 1: 0;
+	console.log("doSelectRemoteBackupEnable remoteBackupEnable:" + remoteBackupEnable);
+	if(remoteBackupEnable == 0)
+	{
+		$("#remoteBackupConfig").hide();
+	}
+	else
+	{	
+		$("#remoteBackupConfig").show();
+	}		
+}
+
+function doSelectRemoteBackupStorageProtocol()
+{
+	var protocol = $("#remoteBackupStorageProtocol").val();
+	console.log("doSelectRemoteBackupStorageProtocol protocol:" + protocol);
 	if(protocol == undefined || protocol == "")
 	{
-		$("#remoteStorageConfig").hide();
+		$("#remoteBackupStorageConfig").hide();
 		return;
 	}
-	
+
 	switch(protocol)
 	{
 	case "ftp":
-		$("#remoteStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
+		$("#remoteBackupStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
 		break;
 	case "sftp":
-		$("#remoteStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
+		$("#remoteBackupStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
 		break;
 	case "smb":
-		$("#remoteStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
+		$("#remoteBackupStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
 		break;
 	case "svn":
-		$("#remoteStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
+		$("#remoteBackupStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
 		break;
 	case "git":
-		$("#remoteStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+		$("#remoteBackupStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
+		break;
+	case "mxsdoc":
+		$("#remoteBackupStorage").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
 		break;
 	}
-	$("#remoteStorageConfig").show();
-}
-
-
-function getRemoteStorageConfig()
-{   
-	var protocol = $("#remoteStorageProtocol").val();
-	console.log("getRemoteStorageConfig protocol:" + protocol);
-	if(protocol == undefined || protocol == "")
-	{
-		return "none";
-	}
-	
-	var prefix = "";
-	switch(protocol)
-	{
-	case "svn":
-		prefix = "svn://";
-		break;
-	case "git":
-		prefix = "git://";
-		break;
-	}
-	
-    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
-	var autoPull = $("#autoPull").is(':checked')? 1: 0;
-	var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
-	var autoPush = $("#autoPush").is(':checked')? 1: 0;
-	var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
-    if(remoteStorage != undefined && remoteStorage != "")
-	{
-    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-		remoteStorage = prefix + remoteStorage;
-	}
-    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
-	return remoteStorage;
+	$("#remoteBackupStorageConfig").show();
 }
 
 function getAutoBackupConfig()
@@ -1229,206 +1434,5 @@ function getRemoteBackupRemoteStorageConfig()
     console.log("getRemoteBackupRemoteStorageConfig remoteStorage:" + remoteStorage);
 	return remoteStorage;
 }	
-
-
-function saveReposBasicSetting()
-{
-	console.log("saveReposBasicSetting");
-	var newReposSetting = [];
-	newReposSetting.vid = getQueryString("vid");
-	newReposSetting.name = $("#RBSname").val();
-	newReposSetting.info = $("#RBSinfo").val();
-	newReposSetting.type =  $("#RBStype").val();	//Real DocSystem
-	newReposSetting.path = $("#RBSpath").val();
-	newReposSetting.realDocPath = $("#RBSrealDocPath").val();
-	var remoteStorage = getRemoteStorageConfig();
-	newReposSetting.remoteStorage = remoteStorage;
-	var autoBackup = getAutoBackupConfig();
-	newReposSetting.autoBackup = autoBackup;
-	console.log("newReposSetting.autoBackup:" + autoBackup);
-
-	newReposSetting.verCtrl = $("#RBSverCtrl").val();
-	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;
-	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
-	newReposSetting.svnPath = $("#RBSsvnPath").val();
-	newReposSetting.svnUser = $("#RBSsvnUser").val();
-	newReposSetting.svnPwd = $("#RBSsvnPwd").val();
-	newReposSetting.verCtrl1 = $("#RBSverCtrl1").val();
-	newReposSetting.isRemote1 =  $("#RBSisRemote1").is(':checked')? 1: 0;
-	newReposSetting.localSvnPath1 = $("#RBSlocalSvnPath1").val();
-	newReposSetting.svnPath1 = $("#RBSsvnPath1").val();
-	newReposSetting.svnUser1 = $("#RBSsvnUser1").val();
-	newReposSetting.svnPwd1 = $("#RBSsvnPwd1").val();
-	newReposSetting.isTextSearchEnabled =  $("#RBSisTextSearchEnabled").is(':checked')? 1: 0;
-	newReposSetting.encryptType =  $("#RBSisEncryptEnabled").is(':checked')? 1: 0;
-	
-	console.log(newReposSetting);
-	
-	if(newReposSetting.isRemote == 0)
-	{
-		newReposSetting.localSvnPath = newReposSetting.path + "DocSysVerReposes/";
-	}
-	
-	if(newReposSetting.isRemote1 == 0)
-	{
-		newReposSetting.localSvnPath1 = newReposSetting.path + "DocSysVerReposes/";        		
-	}
-	
-	if(verifyReposSetting(gReposBasicSetting,newReposSetting) == true)
-	{	
-   		$.ajax({
-                url : "/DocSystem/Repos/updateReposInfo.do",
-                type : "post",
-                dataType : "json",
-                data : {
-                	reposId : newReposSetting.vid,
-                    name : newReposSetting.name,
-                    info : newReposSetting.info,
-                    type : newReposSetting.type,
-                    path : newReposSetting.path,
-                    realDocPath : newReposSetting.realDocPath,
-                    remoteStorage : newReposSetting.remoteStorage,
-                    verCtrl : newReposSetting.verCtrl,
-                    isRemote : newReposSetting.isRemote,
-                    localSvnPath : newReposSetting.localSvnPath,
-                    svnPath : newReposSetting.svnPath,
-                    svnUser : newReposSetting.svnUser,
-                    svnPwd : newReposSetting.svnPwd,
-                    verCtrl1 : newReposSetting.verCtrl1,
-                    isRemote1 : newReposSetting.isRemote1,
-                    localSvnPath1 : newReposSetting.localSvnPath1,
-                    svnPath1 : newReposSetting.svnPath1,
-                    svnUser1 : newReposSetting.svnUser1,
-                    svnPwd1 : newReposSetting.svnPwd1,
-                    isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
-                    encryptType: newReposSetting.encryptType,
-                    autoBackup : newReposSetting.autoBackup,                    
-                },
-                success : function (ret) {
-                	if(ret.status == "ok")
-                	{
-                		console.log("更新仓库设置成功");
-                		getReposBasicSetting();     
-                		// 普通消息提示条
-						bootstrapQ.msg({
-						msg : '设置完成！',
-						type : 'success',
-						time : 2000,
-					    });
-	                }
-                    else
-                    {
-                    	alert(ret.msgInfo);
-                    }
-                },
-                error : function () {
-                    alert('服务器异常: 设置失败');
-                }
-            });
-            return true;
-       }
-       else
-       {
-            return false;
-       }    
-       
-       function verifyReposSetting(oldSetting, newSetting)
-       {
-       		if(oldSetting.name != newSetting.name)
-       		{
-       			//alert("仓库名字不能修改");
-       			return true;
-       		}
-       		
-       		if(oldSetting.type != newSetting.type)
-       		{
-       			alert("仓库类型不能修改");
-       			return false;
-       		}
-       		
-       		if(oldSetting.path != newSetting.path)
-       		{
-       			return true;
-       		}
-       		
-       		if(oldSetting.realDocPath != newSetting.realDocPath)
-       		{
-       			return true;
-       		}
-
-       		if(oldSetting.remoteStorage != newSetting.remoteStorage)
-       		{
-       			return true;
-       		}
-       		
-       		if(oldSetting.autoBackup != newSetting.autoBackup)
-       		{
-       			return true;
-       		}
-       		
-       		if(oldSetting.info != newSetting.info)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.verCtrl != newSetting.verCtrl)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.isRemote != newSetting.isRemote)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.localSvnPath != newSetting.localSvnPath)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.svnPath != newSetting.svnPath)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.svnUser != newSetting.svnUser)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.svnPwd != newSetting.svnPwd)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.verCtrl1 != newSetting.verCtrl1)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.isRemote1 != newSetting.isRemote1)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.localSvnPath1 != newSetting.localSvnPath1)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.svnPath1 != newSetting.svnPath1)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.svnUser1 != newSetting.svnUser1)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.svnPwd1 != newSetting.svnPwd1)
-       		{
-       			return true;
-       		} 
-       		if(oldSetting.isTextSearchEnabled != newSetting.isTextSearchEnabled)
-       		{
-       			return true;
-       		}
-       		if(oldSetting.encryptType != newSetting.encryptType)
-       		{
-       			return true;
-       		}
-       		alert("仓库信息未变化！");
-       		return false;
-       }  
-}
 
 </script>
