@@ -706,14 +706,14 @@
 	        </label>
 		</div>
 			
-		<div id="autoBackupConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
+		<div id="autoBackupConfigDiv" style="padding-left:45px;margin-top:10px;display:none">
             <label>本地备份
             	<span style="margin-left:5px">
             		<input type="checkbox" id="localBackupEnable" value="0" onclick="doSelectLocalBackupEnable()">
             	</span>
             </label>
             <div id="localBackupConfig" style="display:none">
-			    <input class="form-control" type="text" id="localBackupRootPath"  placeholder="请填写备份存储路径！" value="" style="width: 100%"/>
+			    <input class="form-control" type="text" id="localBackupRootPath"  placeholder="请填写备份存储路径！" value="" style="width: 85%"/>
    				<label style="margin-top:5px">备份时间</label>
 	        	<select class="form-control" id="localBackupTime" style="width:100%">   
 			        <option value="0">0:00</option>   
@@ -766,7 +766,7 @@
             	</span>
             </label>
             <div id="remoteBackupConfig" style="display:none">
-	        	<select class="form-control" id="remoteBackupStorageProtocol" onchange="doSelectRemoteBackupStorageProtocol();" style="width:100%">   
+	        	<select class="form-control" id="remoteBackupStorageProtocol" onchange="doSelectRemoteBackupStorageProtocol();" style="width:85%">   
 			        <option value="">无</option>
 			        <option value="ftp">FTP</option>   
 			        <option value="sftp">SFTP</option>   
@@ -776,7 +776,7 @@
 			        <option value="mxsdoc">MXSDOC</option>  
 			    </select>
 			    <div id="remoteBackupStorageConfig" style="margin-top:10px; display:none">
-	           		<input class="form-control" type="text" id="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
+	           		<input class="form-control" type="text" id="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:85%"/>
     				<label style="margin-top:5px">备份时间</label>
 		        	<select class="form-control" id="remoteBackupTime" style="width:100%">   
 				        <option value="0">0:00</option>   
