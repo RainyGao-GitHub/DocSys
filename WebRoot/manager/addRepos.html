@@ -65,7 +65,10 @@
 	    var svnPwd1 = $("#svnPwd1").val();
 	    var isTextSearchEnabled = $("#isTextSearchEnabled").is(':checked')? 1: 0;
 	    var encryptType = $("#isEncryptEnabled").is(':checked')? 1: 0;
-	    
+
+	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
+	    console.log("autoBackupConfig = " + autoBackupConfig);
+
 	    var createTime = new Date().getTime();	//获取时间戳
 	    
 	    //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
@@ -123,6 +126,7 @@
 	             createTime:createTime,
 	             isTextSearchEnabled: isTextSearchEnabled,       
 	             encryptType: encryptType,
+	             autoBackup : autoBackupConfig,	 	             
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
