@@ -13,6 +13,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
+import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.Project;
@@ -1146,6 +1148,79 @@ public class FileUtil {
         return false;
     }
     
+    /***** compress with 7Z *****/
+    public static boolean compressWith7z(String inputFile, String outputFile) 
+    {
+    	boolean ret = false;
+    	SevenZOutputFile out = null;
+    	try {
+	    	File input = new File(inputFile);
+	        if (!input.exists()) 
+	        {
+	        	Log.debug(inputFile + " 不存在");
+	        	return false;
+	        }
+	        
+	        out = new SevenZOutputFile(new File(outputFile));
+	        compress(out, input, null);
+	        ret = true;
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	} finally {
+    		if(out != null)
+    		{
+    			try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+    		}
+    	}
+    	return ret;
+    }
+    
+    //递归压缩
+    public static void compress(SevenZOutputFile out, File input, String name) throws IOException 
+    {
+	    if (name == null) {
+	    	name = input.getName();
+	    }
+        
+	    SevenZArchiveEntry entry = null;
+        //如果路径为目录（文件夹）
+        if (input.isDirectory()) {
+        	//取出文件夹中的文件（或子文件夹）
+            File[] flist = input.listFiles();
+
+            if (flist.length == 0)//如果文件夹为空，则只需在目的地.7z文件中写入一个目录进入
+            {
+            	entry = out.createArchiveEntry(input,name + "/");
+                out.putArchiveEntry(entry);
+            } 
+            else//如果文件夹不为空，则递归调用compress，文件夹中的每一个文件（或文件夹）进行压缩
+            {
+            	for (int i = 0; i < flist.length; i++) {
+            		compress(out, flist[i], name + "/" + flist[i].getName());
+                }
+            }
+        } 
+        else//如果不是目录（文件夹），即为文件，则先写入目录进入点，之后将文件写入7z文件中
+        {
+        	FileInputStream fos = new FileInputStream(input);
+            BufferedInputStream bis = new BufferedInputStream(fos);
+            entry = out.createArchiveEntry(input, name);
+            out.putArchiveEntry(entry);
+            int len = -1;
+            //将源文件写入到7z文件中
+            byte[] buf = new byte[1024];
+            while ((len = bis.read(buf)) != -1) {
+            	out.write(buf, 0, len);
+            }
+            bis.close();
+            fos.close();
+            out.closeArchiveEntry();
+       }
+    }
     
 	/***************************图片上传相关接口*****************************/
 	protected static String[] IMGALLOWDTYPES = {"JPG","JPEG","PNG","GIF","BMP"};
