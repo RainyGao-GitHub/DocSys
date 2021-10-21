@@ -445,7 +445,7 @@ public class BaseController  extends BaseFunction{
 			return getLocalEntryList(repos, doc);
 		case 3:
 		case 4:
-			return getRemoteEntryList(repos, doc);
+			return getVerReposEntryList(repos, doc);
 		}
 		return null;
 	}
@@ -722,7 +722,7 @@ public class BaseController  extends BaseFunction{
 		return doc.getLevel() - 1;
 	}
 
-	private List<Doc> getRemoteEntryList(Repos repos, Doc doc) {
+	private List<Doc> getVerReposEntryList(Repos repos, Doc doc) {
 		//Log.debug("getRemoteEntryList() " + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 
 		switch(repos.getVerCtrl())
@@ -4478,7 +4478,7 @@ public class BaseController  extends BaseFunction{
 	    	}
     	}
 	    
-	    List<Doc> remoteEntryList = getRemoteEntryList(repos, doc);
+	    List<Doc> remoteEntryList = getVerReposEntryList(repos, doc);
 	    //Log.printObject("SyncUpSubDocs_FSM() remoteEntryList:", remoteEntryList);
 	    if(remoteEntryList != null)
     	{
@@ -4899,7 +4899,7 @@ public class BaseController  extends BaseFunction{
 		
 		HashMap<Long, Doc> dbDocHashMap = null;	
 		HashMap<Long, Doc> localDocHashMap =  null;	
-		HashMap<Long, Doc> remoteDocHashMap = null;		
+		HashMap<Long, Doc> verReposDocHashMap = null;		
 
 				
 		List<Doc> localEntryList = getLocalEntryList(repos, doc);
@@ -4914,14 +4914,14 @@ public class BaseController  extends BaseFunction{
 		//Log.printObject("SyncUpSubDocs_FSM() dbEntryList:", dbDocList);
 
 		//注意: 如果仓库没有版本仓库则不需要远程同步
-		List<Doc> remoteEntryList = null;
-    	boolean isRemoteSyncUpNeed = isRemoteSyncupNeed(repos);
+		List<Doc> verReposEntryList = null;
+    	boolean isVerReposSyncUpNeed = isVerReposSyncupNeed(repos);
     	
-    	if(isRemoteSyncUpNeed)
+    	if(isVerReposSyncUpNeed)
 		{
-    		remoteEntryList = getRemoteEntryList(repos, doc);
+    		verReposEntryList = getVerReposEntryList(repos, doc);
     	    //Log.printObject("SyncUpSubDocs_FSM() remoteEntryList:", remoteEntryList);
-        	if(remoteEntryList == null)
+        	if(verReposEntryList == null)
         	{
         		Log.debug("SyncUpSubDocs_FSM() remoteEntryList 获取异常:");
             	return false;
@@ -4931,30 +4931,30 @@ public class BaseController  extends BaseFunction{
     	//将dbDocList\localEntryList\remoteEntryList转成HashMap
 		localDocHashMap =  ConvertDocListToHashMap(localEntryList);	
 		dbDocHashMap = ConvertDocListToHashMap(dbDocList);	
-		if(isRemoteSyncUpNeed)	//如果不需要远程同步则直接将remoteHashMap设置成dbHashMap来避免远程同步
+		if(isVerReposSyncUpNeed)	//如果不需要远程同步则直接将remoteHashMap设置成dbHashMap来避免远程同步
 		{
-			remoteDocHashMap = ConvertDocListToHashMap(remoteEntryList);					
+			verReposDocHashMap = ConvertDocListToHashMap(verReposEntryList);					
 		}
 		else
 		{
-			remoteDocHashMap = dbDocHashMap;
+			verReposDocHashMap = dbDocHashMap;
 		}
 
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
 		//Log.debug("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
-        syncupScanForDocList_FSM(remoteEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+        syncupScanForDocList_FSM(verReposEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 		
         //Log.debug("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
-        syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+        syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 		
         //Log.debug("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
-        syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+        syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 
 		return true;
     }
 	
-	private boolean isRemoteSyncupNeed(Repos repos) {
+	private boolean isVerReposSyncupNeed(Repos repos) {
 		if(repos.getVerCtrl() == null)
 		{
 			return false;
