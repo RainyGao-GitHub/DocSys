@@ -1180,7 +1180,7 @@ public class FileUtil {
     }
     
     //递归压缩
-    public static void compress(SevenZOutputFile out, File input, String name) throws IOException 
+    public static void compress(SevenZOutputFile out, File input, String name) throws Exception 
     {
 	    if (name == null) {
 	    	name = input.getName();
