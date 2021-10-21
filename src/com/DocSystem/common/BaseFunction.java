@@ -13,6 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -32,11 +33,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -61,6 +70,8 @@ import com.DocSystem.common.entity.LocalConfig;
 import com.DocSystem.common.entity.MxsDocConfig;
 import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
+import com.DocSystem.common.entity.QueryCondition;
+import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteBackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.SftpConfig;
@@ -1458,260 +1469,6 @@ public class BaseFunction{
         }
         return path;
     }
-    
-	protected static UserPreferServer addUserPreferServer(String serverUrl, String userName, String pwd, String serverName, User accessUser)
-    {
-		UserPreferServer server = new UserPreferServer();
-		server.createTime = new Date().getTime();
-		
-		server.serverName = serverName;
-		server.serverUrl = serverUrl;
-		server.serverUserName = userName;
-		server.serverUserPwd = pwd;
-		
-		server.userId = accessUser.getId();
-		server.userName = accessUser.getName();
-		
-		server.id = server.userId + "_" + serverUrl.hashCode() + "_" + server.createTime;
-		
-		String indexLib = getIndexLibPathForUserPreferServer();
-		if(addUserPreferServerIndex(server, indexLib) == false)
-		{
-			return null;
-		}
-		return server;
-    }
-	
-	
-	protected PreferLink addPreferLink(String url, String name, String content, Integer type, User accessUser) {
-		PreferLink link = new PreferLink();
-		link.createTime = new Date().getTime();
-		
-		link.name = name;
-		link.url = url;
-		link.content = content;
-		link.type = type;
-		
-		link.userId = accessUser.getId();
-		link.userName = accessUser.getName();
-		
-		link.id = link.userId + "_" + url.hashCode() + "_" + link.createTime;
-		
-		String indexLib = getIndexLibPathForPreferLink();
-		if(addPreferLinkIndex(link, indexLib) == false)
-		{
-			return null;
-		}
-		return link;
-	}
-
-
-	protected boolean editPreferLink(PreferLink link) {
-		String indexLib = getIndexLibPathForPreferLink();
-		return updatePreferLinkIndex(link, indexLib);
-	}
-	
-	private boolean updatePreferLinkIndex(PreferLink link, String indexLib) {
-    	Analyzer analyzer = null;
-		Directory directory = null;
-		IndexWriter indexWriter = null;
-    	
-		try {
-	    	Date date1 = new Date();
-	    	analyzer = new IKAnalyzer();
-	    	directory = FSDirectory.open(new File(indexLib));
-
-	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
-	        indexWriter = new IndexWriter(directory, config);
-	
-	        Document document = LuceneUtil2.buildDocumentForObject(link);
-	        indexWriter.addDocument(document);	        
-	        
-	        indexWriter.updateDocument(new Term("id", link.id), document);
-	        indexWriter.commit();
-	        
-	        indexWriter.close();
-	        indexWriter = null;
-	        directory.close();
-	        directory = null;
-	        analyzer.close();
-	        analyzer = null;
-	        
-			Date date2 = new Date();
-	        Log.debug("updatePreferLinkIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-	    	return true;
-		} catch (Exception e) {
-			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("updatePreferLinkIndex() 异常");
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	protected boolean editUserPreferServer(UserPreferServer server) {
-		String indexLib = getIndexLibPathForUserPreferServer();
-		return updateUserPreferServerIndex(server, indexLib);
-	}
-	
-	
-	protected boolean updateUserPreferServerIndex(UserPreferServer server, String indexLib)
-    {	
-    	Analyzer analyzer = null;
-		Directory directory = null;
-		IndexWriter indexWriter = null;
-    	
-		try {
-	    	Date date1 = new Date();
-	    	analyzer = new IKAnalyzer();
-	    	directory = FSDirectory.open(new File(indexLib));
-
-	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
-	        indexWriter = new IndexWriter(directory, config);
-	
-	        Document document = LuceneUtil2.buildDocumentForObject(server);
-	        indexWriter.addDocument(document);	        
-	        
-	        indexWriter.updateDocument(new Term("id", server.id), document);
-	        indexWriter.commit();
-	        
-	        indexWriter.close();
-	        indexWriter = null;
-	        directory.close();
-	        directory = null;
-	        analyzer.close();
-	        analyzer = null;
-	        
-			Date date2 = new Date();
-	        Log.debug("updateUserPreferServerIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-	    	return true;
-		} catch (Exception e) {
-			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("updateUserPreferServerIndex() 异常");
-			e.printStackTrace();
-			return false;
-		}
-    }
-	
-	protected boolean deleteUserPreferServer(String serverId)
-    {
-		String indexLib = getIndexLibPathForUserPreferServer();
-		return deleteUserPreferServerIndex(serverId, indexLib);
-	}
-	
-	protected boolean deletePreferLink(String linkId) {
-		String indexLib = getIndexLibPathForPreferLink();
-		return deleteUserPreferServerIndex(linkId, indexLib);
-	}
-	
-	protected boolean deleteUserPreferServerIndex(String serverId, String indexLib)
-	{
-    	Log.debug("deleteUserPreferServerIndex() serverId:" + serverId + " indexLib:"+indexLib);
-    	Analyzer analyzer = null;
-    	Directory directory = null;
-    	IndexWriter indexWriter = null;
-    	
-		try {
-			Date date1 = new Date();
-			directory = FSDirectory.open(new File(indexLib));
-		
-	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
-	        indexWriter = new IndexWriter(directory, config);
-	        
-	        Query query = new TermQuery(new Term("id", serverId));
-	        indexWriter.deleteDocuments(query);
-	        indexWriter.commit();
-
-	        indexWriter.close();
-	        indexWriter = null;
-	        directory.close();
-	        directory = null;
-	        
-	        Date date2 = new Date();
-	        Log.debug("deleteUserPreferServerIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-	        return true;
-		} catch (Exception e) {
-			closeResource(indexWriter, directory, analyzer);
-			e.printStackTrace();
-			return false;
-		}
-    }  
-
-	private static boolean addUserPreferServerIndex(UserPreferServer server, String indexLib) {
-    	Log.debug("addUserPreferServerIndex() id:" + server.id + " indexLib:"+indexLib);    	
-    	
-    	Analyzer analyzer = null;
-		Directory directory = null;
-		IndexWriter indexWriter = null;
-    	
-		try {
-	    	Date date1 = new Date();
-	    	analyzer = new IKAnalyzer();
-	    	directory = FSDirectory.open(new File(indexLib));
-
-	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
-	        indexWriter = new IndexWriter(directory, config);
-	
-	        Document document = LuceneUtil2.buildDocumentForObject(server);
-	        indexWriter.addDocument(document);	        
-	        
-	        indexWriter.commit();
-	        
-	        indexWriter.close();
-	        indexWriter = null;
-	        directory.close();
-	        directory = null;
-	        analyzer.close();
-	        analyzer = null;
-	        
-			Date date2 = new Date();
-	        Log.debug("addUserPreferServerIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-	    	return true;
-		} catch (Exception e) {
-			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("addUserPreferServerIndex() 异常");
-			e.printStackTrace();
-			return false;
-		}
-    }
-	
-	
-	private boolean addPreferLinkIndex(PreferLink link, String indexLib) {
-    	Log.debug("addPreferLinkIndex() id:" + link.id + " indexLib:"+indexLib);    	
-    	
-    	Analyzer analyzer = null;
-		Directory directory = null;
-		IndexWriter indexWriter = null;
-    	
-		try {
-	    	Date date1 = new Date();
-	    	analyzer = new IKAnalyzer();
-	    	directory = FSDirectory.open(new File(indexLib));
-
-	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
-	        indexWriter = new IndexWriter(directory, config);
-	
-	        Document document = LuceneUtil2.buildDocumentForObject(link);
-	        indexWriter.addDocument(document);	        
-	        
-	        indexWriter.commit();
-	        
-	        indexWriter.close();
-	        indexWriter = null;
-	        directory.close();
-	        directory = null;
-	        analyzer.close();
-	        analyzer = null;
-	        
-			Date date2 = new Date();
-	        Log.debug("addPreferLinkIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-	    	return true;
-		} catch (Exception e) {
-			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("addPreferLinkIndex() 异常");
-			e.printStackTrace();
-			return false;
-		}
-	}
 
 	//日志管理	
 	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
@@ -2316,4 +2073,443 @@ public class BaseFunction{
 		return doc;
 	}
 	
+	/***** UserPreferServer *******/
+	protected static UserPreferServer addUserPreferServer(String serverUrl, String userName, String pwd, String serverName, User accessUser)
+    {
+		UserPreferServer server = new UserPreferServer();
+		server.createTime = new Date().getTime();
+		
+		server.serverName = serverName;
+		server.serverUrl = serverUrl;
+		server.serverUserName = userName;
+		server.serverUserPwd = pwd;
+		
+		server.userId = accessUser.getId();
+		server.userName = accessUser.getName();
+		
+		server.id = server.userId + "_" + serverUrl.hashCode() + "_" + server.createTime;
+		
+		String indexLib = getIndexLibPathForUserPreferServer();
+		if(addUserPreferServerIndex(server, indexLib) == false)
+		{
+			return null;
+		}
+		return server;
+    }
+	
+	protected boolean editUserPreferServer(UserPreferServer server) {
+		String indexLib = getIndexLibPathForUserPreferServer();
+		return updateUserPreferServerIndex(server, indexLib);
+	}
+	
+	protected boolean updateUserPreferServerIndex(UserPreferServer server, String indexLib)
+    {	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(server);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.updateDocument(new Term("id", server.id), document);
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        Log.debug("updateUserPreferServerIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        Log.debug("updateUserPreferServerIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+	
+	protected boolean deleteUserPreferServer(String serverId)
+    {
+		String indexLib = getIndexLibPathForUserPreferServer();
+		return deleteUserPreferServerIndex(serverId, indexLib);
+	}
+
+	protected boolean deleteUserPreferServerIndex(String serverId, String indexLib)
+	{
+    	Log.debug("deleteUserPreferServerIndex() serverId:" + serverId + " indexLib:"+indexLib);
+    	Analyzer analyzer = null;
+    	Directory directory = null;
+    	IndexWriter indexWriter = null;
+    	
+		try {
+			Date date1 = new Date();
+			directory = FSDirectory.open(new File(indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        indexWriter = new IndexWriter(directory, config);
+	        
+	        Query query = new TermQuery(new Term("id", serverId));
+	        indexWriter.deleteDocuments(query);
+	        indexWriter.commit();
+
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        
+	        Date date2 = new Date();
+	        Log.debug("deleteUserPreferServerIndex() 删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+			e.printStackTrace();
+			return false;
+		}
+    }  
+
+	private static boolean addUserPreferServerIndex(UserPreferServer server, String indexLib) {
+    	Log.debug("addUserPreferServerIndex() id:" + server.id + " indexLib:"+indexLib);    	
+    	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(server);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        Log.debug("addUserPreferServerIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        Log.debug("addUserPreferServerIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+	
+	protected static UserPreferServer getUserPreferServer(String serverId) {
+		UserPreferServer queryServerInfo = new UserPreferServer();
+		queryServerInfo.id = serverId;
+		
+		String indexLib = getIndexLibPathForUserPreferServer();
+		List<UserPreferServer> list = multiQueryForUserPreferServer(queryServerInfo, indexLib, null);
+		if(list == null || list.size() != 1)
+		{
+			return null;
+		}
+		return list.get(0);
+	}
+	
+	protected static List<UserPreferServer> getUserPreferServerList(UserPreferServer queryServerInfo, QueryResult queryResult) 
+	{
+		//按时间正序排序
+    	Sort sort = new Sort();
+    	SortField field = new SortField("createTime", SortField.Type.LONG, false);
+		sort.setSort(field);
+		
+		String indexLib = getIndexLibPathForUserPreferServer();
+		List<UserPreferServer> list = multiQueryForUserPreferServer(queryServerInfo, indexLib, sort);
+		return list;
+	}
+	
+	public static List<UserPreferServer> multiQueryForUserPreferServer(UserPreferServer queryServerInfo, String indexLib, Sort sort)
+	{
+		List<UserPreferServer> list =  new ArrayList<UserPreferServer>();
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("multiQueryForUserPreferServer() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+	
+	        BooleanQuery builder = buildBooleanQueryForUserPreferServer(queryServerInfo);
+	        if(builder != null)
+	        {
+	        	TopDocs hits = null;
+	        	if(sort == null)
+	        	{
+	        		hits = isearcher.search( builder, 1000); 
+	        	}
+	        	else
+	        	{
+	        		hits = isearcher.search( builder, 1000, sort); 
+	        	}
+	        	
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document document = isearcher.doc( scoreDoc.doc );
+	        		UserPreferServer entry = new UserPreferServer();
+	        		LuceneUtil2.buildObjectForDocument(entry, document);
+		            list.add(entry);
+	        	}
+	        }
+		} catch (Exception e) {
+			System.out.println("search() 异常");
+			e.printStackTrace();
+		} finally {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		}				
+		return list;
+    }
+	
+	private static BooleanQuery buildBooleanQueryForUserPreferServer(UserPreferServer queryServerInfo) 
+	{
+		List<QueryCondition> conditions = LuceneUtil2.buildQueryConditionsForObject(queryServerInfo, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
+		BooleanQuery query = LuceneUtil2.buildBooleanQueryWithConditions(conditions);
+		return query;
+	}
+	
+	/****** UserPreferLink **************/
+	protected PreferLink addPreferLink(String url, String name, String content, Integer type, User accessUser) {
+		PreferLink link = new PreferLink();
+		link.createTime = new Date().getTime();
+		
+		link.name = name;
+		link.url = url;
+		link.content = content;
+		link.type = type;
+		
+		link.userId = accessUser.getId();
+		link.userName = accessUser.getName();
+		
+		link.id = link.userId + "_" + url.hashCode() + "_" + link.createTime;
+		
+		String indexLib = getIndexLibPathForPreferLink();
+		if(addPreferLinkIndex(link, indexLib) == false)
+		{
+			return null;
+		}
+		return link;
+	}
+
+	private boolean addPreferLinkIndex(PreferLink link, String indexLib) {
+    	Log.debug("addPreferLinkIndex() id:" + link.id + " indexLib:"+indexLib);    	
+    	
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(link);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        Log.debug("addPreferLinkIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        Log.debug("addPreferLinkIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	protected boolean deletePreferLink(String linkId) {
+		String indexLib = getIndexLibPathForPreferLink();
+		return deleteUserPreferServerIndex(linkId, indexLib);
+	}
+	
+	protected boolean editPreferLink(PreferLink link) {
+		String indexLib = getIndexLibPathForPreferLink();
+		return updatePreferLinkIndex(link, indexLib);
+	}
+	
+	private boolean updatePreferLinkIndex(PreferLink link, String indexLib) {
+    	Analyzer analyzer = null;
+		Directory directory = null;
+		IndexWriter indexWriter = null;
+    	
+		try {
+	    	Date date1 = new Date();
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
+
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(link);
+	        indexWriter.addDocument(document);	        
+	        
+	        indexWriter.updateDocument(new Term("id", link.id), document);
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+			Date date2 = new Date();
+	        Log.debug("updatePreferLinkIndex() 更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+	        Log.debug("updatePreferLinkIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	protected static BooleanQuery buildBooleanQueryForPreferLink(PreferLink queryInfo) {
+		List<QueryCondition> conditions = LuceneUtil2.buildQueryConditionsForObject(queryInfo, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
+		BooleanQuery query = LuceneUtil2.buildBooleanQueryWithConditions(conditions);
+		return query;
+	}
+	
+	protected static BooleanQuery buildBooleanQueryForPreferLinkLike(PreferLink queryInfo) {
+		List<QueryCondition> conditions = LuceneUtil2.buildQueryConditionsForObject(queryInfo, Occur.SHOULD, QueryCondition.SEARCH_TYPE_Wildcard);
+		BooleanQuery query = LuceneUtil2.buildBooleanQueryWithConditions(conditions);
+		return query;
+	}
+	
+	protected static PreferLink getPreferLink(String linkId) {
+		PreferLink queryInfo = new PreferLink();
+		queryInfo.id = linkId;
+		
+		String indexLib = getIndexLibPathForPreferLink();
+		BooleanQuery query = buildBooleanQueryForPreferLink(queryInfo);
+		List<PreferLink> list = multiQueryForPreferLink(query, indexLib, null);
+		if(list == null || list.size() != 1)
+		{
+			return null;
+		}
+		return list.get(0);
+	}
+	
+	protected static List<PreferLink> multiQueryForPreferLink(BooleanQuery query, String indexLib, Sort sort) {
+		List<PreferLink> list =  new ArrayList<PreferLink>();
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("multiQueryForPreferLink() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+	
+	        if(query != null)
+	        {
+	        	TopDocs hits = null;
+	        	if(sort == null)
+	        	{
+	        		hits = isearcher.search( query, 1000); 
+	        	}
+	        	else
+	        	{
+	        		hits = isearcher.search( query, 1000, sort); 
+	        	}
+	        	
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document document = isearcher.doc( scoreDoc.doc );
+	        		PreferLink entry = new PreferLink();
+	        		LuceneUtil2.buildObjectForDocument(entry, document);
+		            list.add(entry);
+	        	}
+	        }
+		} catch (Exception e) {
+			System.out.println("search() 异常");
+			e.printStackTrace();
+		} finally {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		}				
+		return list;
+	}	
 }
