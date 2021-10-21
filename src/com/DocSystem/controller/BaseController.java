@@ -723,7 +723,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private List<Doc> getVerReposEntryList(Repos repos, Doc doc) {
-		//Log.debug("getRemoteEntryList() " + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+		//Log.debug("getVerReposEntryList() " + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 
 		switch(repos.getVerCtrl())
 		{
@@ -731,7 +731,7 @@ public class BaseController  extends BaseFunction{
 			SVNUtil svnUtil = new SVNUtil();
 			if(false == svnUtil.Init(repos, true, null))
 			{
-				Log.debug("getRemoteEntryList() svnUtil.Init Failed");
+				Log.debug("getVerReposEntryList() svnUtil.Init Failed");
 				return null;
 			}
 			
@@ -742,7 +742,7 @@ public class BaseController  extends BaseFunction{
 			GITUtil gitUtil = new GITUtil();
 			if(false == gitUtil.Init(repos, true, null))
 			{
-				Log.debug("getRemoteEntryList() gitUtil.Init Failed");
+				Log.debug("getVerReposEntryList() gitUtil.Init Failed");
 				return null;
 			}
 			
@@ -3960,7 +3960,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(repos.getType() == 1)	
 		{	
-			realDocSyncResult = syncUpLocalAndRemote(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, login_user, rt);
+			realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, login_user, rt);
 			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
 		}
 		else
@@ -3974,11 +3974,11 @@ public class BaseController  extends BaseFunction{
 		return realDocSyncResult;
 	}
 	
-	private boolean syncUpLocalAndRemote(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, User login_user, ReturnAjax rt) {
+	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, User login_user, ReturnAjax rt) {
 		if(repos.getType() != 1)
 		{
-			Log.debug("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
-			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			Log.debug("syncUpLocalWithVerRepos() 前置类型仓库不需要同步:" + repos.getType());
+			Log.debug("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
 			return true;
 		}
 		
@@ -3986,15 +3986,15 @@ public class BaseController  extends BaseFunction{
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
-			Log.debug("syncupForDocChange() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			Log.debug("syncUpLocalWithVerRepos() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			Log.debug("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
 			return false;
 		}
 		Doc remoteEntry = verReposGetDoc(repos, doc, null);
 		if(remoteEntry == null)
 		{
-			Log.debug("syncupForDocChange() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			Log.debug("syncUpLocalWithVerRepos() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			Log.debug("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
 			return false;
 		}
 		
@@ -4002,10 +4002,10 @@ public class BaseController  extends BaseFunction{
 		
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
 
-		Log.debug("syncupForDocChange() syncupScanForDoc_FSM ret:" + ret);
+		Log.debug("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
 		if(remoteChanges.size() == 0)
 		{
-			Log.debug("syncupForDocChange() 远程没有改动");
+			Log.debug("syncUpLocalWithVerRepos() 远程没有改动");
 		}
 		else
 		{
@@ -4015,13 +4015,13 @@ public class BaseController  extends BaseFunction{
 		
 		if(localChanges.size() == 0)
 		{
-			Log.debug("syncupForDocChange() 本地没有改动");
+			Log.debug("syncUpLocalWithVerRepos() 本地没有改动");
 			return true;
 		}
 		
 		if(action.getAction() == Action.UNDEFINED)
 		{
-			Log.debug("syncupForDocChange() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
+			Log.debug("syncUpLocalWithVerRepos() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
 			return true;
 		}
 		
