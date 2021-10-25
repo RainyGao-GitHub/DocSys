@@ -372,7 +372,7 @@ public class BaseController  extends BaseFunction{
 				
 		if(login_user.getType() < role)
 		{
-			Log.docSysErrorLog("您无权进行此操作，请联系统管理员！", rt);
+			Log.docSysErrorLog("您无权进行此操作，请联系系统管理员！", rt);
 			return false;
 		}
 		
@@ -14284,7 +14284,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected static JSONObject getRemoteAuthCode(String targetServerUrl,  String userName, String pwd, Integer type, ReturnAjax rt) {
+	protected static JSONObject getRemoteAuthCodeForPushDoc(String targetServerUrl,  String userName, String pwd, Integer type, ReturnAjax rt) {
 		String requestUrl = targetServerUrl + "/DocSystem/Bussiness/getAuthCode.do?userName=" + userName + "&pwd="+pwd;
 		if(type != null)
 		{
@@ -14310,6 +14310,35 @@ public class BaseController  extends BaseFunction{
 		if(!ret.getString("status").equals("ok"))
 		{
 			Log.debug("getRemoteAuthCode() ret.status is not ok");
+			rt.setError(ret.getString("msgInfo"));
+			return null;
+		}
+		
+		return ret;
+	}
+	
+	protected static JSONObject getRemoteAuthCodeForPushRepos(String targetServerUrl,  String userName, String pwd, ReturnAjax rt) {
+		String requestUrl = targetServerUrl + "/DocSystem/Bussiness/getAuthCodeForPushRepos.do?userName=" + userName + "&pwd="+pwd;
+		JSONObject ret = postJson(requestUrl, null);	//AuthCode
+
+		if(ret == null)
+		{
+			Log.debug("getRemoteAuthCodeForPushRepos() ret is null");
+			rt.setError("连接服务器失败");
+			return null;
+		}
+		
+		if(ret.getString("status") == null)
+		{
+			//未知状态
+			Log.debug("getRemoteAuthCodeForPushRepos() ret.status is null");
+			rt.setError("连接服务器失败");
+			return null;
+		}
+		
+		if(!ret.getString("status").equals("ok"))
+		{
+			Log.debug("getRemoteAuthCodeForPushRepos() ret.status is not ok");
 			rt.setError(ret.getString("msgInfo"));
 			return null;
 		}
