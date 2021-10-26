@@ -9734,10 +9734,10 @@ public class BaseController  extends BaseFunction{
     //static String DB_PASS = "";
     
 	static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
-    static String DB_TYPE = "mysql";
-    static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
-    static String DB_USER = "root";
-    static String DB_PASS = "";
+    protected static String DB_TYPE = "mysql";
+    protected static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
+    protected static String DB_USER = "root";
+    protected static String DB_PASS = "";
     protected static String officeEditorApi = null;
     protected static String serverIP = null;
     
@@ -11861,7 +11861,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private static boolean importDatabaseFromSqlFile(List<Integer> importTabList, String filePath, String fileName,
+	protected static boolean importDatabaseFromSqlFile(List<Integer> importTabList, String filePath, String fileName,
 			String type, String url, String user, String pwd) {
 		return executeSqlScript(filePath+fileName, type, url, user, pwd);
 	}
@@ -12089,7 +12089,7 @@ public class BaseController  extends BaseFunction{
         return list;
 	}
 
-	private static String getNameByObjType(int objType) {		
+	protected static String getNameByObjType(int objType) {		
 		if(objType < DBTabNameMap.length)
 		{
 			return DBTabNameMap[objType];
@@ -12097,7 +12097,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private static Object buildObjectFromJsonObj(JSONObject jsonObj, int objType) {
+	public static Object buildObjectFromJsonObj(JSONObject jsonObj, int objType) {
 		switch(objType)
 		{
 		case DOCSYS_REPOS:
@@ -14310,35 +14310,6 @@ public class BaseController  extends BaseFunction{
 		if(!ret.getString("status").equals("ok"))
 		{
 			Log.debug("getRemoteAuthCode() ret.status is not ok");
-			rt.setError(ret.getString("msgInfo"));
-			return null;
-		}
-		
-		return ret;
-	}
-	
-	protected static JSONObject getRemoteAuthCodeForPushRepos(String targetServerUrl,  String userName, String pwd, ReturnAjax rt) {
-		String requestUrl = targetServerUrl + "/DocSystem/Bussiness/getAuthCodeForPushRepos.do?userName=" + userName + "&pwd="+pwd;
-		JSONObject ret = postJson(requestUrl, null);	//AuthCode
-
-		if(ret == null)
-		{
-			Log.debug("getRemoteAuthCodeForPushRepos() ret is null");
-			rt.setError("连接服务器失败");
-			return null;
-		}
-		
-		if(ret.getString("status") == null)
-		{
-			//未知状态
-			Log.debug("getRemoteAuthCodeForPushRepos() ret.status is null");
-			rt.setError("连接服务器失败");
-			return null;
-		}
-		
-		if(!ret.getString("status").equals("ok"))
-		{
-			Log.debug("getRemoteAuthCodeForPushRepos() ret.status is not ok");
 			rt.setError(ret.getString("msgInfo"));
 			return null;
 		}
