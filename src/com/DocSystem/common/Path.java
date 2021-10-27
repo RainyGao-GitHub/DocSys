@@ -559,18 +559,30 @@ public class Path {
 
 	public static String getVerReposName(Repos repos,boolean isRealDoc) {
 		String reposName = null;
-		
-		Integer id = repos.getId();
 		if(isRealDoc)
 		{
-			Integer verCtrl = repos.getVerCtrl();
+			reposName = getVerReposName(repos.getId(), repos.getVerCtrl(), repos.getIsRemote(), isRealDoc);
+		}
+		else
+		{
+			reposName = getVerReposName(repos.getId(), repos.getVerCtrl1(), repos.getIsRemote(), isRealDoc);
+		}
+		return reposName;
+	}
+	
+	public static String getVerReposName(Integer reposId, Integer verCtrl, Integer isRemote, boolean isRealDoc) {
+		String reposName = null;
+		
+		Integer id = reposId;
+		if(isRealDoc)
+		{
 			if(verCtrl == 1)
 			{
 				reposName = id + "_SVN_RRepos";
 			}
 			else if(verCtrl == 2)
 			{ 
-				if(repos.getIsRemote() == 1)
+				if(isRemote == 1)
 				{
 					reposName = id + "_GIT_RRepos_Remote";					
 				}
@@ -583,14 +595,13 @@ public class Path {
 		}
 		else
 		{
-			Integer verCtrl = repos.getVerCtrl1();			
 			if(verCtrl == 1)
 			{
 				reposName = id + "_SVN_VRepos";
 			}
 			else if(verCtrl == 2)
 			{
-				if(repos.getIsRemote1() == 1)
+				if(isRemote == 1)
 				{
 
 					reposName = id + "_GIT_VRepos_Remote";					
