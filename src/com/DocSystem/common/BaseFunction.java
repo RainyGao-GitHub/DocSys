@@ -23,10 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,8 +52,6 @@ import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
-import com.DocSystem.common.channels.Channel;
-import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.EncryptConfig;
@@ -86,7 +80,6 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
-import com.DocSystem.websocket.DocData;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -1602,7 +1595,7 @@ public class BaseFunction{
 	{
 		//按月创建Log
 		String indexLibName = "SystemLog-" + date.getYear() + "-" + date.getMonth();
-		String path = getSystemLogStorePath() + indexLibName + "/";
+		String path = Path.getSystemLogStorePath(OSType) + indexLibName + "/";
 		return path;
 	}
 	
@@ -1641,30 +1634,6 @@ public class BaseFunction{
         	break;
         case OS.MacOS:
         	path = "/data/DocSysDB/";
-        	break;
-        }
-        return path;
-    }	
-	
-	
-	protected static String getSystemLogStorePath() {
-    	String path = null;
-    	path = ReadProperties.read("docSysConfig.properties", "SystemLogStorePath");
-        if(path != null && !path.isEmpty())
-        {
-        	return Path.localDirPathFormat(path, OSType);
-        }
-
-        switch(OSType)
-        {
-        case OS.Windows:
-        	path = "C:/DocSysLog/SystemLog/";
-        	break;
-        case OS.Linux: 
-        	path = "/data/DocSysLog/SystemLog/";
-        	break;
-        case OS.MacOS:
-        	path = "/data/DocSysLog/SystemLog/";
         	break;
         }
         return path;
