@@ -135,6 +135,10 @@ public class Path {
 			}
 			else
 			{
+				if(OS.isWinDiskStr(paths[0]))
+				{
+					paths[0] = "";	//去掉盘符信息
+				}
 				path = "/" + buildPath(paths);
 			}
 		}	
@@ -324,7 +328,52 @@ public class Path {
 		}	    
 		return path;
 	}
+	
+	public static String getSaleDataStorePath(Integer OSType) {
+    	String path = null;
+    	path = ReadProperties.read("docSysConfig.properties", "SalesDataStorePath");
+        if(path != null && !path.isEmpty())
+        {
+        	return Path.localDirPathFormat(path, OSType);
+        }
 
+        switch(OSType)
+        {
+        case OS.Windows:
+        	path = "C:/DocSysSales/";
+        	break;
+        case OS.Linux: 
+        	path = "/data/DocSysSales/";
+        	break;
+        case OS.MacOS:
+        	path = "/data/DocSysSales/";
+        	break;
+        }
+        return path;
+    }	
+	
+	public static String getSystemLogStorePath(Integer OSType) {
+    	String path = null;
+    	path = ReadProperties.read("docSysConfig.properties", "SystemLogStorePath");
+        if(path != null && !path.isEmpty())
+        {
+        	return Path.localDirPathFormat(path, OSType);
+        }
+
+        switch(OSType)
+        {
+        case OS.Windows:
+        	path = "C:/DocSysLog/SystemLog/";
+        	break;
+        case OS.Linux: 
+        	path = "/data/DocSysLog/SystemLog/";
+        	break;
+        case OS.MacOS:
+        	path = "/data/DocSysLog/SystemLog/";
+        	break;
+        }
+        return path;
+    }	
 	
 	public static String getReposPath(Repos repos) {
 		String path = repos.getPath();

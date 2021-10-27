@@ -12259,7 +12259,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	private static DocAuth correctDocAuth(DocAuth obj) {
+	protected static DocAuth correctDocAuth(DocAuth obj) {
 		//任意用户权限检查
 		if(obj.getUserId() != null && obj.getUserId() == 0)
 		{
@@ -12487,7 +12487,7 @@ public class BaseController  extends BaseFunction{
 		return obj;
 	}
 	
-	private static Object getValueFormJsonObj(JSONObject jsonObj, String field, String type) {
+	protected static Object getValueFormJsonObj(JSONObject jsonObj, String field, String type) {
 		Object value = jsonObj.get(field);
 		if(value == null)
 		{
