@@ -17115,14 +17115,11 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("doPushToRemoteStorage dbDoc:", dbDoc);
 		Log.printObject("doPushToRemoteStorage remoteDoc:", remoteDoc);
 		
-		if(doc.offsetPath != null)	//Means It is backup Action
+		if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
 		{
-			if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
+			if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
 			{
-				if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
-				{
-					addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath());
-				}
+				addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath());
 			}
 		}
 		
