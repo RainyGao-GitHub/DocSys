@@ -397,6 +397,7 @@
 	        case "systemDbConfig":
 	        case "systemUpgrade":
 	        case "systemLicenses":
+	        case "systemMigrate":
 	        	title = "系统管理";
 	            $("#nav li[data-eb-params=system]>a").addClass("open");
 	            $("ul.sublist").show();	        	
@@ -443,6 +444,9 @@
             break;
         case "systemDbConfig":
         	showSystemDbConfig();
+        	break;
+        case "systemMigrate":
+        	showSystemMigrate();
         	break;
        	}
     }
@@ -671,6 +675,72 @@
 	    });
 	}
 
+	//系统迁移
+	var gMigrateReposList = [];
+	function showSystemMigrate(){
+		$.ajax({
+	        url : "/DocSystem/Manage/getReposList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	var reposList = ret.data;
+	        		for(var i=0; i<reposList.length; i++)
+	        	 	{
+	        	    	var node = reposList[i];
+	        	       	node.formatedType = formateReposType(node.type);
+	             	}
+	        		gMigrateReposList = reposList;
+	            	$Func.render($("#container"),"systemMigrate",{"list":reposList});
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取仓库列表失败");
+	        }
+	    });		
+	}
+	
+	var selectedMigrateReposList = [];
+	function selectAllReposMigrateEn()
+	{
+		console.log("selectAllReposMigrateEn()");
+		var en = $("#allReposMigrateEn").is(':checked')? 1: 0;
+		console.log("selectAllReposMigrateEn() allReposMigrateEn:" + en);
+		
+		if(en == 1)
+		{
+			console.log("selectAllReposMigrateEn() select all repos");
+			$(".reposMigrateEn").attr("checked","checked");
+		}
+		else
+		{
+			console.log("selectAllReposMigrateEn() unselect all repos");
+			$(".reposMigrateEn").attr("checked",false);
+		}
+	}
+	
+	//showSystemMigratePanel
+	function showSystemMigrateConfirmPanel(){
+		console.log("showSystemMigrateConfirmPanel");
+		qiao.bs.dialog({
+			url: 'systemMigrateConfirm.html',
+			title: '系统迁移',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+			    console.log("page loaded callback");
+			    SystemMigrateConfirmPageInit(selectedMigrateReposList);
+			}
+		}, null);
+	}
+	
 	//系统数据库设置
 	var systemDbSetting = {
 			type: "",

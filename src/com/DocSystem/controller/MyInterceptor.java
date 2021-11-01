@@ -74,6 +74,9 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Bussiness/saveDoc",
 		//For remote Access
 		"Bussiness/getAuthCode",
+		//For system migrate
+		"Bussiness/getAuthCodeForSystemMigrate",
+		"Bussiness/importDBDataForSystemMigrate",
 		//For Payment
 		"pay/queryGoods",
 		"pay/initOrder",
