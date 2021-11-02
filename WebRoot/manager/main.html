@@ -817,6 +817,23 @@
 		var pwd = $("#systemDbPwd").val();
 		updateSystemDBConfig(type, url, user, pwd);
 	}
+	
+	function doSelectDbType(){
+		var type = $("#systemDbType").val();
+		switch(type)
+		{
+		case "mysql":
+			$("#systemDbUrl").val("jdbc:mysql://localhost:3307/DocSystem1?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC");
+			$("#systemDbUser").val("root");
+			$("#systemDbPwd").val("");
+			break;
+		case "sqlite":
+			$("#systemDbUrl").val("jdbc:sqlite:${catalina.home}/DocSystem.db");
+			$("#systemDbUser").val("");
+			$("#systemDbPwd").val("");
+			break;
+		}
+	}
 
 	function showSystemDbConfig(){
 		$.ajax({
