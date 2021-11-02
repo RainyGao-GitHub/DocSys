@@ -69,7 +69,10 @@
                     <div id="dbConfigForm">
                         <div class="form-group">
                             <label for="systemDbUrl">数据库类型</label>
-                            <input type="text" name="systemDbType" id="systemDbType" class="form-control disabled" disabled="disabled" placeholder="数据库类型">
+				            <select class="form-control" id="systemDbType" onchange="doSelectDbType();" disabled="disabled" >   
+					            <option value="mysql">mysql</option>   
+					            <option value="sqlite">sqlite</option>   
+					        </select>
                         </div>
                         <div class="form-group">
                             <label for="systemDbUrl">数据库链接</label>
@@ -516,6 +519,23 @@
 	        	showErrorMessage("服务器异常:获取数据库信息失败");
 	        }
 	    });
+	}
+	
+	function doSelectDbType(){
+		var type = $("#systemDbType").val();
+		switch(type)
+		{
+		case "mysql":
+			$("#systemDbUrl").val("jdbc:mysql://localhost:3307/DocSystem1?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC");
+			$("#systemDbUser").val("root");
+			$("#systemDbPwd").val("");
+			break;
+		case "sqlite":
+			$("#systemDbUrl").val("jdbc:sqlite:${catalina.home}/DocSystem.db");
+			$("#systemDbUser").val("");
+			$("#systemDbPwd").val("");
+			break;
+		}
 	}
     
 	function updatesystemDbSetting(type, url, user, pwd){
