@@ -716,12 +716,12 @@
 		if(en == 1)
 		{
 			console.log("selectAllReposMigrateEn() select all repos");
-			$(".reposMigrateEn").attr("checked","checked");
+			$(".reposMigrateEn").prop("checked","checked");
 		}
 		else
 		{
 			console.log("selectAllReposMigrateEn() unselect all repos");
-			$(".reposMigrateEn").attr("checked",false);
+			$(".reposMigrateEn").prop("checked",false);
 		}
 	}
 	
