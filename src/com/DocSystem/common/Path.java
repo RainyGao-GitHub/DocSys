@@ -81,7 +81,7 @@ public class Path {
 	//正确格式化仓库根路径
 	public static String dirPathFormat(String path) {
 		//如果传入的Path没有带/,给他加一个
-		if(path.isEmpty())
+		if(path == null || path.isEmpty())
 		{
 			return path;
 		}

@@ -16,7 +16,10 @@
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="name">类型</label>
                       <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemDbType" name="systemDbType" value="{{value.type}}" disabled="disabled" >
+			            <select class="form-control" id="systemDbType" onchange="doSelectDbType();" disabled="disabled" >   
+				            <option value="mysql" {{if value.type == "mysql"}}selected="selected"{{/if}}>mysql</option>   
+				            <option value="sqlite" {{if value.type == "sqlite"}}selected="selected"{{/if}}>sqlite</option>   
+				         </select>
                       </div>
                     </div>
                     <div class="form-group">
@@ -56,4 +59,5 @@
             <!-- Matter ends -->
           </div>
         </div>
-      </div>
+</div>
+      
