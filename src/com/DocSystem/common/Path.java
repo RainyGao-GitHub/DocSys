@@ -582,7 +582,7 @@ public class Path {
 			}
 			else if(verCtrl == 2)
 			{ 
-				if(isRemote == 1)
+				if(isRemote !=null && isRemote == 1)
 				{
 					reposName = id + "_GIT_RRepos_Remote";					
 				}
@@ -601,7 +601,7 @@ public class Path {
 			}
 			else if(verCtrl == 2)
 			{
-				if(isRemote == 1)
+				if(isRemote != null && isRemote == 1)
 				{
 
 					reposName = id + "_GIT_VRepos_Remote";					

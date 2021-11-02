@@ -355,7 +355,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean mamageAccessCheck(String authCode, String expUsage, int role, HttpSession session, ReturnAjax rt) {
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == true)
+			if(checkAuthCode(authCode, expUsage) == true)
 			{
 				return true;
 			}

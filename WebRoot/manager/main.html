@@ -706,7 +706,6 @@
 	    });		
 	}
 	
-	var selectedMigrateReposList = [];
 	function selectAllReposMigrateEn()
 	{
 		console.log("selectAllReposMigrateEn()");
@@ -717,17 +716,39 @@
 		{
 			console.log("selectAllReposMigrateEn() select all repos");
 			$(".reposMigrateEn").prop("checked","checked");
+			//$(".reposMigrateEn").attr("checked","checked");
 		}
 		else
 		{
 			console.log("selectAllReposMigrateEn() unselect all repos");
 			$(".reposMigrateEn").prop("checked",false);
+			//$(".reposMigrateEn").attr("checked",false);
 		}
 	}
 	
 	//showSystemMigratePanel
 	function showSystemMigrateConfirmPanel(){
-		console.log("showSystemMigrateConfirmPanel");
+		console.log("showSystemMigrateConfirmPanel gMigrateReposList.length :" + gMigrateReposList.length);
+		
+		var selectedMigrateReposList = [];
+		for(var i=0; i < gMigrateReposList.length; i++)
+		{
+			var node = gMigrateReposList[i];
+			//console.log("showSystemMigrateConfirmPanel node:", node);
+			var selected = $("#reposMigrateEn" + i).is(':checked')? 1: 0;
+			if(selected == 1)
+			{
+				selectedMigrateReposList.push(gMigrateReposList[i]);
+			}
+		}
+		
+		console.log("showSystemMigrateConfirmPanel selectedMigrateReposList.length :" + selectedMigrateReposList.length);
+		if(selectedMigrateReposList.length == 0)
+		{
+			showErrorMessage("请选择需要迁移的仓库！");
+			return;
+		}
+		
 		qiao.bs.dialog({
 			url: 'systemMigrateConfirm.html',
 			title: '系统迁移',
