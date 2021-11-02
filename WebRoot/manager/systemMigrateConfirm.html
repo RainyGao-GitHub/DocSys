@@ -2,7 +2,7 @@
 	<div class="form-group">
     	<label class="control-label col-lg-3" for="server">目标服务器</label>
         <div class="col-lg-9">
-        	<input type="text" class="form-control" id="migrateUrl" placeholder="http://192.168.1.10:8100/DocSystem"/>
+        	<input type="text" class="form-control" id="migrateUrl" placeholder="http://localhost:8100"/>
         </div> 
     </div>
     
@@ -14,22 +14,22 @@
     </div>
 
     <div class="form-group">
-    	<label class="control-label col-lg-3" for="password">用户名</label>
+    	<label class="control-label col-lg-3" for="password">密码</label>
         <div class="col-lg-9">
         	<input type="password" class="form-control" id="migratePwd" placeholder="目标服务器系统管理员密码"/>
         </div> 
     </div>
     
     <div class="form-group">
-    	<label class="control-label col-lg-3" for="path">仓库迁移位置</label>
+    	<label class="control-label col-lg-3" for="path">仓库位置</label>
         <div class="col-lg-9">
         	<input type="text" class="form-control" id="migratePath" placeholder="如使用目标服务器默认仓库位置，请留空！"/>
         </div>
     </div>
 	
 	<div class="form-group">
-		<label class="control-label col-lg-3" for="type">仓库冲突处理</label>
-       	<div class="col-lg-9">
+		<label class="control-label col-lg-3" for="type">仓库冲突 解决方案</label>
+       	<div class="col-lg-9" style="margin-top:10px;">
 			<select class="form-control" id="migrateConflictSolution" onchange="doSelectMigrateConflictSolution();" style="width: 100%">   
 				<option value="0" selected="selected">自动跳过</option>   
 				<option value="1">强制覆盖</option>
@@ -39,9 +39,9 @@
 	</div>
     
     <div class="form-group">
-    	<label class="control-label col-lg-3" for="info">仓库迁移列表</label>
+    	<label class="control-label col-lg-3" for="info">仓库列表</label>
         <div class="col-lg-9">
-        	<input type="textarea" class="form-control" id="migrateReposListInfo" disabled="disabled"/>
+        	<textarea type="text" class="form-control" id="migrateReposListInfo" disabled="disabled" />
         </div>
     </div>
         
@@ -66,7 +66,7 @@
 		for( var i = 0 ; i < reposList.length ; i++ )
 		{
 			var repos = reposList[i];
-			reposListInfo = "[" + repos.id + "] " + repos.name + "<br>";
+			reposListInfo += "[" + repos.id + "]" + repos.name + ";  \n";
 			reposIds = repos.id + ",";
 		}
 		migrateReposesInfo.reposListInfo = reposListInfo;

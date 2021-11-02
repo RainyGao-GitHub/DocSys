@@ -17,7 +17,7 @@ public class MxsDocUtil {
 	private String username;
     private String password;
     private Integer reposId;
-    private String remoteDirectory;
+    public String remoteDirectory;
     
     private String authCode;
 	
