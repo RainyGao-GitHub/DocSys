@@ -1725,6 +1725,7 @@ public class BaseFunction{
      */
     public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, JSONObject json) {
 		JSONObject returnJson = null;
+		Log.debug("\n**** postFileStreamAndJsonObj Start");
         try {
             //开始设置模拟请求的参数，额，不一个个介绍了，根据需要拿
             String boundary = "------WebKitFormBoundaryUey8ljRiiZqhZHBu";
@@ -1762,9 +1763,8 @@ public class BaseFunction{
             		}
             		
             		String name = entry.getKey();
-            		Log.debug("postFileStreamAndJsonObj name:" + name);            		
             		String value = entry.getValue().toString();
-            		Log.debug("postFileStreamAndJsonObj value:" + value);
+            		Log.debug("postFileStreamAndJsonObj " + name  + " = " + value);            		
 
             		StringBuilder sb = new StringBuilder();            		
     	            //添加form属性
@@ -1806,7 +1806,7 @@ public class BaseFunction{
 			while ((lines = reader.readLine()) != null) {
 				sb.append(lines);
 			}
-			Log.debug("postFileStreamAndJsonObj sb:"+sb);			
+			Log.debug("postFileStreamAndJsonObj response:"+sb);			
 			returnJson = JSONObject.parseObject(sb.toString());
 			reader.close();
 			// 断开连接
@@ -1815,6 +1815,8 @@ public class BaseFunction{
             Log.debug("postFileStreamAndJsonObj 发送POST请求出现异常！" + e);
             e.printStackTrace();
         }
+        
+        Log.debug("\n**** postFileStreamAndJsonObj End");
         return returnJson;
     }
 
