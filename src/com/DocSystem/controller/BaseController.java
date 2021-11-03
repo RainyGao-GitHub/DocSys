@@ -14930,7 +14930,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地文件->目录, 手动强制推送模式，推送");
 				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 			}
-			else if(localChangeType == DocChangeType.LOCALFILETODIR && isAutoPush == false)
+			else if(localChangeType == DocChangeType.NOCHANGE && isAutoPush == false)
 			{
 				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地未改动, 手动强制推送模式，推送");
 				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);				
