@@ -524,7 +524,7 @@ public class BaseController  extends BaseFunction{
 	
 
 	protected static Doc getRemoteStorageEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
-        return remoteStorageGetEntry(remote, repos, doc);
+        return remoteStorageGetEntry(null, remote, repos, doc);
 	}
 
 	private DocChangeType getRemoteChangeType(HashMap<String, Doc> dbHashMap, Doc remoteDoc) {
@@ -547,7 +547,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
-		List<Doc> list = remoteStorageGetEntryList(remote, repos, doc);
+		List<Doc> list = remoteStorageGetEntryList(null, remote, repos, doc);
         return list;
 	}
 	
@@ -14318,10 +14318,14 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/************* RemoteStorage Interfaces *******************************/
-	public List<Doc> remoteStorageGetEntryList( RemoteStorageConfig remote, Repos repos, Doc doc) {
+	public List<Doc> remoteStorageGetEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		Log.debug("remoteStorageGetEntryList() " + doc.getPath() + doc.getName());
-        RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
-    	List<Doc> list = null;
+		if(session == null) 
+		{
+			session = doRemoteStorageLogin(repos, remote);
+		}
+
+        List<Doc> list = null;
         if(session != null)
         {
         	list = getRemoteStorageEntryList(session, remote, repos, doc);
@@ -14330,9 +14334,13 @@ public class BaseController  extends BaseFunction{
         return list;
 	}
 
-	public static Doc remoteStorageGetEntry(RemoteStorageConfig remote, Repos repos, Doc doc) {
+	public static Doc remoteStorageGetEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		Log.debug("remoteStorageGetEntry() " + doc.getPath() + doc.getName());
-		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+		if(session == null) 
+		{
+			session = doRemoteStorageLogin(repos, remote);
+		}
+		
     	Doc remoteDoc = null;
         if(session != null)
         {
@@ -15219,7 +15227,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true && remote.isVerRepos == false)
 		{
 			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = getRemoteStorageEntry(repos, doc, remote);
+			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc);
 			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 			{
 				pushResult.successCount ++;
@@ -15256,7 +15264,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true && remote.isVerRepos == false)
 		{
 			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = getRemoteStorageEntry(repos, doc, remote);
+			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc);
 			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 			{
 				pushResult.successCount ++;
@@ -15293,7 +15301,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true && remote.isVerRepos == false)
 		{
 			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = getRemoteStorageEntry(repos, doc, remote);
+			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc);
 			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 			{
 				pushResult.successCount ++;
@@ -17084,7 +17092,7 @@ public class BaseController  extends BaseFunction{
 	
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
-		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote); 
+		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc); 
 		
 		Integer subEntryPullFlag = 1;
 		if(recurcive)
@@ -17108,7 +17116,7 @@ public class BaseController  extends BaseFunction{
 				
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
-		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote); 
+		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc); 
 		
 		Log.printObject("doPushToRemoteStorage doc:", doc);
 		Log.printObject("doPushToRemoteStorage localDoc:", localDoc);
