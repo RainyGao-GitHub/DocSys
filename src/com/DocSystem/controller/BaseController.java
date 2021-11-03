@@ -14320,32 +14320,42 @@ public class BaseController  extends BaseFunction{
 	/************* RemoteStorage Interfaces *******************************/
 	public List<Doc> remoteStorageGetEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		Log.debug("remoteStorageGetEntryList() " + doc.getPath() + doc.getName());
+        List<Doc> list = null;
 		if(session == null) 
 		{
 			session = doRemoteStorageLogin(repos, remote);
+        	if(session == null)
+        	{
+        		return null;
+        	}
+			list = getRemoteStorageEntryList(session, remote, repos, doc);
+        	doRemoteStorageLogout(session);
 		}
-
-        List<Doc> list = null;
-        if(session != null)
+		else
         {
         	list = getRemoteStorageEntryList(session, remote, repos, doc);
-        	doRemoteStorageLogout(session);
         }
         return list;
 	}
 
 	public static Doc remoteStorageGetEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		Log.debug("remoteStorageGetEntry() " + doc.getPath() + doc.getName());
+		Doc remoteDoc = null;
+        
 		if(session == null) 
 		{
 			session = doRemoteStorageLogin(repos, remote);
-		}
-		
-    	Doc remoteDoc = null;
-        if(session != null)
-        {
-        	remoteDoc = getRemoteStorageEntry(session, remote, repos, doc);
+			if(session == null)
+        	{
+        		return null;
+        	}
+			
+			remoteDoc = getRemoteStorageEntry(session, remote, repos, doc);
         	doRemoteStorageLogout(session);
+		}
+		else
+		{
+        	remoteDoc = getRemoteStorageEntry(session, remote, repos, doc);
         }
 		return remoteDoc;
 	}
@@ -16252,7 +16262,10 @@ public class BaseController  extends BaseFunction{
         		fileRemotePath += doc.getName() + "/";
         	}
             Log.debug("getRemoteStorageEntryHashMapForMxsDoc fileRemotePath:" + fileRemotePath);
-                    	
+
+            Log.printObject("getRemoteStorageEntryHashMapForMxsDoc session:", session);
+            Log.printObject("getRemoteStorageEntryHashMapForMxsDoc session.mxsdoc:", session.mxsdoc);
+
 			JSONArray list = session.mxsdoc.listFiles(fileRemotePath);
 			if(list != null)
 			{
