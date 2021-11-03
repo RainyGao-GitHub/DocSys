@@ -556,15 +556,19 @@ public class FileUtil {
 	
     //Create Directory
     public static boolean createDir(String path){
-        File dir=new File(path);
-        if(!dir.exists())
-        {
-            return dir.mkdirs();
-        }
-        else
+    	File dir=new File(path);
+        if(dir.exists())
         {
         	return true;
         }
+
+        boolean ret = false;
+        try {
+        	ret = dir.mkdirs();
+        } catch(Exception e) {
+        	e.printStackTrace();
+        }
+    	return ret;
     }
     
     //Create File
