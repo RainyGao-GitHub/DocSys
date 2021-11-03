@@ -1725,7 +1725,7 @@ public class BaseFunction{
      */
     public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, JSONObject json) {
 		JSONObject returnJson = null;
-		Log.debug("\n**** postFileStreamAndJsonObj Start");
+		Log.debug("\n*************************** postFileStreamAndJsonObj Start");
         try {
             //开始设置模拟请求的参数，额，不一个个介绍了，根据需要拿
             String boundary = "------WebKitFormBoundaryUey8ljRiiZqhZHBu";
@@ -1816,7 +1816,7 @@ public class BaseFunction{
             e.printStackTrace();
         }
         
-        Log.debug("\n**** postFileStreamAndJsonObj End");
+        Log.debug("*********************** postFileStreamAndJsonObj End\n");
         return returnJson;
     }
 
