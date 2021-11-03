@@ -3461,7 +3461,7 @@ public class DocController extends BaseController{
 		{
 			
 			Repos vRepos = new Repos();			
-			Doc doc = buildBasicDoc(null, null, null, "", path, name, null, null, true, remoteDirectory, null, null, null);
+			Doc doc = buildBasicDoc(null, null, null, "", path, name, null, 2, true, remoteDirectory, null, 0L, null);
 			Doc localDoc = fsGetDoc(vRepos, doc);
 			rt.setData(localDoc);
 			writeJson(rt, response);			
