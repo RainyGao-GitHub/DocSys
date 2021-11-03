@@ -14833,6 +14833,7 @@ public class BaseController  extends BaseFunction{
 		//远程没有改动
 		if(remoteChangeType == DocChangeType.NOCHANGE)
 		{
+			//TODO: 需要根据remoteEntry的信息来确定真正的push行为
 			//本地删除
 			if(localChangeType == DocChangeType.LOCALDELETE)
 			{
@@ -14910,6 +14911,7 @@ public class BaseController  extends BaseFunction{
 		//远程改动（强制推送）
 		if(force == true) 
 		{
+			//TODO: 需要根据remoteEntry的信息来确定真正的push行为
 			if(localChangeType == DocChangeType.LOCALCHANGE)
 			{
 				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地改动, 推送");
