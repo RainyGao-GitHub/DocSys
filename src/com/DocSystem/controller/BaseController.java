@@ -14827,7 +14827,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		boolean ret = false;
-		
 		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);
 		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
 		
@@ -14885,6 +14884,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地未改动");
 				ret = true;
 			}
+			Log.debug("doPushEntryToRemoteStorage " + doc.getPath() + doc.getName() + "推送 ret:" + ret);				
 			
 			//pushSubEntries
 			if(ret == true && localDoc != null && localDoc.getType() != null && localDoc.getType() == 2)
@@ -14929,6 +14929,11 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地文件->目录, 手动强制推送模式，推送");
 				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
+			}
+			else if(localChangeType == DocChangeType.LOCALFILETODIR && isAutoPush == false)
+			{
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地未改动, 手动强制推送模式，推送");
+				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);				
 			}
 			
 			if(ret == true && localDoc != null && localDoc.getType() != null && localDoc.getType() == 2)
@@ -17140,6 +17145,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
 			{
+				Log.debug("doPushToRemoteStorage addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
 				addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath());
 			}
 		}
