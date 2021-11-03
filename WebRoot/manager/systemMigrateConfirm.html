@@ -39,16 +39,16 @@
 	</div>
     
     <div class="form-group">
-    	<label class="control-label col-lg-3" for="info">仓库列表</label>
+    	<label class="control-label col-lg-3" for="info">迁移信息</label>
         <div class="col-lg-9">
-        	<textarea type="text" class="form-control" id="migrateReposListInfo" disabled="disabled" />
+        	<textarea type="text" class="form-control" id="systemMigrateInfo" disabled="disabled" />
         </div>
     </div>
         
     <!-- Buttons -->
     <div class="form-group">
     	<div class="col-lg-offset-9 col-lg-2">
-        	<button type="submit" class="btn btn-success" onclick="doSystemMigrate()">确定</button>
+        	<button id="systemMigrateBtn" type="submit" class="btn btn-success" onclick="doSystemMigrate()">开始迁移</button>
         </div>
     </div>
  </div>
@@ -66,12 +66,12 @@
 		for( var i = 0 ; i < reposList.length ; i++ )
 		{
 			var repos = reposList[i];
-			reposListInfo += "[" + repos.id + "]" + repos.name + ";  \n";
+			reposListInfo += "[" + repos.id + "] " + repos.name + ";  \n";
 			reposIds += repos.id + ",";
 		}
 		migrateReposesInfo.reposListInfo = reposListInfo;
 		migrateReposesInfo.reposIds = reposIds;
-		$("#migrateReposListInfo").val(reposListInfo);
+		$("#systemMigrateInfo").val(reposListInfo);
 	}
 	
 	function showSystemMigrateConfirmModal(text){
@@ -112,16 +112,24 @@
             	reposIds: reposIds,
             },
             success : function (ret) {
-                if( "ok" == ret.status ){
-                	alert("系统迁移完成");
+                if( "ok" == ret.status )
+                {
+                	console.log("doSystemMigrate ret:", ret);
+                    $("#systemMigrateBtn").text("系统迁移完成");
+                    $("#systemMigrateInfo").val(ret.dataEx.info);
+                	//alert("系统迁移完成");
                 }else {
-                	alert("错误：" + ret.msgInfo);
+                	alert("错误：" + ret.msgInfo);      
                 }
             },
             error : function () {
             	alert("服务器异常:系统迁移失败");
             }
-        });	
+        });
+        
+        //将确定按键的文字修改掉
+        $("#systemMigrateBtn").attr("disabled",true);
+        $("#systemMigrateBtn").text("系统迁移中...");        
     }
 					
 	//页面初始化代码    
