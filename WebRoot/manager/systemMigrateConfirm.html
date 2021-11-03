@@ -67,7 +67,7 @@
 		{
 			var repos = reposList[i];
 			reposListInfo += "[" + repos.id + "]" + repos.name + ";  \n";
-			reposIds = repos.id + ",";
+			reposIds += repos.id + ",";
 		}
 		migrateReposesInfo.reposListInfo = reposListInfo;
 		migrateReposesInfo.reposIds = reposIds;
