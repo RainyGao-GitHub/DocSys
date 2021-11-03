@@ -15708,7 +15708,7 @@ public class BaseController  extends BaseFunction{
 	
 	private static boolean addDirToMxsDocServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String fileName)  {
         boolean ret = false;
-		Log.debug("addDirToSmbServer remotePath:" + remotePath + " fileName:" + fileName);
+		Log.debug("addDirToMxsDocServer remotePath:" + remotePath + " fileName:" + fileName);
 
 		try {
 			ret = session.mxsdoc.add(remotePath, fileName, 2); 	
@@ -16519,29 +16519,31 @@ public class BaseController  extends BaseFunction{
             
 			FTPFile[] list = session.ftp.listFiles(fileRemotePath);
 			//Log.printObject("list:", list);
-			for(int i=0; i<list.length; i++)
-			{
-				FTPFile subEntry = list[i];
-				String subEntryName = subEntry.getName();
-				if(subEntryName.equals(".") || subEntryName.equals(".."))
+			if(list != null) {
+				for(int i=0; i<list.length; i++)
 				{
-					continue;
-				}
-				
-				//Log.println(fileRemotePath + subEntryName);
-				
-				int subEntryType = getEntryType(subEntry);
-				String subEntryRevision = subEntry.getTimestamp() + "";
-		    	long subEntrySize = subEntry.getSize();
-		    	long lastChangeTime = subEntry.getTimestamp().getTimeInMillis();
-		    	long createTime = lastChangeTime;
-		    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
-		    	subDoc.setSize(subEntrySize);
-		    	subDoc.setCreateTime(createTime);
-		    	subDoc.setLatestEditTime(lastChangeTime);
-		    	subDoc.setRevision(subEntryRevision);
-	    		subEntryList.put(subDoc.getName(), subDoc);
-			}			
+					FTPFile subEntry = list[i];
+					String subEntryName = subEntry.getName();
+					if(subEntryName.equals(".") || subEntryName.equals(".."))
+					{
+						continue;
+					}
+					
+					//Log.println(fileRemotePath + subEntryName);
+					
+					int subEntryType = getEntryType(subEntry);
+					String subEntryRevision = subEntry.getTimestamp() + "";
+			    	long subEntrySize = subEntry.getSize();
+			    	long lastChangeTime = subEntry.getTimestamp().getTimeInMillis();
+			    	long createTime = lastChangeTime;
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.put(subDoc.getName(), subDoc);
+				}		
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -16570,28 +16572,31 @@ public class BaseController  extends BaseFunction{
             
 			SmbFile[] list = session.smb.listFiles(fileRemotePath);
 			//Log.printObject("list:", list);
-			for(int i=0; i<list.length; i++)
+			if(list != null)
 			{
-				SmbFile subEntry = list[i];
-				String subEntryName = subEntry.getName();
-				if(subEntryName.equals(".") || subEntryName.equals(".."))
+				for(int i=0; i<list.length; i++)
 				{
-					continue;
-				}
-				
-				//Log.println(fileRemotePath + subEntryName);				
-				int subEntryType = getEntryType(subEntry);
-				String subEntryRevision = subEntry.lastModified() + "";
-		    	long subEntrySize = subEntry.length();
-		    	long lastChangeTime = subEntry.lastModified();
-		    	long createTime = subEntry.createTime();
-		    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
-		    	subDoc.setSize(subEntrySize);
-		    	subDoc.setCreateTime(createTime);
-		    	subDoc.setLatestEditTime(lastChangeTime);
-		    	subDoc.setRevision(subEntryRevision);
-	    		subEntryList.put(subDoc.getName(), subDoc);
-			}			
+					SmbFile subEntry = list[i];
+					String subEntryName = subEntry.getName();
+					if(subEntryName.equals(".") || subEntryName.equals(".."))
+					{
+						continue;
+					}
+					
+					//Log.println(fileRemotePath + subEntryName);				
+					int subEntryType = getEntryType(subEntry);
+					String subEntryRevision = subEntry.lastModified() + "";
+			    	long subEntrySize = subEntry.length();
+			    	long lastChangeTime = subEntry.lastModified();
+			    	long createTime = subEntry.createTime();
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+			    	subDoc.setSize(subEntrySize);
+			    	subDoc.setCreateTime(createTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setRevision(subEntryRevision);
+		    		subEntryList.put(subDoc.getName(), subDoc);
+				}		
+			}	
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
