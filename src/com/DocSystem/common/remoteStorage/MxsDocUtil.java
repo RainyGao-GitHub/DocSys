@@ -318,7 +318,7 @@ public class MxsDocUtil {
 		}
 
 	public boolean add(String remotePath, String name, Integer type) {
-		Log.debug("MxsDocUtil add " + remotePath + name);
+		Log.debug("MxsDocUtil add " + remoteDirectory + remotePath + name);
         boolean result = false;
 
         try {
