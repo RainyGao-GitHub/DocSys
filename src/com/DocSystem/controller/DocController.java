@@ -396,7 +396,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("\n************** addDocRS ****************");
-		Log.debug("addDocRS reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " name:" + name  + " type:" + type + " content:" + " authCode:" + authCode);
+		Log.debug("addDocRS reposId:" + reposId + " remoteDirectory:[" + remoteDirectory + "] path:[" + path + "] name:" + name  + " type:" + type + " content:" + " authCode:" + authCode);
 		//Log.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
