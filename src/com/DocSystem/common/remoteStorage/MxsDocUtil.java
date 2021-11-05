@@ -3,6 +3,8 @@ package com.DocSystem.common.remoteStorage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
@@ -38,18 +40,18 @@ public class MxsDocUtil {
 	 	
 		String requestUrl = serverUrl + "/DocSystem/Bussiness/getAuthCodeRS.do?userName=" + username + "&pwd="+password;
 		Log.debug("MxsDocUtil login() requestUrl:" + requestUrl);
-		JSONObject reqObj = new JSONObject();
+		HashMap<String, String> params = new HashMap<String, String>();
 		if(reposId != null)
 		{
-			reqObj.put("reposId", reposId);
+			params.put("reposId", reposId +"");
 		}
 		else
 		{
-			reqObj.put("remoteDirectory", remoteDirectory);
+			params.put("remoteDirectory", remoteDirectory);
 		}
 		Log.debug("MxsDocUtil login() requestUrl:" + requestUrl);		
 		
-		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqObj);
+		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, params);
 		if(ret == null)
 		{
 			Log.debug("MxsDocUtil login() ret is null");
@@ -81,17 +83,17 @@ public class MxsDocUtil {
 	public JSONArray listFiles(String directory)
 	{
 		String requestUrl = serverUrl + "/DocSystem/Repos/getSubDocListRS.do?authCode=" + authCode;
-		JSONObject reqObj = new JSONObject();
+		HashMap<String, String> reqParams = new HashMap<String, String>();
 		if(reposId != null)
 		{
-			reqObj.put("reposId", reposId);
+			reqParams.put("reposId", reposId+"");
 		}
 		else
 		{
-			reqObj.put("remoteDirectory", remoteDirectory);
+			reqParams.put("remoteDirectory", remoteDirectory);
 		}
-		reqObj.put("path", directory);
-		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqObj);
+		reqParams.put("path", directory);
+		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
 		if(ret == null)
 		{
 			Log.debug("MxsDocUtil listFiles() ret is null");
@@ -118,19 +120,19 @@ public class MxsDocUtil {
 	public JSONObject getEntry(String path, String name) 
 	{
 		String requestUrl = serverUrl + "/DocSystem/Doc/getDocRS.do?authCode=" + authCode;
-		JSONObject reqObj = new JSONObject();
+		HashMap<String, String>  reqParams = new HashMap<String, String> ();
 		if(reposId != null)
 		{
-			reqObj.put("reposId", reposId);
+			reqParams.put("reposId", reposId+"");
 		}
 		else
 		{
-			reqObj.put("remoteDirectory", remoteDirectory);
+			reqParams.put("remoteDirectory", remoteDirectory);
 		}
-		reqObj.put("path", path);
-		reqObj.put("name", name);
+		reqParams.put("path", path);
+		reqParams.put("name", name);
 		
-		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqObj);
+		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
 		if(ret == null)
 		{
 			Log.debug("MxsDocUtil getEntry() ret is null");
@@ -224,25 +226,25 @@ public class MxsDocUtil {
 			Log.debug("remoteUploadFile localPath:" + localPath + " name:" + name);
 
 			String requestUrl = serverUrl + "/DocSystem/Doc/uploadDocRS.do?authCode=" + authCode;
-			JSONObject reqObj = new JSONObject();
+			HashMap<String, String>  reqParams = new HashMap<String, String>();
 			if(reposId != null)
 			{
-				reqObj.put("reposId", reposId);
+				reqParams.put("reposId", reposId + "");
 			}
 			else
 			{
-				reqObj.put("remoteDirectory", remoteDirectory);
+				reqParams.put("remoteDirectory", remoteDirectory);
 			}
-			reqObj.put("path", remotePath);
-			reqObj.put("name", name);
+			reqParams.put("path", remotePath);
+			reqParams.put("name", name);
 
 			if(size == null)
 			{
 				size = new File(localPath + name).length();
 				Log.debug("remoteUploadFile fileSize:" + size);
 			}
-			reqObj.put("size", size);
-			reqObj.put("checkSum", checkSum);			
+			reqParams.put("size", size+"");
+			reqParams.put("checkSum", checkSum);			
 			
 			boolean chunked = false;
 			Integer chunkIndex = 0;
@@ -277,24 +279,24 @@ public class MxsDocUtil {
 					Log.debug("chunkSize:" + chunkSize + " docData Size:" + docData.length);				
 					
 					chunkHash = MD5.md5(docData);
-					reqObj.put("chunkHash", chunkHash);
+					reqParams.put("chunkHash", chunkHash);
 					offset +=  docData.length;
 				}
 				
 				//后台chunkNum是否为空来判断是否进行了分片
 				if(chunked)
 				{
-					reqObj.put("chunkNum", chunkNum);
-					reqObj.put("chunkIndex", chunkIndex);
-					reqObj.put("chunkSize", docData.length);					
+					reqParams.put("chunkNum", chunkNum+"");
+					reqParams.put("chunkIndex", chunkIndex+"");
+					reqParams.put("chunkSize", docData.length+"");					
 				}
 				else
 				{
-					//reqObj.put("chunkIndex", chunkIndex);
-					//reqObj.put("chunkNum", chunkNum);
-					reqObj.put("chunkSize", size);					
+					//reqParams.put("chunkIndex", chunkIndex);
+					//reqParams.put("chunkNum", chunkNum);
+					reqParams.put("chunkSize", size+"");					
 				}				
-				JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, name, docData, reqObj);
+				JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, name, docData, reqParams);
 				if(ret == null)
 				{
 					Log.debug("remoteUploadFile() ret is null");
@@ -323,20 +325,20 @@ public class MxsDocUtil {
 
         try {
     		String requestUrl = serverUrl + "/DocSystem/Doc/addDocRS.do?authCode=" + authCode;
-    		JSONObject reqObj = new JSONObject();
+    		HashMap<String, String> reqParams = new HashMap<String, String>();
     		if(reposId != null)
     		{
-    			reqObj.put("reposId", reposId);
+    			reqParams.put("reposId", reposId + "");
     		}
     		else
     		{
-    			reqObj.put("remoteDirectory", remoteDirectory);
+    			reqParams.put("remoteDirectory", remoteDirectory);
     		}
-    		reqObj.put("type", type);
-    		reqObj.put("path", remotePath);
-    		reqObj.put("name", name);
+    		reqParams.put("type", type + "");
+    		reqParams.put("path", remotePath);
+    		reqParams.put("name", name);
            
-    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqObj);
+    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
     		if(ret == null)
     		{
     			Log.debug("MxsDocUtil add() ret is null");
@@ -369,19 +371,19 @@ public class MxsDocUtil {
 
         try {
     		String requestUrl = serverUrl + "/DocSystem/Doc/deleteDocRS.do?authCode=" + authCode;
-    		JSONObject reqObj = new JSONObject();
+    		HashMap<String, String> reqParams = new HashMap<String, String>();
     		if(reposId != null)
     		{
-    			reqObj.put("reposId", reposId);
+    			reqParams.put("reposId", reposId+"");
     		}
     		else
     		{
-    			reqObj.put("remoteDirectory", remoteDirectory);
+    			reqParams.put("remoteDirectory", remoteDirectory);
     		}
-    		reqObj.put("path", remotePath);
-    		reqObj.put("name", fileName);
+    		reqParams.put("path", remotePath);
+    		reqParams.put("name", fileName);
            
-    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqObj);
+    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
     		if(ret == null)
     		{
     			Log.debug("MxsDocUtil delete() ret is null");
