@@ -307,15 +307,15 @@ public class DocController extends BaseController{
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -365,15 +365,15 @@ public class DocController extends BaseController{
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
