@@ -1723,7 +1723,7 @@ public class BaseFunction{
      *
      * @return
      */
-    public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, JSONObject json) {
+    public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, HashMap<String, String> params) {
 		JSONObject returnJson = null;
 		Log.debug("\n*************************** postFileStreamAndJsonObj Start");
         try {
@@ -1751,19 +1751,11 @@ public class BaseFunction{
             DataOutputStream out = new DataOutputStream(conn.getOutputStream());
             byte[] end_data = ("\r\n--" + boundary + "--\r\n").getBytes();// 定义最后数据分隔线
  
-            if(json != null)
+            if(params != null)
             {
-            	Iterator<Entry<String, Object>> iter = json.entrySet().iterator();
-            	while (iter.hasNext()) 
-            	{
-            		Entry<String, Object> entry = iter.next();
-            		if(entry.getValue() == null)
-            		{
-            			continue;
-            		}
-            		
+            	for (Entry<String, String> entry : params.entrySet()) {
             		String name = entry.getKey();
-            		String value = entry.getValue().toString();
+            		String value = entry.getValue();
             		Log.debug("postFileStreamAndJsonObj " + name  + " = " + value);            		
 
             		StringBuilder sb = new StringBuilder();            		
