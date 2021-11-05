@@ -1214,6 +1214,7 @@
 			defaultReposStorePath:"",
 			ldapConfig:"",
 			logLevel: 1,	//default info
+			logFile : "", //defualt not set
 	}
 	
 	function enableSystemInfoSet(){
@@ -1227,6 +1228,7 @@
 		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
+		$("#logFile").val(systemInfo.logFile);
 		
 		$("#tomcatPath").attr('disabled',false);
 		$("#javaHome").attr('disabled',false);
@@ -1235,6 +1237,7 @@
 		$("#defaultReposStorePath").attr('disabled',false);
 		$("#ldapConfig").attr('disabled',false);
 		$("#logLevel").attr('disabled',false);
+		$("#logFile").attr('disabled',false);
 	}
 	
 	function cancelSystemInfoSet(){
@@ -1249,6 +1252,7 @@
 		$("#defaultReposStorePath").attr('disabled',true);
 		$("#ldapConfig").attr('disabled',true);
 		$("#logLevel").attr('disabled',true);
+		$("#logFile").attr('disabled',true);
 
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#javaHome").val(systemInfo.javaHome);
@@ -1257,6 +1261,7 @@
 		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
+		$("#logFile").val(systemInfo.logFile);		
 	}
 	
 	function saveSystemInfoSet(){
@@ -1271,6 +1276,7 @@
 		$("#defaultReposStorePath").attr('disabled',true);
 		$("#ldapConfig").attr('disabled',true);
 		$("#logLevel").attr('disabled',true);
+		$("#logFile").attr('disabled',true);
 
 
 		var tomcatPath = $("#tomcatPath").val();
@@ -1280,11 +1286,12 @@
 		var defaultReposStorePath = $("#defaultReposStorePath").val();
 		var ldapConfig = $("#ldapConfig").val();
 		var logLevel = $("#logLevel").val();
+		var logFile =  $("#logFile").val();
 		
-		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel);
+		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel, logFile);
 	}
 	
-	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel){
+	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel, logFile){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
 	        type : "post",
@@ -1297,6 +1304,7 @@
 	        	defaultReposStorePath: defaultReposStorePath,
 	        	ldapConfig: ldapConfig,
 	        	logLevel: logLevel,
+	        	logFile: logFile,
 	        },
 	        success : function (ret) {
 	        	console.log("setSystemInfo ret:",ret);
@@ -1309,6 +1317,7 @@
 	        		systemInfo.defaultReposStorePath = defaultReposStorePath;
 	        		systemInfo.ldapConfig = ldapConfig;
 	        		systemInfo.logLevel = logLevel;
+	        		systemInfo.logFile = logFile;
 	        		showErrorMessage("更新成功！");
 	            }
 	            else 
@@ -1323,6 +1332,7 @@
 	        		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
 	        		$("#ldapConfig").val(systemInfo.ldapConfig);
 	        		$("#logLevel").val(systemInfo.logLevel);
+	        		$("#logFile").val(systemInfo.logFile);
 	            }
 	        },
 	        error : function () {
@@ -1335,6 +1345,7 @@
         		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
         		$("#ldapConfig").val(systemInfo.ldapConfig);
         		$("#logLevel").val(systemInfo.logLevel);
+        		$("#logFile").val(systemInfo.logFile);
 	        }
 	    });
 	}
@@ -1354,6 +1365,10 @@
 	            	if(systemInfo.logLevel == undefined)
 	            	{
 	            		systemInfo.logLevel = 1;	//defulat info
+	            	}
+	            	if(systemInfo.logFile == undefined)
+	            	{
+	            		systemInfo.logFile = "";
 	            	}
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
