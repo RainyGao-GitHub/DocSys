@@ -3145,11 +3145,22 @@ public class BaseController  extends BaseFunction{
 					uploadFile, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
-			
+		case 5:	//文件服务器前置
+			return addDoc_REMOTE(repos, doc,	//Add a empty file
+					uploadFile, //For upload
+					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
+					commitMsg, commitUser, login_user, rt, actionList);
 		}
 		return false;
 	}
 	
+	private boolean addDoc_REMOTE(Repos repos, Doc doc, MultipartFile uploadFile, Integer chunkNum, Long chunkSize,
+			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			List<CommonAction> actionList) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	//底层addDoc接口
 	//docData: null为新建文件或者是目录，否则为文件上传（新增）
 	protected boolean addDocEx(Repos repos, Doc doc, 
