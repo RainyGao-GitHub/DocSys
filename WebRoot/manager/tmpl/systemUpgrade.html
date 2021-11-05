@@ -109,7 +109,8 @@
 			            		<option value="1" {{if value.logLevel == 1}} selected="selected" {{/if}}>info</option>   
 			            		<option value="2" {{if value.logLevel == 2}} selected="selected" {{/if}}>warn</option>   
 			            		<option value="2" {{if value.logLevel == 3}} selected="selected" {{/if}}>error</option> 
-			            	</select>	                    
+			            	</select>
+	                    	<input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="如需输出到文件，请指定日志文件路径" disabled="disabled">			            		                    
 			            </td>
 	                    <td class="edit">
 	                    </td>
