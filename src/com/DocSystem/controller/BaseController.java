@@ -197,6 +197,9 @@ public class BaseController  extends BaseFunction{
 		Log.logLevel = getLogLevelFromFile();
 		Log.debug("initLogLevel Log.logLevel:" + Log.logLevel);
 
+		Log.logFile = getLogFileFromFile();
+		Log.debug("initLogLevel Log.logFile:" + Log.logFile);
+		
 		//Log.logMask = Log.allowAll;
 		//Log.logFile = Path.getSystemLogParentPath(docSysWebPath); 
 		//Log.debug("initLogLevel Log.logFile:" + Log.logFile);
@@ -10083,10 +10086,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private static int getLogLevelFromFile() {
-		File file = new File(docSysWebPath + "debugLogLevel");
+		File file = new File(docSysIniPath + "debugLogLevel");
 		if(file.exists())
 		{
-			String logLevelStr = FileUtil.readDocContentFromFile(docSysWebPath, "debugLogLevel", "UTF-8");
+			String logLevelStr = FileUtil.readDocContentFromFile(docSysIniPath, "debugLogLevel", "UTF-8");
 			if(logLevelStr == null || logLevelStr.isEmpty())
 			{
 				return Log.info;
@@ -10107,7 +10110,38 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected static void setLogLevelToFile(Integer logLevel) {
-		FileUtil.saveDocContentToFile(logLevel + "", docSysWebPath, "debugLogLevel", "UTF-8");
+		FileUtil.saveDocContentToFile(logLevel + "", docSysIniPath, "debugLogLevel", "UTF-8");
+	}
+	
+	private static String getLogFileFromFile() {
+		File file = new File(docSysIniPath + "debugLogFile");
+		if(file.exists())
+		{
+			String logFile = FileUtil.readDocContentFromFile(docSysIniPath, "debugLogFile", "UTF-8");
+			if(logFile == null)
+			{
+				return null;
+			}
+			
+			
+			logFile = logFile.trim();
+			if(logFile.isEmpty())
+			{
+				return null;
+			}
+			
+			return logFile;
+		}
+		return null;
+	}
+
+	protected static void setLogFileToFile(String logFile) {
+		if(logFile == null)
+		{
+			logFile = "";
+		}
+		
+		FileUtil.saveDocContentToFile(logFile, docSysIniPath, "debugLogFile", "UTF-8");
 	}
 
 	protected void initReposExtentionConfig() {
