@@ -13,8 +13,6 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2397,7 +2395,6 @@ public class DocController extends BaseController{
 	}
 	
 	private Doc getDownloadDocInfoForOffice(Repos repos, Doc doc) {
-		// TODO Auto-generated method stub
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
