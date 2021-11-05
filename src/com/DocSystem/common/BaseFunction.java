@@ -1811,7 +1811,12 @@ public class BaseFunction{
         Log.debug("*********************** postFileStreamAndJsonObj End\n");
         return returnJson;
     }
+    
+	public static JSONObject postJson(String urlString , HashMap<String, String> params) {
+		return postFileStreamAndJsonObj(urlString, null, null, params);
+	}
 
+    //注意：该函数只能用于传输小量二进制文件，而且接收也必须是非标方法
 	public static JSONObject postData(String urlString ,byte[] data) {
 		JSONObject returnJson = null;
 		try {
@@ -1849,49 +1854,6 @@ public class BaseFunction{
 				sb.append(lines);
 			}
 			System.out.println("sb:"+sb);			
-			returnJson = JSONObject.parseObject(sb.toString());
-			reader.close();
-			// 断开连接
-			connection.disconnect();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return returnJson;
-	}
-	
-	public static JSONObject postJson(String urlString ,JSONObject jsonObject) {
-		JSONObject returnJson = null;
-		try {
-			// 创建连接
-			URL url = new URL(urlString);
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod("POST");
-			connection.setDoOutput(true);
-			connection.setDoInput(true);
-			connection.setUseCaches(false);
-			connection.setInstanceFollowRedirects(true);			
-			connection.setRequestProperty("Content-Type","application/json;charset=UTF-8");//**注意点1**，需要此格式，后边这个字符集可以不设置
-			connection.connect();
-			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
-			if(jsonObject != null)
-			{
-				out.write(jsonObject.toString().getBytes("UTF-8"));//**注意点2**，需要此格式
-			}
-			out.flush();
-			out.close();
-			// 读取响应
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					connection.getInputStream(),"utf-8"));//**注意点3**，需要此格式
-			String lines;
-			StringBuffer sb = new StringBuffer("");
-			while ((lines = reader.readLine()) != null) {
-				sb.append(lines);
-			}
-			Log.debug("sb:"+sb);			
 			returnJson = JSONObject.parseObject(sb.toString());
 			reader.close();
 			// 断开连接
