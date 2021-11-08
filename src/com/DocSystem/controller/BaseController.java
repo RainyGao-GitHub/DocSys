@@ -4100,7 +4100,7 @@ public class BaseController  extends BaseFunction{
 		deleteIndexForVDoc(repos, doc, deleteFlag);
 	}
 
-	private boolean buildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
+	public boolean buildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
 			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
 	{	
 		if(force == false)

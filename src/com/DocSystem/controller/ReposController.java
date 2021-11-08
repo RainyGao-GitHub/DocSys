@@ -747,7 +747,24 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//重建仓库的所有文件索引
+		rebuildReposAllDocIndex(repos);
+		
 		writeJson(rt, response);		
+	}
+
+	private void rebuildReposAllDocIndex(Repos repos) {
+		//Delete All Index Lib
+		deleteDocNameIndexLib(repos);
+		deleteRDocIndexLib(repos);
+		deleteVDocIndexLib(repos);
+		
+		//Build All Index For RootDoc
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildRootDoc(repos, localRootPath, localVRootPath);
+		ReturnAjax rt = new ReturnAjax();
+		buildIndexForDoc(repos, doc, null, null, rt, 2, true);		
 	}
 
 	private boolean clearReposFileCache(Repos repos, ReturnAjax rt) {
