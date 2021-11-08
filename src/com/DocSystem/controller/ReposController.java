@@ -732,7 +732,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
