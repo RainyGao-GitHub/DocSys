@@ -1482,6 +1482,7 @@ public class ManageController extends BaseController{
 			for(int i=0; i<list.size(); i++)
 			{
 				Repos repos = list.get(i);
+				repos.remoteServerConfig = reposRemoteServerHashMap.get(repos.getId());
 				repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
 				repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
 				repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
