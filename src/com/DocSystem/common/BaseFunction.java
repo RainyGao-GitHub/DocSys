@@ -321,11 +321,15 @@ public class BaseFunction{
 
 	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
 	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
+	//远程服务器前置
+	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
+	//远程存储
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	protected static ConcurrentHashMap<Integer, BackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, BackupConfig>();	
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		reposRemoteStorageHashMap.remove(repos.getId());
+		reposRemoteServerHashMap.remove(repos.getId());		
 	}		
 	
 	protected static BackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
@@ -384,7 +388,7 @@ public class BaseFunction{
 		remoteBackupConfig.weekDay6 = remoteBackupObj.getInteger("weekDay6");
 		remoteBackupConfig.weekDay7 = remoteBackupObj.getInteger("weekDay7");
 
-		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr);
+		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr, "RemoteBackup");
 		if(remote != null)
 		{
 			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/Doc";
@@ -426,9 +430,92 @@ public class BaseFunction{
 		return localBackupConfig;
 	}
 	
+	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage)
+	{
+		RemoteStorageConfig remote = null;
+		if(remoteStorage == null || remoteStorage.isEmpty())
+		{
+			//这部分是用来兼容2.02.15版本之前的SVN前置和GIT前置的
+			remoteStorage = buildRemoteStorageStr(repos);
+		}	
+		
+		remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteServer");
+		if(remote == null)
+		{
+			reposRemoteServerHashMap.remove(repos.getId());
+			return;
+		}
+		
+		//设置索引库位置
+		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteServer/" + repos.getId() + "/Doc";
+		
+		//add remote config to hashmap
+		reposRemoteServerHashMap.put(repos.getId(), remote);
+	}
+	
+	private static String buildRemoteStorageStr(Repos repos) {
+		switch(repos.getType())
+		{
+		case 3: //SVN 前置
+		case 4: //GIT 前置
+			break;
+		default:
+			Log.debug("buildRemoteStorageStr() remoteServer not configured");
+			return null;
+		}
+		
+		Integer verCtrl = repos.getVerCtrl();
+		if(verCtrl == null)
+		{
+			Log.debug("buildRemoteStorageStr() verCtrl not configured");
+			return null;
+		}
+		
+		String verReposURL = null;
+		String verReposUserName = "";
+		String verReposPwd = "";
+		
+		if(repos.getIsRemote() != null && repos.getIsRemote() == 1)	//远程仓库
+		{
+			verReposURL = repos.getSvnPath();
+			if(verReposURL == null || verReposURL.isEmpty())
+			{
+				Log.debug("buildRemoteStorageStr() verReposURL not configured");
+				return null;
+			}
+			verReposUserName = repos.getSvnUser();
+			verReposPwd = repos.getSvnPwd();
+		}
+		else
+		{
+			String localVerReposPath = repos.getLocalSvnPath();
+			if(localVerReposPath == null || localVerReposPath.isEmpty())
+			{
+				localVerReposPath = repos.getPath() + "DocSysVerReposes/";
+			}
+			String verReposName = Path.getVerReposName(repos, true);
+			verReposURL = "file://" + localVerReposPath + verReposName + "/";
+			verReposUserName = "";
+			verReposPwd = "";
+		}
+		
+		
+		String remoteStorage = null;
+		switch(verCtrl)
+		{
+		case 1:
+			remoteStorage = "svn://" + verReposURL + ";userName=" + verReposUserName + ";pwd=" + verReposPwd;
+			break;
+		case 2:
+			remoteStorage = "git://" + verReposURL + ";userName=" + verReposUserName + ";pwd=" + verReposPwd;
+			break;
+		}
+		return remoteStorage;
+	}
+
 	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
 	{
-		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage);
+		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
 		if(remote == null)
 		{
 			reposRemoteStorageHashMap.remove(repos.getId());
@@ -442,7 +529,7 @@ public class BaseFunction{
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
 	}
 
-	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage) {
+	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage, String type) {
 		if(remoteStorage == null)
 		{
 			return null;
@@ -502,7 +589,7 @@ public class BaseFunction{
 		case "svn":
 			return parseRemoteStorageConfigForSvn(repos, remoteStorage);
 		case "git":
-			return parseRemoteStorageConfigForGit(repos, remoteStorage);
+			return parseRemoteStorageConfigForGit(repos, remoteStorage, type);
 		}
 		return null;
 	}
@@ -553,7 +640,7 @@ public class BaseFunction{
 		remote.rootPath = "";
 	}
 
-	private static RemoteStorageConfig parseRemoteStorageConfigForGit(Repos repos, String remoteStorage) {
+	private static RemoteStorageConfig parseRemoteStorageConfigForGit(Repos repos, String remoteStorage, String type) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "git";
 		remote.isVerRepos = true;
@@ -565,10 +652,23 @@ public class BaseFunction{
 		parseGitUrl(remote, url.trim());
 		if(remote.GIT.isRemote == 1)
 		{
-			String localVerReposRootPath = repos.getLocalSvnPath(); 
-			localVerReposRootPath = Path.dirPathFormat(localVerReposRootPath);
-			String verReposName = repos.getId() + "_GIT_RemoteStorage";			
-			String localVerReposPath = localVerReposRootPath + verReposName + "/";
+			//GIT的远程仓库需要本地仓库存放路径（这个仓库放在和版本仓库相同的位置）
+			String localGitReposRootPath = repos.getLocalSvnPath(); 
+			if(localGitReposRootPath == null || localGitReposRootPath.isEmpty())
+			{
+				localGitReposRootPath = repos.getPath() + "DocSysVerReposes/";
+			}
+			localGitReposRootPath = Path.dirPathFormat(localGitReposRootPath);
+			String verReposName = null;
+			if(type == null)
+			{
+				verReposName = repos.getId() + "_GIT_RemoteStorage";
+			}
+			else
+			{
+				verReposName = repos.getId() + "_GIT_" + type;
+			}
+			String localVerReposPath = localGitReposRootPath + verReposName + "/";
 			remote.GIT.localVerReposPath = localVerReposPath;
 		}
 

@@ -1,4 +1,12 @@
+<script type="text/javascript" src="js/remoteStorageCommon.js"></script>
 <script type="text/javascript">
+	//页面初始化代码    
+	$(function(){
+		console.log("addRepos Page init");
+		AddReposPageInit();
+		$("#name").click().focus();
+	});
+	
 	function AddReposPageInit()
 	{
 		console.log("addReposPageInit()");
@@ -45,30 +53,58 @@
 		var name = $("#name").val();
 	    var info = $("#info").val();
 		var path = $("#path").val();
-	    var type = $("#type").val();
 	    var realDocPath = $("#realDocPath").val();	//realDocPath
+
+	    var isTextSearchEnabled = $("#isTextSearchEnabled").is(':checked')? 1: 0;
+	    var encryptType = $("#isEncryptEnabled").is(':checked')? 1: 0;
+	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
+	    console.log("autoBackupConfig = " + autoBackupConfig);
 	    
-	    var remoteStorage = getRemoteStorageConfig();	    
-	    
-	    var verCtrl = $("#verCtrl").val();
-	    var isRemote = $("#isRemote").is(':checked')? 1: 0;
-	    var localSvnPath = $("#localSvnPath").val();
-	    var svnPath = $("#svnPath").val();
-	    var svnUser = $("#svnUser").val();
-	    var svnPwd = $("#svnPwd").val();
-	    //For Virtual Doc Version Control
+	    //Virtual Doc Version Control
 	    var verCtrl1 = $("#verCtrl1").val();
 	    var isRemote1 = $("#isRemote1").is(':checked')? 1: 0;
 	    var localSvnPath1 = $("#localSvnPath1").val();
 	    var svnPath1 = $("#svnPath1").val();
 	    var svnUser1 = $("#svnUser1").val();
 	    var svnPwd1 = $("#svnPwd1").val();
-	    var isTextSearchEnabled = $("#isTextSearchEnabled").is(':checked')? 1: 0;
-	    var encryptType = $("#isEncryptEnabled").is(':checked')? 1: 0;
-
-	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
-	    console.log("autoBackupConfig = " + autoBackupConfig);
-
+		if(isRemote1 == 0)
+		{
+			localSvnPath1 =   path + "DocSysVerReposes/";        		
+		}
+	    
+		//前置服务器
+	    var remoteServer = "";
+	    //远程存储
+		var remoteStorage = "";
+	    //版本管理
+	    var verCtrl = "";
+	    var isRemote = 0;
+	    var localSvnPath = "";
+	    var svnPath = "";
+	    var svnUser = "";
+	    var svnPwd = "";
+		
+	    var type = $("#type").val();
+	    if(type == 1)
+	    {
+	    	remoteStorage = getRemoteStorageConfig();	    
+		    
+		    verCtrl = $("#verCtrl").val();
+		    isRemote = $("#isRemote").is(':checked')? 1: 0;
+		    localSvnPath = $("#localSvnPath").val();
+		    svnPath = $("#svnPath").val();
+		    svnUser = $("#svnUser").val();
+		    svnPwd = $("#svnPwd").val();
+			if(isRemote == 0)
+			{
+				localSvnPath =   path + "DocSysVerReposes/";
+			}			
+	    }
+	    else
+	    {
+	    	remoteServer = getRemoteServerConfig();	//remoteServer
+	    }
+	    
 	    var createTime = new Date().getTime();	//获取时间戳
 	    
 	    //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
@@ -88,15 +124,7 @@
 	    	return false;
 		}
 		
-		if(isRemote == 0)
-		{
-			localSvnPath =   path + "DocSysVerReposes/";
-		}
-		
-		if(isRemote1 == 0)
-		{
-			localSvnPath1 =   path + "DocSysVerReposes/";        		
-		}
+
 	    
 	    console.log(name,info,path,type);
 	    
@@ -110,6 +138,7 @@
                  path : path,
                  type : type,
 	             realDocPath: realDocPath,
+	             remoteServer: remoteServer,
 	             remoteStorage: remoteStorage,
 	             verCtrl: verCtrl,
 	             isRemote: isRemote,
@@ -142,139 +171,28 @@
         });
 	}
 	
-	function doSelectRemoteStorageProtocol()
-	{
-		var protocol = $("#remoteStorageProtocol").val();
-		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
-		if(protocol == undefined || protocol == "")
-		{
-			$("#remoteStorageConfig").hide();
-			return;
-		}
-		
-		switch(protocol)
-		{
-		case "ftp":
-			$("#remoteStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
-			break;
-		case "sftp":
-			$("#remoteStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
-			break;
-		case "smb":
-			$("#remoteStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
-			break;
-		case "svn":
-			$("#remoteStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
-			break;
-		case "git":
-			$("#remoteStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
-			break;
-		}
-		$("#remoteStorageConfig").show();
-	}
-	
-	function getRemoteStorageConfig()
-	{   
-		var protocol = $("#remoteStorageProtocol").val();
-		console.log("getRemoteStorageConfig protocol:" + protocol);
-		if(protocol == undefined || protocol == "")
-		{
-			return "";
-		}
-		
-		var prefix = "";
-		switch(protocol)
-		{
-		case "svn":
-			prefix = "svn://";
-			break;
-		case "git":
-			prefix = "git://";
-			break;
-		}
-		
-	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
-		var autoPull = $("#autoPull").is(':checked')? 1: 0;
-		var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
-		var autoPush = $("#autoPush").is(':checked')? 1: 0;
-		var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
-	    if(remoteStorage != undefined && remoteStorage != "")
-		{
-	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
-			remoteStorage = prefix + remoteStorage;
-		}
-	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
-		return remoteStorage;
-	}
-	
 	function doSelectFS()
 	{
 		var type = $("#type").val();
-		
-		if(type == 1)	//文件管理系统
+		console.log("doSelectFS type:" + type);
+		if(type == 1 || type == 2)
 		{
-			//RealDoc verCtrl
-			$("#realDocVerCtrlDiv").show();
-			$("#verCtrl").get(0).selectedIndex=0;
-			$("#verCtrl").attr('disabled',false);
-			
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").hide();
-			$("#verCtrl1").get(0).selectedIndex=2;
+			$("#remoteServerDiv").hide();
+			$("#remoteStorageDiv").show();
+			$("#verCtrlDiv").show();
 		}
-		else if(type == 2) //文件系统前置
+		else
 		{
-			$("#realDocVerCtrlDiv").hide();
-			$("#verCtrl").get(0).selectedIndex=0;
-			
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").hide();
-			$("#verCtrl1").get(0).selectedIndex=2;
-		}
-		else if(type == 3)	//SVN前置
-		{
-			//RealDoc verCtrl
-			$("#realDocVerCtrlDiv").show();
-			$("#verCtrl").get(0).selectedIndex=1;
-			$("#verCtrl").attr('disabled',true);
-
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").hide();
-			$("#verCtrl1").get(0).selectedIndex=2;
-		}
-		else if(type == 4)	//GIT前置
-		{
-			//RealDoc verCtrl
-			$("#realDocVerCtrlDiv").show();
-			$("#verCtrl").get(0).selectedIndex=2;
-			$("#verCtrl").attr('disabled',true);
-			
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").hide();
-			$("#verCtrl1").get(0).selectedIndex=2;
-		}
-		doSelectVerCtrl();
-		doSelectVerCtrl1();			
+			$("#remoteServerDiv").show();
+			$("#remoteStorageDiv").hide();
+			$("#verCtrlDiv").hide();
+		}		
 	}
 	
 	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
 	{
 		console.log("doSelectVerCtrl ");
-		var type = $("#type").val();	
-		console.log("doSelectVerCtrl fsType:" + type);
-		if(type == 1)
-		{
-			$("#realDocVerCtrlDiv").show();
-		}
-		else if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
-		{
-			$("#realDocVerCtrlDiv").hide();
-		}
-		else
-		{
-			$("#realDocVerCtrlDiv").show();
-		}
 		
 		var verCtrl = $("#verCtrl").val();
 		var isRemote = $("#isRemote").is(':checked')? 1: 0;
@@ -363,12 +281,103 @@
 		}
 	}
 	
-	//页面初始化代码    
-    $(function(){
-    	console.log("addRepos Page init");
-    	AddReposPageInit();
-		$("#name").click().focus();
-	});
+	/**** 服务器前置 ***/
+	function doSelectRemoteServerProtocol()
+	{
+		var protocol = $("#remoteServerProtocol").val();
+		console.log("doSelectRemoteServerProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#remoteServerConfig").hide();
+			return;
+		}
+		
+		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
+		$("#remoteServer").attr('placeholder', placehoder);
+		$("#remoteServerConfig").show();		
+	}
+	
+	function getRemoteServerConfig()
+	{   
+		var protocol = $("#remoteServerProtocol").val();
+		console.log("getRemoteServerConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		case "mxsdoc":
+			prefix = "mxsdoc://";
+			break;
+		}
+		
+	    var remoteServer = $("#remoteServer").val();	//remoteServer
+	    if(remoteServer != undefined && remoteServer != "")
+		{
+	    	remoteServer = prefix + remoteServer;
+		}
+	    console.log("getRemoteStorageConfig remoteServer:" + remoteServer);
+		return remoteServer;
+	}	
+
+	/**** 远程存储 ***/
+	function doSelectRemoteStorageProtocol()
+	{
+		var protocol = $("#remoteStorageProtocol").val();
+		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#remoteStorageConfig").hide();
+			return;
+		}
+		
+		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
+		$("#remoteStorage").attr('placeholder', placehoder);
+		$("#remoteStorageConfig").show();
+	}
+	
+	function getRemoteStorageConfig()
+	{   
+		var protocol = $("#remoteStorageProtocol").val();
+		console.log("getRemoteStorageConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		}
+		
+	    var remoteStorage = $("#remoteStorage").val();	//remoteStorage
+		var autoPull = $("#autoPull").is(':checked')? 1: 0;
+		var autoPullForce = $("#autoPullForce").is(':checked')? 1: 0;
+		var autoPush = $("#autoPush").is(':checked')? 1: 0;
+		var autoPushForce = $("#autoPushForce").is(':checked')? 1: 0;
+	    if(remoteStorage != undefined && remoteStorage != "")
+		{
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+			remoteStorage = prefix + remoteStorage;
+		}
+	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
+		return remoteStorage;
+	}
 	
 	/********* 自动备份 *****************/
 	function doSelectAutoBackupConfigEanble()
@@ -600,9 +609,7 @@
         <div class="col-lg-9">
 			<select class="form-control"  id="type" name="type" onchange="doSelectFS();" style="width: 100%">   
 				<option value="1" selected="selected">文件管理系统</option>   
-			    <!-- <option value="2">文件系统前置</option> -->
-			    <option value="3">SVN前置</option>   
-			    <option value="4">GIT前置</option>   
+			    <option value="5">文件服务器前置</option>
 			</select>
      	</div>
     </div>
@@ -619,6 +626,20 @@
         <div class="col-lg-9">
         	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
         </div>
+    </div>
+
+    <div class="form-group">
+		<div id="remoteServerDiv" style="margin-top:10px;padding-left:30px; display:none">
+	    	<label>文件服务器</label>
+	    	<select class="form-control" id="remoteServerProtocol" onchange="doSelectremoteServerProtocol();" style="width:86%">   
+	            <option value="ftp">FTP</option>   
+	            <option value="sftp">SFTP</option>   
+	            <option value="smb">SMB</option>  
+	            <option value="svn">SVN</option>  
+	            <option value="git">GIT</option>  
+		    </select>
+	        <input class="form-control" type="text" id="remoteServer"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
+	     </div>
     </div>
     
     <div class="form-group">
@@ -643,7 +664,7 @@
     </div>
         
     <div class="form-group">
-		<div id="realDocVerCtrlDiv" style="margin-top:10px;padding-left:30px">
+		<div id="verCtrlDiv" style="margin-top:10px;padding-left:30px">
 	    	<label>版本管理 <span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 	       	<select class="form-control" id="verCtrl" onchange="doSelectVerCtrl();" style="width: 86%">   
 	        	<option value="0">无</option>   
@@ -698,7 +719,7 @@
 
 	<div class="form-group">
 		<div id="encryptEnablelDiv" style="margin-top:10px;padding-left:30px;">
-	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
 		</div>
 	</div>
 	<div class="form-group">

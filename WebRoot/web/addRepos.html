@@ -15,11 +15,9 @@
 	        	<label>仓库类型</label>
             	<select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
             		<option value="1" selected="selected">文件管理系统</option>   
-            		<!-- <option value="2">文件系统前置</option> -->
-            		<option value="3">SVN前置</option>   
-            		<option value="4">GIT前置</option>   
+            		<option value="5">文件服务器前置</option>
             	</select>
-			</div>
+			</div> 
 			
 	        <div name="reposStorageConfig" style="margin-top:10px">
 				<label>仓库位置 
@@ -39,6 +37,19 @@
 					<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 				</div>
 			</div>
+			
+			<div name="remoteServerDiv" style="margin-top:10px"  style="display:none">
+				<label>文件服务器</label>
+				<select class="form-control" name="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:100%">   
+		        	<option value="ftp">FTP</option>   
+		            <option value="sftp">SFTP</option>   
+		            <option value="smb">SMB</option>  
+		            <option value="svn">SVN</option>  
+		            <option value="git">GIT</option>  
+		            <option value="mxsdoc">MXSDOC</option>  
+		        </select>		            
+				<input class="form-control" type="text" name="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
+			</div>  
 			
         	<div name="remoteStorageDiv" style="margin-top:10px">
 	        	<label>远程存储
@@ -64,67 +75,70 @@
 				</div>
 			</div>        	
         	
-        	<div name="verCtrlEnablelDiv" style="margin-top:20px">
-	            <label>版本管理 
-	            	<span style="margin-left:5px">
-	            		<input type="checkbox" name="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnalbe()">
-	            	</span>
-	            </label>
-	            <span name="verCtrlConfigEnable" value="0" style="margin-left:20px;display:none" onclick="doSelectVerCtrlConfigEnable()">显示高级选项</span>
-			</div>
-			
-			<div name="verCtrlConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
-	            <label>版本仓库类型 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
-	            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
-	            	<option value="0">无</option>   
-	            	<option value="1">SVN</option>   
-	            	<option value="2">GIT</option>   
-	            </select>
-	            <div name="realDocVerCtrlConfigDiv">
-		            <div name="verReposSetting">
-			            <div name="localVerRepos">
-				            <label>版本仓库所在目录</label>
-				            <input class="form-control" type="text" name="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
-			            </div>
-			            <div name="remoteVerRepos">
-				            <label>版本仓库链接</label>
-				            <input class="form-control" type="text" name="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
-				            <label>用户名</label>
-				            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
-				            <label>密码</label>
-			            	<input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
-			            </div>
-		            </div>
-	            </div>
-	            <div name="virtualDocVerCtrlConfigDiv" style="display:none">
-		            <label>备注版本管理<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
-		            <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
+        	<div name="verCtrlDiv">
+	        	<div name="verCtrlEnablelDiv" style="margin-top:20px">
+		            <label>版本管理 
+		            	<span style="margin-left:5px">
+		            		<input type="checkbox" name="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnalbe()">
+		            	</span>
+		            </label>
+		            <span name="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="doSelectShowVerCtrlConfig()">显示高级选项</span>
+				</div>
+				
+				<div name="verCtrlConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
+		            <label>版本仓库类型 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
+		            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
-		            	<option value="2">GIT</option>  
+		            	<option value="2">GIT</option>   
 		            </select>
-		            <div name="verReposSetting1">
-			            <div name="localVerRepos1">            
-				            <label>版本仓库所在目录</label>
-				            <input class="form-control" type="text" name="localSvnPath1"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 100%"/>
-		            	</div>
-		            	<div name="remoteVerRepos1">
-				            <label>版本仓库链接</label>
-				            <input class="form-control" type="text" name="svnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
-				            <label>用户名</label>
-				            <input class="form-control" type="text" name="svnUser1"  value="" style="width: 100%"/>
-				            <label>密码</label>
-				            <input class="form-control" type="password" name="svnPwd1" value="" style="width: 100%"/>          
-				        </div>
-				   </div>
-			    </div>
+		            <div name="realDocVerCtrlConfigDiv">
+			            <div name="verReposSetting">
+				            <div name="localVerRepos">
+					            <label>版本仓库所在目录</label>
+					            <input class="form-control" type="text" name="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
+				            </div>
+				            <div name="remoteVerRepos">
+					            <label>版本仓库链接</label>
+					            <input class="form-control" type="text" name="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+					            <label>用户名</label>
+					            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
+					            <label>密码</label>
+				            	<input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
+				            </div>
+			            </div>
+		            </div>
+		        </div>
+		   	</div>
+	        
+	        <div name="virtualDocVerCtrlConfigDiv" style="display:none">
+		    	<label>备注版本管理<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
+		        <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
+	            	<option value="0">无</option>   
+	            	<option value="1">SVN</option>   
+	            	<option value="2">GIT</option>  
+		        </select>
+		        <div name="verReposSetting1">
+		            <div name="localVerRepos1">            
+			            <label>版本仓库所在目录</label>
+			            <input class="form-control" type="text" name="localSvnPath1"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 100%"/>
+	            	</div>
+	            	<div name="remoteVerRepos1">
+			            <label>版本仓库链接</label>
+			            <input class="form-control" type="text" name="svnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+			            <label>用户名</label>
+			            <input class="form-control" type="text" name="svnUser1"  value="" style="width: 100%"/>
+			            <label>密码</label>
+			            <input class="form-control" type="password" name="svnPwd1" value="" style="width: 100%"/>          
+			        </div>
+				</div>
 			</div>
 					
 			<div name="textSearchEnablelDiv" style="margin-top:10px">
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" name="isTextSearchEnabled" value="0"></span></label>
 			</div>
 			<div name="encryptEnablelDiv" style="margin-top:10px">
-	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0"></span></label>
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" name="isEncryptEnabled" value="0"></span></label>
 			</div>
 			
 			<div name="autoBackupEnablelDiv" style="margin-top:10px">
@@ -265,6 +279,7 @@
 	</div>
 </div>
 
+<script type="text/javascript" src="js/remoteStorageCommon.js"></script>
 <script type="text/javascript">
 	function addReposPageInit(_type, _parentNode)
 	{
@@ -313,31 +328,59 @@
 	    var name = $("#dialog-new-repos input[name='name']").val();
 	    var info = $("#dialog-new-repos textarea[name='info']").val();
 	    var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
-	    var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
 	    
-	    var remoteStorage = getRemoteStorageConfig();	//remoteStorage
+	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
+	    var encryptType = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
+	    console.log("autoBackupConfig = " + autoBackupConfig);
 	    
-	    var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
-	    var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
-	    var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
-	    var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
-	    var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
-	    var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
-	    //For Virtual Doc Version Control
+	    //Virtual Doc Version Control
 	    var verCtrl1 = $("#dialog-new-repos select[name='verCtrl1']").val();
 	    var isRemote1 = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 1: 0;
 	    var localSvnPath1 = $("#dialog-new-repos input[name='localSvnPath1']").val();
 	    var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
 	    var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
 	    var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
+	    if(isRemote1 == 0)
+		{
+			localSvnPath1 =   path + "DocSysVerReposes/";        		
+		}
 	    
-	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
-	    var encryptType = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+		//前置服务器
+	    var remoteServer = "";
+	    //远程存储
+		var remoteStorage = "";
+	    //版本管理
+	    var verCtrl = "";
+	    var isRemote = 0;
+	    var localSvnPath = "";
+	    var svnPath = "";
+	    var svnUser = "";
+	    var svnPwd = "";
+		
+	    var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统  5:文件服务器前置
+	    if(type == 1)
+	    {
+	    	//远程存储
+		    remoteStorage = getRemoteStorageConfig();	//remoteStorage
+		    //版本管理
+		    verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+		    isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
+		    localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
+		    svnPath = $("#dialog-new-repos input[name='svnPath']").val();
+		    svnUser = $("#dialog-new-repos input[name='svnUser']").val();
+		    svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
+			if(isRemote == 0)
+			{
+				localSvnPath =   path + "DocSysVerReposes/";
+			}
+	    }
+	    else
+	    {
+	    	remoteServer = getRemoteServerConfig();	//remoteServer
+	    }
 	    
-	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
-	    console.log("autoBackupConfig = " + autoBackupConfig);
-	    	    
 	    var createTime = new Date().getTime();	//获取时间戳
 	    
 	    //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
@@ -357,16 +400,6 @@
 	    	return false;
 		}
 		
-		if(isRemote == 0)
-		{
-			localSvnPath =   path + "DocSysVerReposes/";
-		}
-		
-		if(isRemote1 == 0)
-		{
-			localSvnPath1 =   path + "DocSysVerReposes/";        		
-		}
-		
 	    $.ajax({
 	            url : "/DocSystem/Repos/addRepos.do",
 	            type : "post",
@@ -377,6 +410,7 @@
 	                type:type,
 	                path:path,
 	                realDocPath: realDocPath,
+	                remoteServer: remoteServer,
 	                remoteStorage: remoteStorage,
 	                verCtrl: verCtrl,
 	                isRemote: isRemote,
@@ -422,76 +456,69 @@
 	{
 		var type = $("#dialog-new-repos select[name='type']").val();
 		console.log("doSelectFS type:" + type);
-		if(type == 1)
+		if(type == 1 || type == 2)
 		{
-			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked",false); //取消 版本管理 勾选	
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();	//隐藏 高级选项
-
-			//设置 RealDoc VerCtrl
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
-			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',false);
-			
-			//设置 VirtualDoc VerCtrl
-			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();	//隐藏 备注版本仓库设置
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
+			$("#dialog-new-repos div[name='remoteServerDiv']").hide();
+			$("#dialog-new-repos div[name='remoteStorageDiv']").show();
+			$("#dialog-new-repos div[name='verCtrlDiv']").show();
 		}
-		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
+		else
 		{
-			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked",false); //取消 版本管理 勾选	
-
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
-			
-			//设置 RealDoc VerCtrl
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭版本管理
-			
-			//设置 VirtualDoc VerCtrl
-			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
+			$("#dialog-new-repos div[name='remoteServerDiv']").show();
+			$("#dialog-new-repos div[name='remoteStorageDiv']").hide();
+			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
 		}
-		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
-		{
-			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked","checked"); //版本管理 勾选 并禁用	
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-			
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();	//显示高级选项
-			
-			//设置 RealDoc VerCtrl
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=1;
-			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
-
-			//设置 VirtualDoc VerCtrl
-			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
-		}
-		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
-		{
-			$("#dialog-new-repos input[name='verCtrlEnable']").attr("checked","checked"); //版本管理 勾选 并禁用	
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide(); //隐藏 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();	//显示高级选项
-			
-			//设置 RealDoc VerCtrl
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
-			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
-			
-			//设置 VirtualDoc VerCtrl
-			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
-		}
-		doSelectVerCtrl();
-		doSelectVerCtrl1();			
 	}
 	
+	/** 版本管理设置 **/
+	function doSelectVerCtrlEnalbe()
+	{
+		var verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
+		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
+		if(verCtrlEnable == 0)
+		{
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭verCtrl
+
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
+			
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").hide();	//隐藏 高级选项提示
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(0);
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("显示高级选项");
+		}
+		else
+		{	
+			if($("#dialog-new-repos select[name='verCtrl']").val() == 0)	//设置版本控制为GIT
+			{
+				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+			}
+			
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();			//隐藏 高级选项
+			
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").show();		//显示 高级选项提示
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(0);
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("显示高级选项");						
+		}
+		
+		doSelectVerCtrl();
+	}
+
+	function doSelectShowVerCtrlConfig()
+	{
+		var showVerCtrlConfig = $("#dialog-new-repos span[name='showVerCtrlConfig']").val();
+		console.log("doSelectShowVerCtrlConfig showVerCtrlConfig:" + showVerCtrlConfig);
+		if(showVerCtrlConfig == 0)
+		{
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(1);
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("隐藏高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();			
+		}
+		else
+		{
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(0);
+			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("显示高级选项");
+			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();						
+		}
+	}
 	
 	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
@@ -580,6 +607,7 @@
 		}
 	}
 	
+	/** 仓库路径设置 **/
 	function doSelectReposStoragePathEnable()
 	{
 		var reposStoragePathEnable = $("#dialog-new-repos input[name='reposStoragePathEnable']").is(':checked')? 1: 0;
@@ -594,6 +622,7 @@
 		}
 	}
 	
+	/** 文件存储路径设置 **/
 	function doSelectReposStorageRealDocPathEnable()
 	{
 		var reposStorageRealDocPathEnable = $("#dialog-new-repos input[name='reposStorageRealDocPathEnable']").is(':checked')? 1: 0;
@@ -608,71 +637,7 @@
 		}
 	}
 	
-	
-	function doSelectRemoteStorageConfigEnable()
-	{
-		var remoteStorageConfigEnable = $("#dialog-new-repos input[name='remoteStorageConfigEnable']").is(':checked')? 1: 0;
-		console.log("doSelectRemoteStorageConfigEnable remoteStorageConfigEnable:" + remoteStorageConfigEnable);
-		if(remoteStorageConfigEnable == 0)
-		{
-			$("#dialog-new-repos div[name='remoteStorageConfig']").hide();
-		}
-		else
-		{	
-			$("#dialog-new-repos div[name='remoteStorageConfig']").show();
-		}
-		
-	}
-	
-	function doSelectVerCtrlEnalbe()
-	{
-		var verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
-		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
-		if(verCtrlEnable == 0)
-		{
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭verCtrl
-
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
-			
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").hide();	//隐藏 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-		}
-		else
-		{	
-			if($("#dialog-new-repos select[name='verCtrl']").val() == 0)	//设置版本控制为GIT
-			{
-				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
-			}
-			
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();			//隐藏 高级选项
-			
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").show();		//显示 高级选项提示
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");						
-		}
-	}
-
-	function doSelectVerCtrlConfigEnable()
-	{
-		var verCtrlConfigEnable = $("#dialog-new-repos span[name='verCtrlConfigEnable']").val();
-		console.log("doSelectVerCtrlConfigEnable verCtrlConfigEnable:" + verCtrlConfigEnable);
-		if(verCtrlConfigEnable == 0)
-		{
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(1);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("隐藏高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();			
-		}
-		else
-		{
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").val(0);
-			$("#dialog-new-repos span[name='verCtrlConfigEnable']").text("显示高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();						
-		}
-		doSelectVerCtrl();
-		doSelectVerCtrl1();	
-	}
-	
+	/** 文件加密设置  **/
 	function doSetEncryptConfirm()
 	{
 		var en = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
@@ -691,8 +656,70 @@
 		}
 	}
 	
+	/**** 文件服务器前置设置 ***/
+	function doSelectRemoteServerProtocol()
+	{
+		var protocol = $("#dialog-new-repos select[name='remoteServerProtocol']").val();
+		console.log("doSelectRemoteServerProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#dialog-new-repos div[name='remoteServerConfig']").hide();
+			return;
+		}
+		
+		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
+		$("#dialog-new-repos input[name='remoteServer']").attr('placeholder', placehoder);
+		$("#dialog-new-repos div[name='remoteServerConfig']").show();		
+	}
 	
-	/**** 远程存储 ***/
+	function getRemoteServerConfig()
+	{   
+		var protocol = $("#dialog-new-repos select[name='remoteServerProtocol']").val();
+		console.log("getRemoteServerConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		case "mxsdoc":
+			prefix = "mxsdoc://";
+			break;
+		}
+		
+	    var remoteServer = $("#dialog-new-repos input[name='remoteServer']").val();	//remoteServer
+	    if(remoteServer != undefined && remoteServer != "")
+		{
+	    	remoteServer = prefix + remoteServer;
+		}
+	    console.log("getRemoteStorageConfig remoteServer:" + remoteServer);
+		return remoteServer;
+	}	
+	
+	/**** 远程存储设置 ***/
+	function doSelectRemoteStorageConfigEnable()
+	{
+		var remoteStorageConfigEnable = $("#dialog-new-repos input[name='remoteStorageConfigEnable']").is(':checked')? 1: 0;
+		console.log("doSelectRemoteStorageConfigEnable remoteStorageConfigEnable:" + remoteStorageConfigEnable);
+		if(remoteStorageConfigEnable == 0)
+		{
+			$("#dialog-new-repos div[name='remoteStorageConfig']").hide();
+		}
+		else
+		{	
+			$("#dialog-new-repos div[name='remoteStorageConfig']").show();
+		}
+		
+	}
+	
 	function doSelectRemoteStorageProtocol()
 	{
 		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
@@ -703,29 +730,9 @@
 			return;
 		}
 
-		switch(protocol)
-		{
-		case "ftp":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
-			break;
-		case "sftp":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
-			break;
-		case "smb":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
-			break;
-		case "svn":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
-			break;
-		case "git":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
-			break;
-		case "mxsdoc":
-			$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
-			break;
-		}
-		$("#dialog-new-repos div[name='remoteStorageConfig']").show();
-		
+		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
+		$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder', placehoder);
+		$("#dialog-new-repos div[name='remoteStorageConfig']").show();		
 	}
 	
 	function getRemoteStorageConfig()
@@ -765,7 +772,7 @@
 		return remoteStorage;
 	}	
 	
-	/********* 自动备份 *****************/
+	/********* 自动备份设置 *****************/
 	function doSelectAutoBackupConfigEanble()
 	{
 		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
@@ -817,28 +824,9 @@
 			$("#dialog-new-repos div[name='remoteBackupStorageConfig']").hide();
 			return;
 		}
-
-		switch(protocol)
-		{
-		case "ftp":
-			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
-			break;
-		case "sftp":
-			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
-			break;
-		case "smb":
-			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
-			break;
-		case "svn":
-			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
-			break;
-		case "git":
-			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
-			break;
-		case "mxsdoc":
-			$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
-			break;
-		}
+		
+		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
+		$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder', placehoder);
 		$("#dialog-new-repos div[name='remoteBackupStorageConfig']").show();
 	}
 	

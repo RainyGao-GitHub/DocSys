@@ -145,6 +145,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/addRepos.do")
 	public void addRepos(String name,String info, Integer type, String path, 
 			String realDocPath, 
+			String remoteServer,
 			String remoteStorage,
 			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, 
@@ -157,6 +158,7 @@ public class ReposController extends BaseController{
 		Log.info("\n****************** addRepos.do ***********************");
 		Log.debug("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  
 				+ " realDocPath: " + realDocPath 
+				+ " remoteServer: " + remoteServer 
 				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
@@ -293,10 +295,16 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);	
 			return;			
 		}
-		
+
 		if(remoteStorage != null)
 		{
 			initReposRemoteStorageConfig(repos, remoteStorage);
+		}
+		
+		if(remoteServer != null)
+		{
+			setReposRemoteServer(repos, remoteServer);
+			initReposRemoteServerConfig(repos, remoteServer);		
 		}
 		
 		if(autoBackup != null)
@@ -431,6 +439,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/updateReposInfo.do")
 	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, 
 			String realDocPath,
+			String remoteServer,
 			String remoteStorage,
 			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
@@ -442,6 +451,7 @@ public class ReposController extends BaseController{
 		Log.info("\n****************** updateReposInfo.do ***********************");
 		Log.debug("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path 
 				+ " realDocPath:" + realDocPath 
+				+ " remoteServer:" + remoteServer 
 				+ " remoteStorage:" + remoteStorage 
 				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
@@ -532,6 +542,12 @@ public class ReposController extends BaseController{
 		{
 			initReposRemoteStorageConfig(reposInfo, remoteStorage);
 		}
+		
+		if(remoteServer != null)
+		{
+			setReposRemoteServer(reposInfo, remoteServer);
+			initReposRemoteServerConfig(reposInfo, remoteServer);
+		}		
 		
 		if(autoBackup != null)
 		{
@@ -747,8 +763,13 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//重建仓库的所有文件索引
-		rebuildReposAllDocIndex(repos);
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("clearReposCache() rebuildReposAllDocIndex() in new Thread");
+				//重建仓库的所有文件索引
+				rebuildReposAllDocIndex(repos);
+			}
+		}).start();
 		
 		writeJson(rt, response);		
 	}
