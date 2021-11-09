@@ -10160,6 +10160,11 @@ public class BaseController  extends BaseFunction{
 				//Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
 				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
 				
+				//int remoteServerConifg
+				String remoteServer = getReposRemoteServer(repos);
+				repos.remoteServer = remoteServer;
+				initReposRemoteServerConfig(repos, remoteServer);
+				
 				//init autoBackupConfig
 				String autoBackup = getReposAutoBackup(repos);
 				repos.setAutoBackup(autoBackup);
@@ -10173,7 +10178,7 @@ public class BaseController  extends BaseFunction{
 	        e.printStackTrace();
 		}	
 	}
-	
+
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
 		Log.debug("initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup:" + autoBackup);
@@ -10507,7 +10512,23 @@ public class BaseController  extends BaseFunction{
 		Log.debug("getDelayTimeForNextRemoteBackupTask() delayDays:" + delayDays + " delayTime:" + delayTime);
 		return delayTime;
 	}
-
+	
+	protected boolean setReposRemoteServer(Repos repos, String remoteServer) {
+		String reposRemoteServerConfigPath = Path.getReposRemoteServerConfigPath(repos);
+		
+		if(remoteServer == null || remoteServer.isEmpty())
+		{
+			return FileUtil.delFile(reposRemoteServerConfigPath + "remoteServer.conf");
+		}
+		
+		return FileUtil.saveDocContentToFile(remoteServer, reposRemoteServerConfigPath, "remoteServer.conf", "UTF-8");
+	}
+	
+	private String getReposRemoteServer(Repos repos) {
+		String configPath = Path.getReposRemoteServerConfigPath(repos);		
+		return FileUtil.readDocContentFromFile(configPath, "remoteServer.conf", "UTF-8");
+	}
+	
 	protected boolean setReposAutoBackup(Repos repos, String autoBackup) {
 		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);
 		
@@ -13219,6 +13240,7 @@ public class BaseController  extends BaseFunction{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos != null)
 		{
+			repos.remoteServerConfig = reposRemoteServerHashMap.get(repos.getId());
 			repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
 			repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
 			repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);

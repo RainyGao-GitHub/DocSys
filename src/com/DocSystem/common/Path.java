@@ -548,9 +548,13 @@ public class Path {
 		{
 			localSvnPath = repos.getLocalSvnPath1();
 		}	
+
+		if(localSvnPath == null || localSvnPath.isEmpty())
+		{
+			localSvnPath = repos.getPath() + "DocSysVerReposes/";
+		}
 		
 		localSvnPath = dirPathFormat(localSvnPath);
-
 		String reposName = getVerReposName(repos,isRealDoc);
 		
 		localVerReposPath = localSvnPath + reposName + "/";
@@ -671,6 +675,11 @@ public class Path {
 
 	public static String getReposTextSearchConfigPathForVirtualDoc(Repos repos) {
 		String path = getReposPath(repos) + "data/textSearchSetting/VirtualDoc/";
+		return path;
+	}
+	
+	public static String getReposRemoteServerConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/remoteServerSetting/";
 		return path;
 	}
 	

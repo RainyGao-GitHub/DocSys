@@ -1,3 +1,4 @@
+<script type="text/javascript" src="js/remoteStorageCommon.js"></script>
 <script type="text/javascript">
 	var gCurReposInfo;
 	function EditReposPageInit(_reposInfo)
@@ -27,6 +28,91 @@
 	 	}  
 	}
 	
+	function showReposBasicSetting(reposInfo)
+	{
+	   	$("#name").val(reposInfo.name);
+	   	$("#info").val(reposInfo.info);
+	   	$("#path").val(reposInfo.path);
+	   	$("#realDocPath").val(reposInfo.realDocPath);
+		
+	   	if(reposInfo.type == 1 || reposInfo.type == 2)
+	   	{
+	   		$("#type option[value='1']").attr("selected","selected");
+	   	}
+	   	else
+	   	{
+	   		$("#type option[value='5']").attr("selected","selected");		   		
+	   	}
+	   	
+	   	//文件存储路径显示
+	   	showReposStorageRealDocPath(reposInfo);
+	   	
+	   	//服务器前置
+	   	showRemoteServerConfig(reposInfo);
+	   	
+	   	//远程存储
+	   	showRemoteStorageConfig(reposInfo);
+	   	
+	   	//版本管理
+	   	$("#verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote == 0)
+	   	{
+		   	$("#isRemote").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#isRemote").attr("checked","checked");
+		   	
+	   	}
+	   	$("#localSvnPath").val(reposInfo.localSvnPath);
+	   	$("#svnPath").val(reposInfo.svnPath);
+	   	$("#svnUser").val(reposInfo.svnUser);
+	   	$("#svnPwd").val(reposInfo.svnPwd);
+	   	doSelectVerCtrl();
+	   	
+	   	//备注版本管理
+	   	$("#verCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote1 == 0)
+	   	{
+		   	$("#isRemote1").attr("checked",false);	   		
+	   	}
+	   	else
+	   	{
+		   	$("#isRemote1").attr("checked","checked");
+	   	}
+	   	$("#localSvnPath1").val(reposInfo.localSvnPath1);
+	   	$("#svnPath1").val(reposInfo.svnPath1);
+	   	$("#svnUser1").val(reposInfo.svnUser1);
+	   	$("#svnPwd1").val(reposInfo.svnPwd1);
+	   	doSelectVerCtrl1();
+
+	   	//全文搜索
+	   	if(reposInfo.isTextSearchEnabled == 0)
+	   	{
+		   	$("#isTextSearchEnabled").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#isTextSearchEnabled").attr("checked","checked");
+	   	}
+	   	
+	   	//文件加密
+	   	if(reposInfo.encryptType == 0)
+	   	{
+		   	$("#isEncryptEnabled").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#isEncryptEnabled").attr("checked","checked");
+	   	}
+	   	
+	   	//自动备份
+	   	showAutoBackupConfig(reposInfo);
+	   	
+		//初始化显示
+	   	doSelectFS();
+	}
+	
 	function saveReposBasicSetting()
 	{
 		console.log("saveReposBasicSetting");
@@ -37,8 +123,13 @@
 		newReposSetting.type =  $("#type").val();	//Real DocSystem
 		newReposSetting.path = $("#path").val();
 		newReposSetting.realDocPath = $("#realDocPath").val();
+
+		var remoteServer = getRemoteServerConfig();
+		newReposSetting.remoteServer = remoteServer;
+
 		var remoteStorage = getRemoteStorageConfig();
-	    newReposSetting.remoteStorage = remoteStorage;
+		newReposSetting.remoteStorage = remoteStorage;
+
 		var autoBackup = getAutoBackupConfig();
 		newReposSetting.autoBackup = autoBackup;
 		console.log("newReposSetting.autoBackup:" + autoBackup);
@@ -82,6 +173,7 @@
 	                    type : newReposSetting.type,
 	                    path : newReposSetting.path,
 	                    realDocPath : newReposSetting.realDocPath,
+	                    remoteServer : newReposSetting.remoteServer,
 	                    remoteStorage : newReposSetting.remoteStorage,
 	                    verCtrl : newReposSetting.verCtrl,
 	                    isRemote : newReposSetting.isRemote,
@@ -145,6 +237,12 @@
 	       		if(oldSetting.realDocPath != newSetting.realDocPath)
 	       		{
 	       			console.log("verifyReposSetting realDocPath changed");
+	       			return true;
+	       		}
+	       		
+	       		if(oldSetting.remoteServer != newSetting.remoteServer)
+	       		{
+	       			console.log("verifyReposSetting remoteServer changed");
 	       			return true;
 	       		}
 	       		
@@ -242,118 +340,127 @@
 	       }  
 	}
 	
-	function showReposBasicSetting(reposInfo)
-	{
-	   	$("#name").val(reposInfo.name);
-	   	$("#info").val(reposInfo.info);
-	   	$("#path").val(reposInfo.path);
-	   	$("#type option[value='"+reposInfo.type+"']").attr("selected","selected");
-	   	$("#realDocPath").val(reposInfo.realDocPath);
-	   	
-	   	showRemoteStorageConfig(reposInfo);
-	   	
-	   	$("#verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
-	   	if(reposInfo.isRemote == 0)
-	   	{
-		   	$("#isRemote").attr("checked",false);
-	   	}
-	   	else
-	   	{
-		   	$("#isRemote").attr("checked","checked");
-		   	
-	   	}
-	   	$("#localSvnPath").val(reposInfo.localSvnPath);
-	   	$("#svnPath").val(reposInfo.svnPath);
-	   	$("#svnUser").val(reposInfo.svnUser);
-	   	$("#svnPwd").val(reposInfo.svnPwd);
-	   	$("#verCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
-	   	if(reposInfo.isRemote1 == 0)
-	   	{
-		   	$("#isRemote1").attr("checked",false);	   		
-	   	}
-	   	else
-	   	{
-		   	$("#isRemote1").attr("checked","checked");
-	   	}
-	   	$("#localSvnPath1").val(reposInfo.localSvnPath1);
-	   	$("#svnPath1").val(reposInfo.svnPath1);
-	   	$("#svnUser1").val(reposInfo.svnUser1);
-	   	$("#svnPwd1").val(reposInfo.svnPwd1);
-   		
-	   	if(reposInfo.isTextSearchEnabled == 0)
-	   	{
-		   	$("#isTextSearchEnabled").attr("checked",false);
-	   	}
-	   	else
-	   	{
-		   	$("#isTextSearchEnabled").attr("checked","checked");
-	   	}
-	   	
-	   	if(reposInfo.encryptType == 0)
-	   	{
-		   	$("#isEncryptEnabled").attr("checked",false);
-	   	}
-	   	else
-	   	{
-		   	$("#isEncryptEnabled").attr("checked","checked");
-	   	}
-	   	
-	   	showAutoBackupConfig(reposInfo);
-	   	
-	   	doSelectVerCtrl();
-	   	doSelectVerCtrl1();
-	}
-	
 	function doSelectFS()
 	{
 		var type = $("#type").val();
+		console.log("doSelectFS type:" + type);
 		
-		if(type == 1)	//文件管理系统
+		if(type == 1 || type == 2)
 		{
-			//RealDoc verCtrl
-			$("#realDocVerCtrlDiv").show();
-			$("#verCtrl").get(0).selectedIndex=0;
-			$("#verCtrl").attr('disabled',false);
-			
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").show();
-			$("#verCtrl1").get(0).selectedIndex=2;
+			$("#remoteServerDiv").hide();
+			$("#remoteStorageDiv").show();
+			$("#verCtrlDiv").show();
 		}
-		else if(type == 2) //文件系统前置
+		else
 		{
-			$("#realDocVerCtrlDiv").hide();
-			$("#verCtrl").get(0).selectedIndex=0;
-			
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").show();
-			$("#verCtrl1").get(0).selectedIndex=2;
+			$("#remoteServerDiv").show();
+			$("#remoteStorageDiv").hide();
+			$("#verCtrlDiv").hide();
 		}
-		else if(type == 3)	//SVN前置
-		{
-			//RealDoc verCtrl
-			$("#realDocVerCtrlDiv").show();
-			$("#verCtrl").get(0).selectedIndex=1;
-			$("#verCtrl").attr('disabled',true);
+	}
+	/** 文件存储位置设置 **/
+	function showReposStorageRealDocPath(reposInfo)
+	{
+	   	if(reposInfo.realDocPath == null || reposInfo.realDocPath == "")
+	   	{
+			$("#reposStorageRealDocPathEnable").attr("checked",false);
+	   		$("#reposStorageRealDocPathConfig").hide();
+	   	}
+	   	else
+	   	{
+	   		$("#reposStorageRealDocPathEnable").attr("checked","checked");
+			$("#reposStorageRealDocPathConfig").show();
+	   		$("#realDocPath").val(reposInfo.realDocPath);
+	   	}	
+	}
 
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").show();
-			$("#verCtrl1").get(0).selectedIndex=2;
-		}
-		else if(type == 4)	//GIT前置
+	function doSelectReposStorageRealDocPathEnable()
+	{
+		var reposStorageRealDocPathEnable = $("#reposStorageRealDocPathEnable").is(':checked')? 1: 0;
+		console.log("doSelectReposStorageRealDocPathEnable reposStorageRealDocPathEnable:" + reposStorageRealDocPathEnable);
+		if(reposStorageRealDocPathEnable == 0)
 		{
-			//RealDoc verCtrl
-			$("#realDocVerCtrlDiv").show();
-			$("#verCtrl").get(0).selectedIndex=2;
-			$("#verCtrl").attr('disabled',true);
-			
-			//virtualDoc verCtrl 默认总是Git
-			$("#virtualDocVerCtrlDiv").show();
-			$("#verCtrl1").get(0).selectedIndex=2;
+			$("#reposStorageRealDocPathConfig").hide();
 		}
-		doSelectVerCtrl();
-		doSelectVerCtrl1();			
+		else
+		{	
+			$("#reposStorageRealDocPathConfig").show();
+		}
 	}
 	
+	/*** 文件服务器前置 ****/
+	function showRemoteServerConfig(reposInfo)
+	{
+		if(reposInfo.remoteServerConfig == undefined)
+	   	{
+			$("#remoteServerDiv").hide();
+			$("#remoteServerProtocol option[value='']").attr("selected","selected");		
+			return;
+	   	}
+		
+		var protocol = reposInfo.remoteServerConfig.protocol;
+		if(protocol == undefined || protocol == "")
+		{
+			$("#remoteServerProtocol option[value='']").attr("selected","selected");			
+			$("#remoteServerDiv").hide();
+			return;
+		}
+		
+		$("#remoteServerDiv").show();			
+		$("#remoteServerProtocol option[value='" + protocol + "']").attr("selected","selected");	
+		
+		var remoteServer = buildRemoteStorageConfigStr(reposInfo.remoteServerConfig);
+		$("#remoteServer").val(remoteServer);
+	}
+	
+	function doSelectRemoteServerProtocol()
+	{
+		var protocol = $("#remoteServerProtocol").val();
+		console.log("doSelectRemoteServerProtocol protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			$("#remoteServerConfig").hide();
+			return;
+		}
+		
+		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
+		$("#remoteServer").attr('placeholder', placehoder);
+		$("#remoteServerConfig").show();		
+	}
+	
+	function getRemoteServerConfig()
+	{   
+		var protocol = $("#remoteServerProtocol").val();
+		console.log("getRemoteServerConfig protocol:" + protocol);
+		if(protocol == undefined || protocol == "")
+		{
+			return "";
+		}
+		
+		var prefix = "";
+		switch(protocol)
+		{
+		case "svn":
+			prefix = "svn://";
+			break;
+		case "git":
+			prefix = "git://";
+			break;
+		case "mxsdoc":
+			prefix = "mxsdoc://";
+			break;
+		}
+		
+	    var remoteServer = $("#remoteServer").val();	//remoteServer
+	    if(remoteServer != undefined && remoteServer != "")
+		{
+	    	remoteServer = prefix + remoteServer;
+		}
+	    console.log("getRemoteStorageConfig remoteServer:" + remoteServer);
+		return remoteServer;
+	}	
+	
+	/*** 远程存储 ****/
 	function showRemoteStorageConfig(reposInfo)
 	{
 		var remoteStorage = "";
@@ -375,89 +482,7 @@
 		$("#remoteStorageConfig").show();			
 		$("#remoteStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
 		
-		var remoteStorage = "";
-		switch(protocol)
-		{
-		case "ftp":
-			remoteStorage = protocol + "://" + reposInfo.remoteStorageConfig.FTP.host;
-			if(reposInfo.remoteStorageConfig.FTP.port)
-			{
-				remoteStorage += ":" + reposInfo.remoteStorageConfig.FTP.port;
-			}
-			if(reposInfo.remoteStorageConfig.rootPath)
-			{
-				remoteStorage += reposInfo.remoteStorageConfig.rootPath;
-			}
-			if(reposInfo.remoteStorageConfig.FTP.userName)
-			{
-				remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.FTP.userName;
-			}
-			if(reposInfo.remoteStorageConfig.FTP.pwd)
-			{
-				remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.FTP.pwd;
-			}
-			break;
-		case "sftp":
-			remoteStorage = protocol + "://" + reposInfo.remoteStorageConfig.SFTP.host;
-			if(reposInfo.remoteStorageConfig.SFTP.port)
-			{
-				remoteStorage += ":" + reposInfo.remoteStorageConfig.SFTP.port;
-			}
-			if(reposInfo.remoteStorageConfig.rootPath)
-			{
-				remoteStorage += reposInfo.remoteStorageConfig.rootPath;
-			}
-			if(reposInfo.remoteStorageConfig.SFTP.userName)
-			{
-				remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.SFTP.userName;
-			}
-			if(reposInfo.remoteStorageConfig.SFTP.pwd)
-			{
-				remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.SFTP.pwd;
-			}
-			break;
-		case "smb":
-			remoteStorage = protocol + "://" + reposInfo.remoteStorageConfig.SMB.host;
-			if(reposInfo.remoteStorageConfig.rootPath)
-			{
-				remoteStorage += reposInfo.remoteStorageConfig.rootPath;
-			}
-			if(reposInfo.remoteStorageConfig.SMB.userDomain)
-			{
-				remoteStorage += ";userDomain=" + reposInfo.remoteStorageConfig.SMB.userDomain;
-			}
-			if(reposInfo.remoteStorageConfig.SMB.userName)
-			{
-				remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.SMB.userName;
-			}
-			if(reposInfo.remoteStorageConfig.SMB.pwd)
-			{
-				remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.SMB.pwd;
-			}
-			break;
-		case "svn":
-			remoteStorage = reposInfo.remoteStorageConfig.SVN.url;
-			if(reposInfo.remoteStorageConfig.SVN.userName)
-			{
-				remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.SVN.userName;
-			}
-			if(reposInfo.remoteStorageConfig.SVN.pwd)
-			{
-				remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.SVN.pwd;
-			}
-			break;
-		case "git":
-			remoteStorage = reposInfo.remoteStorageConfig.GIT.url;
-			if(reposInfo.remoteStorageConfig.GIT.userName)
-			{
-				remoteStorage += ";userName=" + reposInfo.remoteStorageConfig.GIT.userName;
-			}
-			if(reposInfo.remoteStorageConfig.GIT.pwd)
-			{
-				remoteStorage += ";pwd=" + reposInfo.remoteStorageConfig.GIT.pwd;
-			}
-			break;
-		}	
+		var remoteStorage = buildRemoteStorageConfigStr(reposInfo.remoteStorageConfig);
 		$("#remoteStorage").val(remoteStorage);
 		
 	   	if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
@@ -507,24 +532,8 @@
 			return;
 		}
 		
-		switch(protocol)
-		{
-		case "ftp":
-			$("#remoteStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
-			break;
-		case "sftp":
-			$("#remoteStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
-			break;
-		case "smb":
-			$("#remoteStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
-			break;
-		case "svn":
-			$("#remoteStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
-			break;
-		case "git":
-			$("#remoteStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
-			break;
-		}
+		var placeholder = getPlacehoderForRemoteStorageProtocol(protocol);
+		$("#remoteStorage").attr('placeholder',placeholder);
 		$("#remoteStorageConfig").show();
 	}
 
@@ -562,25 +571,59 @@
 		return remoteStorage;
 	}
 	
-	//According verCtrl value to disale the svnPath or not
-	function doSelectVerCtrl()
+	/** 版本管理设置 **/
+	function doSelectVerCtrlEnalbe()
 	{
-		console.log("doSelectVerCtrl ");
-		var type = $("#type").val();	
-		console.log("doSelectVerCtrl fsType:" + type);
-		if(type == 1)
+		var verCtrlEnable = $("#verCtrlEnable").is(':checked')? 1: 0;
+		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
+		if(verCtrlEnable == 0)
 		{
-			$("#realDocVerCtrlDiv").show();
+			$("#verCtrl").get(0).selectedIndex=0;	//关闭verCtrl
+
+			$("#verCtrlConfigDiv").hide();		//隐藏 高级选项
+			
+			$("#showVerCtrlConfig").hide();	//隐藏 高级选项提示
+			$("#showVerCtrlConfig").val(0);
+			$("#showVerCtrlConfig").text("显示高级选项");
 		}
-		else if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
+		else
+		{	
+			if($("#verCtrl").val() == 0)	//设置版本控制为GIT
+			{
+				$("#verCtrl").get(0).selectedIndex=2;
+			}
+			
+			$("#verCtrlConfigDiv").hide();			//隐藏 高级选项
+			
+			$("#showVerCtrlConfig").show();		//显示 高级选项提示
+			$("showVerCtrlConfig").val(0);
+			$("#showVerCtrlConfig").text("显示高级选项");						
+		}
+		
+		doSelectVerCtrl();
+	}
+
+	function doSelectShowVerCtrlConfig()
+	{
+		var showVerCtrlConfig = $("#showVerCtrlConfig").val();
+		console.log("doSelectShowVerCtrlConfig showVerCtrlConfig:" + showVerCtrlConfig);
+		if(showVerCtrlConfig == 0)
 		{
-			$("#realDocVerCtrlDiv").hide();
+			$("#showVerCtrlConfig").val(1);
+			$("#showVerCtrlConfig").text("隐藏高级选项");
+			$("#verCtrlConfigDiv").show();			
 		}
 		else
 		{
-			$("#realDocVerCtrlDiv").show();
+			$("#showVerCtrlConfig").val(0);
+			$("#showVerCtrlConfig").text("显示高级选项");
+			$("#verCtrlConfigDiv").hide();						
 		}
-		
+	}
+	
+	function doSelectVerCtrl()
+	{
+		console.log("doSelectVerCtrl ");
 		var verCtrl = $("#verCtrl").val();
 		var isRemote = $("#isRemote").is(':checked')? 1: 0;
 		
@@ -683,12 +726,21 @@
        		$("#autoBackupEnable").attr("checked",false);
     	}
     	else
-    	{		
-    		$("#autoBackupConfigDiv").show();
-    		$("#autoBackupEnable").attr("checked", "checked");
-    		
-    		showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
-    		showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
+    	{	
+    		if(reposInfo.backupConfig.localBackupConfig == undefined && 
+    			reposInfo.backupConfig.remoteBackupConfig == undefined)
+    		{
+    				$("#autoBackupConfigDiv").hide();
+    		   		$("#autoBackupEnable").attr("checked",false);
+    		}
+    		else
+    		{
+	    		$("#autoBackupConfigDiv").show();
+	    		$("#autoBackupEnable").attr("checked", "checked");
+	    		
+	    		showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
+	    		showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
+    		}
     	}
     	
     	//init autoBackup
@@ -905,89 +957,7 @@
     	$("#remoteBackupStorageConfig").show();			
     	$("#remoteBackupStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
     	
-    	var remoteStorage = "";
-    	switch(protocol)
-    	{
-    	case "ftp":
-    		remoteStorage = protocol + "://" + remoteStorageConfig.FTP.host;
-    		if(remoteStorageConfig.FTP.port)
-    		{
-    			remoteStorage += ":" + remoteStorageConfig.FTP.port;
-    		}
-    		if(remoteStorageConfig.rootPath)
-    		{
-    			remoteStorage += remoteStorageConfig.rootPath;
-    		}
-    		if(remoteStorageConfig.FTP.userName)
-    		{
-    			remoteStorage += ";userName=" + remoteStorageConfig.FTP.userName;
-    		}
-    		if(remoteStorageConfig.FTP.pwd)
-    		{
-    			remoteStorage += ";pwd=" + remoteStorageConfig.FTP.pwd;
-    		}
-    		break;
-    	case "sftp":
-    		remoteStorage = protocol + "://" + remoteStorageConfig.SFTP.host;
-    		if(remoteStorageConfig.SFTP.port)
-    		{
-    			remoteStorage += ":" + remoteStorageConfig.SFTP.port;
-    		}
-    		if(remoteStorageConfig.rootPath)
-    		{
-    			remoteStorage += remoteStorageConfig.rootPath;
-    		}
-    		if(remoteStorageConfig.SFTP.userName)
-    		{
-    			remoteStorage += ";userName=" + remoteStorageConfig.SFTP.userName;
-    		}
-    		if(remoteStorageConfig.SFTP.pwd)
-    		{
-    			remoteStorage += ";pwd=" + remoteStorageConfig.SFTP.pwd;
-    		}
-    		break;
-    	case "smb":
-    		remoteStorage = protocol + "://" + remoteStorageConfig.SMB.host;
-    		if(remoteStorageConfig.rootPath)
-    		{
-    			remoteStorage += remoteStorageConfig.rootPath;
-    		}
-    		if(remoteStorageConfig.SMB.userDomain)
-    		{
-    			remoteStorage += ";userDomain=" + remoteStorageConfig.SMB.userDomain;
-    		}
-    		if(remoteStorageConfig.SMB.userName)
-    		{
-    			remoteStorage += ";userName=" + remoteStorageConfig.SMB.userName;
-    		}
-    		if(remoteStorageConfig.SMB.pwd)
-    		{
-    			remoteStorage += ";pwd=" + remoteStorageConfig.SMB.pwd;
-    		}
-    		break;
-    	case "svn":
-    		remoteStorage = remoteStorageConfig.SVN.url;
-    		if(remoteStorageConfig.SVN.userName)
-    		{
-    			remoteStorage += ";userName=" + remoteStorageConfig.SVN.userName;
-    		}
-    		if(remoteStorageConfig.SVN.pwd)
-    		{
-    			remoteStorage += ";pwd=" + remoteStorageConfig.SVN.pwd;
-    		}
-    		break;
-    	case "git":
-    		remoteStorage = remoteStorageConfig.GIT.url;
-    		if(remoteStorageConfig.GIT.userName)
-    		{
-    			remoteStorage += ";userName=" + remoteStorageConfig.GIT.userName;
-    		}
-    		if(remoteStorageConfig.GIT.pwd)
-    		{
-    			remoteStorage += ";pwd=" + remoteStorageConfig.GIT.pwd;
-    		}
-    		break;
-    	}	
+    	var remoteStorage = buildRemoteStorageConfigStr(remoteStorageConfig);
     	$("#remoteBackupStorage").val(remoteStorage);
     }
 
@@ -1042,28 +1012,9 @@
     		$("#remoteBackupStorageConfig").hide();
     		return;
     	}
-
-    	switch(protocol)
-    	{
-    	case "ftp":
-    		$("#remoteBackupStorage").attr('placeholder','ftp://192.168.0.1:21/path;userName=test;pwd=123456;');
-    		break;
-    	case "sftp":
-    		$("#remoteBackupStorage").attr('placeholder','sftp://192.168.0.1:22/path;userName=test;pwd=123456;');
-    		break;
-    	case "smb":
-    		$("#remoteBackupStorage").attr('placeholder','smb://192.168.0.1/path;userName=test;pwd=123456;');
-    		break;
-    	case "svn":
-    		$("#remoteBackupStorage").attr('placeholder','http://gitee.com/SvnRepos/path;userName=test;pwd=123456;');
-    		break;
-    	case "git":
-    		$("#remoteBackupStorage").attr('placeholder','http://gitee.com/GitRepos;userName=test;pwd=123456;');
-    		break;
-    	case "mxsdoc":
-    		$("#remoteBackupStorage").attr('placeholder','http://dw.gofreeteam.com;reposId=1;rootPath=/path;userName=test;pwd=123456;');
-    		break;
-    	}
+    	
+    	var placeholder = getPlacehoderForRemoteStorageProtocol(protocol);
+    	$("#remoteBackupStorage").attr('placeholder',placeholder);
     	$("#remoteBackupStorageConfig").show();
     }
 
@@ -1225,9 +1176,7 @@
        	<div class="col-lg-9">
 			<select class="form-control" id="type" name="type"  onchange="doSelectFS();" style="width: 100%">   
 				<option value="1" selected="selected">文件管理系统</option>   
-				<!-- <option value="2">文件系统前置</option> -->
-				<option value="3">SVN前置</option>   
-				<option value="4">GIT前置</option>   
+				<option value="5">文件服务器前置</option>
 			</select>
        </div>
 	</div>
@@ -1240,11 +1189,30 @@
 	</div>      
    	
    	<div class="form-group">
-    	<label class="control-label col-lg-3" for="realDocPath">存储位置</label>
-        <div class="col-lg-9">
-        	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+        <label style="margin-top:10px;padding-left:30px">文件存储位置
+        	<span style="margin-left:20px">
+				<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="doSelectReposStorageRealDocPathEnable()">自定义
+			</span> 
+        </label>
+		<div id="reposStorageRealDocPathConfig" style="padding-left:30px; display:none">
+        	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 86%"/>
         </div>
     </div>
+    
+    <div class="form-group">
+		<div id="remoteServerDiv" style="margin-top:10px;padding-left:30px; display:none">
+	    	<label>文件服务器</label>
+			<select class="form-control" id="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:86%">   
+	        	<option value="ftp">FTP</option>   
+	            <option value="sftp">SFTP</option>   
+	            <option value="smb">SMB</option>  
+	            <option value="svn">SVN</option>  
+	            <option value="git">GIT</option>  
+				<option value="mxsdoc">MXSDOC</option>  
+	        </select>		
+			<input class="form-control" type="text" id="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456;"  value="" style="width: 86%"/>
+	     </div>
+    </div>    
     
     <div class="form-group">
 		<div id="remoteStorageDiv" style="margin-top:10px;padding-left:30px">
@@ -1256,9 +1224,10 @@
 	            <option value="smb">SMB</option>  
 	            <option value="svn">SVN</option>  
 	            <option value="git">GIT</option>  
+				<option value="mxsdoc">MXSDOC</option>
 	        </select>		
 	 	    <div id="remoteStorageConfig"  style="margin-top:10px; display:none">
-	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 86%"/>
+	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456;"  value="" style="width: 86%"/>
 	    		<label style="margin-left:1px">自动拉取<span style="margin-left:3px"><input type="checkbox" id="autoPull" value="0"></span></label>
 		        <label style="margin-left:10px">强制拉取<span style="margin-left:3px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
 		        <label style="margin-left:10px">自动推送 <span style="margin-left:3px"><input type="checkbox" id="autoPush" value="0"></span></label>
@@ -1268,26 +1237,37 @@
     </div>    
 
     <div class="form-group">
-		<div id="realDocVerCtrlDiv" style="padding-left:30px">
-	    	<label>版本管理 <span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
-	       	<select class="form-control" id="verCtrl" onchange="doSelectVerCtrl();" style="width: 86%">   
-	        	<option value="0">无</option>   
-	            <option value="1">SVN</option>   
-	            <option value="2">GIT</option>   
-	        </select>
-		    <div id="verReposSetting" style="padding-left:45px;display:none">
-				<div id="localVerRepos">
-					<label>版本仓库所在目录</label>
-				    <input class="form-control" type="text" id="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
-			    </div>
-			   	<div id="remoteVerRepos">
-					<label>版本仓库链接</label>
-				    <input class="form-control" type="text" id="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
-				    <label>用户名</label>
-				    <input class="form-control" type="text" id="svnUser"  value="" style="width: 85%"/>
-				    <label>密码</label>
-			        <input class="form-control" type="password" id="svnPwd" value="" style="width: 85%"/>           
-			    </div>	
+		<div id="verCtrlDiv" style="padding-left:30px">
+    		<div id="verCtrlEnablelDiv" style="margin-top:20px">
+	            <label>版本管理 
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnalbe()">
+	            	</span>
+	            </label>
+	            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="doSelectShowVerCtrlConfig()">显示高级选项</span>
+			</div>
+	    	
+	    	<div id="verCtrlConfigDiv" style="display:none">
+		    	<label style="margin-left:20px">版本仓库看类型<span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
+		       	<select class="form-control" id="verCtrl" onchange="doSelectVerCtrl();" style="margin-left:20px; width: 86%">   
+		        	<option value="0">无</option>   
+		            <option value="1">SVN</option>   
+		            <option value="2">GIT</option>   
+		        </select>
+			    <div id="verReposSetting" style="padding-left:45px;display:none">
+					<div id="localVerRepos">
+						<label>版本仓库所在目录</label>
+					    <input class="form-control" type="text" id="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
+				    </div>
+				   	<div id="remoteVerRepos">
+						<label>版本仓库链接</label>
+					    <input class="form-control" type="text" id="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
+					    <label>用户名</label>
+					    <input class="form-control" type="text" id="svnUser"  value="" style="width: 85%"/>
+					    <label>密码</label>
+				        <input class="form-control" type="password" id="svnPwd" value="" style="width: 85%"/>           
+				    </div>	
+				</div>
 			</div>
 	     </div>
 	       	
@@ -1323,7 +1303,7 @@
 	
 	<div class="form-group">
 		<div id="encryptEnablelDiv" style="margin-top:10px;padding-left:30px;">
-	            <label>仓库加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="doSetEncryptConfirm()"></span></label>
 		</div>
 	</div>
 

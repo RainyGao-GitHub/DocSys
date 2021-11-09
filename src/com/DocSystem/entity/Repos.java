@@ -70,9 +70,12 @@ public class Repos {
 	public boolean  isBussiness;
 	
 	public Integer isTextSearchEnabled;
+
+	public String remoteServer;
 	
 	public Long totalSize;
 	public Long freeSize;
+	public RemoteStorageConfig remoteServerConfig;
 	public RemoteStorageConfig remoteStorageConfig;
 	public TextSearchConfig textSearchConfig;
 		
