@@ -446,9 +446,11 @@ public class BaseController  extends BaseFunction{
 				return docSysGetDocListWithChangeType(repos, doc);
 			}
 			return getLocalEntryList(repos, doc);
-		case 3:
-		case 4:
+		case 3: //SVN前置(deprecated)
+		case 4: //GIT前置(deprecated)
 			return getVerReposEntryList(repos, doc);
+		case 5:	//远程服务器前置
+			return getRemoteServerEntryList(repos, doc);
 		}
 		return null;
 	}
@@ -753,6 +755,22 @@ public class BaseController  extends BaseFunction{
 			return gitUtil.getDocList(repos, doc, null); 
 		}
 		return null;
+	}
+	
+	private List<Doc> getRemoteServerEntryList(Repos repos, Doc doc) {
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("getRemoteServerEntryList remoteServerConfig is null");
+			return null;
+		}
+		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote);
+		if(remoteList == null)
+		{
+			Log.debug("docSysGetDocListWithChangeType remoteList is null");
+			return null;
+		}
+		return remoteList;
 	}
 
 	protected boolean isDirLocalChanged(Repos repos, Doc doc) 
