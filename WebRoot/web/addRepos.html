@@ -18,6 +18,19 @@
             		<option value="5">文件服务器前置</option>
             	</select>
 			</div> 
+
+			<div name="remoteServerDiv" style="margin-top:10px"  style="display:none">
+				<label>文件服务器</label>
+				<select class="form-control" name="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:100%">   
+		        	<option value="ftp">FTP</option>   
+		            <option value="sftp">SFTP</option>   
+		            <option value="smb">SMB</option>  
+		            <option value="svn">SVN</option>  
+		            <option value="git">GIT</option>  
+		            <option value="mxsdoc">MXSDOC</option>  
+		        </select>		            
+				<input class="form-control" type="text" name="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
+			</div>  
 			
 	        <div name="reposStorageConfig" style="margin-top:10px">
 				<label>仓库位置 
@@ -37,19 +50,6 @@
 					<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 				</div>
 			</div>
-			
-			<div name="remoteServerDiv" style="margin-top:10px"  style="display:none">
-				<label>文件服务器</label>
-				<select class="form-control" name="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:100%">   
-		        	<option value="ftp">FTP</option>   
-		            <option value="sftp">SFTP</option>   
-		            <option value="smb">SMB</option>  
-		            <option value="svn">SVN</option>  
-		            <option value="git">GIT</option>  
-		            <option value="mxsdoc">MXSDOC</option>  
-		        </select>		            
-				<input class="form-control" type="text" name="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
-			</div>  
 			
         	<div name="remoteStorageDiv" style="margin-top:10px">
 	        	<label>远程存储
