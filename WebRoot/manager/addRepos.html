@@ -189,7 +189,71 @@
 		}		
 	}
 	
-	//According verCtrl value to disale the svnPath or not
+	/** 文件存储位置设置 **/
+	function doSelectReposStorageRealDocPathEnable()
+	{
+		var reposStorageRealDocPathEnable = $("#reposStorageRealDocPathEnable").is(':checked')? 1: 0;
+		console.log("doSelectReposStorageRealDocPathEnable reposStorageRealDocPathEnable:" + reposStorageRealDocPathEnable);
+		if(reposStorageRealDocPathEnable == 0)
+		{
+			$("#reposStorageRealDocPathConfig").hide();
+		}
+		else
+		{	
+			$("#reposStorageRealDocPathConfig").show();
+		}
+	}
+	
+	/** 版本管理设置 **/
+	function doSelectVerCtrlEnalbe()
+	{
+		var verCtrlEnable = $("#verCtrlEnable").is(':checked')? 1: 0;
+		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
+		if(verCtrlEnable == 0)
+		{
+			$("#verCtrl").get(0).selectedIndex=0;	//关闭verCtrl
+
+			$("#verCtrlConfigDiv").hide();		//隐藏 高级选项
+			
+			$("#showVerCtrlConfig").hide();	//隐藏 高级选项提示
+			$("#showVerCtrlConfig").val(0);
+			$("#showVerCtrlConfig").text("显示高级选项");
+		}
+		else
+		{	
+			if($("#verCtrl").val() == 0)	//设置版本控制为GIT
+			{
+				$("#verCtrl").get(0).selectedIndex=2;
+			}
+			
+			$("#verCtrlConfigDiv").hide();			//隐藏 高级选项
+			
+			$("#showVerCtrlConfig").show();		//显示 高级选项提示
+			$("showVerCtrlConfig").val(0);
+			$("#showVerCtrlConfig").text("显示高级选项");						
+		}
+		
+		doSelectVerCtrl();
+	}
+
+	function doSelectShowVerCtrlConfig()
+	{
+		var showVerCtrlConfig = $("#showVerCtrlConfig").val();
+		console.log("doSelectShowVerCtrlConfig showVerCtrlConfig:" + showVerCtrlConfig);
+		if(showVerCtrlConfig == 0)
+		{
+			$("#showVerCtrlConfig").val(1);
+			$("#showVerCtrlConfig").text("隐藏高级选项");
+			$("#verCtrlConfigDiv").show();			
+		}
+		else
+		{
+			$("#showVerCtrlConfig").val(0);
+			$("#showVerCtrlConfig").text("显示高级选项");
+			$("#verCtrlConfigDiv").hide();						
+		}
+	}	
+
 	function doSelectVerCtrl()
 	{
 		console.log("doSelectVerCtrl ");
@@ -621,10 +685,14 @@
         </div>
     </div>
 
-    <div class="form-group">
-    	<label class="control-label col-lg-3" for="realDocPath">存储位置</label>
-        <div class="col-lg-9">
-        	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+   	<div class="form-group">
+        <label style="margin-top:10px;padding-left:30px">文件存储位置
+        	<span style="margin-left:20px">
+				<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="doSelectReposStorageRealDocPathEnable()">自定义
+			</span> 
+        </label>
+		<div id="reposStorageRealDocPathConfig" style="padding-left:30px; display:none">
+        	<input class="form-control" type="text" id="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 86%"/>
         </div>
     </div>
 
@@ -665,25 +733,36 @@
         
     <div class="form-group">
 		<div id="verCtrlDiv" style="margin-top:10px;padding-left:30px">
-	    	<label>版本管理 <span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
-	       	<select class="form-control" id="verCtrl" onchange="doSelectVerCtrl();" style="width: 86%">   
-	        	<option value="0">无</option>   
-	            <option value="1">SVN</option>   
-	            <option value="2">GIT</option>   
-	        </select>
-		    <div id="verReposSetting" style="padding-left:45px;display:none">
-				<div id="localVerRepos">
-					<label>版本仓库所在目录</label>
-				    <input class="form-control" type="text" id="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
-			    </div>
-			   	<div id="remoteVerRepos">
-					<label>版本仓库链接</label>
-				    <input class="form-control" type="text" id="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
-				    <label>用户名</label>
-				    <input class="form-control" type="text" id="svnUser"  value="" style="width: 85%"/>
-				    <label>密码</label>
-			        <input class="form-control" type="password" id="svnPwd" value="" style="width: 85%"/>           
-			    </div>	
+    		<div id="verCtrlEnablelDiv" style="margin-top:20px">
+	            <label>版本管理 
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnalbe()">
+	            	</span>
+	            </label>
+	            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="doSelectShowVerCtrlConfig()">显示高级选项</span>
+			</div>
+
+	    	<div id="verCtrlConfigDiv" style="display:none">
+		    	<label style="margin-left:20px">版本仓库看类型<span id="isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
+		       	<select class="form-control" id="verCtrl" onchange="doSelectVerCtrl();" style="margin-left:20px; width: 86%">   
+		        	<option value="0">无</option>   
+		            <option value="1">SVN</option>   
+		            <option value="2">GIT</option>   
+		        </select>
+			    <div id="verReposSetting" style="padding-left:45px;display:none">
+					<div id="localVerRepos">
+						<label>版本仓库所在目录</label>
+					    <input class="form-control" type="text" id="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
+				    </div>
+				   	<div id="remoteVerRepos">
+						<label>版本仓库链接</label>
+					    <input class="form-control" type="text" id="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
+					    <label>用户名</label>
+					    <input class="form-control" type="text" id="svnUser"  value="" style="width: 85%"/>
+					    <label>密码</label>
+				        <input class="form-control" type="password" id="svnPwd" value="" style="width: 85%"/>           
+				    </div>	
+				</div>
 			</div>
 	     </div>
 	       	
