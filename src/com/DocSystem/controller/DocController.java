@@ -3374,6 +3374,9 @@ public class DocController extends BaseController{
 			case 4:
 				dbDoc = verReposGetDoc(repos, doc, null);
 				break;
+			case 5:
+				dbDoc = remoteServerGetDoc(repos, doc, null);
+				break;
 			}
 			
 		}
@@ -3435,7 +3438,7 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 	}	
-	
+
 	//get DocInfo for remoteStorage
 	@RequestMapping("/getDocRS.do")
 	public void getDocRS(Integer reposId, String remoteDirectory, String path, String name,
