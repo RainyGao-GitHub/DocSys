@@ -75,6 +75,7 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.BackupConfig;
+import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.LocalBackupConfig;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteBackupConfig;
@@ -2189,6 +2190,9 @@ public class DocController extends BaseController{
 			case 4:
 				downloadDocPrepare_VRP(repos, doc, reposAccess.getAccessUser(), rt);				
 				break;
+			case 5:
+				downloadDocPrepare_RS(repos, doc, reposAccess.getAccessUser(), rt);				
+				break;
 			}
 		}
 		writeJson(rt, response);
@@ -2393,6 +2397,91 @@ public class DocController extends BaseController{
 		Log.docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
 		return;		
 	}
+	
+	public void downloadDocPrepare_RS(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
+	{	
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("downloadDocPrepare_RS() remote is null");
+			Log.docSysErrorLog("文件服务器设置错误！", rt);
+			return;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+		{
+			Log.debug("downloadDocPrepare_RS() channel is null");
+			Log.docSysErrorLog("非商业版不支持文件服务器前置！", rt);			
+			return;
+		}
+		channel.remoteStoragePull(remote, repos, doc, accessUser, "文件下载拉取", true, true, false, rt);
+		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
+		if(pullResult == null)
+		{
+			Log.debug("downloadDocPrepare_RS() 远程拉取失败");
+			Log.docSysErrorLog("文件远程下载失败！", rt);			
+			return;			
+		}
+		
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry == null)
+		{
+			Log.debug("downloadDocPrepare_FSM() locaDoc " +doc.getPath() + doc.getName() + " 获取异常");
+			Log.docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
+			return;
+		}
+				
+		//本地文件不存在
+		if(localEntry.getType() == 0)
+		{
+			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+			return;
+		}
+		
+		//原始路径下载，禁止删除原始文件
+		String targetName = doc.getName();
+		String targetPath = doc.getLocalRootPath() + doc.getPath();
+		if(localEntry.getType() == 1)
+		{
+			//If it is office file, need try to get the latest save office file
+			Doc downloadDocForOffice = getDownloadDocInfoForOffice(repos, localEntry);
+			if(downloadDocForOffice != null)
+			{
+				rt.setData(downloadDocForOffice);
+				rt.setMsgData(1);	//下载完成后删除已下载的文件
+				Log.docSysDebugLog("本地文件: 非原始路径下载", rt);
+				return;
+			}
+			
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
+			rt.setData(downloadDoc);
+			rt.setMsgData(0);	//下载完成后不能删除下载的文件
+			Log.docSysDebugLog("本地文件: 原始路径下载", rt);
+			return;
+		}
+		
+		if(localEntry.getType() == 2)
+		{	
+			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
+			{
+				Log.docSysErrorLog("空目录无法下载！", rt);
+				return;				
+			}
+			
+			//TODO: 这里存在越权下载文件的风险，需要增加权限检查，避免下载了不应该下载的文件
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
+			rt.setData(downloadDoc);
+			rt.setMsgData(0);	//下载完成后删除已下载的文件
+			Log.docSysDebugLog("本地目录: 原始路径下载", rt);
+			return;						
+		}
+				
+		Log.docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
+		return;		
+	}
+
 	
 	private Doc getDownloadDocInfoForOffice(Repos repos, Doc doc) {
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
