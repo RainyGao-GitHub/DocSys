@@ -5390,9 +5390,8 @@ public class BaseController  extends BaseFunction{
 		case 3:
 		case 4:
 			return verReposGetDoc(repos, doc, null);
-		//case 5:// FTP 前置
-		//case 6:// SFTP 前置
-		//case 7:// SMB 前置 (共享目录)
+		case 5:
+			return remoteServerGetDoc(repos, doc, null);
 		}
 		
 		return null;
@@ -5513,7 +5512,11 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getLatestRevision(doc);		
 	}
 
-
+	
+	protected Doc remoteServerGetDoc(Repos repos, Doc doc, String revision) {
+		return getRemoteStorageEntry(repos, doc, repos.remoteServerConfig);
+	}
+	
 	protected Doc verReposGetDoc(Repos repos, Doc doc, String revision)
 	{
 		if(repos.getVerCtrl() == 1)
