@@ -437,22 +437,18 @@ public class BaseController  extends BaseFunction{
 
 	protected List<Doc> docSysGetDocList(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
-		switch(repos.getType())
+		//文件管理系统
+		if(repos.getType() < 3)
 		{
-		case 1:
-		case 2:
 			if(remoteStorageEn)
 			{
 				return docSysGetDocListWithChangeType(repos, doc);
 			}
 			return getLocalEntryList(repos, doc);
-		case 3: //SVN前置(deprecated)
-		case 4: //GIT前置(deprecated)
-			return getVerReposEntryList(repos, doc);
-		case 5:	//远程服务器前置
-			return getRemoteServerEntryList(repos, doc);
 		}
-		return null;
+		
+		//文件服务器前置
+		return getRemoteServerEntryList(repos, doc);
 	}
 	
 	private List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
@@ -5378,23 +5374,17 @@ public class BaseController  extends BaseFunction{
 	
 	protected Doc docSysGetDoc(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
-			if(remoteStorageEn)
+		//文件管理系统
+		if(repos.getType() < 3)
+		{	if(remoteStorageEn)
 			{
 				return docSysGetDocWithChangeType(repos, doc);
 			}
 			return fsGetDoc(repos, doc);
-		case 3:
-		case 4:
-			return verReposGetDoc(repos, doc, null);
-		case 5:
-			return remoteServerGetDoc(repos, doc, null);
 		}
 		
-		return null;
+		//文件服务器前置
+		return remoteServerGetDoc(repos, doc, null);
 	}
 	
 	protected Doc docSysGetDocWithChangeType(Repos repos, Doc doc) {

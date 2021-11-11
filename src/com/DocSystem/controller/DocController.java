@@ -2180,19 +2180,13 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			switch(repos.getType())
+			if(repos.getType() < 3)
 			{
-			case 1:
-			case 2:
 				downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), true, rt);				
-				break;
-			case 3:
-			case 4:
-				downloadDocPrepare_VRP(repos, doc, reposAccess.getAccessUser(), rt);				
-				break;
-			case 5:
-				downloadDocPrepare_RS(repos, doc, reposAccess.getAccessUser(), rt);				
-				break;
+			}
+			else
+			{
+				downloadDocPrepare_RemoteServer(repos, doc, reposAccess.getAccessUser(), rt);				
 			}
 		}
 		writeJson(rt, response);
@@ -2398,7 +2392,7 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	public void downloadDocPrepare_RS(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
+	public void downloadDocPrepare_RemoteServer(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
 		RemoteStorageConfig remote = repos.remoteServerConfig;
 		if(remote == null)
