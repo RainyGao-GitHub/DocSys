@@ -3152,32 +3152,12 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.debug("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 	
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return addDoc_FSM(repos, doc,	//Add a empty file
+		return addDoc_FSM(repos, doc,	//Add a empty file
 					uploadFile, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
-		case 5:	//文件服务器前置
-			return addDoc_REMOTE(repos, doc,	//Add a empty file
-					uploadFile, //For upload
-					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt, actionList);
-		}
-		return false;
 	}
 	
-	private boolean addDoc_REMOTE(Repos repos, Doc doc, MultipartFile uploadFile, Integer chunkNum, Long chunkSize,
-			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
-			List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	//底层addDoc接口
 	//docData: null为新建文件或者是目录，否则为文件上传（新增）
 	protected boolean addDocEx(Repos repos, Doc doc, 
@@ -3187,19 +3167,10 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.debug("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 	
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return addDocEx_FSM(repos, doc,	//Add a empty file
+		return addDocEx_FSM(repos, doc,	//Add a empty file
 					docData, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
-			
-		}
-		return false;
 	}
 
 	protected boolean addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
@@ -3268,22 +3239,43 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
-		if(revision == null)
+		String revision = null;
+		if(repos.getType() < 3)
 		{
-			Log.docSysWarningLog("verReposDocCommit Failed", rt);
+			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
+			if(revision == null)
+			{
+				Log.docSysWarningLog("verReposDocCommit Failed", rt);
+			}
+			else
+			{
+				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+				doc.setRevision(revision);
+				if(dbAddDoc(repos, doc, false, false) == false)
+				{	
+					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+				}
+				
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			}		
 		}
 		else
 		{
-			//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
-			doc.setRevision(revision);
-			if(dbAddDoc(repos, doc, false, false) == false)
-			{	
-				Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2, null);
+			if(revision == null)
+			{
+				Log.docSysWarningLog("remoteServerDocCommit Failed", rt);
 			}
-			
-			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			else
+			{
+				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+				doc.setRevision(revision);
+				if(dbAddDoc(repos, doc, false, false) == false)
+				{	
+					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+				}
+			}			
 		}
 		
 		//检查dbParentDoc是否已添加
@@ -3305,7 +3297,7 @@ public class BaseController  extends BaseFunction{
 		
 		return true;
 	}
-	
+
 	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
@@ -3372,22 +3364,43 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
-		if(revision == null)
+		String revision = null;
+		if(repos.getType() < 3)
 		{
-			Log.docSysWarningLog("verReposDocCommit Failed", rt);
+			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
+			if(revision == null)
+			{
+				Log.docSysWarningLog("verReposDocCommit Failed", rt);
+			}
+			else
+			{
+				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+				doc.setRevision(revision);
+				if(dbAddDoc(repos, doc, false, false) == false)
+				{	
+					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+				}
+				
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			}
 		}
 		else
 		{
-			//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
-			doc.setRevision(revision);
-			if(dbAddDoc(repos, doc, false, false) == false)
-			{	
-				Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2, null);
+			if(revision == null)
+			{
+				Log.docSysWarningLog("remoteServerDocCommit Failed", rt);
 			}
-			
-			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			else
+			{
+				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+				doc.setRevision(revision);
+				if(dbAddDoc(repos, doc, false, false) == false)
+				{	
+					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+				}
+			}				
 		}
 		
 		//检查dbParentDoc是否已添加
@@ -3410,7 +3423,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	
 	private boolean dbUpdateDocRevision(Repos repos, Doc doc, String revision) {
 		Log.debug("dbUpdateDocRevision " + revision + " doc " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "]");
 
@@ -9122,6 +9134,37 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return gitUtil.getHistoryDetail(doc, commitId);
+	}
+	
+	private String remoteServerDocCommit(Repos repos, Doc doc, String commitMsg, User accessUser, ReturnAjax rt, boolean modifyEnable, int subDocCommitFlag, List<CommitAction> commitActionList) {
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("remoteServerDocCommit() repos.remoteServerConfig 未设置");
+			rt.setError("文件服务器设置错误！");
+			return null;
+		}
+		
+        RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session == null)
+        {
+        	Log.debug("remoteServerDocCommit() 文件服务器登录失败！");
+    		rt.setError("文件服务器登录失败！");
+    		return null;			
+    	}	
+        
+        doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, rt);
+        doRemoteStorageLogout(session);            
+		
+        DocPushResult pushResult = (DocPushResult) rt.getDataEx();
+        if(pushResult == null || pushResult.revision == null)
+        {
+        	Log.debug("remoteServerDocCommit() 文件推送失败！");
+    		rt.setError("文件远程推送失败！");
+    		return null;			        	
+        }
+        
+        return pushResult.revision;
 	}
 	
 	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
@@ -17290,6 +17333,7 @@ public class BaseController  extends BaseFunction{
 		{
 			updateRemoteStorageDbEntry(remote, repos, pushResult, pushResult.actionList, revision);
 		}
+		pushResult.revision = revision;
 	}
 	
 	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt) {
@@ -17349,11 +17393,18 @@ public class BaseController  extends BaseFunction{
 			subEntryPushFlag = 2;
 		}
 		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, pushResult.actionList, false);
-		if(ret == true && remote.isVerRepos)
+		if(ret == true)
 		{
-			if(pushResult.actionList.size() > 0)
+			if(remote.isVerRepos == true)
 			{
-				remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult); 
+				if(pushResult.actionList.size() > 0)
+				{
+					remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult); 
+				}
+			}
+			else
+			{
+				pushResult.revision = "";
 			}
 		}
 		rt.setDataEx(pushResult);

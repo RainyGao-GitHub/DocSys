@@ -11,4 +11,5 @@ public class DocPushResult {
 	public List<CommitAction> actionList;	
 	public boolean isSubAction = false;
 	public CommitAction action; //latest add commitAction
+	public String revision;	//svn和git会设置
 }
