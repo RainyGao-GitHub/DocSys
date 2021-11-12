@@ -115,7 +115,6 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 #### 1、检查系统缺少的动态库并修复
 双击运行 DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat ，根据报错提示确定需要修复的动态库
 ### 四、Linux系统Excel在线编辑退出后，修改内容丢失
-### 五、Linux系统中文乱码
 #### 1、安装字体库
 yum -y install fontconfig
 #### 2、添加中文字体
@@ -126,6 +125,15 @@ yum -y install ttmkfdir
 fc-cache
 #### 5、重新生成office字体库
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
+### 五、Linux系统中文乱码
+#### 1、安装字体库
+yum -y install fontconfig
+#### 2、添加中文字体
+将 C:/Windows/Fonts 字体文件复制到 /usr/share/fonts 目录
+#### 3、生成 fonts.scale 文件
+yum -y install ttmkfdir 
+#### 4、刷新字体缓存
+fc-cache
 ### 六、什么是分布式远程存储
 1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、MxsDoc等文件存储系统）
 
