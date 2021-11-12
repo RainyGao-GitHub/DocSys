@@ -1271,7 +1271,7 @@ public class DocController extends BaseController{
 		}
 			
 		//非文件管理系统类型仓库不支持秒传
-		if(repos.getType() != 1)
+		if(isFSMRepos(repos) == false)
 		{
 			return false;
 		}
@@ -2180,15 +2180,9 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(repos.getType() < 3)
-			{
-				downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), true, rt);				
-			}
-			else
-			{
-				downloadDocPrepare_RemoteServer(repos, doc, reposAccess.getAccessUser(), rt);				
-			}
+			downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), true, rt);				
 		}
+		
 		writeJson(rt, response);
 		
 		if(rt.getStatus().equals("ok"))
@@ -2251,21 +2245,24 @@ public class DocController extends BaseController{
 	
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
-		boolean autoPullDone = false;
-		RemoteStorageConfig remote = null;
-		if(remoteStorageEn)
+		if(isFSMRepos(repos) == false)
 		{
-			//远程存储自动拉取
-			remote = repos.remoteStorageConfig;
-			if(remote != null && remote.autoPull != null && remote.autoPull == 1)
+			//文件服务器前置仓库不允许远程存储
+			remoteStorageEn = false;
+			//从文件服务器拉取文件
+			remoteServerCheckOut(repos, doc, null, null, true, true, null);
+		}
+		
+		//如果设置了远程存储自动拉取，那么先自动拉取，并设置allPullDone标记，避免后面本地文件不存在时再次远程拉取
+		boolean remoteStorageAutoPullDone = false;		
+		if(remoteStorageEn)
+		{	
+			RemoteStorageConfig remoteStorage = repos.remoteStorageConfig;
+			if(remoteStorage != null && remoteStorage.autoPull != null && remoteStorage.autoPull == 1)
 			{
 				Log.debug("downloadDocPrepare_FSM() 远程自动拉取");
-				Channel channel = ChannelFactory.getByChannelName("businessChannel");
-				if(channel != null)
-				{	
-					channel.remoteStoragePull(remote, repos, doc, accessUser, "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
-				}
-				autoPullDone = true;
+				remoteStorageCheckOut(repos, doc, accessUser, "远程存储自动拉取", true, true, true, rt);
+				remoteStorageAutoPullDone = true;
 			}
 		}
 
@@ -2277,28 +2274,23 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		
 		//本地文件不存在
 		if(localEntry.getType() == 0)
 		{
 			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			if(remoteStorageEn)
 			{
-				if(autoPullDone == false)
+			    if(remoteStorageAutoPullDone == false)
 				{
-					//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
-			        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-					if(channel == null)
-			        {
-						Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
-					}
-					else
+			    	//本地文件不存在且没有自动拉取过，则从远程存储服务器自动拉取文件
+					if(remoteStorageCheckOut(repos, doc, accessUser, "文件下载拉取", true, true, true, rt) == true)
 					{
-						channel.remoteStoragePull(remote, repos, localEntry, accessUser, "文件下载拉取", true, remote.autoPullForce == 1, true, rt);
 						localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
 					}
 				}
 			}
+			
+			//注意：这里不再次检查localEntry是否存在，是因为后面还可能需要从版本仓库中下载文件
 		}
 		
 		//原始路径下载，禁止删除原始文件
@@ -2339,10 +2331,18 @@ public class DocController extends BaseController{
 			return;						
 		}
 		
-		//本地文件不存在（尝试从版本仓库中下载）
-		targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
 		if(localEntry.getType() == 0)
 		{
+			//文件服务器前置仓库不支持版本仓库
+			if(isFSMRepos(repos) == false)
+			{
+				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+				Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+				return;					
+			}
+			
+			//本地文件不存在（尝试从版本仓库中下载）
+			targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
@@ -2392,90 +2392,36 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	public void downloadDocPrepare_RemoteServer(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
-	{	
-		RemoteStorageConfig remote = repos.remoteServerConfig;
+	private boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt)
+	{
+		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
-			Log.debug("downloadDocPrepare_RS() remote is null");
-			Log.docSysErrorLog("文件服务器设置错误！", rt);
-			return;
+			Log.debug("remoteStorageCheckOut() remote is null");
+			Log.docSysErrorLog("远程存储未设置！", rt);
+			return false;
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 		{
-			Log.debug("downloadDocPrepare_RS() channel is null");
-			Log.docSysErrorLog("非商业版不支持文件服务器前置！", rt);			
-			return;
+			Log.debug("remoteStorageCheckOut() channel is null");
+			Log.docSysErrorLog("开源版不支持远程存储！", rt);			
+			return false;
 		}
-		channel.remoteStoragePull(remote, repos, doc, accessUser, "文件下载拉取", true, true, false, rt);
+		
+		channel.remoteStoragePull(remote, repos, doc, accessUser, "远程存储自动拉取", recurcive, force, isAutoPull, rt);
 		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
 		if(pullResult == null)
 		{
-			Log.debug("downloadDocPrepare_RS() 远程拉取失败");
+			Log.debug("remoteStorageCheckOut() 远程拉取失败");
 			Log.docSysErrorLog("文件远程下载失败！", rt);			
-			return;			
-		}
+			return false;			
+		}	
 		
-		Doc localEntry = fsGetDoc(repos, doc);
-		if(localEntry == null)
-		{
-			Log.debug("downloadDocPrepare_FSM() locaDoc " +doc.getPath() + doc.getName() + " 获取异常");
-			Log.docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
-			return;
-		}
-				
-		//本地文件不存在
-		if(localEntry.getType() == 0)
-		{
-			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
-			return;
-		}
+		return true;
 		
-		//原始路径下载，禁止删除原始文件
-		String targetName = doc.getName();
-		String targetPath = doc.getLocalRootPath() + doc.getPath();
-		if(localEntry.getType() == 1)
-		{
-			//If it is office file, need try to get the latest save office file
-			Doc downloadDocForOffice = getDownloadDocInfoForOffice(repos, localEntry);
-			if(downloadDocForOffice != null)
-			{
-				rt.setData(downloadDocForOffice);
-				rt.setMsgData(1);	//下载完成后删除已下载的文件
-				Log.docSysDebugLog("本地文件: 非原始路径下载", rt);
-				return;
-			}
-			
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
-			rt.setData(downloadDoc);
-			rt.setMsgData(0);	//下载完成后不能删除下载的文件
-			Log.docSysDebugLog("本地文件: 原始路径下载", rt);
-			return;
-		}
-		
-		if(localEntry.getType() == 2)
-		{	
-			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
-			{
-				Log.docSysErrorLog("空目录无法下载！", rt);
-				return;				
-			}
-			
-			//TODO: 这里存在越权下载文件的风险，需要增加权限检查，避免下载了不应该下载的文件
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
-			rt.setData(downloadDoc);
-			rt.setMsgData(0);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("本地目录: 原始路径下载", rt);
-			return;						
-		}
-				
-		Log.docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
-		return;		
 	}
-
 	
 	private Doc getDownloadDocInfoForOffice(Repos repos, Doc doc) {
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
@@ -3016,20 +2962,14 @@ public class DocController extends BaseController{
 			Doc tmpDoc = doc;
 			if(commitId == null)
 			{
-				//SVN/GIT前置类型仓库需要先将文件下载到本地
-				if(repos.getType() == 1)
+				if(isFSMRepos(repos))
 				{
 					//远程存储自动拉取
 					boolean autoPullDone = false;
 					RemoteStorageConfig remote = repos.remoteStorageConfig;
 					if(remote != null && remote.autoPull != null && remote.autoPull == 1)
 					{
-						Log.debug("getDocContent() 远程自动拉取");
-				    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
-						if(channel != null)
-				        {	
-							channel.remoteStoragePull(remote, repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
-				        }
+						remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
 						autoPullDone = true;
 					}
 					
@@ -3040,24 +2980,30 @@ public class DocController extends BaseController{
 						Log.debug("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在");
 						if(autoPullDone == false)
 						{
-							//本地文件如果不存在，那么不管是不是设置了自动拉取都要重新拉取
-					        Channel channel = ChannelFactory.getByChannelName("businessChannel");
-							if(channel != null)
+							if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt) == true)
 							{
-								channel.remoteStoragePull(remote, repos, localEntry, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
 								localEntry = fsGetDoc(repos, doc); //重新读取文件信息
 							}
 						}
 					}		
 				}
-				else if(repos.getType() == 3 || repos.getType() == 4)
+				else
 				{
-					verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);
+					remoteServerCheckOut(repos, doc, null, commitId, true, true, null);
 				}
 			}
 			else	//获取历史版本文件
 			{
-				Doc remoteDoc = verReposGetDoc(repos, doc, commitId);
+				Doc remoteDoc = null;
+				if(isFSMRepos(repos))
+				{
+					remoteDoc = verReposGetDoc(repos, doc, commitId);
+				}
+				else
+				{
+					remoteServerGetDoc(repos, doc, commitId);
+				}
+				
 				if(remoteDoc == null)
 				{
 					Log.docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
@@ -3087,7 +3033,14 @@ public class DocController extends BaseController{
 				File file = new File(tempLocalRootPath + path + name);
 				if(file.exists() == false)
 				{
-					verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+					if(isFSMRepos(repos))
+					{
+						verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+					}
+					else
+					{
+						remoteServerCheckOut(repos, doc, tempLocalRootPath, commitId, true, true, null);
+					}
 				}
 				tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
 			}
@@ -3156,7 +3109,7 @@ public class DocController extends BaseController{
 		return FileUtils2.isBinaryFile(code);
 	}
 	
-	public String getDocContent(Repos repos, Doc doc, int offset, int size)
+	public String getDocContent(Repos repos, Doc doc, int offset, int size, User accessUser)
 	{
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
@@ -3166,10 +3119,10 @@ public class DocController extends BaseController{
 		doc.setLocalVRootPath(localVRootPath);
 		
 		Doc tmpDoc = doc;
-		//SVN/GIT前置类型仓库需要先将文件下载到本地
-		if(repos.getType() == 3 || repos.getType() == 4)
+		//置类型仓库需要先将文件下载到本地
+		if(isFSMRepos(repos) == false)
 		{
-			verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);
+			remoteServerCheckOut(repos, doc, null, null, true, true, null);
 		}		
 	
 		String content = "";
@@ -3439,30 +3392,20 @@ public class DocController extends BaseController{
 		Doc dbDoc = fsGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
 		{
-			switch(repos.getType())
+			if(isFSMRepos(repos))
 			{
-			case 1:
-			case 2:	//文件系统前置只是文件管理系统类型的特殊形式（版本管理）
 				RemoteStorageConfig remote = repos.remoteStorageConfig;
-				if(remote == null)
-				{
-					Log.debug("docSysGetDocListWithChangeType remote is null");
-				}
-				else
+				if(remote != null)
 				{
 					dbDoc = getRemoteStorageEntry(repos, doc, remote);
 				}
-				break;
-			case 3:
-			case 4:
-				dbDoc = verReposGetDoc(repos, doc, null);
-				break;
-			case 5:
-				dbDoc = remoteServerGetDoc(repos, doc, null);
-				break;
 			}
-			
+			else
+			{	
+				dbDoc = remoteServerGetDoc(repos, doc, null);
+			}			
 		}
+		
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + path+name + " 不存在！", rt);
@@ -3701,17 +3644,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-			downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), false, rt);				
-			break;
-		case 3:
-		case 4:
-			downloadDocPrepare_VRP(repos, doc, reposAccess.getAccessUser(), rt);				
-			break;
-		}
+		downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), false, rt);							
 		
 		//rt里保存了下载文件的信息
 		String status = rt.getStatus();
@@ -3854,10 +3787,10 @@ public class DocController extends BaseController{
 		Doc tmpDoc = doc;
 		if(commitId == null)
 		{
-			//SVN和GIT前置类型仓库，需要先将文件CheckOut出来
-			if(repos.getType() == 3 || repos.getType() == 4)
+			//前置类型仓库，需要先将文件CheckOut出来
+			if(isFSMRepos(repos) == false)
 			{
-				verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null);
+				remoteServerCheckOut(repos, doc, null, null, true, true, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -3870,7 +3803,16 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			Doc remoteDoc = verReposGetDoc(repos, doc, commitId);
+			Doc remoteDoc = null;
+			if(isFSMRepos(repos))
+			{
+				remoteDoc = verReposGetDoc(repos, doc, commitId);
+			}
+			else
+			{
+				remoteDoc = remoteServerGetDoc(repos, doc, commitId);					
+			}
+			
 			if(remoteDoc == null)
 			{
 				Log.docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
@@ -3900,7 +3842,14 @@ public class DocController extends BaseController{
 			File file = new File(tempLocalRootPath + path + name);
 			if(file.exists() == false)
 			{
-				verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+				if(isFSMRepos(repos))
+				{
+					verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+				}
+				else
+				{
+					remoteServerCheckOut(repos, doc, null, commitId, true, true, null);
+				}
 			}
 			
 			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
@@ -4516,10 +4465,10 @@ public class DocController extends BaseController{
 
 		if(isRealDoc)
 		{
-			if(repos.getType() == 3 || repos.getType() == 4)
+			if(isFSMRepos(repos) == false)
 			{
 				//前置类型仓库不需要判断本地是否有改动
-				Log.debug("revertDocHistory reposId:" + reposId + " SVN或GIT前置仓库不需要检查本地是否有改动");
+				Log.debug("revertDocHistory reposId:" + reposId + " 前置仓库不需要检查本地是否有改动");
 			}
 			else
 			{
@@ -4532,7 +4481,16 @@ public class DocController extends BaseController{
 					return;				
 				}
 	
-				Doc remoteEntry = verReposGetDoc(repos, doc, null);		
+				Doc remoteEntry = null;
+				if(isFSMRepos(repos))
+				{
+					remoteEntry = verReposGetDoc(repos, doc, null);		
+				}
+				else
+				{
+					remoteEntry = remoteServerGetDoc(repos, doc, null);							
+				}	
+				
 				if(remoteEntry == null)
 				{
 					Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
@@ -4609,7 +4567,7 @@ public class DocController extends BaseController{
 		}
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
-		if(isRealDoc == true && (repos.getType() == 1 || repos.getType() == 2))
+		if(isRealDoc == true && isFSMRepos(repos))
 		{
 			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
 			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
@@ -5567,7 +5525,7 @@ public class DocController extends BaseController{
       	    String hitText = "";
       	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
       	    {
-      	    	hitText = getDocContent(repos, doc, 0, 120);
+      	    	hitText = getDocContent(repos, doc, 0, 120, null);
       	    	hitText = Base64Util.base64Encode(hitText);
       	    	//Log.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }

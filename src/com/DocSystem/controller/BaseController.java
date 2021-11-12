@@ -438,7 +438,7 @@ public class BaseController  extends BaseFunction{
 	protected List<Doc> docSysGetDocList(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
 		//文件管理系统
-		if(repos.getType() < 3)
+		if(isFSMRepos(repos))
 		{
 			if(remoteStorageEn)
 			{
@@ -459,7 +459,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("docSysGetDocListWithChangeType remote is null");
 			return localList;
 		}
-		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote);
+		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote, null);
 		if(remoteList == null)
 		{
 			Log.debug("docSysGetDocListWithChangeType remoteList is null");
@@ -525,7 +525,7 @@ public class BaseController  extends BaseFunction{
 	
 
 	protected static Doc getRemoteStorageEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
-        return remoteStorageGetEntry(null, remote, repos, doc);
+        return remoteStorageGetEntry(null, remote, repos, doc, null);
 	}
 
 	private DocChangeType getRemoteChangeType(HashMap<String, Doc> dbHashMap, Doc remoteDoc) {
@@ -547,8 +547,8 @@ public class BaseController  extends BaseFunction{
         return remoteStorageGetDBHashMap(repos.remoteStorageConfig, repos, doc);
 	}
 	
-	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
-		List<Doc> list = remoteStorageGetEntryList(null, remote, repos, doc);
+	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc, RemoteStorageConfig remote, String commitId) {
+		List<Doc> list = remoteStorageGetEntryList(null, remote, repos, doc, commitId);
         return list;
 	}
 	
@@ -760,7 +760,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("getRemoteServerEntryList remoteServerConfig is null");
 			return null;
 		}
-		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote);
+		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote, null);
 		if(remoteList == null)
 		{
 			Log.debug("docSysGetDocListWithChangeType remoteList is null");
@@ -1105,17 +1105,7 @@ public class BaseController  extends BaseFunction{
 			rt.setError("仓库存储目录 " + repos.getPath() + " 已被使用！");		
 			return false;
 		}
-		
-		//文件系统前置，必须有realDocPath
-		if(repos.getType() == 2)
-		{
-			if(repos.getRealDocPath() == null || repos.getRealDocPath().isEmpty())
-			{
-				rt.setError("文件存储目录不能为空！");						
-				return false;
-			}
-		}
-		
+				
 		if(true == isReposRealDocPathBeUsed(repos, rt))
 		{
 			return false;
@@ -1284,18 +1274,6 @@ public class BaseController  extends BaseFunction{
 			if(true == isReposRealDocPathBeUsed(newReposInfo,rt))
 			{
 				return false;
-			}
-		}
-		else
-		{
-			//文件系统前置，必须有realDocPath
-			if(newReposInfo.getType() == 2)
-			{
-				if(realDocPath != null && realDocPath.isEmpty())
-				{
-					rt.setError("文件存储目录不能为空！");						
-					return false;
-				}
 			}
 		}
 		
@@ -1906,18 +1884,11 @@ public class BaseController  extends BaseFunction{
 			{
 				//Do move the repos
 				String reposName = previousReposInfo.getId()+"";
-				if(previousReposInfo.getType() == 2)
+				if(path.indexOf(oldPath) == 0)
 				{
-					reposName = "";
-				}
-				else
-				{
-					if(path.indexOf(oldPath) == 0)
-					{
-						Log.debug("禁止将仓库目录迁移到仓库的子目录中！");
-						rt.setError("修改仓库位置失败：禁止迁移到本仓库的子目录");	
-						return false;
-					}
+					Log.debug("禁止将仓库目录迁移到仓库的子目录中！");
+					rt.setError("修改仓库位置失败：禁止迁移到本仓库的子目录");	
+					return false;
 				}
 	
 				if(FileUtil.copyFileOrDir(oldPath+reposName, path+reposName,true) == false)
@@ -3105,7 +3076,17 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, false, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
+		List<Doc> successDocList = null;
+		
+		if(isFSMRepos(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
+		{
+			successDocList = verReposCheckOut(repos, false, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
+		}
+		else
+		{
+			successDocList = remoteServerCheckOut(repos, doc, null, commitId, true, true, downloadList);
+		}
+		
 		if(successDocList == null || successDocList.size() == 0)
 		{
 			Log.docSysErrorLog("未找到需要恢复的文件！",rt);
@@ -3115,14 +3096,27 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("revertDocHistory checkOut successDocList:", successDocList);
 		
 		//Do commit to verRepos		
-		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
+		String revision = null;
+		if(isFSMRepos(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
+		{
+			revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
+		}
+		else
+		{
+			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2, null);
+		}
+		
 		if(revision == null)
 		{			
 			Log.docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
 			return null;
 		}
-		//推送至远程仓库
-		verReposPullPush(repos, doc.getIsRealDoc(), rt);
+		
+		if(isFSMRepos(repos))
+		{
+			//推送至远程仓库
+			verReposPullPush(repos, doc.getIsRealDoc(), rt);
+		}
 		
 		if(doc.getIsRealDoc())
 		{
@@ -3240,42 +3234,33 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
 		String revision = null;
-		if(repos.getType() < 3)
+		if(isFSMRepos(repos))
 		{
-			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
-			if(revision == null)
-			{
-				Log.docSysWarningLog("verReposDocCommit Failed", rt);
-			}
-			else
-			{
-				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
-				doc.setRevision(revision);
-				if(dbAddDoc(repos, doc, false, false) == false)
-				{	
-					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
-				}
-				
-				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}		
+			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);		
 		}
 		else
 		{
 			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2, null);
-			if(revision == null)
-			{
-				Log.docSysWarningLog("remoteServerDocCommit Failed", rt);
+		}
+		
+		if(revision == null)
+		{
+			Log.docSysWarningLog("verReposDocCommit Failed", rt);
+		}
+		else
+		{
+			//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+			doc.setRevision(revision);
+			if(dbAddDoc(repos, doc, false, false) == false)
+			{	
+				Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 			}
-			else
+			
+			if(isFSMRepos(repos))
 			{
-				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
-				doc.setRevision(revision);
-				if(dbAddDoc(repos, doc, false, false) == false)
-				{	
-					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
-				}
-			}			
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			}
 		}
 		
 		//检查dbParentDoc是否已添加
@@ -3296,6 +3281,10 @@ public class BaseController  extends BaseFunction{
 		Log.docSysDebugLog("新增成功", rt); 
 		
 		return true;
+	}
+
+	protected boolean isFSMRepos(Repos repos) {
+		return repos.getType() < 3;
 	}
 
 	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
@@ -3365,7 +3354,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
 		String revision = null;
-		if(repos.getType() < 3)
+		if(isFSMRepos(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 			if(revision == null)
@@ -3451,12 +3440,6 @@ public class BaseController  extends BaseFunction{
 	//该接口用于更新父节点的信息: 仓库有commit成功的操作时必须调用
 	private void dbCheckAddUpdateParentDoc(Repos repos, Doc doc, List<Doc> parentDocList, List<CommonAction> actionList) 
 	{
-		if(repos.getType() != 1)
-		{
-			//For Non FSM type repos, dbNode is not need
-			return;
-		}
-		
 		Log.debug("checkAddUpdateParentDoc " + doc.getDocId() + " " +doc.getPath() + doc.getName());
 		
 		if(doc.getDocId() == 0)
@@ -3513,15 +3496,7 @@ public class BaseController  extends BaseFunction{
 	//底层deleteDoc接口
 	protected String deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return deleteDoc_FSM(repos, doc, commitMsg, commitUser, login_user,  rt, actionList);			
-		}
-		return null;
+		return deleteDoc_FSM(repos, doc, commitMsg, commitUser, login_user,  rt, actionList);			
 	}
 
 	protected String deleteDoc_FSM(Repos repos, Doc doc,	String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
@@ -3566,7 +3541,16 @@ public class BaseController  extends BaseFunction{
 		}
 		
 
-		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+		String revision = null;
+		if(isFSMRepos(repos))
+		{
+			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+		}
+		else
+		{
+			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2, null);				
+		}
+		
 		if(revision == null)
 		{
 			Log.docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
@@ -3583,8 +3567,11 @@ public class BaseController  extends BaseFunction{
 			//delete操作需要自动增加ParentDoc???
 			//dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 			
-			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			if(isFSMRepos(repos))
+			{
+				//异步推送远程版本仓库：Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			}
 		}
 		
 		unlockDoc(doc, lockType, login_user);
@@ -3998,7 +3985,7 @@ public class BaseController  extends BaseFunction{
 			verReposPullPush(repos, true, null);
 		}
 		
-		if(repos.getType() == 1)	
+		if(isFSMRepos(repos))	
 		{	
 			realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, login_user, rt);
 			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
@@ -4015,7 +4002,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, User login_user, ReturnAjax rt) {
-		if(repos.getType() != 1)
+		if(isFSMRepos(repos) == false)
 		{
 			Log.debug("syncUpLocalWithVerRepos() 前置类型仓库不需要同步:" + repos.getType());
 			Log.debug("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
@@ -5387,8 +5374,9 @@ public class BaseController  extends BaseFunction{
 	protected Doc docSysGetDoc(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
 		//文件管理系统
-		if(repos.getType() < 3)
-		{	if(remoteStorageEn)
+		if(isFSMRepos(repos))
+		{	
+			if(remoteStorageEn)
 			{
 				return docSysGetDocWithChangeType(repos, doc);
 			}
@@ -5623,12 +5611,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs, boolean parentDocCheck) 
-	{
-		if(repos.getType() != 1)
-		{
-			return true;
-		}
-		
+	{		
 		String reposRPath = Path.getReposRealPath(repos);
 		String docPath = reposRPath + doc.getPath() + doc.getName();
 		File localEntry = new File(docPath);
@@ -5669,11 +5652,6 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean dbDeleteDoc(Repos repos, Doc doc, boolean deleteSubDocs) 
 	{
-		if(repos.getType() != 1)
-		{
-			return true;
-		}
-
 		if(deleteSubDocs)
 		{
 			String subDocParentPath = doc.getPath() + doc.getName() + "/";
@@ -5717,11 +5695,6 @@ public class BaseController  extends BaseFunction{
 	//autoDetect: 自动检测是新增还是更新或者非法
 	private boolean dbUpdateDoc(Repos repos, Doc doc, boolean autoDetect) 
 	{	
-		if(repos.getType() != 1)
-		{
-			return true;
-		}
-
 		if(autoDetect == false)
 		{
 			if(reposService.updateDoc(doc) == 0)
@@ -5807,31 +5780,16 @@ public class BaseController  extends BaseFunction{
 
 	private boolean dbMoveDoc(Repos repos, Doc srcDoc, Doc dstDoc) 
 	{
-		if(repos.getType() != 1)
-		{
-			return true;
-		}
-		
 		dbDeleteDoc(repos, srcDoc,true);
 		return dbAddDoc(repos, dstDoc, true, false);
 	}
 	
 	private boolean dbCopyDoc(Repos repos, Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
-		if(repos.getType() != 1)
-		{
-			return true;
-		}
-
 		return dbAddDoc(repos, dstDoc, true, false);
 	}
 	
 	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
 	{
-		if(repos.getType() != 1)
-		{
-			return true;
-		}
-
 		if(deleteSubDocs)
 		{
 			Doc qSubDoc = new Doc();
@@ -6295,18 +6253,10 @@ public class BaseController  extends BaseFunction{
 								Integer chunkNum, Long chunkSize, String chunkParentPath, 
 								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return updateDoc_FSM(repos, doc,
+		return updateDoc_FSM(repos, doc,
 					uploadFile,
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt, actionList);
-		}
-		return false;
 	}
 	
 	//底层updateDoc接口
@@ -6315,18 +6265,10 @@ public class BaseController  extends BaseFunction{
 								Integer chunkNum, Long chunkSize, String chunkParentPath, 
 								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return updateDocEx_FSM(repos, doc,
+		return updateDocEx_FSM(repos, doc,
 					docData,
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt, actionList);
-		}
-		return false;
 	}
 
 	protected boolean updateDoc_FSM(Repos repos, Doc doc,
@@ -6372,7 +6314,16 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+		String revision = null;
+		if(isFSMRepos(repos))
+		{
+			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+		}
+		else
+		{
+			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2, null);
+		}
+		
 		if(revision == null)
 		{
 			Log.docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -6387,8 +6338,12 @@ public class BaseController  extends BaseFunction{
 				Log.docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
 			}
 			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
-			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			
+			if(isFSMRepos(repos))
+			{
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			}
 		}
 		
 		//Build DocUpdate action
@@ -6442,7 +6397,17 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 	
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+		String revision = null;
+		
+		if(isFSMRepos(repos))
+		{
+			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+		}
+		else
+		{
+			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2, null);
+		}
+		
 		if(revision == null)
 		{
 			Log.docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -6457,8 +6422,12 @@ public class BaseController  extends BaseFunction{
 				Log.docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
 			}
 			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
-			//Insert Push Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			
+			if(isFSMRepos(repos))
+			{
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			}
 		}
 		
 		//Build DocUpdate action
@@ -6470,28 +6439,12 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	protected boolean renameDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
-		}
-		return false;
+		return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 	}
 	
 
 	protected boolean moveDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
-		}
-		return false;
+		return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 	}
 
 	private boolean moveDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user,
@@ -6533,7 +6486,16 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+		String revision = null;
+		if(isFSMRepos(repos))
+		{
+			revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+		}
+		else
+		{
+			revision = remoteServerDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);				
+		}
+		
 		if(revision == null)
 		{
 			Log.docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
@@ -6548,6 +6510,7 @@ public class BaseController  extends BaseFunction{
 			dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 		}
 		
+		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, true);
 		
@@ -6560,21 +6523,52 @@ public class BaseController  extends BaseFunction{
 		rt.setData(dstDoc);
 		return true;
 	}
-	
+
+	private String remoteServerDocMove(Repos repos, boolean b, Doc srcDoc, Doc dstDoc, String commitMsg,
+			String commitUser, ReturnAjax rt, Object object) {
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		
+		return null;
+	}
+
 	//底层copyDoc接口
 	protected boolean copyDoc(Repos repos, Doc srcDoc, Doc dstDoc, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,List<CommonAction> actionList) 
 	{
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			return 	copyDoc_FSM(repos, srcDoc, dstDoc,
+		return 	copyDoc_FSM(repos, srcDoc, dstDoc,
 					commitMsg, commitUser, login_user, rt, actionList);
-		}
-		return false;
 	}
 
 	protected boolean copyDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc,
@@ -6625,9 +6619,18 @@ public class BaseController  extends BaseFunction{
 			rt.setError("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed");
 			return false;
 		}
-			
-		//需要将文件Commit到VerRepos上去
-		String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+		
+		String revision = null;
+		if(isFSMRepos(repos))
+		{
+			//需要将文件Commit到VerRepos上去
+			revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+		}
+		else
+		{
+			revision = remoteServerDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+		}
+				
 		if(revision == null)
 		{
 			Log.docSysWarningLog("copyDoc_FSM() verReposRealDocCopy failed", rt);
@@ -6651,6 +6654,39 @@ public class BaseController  extends BaseFunction{
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
 		return true;
+	}
+
+	private String remoteServerDocCopy(Repos repos, boolean b, Doc srcDoc, Doc dstDoc, String commitMsg,
+			String commitUser, ReturnAjax rt, Object object) {
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+
+		return null;
 	}
 
 	protected boolean updateRealDocContent(Repos repos, Doc doc, 
@@ -9310,6 +9346,59 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.checkPath(entryPath, commitId);
 	}
 
+	protected List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) {
+		List<Doc> list = null;
+		Doc tmpDoc = doc;
+		if(tempLocalRootPath != null)	//如果需要将文件存放到临时目录，那么需要copyDoc到tmpDoc中
+		{
+			tmpDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), doc.getReposName(), doc.getPath(), doc.getName(), doc.getLevel(), 1, true, tempLocalRootPath, doc.getLocalVRootPath(), doc.getSize(), doc.getCheckSum(), doc.offsetPath);					
+		}
+		
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("remoteServerCheckOut() remote is null");
+			return null;
+		}
+		
+        RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session != null)
+        {
+        	list = doCheckOutFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, true, false, downloadList);
+        	doRemoteStorageLogout(session);
+        }
+        
+        return list;
+	}
+
+	private List<Doc> doCheckOutFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos,
+			Doc tmpDoc, String commitId, boolean b, boolean c, boolean d, HashMap<String, String> downloadList) {
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+
+		return null;
+	}
+
 	/*
 	 * verReposCheckOut
 	 * 参数：
@@ -10270,7 +10359,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("addDelayTaskForLocalBackup 非商业版本不支持自动备份");
 			return;
 	    }
-				
+		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.schedule(
         		new Runnable() {
@@ -14557,7 +14646,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/************* RemoteStorage Interfaces *******************************/
-	public List<Doc> remoteStorageGetEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	public List<Doc> remoteStorageGetEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		Log.debug("remoteStorageGetEntryList() " + doc.getPath() + doc.getName());
         List<Doc> list = null;
 		if(session == null) 
@@ -14567,17 +14656,17 @@ public class BaseController  extends BaseFunction{
         	{
         		return null;
         	}
-			list = getRemoteStorageEntryList(session, remote, repos, doc);
+			list = getRemoteStorageEntryList(session, remote, repos, doc, commitId);
         	doRemoteStorageLogout(session);
 		}
 		else
         {
-        	list = getRemoteStorageEntryList(session, remote, repos, doc);
+        	list = getRemoteStorageEntryList(session, remote, repos, doc, commitId);
         }
         return list;
 	}
 
-	public static Doc remoteStorageGetEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	public static Doc remoteStorageGetEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		Log.debug("remoteStorageGetEntry() " + doc.getPath() + doc.getName());
 		Doc remoteDoc = null;
         
@@ -14589,12 +14678,12 @@ public class BaseController  extends BaseFunction{
         		return null;
         	}
 			
-			remoteDoc = getRemoteStorageEntry(session, remote, repos, doc);
+			remoteDoc = getRemoteStorageEntry(session, remote, repos, doc, commitId);
         	doRemoteStorageLogout(session);
 		}
 		else
 		{
-        	remoteDoc = getRemoteStorageEntry(session, remote, repos, doc);
+        	remoteDoc = getRemoteStorageEntry(session, remote, repos, doc, commitId);
         }
 		return remoteDoc;
 	}
@@ -14690,7 +14779,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Remote Storage remoteEntry Interfaces
-	protected static List<Doc> getRemoteStorageEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	protected static List<Doc> getRemoteStorageEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		switch(remote.protocol)
 		{
 		case "file":
@@ -14704,9 +14793,9 @@ public class BaseController  extends BaseFunction{
 		case "mxsdoc":
 			return getRemoteStorageEntryListForMxsDoc(session, remote, repos, doc);
 		case "svn":
-			return getRemoteStorageEntryListForSvn(session, remote, repos, doc);
+			return getRemoteStorageEntryListForSvn(session, remote, repos, doc, commitId);
 		case "git":
-			return getRemoteStorageEntryListForGit(session, remote, repos, doc);
+			return getRemoteStorageEntryListForGit(session, remote, repos, doc, commitId);
 		default:
 			Log.debug("getRemoteStorageEntryList unknown remoteStorage protocol:" + remote.protocol);
 			break;
@@ -14714,7 +14803,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMap(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMap(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		if(remote == null)
 		{
 			Log.debug("getRemoteStorageEntryHashMap remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
@@ -14734,9 +14823,9 @@ public class BaseController  extends BaseFunction{
 		case "mxsdoc":
 			return getRemoteStorageEntryHashMapForMxsDoc(session, remote, repos, doc);
 		case "svn":
-			return getRemoteStorageEntryHashMapForSvn(session, remote, repos, doc);
+			return getRemoteStorageEntryHashMapForSvn(session, remote, repos, doc, commitId);
 		case "git":
-			return getRemoteStorageEntryHashMapForGit(session, remote, repos, doc);
+			return getRemoteStorageEntryHashMapForGit(session, remote, repos, doc, commitId);
 		default:
 			Log.debug("getRemoteStorageEntryHashMap unknown remoteStorage protocol:" + remote.protocol);
 			break;
@@ -14744,7 +14833,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected static Doc getRemoteStorageEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	protected static Doc getRemoteStorageEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		if(remote == null)
 		{
 			Log.debug("getRemoteStorageEntry remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
@@ -14764,9 +14853,9 @@ public class BaseController  extends BaseFunction{
 		case "mxsdoc":
 			return getRemoteStorageEntryForMxsDoc(session, remote, repos, doc);
 		case "svn":
-			return getRemoteStorageEntryForSvn(session, remote, repos, doc);
+			return getRemoteStorageEntryForSvn(session, remote, repos, doc, commitId);
 		case "git":
-			return getRemoteStorageEntryForGit(session, remote, repos, doc);
+			return getRemoteStorageEntryForGit(session, remote, repos, doc, commitId);
 
 		default:
 			Log.debug("getRemoteStorageEntry unknown remoteStorage protocol:" + remote.protocol);
@@ -14942,12 +15031,12 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected static boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
+	protected static boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
 		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
 			System.out.println("doPullEntryFromRemoteStorage() 拉取根目录");
-			return doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);					
+			return doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);					
 		}
 		
 		boolean ret = false;		
@@ -14965,29 +15054,29 @@ public class BaseController  extends BaseFunction{
 				if(remoteChangeType == DocChangeType.REMOTEADD)
 				{
 					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，拉取");
-					ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+					ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 				}
 				else if(force == true && isAutoPull == false)
 				{
 					if(remoteChangeType == DocChangeType.REMOTECHANGE)
 					{
 						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，手动强制拉取模式，拉取");
-						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);						
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);						
 					}
 					else if(remoteChangeType == DocChangeType.REMOTEDELETE)
 					{
 						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动, 远程删除, 手动强制拉取模式， 拉取");
-						ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+						ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 					}
 					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
 					{
 						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程目录->文件，手动强制拉取模式，拉取");							
-						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);						
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);						
 					}
 					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
 					{
 						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程文件->目录，手动强制拉取模式，拉取");
-						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 					}
 				}
 				else
@@ -15004,7 +15093,7 @@ public class BaseController  extends BaseFunction{
 			//pullSubEntries
 			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
-				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);					
+				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);					
 			}
 			return true;
 		}
@@ -15016,32 +15105,32 @@ public class BaseController  extends BaseFunction{
 			if(remoteChangeType == DocChangeType.REMOTEADD)
 			{
 				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，手动强制拉取模式，拉取");
-				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 			}
 			else if(remoteChangeType == DocChangeType.REMOTECHANGE)
 			{
 				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 手动强制拉取模式, 拉取");
-				return remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);
+				return remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 			}
 			else if(remoteChangeType == DocChangeType.REMOTEDELETE)
 			{
 				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程删除, 手动强制拉取模式，拉取");
-				ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);					
+				ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 			}
 			else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
 			{
 				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程目录->文件, 手动强制拉取模式，拉取");
-				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);					
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 			}
 			else if(remoteChangeType == DocChangeType.REMOTEFILETODIR)
 			{
 				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程文件->目录, 手动强制拉取模式，拉取");
-				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, accessUser, pullResult, remoteChangeType);					
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 			}
 			
 			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
-				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);
+				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
 			}
 		}		
 		else
@@ -15192,7 +15281,7 @@ public class BaseController  extends BaseFunction{
 		return ret;		
 	}
 	
-	private static boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
+	private static boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
 		//子目录不递归
 		if(subEntryPullFlag == 0)
 		{
@@ -15205,7 +15294,7 @@ public class BaseController  extends BaseFunction{
 			subEntryPullFlag = 0;
 		}
 		
-		List<Doc> remoteList = getRemoteStorageEntryList(session, remote, repos, doc);
+		List<Doc> remoteList = getRemoteStorageEntryList(session, remote, repos, doc, commitId);
 		if(remoteList == null)
 		{
 			return false;
@@ -15220,7 +15309,7 @@ public class BaseController  extends BaseFunction{
 			//Log.println("doPullSubEntriesFromRemoteStorage subDocName:" + subRemoteDoc.getName());
 			Doc subDbDoc = dbHashMap.get(subRemoteDoc.getName());
 			Doc subLocalDoc = localHashMap.get(subRemoteDoc.getName());
-			doPullEntryFromRemoteStorage(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);
+			doPullEntryFromRemoteStorage(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
 		}
 		return true;
 	}
@@ -15249,7 +15338,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		HashMap<String, Doc> dbHashMap = getRemoteStorageDBHashMap(repos, doc, remote);
-		HashMap<String, Doc>  remoteHashMap = getRemoteStorageEntryHashMap(session, remote, repos, doc);
+		HashMap<String, Doc>  remoteHashMap = getRemoteStorageEntryHashMap(session, remote, repos, doc, null);
 		
 		for(int i=0; i<localList.size(); i++)
 		{
@@ -15299,26 +15388,26 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	private static boolean remoteStoragePullEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult, 
+	private static boolean remoteStoragePullEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, DocPullResult pullResult, 
 			DocChangeType remoteChangeType) 
 	{
 		boolean ret = false;
 		switch(remoteChangeType)
 		{
 		case REMOTECHANGE:
-			ret = remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			ret = remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 			break;
 		case REMOTEADD:
-			ret = remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			ret = remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 			break;
 		case REMOTEDELETE:
-			ret = remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			ret = remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 			break;
 		case REMOTEFILETODIR:
-			ret = remoteStorageChangeLocalFileToDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			ret = remoteStorageChangeLocalFileToDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 			break;
 		case REMOTEDIRTOFILE:
-			ret = remoteStorageChangeLocalDirToFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			ret = remoteStorageChangeLocalDirToFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 			break;
 		default:
 			break;						
@@ -15327,19 +15416,19 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static boolean remoteStorageChangeLocalDirToFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
-			User accessUser, DocPullResult pullResult) {
-		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult) == true)
+			DocPullResult pullResult) {
+		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult) == true)
 		{
-			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 		}
 		return false;
 	}
 
 	private static boolean remoteStorageChangeLocalFileToDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
-			User accessUser, DocPullResult pullResult) {
-		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult) == true)
+			DocPullResult pullResult) {
+		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult) == true)
 		{
-			return remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			return remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 		}
 		return false;
 	}
@@ -15385,7 +15474,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private static boolean remoteStorageDownloadFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	private static boolean remoteStorageDownloadFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) 
 	{
 		boolean ret = false;
 		pullResult.totalCount ++;
@@ -15413,16 +15502,16 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	private static boolean remoteStorageAddLocalEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	private static boolean remoteStorageAddLocalEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) 
 	{
 		if(doc.getType() == 1)
 		{
-			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 		}
-		return remoteStorageAddLocalDir(remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pullResult);
+		return remoteStorageAddLocalDir(remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 	}
 	
-	private static boolean remoteStorageAddLocalDir(RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	private static boolean remoteStorageAddLocalDir(RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) 
 	{
 		boolean ret = false;
 		pullResult.totalCount ++;
@@ -15447,7 +15536,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	private static boolean remoteStorageDeleteLocalEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPullResult pullResult) 
+	private static boolean remoteStorageDeleteLocalEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) 
 	{
 		boolean ret = false;
 		pullResult.totalCount ++;
@@ -15473,7 +15562,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true && remote.isVerRepos == false)
 		{
 			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc);
+			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
 			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 			{
 				pushResult.successCount ++;
@@ -15510,7 +15599,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true && remote.isVerRepos == false)
 		{
 			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc);
+			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
 			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 			{
 				pushResult.successCount ++;
@@ -15547,7 +15636,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true && remote.isVerRepos == false)
 		{
 			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc);
+			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
 			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 			{
 				pushResult.successCount ++;
@@ -16569,7 +16658,7 @@ public class BaseController  extends BaseFunction{
         return remoteDoc;	
     }
 	
-	private static List<Doc> getRemoteStorageEntryListForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	private static List<Doc> getRemoteStorageEntryListForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		String entryPath = doc.getPath() + doc.getName();
 		List <Doc> subEntryList =  null;
 
@@ -16589,7 +16678,7 @@ public class BaseController  extends BaseFunction{
         	}
         	Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
             
-			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, null);
+			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
 			//Log.printObject("list:", list);
 			if(treeWalk != null)
 			{
@@ -16622,7 +16711,7 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 
-	private static List<Doc> getRemoteStorageEntryListForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	private static List<Doc> getRemoteStorageEntryListForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		String entryPath = doc.getPath() + doc.getName();
 		List <Doc> subEntryList =  null;
 
@@ -16642,7 +16731,7 @@ public class BaseController  extends BaseFunction{
         	}
         	Log.debug("getRemoteStorageEntryHashMapForSvn fileRemotePath:" + fileRemotePath);
             
-			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath);
+			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath, commitId);
 			if(list != null)
 			{
 				subEntryList = new ArrayList<Doc>();
@@ -16834,7 +16923,7 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForGit(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc)
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForGit(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc, String commitId)
 	{
 		String entryPath = doc.getPath() + doc.getName();
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
@@ -16855,7 +16944,7 @@ public class BaseController  extends BaseFunction{
         	}
         	Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
             
-			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, null);
+			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
 			//Log.printObject("list:", list);
 			while(treeWalk.next())
 	    	{
@@ -16884,7 +16973,7 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSvn(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) 
+	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSvn(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc, String commitId) 
 	{
 		String entryPath = doc.getPath() + doc.getName();
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
@@ -16905,7 +16994,7 @@ public class BaseController  extends BaseFunction{
         	}
         	Log.debug("getRemoteStorageEntryHashMapForSvn fileRemotePath:" + fileRemotePath);
             
-			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath);
+			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath, commitId);
 
 		    Iterator<SVNDirEntry> iterator = list.iterator();
 		    while (iterator.hasNext()) 
@@ -17120,7 +17209,7 @@ public class BaseController  extends BaseFunction{
         return remoteDoc;
 	}
 	
-	private static Doc getRemoteStorageEntryForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
+	private static Doc getRemoteStorageEntryForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) 
 	{
         Doc remoteDoc = null;
         
@@ -17128,7 +17217,8 @@ public class BaseController  extends BaseFunction{
         {
         	Log.debug("getRemoteStorageEntryForFtp it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
-	    	return remoteDoc;
+	    	remoteDoc.setRevision(commitId);
+			return remoteDoc;
         }	
         
         if(doc.getName().isEmpty())
@@ -17141,7 +17231,7 @@ public class BaseController  extends BaseFunction{
 		try {
         	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
 
-        	Collection<SVNDirEntry> list = session.svn.listFiles(remoteParentPath);
+        	Collection<SVNDirEntry> list = session.svn.listFiles(remoteParentPath, commitId);
 			
     	    Iterator<SVNDirEntry> iterator = list.iterator();
     	    while (iterator.hasNext()) 
@@ -17173,7 +17263,7 @@ public class BaseController  extends BaseFunction{
         return remoteDoc;
 	}
 
-	private static Doc getRemoteStorageEntryForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
+	private static Doc getRemoteStorageEntryForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) 
 	{
         Doc remoteDoc = null;
         
@@ -17181,7 +17271,8 @@ public class BaseController  extends BaseFunction{
         {
         	Log.debug("getRemoteStorageEntryForGit it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
-	    	return remoteDoc;
+	    	remoteDoc.setRevision(commitId);
+			return remoteDoc;
         }	
         
         if(doc.getName().isEmpty())
@@ -17194,7 +17285,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			
         	String remoteEntryPath = doc.offsetPath + doc.getPath() + doc.getName();        	        	
-        	Integer type = session.git.checkPath(remoteEntryPath, null);
+        	Integer type = session.git.checkPath(remoteEntryPath, commitId);
         	if(type == null)
         	{
         		return null;
@@ -17204,7 +17295,15 @@ public class BaseController  extends BaseFunction{
     		{
     	    	return null;
     		}
-
+            
+            if(commitId != null) 
+    		{
+            	//If revision already set, no need to get revision
+            	remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null, doc.offsetPath);
+    	    	remoteDoc.setRevision(commitId);
+    	    	return remoteDoc;
+    		}
+            
             RevCommit commit = session.git.getLatestRevCommit(doc);
             if(commit == null)
             {
@@ -17212,7 +17311,7 @@ public class BaseController  extends BaseFunction{
             	return null;
             }
     		
-            String commitId=commit.getName();  //revision
+            commitId=commit.getName();  //revision
     	    String author=commit.getAuthorIdent().getName();  //作者
     	    String commitUser=commit.getCommitterIdent().getName();
     	    long commitTime = session.git.convertCommitTime(commit.getCommitTime());
@@ -17336,18 +17435,41 @@ public class BaseController  extends BaseFunction{
 		pushResult.revision = revision;
 	}
 	
-	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt) {
+	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt) {
 		Log.debug(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "]");
-
+		
 		boolean ret = false;
 		DocPullResult pullResult = new DocPullResult();
 		pullResult.totalCount = 0;
 		pullResult.failCount = 0;
 		pullResult.successCount = 0;
 	
+		if(commitId != null)
+		{
+			if(remote.isVerRepos == false)
+			{
+				Log.debug("doPullFromRemoteStorage() 非远程版本仓库不支持历史版本获取！");
+				return false;
+			}	
+				
+			//拉取指定版本: 直接拉取即可
+			Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, commitId); 			
+			Integer subEntryPullFlag = 1;
+			if(recurcive)
+			{
+				subEntryPullFlag = 2;
+			}
+			
+			//将localDoc和dbDoc全部设置成null保证总是远程下载
+			ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, null, null, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
+			
+			rt.setDataEx(pullResult);
+			return ret;
+		}
+		
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
-		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc); 
+		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		
 		Integer subEntryPullFlag = 1;
 		if(recurcive)
@@ -17355,7 +17477,7 @@ public class BaseController  extends BaseFunction{
 			subEntryPullFlag = 2;
 		}
 
-		ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPullFlag, force, isAutoPull, pullResult);
+		ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
 		
 		rt.setDataEx(pullResult);
 		return ret;
@@ -17371,7 +17493,7 @@ public class BaseController  extends BaseFunction{
 				
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
-		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc); 
+		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		
 		Log.printObject("doPushToRemoteStorage doc:", doc);
 		Log.printObject("doPushToRemoteStorage localDoc:", localDoc);
