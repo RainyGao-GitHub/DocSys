@@ -1172,8 +1172,9 @@ public class DocController extends BaseController{
 		Doc fsDoc = fsGetDoc(repos, doc);
 		if(fsDoc != null && fsDoc.getType() != 0)
 		{	
-			if(isUploadCanSkip(repos, doc, fsDoc))
-			{
+			Doc dbDoc = dbGetDoc(repos, doc, true);
+			if(isUploadCanSkip(repos, doc, fsDoc, dbDoc))
+			{	
 				rt.setData(fsDoc);
 				rt.setMsgData("1");
 				Log.docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
@@ -1256,7 +1257,7 @@ public class DocController extends BaseController{
 		return null;
 	}
 
-	private boolean isUploadCanSkip(Repos repos, Doc doc, Doc fsDoc) {
+	private boolean isUploadCanSkip(Repos repos, Doc doc, Doc fsDoc, Doc dbDoc) {
 		//检查checkSum是否相同
 		if(doc.getType() != 1)
 		{
@@ -1270,25 +1271,27 @@ public class DocController extends BaseController{
 			return false;
 		}
 			
-		//非文件管理系统类型仓库不支持秒传
-		if(isFSMRepos(repos) == false)
-		{
-			return false;
-		}
-			
-		//数据库记录不存在无法检查文件是否相同
-		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)
 		{
 			return false;				
 		}
 			
 		//数据库记录与本地文件已经不一致无法检查文件是否相同
-		if(isDocLocalChanged(repos, dbDoc, fsDoc))
+		//local file size changed
+		if(!dbDoc.getSize().equals(fsDoc.getSize()))
 		{
-			return false;					
+			Log.debug("isUploadCanSkip() local changed: dbDoc.size:" + dbDoc.getSize() + " localEntry.size:" + fsDoc.getSize()); 
+			return false;			
 		}
-			
+						
+		//local file timestamp changed
+		if(!dbDoc.getLatestEditTime().equals(fsDoc.getLatestEditTime()))
+		{
+			Log.debug("isUploadCanSkip() local changed: dbDoc.lastEditTime:" + dbDoc.getLatestEditTime() + " localEntry.lastEditTime:" + fsDoc.getLatestEditTime()); 
+			return false;
+		}
+		
+		//checksum check
 		if(isDocCheckSumMatched(dbDoc,doc.getSize(), doc.getCheckSum()))
 		{
 			return true;
@@ -4481,16 +4484,7 @@ public class DocController extends BaseController{
 					return;				
 				}
 	
-				Doc remoteEntry = null;
-				if(isFSMRepos(repos))
-				{
-					remoteEntry = verReposGetDoc(repos, doc, null);		
-				}
-				else
-				{
-					remoteEntry = remoteServerGetDoc(repos, doc, null);							
-				}	
-				
+				Doc remoteEntry = verReposGetDoc(repos, doc, null);
 				if(remoteEntry == null)
 				{
 					Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
@@ -4503,7 +4497,7 @@ public class DocController extends BaseController{
 				
 				HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2) == false)
+				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, false) == false)
 				{
 					Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
 					Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
