@@ -821,15 +821,7 @@ public class LuceneUtil2   extends BaseFunction
 
 	private static HitDoc BuildHitDocFromDocument(Repos repos, Document hitDocument) 
     {
-    	switch(repos.getType())
-    	{
-    	case 1:
-    	case 2:
-    	case 3:
-    	case 4:
-    		return BuildHitDocFromDocument_FS(repos, hitDocument);
-    	}
-		return null;
+    	return BuildHitDocFromDocument_FS(repos, hitDocument);
  	}
 
 	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, Document hitDocument) {

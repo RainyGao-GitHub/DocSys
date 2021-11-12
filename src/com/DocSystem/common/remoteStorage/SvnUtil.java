@@ -85,10 +85,11 @@ public class SvnUtil {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public Collection<SVNDirEntry> listFiles(String directory){
+	public Collection<SVNDirEntry> listFiles(String directory, String commitId){
+    	Long revision = getRevisionByCommitId(commitId);
     	Collection<SVNDirEntry> list = null;
     	try {
-			list = repository.getDir(directory,  -1L, null,(Collection) null);
+			list = repository.getDir(directory,  revision, null,(Collection) null);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

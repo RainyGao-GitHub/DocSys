@@ -20,8 +20,9 @@ public interface Channel {
     String channelName();
 
 	void initBussinessChannel();	
-    	
-	void remoteStoragePull(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt);
+    
+	//accessUser is for lockDoc
+	void remoteStoragePull(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt);
 
 	void remoteStoragePush(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
 	
