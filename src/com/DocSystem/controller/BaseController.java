@@ -3444,7 +3444,9 @@ public class BaseController  extends BaseFunction{
 		if(isFSMRepos(repos) == false)
 		{
 			return;
-		}		Log.debug("checkAddUpdateParentDoc " + doc.getDocId() + " " +doc.getPath() + doc.getName());
+		}		
+		
+		Log.debug("checkAddUpdateParentDoc " + doc.getDocId() + " " +doc.getPath() + doc.getName());
 		
 		if(doc.getDocId() == 0)
 		{
