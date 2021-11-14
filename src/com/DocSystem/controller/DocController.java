@@ -2248,7 +2248,7 @@ public class DocController extends BaseController{
 	
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			//文件服务器前置仓库不允许远程存储
 			remoteStorageEn = false;
@@ -2337,7 +2337,7 @@ public class DocController extends BaseController{
 		if(localEntry.getType() == 0)
 		{
 			//文件服务器前置仓库不支持版本仓库
-			if(isFSMRepos(repos) == false)
+			if(isFSM(repos) == false)
 			{
 				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 				Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
@@ -2965,7 +2965,7 @@ public class DocController extends BaseController{
 			Doc tmpDoc = doc;
 			if(commitId == null)
 			{
-				if(isFSMRepos(repos))
+				if(isFSM(repos))
 				{
 					//远程存储自动拉取
 					boolean autoPullDone = false;
@@ -2998,7 +2998,7 @@ public class DocController extends BaseController{
 			else	//获取历史版本文件
 			{
 				Doc remoteDoc = null;
-				if(isFSMRepos(repos))
+				if(isFSM(repos))
 				{
 					remoteDoc = verReposGetDoc(repos, doc, commitId);
 				}
@@ -3036,7 +3036,7 @@ public class DocController extends BaseController{
 				File file = new File(tempLocalRootPath + path + name);
 				if(file.exists() == false)
 				{
-					if(isFSMRepos(repos))
+					if(isFSM(repos))
 					{
 						verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 					}
@@ -3123,7 +3123,7 @@ public class DocController extends BaseController{
 		
 		Doc tmpDoc = doc;
 		//置类型仓库需要先将文件下载到本地
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			remoteServerCheckOut(repos, doc, null, null, true, true, null);
 		}		
@@ -3395,7 +3395,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = fsGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
 		{
-			if(isFSMRepos(repos))
+			if(isFSM(repos))
 			{
 				RemoteStorageConfig remote = repos.remoteStorageConfig;
 				if(remote != null)
@@ -3791,7 +3791,7 @@ public class DocController extends BaseController{
 		if(commitId == null)
 		{
 			//前置类型仓库，需要先将文件CheckOut出来
-			if(isFSMRepos(repos) == false)
+			if(isFSM(repos) == false)
 			{
 				remoteServerCheckOut(repos, doc, null, null, true, true, null);
 			}
@@ -3807,7 +3807,7 @@ public class DocController extends BaseController{
 		else
 		{
 			Doc remoteDoc = null;
-			if(isFSMRepos(repos))
+			if(isFSM(repos))
 			{
 				remoteDoc = verReposGetDoc(repos, doc, commitId);
 			}
@@ -3845,7 +3845,7 @@ public class DocController extends BaseController{
 			File file = new File(tempLocalRootPath + path + name);
 			if(file.exists() == false)
 			{
-				if(isFSMRepos(repos))
+				if(isFSM(repos))
 				{
 					verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 				}
@@ -4468,7 +4468,7 @@ public class DocController extends BaseController{
 
 		if(isRealDoc)
 		{
-			if(isFSMRepos(repos) == false)
+			if(isFSM(repos) == false)
 			{
 				//前置类型仓库不需要判断本地是否有改动
 				Log.debug("revertDocHistory reposId:" + reposId + " 前置仓库不需要检查本地是否有改动");
@@ -4561,7 +4561,7 @@ public class DocController extends BaseController{
 		}
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
-		if(isRealDoc == true && isFSMRepos(repos))
+		if(isRealDoc == true && isFSM(repos))
 		{
 			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
 			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");

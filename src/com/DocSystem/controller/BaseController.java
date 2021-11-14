@@ -438,7 +438,7 @@ public class BaseController  extends BaseFunction{
 	protected List<Doc> docSysGetDocList(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
 		//文件管理系统
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			if(remoteStorageEn)
 			{
@@ -3078,7 +3078,7 @@ public class BaseController  extends BaseFunction{
 		//Do checkout the entry to
 		List<Doc> successDocList = null;
 		
-		if(isFSMRepos(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
+		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
 			successDocList = verReposCheckOut(repos, false, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
 		}
@@ -3097,7 +3097,7 @@ public class BaseController  extends BaseFunction{
 		
 		//Do commit to verRepos		
 		String revision = null;
-		if(isFSMRepos(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
+		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
 			revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
 		}
@@ -3112,7 +3112,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			//推送至远程仓库
 			verReposPullPush(repos, doc.getIsRealDoc(), rt);
@@ -3235,7 +3235,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
 		String revision = null;
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);		
 		}
@@ -3257,7 +3257,7 @@ public class BaseController  extends BaseFunction{
 				Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 			}
 			
-			if(isFSMRepos(repos))
+			if(isFSM(repos))
 			{
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -3284,8 +3284,12 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean isFSMRepos(Repos repos) {
+	protected boolean isFSM(Repos repos) {
 		return repos.getType() < 3;
+	}
+	
+	protected boolean isRSP(Repos repos) {
+		return repos.getType() > 2;
 	}
 
 	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
@@ -3355,7 +3359,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
 		String revision = null;
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 			if(revision == null)
@@ -3441,7 +3445,7 @@ public class BaseController  extends BaseFunction{
 	//该接口用于更新父节点的信息: 仓库有commit成功的操作时必须调用
 	private void dbCheckAddUpdateParentDoc(Repos repos, Doc doc, List<Doc> parentDocList, List<CommonAction> actionList) 
 	{
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			return;
 		}		
@@ -3548,7 +3552,7 @@ public class BaseController  extends BaseFunction{
 		
 
 		String revision = null;
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 		}
@@ -3573,7 +3577,7 @@ public class BaseController  extends BaseFunction{
 			//delete操作需要自动增加ParentDoc???
 			//dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 			
-			if(isFSMRepos(repos))
+			if(isFSM(repos))
 			{
 				//异步推送远程版本仓库：Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -3979,7 +3983,7 @@ public class BaseController  extends BaseFunction{
 		}		
 				
 		boolean realDocSyncResult = false;
-		if(isFSMRepos(repos))	
+		if(isFSM(repos))	
 		{
 			if(repos.getIsRemote() == 1)
 			{
@@ -5388,7 +5392,7 @@ public class BaseController  extends BaseFunction{
 	protected Doc docSysGetDoc(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
 		//文件管理系统
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{	
 			if(remoteStorageEn)
 			{
@@ -5626,7 +5630,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs, boolean parentDocCheck) 
 	{		
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			return true;
 		}		
@@ -5671,7 +5675,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean dbDeleteDoc(Repos repos, Doc doc, boolean deleteSubDocs) 
 	{
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			return true;
 		}		
@@ -5719,7 +5723,7 @@ public class BaseController  extends BaseFunction{
 	//autoDetect: 自动检测是新增还是更新或者非法
 	private boolean dbUpdateDoc(Repos repos, Doc doc, boolean autoDetect) 
 	{	
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			return true;
 		}	
@@ -5809,7 +5813,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean dbMoveDoc(Repos repos, Doc srcDoc, Doc dstDoc) 
 	{
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			return true;
 		}	
@@ -5819,7 +5823,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean dbCopyDoc(Repos repos, Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			return true;
 		}		
@@ -5829,7 +5833,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
 	{
-		if(isFSMRepos(repos) == false)
+		if(isFSM(repos) == false)
 		{
 			return true;
 		}	
@@ -6359,7 +6363,7 @@ public class BaseController  extends BaseFunction{
 
 		//需要将文件Commit到版本仓库上去
 		String revision = null;
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 		}
@@ -6383,7 +6387,7 @@ public class BaseController  extends BaseFunction{
 			}
 			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 			
-			if(isFSMRepos(repos))
+			if(isFSM(repos))
 			{
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -6443,7 +6447,7 @@ public class BaseController  extends BaseFunction{
 		//需要将文件Commit到版本仓库上去
 		String revision = null;
 		
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 		}
@@ -6467,7 +6471,7 @@ public class BaseController  extends BaseFunction{
 			}
 			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 			
-			if(isFSMRepos(repos))
+			if(isFSM(repos))
 			{
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -6531,7 +6535,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String revision = null;
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 		}
@@ -6665,7 +6669,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String revision = null;
-		if(isFSMRepos(repos))
+		if(isFSM(repos))
 		{
 			//需要将文件Commit到VerRepos上去
 			revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
@@ -16235,7 +16239,7 @@ public class BaseController  extends BaseFunction{
 
 		try {
         	is = new FileInputStream(localPath + fileName);
-        	ret = session.sftp.upload(remotePath, fileName, is);        	
+        	ret = session.sftp.upload(remotePath, fileName, is);   
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
