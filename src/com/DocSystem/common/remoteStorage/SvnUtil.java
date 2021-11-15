@@ -174,6 +174,39 @@ public class SvnUtil {
 		}
 		return -1;
 	}
+	
+	public String doCopy(String srcPath, String srcName, String dstPath, String dstName, String commitMsg,String commitUser,  boolean isMove)
+	{	
+		Integer type = checkPath(srcPath + srcName, -1L);
+		if(type == null || type == -1 || type == 0)
+		{
+	    	System.out.println("doCopy() " + srcPath + srcName +" not exists");
+			return null;
+		}
+
+		ISVNEditor editor = getCommitEditor(commitMsg);
+	    if(editor == null)
+	    {
+	    	System.out.println("doCopy() getCommitEditor Failed");
+	        return null;
+	    }
+	    
+	    if(copyEntry(editor, srcPath, srcName, dstPath, dstName, type == 2, -1L, isMove) == false)
+	    {
+	    	System.out.println("doCopy() copyEntry Failed");
+	        return null;	    	
+	    }
+	        
+	    SVNCommitInfo commitInfo = commit(editor);
+	    if(commitInfo == null)
+	    {
+	    	System.out.println("doCopy() commit failed: " + commitInfo);
+	        return null;
+	    }
+	    System.out.println("doCopy() commit success: " + commitInfo);
+	    return commitInfo.getNewRevision()+"";
+	}
+	
     
 	public String doCommit(String commitMsg,String commitUser, DocPushResult pushResult, List<CommitAction> commitActionList)
 	{		
@@ -694,6 +727,59 @@ public class SvnUtil {
 	        }
 		} catch (SVNException e) {
 			System.out.println("modifyFile(): Schedule to modifyFile Failed!");
+			e.printStackTrace();
+			return false;
+		}
+        return true;
+    }
+    
+    private boolean copyEntry(ISVNEditor editor,String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName,boolean isDir,long revision,boolean isMove) 
+    {
+    	if(srcParentPath == null || srcEntryName == null || dstParentPath == null || dstEntryName == null)
+    	{
+    		System.out.println("copyEntry() 非法参数：srcParentPath srcEntryName dstParentPath or dstEntryName is null!");
+    		return false;
+    	}
+    
+        try {
+			editor.openRoot(-1);
+        
+			editor.openDir(dstParentPath, -1);
+	        
+	    	//Copy the file
+		    String dstEntryPath = dstParentPath + dstEntryName;
+	    	String srcEntryPath = srcParentPath + srcEntryName;
+	    	//目前svnkit无法针对文件进行copy
+	    	if(isDir)
+			{
+				editor.addDir(dstEntryPath, srcEntryPath, revision);
+				editor.closeDir();				
+			}
+			else
+			{	
+				editor.addFile(dstEntryPath, srcEntryPath, revision);
+	    		editor.applyTextDelta(srcEntryPath, null);
+	    		//SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
+	    		String checksum = "d41d8cd98f00b204e9800998ecf8427e";
+				editor.closeFile(dstEntryPath, checksum);	//CheckSum need to be given
+			}	
+	    	
+
+	        //close the parent Dir
+	        editor.closeDir();
+	        
+	    	if(isMove)
+	    	{
+	    		editor.deleteEntry(srcEntryPath, -1);
+	    	}
+	
+	        /*
+	         * Closes the root directory.
+	         */
+	        editor.closeDir();
+
+		} catch (SVNException e) {
+			System.out.println("copyFile(): Schedule to copyEntry Failed!");
 			e.printStackTrace();
 			return false;
 		}

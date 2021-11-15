@@ -884,6 +884,63 @@ public class GitUtil {
 		}			    
 	}
 
+	public String doCopy(String srcPath, String srcName, String dstPath, String dstName, String commitMsg, String commitUser, boolean isMove) {
+	    Integer type = checkPath(srcPath + srcName, null);
+	    if(type == null || type == 0)
+	    {
+	    	System.out.println("doCopy() " + srcPath + srcName  + " not exists");
+	    	return null;
+	    }
+		
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			System.out.println("doCopy() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return null;
+		}
+		
+		if(isMove)
+		{
+			if(moveEntry(git, srcPath, srcName, dstPath, dstName) == false)
+		    {
+		    	System.out.println("doCopy() moveEntry Failed");
+		    	git.close();
+		        return null;
+		    }			
+		}
+		else
+		{
+			if(copyEntry(git, srcPath, srcName, dstPath, dstName) == false)
+		    {
+		    	System.out.println("doCopy() copyEntry Failed");
+		    	git.close();
+		        return null;
+		    }
+		}
+	    
+	    String newRevision =  doCommit(git, commitUser, commitMsg, null);
+	    
+	    if(newRevision == null)
+	    {
+	    	//Do rollBack
+			//Do roll back Index
+			rollBackIndex(git, "", null);
+			
+			//rollBackWcDir(realCommitActionList);	//删除actionList中新增的文件和目录	
+			FileUtil.delFileOrDir(wcDir + dstPath + dstName);
+			
+			git.close();
+			return null;
+	    }
+	    
+	    git.close();
+	    
+	    doPushEx();
+	    return newRevision;
+	}
+	
 
 	public String doCommit(String commitMsg, String commitUser, DocPushResult pushResult, List<CommitAction> commitActionList) {
 	    if(commitActionList == null || commitActionList.size() ==0)
@@ -924,21 +981,21 @@ public class GitUtil {
 			return null;
 		}
 		
-		if(executeCommitActionList(git,commitActionList,true) == false)
+		if(executeCommitActionList(git,realCommitActionList,true) == false)
 	    {
 	    	System.out.println("doAutoCommit() executeCommitActionList Failed");
 	    	git.close();
 	        return null;
 	    }
 	    
-	    String newRevision =  doCommit(git, commitUser, commitMsg, commitActionList);
+	    String newRevision =  doCommit(git, commitUser, commitMsg, realCommitActionList);
 	    
 	    if(newRevision == null)
 	    {
 	    	//Do rollBack
 			//Do roll back Index
 			rollBackIndex(git, "", null);
-			rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录	
+			rollBackWcDir(realCommitActionList);	//删除actionList中新增的文件和目录	
 			git.close();
 			return null;
 	    }
@@ -1288,6 +1345,63 @@ public class GitUtil {
 			git.add().addFilepattern(remoteEntryPath).call();
 		} catch (Exception e) {
 			System.out.println("addEntry() git.add.addFilepattern.call for " + remoteEntryPath + " 失败");	
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean moveEntry(Git git, String srcPath, String srcName, String dstPath, String dstName) 
+	{
+		String srcRemoteEntryPath = srcPath + srcName; 
+		String dstRemoteEntryPath = dstPath + dstName; 
+		String srcWcDocPath = wcDir + srcRemoteEntryPath;
+		String dstWcDocPath = wcDir + dstRemoteEntryPath;
+		
+		if(FileUtil.moveFileOrDir(wcDir + srcPath, srcName,  wcDir + dstPath, dstName, false) == false)
+		{
+			System.out.println("copyEntry() FileUtil.moveFileOrDir from " + srcWcDocPath + " to " + dstWcDocPath + " 失败");		
+			return false;
+		}			
+		
+		//先增加目标文件
+		try {	
+			git.add().addFilepattern(dstRemoteEntryPath).call();
+		} catch (Exception e) {
+			System.out.println("addEntry() git.add.addFilepattern.call for " + dstRemoteEntryPath + " 失败");	
+			e.printStackTrace();
+			return false;
+		}
+
+		//删除源文件
+		try {	
+			git.add().addFilepattern(srcRemoteEntryPath).call();
+		} catch (Exception e) {
+			System.out.println("addEntry() git.add.addFilepattern.call for " + srcRemoteEntryPath + " 失败");	
+			e.printStackTrace();
+			//return false;
+		}
+
+		return true;
+	}
+	
+	public boolean copyEntry(Git git, String srcPath, String srcName, String dstPath, String dstName) 
+	{
+		String srcRemoteEntryPath = srcPath + srcName; 
+		String dstRemoteEntryPath = dstPath + dstName; 
+		String srcWcDocPath = wcDir + srcRemoteEntryPath;
+		String dstWcDocPath = wcDir + dstRemoteEntryPath;
+	
+		if(FileUtil.copyFileOrDir(srcWcDocPath, dstWcDocPath, false) == false)
+		{
+			System.out.println("copyEntry() FileUtil.copyFileOrDir from " + srcWcDocPath + " to " + dstWcDocPath + " 失败");		
+			return false;
+		}
+		
+		try {	
+			git.add().addFilepattern(dstRemoteEntryPath).call();
+		} catch (Exception e) {
+			System.out.println("addEntry() git.add.addFilepattern.call for " + dstRemoteEntryPath + " 失败");	
 			e.printStackTrace();
 			return false;
 		}

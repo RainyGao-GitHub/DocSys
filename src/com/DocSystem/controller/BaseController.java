@@ -3100,23 +3100,15 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
 			revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
-		}
-		else
-		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2);
-		}
-		
-		if(revision == null)
-		{			
-			Log.docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
-			return null;
-		}
-		
-		if(isFSM(repos))
-		{
+			if(revision == null)
+			{			
+				Log.docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
+				return null;
+			}
+			
 			//推送至远程仓库
 			verReposPullPush(repos, doc.getIsRealDoc(), rt);
-		
+			
 			if(doc.getIsRealDoc())
 			{
 				//Force update docInfo
@@ -3125,7 +3117,7 @@ public class BaseController  extends BaseFunction{
 				{
 					Doc successDoc = successDocList.get(i);
 					Log.debug("revertDocHistory() " + successDoc.getDocId() + " [" + doc.getPath() + doc.getName() + "] 恢复成功");
-						
+							
 					successDoc.setRevision(revision);
 					successDoc.setCreator(login_user.getId());
 					successDoc.setLatestEditor(login_user.getId());
@@ -3134,7 +3126,10 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		}
-		
+		else
+		{
+			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2);
+		}		
 		return revision;
 	}
 	
@@ -3289,7 +3284,7 @@ public class BaseController  extends BaseFunction{
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		Log.debug("addDoc_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
+		Log.debug("addDocEx_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 		
 		//add doc detail info
 		doc.setCreator(login_user.getId());
@@ -3306,7 +3301,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				SyncLock.unlock(syncLock);
-				Log.debug("addDoc_FSM() lockDoc " + doc.getName() + " Failed!");
+				Log.debug("addDocEx_FSM() lockDoc " + doc.getName() + " Failed!");
 				return false;
 			}
 		}
@@ -3317,7 +3312,7 @@ public class BaseController  extends BaseFunction{
 		if(localEntry.exists())
 		{	
 			unlockDoc(doc, lockType, login_user);
-			Log.docSysDebugLog("addDoc_FSM() " +localDocPath + "　已存在！", rt);
+			Log.docSysDebugLog("addDocEx_FSM() " +localDocPath + "　已存在！", rt);
 		}
 		
 		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
@@ -3329,7 +3324,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				String MsgInfo = "createRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
-				Log.debug("addDoc_FSM() createRealDoc Failed");
+				Log.debug("addDocEx_FSM() createRealDoc Failed");
 				return false;
 			}
 		}
@@ -3340,7 +3335,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
-				Log.debug("addDoc_FSM() updateRealDoc Failed");
+				Log.debug("addDocEx_FSM() updateRealDoc Failed");
 				return false;
 			}
 		}
@@ -3376,17 +3371,10 @@ public class BaseController  extends BaseFunction{
 			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2);
 			if(revision == null)
 			{
-				Log.docSysWarningLog("remoteServerDocCommit Failed", rt);
-			}
-			else
-			{
-				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
-				doc.setRevision(revision);
-				if(dbAddDoc(repos, doc, false, false) == false)
-				{	
-					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
-				}
-			}				
+				Log.docSysWarningLog("addDocEx_FSM remoteServerDocCommit Failed", rt);
+				rt.setError("远程推送失败");
+				return false;
+			}			
 		}
 		
 		//检查dbParentDoc是否已添加
@@ -3542,37 +3530,37 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-
 		String revision = null;
 		if(isFSM(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
-		}
-		else
-		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);				
-		}
-		
-		if(revision == null)
-		{
-			Log.docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
-			Log.docSysWarningLog("verReposRealDocDelete Failed", rt);
-		}
-		else
-		{
-			//Delete DataBase Record and Build AsynActions For delete 
-			if(dbDeleteDocEx(actionList, repos, doc, commitMsg, commitUser, true) == false)
-			{	
-				Log.docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
-			}
-			
-			//delete操作需要自动增加ParentDoc???
-			//dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
-			
-			if(isFSM(repos))
+			if(revision == null)
 			{
+				Log.docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
+				Log.docSysWarningLog("verReposRealDocDelete Failed", rt);
+			}
+			else
+			{
+				//Delete DataBase Record and Build AsynActions For delete 
+				if(dbDeleteDocEx(actionList, repos, doc, commitMsg, commitUser, true) == false)
+				{	
+					Log.docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
+				}
+				
+				//delete操作需要自动增加ParentDoc???
+				//dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+				
 				//异步推送远程版本仓库：Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+			}
+		}
+		else
+		{
+			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);
+			if(revision == null)
+			{
+				Log.debug("deleteDoc_FSM() remoteServerDocCommit Failed");
+				rt.setError("远程推送失败");
 			}
 		}
 		
@@ -6352,37 +6340,42 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = null;
 		if(isFSM(repos))
 		{
-			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+			if(revision == null)
+			{
+				Log.docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+				Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+			}
+			else
+			{
+				//updateDoc Info
+				doc.setRevision(revision);
+				if(dbUpdateDoc(repos, doc, true) == false)
+				{
+					Log.docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
+				}
+				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+				
+				if(isFSM(repos))
+				{
+					//Insert Push Action
+					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				}
+			}
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2);
+			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+			{
+				Log.debug("updateDoc_FSM() remoteServerDocCommit Failed");
+				rt.setError("远程推送失败");
+				return false;
+			}
 		}
 		
-		if(revision == null)
-		{
-			Log.docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-			Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
-		}
-		else
-		{
-			//updateDoc Info
-			doc.setRevision(revision);
-			if(dbUpdateDoc(repos, doc, true) == false)
-			{
-				Log.docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
-			}
-			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
-			
-			if(isFSM(repos))
-			{
-				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
-		}
+
 		
 		//Build DocUpdate action
 		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
@@ -6408,7 +6401,7 @@ public class BaseController  extends BaseFunction{
 			{
 				SyncLock.unlock(syncLock); 
 	
-				Log.debug("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
+				Log.debug("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
 				return false;
 			}
 			SyncLock.unlock(syncLock); 
@@ -6422,7 +6415,7 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(doc, lockType, login_user);
 	
-			Log.debug("updateDoc_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
+			Log.debug("updateDocEx_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return false;
 		}
@@ -6434,39 +6427,43 @@ public class BaseController  extends BaseFunction{
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 	
-		//需要将文件Commit到版本仓库上去
-		String revision = null;
-		
 		if(isFSM(repos))
 		{
-			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+			//需要将文件Commit到版本仓库上去
+			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+			if(revision == null)
+			{
+				Log.docSysDebugLog("updateDocEx_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+				Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+			}
+			else
+			{
+				//updateDoc Info
+				doc.setRevision(revision);
+				if(dbUpdateDoc(repos, doc, true) == false)
+				{
+					Log.docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
+				}
+				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+				
+				if(isFSM(repos))
+				{
+					//Insert Push Action
+					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				}
+			}
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);
+			if(remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2) == null)
+			{
+				Log.debug("updateDocEx_FSM() remoteServerDocCommit Failed");
+				rt.setError("远程推送失败");
+				return false;
+			}
 		}
 		
-		if(revision == null)
-		{
-			Log.docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-			Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
-		}
-		else
-		{
-			//updateDoc Info
-			doc.setRevision(revision);
-			if(dbUpdateDoc(repos, doc, true) == false)
-			{
-				Log.docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
-			}
-			dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
-			
-			if(isFSM(repos))
-			{
-				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
-		}
+
 		
 		//Build DocUpdate action
 		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
@@ -6543,7 +6540,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(remoteServerDocMove(repos, srcDoc, dstDoc, commitMsg, login_user, rt) == null)
+			if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, true) == null)
 			{
 				rt.setError("远程推送失败！");
 				return false;
@@ -6621,30 +6618,35 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String revision = null;
 		if(isFSM(repos))
 		{
 			//需要将文件Commit到VerRepos上去
-			revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+			if(revision == null)
+			{
+				Log.docSysWarningLog("copyDoc_FSM() verReposRealDocCopy failed", rt);
+			}
+			else
+			{
+				dstDoc.setRevision(revision);
+				if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
+				{
+					Log.docSysWarningLog("copyDoc_FSM() dbCopyDoc failed", rt);			
+				}
+				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
+			}
 		}
 		else
 		{
-			revision = remoteServerDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+			if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, false) == null)
+			{
+				Log.debug("文件复制失败！");
+				rt.setError("远程推送失败！");
+				return false;
+			}
 		}
 				
-		if(revision == null)
-		{
-			Log.docSysWarningLog("copyDoc_FSM() verReposRealDocCopy failed", rt);
-		}
-		else
-		{
-			dstDoc.setRevision(revision);
-			if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
-			{
-				Log.docSysWarningLog("copyDoc_FSM() dbCopyDoc failed", rt);			
-			}
-			dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
-		}
+
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
@@ -6655,39 +6657,6 @@ public class BaseController  extends BaseFunction{
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
 		return true;
-	}
-
-	private String remoteServerDocCopy(Repos repos, boolean b, Doc srcDoc, Doc dstDoc, String commitMsg,
-			String commitUser, ReturnAjax rt, Object object) {
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-
-		return null;
 	}
 
 	protected boolean updateRealDocContent(Repos repos, Doc doc, 
@@ -6732,27 +6701,38 @@ public class BaseController  extends BaseFunction{
 			Doc fsDoc = fsGetDoc(repos, doc);
 			doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
-			//需要将文件Commit到版本仓库上去
-			String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2, null);
-			if(revision == null)
+			if(isFSM(repos))
 			{
-				Log.docSysDebugLog("updateRealDocContent_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-				Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+				//需要将文件Commit到版本仓库上去
+				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2, null);
+				if(revision == null)
+				{
+					Log.docSysDebugLog("updateRealDocContent_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+					Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+				}
+				else
+				{
+					//updateDoc Info
+					doc.setRevision(revision);
+					doc.setContent(null); //实体文件的内容不能放入数据库
+					if(dbUpdateDoc(repos, doc, true) == false)
+					{
+						Log.docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
+					}
+					dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+					//Insert Push Action
+					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				}
 			}
 			else
 			{
-				//updateDoc Info
-				doc.setRevision(revision);
-				doc.setContent(null); //实体文件的内容不能放入数据库
-				if(dbUpdateDoc(repos, doc, true) == false)
+				if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
 				{
-					Log.docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
+					Log.debug("updateRealDocContent_FSM() remoteServerDocCommit Failed");
+					rt.setError("远程推送失败");
+					return false;
 				}
-				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
-				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
-			
 			//Build DocUpdate action
 			BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
 			return true;
@@ -9212,11 +9192,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private String remoteServerDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, User accessUser, ReturnAjax rt) {
+	private String remoteServerDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, User accessUser, ReturnAjax rt, boolean isMove) {
 		RemoteStorageConfig remote = repos.remoteServerConfig;
 		if(remote == null)
 		{
-			Log.debug("remoteServerDocMove() repos.remoteServerConfig 未设置");
+			Log.debug("remoteServerDocCopy() repos.remoteServerConfig 未设置");
 			rt.setError("文件服务器设置错误！");
 			return null;
 		}
@@ -9224,18 +9204,18 @@ public class BaseController  extends BaseFunction{
         RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
         if(session == null)
         {
-        	Log.debug("remoteServerDocMove() 文件服务器登录失败！");
+        	Log.debug("remoteServerDocCopy() 文件服务器登录失败！");
     		rt.setError("文件服务器登录失败！");
     		return null;			
     	}	
         
-        remoteStorageMoveEntry(session, remote, repos, srcDoc, dstDoc, accessUser, commitMsg, rt);
+        remoteStorageCopyEntry(session, remote, repos, srcDoc, dstDoc, accessUser, commitMsg, rt, isMove);
         doRemoteStorageLogout(session);            
 		
         DocPushResult pushResult = (DocPushResult) rt.getDataEx();
         if(pushResult == null || pushResult.revision == null)
         {
-        	Log.debug("remoteServerDocMove() 远程移动失败！");
+        	Log.debug("remoteServerDocCopy() 远程移动失败！");
     		rt.setError("文件远程移动失败！");
     		return null;			        	
         }
@@ -15717,34 +15697,128 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private static boolean remoteStorageMoveEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc srcDoc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt) {
+	private static boolean remoteStorageCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc srcDoc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt, boolean isMove) {
+	
 		if(remote == null)
 		{
 			Log.debug("remoteStorageMoveEntry remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
 			return false;
 		}
 		
+		DocPushResult pushResult = new DocPushResult();
+		rt.setDataEx(pushResult);
+		
 		switch(remote.protocol)
 		{
 		case "file":
-			return localDiskMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+			pushResult.revision = "";
+			return localDiskCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
 		case "sftp":
-			return sftpServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+			pushResult.revision = "";
+			return sftpServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
 		case "ftp":
-			return ftpServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+			pushResult.revision = "";			
+			return ftpServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
 		case "smb":
-			return smbServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+			pushResult.revision = "";			
+			return smbServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
 		case "mxsdoc":
-			return mxsDocServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+			pushResult.revision = "";			
+			return mxsDocServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
 		case "svn":
-			return svnServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+			return svnServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), commitMsg, accessUser.getName(), isMove, pushResult);
 		case "git":
-			return gitServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+			return gitServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), commitMsg, accessUser.getName(), isMove, pushResult);
 		default:
 			Log.debug("remoteStorageMoveEntry unknown remoteStorage protocol:" + remote.protocol);
 			break;
 		}
 		return false;
+	}
+
+	private static boolean gitServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, DocPushResult pushResult) {
+        Log.debug("gitServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+		boolean ret = false;
+		try {
+			pushResult.revision = session.git.doCopy(srcRemotePath, srcName, dstRemotePath, dstName, commitMsg, commitUser, isMove);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean svnServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, DocPushResult pushResult) {
+        Log.debug("svnServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+		boolean ret = false;
+		try {
+			pushResult.revision = session.svn.doCopy(srcRemotePath, srcName, dstRemotePath, dstName, commitMsg, commitUser, isMove);
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean mxsDocServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+        Log.debug("mxsDocServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+
+        return session.mxsdoc.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);	       	
+	}
+
+	private static boolean smbServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+        boolean ret = false;
+        
+        Log.debug("smbServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+		try {
+ 			ret = session.smb.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean ftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+        boolean ret = false;
+        
+        Log.debug("ftpServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+		try {
+ 			ret = session.ftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean sftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+        boolean ret = false;
+        
+        Log.debug("sftpServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+		try {
+ 			ret = session.sftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+
+	private static boolean localDiskCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+        boolean ret = false;
+        
+        Log.debug("downloadFileFromLocalDisk srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+		try {
+			if(isMove)
+			{
+				ret = FileUtil.moveFileOrDir(remote.FILE.localRootPath + srcRemotePath, srcName, remote.FILE.localRootPath + dstRemotePath, dstName, false);
+			}
+			else
+			{
+				ret = FileUtil.copyFileOrDir(remote.FILE.localRootPath + srcRemotePath + srcName, remote.FILE.localRootPath + dstRemotePath + dstName, false);				
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
 	}
 
 	private static boolean remoteStorageAddEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
@@ -15982,7 +16056,7 @@ public class BaseController  extends BaseFunction{
         
         Log.debug("downloadFileFromLocalDisk remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
 		try {
- 			FileUtil.copyFile(remote.FILE.localRootPath + remotePath + fileName, localPath + fileName, true);
+ 			ret = FileUtil.copyFile(remote.FILE.localRootPath + remotePath + fileName, localPath + fileName, true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
