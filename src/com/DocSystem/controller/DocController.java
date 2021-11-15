@@ -182,7 +182,7 @@ public class DocController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, actionList); 
 		
-		if(ret == true)
+		if(ret == true && isFSM(repos))
 		{
 			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "addDoc");
 			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "addDoc");
