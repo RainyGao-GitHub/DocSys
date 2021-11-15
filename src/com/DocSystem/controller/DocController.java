@@ -950,8 +950,10 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		
 		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-		if(ret == true)
+
+		if(ret == true && isFSM(repos))
 		{
 			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "moveDoc");
 			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "moveDoc");
@@ -1030,7 +1032,7 @@ public class DocController extends BaseController{
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-		if(ret == true)
+		if(ret == true || isFSM(repos))
 		{
 			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
 			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
