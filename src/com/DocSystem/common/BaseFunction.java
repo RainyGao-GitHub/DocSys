@@ -432,6 +432,12 @@ public class BaseFunction{
 	
 	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage)
 	{
+		if(isFSM(repos))
+		{
+			Log.debug("initReposRemoteServerConfig 非前置类型仓库！");
+			return;
+		}
+		
 		RemoteStorageConfig remote = null;
 		if(remoteStorage == null || remoteStorage.isEmpty())
 		{
@@ -453,6 +459,10 @@ public class BaseFunction{
 		reposRemoteServerHashMap.put(repos.getId(), remote);
 	}
 	
+	protected static boolean isFSM(Repos repos) {
+		return repos.getType() < 3;
+	}
+
 	private static String buildRemoteStorageStr(Repos repos) {
 		switch(repos.getType())
 		{
@@ -515,6 +525,12 @@ public class BaseFunction{
 
 	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
 	{
+		if(isFSM(repos) == false)
+		{
+			Log.debug("initReposRemoteServerConfig 前置类型仓库不支持远程存储！");
+			return;
+		}
+		
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
 		if(remote == null)
 		{

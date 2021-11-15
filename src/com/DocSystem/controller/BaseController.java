@@ -3284,10 +3284,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean isFSM(Repos repos) {
-		return repos.getType() < 3;
-	}
-	
 	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
@@ -10374,6 +10370,12 @@ public class BaseController  extends BaseFunction{
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
 		Log.debug("initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup:" + autoBackup);
+		
+		if(isFSM(repos) == false)
+		{
+			Log.debug("initReposRemoteServerConfig 前置类型仓库不支持自动备份！");
+			return;
+		}
 		
 		BackupConfig config = parseAutoBackupConfig(repos, autoBackup);
 		if(config == null)
