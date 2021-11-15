@@ -3103,7 +3103,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2, null);
+			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2);
 		}
 		
 		if(revision == null)
@@ -3250,11 +3250,8 @@ public class BaseController  extends BaseFunction{
 					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 				}
 				
-				if(isFSM(repos))
-				{
-					//Insert Push Action
-					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
-				}
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
 			//检查dbParentDoc是否已添加
@@ -3267,9 +3264,10 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2, null) == null)
+			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 			{
-				rt.setError("");
+				Log.debug("addDoc_FSM() remoteServerDocCommit Failed");
+				rt.setError("远程推送失败");
 				return false;
 			}
 		}
@@ -3290,10 +3288,6 @@ public class BaseController  extends BaseFunction{
 		return repos.getType() < 3;
 	}
 	
-	protected boolean isRSP(Repos repos) {
-		return repos.getType() > 2;
-	}
-
 	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
@@ -3383,7 +3377,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2, null);
+			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2);
 			if(revision == null)
 			{
 				Log.docSysWarningLog("remoteServerDocCommit Failed", rt);
@@ -3560,7 +3554,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2, null);				
+			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);				
 		}
 		
 		if(revision == null)
@@ -3939,12 +3933,23 @@ public class BaseController  extends BaseFunction{
 
 	//这个接口要保证只有一次Commit操作
 	protected boolean syncupForDocChange(CommonAction action, boolean remoteStorageEnable ,ReturnAjax rt) {		
+		Log.debug("syncupForDocChange() **************************** 启动自动同步 ********************************");
+		Repos repos =  action.getRepos();
+		Log.printObject("syncupForDocChange() repos:",repos);
+		if(isFSM(repos) == false)
+		{
+			Log.debug("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
+			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			return true;
+		}
+
 		Doc doc = action.getDoc();
 		if(doc == null)
 		{
+			Log.debug("syncupForDocChange() doc is null");
+			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
 			return false;
 		}
-		Log.debug("syncupForDocChange() **************************** 启动自动同步 ********************************");
 		Log.printObject("syncupForDocChange() doc:",doc);
 		
 		User login_user = action.getUser();
@@ -3952,9 +3957,6 @@ public class BaseController  extends BaseFunction{
 		{
 			login_user = systemUser;
 		}
-		
-		Repos repos =  action.getRepos();
-		Log.printObject("syncupForDocChange() repos:",repos);
 		
 		Integer subDocSyncupFlag = 1;
 		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
@@ -3985,31 +3987,21 @@ public class BaseController  extends BaseFunction{
 		}		
 				
 		boolean realDocSyncResult = false;
-		if(isFSM(repos))	
+		if(repos.getIsRemote() == 1)
 		{
-			if(repos.getIsRemote() == 1)
-			{
-				//Sync Up local VerRepos with remote VerRepos
-				verReposPullPush(repos, true, null);
-			}
-			
-			//文件管理系统
-			HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
-			HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-			
-			realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, true, login_user, rt);
-
-			checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
-
-			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			//Sync Up local VerRepos with remote VerRepos
+			verReposPullPush(repos, true, null);
 		}
-		else
-		{
-			Log.debug("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
-			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
-			realDocSyncResult = true;
-		}
-		
+			
+		//文件管理系统
+		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
+		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
+			
+		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, true, login_user, rt);
+
+		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
+
+		Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
 		return realDocSyncResult;
 	}
 	
@@ -6371,7 +6363,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2, null);
+			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2);
 		}
 		
 		if(revision == null)
@@ -6455,7 +6447,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2, null);
+			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);
 		}
 		
 		if(revision == null)
@@ -9229,7 +9221,7 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryDetail(doc, commitId);
 	}
 	
-	private String remoteServerDocCommit(Repos repos, Doc doc, String commitMsg, User accessUser, ReturnAjax rt, boolean modifyEnable, int subDocCommitFlag, List<CommitAction> commitActionList) {
+	private String remoteServerDocCommit(Repos repos, Doc doc, String commitMsg, User accessUser, ReturnAjax rt, boolean modifyEnable, int subDocCommitFlag) {
 		RemoteStorageConfig remote = repos.remoteServerConfig;
 		if(remote == null)
 		{
@@ -9260,6 +9252,8 @@ public class BaseController  extends BaseFunction{
         return pushResult.revision;
 	}
 	
+	//localChanges : 指定需要commit的改动文件
+	//commitActionList : 改动扫描结果，非空表示该列表需要被外部使用（只用于自动同步接口）
 	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{	
 		doc = docConvert(doc, convert);
