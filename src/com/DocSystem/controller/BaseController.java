@@ -13424,7 +13424,7 @@ public class BaseController  extends BaseFunction{
   }
 
 	public Repos getRepos(Integer reposId) {
-		return reposService.getRepos(reposId);
+		return getReposEx(reposId);
 	}  
 	
 	//获取仓库信息（包括非数据库的信息）
@@ -13432,8 +13432,17 @@ public class BaseController  extends BaseFunction{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos != null)
 		{
-			repos.remoteServerConfig = reposRemoteServerHashMap.get(repos.getId());
-			repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
+			if(isFSM(repos))
+			{
+				repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
+				repos.backupConfig = reposBackupConfigHashMap.get(repos.getId());
+			}
+			else
+			{
+				repos.remoteServerConfig = reposRemoteServerHashMap.get(repos.getId());
+				repos.setVerCtrl(0);
+			}
+			
 			repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
 			repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 			repos.isBussiness = systemLicenseInfo.hasLicense;
@@ -13444,7 +13453,6 @@ public class BaseController  extends BaseFunction{
 			{
 				repos.encryptType = encryptConfig.type;
 			}			
-			repos.backupConfig = reposBackupConfigHashMap.get(repos.getId());
 		}
 		return repos;
 	}
