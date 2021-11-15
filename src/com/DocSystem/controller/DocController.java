@@ -701,6 +701,7 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, "");
 	}
 	
+	
 	@RequestMapping("/deleteDocRS.do")
 	public void deleteDocRS(Integer reposId, String remoteDirectory, String path, String name,
 			String commitMsg,
@@ -779,7 +780,6 @@ public class DocController extends BaseController{
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, "");
 	}
-	
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
@@ -1047,6 +1047,130 @@ public class DocController extends BaseController{
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, "");
+	}
+	
+	/****************   copy/move/rename a Document ******************/
+	@RequestMapping("/copyDocRS.do")
+	public void copyDocRS(Integer reposId, String remoteDirectory, String srcPath, String srcName, String dstPath, String dstName, Integer isMove,
+			String commitMsg,
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("\n************** copyDocRS ****************");
+		Log.debug("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " srcName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(checkAuthCode(authCode, null) == false)
+		{
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		boolean move = false;
+		if(isMove != null && isMove == 1)
+		{
+			move = true;
+		}			
+	
+		//move file
+		if(reposId == null)
+		{
+			if(remoteDirectory == null)
+			{
+				Log.debug("copyDocRS remoteDirectory is null");
+				rt.setError("服务器路径不能为空！");
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			if(move)
+			{
+				if(FileUtil.moveFileOrDir(remoteDirectory + srcPath, srcName, remoteDirectory + dstPath, dstName, false) == false)
+				{
+					Log.debug("copyDocRS() move " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！");
+					rt.setError("移动失败");
+				}				
+			}
+			else
+			{
+				if(FileUtil.copyFileOrDir(remoteDirectory + srcPath + srcName, remoteDirectory + dstPath + dstName, false) == false)
+				{
+					Log.debug("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！");
+					rt.setError("复制失败");
+				}
+			}
+			writeJson(rt, response);			
+			return;			
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查用户是否有目标目录权限新增文件
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		Doc dstParentDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
+		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(dstName == null || "".equals(dstName))
+		{
+			dstName = srcName;
+		}
+		
+		if(commitMsg == null)
+		{
+			if(move)
+			{
+				commitMsg = "移动 " + srcPath + srcName + " 到 " + dstPath + dstName;				
+			}
+			else
+			{
+				commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
+			}
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		Doc srcDoc = buildBasicDoc(reposId, null, null, reposPath, srcPath, srcName, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, dstName, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
+		if(srcDbDoc == null || srcDbDoc.getType() == 0)
+		{
+			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		srcDoc.setRevision(srcDbDoc.getRevision());
+		
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		if(ret == true || isFSM(repos))
+		{
+			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
+			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
+		}
+		
+		writeJson(rt, response);
+		
+		if(ret)
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", "成功",  repos, srcDoc, dstDoc, "");
+			executeCommonActionList(actionList, rt);
+			return;
+		}
+		addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, "");
 	}
 	
 	/****************   execute a Document ******************/
