@@ -486,7 +486,7 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, actionList); 
+		boolean ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, actionList); 
 				
 		writeJson(rt, response);
 		
@@ -683,7 +683,8 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-		if(ret != null)
+		
+		if(ret != null && isFSM(repos))
 		{
 			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "deleteDoc");
 			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "deleteDoc");
