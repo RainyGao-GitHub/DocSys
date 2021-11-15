@@ -2324,54 +2324,6 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, "");				
 		}
 	}
-
-	public void downloadDocPrepare_VRP(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
-	{	
-		Doc dbDoc = docSysGetDoc(repos, doc, false);
-		if(dbDoc == null || dbDoc.getType() == 0)
-		{
-			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-			return;
-		}
-				
-		String targetName = doc.getName();
-		String targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
-				
-		//Do checkout to local
-		if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
-		{
-			Log.docSysErrorLog("远程下载失败", rt);
-			Log.docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
-			return;
-		}
-				
-		if(dbDoc.getType() == 1)
-		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
-			rt.setData(downloadDoc);
-			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
-			return;
-		}
-		else if(dbDoc.getType() == 2)
-		{
-			if(FileUtil.isEmptyDir(targetPath + doc.getName(), true))
-			{
-				Log.docSysErrorLog("空目录无法下载！", rt);
-				return;				
-			}
-					
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
-			rt.setData(downloadDoc);
-			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("远程目录: 已下载并存储在用户临时目录", rt);
-			return;
-		}
-	
-		Log.docSysErrorLog("本地未知文件类型:" + dbDoc.getType(), rt);
-		return;		
-	}
 	
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
