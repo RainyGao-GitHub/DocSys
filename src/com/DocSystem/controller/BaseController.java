@@ -3234,42 +3234,44 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		String revision = null;
 		if(isFSM(repos))
 		{
-			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);		
-		}
-		else
-		{
-			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2, null);
-		}
-		
-		if(revision == null)
-		{
-			Log.docSysWarningLog("verReposDocCommit Failed", rt);
-		}
-		else
-		{
-			//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
-			doc.setRevision(revision);
-			if(dbAddDoc(repos, doc, false, false) == false)
-			{	
-				Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
+			if(revision == null)
+			{
+				Log.docSysWarningLog("verReposDocCommit Failed", rt);
+			}
+			else
+			{
+				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+				doc.setRevision(revision);
+				if(dbAddDoc(repos, doc, false, false) == false)
+				{	
+					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+				}
+				
+				if(isFSM(repos))
+				{
+					//Insert Push Action
+					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				}
 			}
 			
-			if(isFSM(repos))
+			//检查dbParentDoc是否已添加
+			List <Doc> addedParentDocList = new ArrayList<Doc>();
+			dbCheckAddUpdateParentDoc(repos, doc, addedParentDocList, actionList);
+			if(addedParentDocList.size() > 0)
 			{
-				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				rt.setDataEx(addedParentDocList);
 			}
 		}
-		
-		//检查dbParentDoc是否已添加
-		List <Doc> addedParentDocList = new ArrayList<Doc>();
-		dbCheckAddUpdateParentDoc(repos, doc, addedParentDocList, actionList);
-		if(addedParentDocList.size() > 0)
+		else
 		{
-			rt.setDataEx(addedParentDocList);
+			if(remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2, null) == null)
+			{
+				rt.setError("");
+				return false;
+			}
 		}
 				
 		//BuildMultiActionListForDocAdd();
@@ -3596,14 +3598,14 @@ public class BaseController  extends BaseFunction{
 		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null, false);
 		//Insert index add action for RDoc
 		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null, null, false);
+
 		
+		//Insert add action for VDoc
 		String content = doc.getContent();
 		if(content == null || content.isEmpty())
 		{
 			return;
 		}
-		//Insert add action for VDoc
-
 		//Build subActionList
 		List<CommonAction> subActionList = new ArrayList<CommonAction>();
 		if(repos.getVerCtrl1() > 0)
@@ -9140,7 +9142,14 @@ public class BaseController  extends BaseFunction{
 		FileUtil.delFileOrDir(dstPath);
 	}
 	
-	/*************** DocSys verRepos操作接口 *********************/
+	
+	protected List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum) {
+		//TODO: remote Server get history
+		return null;
+	}
+	
+	
+	/*************** DocSys verRepos操作接口 *********************/	
 	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum) 
 	{
 		doc = docConvert(doc, convert);
@@ -9269,40 +9278,38 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//对于没有版本管理的仓库，需要认为所有的LocalChanges都会commit成功
-		if(localChanges == null)
+		if(localChanges != null)
 		{
-			return "";
+			if(commitActionList == null)
+			{
+				commitActionList = new ArrayList<CommitAction>();
+			}
+	        for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) {
+	            DocChange val = entry.getValue();
+	            CommitType commitType = CommitType.UNDEFINED;
+				switch(val.getType())
+	            {
+	            case LOCALADD:
+	            	commitType  = CommitType.ADD;
+	            	break;
+	            case LOCALDELETE:
+	            	commitType = CommitType.DELETE;
+	            	break;
+	            case LOCALCHANGE:
+	            	commitType = CommitType.MODIFY;
+	            	break;
+	            case LOCALFILETODIR:
+	            	commitType = CommitType.FILETODIR;
+	            	break;
+	            case LOCALDIRTOFILE:
+	            	commitType = CommitType.DIRTOFILE;
+	            	break;
+				default:
+					continue;
+	            }
+	            CommitAction.insertAction(commitActionList, val.getDoc(), commitType, verCtrl==2);
+	        }
 		}
-		
-		if(commitActionList == null)
-		{
-			commitActionList = new ArrayList<CommitAction>();
-		}
-        for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) {
-            DocChange val = entry.getValue();
-            CommitType commitType = CommitType.UNDEFINED;
-			switch(val.getType())
-            {
-            case LOCALADD:
-            	commitType  = CommitType.ADD;
-            	break;
-            case LOCALDELETE:
-            	commitType = CommitType.DELETE;
-            	break;
-            case LOCALCHANGE:
-            	commitType = CommitType.MODIFY;
-            	break;
-            case LOCALFILETODIR:
-            	commitType = CommitType.FILETODIR;
-            	break;
-            case LOCALDIRTOFILE:
-            	commitType = CommitType.DIRTOFILE;
-            	break;
-			default:
-				continue;
-            }
-            CommitAction.insertAction(commitActionList, val.getDoc(), commitType, verCtrl==2);
-        }
 		return "";
 	}
 	
@@ -17263,7 +17270,7 @@ public class BaseController  extends BaseFunction{
         
         if(doc.getDocId() == 0)	//rootDoc
         {
-        	Log.debug("getRemoteStorageEntryForFtp it is rootDoc");
+        	Log.debug("getRemoteStorageEntryForSvn it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
 	    	remoteDoc.setRevision(commitId);
 			return remoteDoc;
@@ -17271,11 +17278,11 @@ public class BaseController  extends BaseFunction{
         
         if(doc.getName().isEmpty())
 		{
-			Log.debug("getRemoteStorageEntryForFtp name 不能为空");
+			Log.debug("getRemoteStorageEntryForSvn name 不能为空");
 			return null;
 		}
 		
-        Log.debug("getRemoteStorageEntryForFtp doc:" + doc.offsetPath + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryForSvn doc:" + doc.offsetPath + doc.getPath() + doc.getName());
 		try {
         	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
 
@@ -17355,7 +17362,7 @@ public class BaseController  extends BaseFunction{
             RevCommit commit = session.git.getLatestRevCommit(doc);
             if(commit == null)
             {
-            	System.out.println("getLatestRevision() Failed to getLatestRevCommit");
+            	System.out.println("getRemoteStorageEntryForGit() Failed to getLatestRevCommit");
             	return null;
             }
     		

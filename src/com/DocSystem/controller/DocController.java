@@ -4098,12 +4098,20 @@ public class DocController extends BaseController{
 			num = maxLogNum;
 		}
 		
+		List<LogEntry> logList = null;
+		if(isFSM(repos) || inputDoc.getIsRealDoc() == false)
+		{
+			logList = verReposGetHistory(repos, false, inputDoc, num);
+		}
+		else
+		{
+			logList = remoteServerGetHistory(repos, inputDoc, num);
+		}
 		
-		List<LogEntry> logList = verReposGetHistory(repos, false, inputDoc, num);
 		rt.setData(logList);
 		writeJson(rt, response);
 	}
-	
+
 	/****************   get Document History Detail ******************/
 	@RequestMapping("/getHistoryDetail.do")
 	public void getHistoryDetail(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
