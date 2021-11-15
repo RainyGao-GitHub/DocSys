@@ -364,6 +364,57 @@ public class MxsDocUtil {
         }
         return result;		
 	}
+	
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+		Log.debug("MxsDocUtil copy " + remoteDirectory + srcRemotePath + srcName + " to " +  remoteDirectory + dstRemotePath + dstName);
+        boolean result = false;
+
+        try {
+    		String requestUrl = serverUrl + "/DocSystem/Doc/copyDocRS.do?authCode=" + authCode;
+    		HashMap<String, String> reqParams = new HashMap<String, String>();
+    		if(reposId != null)
+    		{
+    			reqParams.put("reposId", reposId + "");
+    		}
+    		else
+    		{
+    			reqParams.put("remoteDirectory", remoteDirectory);
+    		}
+    		reqParams.put("srcPath", srcRemotePath);
+    		reqParams.put("srcName", srcName);
+    		reqParams.put("dstPath", dstRemotePath);
+    		reqParams.put("dstName", dstName);
+    		if(isMove)
+    		{
+    			reqParams.put("isMove", "1");
+    		}
+           
+    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
+    		if(ret == null)
+    		{
+    			Log.debug("MxsDocUtil copy() ret is null");
+    			return false;
+    		}
+    		
+    		if(ret.getString("status") == null)
+    		{
+    			//未知状态
+    			Log.debug("MxsDocUtil copy() ret.status is null");
+    			return false;
+    		}
+    		
+    		if(!ret.getString("status").equals("ok"))
+    		{
+    			Log.debug("MxsDocUtil copy() ret.status is not ok");
+    			return false;
+    		}
+    		
+    		result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;	
+	}	
 
 	public boolean delete(String remotePath, String fileName) {
 		Log.debug("MxsDocUtil delete " + remotePath + fileName);
@@ -408,5 +459,5 @@ public class MxsDocUtil {
             e.printStackTrace();
         }
         return result;	
-	}	
+	}
 }

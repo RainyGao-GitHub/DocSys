@@ -196,16 +196,36 @@ public class SFTPUtil {
     }    
 
     //移动或重命名
-    public boolean move(String fromFilePath, String toFilePath) throws SftpException {
+    public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) throws SftpException {
+       if(isMove)
+       {
+    	   return move(srcRemotePath, srcName, dstRemotePath, dstName);
+       }
+       
+       return copy(srcRemotePath, srcName, dstRemotePath, dstName);
+    }  
+
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+    	boolean ret = false;
+    	try {
+    		sftp.put(srcRemotePath + srcName, dstRemotePath + dstName); 
+    		ret = true;
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	} 
+    
+    public boolean move(String srcRemotePath, String srcName, String dstRemotePath, String dstName) throws SftpException {
         boolean ret = false;
     	try {
-            sftp.rename(fromFilePath, toFilePath);
+            sftp.rename(srcRemotePath + srcName, dstRemotePath + dstName);
             ret =  true;
         } catch (SftpException e) {
         	e.printStackTrace();
         }
         return ret;        
-    }    
+    } 
 
     //切换目录
     public void cd(String directory){

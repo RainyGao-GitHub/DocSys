@@ -175,4 +175,27 @@ public class SmbUtil {
 		}
    	 	return ret;
     }
+
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+    	boolean ret = false;   	 
+   	 	try {
+   	 		SmbFile remoteFile = new SmbFile(remoteBaseUrl + srcRemotePath + srcName, auth);
+   		 	if(remoteFile.exists())
+   		 	{
+   		 		SmbFile dstRemoteFile = new SmbFile(remoteBaseUrl + dstRemotePath + dstName, auth);
+   			 	if(isMove)
+   			 	{
+   			 		remoteFile.renameTo(dstRemoteFile);
+   			 	}
+   			 	else
+   			 	{
+   			 		remoteFile.copyTo(dstRemoteFile);   			 		
+   			 	}
+   	   		 	ret = true;
+   		 	}
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+   	 	return ret;
+	}
 }

@@ -1,5 +1,7 @@
 package com.DocSystem.common.remoteStorage;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8,6 +10,11 @@ import java.net.MalformedURLException;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+
+import com.DocSystem.common.Log;
+import com.DocSystem.common.entity.RemoteStorageConfig;
+import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.Repos;
 
 
 public class FtpUtil { 
@@ -145,6 +152,78 @@ public class FtpUtil {
         return ret;
     }
     
+    
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+       if(isMove)
+       {
+    	   return move(srcRemotePath, srcName, dstRemotePath, dstName);
+       }
+ 
+       return copy(srcRemotePath, srcName, dstRemotePath, dstName);
+	} 
+    
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+    	boolean ret = false;
+    	try {
+    		FTPFile[] list = ftpClient.listFiles(srcRemotePath + srcName); 
+            if (list.length > 0) 
+            { 
+            	//it is folder
+            	ret = mkdir(dstRemotePath + dstName);
+            	if(ret == true)
+            	{
+	            	for(int i=0; i < list.length; i++)
+		            {
+		            	FTPFile srcFile = list[i];
+		            	if(srcFile.isFile())
+		            	{
+		            		copyFile(srcRemotePath + srcName + "/", srcFile.getName(), dstRemotePath + dstName + "/", srcFile.getName());
+		            	}
+		            	else
+		            	{
+		            		copy(srcRemotePath + srcName + "/", srcFile.getName(),  dstRemotePath + dstName + "/", srcFile.getName());
+		            	}
+	    			}
+            	}
+            } 
+            else
+            {
+            	ret = copyFile(srcRemotePath, srcName, dstRemotePath, dstName);
+            }            
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	} 
+	
+	public boolean copyFile(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+    	boolean ret = false;
+        try {
+	        ftpClient.setBufferSize(1024); 
+	        ByteArrayOutputStream fos=new ByteArrayOutputStream();
+	        ftpClient.retrieveFile(srcRemotePath + srcName, fos);
+	        ByteArrayInputStream in=new ByteArrayInputStream(fos.toByteArray());
+	        ftpClient.storeFile(dstRemotePath + dstName, in);
+	        fos.close();
+	        in.close();
+             ret = true;
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	} 
+	
+	public boolean move(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+    	boolean ret = false;
+        try {
+        	 ftpClient.rename(srcRemotePath + srcName, dstRemotePath + dstName);  
+             ret = true;
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	} 
+    
      public boolean cd(String directory) 
      { 
         boolean ret = true; 
@@ -164,5 +243,5 @@ public class FtpUtil {
           flag = true; 
         } 
         return flag; 
-    } 
+    }
 }
