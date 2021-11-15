@@ -858,7 +858,7 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-		if(ret == true)
+		if(ret == true && isFSM(repos))
 		{
 			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "renameDoc");
 			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "renameDoc");

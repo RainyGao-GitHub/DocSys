@@ -6524,28 +6524,30 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String revision = null;
 		if(isFSM(repos))
 		{
-			revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
-		}
-		else
-		{
-			revision = remoteServerDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);				
-		}
-		
-		if(revision == null)
-		{
-			Log.docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
-		}
-		else
-		{
-			dstDoc.setRevision(revision);
-			if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
+			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+			if(revision == null)
 			{
-				Log.docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
+				Log.docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
 			}
-			dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
+			else
+			{
+				dstDoc.setRevision(revision);
+				if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
+				{
+					Log.docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
+				}
+				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
+			}
+		}
+		else
+		{
+			if(remoteServerDocMove(repos, srcDoc, dstDoc, commitMsg, login_user, rt) == null)
+			{
+				rt.setError("远程推送失败！");
+				return false;
+			}
 		}
 		
 		
@@ -6560,45 +6562,6 @@ public class BaseController  extends BaseFunction{
 		
 		rt.setData(dstDoc);
 		return true;
-	}
-
-	private String remoteServerDocMove(Repos repos, boolean b, Doc srcDoc, Doc dstDoc, String commitMsg,
-			String commitUser, ReturnAjax rt, Object object) {
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		
-		return null;
 	}
 
 	//底层copyDoc接口
@@ -9248,6 +9211,38 @@ public class BaseController  extends BaseFunction{
         return pushResult.revision;
 	}
 	
+
+	private String remoteServerDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, User accessUser, ReturnAjax rt) {
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("remoteServerDocMove() repos.remoteServerConfig 未设置");
+			rt.setError("文件服务器设置错误！");
+			return null;
+		}
+		
+        RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session == null)
+        {
+        	Log.debug("remoteServerDocMove() 文件服务器登录失败！");
+    		rt.setError("文件服务器登录失败！");
+    		return null;			
+    	}	
+        
+        remoteStorageMoveEntry(session, remote, repos, srcDoc, dstDoc, accessUser, commitMsg, rt);
+        doRemoteStorageLogout(session);            
+		
+        DocPushResult pushResult = (DocPushResult) rt.getDataEx();
+        if(pushResult == null || pushResult.revision == null)
+        {
+        	Log.debug("remoteServerDocMove() 远程移动失败！");
+    		rt.setError("文件远程移动失败！");
+    		return null;			        	
+        }
+        
+        return pushResult.revision;
+	}
+
 	//localChanges : 指定需要commit的改动文件
 	//commitActionList : 改动扫描结果，非空表示该列表需要被外部使用（只用于自动同步接口）
 	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
@@ -15612,7 +15607,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return ret;
 	}
-
+	
 	private static boolean remoteStorageUploadFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
 		boolean ret = false;
 		pushResult.totalCount ++;
@@ -15720,6 +15715,36 @@ public class BaseController  extends BaseFunction{
 			pushResult.failCount ++;
 		}
 		return ret;
+	}
+
+	private static boolean remoteStorageMoveEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc srcDoc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt) {
+		if(remote == null)
+		{
+			Log.debug("remoteStorageMoveEntry remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return false;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return localDiskMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+		case "sftp":
+			return sftpServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+		case "ftp":
+			return ftpServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+		case "smb":
+			return smbServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+		case "mxsdoc":
+			return mxsDocServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+		case "svn":
+			return svnServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+		case "git":
+			return gitServerMoveEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath());
+		default:
+			Log.debug("remoteStorageMoveEntry unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return false;
 	}
 
 	private static boolean remoteStorageAddEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
