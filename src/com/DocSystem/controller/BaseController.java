@@ -9374,42 +9374,20 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-        RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+		ReturnAjax rt = new ReturnAjax();
+		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
         if(session != null)
         {
-        	list = doCheckOutFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, true, false, downloadList);
+        	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, force, false, rt );
         	doRemoteStorageLogout(session);
         }
         
+        DocPullResult pullResult = (DocPullResult) rt.getDataEx();
+        if(pullResult != null)
+        {
+        	list = pullResult.successDocList;
+        }
         return list;
-	}
-
-	private List<Doc> doCheckOutFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos,
-			Doc tmpDoc, String commitId, boolean b, boolean c, boolean d, HashMap<String, String> downloadList) {
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-
-		return null;
 	}
 
 	/*
@@ -15509,6 +15487,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true)
 		{
 			pullResult.successCount ++;
+			pullResult.successDocList.add(doc);	
 			//add or update DB
 			Doc newLocalDoc = fsGetDoc(repos, doc);
 			doc.setSize(newLocalDoc.getSize());
@@ -15547,6 +15526,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true)
 		{
 			pullResult.successCount ++;
+			pullResult.successDocList.add(doc);
 			if(dbDoc == null)
 			{
 				addRemoteStorageDBEntry(repos, doc, remote);
@@ -15572,6 +15552,7 @@ public class BaseController  extends BaseFunction{
 		if(ret == true)
 		{
 			pullResult.successCount ++;
+			pullResult.successDocList.add(doc);			
 			deleteRemoteStorageDBEntry(repos, doc, remote);
 		}
 		else
@@ -17594,6 +17575,7 @@ public class BaseController  extends BaseFunction{
 		pullResult.totalCount = 0;
 		pullResult.failCount = 0;
 		pullResult.successCount = 0;
+		pullResult.successDocList = new ArrayList<Doc>();
 	
 		if(commitId != null)
 		{
@@ -17604,7 +17586,7 @@ public class BaseController  extends BaseFunction{
 			}	
 				
 			//拉取指定版本: 直接拉取即可
-			Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, commitId); 			
+			//Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, commitId); 			
 			Integer subEntryPullFlag = 1;
 			if(recurcive)
 			{
