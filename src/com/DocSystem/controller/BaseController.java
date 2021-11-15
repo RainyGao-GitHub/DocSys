@@ -3345,10 +3345,9 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		String revision = null;
 		if(isFSM(repos))
 		{
-			revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
+			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 			if(revision == null)
 			{
 				Log.docSysWarningLog("verReposDocCommit Failed", rt);
@@ -3368,8 +3367,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2);
-			if(revision == null)
+			if(remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2) == null)
 			{
 				Log.docSysWarningLog("addDocEx_FSM remoteServerDocCommit Failed", rt);
 				rt.setError("远程推送失败");
@@ -6446,11 +6444,8 @@ public class BaseController  extends BaseFunction{
 				}
 				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 				
-				if(isFSM(repos))
-				{
-					//Insert Push Action
-					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
-				}
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 		}
 		else
@@ -6462,8 +6457,6 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 		}
-		
-
 		
 		//Build DocUpdate action
 		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
