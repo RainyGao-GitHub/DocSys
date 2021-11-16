@@ -6,15 +6,22 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.entity.DocPushResult;
+import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.LogEntry;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNLogEntry;
+import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.SVNURL;
@@ -888,6 +895,223 @@ public class SvnUtil {
 		}
         
         return true;
+	}
+
+    //getHistory filePath: remote File Path under repositoryURL
+	public List<LogEntry> getHistoryLogs(String entryPath,long startRevision, long endRevision, int maxLogNum) 
+    {
+    	System.out.println("getHistoryLogs entryPath:" + entryPath);	
+    	if(entryPath == null)
+    	{
+        	System.out.println("getHistoryLogs() 非法参数：entryPath is null");
+        	return null;
+    	}
+    	
+    	//获取startRevision and endRevision
+    	if(endRevision < 0)
+    	{
+        	try {
+	    	    endRevision = repository.getLatestRevision();
+	        } catch (SVNException svne) {
+	            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
+	            return null;
+	        }
+    	}
+        
+    	if(maxLogNum > 0)
+    	{
+    		if((endRevision - startRevision) > maxLogNum)
+    		{
+    			startRevision = endRevision - maxLogNum;
+    		}
+    	}
+
+    	//Get logList
+    	List<LogEntry> logList = getLogEntryList(entryPath, startRevision, endRevision, maxLogNum);
+        return logList;
+    }
+	
+	private List<LogEntry> getLogEntryList(String entryPath, long startRevision, long endRevision, int maxLogNum) {
+		System.out.println("getLogEntryList() entryPath:" + entryPath + " startRevision:" + startRevision + " endRevision:" + endRevision + " maxLogNum:" + maxLogNum);
+        List<LogEntry> logList = new ArrayList<LogEntry>();
+        
+		String[] targetPaths = new String[]{entryPath};
+		
+        Collection<SVNLogEntry> logEntries = null;
+        try {
+            logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, false);
+        } catch (SVNException svne) {
+            System.out.println("getLogEntryList() repository.log() 异常: " + svne.getMessage());
+            return null;
+        }
+        
+        Iterator<SVNLogEntry> entries = logEntries.iterator();    
+        long oldestRevision = 0;	//用于控制maxLogNum
+        while(entries.hasNext()) {
+            /*
+             * gets a next SVNLogEntry
+             */
+            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+            long revision = logEntry.getRevision();
+            
+            String commitId = "" + revision;
+            String commitUser = logEntry.getAuthor(); //提交者
+            String commitMessage= logEntry.getMessage();
+            long commitTime = logEntry.getDate().getTime();            
+            
+//            System.out.println("revision:"+revision);
+//            System.out.println("commitId:"+commitId);
+//            System.out.println("commitUser:"+commitUser);
+//            System.out.println("commitMessage:"+commitMessage);
+//            System.out.println("commitName:"+commitUser);
+//            System.out.println("commitTime:"+commitTime);
+            
+            LogEntry log = new LogEntry();
+            log.setRevision(revision);
+            log.setCommitId(commitId);
+            log.setCommitUser(commitUser);
+            log.setCommitMsg(commitMessage);
+            log.setCommitTime(commitTime);
+            
+            logList.add(0,log);	//add to the top
+        }
+        
+        int nextMaxLogNum = maxLogNum - logList.size();
+        if(nextMaxLogNum <= 0)
+        {
+        	return logList;
+        }
+        
+        //Try to get logEntry for deleted 
+        if(oldestRevision > 0)
+        {
+        	long nextEndRevision = oldestRevision - 1;
+        	List<LogEntry> nextLogList = getLogEntryList(entryPath, startRevision, nextEndRevision, nextMaxLogNum);        	
+        	logList.addAll(nextLogList);
+        }
+        return logList;
+	}
+
+	public List<ChangedItem> getHistoryDetail(String entryPath, String commitId) 
+	{
+    	System.out.println("getHistoryDetail entryPath:" + entryPath);	
+		
+		long revision = -1;
+		if(commitId != null)
+		{
+			revision = Long.parseLong(commitId);
+		}
+    	
+    	/*
+         * Get History Info
+         */
+        String[] targetPaths = new String[]{entryPath};
+        Collection<SVNLogEntry> logEntries = null;
+        try {
+            logEntries = repository.log(targetPaths, null,revision, revision, true, false);
+        } catch (SVNException svne) {
+            System.out.println("getHistoryDetail() 获取日志异常：" + svne.getMessage());
+            return null;
+        }
+        
+        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
+            /*
+             * gets a next SVNLogEntry
+             */
+            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+            
+            if(logEntry.getChangedPaths().size() > 0) 
+            {
+            	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
+                
+            	System.out.println("changed Entries:");
+                Set<String> changedPathsSet = logEntry.getChangedPaths().keySet();
+                for (Iterator<String> changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
+                {
+                	//obtains a next SVNLogEntryPath
+                    SVNLogEntryPath svnLogEntryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
+                    String nodePath = formatEntryPath(svnLogEntryPath.getPath());
+                    
+                    Integer entryType = getEntryType(svnLogEntryPath.getKind());
+                    Integer changeType = getChangeType(svnLogEntryPath);
+                    String srcEntryPath = formatEntryPath(svnLogEntryPath.getCopyPath());
+                    
+                    if(srcEntryPath == null)
+                    {
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath);                                     	
+                    }
+                    else
+                    {
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath + " from " + srcEntryPath + " at revision " + commitId);                
+                    }
+                    
+                    //Add to changedItemList
+                    ChangedItem changedItem = new ChangedItem();
+                    changedItem.setChangeType(changeType);	
+                    changedItem.setEntryType(entryType);
+                    changedItem.setEntryPath(nodePath);
+                    
+                    changedItem.setSrcEntryPath(srcEntryPath);
+                    
+                    changedItem.setCommitId(commitId);
+                    
+                    changedItemList.add(changedItem);
+                }
+                return changedItemList;
+            }
+        }
+		return null;
+	}	
+	
+    private String formatEntryPath(String path) {
+    	if(path == null || path.length() == 0)
+    	{
+    		return path;
+    	}
+    	if(path.charAt(0) == '/')
+    	{
+    		return path.substring(1,path.length());
+    	}
+		return path;
+	}
+
+	private Integer getChangeType(SVNLogEntryPath svnLogEntryPath) {
+
+    	switch(svnLogEntryPath.getType())
+    	{
+    	case 'A':
+    		return 1;
+    	case 'D':
+    		return 2;
+    	case 'M':
+    		return 3;
+    	case 'R':
+    		return 5;
+    	}
+    	
+    	return null;
+	}
+    
+	private Integer getEntryType(SVNNodeKind nodeKind) 
+    {
+		if(nodeKind == null)
+		{
+			return -1;
+		}
+    	
+    	if(nodeKind == SVNNodeKind.NONE) 
+		{
+			return 0;
+		}
+		else if(nodeKind == SVNNodeKind.FILE)
+		{
+			return 1;
+		}
+		else if(nodeKind == SVNNodeKind.DIR)
+		{
+			return 2;
+		}
+		return -1;
 	}
 	
 }

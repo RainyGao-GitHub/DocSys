@@ -21,6 +21,8 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.Config;
@@ -29,6 +31,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryState;
@@ -39,6 +42,7 @@ import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.transport.RemoteRefUpdate.Status;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import com.DocSystem.common.DocUtil;
@@ -47,7 +51,9 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.entity.DocPushResult;
+import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.LogEntry;
 
 public class GitUtil {
 	private String user = null;
@@ -1408,4 +1414,300 @@ public class GitUtil {
 		return true;
 	}
 
+
+	//getHistory entryPath: remote File Path under repositoryURL
+    public List<LogEntry> getHistoryLogs(String entryPath,String startRevision, String endRevision,int maxLogNum) 
+    {
+    	System.out.println("getHistoryLogs entryPath:" + entryPath);	
+
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("getLatestRevCommit() Failed to open git repository");
+    		return null;
+    	}
+    	
+    	try {
+	    	List<LogEntry> logList = new ArrayList<LogEntry>();
+				
+		    Iterable<RevCommit> iterable = null;
+		    if(entryPath == null || entryPath.isEmpty())
+		    {
+		    	iterable = git.log().setMaxCount(maxLogNum).call();
+		    }
+		    else
+		    {
+		    	iterable = git.log().addPath(entryPath).setMaxCount(maxLogNum).call();
+		    }
+		    
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();
+	            //String authorEmail=commit.getAuthorIdent().getEmailAddress();
+	            //String author=commit.getAuthorIdent().getName();  //作者
+	
+	            String commitUser=commit.getCommitterIdent().getName();
+	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+	
+	            long commitTime = convertCommitTime(commit.getCommitTime());
+	
+	            String fullMessage=commit.getFullMessage();
+	            //String shortMessage=commit.getShortMessage();  //返回message的firstLine
+	
+	            String commitId=commit.getName();  //这个应该就是提交的版本号
+	
+////	            System.out.println("authorEmail:"+authorEmail);
+////	            System.out.println("authorName:"+author);
+////	            System.out.println("commitEmail:"+commitUserEmail);
+//	            System.out.println("commitName:"+commitUser);
+//	            System.out.println("time:"+commitTime);
+//	            System.out.println("fullMessage:"+fullMessage);
+////	            System.out.println("shortMessage:"+shortMessage);
+//	            System.out.println("commitId:"+commitId);
+	            
+	            LogEntry log = new LogEntry();
+	            log.setCommitId(commitId);
+	            log.setCommitUser(commitUser);
+	            log.setCommitMsg(fullMessage);
+	            log.setCommitTime(commitTime);
+	            logList.add(log);
+	        }
+	        
+	        CloseRepos();
+	        return logList;
+	    } catch (Exception e) {
+			System.out.println("getHistoryLogs Error");	
+			e.printStackTrace();
+			CloseRepos();
+			return null;
+		}
+    }
+    
+    //getHistory wcDir
+    public List<LogEntry> getWCHistoryLogs(String entryPath,String startRevision, String endRevision,int maxLogNum) 
+    {
+    	System.out.println("getWCHistoryLogs entryPath:" + entryPath);	
+
+    	Git git = null;
+        try {
+			git = Git.open(new File(wcDir));
+		} catch (IOException e) {
+			System.out.println("getWCHistoryLogs() Failed to open gitDir:" + gitDir);
+			e.printStackTrace();
+			return null;
+		}
+        
+    	
+    	try {
+	    	List<LogEntry> logList = new ArrayList<LogEntry>();
+				
+		    Iterable<RevCommit> iterable = null;
+		    if(entryPath == null || entryPath.isEmpty())
+		    {
+		    	iterable = git.log().setMaxCount(maxLogNum).call();
+		    }
+		    else
+		    {
+		    	iterable = git.log().addPath(entryPath).setMaxCount(maxLogNum).call();
+		    }
+		    
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();
+	            //String authorEmail=commit.getAuthorIdent().getEmailAddress();
+	            //String author=commit.getAuthorIdent().getName();  //作者
+	
+	            String commitUser=commit.getCommitterIdent().getName();
+	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+	
+	            long commitTime = convertCommitTime(commit.getCommitTime());
+	
+	            String fullMessage=commit.getFullMessage();
+	            //String shortMessage=commit.getShortMessage();  //返回message的firstLine
+	
+	            String commitId=commit.getName();  //这个应该就是提交的版本号
+	
+	            System.out.println("commitName:"+commitUser);
+	            System.out.println("time:"+commitTime);
+	            System.out.println("fullMessage:"+fullMessage);
+	            System.out.println("commitId:"+commitId);
+	            
+	            LogEntry log = new LogEntry();
+	            log.setCommitId(commitId);
+	            log.setCommitUser(commitUser);
+	            log.setCommitMsg(fullMessage);
+	            log.setCommitTime(commitTime);
+	            logList.add(log);
+	        }
+	        
+	        CloseRepos();
+	        return logList;
+	    } catch (Exception e) {
+			System.out.println("getHistoryLogs Error");	
+			e.printStackTrace();
+			CloseRepos();
+			return null;
+		}
+    }
+
+    public List<ChangedItem> getHistoryDetail(String entryPath, String commitId) {
+		String revision = "HEAD";
+		if(commitId != null)
+		{
+			revision = commitId;
+		}
+		
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("getHistoryDetail() Failed to open git repository");
+    		return null;
+    	}
+    	
+    	List<ChangedItem> changedItemList = getHistoryDetailBasic(entryPath, revision);
+    	
+        CloseRepos();
+        return changedItemList;
+    }
+    
+	private List<ChangedItem> getHistoryDetailBasic(String entryPath, String revision) {
+    	//System.out.println("getHistoryDetail entryPath:" + entryPath);	
+		
+		List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
+		
+		try {
+	        //Get objId for revision
+	        ObjectId objId = repository.resolve(revision);
+	        if(objId == null)
+	        {
+	        	System.out.println("getHistoryDetail() There is no any commit history for repository:"  + gitDir + " at revision:"+ revision);
+	        	CloseRepos();	
+	        	return changedItemList;
+	        }
+	        
+	        RevCommit revCommit = walk.parseCommit(objId);
+	        RevCommit previsouCommit=getPrevHash(revCommit,repository);
+
+	        if(previsouCommit == null)	//It is first commit, so all Items was new added
+	        {
+    			System.out.println("getHistoryDetail() previsouCommit is null, so It is first Commit"); 
+
+	        	//go through all Items under revTree
+	        	RevTree revTree = revCommit.getTree();
+	            TreeWalk treeWalk = getTreeWalkByPath(revTree, "");
+	            treeWalk.setRecursive(true);
+	    		try {
+	    			while(treeWalk.next())
+	    	    	{
+	    	    		int type = getEntryType(treeWalk.getFileMode(0));
+	    		    	if(type <= 0)
+	    		    	{
+	    		    		continue;
+	    		    	}
+	    		    	
+	    	    		String nodePath =  treeWalk.getPathString();;
+	    	    		//System.out.println("getHistoryDetail() entry nodePath:" + nodePath); 
+	    	    		//Add to changedItemList
+	    	    		
+	    	    		ChangedItem changedItem = new ChangedItem();
+	    	    		changedItem.setChangeType(1);	//Add
+	    	    		changedItem.setEntryType(type);
+	    	    		changedItem.setEntryPath(nodePath);
+	    	    		changedItem.setSrcEntryPath(null);
+	    	    		changedItem.setCommitId(revision);
+	    	    		changedItemList.add(changedItem);				
+	    	    	}
+	    		} catch(Exception e){
+	    			System.out.println("getHistoryDetail() treeWalk.next() Exception"); 
+	                e.printStackTrace();
+	    			return null;
+	    		}
+				return changedItemList;	        	
+	        }
+	        
+	        ObjectId head=revCommit.getTree().getId();
+	        ObjectId preHead = previsouCommit.getTree().getId();
+	
+			ObjectReader reader = repository.newObjectReader();
+			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+			oldTreeIter.reset(reader, preHead);
+	  		CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+			newTreeIter.reset(reader, head);
+			
+			List<DiffEntry> diffs= git.diff()
+	                		.setNewTree(newTreeIter)
+	                		.setOldTree(oldTreeIter)
+	                		.call();
+
+			if(diffs.size() > 0)
+			{
+		        for (DiffEntry entry : diffs) 
+		        {
+		          //System.out.println("getHistoryDetail() Entry: " + entry);
+		          
+		      	  String nodePath = entry.getNewPath();
+		          Integer entryType = getEntryType(entry.getNewMode());
+		          Integer changeType = getChangeType(entry.getChangeType());
+		          String srcEntryPath = entry.getOldPath();
+		          if(changeType == 2)	//Delete
+		          {
+		        	  nodePath = srcEntryPath;	//删除操作，newPath不存在了，所以此时nodePath应该用删除前的Path
+		          }
+				          
+		          //Add to changedItemList
+		          ChangedItem changedItem = new ChangedItem();
+		          changedItem.setChangeType(changeType);	
+		          changedItem.setEntryType(entryType);
+		          changedItem.setEntryPath(nodePath);
+		          
+		          changedItem.setSrcEntryPath(srcEntryPath);
+		          
+		          changedItem.setCommitId(revision);
+		          
+		          changedItemList.add(changedItem);
+		        }
+			}
+	        return changedItemList;
+		} catch (Exception e) {
+			System.out.println("getHistoryDetail() entryPath:" + entryPath + " 异常");	
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+    private Integer getChangeType(ChangeType changeType) {
+
+    	switch(changeType)
+    	{
+    	case ADD:
+    		return 1;
+    	case DELETE:
+    		return 2;
+    	case MODIFY:
+    		return 3;
+    	case COPY:
+    		return 4;
+    	case RENAME:
+    		return 5;
+    	}
+    	
+    	return null;
+	}
+    
+	public static RevCommit getPrevHash(RevCommit commit, Repository repo)  throws  IOException {
+		 
+	    try (RevWalk walk = new RevWalk(repo)) {
+	        // Starting point
+	        walk.markStart(commit);
+	        int count = 0;
+	        for (RevCommit rev : walk) {
+	            // got the previous commit.
+	            if (count == 1) {
+	                return rev;
+	            }
+	            count++;
+	        }
+	        walk.dispose();
+	    }
+	    //Reached end and no previous commits.
+	    return null;
+	}
 }
