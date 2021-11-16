@@ -2332,11 +2332,11 @@ public class DocController extends BaseController{
 			//文件服务器前置仓库不允许远程存储
 			remoteStorageEn = false;
 			//从文件服务器拉取文件
-			remoteServerCheckOut(repos, doc, null, null, true, true, null);
+			remoteServerCheckOut(repos, doc, null, null, null, null, true, true, null);
 		}
 		
 		//如果设置了远程存储自动拉取，那么先自动拉取，并设置allPullDone标记，避免后面本地文件不存在时再次远程拉取
-		boolean remoteStorageAutoPullDone = false;		
+		boolean remoteStorageAutoPullDone = false;
 		if(remoteStorageEn)
 		{	
 			RemoteStorageConfig remoteStorage = repos.remoteStorageConfig;
@@ -3071,7 +3071,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					remoteServerCheckOut(repos, doc, null, commitId, true, true, null);
+					remoteServerCheckOut(repos, doc, null, null, null, commitId, true, true, null);
 				}
 			}
 			else	//获取历史版本文件
@@ -3083,7 +3083,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					remoteServerGetDoc(repos, doc, commitId);
+					remoteDoc = remoteServerGetDoc(repos, doc, commitId);
 				}
 				
 				if(remoteDoc == null)
@@ -3121,7 +3121,7 @@ public class DocController extends BaseController{
 					}
 					else
 					{
-						remoteServerCheckOut(repos, doc, tempLocalRootPath, commitId, true, true, null);
+						remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, true, true, null);
 					}
 				}
 				tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
@@ -3204,7 +3204,7 @@ public class DocController extends BaseController{
 		//置类型仓库需要先将文件下载到本地
 		if(isFSM(repos) == false)
 		{
-			remoteServerCheckOut(repos, doc, null, null, true, true, null);
+			remoteServerCheckOut(repos, doc, null, null, null, null, true, true, null);
 		}		
 	
 		String content = "";
@@ -3872,7 +3872,7 @@ public class DocController extends BaseController{
 			//前置类型仓库，需要先将文件CheckOut出来
 			if(isFSM(repos) == false)
 			{
-				remoteServerCheckOut(repos, doc, null, null, true, true, null);
+				remoteServerCheckOut(repos, doc, null, null, null, null, true, true, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -3930,7 +3930,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					remoteServerCheckOut(repos, doc, null, commitId, true, true, null);
+					remoteServerCheckOut(repos, doc, null, null, null, commitId, true, true, null);
 				}
 			}
 			
@@ -4238,7 +4238,15 @@ public class DocController extends BaseController{
 			inputDoc = buildVDoc(doc);
 		}
 
-		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
+		List<ChangedItem> changedItemList = null;
+		if(isFSM(repos) || historyType == 1)
+		{
+			changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
+		}
+		else
+		{
+			changedItemList = remoteServerGetHistoryDetail(repos, inputDoc, commitId);
+		}
 		
 		if(changedItemList == null)
 		{
@@ -4248,7 +4256,7 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 	}
-	
+
 	/**************** download History Doc  *****************/
 	@RequestMapping("/downloadHistoryDocPrepare.do")
 	public void downloadHistoryDocPrepare(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
@@ -4342,7 +4350,14 @@ public class DocController extends BaseController{
 			
 			if(isRealDoc)
 			{
-				successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
+				if(isFSM(repos))
+				{
+					successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
+				}
+				else
+				{
+					successDocList = remoteServerCheckOut(repos, doc, userTmpDir, userTmpDir, targetName, commitId, true, true, downloadList) ;					
+				}
 				if(successDocList == null)
 				{
 					Log.docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);

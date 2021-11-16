@@ -3084,7 +3084,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			successDocList = remoteServerCheckOut(repos, doc, null, commitId, true, true, downloadList);
+			successDocList = remoteServerCheckOut(repos, doc, null, null, null, commitId, true, true, downloadList);
 		}
 		
 		if(successDocList == null || successDocList.size() == 0)
@@ -9066,13 +9066,6 @@ public class BaseController  extends BaseFunction{
 		FileUtil.delFileOrDir(dstPath);
 	}
 	
-	
-	protected List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum) {
-		//TODO: remote Server get history
-		return null;
-	}
-	
-	
 	/*************** DocSys verRepos操作接口 *********************/	
 	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum) 
 	{
@@ -9359,7 +9352,7 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.checkPath(entryPath, commitId);
 	}
 
-	protected List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) {
+	protected List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) {
 		List<Doc> list = null;
 		Doc tmpDoc = doc;
 		if(tempLocalRootPath != null)	//如果需要将文件存放到临时目录，那么需要copyDoc到tmpDoc中
@@ -9386,7 +9379,55 @@ public class BaseController  extends BaseFunction{
         if(pullResult != null)
         {
         	list = pullResult.successDocList;
+        	if(localParentPath != null)
+        	{
+        		FileUtil.moveFileOrDir(tmpDoc.getLocalRootPath() + tmpDoc.getPath(), tmpDoc.getName(), localParentPath, targetName, true);
+        	}        	
         }
+        return list;
+	}
+	
+	protected List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum) {
+		Log.debug("remoteServerGetHistory()");
+
+		List<LogEntry> list = null;
+		
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("remoteServerGetHistory() remote is null");
+			return null;
+		}
+		
+		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session != null)
+        {
+        	list = remoteStorageGetHistory(session, remote, repos, doc, maxLogNum);
+        	doRemoteStorageLogout(session);
+        }
+        
+        return list;
+	}
+	
+	protected List<ChangedItem> remoteServerGetHistoryDetail(Repos repos, Doc doc, String commitId) {
+		Log.debug("remoteServerGetHistoryDetail()");
+
+		List<ChangedItem> list = null;
+		
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("remoteServerGetHistory() remote is null");
+			return null;
+		}
+		
+		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session != null)
+        {
+        	list = remoteStorageGetHistoryDetail(session, remote, repos, doc, commitId);
+        	doRemoteStorageLogout(session);
+        }
+        
         return list;
 	}
 
@@ -15669,6 +15710,67 @@ public class BaseController  extends BaseFunction{
 			pushResult.failCount ++;
 		}
 		return ret;
+	}
+	
+	private List<LogEntry> remoteStorageGetHistory(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, int maxLogNum) {
+		if(remote == null)
+		{
+			Log.debug("remoteStorageGetHistory remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return null;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "svn":
+			return svnServerGetHistory(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), maxLogNum);
+		case "git":
+			return gitServerGetHistory(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), maxLogNum);
+		default:
+			Log.debug("remoteStorageGetHistory protocol:" + remote.protocol + " does not support history");
+			break;
+		}
+		return null;
+	}
+	
+	
+	protected List<LogEntry> svnServerGetHistory(RemoteStorageSession session, RemoteStorageConfig remote, String entryPath, int maxLogNum) {
+		return session.svn.getHistoryLogs(entryPath, 0, -1, maxLogNum);
+	}
+	
+	protected List<LogEntry> gitServerGetHistory(RemoteStorageSession session, RemoteStorageConfig remote, String entryPath, int maxLogNum) {
+		return session.git.getHistoryLogs(entryPath, null, null, maxLogNum);
+	}
+	
+
+	private List<ChangedItem> remoteStorageGetHistoryDetail(RemoteStorageSession session, RemoteStorageConfig remote,
+			Repos repos, Doc doc, String commitId) {
+		if(remote == null)
+		{
+			Log.debug("remoteStorageGetHistoryDetail remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
+			return null;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "svn":
+			return svnServerGetHistoryDetail(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), commitId);
+		case "git":
+			return gitServerGetHistoryDetail(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath() + doc.getName(), commitId);
+		default:
+			Log.debug("remoteStorageGetHistory protocol:" + remote.protocol + " does not support history");
+			break;
+		}
+		return null;
+	}
+	
+	protected List<ChangedItem> svnServerGetHistoryDetail(RemoteStorageSession session, RemoteStorageConfig remote, String entryPath, String commitId) 
+	{
+		return session.svn.getHistoryDetail(entryPath, commitId); 
+	}
+	
+	protected List<ChangedItem> gitServerGetHistoryDetail(RemoteStorageSession session, RemoteStorageConfig remote, String entryPath, String commitId) 
+	{
+		return session.git.getHistoryDetail(entryPath, commitId);
 	}
 
 	private static boolean remoteStorageCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc srcDoc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt, boolean isMove) {
