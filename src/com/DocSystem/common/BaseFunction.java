@@ -807,6 +807,7 @@ public class BaseFunction{
 			
 			remote.FTP.userName = config.getString("userName");
 			remote.FTP.pwd = config.getString("pwd");
+			remote.FTP.charset = config.getString("charset");
 			
 			Log.debug("parseRemoteStorageConfigForFtp userName:" + remote.FTP.userName + " pwd:" + remote.FTP.pwd + " autoPull:" + remote.autoPull);
 		}

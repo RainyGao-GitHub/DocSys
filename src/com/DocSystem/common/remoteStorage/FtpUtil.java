@@ -24,13 +24,18 @@ public class FtpUtil {
 	private String username; 
 	private String password; 
       
-    public FTPClient ftpClient = null; 
+    public FTPClient ftpClient = null;
+	private String charset = "utf-8"; 
       
-    public FtpUtil(String username, String password, String host, int port) {
+    public FtpUtil(String username, String password, String host, int port, String charset) {
         this.username = username;
         this.password = password;
         this.host = host;
         this.port = port;
+        if(charset != null)
+        {
+        	this.charset = charset;
+        }
     }
     
     public FtpUtil() {
@@ -41,8 +46,9 @@ public class FtpUtil {
      * 连接sftp服务器
      */
     public boolean login() {
-    	ftpClient = new FTPClient(); 
-    	ftpClient.setControlEncoding("utf-8"); 
+    	ftpClient = new FTPClient();     	
+    	ftpClient.setControlEncoding(this.charset); 
+    	
     	try { 
     		System.out.println("connecting...ftp服务器:"+this.host+":"+this.port);  
     		ftpClient.connect(host, port); //连接ftp服务器 

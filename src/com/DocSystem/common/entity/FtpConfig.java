@@ -6,4 +6,5 @@ public class FtpConfig {
 	public String pwd;
 	public String host;
 	public Integer port;
+	public String charset;
 }
