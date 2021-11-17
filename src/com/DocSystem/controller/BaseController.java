@@ -4895,6 +4895,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
+				Log.debug("getRemoteDocChangeType old revision:" + dbDoc.getRevision() + " new revision:" + remoteEntry.getRevision()); 
 				Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTECHANGE); 
 				return DocChangeType.REMOTECHANGE;
 			}			
@@ -9353,6 +9354,9 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) {
+		
+		Log.debug("remoteServerCheckOut()");
+		
 		List<Doc> list = null;
 		Doc tmpDoc = doc;
 		if(tempLocalRootPath != null)	//如果需要将文件存放到临时目录，那么需要copyDoc到tmpDoc中
@@ -17685,26 +17689,12 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("doPullFromRemoteStorage() 非远程版本仓库不支持历史版本获取！");
 				return false;
-			}	
-				
-			//拉取指定版本: 直接拉取即可
-			//Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, commitId); 			
-			Integer subEntryPullFlag = 1;
-			if(recurcive)
-			{
-				subEntryPullFlag = 2;
-			}
-			
-			//将localDoc和dbDoc全部设置成null保证总是远程下载
-			ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, null, null, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
-			
-			rt.setDataEx(pullResult);
-			return ret;
+			}					
 		}
 		
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
-		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
+		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, commitId); 
 		
 		Integer subEntryPullFlag = 1;
 		if(recurcive)
