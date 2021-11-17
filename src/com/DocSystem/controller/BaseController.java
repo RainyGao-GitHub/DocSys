@@ -10510,9 +10510,10 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long, BackupTask> map = config.localBackupConfig.backTaskHashMap;
 		if(map == null)
 		{
-			return true;
+			Log.debug("stopReposLocalBackUpTasks() remoteBackupConfig.backTaskHashMap is null");
+			return false;
 		}
-		
+
 		for (BackupTask value : map.values()) {
 			value.stopFlag = true;
 		}		
@@ -10535,7 +10536,8 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long, BackupTask> map = config.remoteBackupConfig.backTaskHashMap;
 		if(map == null)
 		{
-			return true;
+			Log.debug("stopReposRemoteBackUpTasks() remoteBackupConfig.backTaskHashMap is null");
+			return false;
 		}
 		
 		for (BackupTask value : map.values()) {
