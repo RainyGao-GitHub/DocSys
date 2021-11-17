@@ -9376,6 +9376,12 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
         if(session != null)
         {
+        	//如果checkOut到临时目录，则不能更新index
+        	if(tempLocalRootPath != null)
+        	{
+        		session.indexUpdateEn = false;
+        	}
+        	
         	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, force, false, rt );
         	doRemoteStorageLogout(session);
         }
@@ -15712,18 +15718,21 @@ public class BaseController  extends BaseFunction{
 		if(ret == true)
 		{
 			pullResult.successCount ++;
-			pullResult.successDocList.add(doc);	
-			//add or update DB
-			Doc newLocalDoc = fsGetDoc(repos, doc);
-			doc.setSize(newLocalDoc.getSize());
-			doc.setLatestEditTime(newLocalDoc.getLatestEditTime());
-			if(dbDoc == null)
+			pullResult.successDocList.add(doc);
+			if(session.indexUpdateEn)
 			{
-				addRemoteStorageDBEntry(repos, doc, remote);
-			}
-			else
-			{
-				updateRemoteStorageDBEntry(repos, doc, remote);
+				//add or update DB
+				Doc newLocalDoc = fsGetDoc(repos, doc);
+				doc.setSize(newLocalDoc.getSize());
+				doc.setLatestEditTime(newLocalDoc.getLatestEditTime());
+				if(dbDoc == null)
+				{
+					addRemoteStorageDBEntry(repos, doc, remote);
+				}
+				else
+				{
+					updateRemoteStorageDBEntry(repos, doc, remote);
+				}
 			}
 		}
 		else
@@ -15739,10 +15748,10 @@ public class BaseController  extends BaseFunction{
 		{
 			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult, null);
 		}
-		return remoteStorageAddLocalDir(remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
+		return remoteStorageAddLocalDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 	}
 	
-	private static boolean remoteStorageAddLocalDir(RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) 
+	private static boolean remoteStorageAddLocalDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) 
 	{
 		boolean ret = false;
 		pullResult.totalCount ++;
@@ -15752,13 +15761,16 @@ public class BaseController  extends BaseFunction{
 		{
 			pullResult.successCount ++;
 			pullResult.successDocList.add(doc);
-			if(dbDoc == null)
+			if(session.indexUpdateEn)
 			{
-				addRemoteStorageDBEntry(repos, doc, remote);
-			}
-			else
-			{
-				updateRemoteStorageDBEntry(repos, doc, remote);
+				if(dbDoc == null)
+				{
+					addRemoteStorageDBEntry(repos, doc, remote);
+				}
+				else
+				{
+					updateRemoteStorageDBEntry(repos, doc, remote);
+				}
 			}
 		}
 		else
@@ -15777,8 +15789,11 @@ public class BaseController  extends BaseFunction{
 		if(ret == true)
 		{
 			pullResult.successCount ++;
-			pullResult.successDocList.add(doc);			
-			deleteRemoteStorageDBEntry(repos, doc, remote);
+			pullResult.successDocList.add(doc);	
+			if(session.indexUpdateEn)
+			{
+				deleteRemoteStorageDBEntry(repos, doc, remote);
+			}
 		}
 		else
 		{
@@ -15873,7 +15888,6 @@ public class BaseController  extends BaseFunction{
 			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 			{
 				pushResult.successCount ++;
-
 				doc.setRevision(newRemoteDoc.getRevision());
 				if(dbDoc == null)
 				{
