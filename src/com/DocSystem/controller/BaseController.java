@@ -14984,7 +14984,7 @@ public class BaseController  extends BaseFunction{
 	
 	private static RemoteStorageSession remoteStorageLoginForFtp(Repos repos, RemoteStorageConfig remote,
 			RemoteStorageSession session) {
-    	FtpUtil ftp = new FtpUtil(remote.FTP.userName, remote.FTP.pwd, remote.FTP.host, remote.FTP.port);
+    	FtpUtil ftp = new FtpUtil(remote.FTP.userName, remote.FTP.pwd, remote.FTP.host, remote.FTP.port, remote.FTP.charset);
         if(ftp.login() == false)
         {
         	Log.debug("doRemoteStorageLogin login failed");
