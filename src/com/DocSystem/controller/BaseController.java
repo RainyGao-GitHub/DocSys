@@ -10379,17 +10379,17 @@ public class BaseController  extends BaseFunction{
 		//add backup config to hashmap
 		reposBackupConfigHashMap.put(repos.getId(), config);	
 		
-		addDelayTaskForLocalBackup(repos, config.localBackupConfig);
-		addDelayTaskForRemoteBackup(repos, config.remoteBackupConfig);	
+		addDelayTaskForLocalBackup(repos, config.localBackupConfig, 0);
+		addDelayTaskForRemoteBackup(repos, config.remoteBackupConfig, 0);	
 	}
 	
-	private void addDelayTaskForLocalBackup(Repos repos, LocalBackupConfig localBackupConfig) {
+	private void addDelayTaskForLocalBackup(Repos repos, LocalBackupConfig localBackupConfig, int offsetMinute) {
 		if(localBackupConfig == null)
 		{
 			return;
 		}
 		
-		Long delayTime = getDelayTimeForNextLocalBackupTask(localBackupConfig);
+		Long delayTime = getDelayTimeForNextLocalBackupTask(localBackupConfig, offsetMinute);
 		if(delayTime == null)
 		{
 			Log.debug("addDelayTaskForLocalBackup delayTime is null");			
@@ -10444,7 +10444,8 @@ public class BaseController  extends BaseFunction{
                     		Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
                         	channel.localBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
                         }
-                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig);                      
+                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30);                      
                     }
                 },
                 delayTime,
@@ -10587,13 +10588,13 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private void addDelayTaskForRemoteBackup(Repos repos, RemoteBackupConfig remoteBackupConfig) {
+	private void addDelayTaskForRemoteBackup(Repos repos, RemoteBackupConfig remoteBackupConfig, int offsetMinute) {
 		if(remoteBackupConfig == null)
 		{
 			return;
 		}
 		
-		Long delayTime = getDelayTimeForNextRemoteBackupTask(remoteBackupConfig);
+		Long delayTime = getDelayTimeForNextRemoteBackupTask(remoteBackupConfig, offsetMinute);
 		if(delayTime == null)
 		{
 			return;
@@ -10638,16 +10639,14 @@ public class BaseController  extends BaseFunction{
                         	return;
                         }
                         
-                        //确认当前时间是否仍然在当天的备份窗口内(配置发生变化都将导致该任务无效)
-                        if(checkCurrentTimeForRemoteBackup(latestRemoteBackupConfig) == true)
-                        {
-                        	ReturnAjax rt = new ReturnAjax();
-                            String localRootPath = Path.getReposRealPath(latestReposInfo);
-                    		String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
-                    		Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-                        	channel.remoteBackUp(latestRemoteBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "异地定时备份", true, true, rt );
-                        }
-                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig);                      
+                        ReturnAjax rt = new ReturnAjax();
+                        String localRootPath = Path.getReposRealPath(latestReposInfo);
+                    	String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
+                        channel.remoteBackUp(latestRemoteBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "异地定时备份", true, true, rt );
+                        
+                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30);                      
                     }
                 },
                 delayTime,
@@ -10722,7 +10721,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private Long getDelayTimeForNextLocalBackupTask(LocalBackupConfig localBackupConfig) {
+	private Long getDelayTimeForNextLocalBackupTask(LocalBackupConfig localBackupConfig, int offsetMinute) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
 		weekDayBackupEnTab[1] = localBackupConfig.weekDay1;
@@ -10744,7 +10743,7 @@ public class BaseController  extends BaseFunction{
 		Integer delayDays = null;
 		int index = curWeekDay;
 		
-		if(curMinuteOfDay > localBackupConfig.backupTime)
+		if((curMinuteOfDay + offsetMinute) > localBackupConfig.backupTime)
 		{
 			index = (index + 1) % 7;
 		}
@@ -10774,7 +10773,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Long delayTime = null;
-		if(curMinuteOfDay > localBackupConfig.backupTime)
+		if((curMinuteOfDay + offsetMinute) > localBackupConfig.backupTime)
 		{
 			delayDays += 1;
 			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - localBackupConfig.backupTime) * 60);
@@ -10789,7 +10788,7 @@ public class BaseController  extends BaseFunction{
 		return delayTime;
 	}
 
-	private Long getDelayTimeForNextRemoteBackupTask(RemoteBackupConfig remoteBackupConfig) {
+	private Long getDelayTimeForNextRemoteBackupTask(RemoteBackupConfig remoteBackupConfig, int offsetMinute) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
 		weekDayBackupEnTab[1] = remoteBackupConfig.weekDay1;
@@ -10810,7 +10809,7 @@ public class BaseController  extends BaseFunction{
 		
 		Integer delayDays = null;
 		int index = curWeekDay;
-		if(curMinuteOfDay > remoteBackupConfig.backupTime)
+		if((curMinuteOfDay + offsetMinute) > remoteBackupConfig.backupTime)
 		{
 			index = (index + 1) % 7;
 		}
@@ -10841,7 +10840,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		Long delayTime = null;
-		if(curMinuteOfDay > remoteBackupConfig.backupTime)
+		if((curMinuteOfDay + offsetMinute) > remoteBackupConfig.backupTime)
 		{
 			delayDays += 1;
 			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - remoteBackupConfig.backupTime) * 60);
