@@ -4893,9 +4893,9 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
+			Log.debug("getRemoteDocChangeType old revision:" + dbDoc.getRevision() + " new revision:" + remoteEntry.getRevision()); 
 			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
-				Log.debug("getRemoteDocChangeType old revision:" + dbDoc.getRevision() + " new revision:" + remoteEntry.getRevision()); 
 				Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTECHANGE); 
 				return DocChangeType.REMOTECHANGE;
 			}			
@@ -15445,7 +15445,7 @@ public class BaseController  extends BaseFunction{
 		switch(remoteChangeType)
 		{
 		case REMOTECHANGE:
-			ret = remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
+			ret = remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult, commitId);
 			break;
 		case REMOTEADD:
 			ret = remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
@@ -15465,17 +15465,15 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private static boolean remoteStorageChangeLocalDirToFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
-			DocPullResult pullResult) {
+	private static boolean remoteStorageChangeLocalDirToFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) {
 		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult) == true)
 		{
-			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
+			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult, null);
 		}
 		return false;
 	}
 
-	private static boolean remoteStorageChangeLocalFileToDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
-			DocPullResult pullResult) {
+	private static boolean remoteStorageChangeLocalFileToDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) {
 		if(remoteStorageDeleteLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult) == true)
 		{
 			return remoteStorageAddLocalEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
@@ -15524,11 +15522,11 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private static boolean remoteStorageDownloadFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult) 
+	private static boolean remoteStorageDownloadFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, DocPullResult pullResult, String commitId) 
 	{
 		boolean ret = false;
 		pullResult.totalCount ++;
-		ret = downloadFileFromRemoteStorage(session, remote, repos, doc);
+		ret = downloadFileFromRemoteStorage(session, remote, repos, doc, commitId);
 		if(ret == true)
 		{
 			pullResult.successCount ++;
@@ -15557,7 +15555,7 @@ public class BaseController  extends BaseFunction{
 	{
 		if(doc.getType() == 1)
 		{
-			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
+			return remoteStorageDownloadFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult, null);
 		}
 		return remoteStorageAddLocalDir(remote, repos, doc, dbDoc, localDoc, remoteDoc, pullResult);
 	}
@@ -15911,7 +15909,7 @@ public class BaseController  extends BaseFunction{
 		return remoteStorageAddDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
 	}
 
-	private static boolean downloadFileFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
+	private static boolean downloadFileFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		if(remote == null)
 		{
 			Log.debug("downloadFileFromRemoteStorage remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
@@ -15931,9 +15929,9 @@ public class BaseController  extends BaseFunction{
 		case "mxsdoc":
 			return downloadFileFromMxsDocServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
 		case "svn":
-			return downloadFileFromSvnServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return downloadFileFromSvnServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), commitId);
 		case "git":
-			return downloadFileFromGitServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			return downloadFileFromGitServer(session, remote,  remote.rootPath + doc.offsetPath + doc.getPath(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), commitId);
 		default:
 			Log.debug("downloadFileFromRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
 			break;
@@ -16192,10 +16190,15 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private static boolean downloadFileFromSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName)  {
+	private static boolean downloadFileFromSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName, String commitId)  {
 		boolean ret = false;
 		try {
-			session.svn.getRemoteFile(remotePath + fileName, localPath, fileName, -1L, true);
+			long revision = -1L;
+			if(commitId != null)
+			{
+				revision = Long.parseLong(commitId);
+			}
+			session.svn.getRemoteFile(remotePath + fileName, localPath, fileName, revision, true);
 			ret = true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -16203,10 +16206,10 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private static boolean downloadFileFromGitServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName) {
+	private static boolean downloadFileFromGitServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String localPath, String fileName, String commitId) {
 		boolean ret = false;
 		try {
-			session.git.getRemoteFile(remotePath + fileName, localPath, fileName, null, true);
+			session.git.getRemoteFile(remotePath + fileName, localPath, fileName, commitId, true);
 			ret = true;
 		} catch (Exception e) {
 			e.printStackTrace();
