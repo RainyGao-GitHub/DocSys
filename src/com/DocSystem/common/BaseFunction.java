@@ -397,6 +397,7 @@ public class BaseFunction{
 			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/Doc";
 		}
 		remoteBackupConfig.remoteStorageConfig = remote;
+		remoteBackupConfig.backTaskHashMap = new HashMap<Long, BackupTask>();
 		return remoteBackupConfig;
 	}
 
@@ -429,7 +430,8 @@ public class BaseFunction{
 			remote.remoteStorageIndexLib = getDBStorePath() + "LocalBackup/" + repos.getId() + "/Doc";
 		}
 		
-		localBackupConfig.remoteStorageConfig = remote;		
+		localBackupConfig.remoteStorageConfig = remote;	
+		localBackupConfig.backTaskHashMap = new HashMap<Long, BackupTask>();
 		return localBackupConfig;
 	}
 	
