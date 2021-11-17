@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -54,6 +53,7 @@ import util.LuceneUtil.LuceneUtil2;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.common.entity.BackupConfig;
+import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
@@ -325,7 +325,10 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
 	//远程存储
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
-	protected static ConcurrentHashMap<Integer, BackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, BackupConfig>();	
+	protected static ConcurrentHashMap<Integer, BackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, BackupConfig>();
+	
+	protected static ConcurrentHashMap<Integer, BackupTask> reposBackupTaskHashMap = new ConcurrentHashMap<Integer, BackupTask>();	
+	
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		reposRemoteStorageHashMap.remove(repos.getId());

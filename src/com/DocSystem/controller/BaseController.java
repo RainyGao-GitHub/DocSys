@@ -113,6 +113,7 @@ import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.BackupConfig;
+import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.common.entity.EncryptConfig;
@@ -10402,13 +10403,23 @@ public class BaseController  extends BaseFunction{
 			return;
 	    }
 		
+		long curTime = new Date().getTime();
+		stopReposLocalBackUpTasks(repos, curTime);
+		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.schedule(
+        startReposLocalBackupTask(repos, curTime);
+		
+		executor.schedule(
         		new Runnable() {
                     @Override
                     public void run() {
                         Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
                         
+                        if(isLocalBackUpTaskNeedToStop(repos, curTime))
+                        {
+                        	return;
+                        }
+                        	
                         //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
                 		Repos latestReposInfo = getReposEx(repos.getId());
                         BackupConfig backupConfig = latestReposInfo.backupConfig;
@@ -10440,6 +10451,142 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 
+	private boolean startReposLocalBackupTask(Repos repos, long curTime) {
+		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
+		if(config == null)
+		{
+			return false;
+		}
+		
+		if(config.localBackupConfig == null)
+		{
+			return false;
+		}
+		
+		BackupTask backupTask = new BackupTask();
+		backupTask.createTime = curTime;
+		config.localBackupConfig.backTaskHashMap.put(curTime, backupTask);
+		return true;
+	}
+	
+	private boolean startReposRemoteBackupTask(Repos repos, long curTime) {
+		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
+		if(config == null)
+		{
+			return false;
+		}
+		
+		if(config.remoteBackupConfig == null)
+		{
+			return false;
+		}
+		
+		BackupTask backupTask = new BackupTask();
+		backupTask.createTime = curTime;
+		config.remoteBackupConfig.backTaskHashMap.put(curTime, backupTask);
+		return true;
+	}
+
+	private boolean stopReposLocalBackUpTasks(Repos repos, Long curTime) {
+		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
+		if(config == null)
+		{
+			return false;
+		}
+		
+		if(config.localBackupConfig == null)
+		{
+			return false;
+		}
+		
+		//go through all backupTask and close all task
+		HashMap<Long, BackupTask> map = config.localBackupConfig.backTaskHashMap;
+		for (BackupTask value : map.values()) {
+			value.stopFlag = true;
+		}		
+		return true;
+	}
+	
+	private boolean stopReposRemoteBackUpTasks(Repos repos, Long curTime) {
+		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
+		if(config == null)
+		{
+			return false;
+		}
+		
+		if(config.remoteBackupConfig == null)
+		{
+			return false;
+		}
+		
+		//TODO: go through all backupTask and close all task
+		HashMap<Long, BackupTask> map = config.remoteBackupConfig.backTaskHashMap;
+		for (BackupTask value : map.values()) {
+			value.stopFlag = true;
+		}		
+		return true;
+	}
+
+	protected boolean isLocalBackUpTaskNeedToStop(Repos repos, long curTime) {
+		// TODO Auto-generated method stub
+		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
+		if(config == null)
+		{
+			return true;
+		}
+		
+		if(config.localBackupConfig == null)
+		{
+			return true;
+		}
+		
+		//TODO: go through all backupTask and close all task which createTime is less then curTime
+		BackupTask backupTask = config.localBackupConfig.backTaskHashMap.get(curTime);
+		if(backupTask == null)
+		{
+			return true;
+		}
+		
+		if(backupTask.stopFlag == true)
+		{
+			//移除备份任务
+			config.localBackupConfig.backTaskHashMap.remove(curTime);
+			return true;
+		}	
+		
+		return false;
+	}
+	
+	protected boolean isRemoteBackUpTaskNeedToStop(Repos repos, long curTime) {
+		// TODO Auto-generated method stub
+		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
+		if(config == null)
+		{
+			return true;
+		}
+		
+		if(config.remoteBackupConfig == null)
+		{
+			return true;
+		}
+		
+		//TODO: go through all backupTask and close all task which createTime is less then curTime
+		BackupTask backupTask = config.remoteBackupConfig.backTaskHashMap.get(curTime);
+		if(backupTask == null)
+		{
+			return true;
+		}
+		
+		if(backupTask.stopFlag == true)
+		{
+			//移除备份任务
+			config.remoteBackupConfig.backTaskHashMap.remove(curTime);
+			return true;
+		}	
+		
+		return false;
+	}
+
 	private void addDelayTaskForRemoteBackup(Repos repos, RemoteBackupConfig remoteBackupConfig) {
 		if(remoteBackupConfig == null)
 		{
@@ -10458,14 +10605,24 @@ public class BaseController  extends BaseFunction{
 			Log.debug("addDelayTaskForRemoteBackup 非商业版本不支持自动备份");
 			return;
 	    }
-				
+		
+		//启动新的备份任务前必须需要先停止旧的备份任务
+		long curTime = new Date().getTime();
+		stopReposRemoteBackUpTasks(repos, curTime);
+		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.schedule(
+		startReposRemoteBackupTask(repos, curTime);		
+
+		executor.schedule(
         		new Runnable() {
                     @Override
                     public void run() {
                         Log.debug("\n*************** RemoteBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
                         
+                        if(isLocalBackUpTaskNeedToStop(repos, curTime))
+                        {
+                        	return;
+                        }
                         
                         //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
                 		Repos latestReposInfo = getReposEx(repos.getId());
@@ -10496,7 +10653,7 @@ public class BaseController  extends BaseFunction{
                 delayTime,
                 TimeUnit.SECONDS);
 	}
-	
+
 	protected boolean checkCurrentTimeForLocalBackup(LocalBackupConfig localBackupConfig) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
