@@ -1730,7 +1730,8 @@ public class BaseFunction{
 	protected static String getIndexLibPathForRemoteStorageDoc(Repos repos, RemoteStorageConfig remote) {
 		if(remote.remoteStorageIndexLib == null)
 		{
-			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
+			Log.debug("getIndexLibPathForRemoteStorageDoc() remoteStorageIndexLib is null!!!");
+			//remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
 		}
 		return remote.remoteStorageIndexLib;
 
