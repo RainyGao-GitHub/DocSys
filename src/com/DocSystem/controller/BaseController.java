@@ -10508,6 +10508,11 @@ public class BaseController  extends BaseFunction{
 		
 		//go through all backupTask and close all task
 		HashMap<Long, BackupTask> map = config.localBackupConfig.backTaskHashMap;
+		if(map == null)
+		{
+			return true;
+		}
+		
 		for (BackupTask value : map.values()) {
 			value.stopFlag = true;
 		}		
@@ -10528,6 +10533,11 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: go through all backupTask and close all task
 		HashMap<Long, BackupTask> map = config.remoteBackupConfig.backTaskHashMap;
+		if(map == null)
+		{
+			return true;
+		}
+		
 		for (BackupTask value : map.values()) {
 			value.stopFlag = true;
 		}		
