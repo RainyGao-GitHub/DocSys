@@ -10,4 +10,5 @@ public class RemoteStorageSession
 	public GitUtil git;
 	public MxsDocUtil mxsdoc;
 	public String authCode;
+	public boolean indexUpdateEn = true;
 }
