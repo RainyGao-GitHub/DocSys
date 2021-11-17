@@ -14912,12 +14912,17 @@ public class BaseController  extends BaseFunction{
 	//******************* 远程存储 接口 *********************************
 	//Remote Storage DB Interfaces
 	protected static List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
+		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		if(indexLib == null)
+		{
+			Log.debug("getRemoteStorageDBEntryList indexLib is null");
+			return null;
+		}
+
 		//查询数据库
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
 		qDoc.setPid(doc.getDocId());
-		
-		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
 		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
 		return list;
 	}
@@ -14939,12 +14944,18 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected static Doc getRemoteStorageDBEntry(Repos repos, Doc doc, boolean dupCheck, RemoteStorageConfig remote) {
+		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		if(indexLib == null)
+		{
+			Log.debug("getRemoteStorageDBEntry indexLib is null");
+			return null;
+		}
+				
 		//查询数据库
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
 		qDoc.setDocId(doc.getDocId());
 		
-		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
 		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
 		if(list == null || list.size() == 0)
 		{
@@ -14970,16 +14981,31 @@ public class BaseController  extends BaseFunction{
 	
 	protected static boolean addRemoteStorageDBEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
 		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		if(indexLib == null)
+		{
+			Log.debug("addRemoteStorageDBEntry indexLib is null");
+			return false;
+		}
 		return LuceneUtil2.addIndex(doc, null, indexLib);
 	}
 
 	protected static boolean updateRemoteStorageDBEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
 		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		if(indexLib == null)
+		{
+			Log.debug("updateRemoteStorageDBEntry indexLib is null");
+			return false;
+		}
 		return LuceneUtil2.updateIndex(doc, null, indexLib);
 	}
 	
 	protected static boolean deleteRemoteStorageDBEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
 		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
+		if(indexLib == null)
+		{
+			Log.debug("deleteRemoteStorageDBEntry indexLib is null");
+			return false;
+		}
 		//return LuceneUtil2.deleteIndex(doc, indexLib);
 		return LuceneUtil2.deleteIndexEx(doc, indexLib, 2);
 	}
