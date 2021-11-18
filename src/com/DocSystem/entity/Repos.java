@@ -4,6 +4,7 @@ import com.DocSystem.common.TextSearchConfig;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
+import com.DocSystem.common.entity.ReposBackupConfig;
 
 public class Repos {    
 	public static final Integer FSM = 1;
@@ -81,7 +82,7 @@ public class Repos {
 		
 	public Integer encryptType;
 	public EncryptConfig encryptConfig;
-	public BackupConfig backupConfig;
+	public ReposBackupConfig backupConfig;
 	
     public Integer getId() {
         return id;
