@@ -1482,19 +1482,7 @@ public class ManageController extends BaseController{
 			for(int i=0; i<list.size(); i++)
 			{
 				Repos repos = list.get(i);
-				repos.remoteServerConfig = reposRemoteServerHashMap.get(repos.getId());
-				repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
-				repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
-				repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
-				repos.isBussiness = systemLicenseInfo.hasLicense;
-				//get encrypt Config
-				repos.encryptType = 0;
-				EncryptConfig encryptConfig = reposEncryptHashMap.get(repos.getId());
-				if(encryptConfig != null && encryptConfig.type != null)
-				{
-					repos.encryptType = encryptConfig.type;
-				}
-				repos.backupConfig = reposBackupConfigHashMap.get(repos.getId());
+				repos = getReposEx(repos);
 			}
 		}
 		
