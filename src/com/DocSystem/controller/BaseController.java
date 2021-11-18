@@ -117,11 +117,10 @@ import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.common.entity.EncryptConfig;
-import com.DocSystem.common.entity.LocalBackupConfig;
 import com.DocSystem.common.entity.QueryResult;
-import com.DocSystem.common.entity.RemoteBackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
+import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.remoteStorage.FtpUtil;
 import com.DocSystem.common.remoteStorage.GitUtil;
 import com.DocSystem.common.remoteStorage.MxsDocUtil;
@@ -10367,7 +10366,7 @@ public class BaseController  extends BaseFunction{
 
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
-		Log.debug("initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup:" + autoBackup);
+		Log.debug("***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: ****" + autoBackup);
 		
 		if(isFSM(repos) == false)
 		{
@@ -10375,10 +10374,11 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		BackupConfig config = parseAutoBackupConfig(repos, autoBackup);
+		ReposBackupConfig config = parseAutoBackupConfig(repos, autoBackup);
 		if(config == null)
 		{
 			reposBackupConfigHashMap.remove(repos.getId());
+			Log.debug("initReposRemoteServerConfig 自动备份未设置或者设置错误");
 			return;
 		}
 		
@@ -10387,15 +10387,16 @@ public class BaseController  extends BaseFunction{
 		
 		addDelayTaskForLocalBackup(repos, config.localBackupConfig, 0);
 		addDelayTaskForRemoteBackup(repos, config.remoteBackupConfig, 0);	
+		Log.debug("**** initReposRemoteServerConfig 自动备份初始化完成 *****");
 	}
 	
-	private void addDelayTaskForLocalBackup(Repos repos, LocalBackupConfig localBackupConfig, int offsetMinute) {
+	private void addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute) {
 		if(localBackupConfig == null)
 		{
 			return;
 		}
 		
-		Long delayTime = getDelayTimeForNextLocalBackupTask(localBackupConfig, offsetMinute);
+		Long delayTime = getDelayTimeForNextBackupTask(localBackupConfig, offsetMinute);
 		if(delayTime == null)
 		{
 			Log.debug("addDelayTaskForLocalBackup delayTime is null");			
@@ -10410,10 +10411,10 @@ public class BaseController  extends BaseFunction{
 	    }
 		
 		long curTime = new Date().getTime();
-		stopReposLocalBackUpTasks(repos, curTime);
+		stopReposBackUpTasks(repos, localBackupConfig, curTime);
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        startReposLocalBackupTask(repos, curTime);
+        startReposBackupTask(repos, localBackupConfig, curTime);
 		
 		executor.schedule(
         		new Runnable() {
@@ -10421,35 +10422,25 @@ public class BaseController  extends BaseFunction{
                     public void run() {
                         Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
                         
-                        if(isLocalBackUpTaskNeedToStop(repos, curTime))
-                        {
-                        	return;
-                        }
-                        	
                         //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
                 		Repos latestReposInfo = getReposEx(repos.getId());
-                        BackupConfig backupConfig = latestReposInfo.backupConfig;
-                        if(backupConfig == null)
+                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
+                        if(latestBackupConfig == null)
                         {
                         	return;
                         }
-                        
-                        LocalBackupConfig latestLocalBackupConfig = backupConfig.localBackupConfig;
-                        if(latestLocalBackupConfig == null)
+                        BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;                        
+                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, curTime))
                         {
                         	return;
                         }
+                        	                        
+                        ReturnAjax rt = new ReturnAjax();
+                        String localRootPath = Path.getReposRealPath(latestReposInfo);
+                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
+                        channel.localBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
                         
-                        //确认当前时间是否仍然在当天的备份窗口内(配置发生变化都将导致该任务无效)
-                        
-                        if(checkCurrentTimeForLocalBackup(latestLocalBackupConfig) == true)
-                        {
-                        	ReturnAjax rt = new ReturnAjax();
-                            String localRootPath = Path.getReposRealPath(latestReposInfo);
-                    		String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
-                    		Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-                        	channel.localBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
-                        }
                         //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
                         addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30);                      
                     }
@@ -10457,211 +10448,57 @@ public class BaseController  extends BaseFunction{
                 delayTime,
                 TimeUnit.SECONDS);
 	}
-
-	private boolean startReposLocalBackupTask(Repos repos, long curTime) {
-		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
-		if(config == null)
-		{
-			return false;
-		}
-		
-		if(config.localBackupConfig == null)
-		{
-			return false;
-		}
-		
-		BackupTask backupTask = new BackupTask();
-		backupTask.createTime = curTime;
-		config.localBackupConfig.backTaskHashMap.put(curTime, backupTask);
-		return true;
-	}
 	
-	private boolean startReposRemoteBackupTask(Repos repos, long curTime) {
-		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
-		if(config == null)
-		{
-			return false;
-		}
-		
-		if(config.remoteBackupConfig == null)
-		{
-			return false;
-		}
-		
-		BackupTask backupTask = new BackupTask();
-		backupTask.createTime = curTime;
-		config.remoteBackupConfig.backTaskHashMap.put(curTime, backupTask);
-		return true;
-	}
-
-	private boolean stopReposLocalBackUpTasks(Repos repos, Long curTime) {
-		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
-		if(config == null)
-		{
-			return false;
-		}
-		
-		if(config.localBackupConfig == null)
-		{
-			return false;
-		}
-		
-		//go through all backupTask and close all task
-		HashMap<Long, BackupTask> map = config.localBackupConfig.backTaskHashMap;
-		if(map == null)
-		{
-			Log.debug("stopReposLocalBackUpTasks() remoteBackupConfig.backTaskHashMap is null");
-			return false;
-		}
-
-		for (BackupTask value : map.values()) {
-			value.stopFlag = true;
-		}		
-		return true;
-	}
-	
-	private boolean stopReposRemoteBackUpTasks(Repos repos, Long curTime) {
-		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
-		if(config == null)
-		{
-			return false;
-		}
-		
-		if(config.remoteBackupConfig == null)
-		{
-			return false;
-		}
-		
-		//TODO: go through all backupTask and close all task
-		HashMap<Long, BackupTask> map = config.remoteBackupConfig.backTaskHashMap;
-		if(map == null)
-		{
-			Log.debug("stopReposRemoteBackUpTasks() remoteBackupConfig.backTaskHashMap is null");
-			return false;
-		}
-		
-		for (BackupTask value : map.values()) {
-			value.stopFlag = true;
-		}		
-		return true;
-	}
-
-	protected boolean isLocalBackUpTaskNeedToStop(Repos repos, long curTime) {
-		// TODO Auto-generated method stub
-		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
-		if(config == null)
-		{
-			return true;
-		}
-		
-		if(config.localBackupConfig == null)
-		{
-			return true;
-		}
-		
-		//TODO: go through all backupTask and close all task which createTime is less then curTime
-		BackupTask backupTask = config.localBackupConfig.backTaskHashMap.get(curTime);
-		if(backupTask == null)
-		{
-			return true;
-		}
-		
-		if(backupTask.stopFlag == true)
-		{
-			//移除备份任务
-			config.localBackupConfig.backTaskHashMap.remove(curTime);
-			return true;
-		}	
-		
-		return false;
-	}
-	
-	protected boolean isRemoteBackUpTaskNeedToStop(Repos repos, long curTime) {
-		// TODO Auto-generated method stub
-		BackupConfig config = reposBackupConfigHashMap.get(repos.getId());	
-		if(config == null)
-		{
-			return true;
-		}
-		
-		if(config.remoteBackupConfig == null)
-		{
-			return true;
-		}
-		
-		//TODO: go through all backupTask and close all task which createTime is less then curTime
-		BackupTask backupTask = config.remoteBackupConfig.backTaskHashMap.get(curTime);
-		if(backupTask == null)
-		{
-			return true;
-		}
-		
-		if(backupTask.stopFlag == true)
-		{
-			//移除备份任务
-			config.remoteBackupConfig.backTaskHashMap.remove(curTime);
-			return true;
-		}	
-		
-		return false;
-	}
-
-	private void addDelayTaskForRemoteBackup(Repos repos, RemoteBackupConfig remoteBackupConfig, int offsetMinute) {
+	private void addDelayTaskForRemoteBackup(Repos repos, BackupConfig remoteBackupConfig, int offsetMinute) {
 		if(remoteBackupConfig == null)
 		{
 			return;
 		}
 		
-		Long delayTime = getDelayTimeForNextRemoteBackupTask(remoteBackupConfig, offsetMinute);
+		Long delayTime = getDelayTimeForNextBackupTask(remoteBackupConfig, offsetMinute);
 		if(delayTime == null)
 		{
+			Log.debug("addDelayTaskForLocalBackup delayTime is null");			
 			return;
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
-			Log.debug("addDelayTaskForRemoteBackup 非商业版本不支持自动备份");
+			Log.debug("addDelayTaskForLocalBackup 非商业版本不支持自动备份");
 			return;
 	    }
 		
-		//启动新的备份任务前必须需要先停止旧的备份任务
 		long curTime = new Date().getTime();
-		stopReposRemoteBackUpTasks(repos, curTime);
+		stopReposBackUpTasks(repos, remoteBackupConfig, curTime);
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-		startReposRemoteBackupTask(repos, curTime);		
-
+        startReposBackupTask(repos, remoteBackupConfig, curTime);
+		
 		executor.schedule(
         		new Runnable() {
                     @Override
                     public void run() {
-                        Log.debug("\n*************** RemoteBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
-                        
-                        if(isLocalBackUpTaskNeedToStop(repos, curTime))
-                        {
-                        	return;
-                        }
+                        Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
                         
                         //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
                 		Repos latestReposInfo = getReposEx(repos.getId());
-                        BackupConfig backupConfig = latestReposInfo.backupConfig;
-                        if(backupConfig == null)
+                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
+                        if(latestBackupConfig == null)
                         {
                         	return;
                         }
-                        
-                        RemoteBackupConfig latestRemoteBackupConfig = backupConfig.remoteBackupConfig;
-                        if(latestRemoteBackupConfig == null)
+                        BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;                        
+                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig, curTime))
                         {
                         	return;
                         }
-                        
+                        	                        
                         ReturnAjax rt = new ReturnAjax();
                         String localRootPath = Path.getReposRealPath(latestReposInfo);
-                    	String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
                     	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-                        channel.remoteBackUp(latestRemoteBackupConfig.remoteStorageConfig, repos, rootDoc, systemUser, "异地定时备份", true, true, rt );
+                        channel.localBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
                         
                         //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
                         addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30);                      
@@ -10670,98 +10507,121 @@ public class BaseController  extends BaseFunction{
                 delayTime,
                 TimeUnit.SECONDS);
 	}
-
-	protected boolean checkCurrentTimeForLocalBackup(LocalBackupConfig localBackupConfig) {
-		//初始化weekDayBackupEnTab
-		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = localBackupConfig.weekDay1;
-		weekDayBackupEnTab[2] = localBackupConfig.weekDay2;
-		weekDayBackupEnTab[3] = localBackupConfig.weekDay3;
-		weekDayBackupEnTab[4] = localBackupConfig.weekDay4;
-		weekDayBackupEnTab[5] = localBackupConfig.weekDay5;
-		weekDayBackupEnTab[6] = localBackupConfig.weekDay6;
-		weekDayBackupEnTab[0] = localBackupConfig.weekDay7;
-		
-		Calendar calendar = Calendar.getInstance();
-		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-		int curMinute = calendar.get(Calendar.MINUTE);
-		int curHour = calendar.get(Calendar.HOUR_OF_DAY);	
-		int curMinuteOfDay = curHour*60 + curMinute;
-		Log.debug("checkCurrentTimeForLocalBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMiute:" + curMinute + " curMinuteOfDay:" + curMinuteOfDay);
-
-		if(weekDayBackupEnTab[curWeekDay] == 0)
+	
+	private boolean startReposBackupTask(Repos repos, BackupConfig backupConfig, long curTime) {
+		if(backupConfig == null)
 		{
-			//当天没有备份任务
-			Log.debug("checkCurrentTimeForLocalBackup() Today have no local backup task");
+			Log.debug("startReposBackupTask() backupConfig is null");			
 			return false;
 		}
 		
-		if(curMinuteOfDay > (localBackupConfig.backupTime + 120))
-		{
-			Log.debug("checkCurrentTimeForLocalBackup() 备份任务已超时两小时!");
-			return false;
-		}
-		
+		BackupTask backupTask = new BackupTask();
+		backupTask.createTime = curTime;
+		backupConfig.backTaskHashMap.put(curTime, backupTask);
 		return true;
 	}
 	
-	protected boolean checkCurrentTimeForRemoteBackup(RemoteBackupConfig remoteBackupConfig) {
+	private boolean stopReposBackUpTasks(Repos repos, BackupConfig backupConfig, Long curTime) {
+		if(backupConfig == null)
+		{
+			Log.debug("stopReposBackUpTasks() backupConfig is null");			
+			return false;
+		}
+		//TODO: go through all backupTask and close all task
+		HashMap<Long, BackupTask> map = backupConfig.backTaskHashMap;
+		if(map == null)
+		{
+			Log.debug("stopReposBackUpTasks() backTaskHashMap is null");
+			return false;
+		}
+		
+		for (BackupTask value : map.values()) {
+			value.stopFlag = true;
+		}		
+		return true;
+	}
+
+	protected boolean isBackUpTaskNeedToStop(Repos repos, BackupConfig backupConfig, long curTime) {
+		if(backupConfig == null)
+		{
+			Log.debug("isBackUpTaskNeedToStop() backupConfig is null");			
+			return false;
+		}
+		
+		BackupTask backupTask = backupConfig.backTaskHashMap.get(curTime);
+		if(backupTask == null)
+		{
+			Log.debug("isBackUpTaskNeedToStop() there is no running backup task for " + curTime);						
+			return true;
+		}
+		
+		if(backupTask.stopFlag == true)
+		{
+			//移除备份任务
+			backupConfig.backTaskHashMap.remove(curTime);
+			return true;
+		}	
+		
+		return false;
+	}
+	
+	protected boolean checkCurrentTimeForBackup(BackupConfig backupConfig) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = remoteBackupConfig.weekDay1;
-		weekDayBackupEnTab[2] = remoteBackupConfig.weekDay2;
-		weekDayBackupEnTab[3] = remoteBackupConfig.weekDay3;
-		weekDayBackupEnTab[4] = remoteBackupConfig.weekDay4;
-		weekDayBackupEnTab[5] = remoteBackupConfig.weekDay5;
-		weekDayBackupEnTab[6] = remoteBackupConfig.weekDay6;
-		weekDayBackupEnTab[0] = remoteBackupConfig.weekDay7;
+		weekDayBackupEnTab[1] = backupConfig.weekDay1;
+		weekDayBackupEnTab[2] = backupConfig.weekDay2;
+		weekDayBackupEnTab[3] = backupConfig.weekDay3;
+		weekDayBackupEnTab[4] = backupConfig.weekDay4;
+		weekDayBackupEnTab[5] = backupConfig.weekDay5;
+		weekDayBackupEnTab[6] = backupConfig.weekDay6;
+		weekDayBackupEnTab[0] = backupConfig.weekDay7;
 		
 		Calendar calendar = Calendar.getInstance();
 		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 		int curMinute = calendar.get(Calendar.MINUTE);
 		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
 		int curMinuteOfDay = curHour*60 + curMinute;
-		Log.debug("checkCurrentTimeForRemoteBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMiute:" + curMinute + " curMinuteOfDay:" + curMinuteOfDay);
+		Log.debug("checkCurrentTimeForBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMiute:" + curMinute + " curMinuteOfDay:" + curMinuteOfDay);
 
 		if(weekDayBackupEnTab[curWeekDay] == 0)
 		{
 			//当天没有备份任务
-			Log.debug("checkCurrentTimeForRemoteBackup() Today have no remote backup task");
+			Log.debug("checkCurrentTimeForBackup() Today have no remote backup task");
 			return false;
 		}
 		
-		if(curMinuteOfDay > (remoteBackupConfig.backupTime + 120))
+		if(curMinuteOfDay > (backupConfig.backupTime + 120))
 		{
-			Log.debug("checkCurrentTimeForRemoteBackup() 备份任务已超时两小时!");
+			Log.debug("checkCurrentTimeForBackup() 备份任务已超时两小时!");
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private Long getDelayTimeForNextLocalBackupTask(LocalBackupConfig localBackupConfig, int offsetMinute) {
+	private Long getDelayTimeForNextBackupTask(BackupConfig backupConfig, int offsetMinute) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = localBackupConfig.weekDay1;
-		weekDayBackupEnTab[2] = localBackupConfig.weekDay2;
-		weekDayBackupEnTab[3] = localBackupConfig.weekDay3;
-		weekDayBackupEnTab[4] = localBackupConfig.weekDay4;
-		weekDayBackupEnTab[5] = localBackupConfig.weekDay5;
-		weekDayBackupEnTab[6] = localBackupConfig.weekDay6;
-		weekDayBackupEnTab[0] = localBackupConfig.weekDay7;
+		weekDayBackupEnTab[1] = backupConfig.weekDay1;
+		weekDayBackupEnTab[2] = backupConfig.weekDay2;
+		weekDayBackupEnTab[3] = backupConfig.weekDay3;
+		weekDayBackupEnTab[4] = backupConfig.weekDay4;
+		weekDayBackupEnTab[5] = backupConfig.weekDay5;
+		weekDayBackupEnTab[6] = backupConfig.weekDay6;
+		weekDayBackupEnTab[0] = backupConfig.weekDay7;
 		
 		Calendar calendar = Calendar.getInstance();
 		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
 		int curMinute = calendar.get(Calendar.MINUTE);
 		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 		int curMinuteOfDay = curHour*60 + curMinute;		
-		Log.debug("getDelayTimeForNextLocalBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
-				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + localBackupConfig.backupTime);
+		Log.debug("getDelayTimeForNextBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
+				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + backupConfig.backupTime);
 		
 		Integer delayDays = null;
 		int index = curWeekDay;
 		
-		if((curMinuteOfDay + offsetMinute) > localBackupConfig.backupTime)
+		if((curMinuteOfDay + offsetMinute) > backupConfig.backupTime)
 		{
 			index = (index + 1) % 7;
 		}
@@ -10791,84 +10651,18 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Long delayTime = null;
-		if((curMinuteOfDay + offsetMinute) > localBackupConfig.backupTime)
+		if((curMinuteOfDay + offsetMinute) > backupConfig.backupTime)
 		{
 			delayDays += 1;
-			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - localBackupConfig.backupTime) * 60);
+			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - backupConfig.backupTime) * 60);
 		}
 		else
 		{
-			delayTime = (long) (delayDays*24*60*60 + (localBackupConfig.backupTime - curMinuteOfDay) * 60);
+			delayTime = (long) (delayDays*24*60*60 + (backupConfig.backupTime - curMinuteOfDay) * 60);
 		}
 		
 		
-		Log.debug("getDelayTimeForNextLocalBackupTask() delayDays:" + delayDays + " delayTime:" + delayTime);
-		return delayTime;
-	}
-
-	private Long getDelayTimeForNextRemoteBackupTask(RemoteBackupConfig remoteBackupConfig, int offsetMinute) {
-		//初始化weekDayBackupEnTab
-		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = remoteBackupConfig.weekDay1;
-		weekDayBackupEnTab[2] = remoteBackupConfig.weekDay2;
-		weekDayBackupEnTab[3] = remoteBackupConfig.weekDay3;
-		weekDayBackupEnTab[4] = remoteBackupConfig.weekDay4;
-		weekDayBackupEnTab[5] = remoteBackupConfig.weekDay5;
-		weekDayBackupEnTab[6] = remoteBackupConfig.weekDay6;
-		weekDayBackupEnTab[0] = remoteBackupConfig.weekDay7;
-		
-		Calendar calendar = Calendar.getInstance();
-		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
-		int curMinute = calendar.get(Calendar.MINUTE);
-		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-		int curMinuteOfDay = curHour*60 + curMinute;		
-		Log.debug("getDelayTimeForNextRemoteBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
-				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + remoteBackupConfig.backupTime);
-		
-		Integer delayDays = null;
-		int index = curWeekDay;
-		if((curMinuteOfDay + offsetMinute) > remoteBackupConfig.backupTime)
-		{
-			index = (index + 1) % 7;
-		}
-		Log.debug("getDelayTimeForNextRemoteBackupTask() index:" + index);		
-		
-		for(int i = 0; i < 7; i++)
-		{
-			if(weekDayBackupEnTab[index % 7] == 1)
-			{
-				Log.debug("getDelayTimeForNextRemoteBackupTask() curWeekDay:" + index % 7 + " backup enabled");
-
-				if(delayDays == null)
-				{
-					delayDays = 0;
-				}
-				else
-				{
-					delayDays++;
-				}
-				break;
-			}
-			index++;
-		}
-		
-		if(delayDays == null)
-		{
-			return null;
-		}
-
-		Long delayTime = null;
-		if((curMinuteOfDay + offsetMinute) > remoteBackupConfig.backupTime)
-		{
-			delayDays += 1;
-			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - remoteBackupConfig.backupTime) * 60);
-		}
-		else
-		{
-			delayTime = (long) (delayDays*24*60*60 + (remoteBackupConfig.backupTime - curMinuteOfDay) * 60);
-		}
-		
-		Log.debug("getDelayTimeForNextRemoteBackupTask() delayDays:" + delayDays + " delayTime:" + delayTime);
+		Log.debug("getDelayTimeForNextBackupTask() delayDays:" + delayDays + " delayTime:" + delayTime);
 		return delayTime;
 	}
 	

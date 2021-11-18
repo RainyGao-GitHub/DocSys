@@ -1,10 +1,18 @@
 package com.DocSystem.common.entity;
 
-import java.util.List;
+import java.util.HashMap;
 
 public class BackupConfig {
+	public RemoteStorageConfig remoteStorageConfig;
+	public Integer fullBackupEn = 0;
+	public Integer realTimeBackup;
 	public Integer backupTime;
-	public List<Integer> backupDateList;
-	public LocalBackupConfig localBackupConfig;
-	public RemoteBackupConfig remoteBackupConfig;
+	public Integer weekDay1;
+	public Integer weekDay2;
+	public Integer weekDay3;
+	public Integer weekDay4;
+	public Integer weekDay5;
+	public Integer weekDay6;
+	public Integer weekDay7;
+	public HashMap<Long, BackupTask> backTaskHashMap;	
 }
