@@ -10527,7 +10527,8 @@ public class BaseController  extends BaseFunction{
 			Log.debug("stopReposBackUpTasks() backupConfig is null");			
 			return false;
 		}
-		//TODO: go through all backupTask and close all task
+		
+		//go through all backupTask and close all task
 		HashMap<Long, BackupTask> map = backupConfig.backTaskHashMap;
 		if(map == null)
 		{
@@ -10651,7 +10652,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Long delayTime = null;
-		if((curMinuteOfDay + offsetMinute) > backupConfig.backupTime)
+		if(curMinuteOfDay > backupConfig.backupTime)
 		{
 			delayDays += 1;
 			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - backupConfig.backupTime) * 60);
