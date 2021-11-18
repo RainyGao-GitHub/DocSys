@@ -10626,13 +10626,13 @@ public class BaseController  extends BaseFunction{
 		{
 			index = (index + 1) % 7;
 		}
-		Log.debug("getDelayTimeForNextLocalBackupTask() index:" + index);		
+		Log.debug("getDelayTimeForNextBackupTask() index:" + index);		
 		
 		for(int i = 0; i < 7; i++)
 		{
 			if(weekDayBackupEnTab[index % 7] == 1)
 			{
-				Log.debug("getDelayTimeForNextLocalBackupTask() curWeekDay:" + index % 7 + " backup enabled");
+				Log.debug("getDelayTimeForNextBackupTask() curWeekDay:" + index % 7 + " backup enabled");
 				if(delayDays == null)
 				{
 					delayDays = 0;
