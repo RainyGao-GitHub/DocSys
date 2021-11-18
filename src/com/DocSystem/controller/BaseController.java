@@ -13392,6 +13392,10 @@ public class BaseController  extends BaseFunction{
 	//获取仓库信息（包括非数据库的信息）
 	public Repos getReposEx(Integer reposId) {
 		Repos repos = reposService.getRepos(reposId);
+		return getReposEx(repos);
+	}
+
+	public Repos getReposEx(Repos repos) {
 		if(repos != null)
 		{
 			if(isFSM(repos))
