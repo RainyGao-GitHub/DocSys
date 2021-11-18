@@ -76,11 +76,10 @@ import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.DocPullResult;
-import com.DocSystem.common.entity.LocalBackupConfig;
 import com.DocSystem.common.entity.QueryCondition;
-import com.DocSystem.common.entity.RemoteBackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
+import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.commonService.ProxyThread;
 
@@ -246,7 +245,7 @@ public class DocController extends BaseController{
 	private void realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
 	{
 		Log.debug("\n************ realTimeBackup() **************");
-		BackupConfig backupConfig = repos.backupConfig;
+		ReposBackupConfig backupConfig = repos.backupConfig;
 		if(backupConfig == null)
 		{
 			Log.debug("realTimeBackup() backupConfig not configured");			
@@ -275,7 +274,7 @@ public class DocController extends BaseController{
 	private void realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("\n************* realTimeRemoteBackup() ***************");
 
-		RemoteBackupConfig remoteBackupConfig = repos.backupConfig.remoteBackupConfig;
+		BackupConfig remoteBackupConfig = repos.backupConfig.remoteBackupConfig;
 		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackup == null || remoteBackupConfig.realTimeBackup == 0)
 		{
 			Log.debug("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured");			
@@ -333,7 +332,7 @@ public class DocController extends BaseController{
 	private void realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("\n********** realTimeLocalBackup() ****************");
 
-		LocalBackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
+		BackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
 		if(localBackupConfig == null || localBackupConfig.realTimeBackup == null || localBackupConfig.realTimeBackup == 0)
 		{
 			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			

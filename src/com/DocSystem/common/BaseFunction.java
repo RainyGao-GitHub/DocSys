@@ -59,15 +59,14 @@ import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.License;
-import com.DocSystem.common.entity.LocalBackupConfig;
 import com.DocSystem.common.entity.LocalConfig;
 import com.DocSystem.common.entity.MxsDocConfig;
 import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
-import com.DocSystem.common.entity.RemoteBackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
+import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
@@ -325,17 +324,15 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
 	//远程存储
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
-	protected static ConcurrentHashMap<Integer, BackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, BackupConfig>();
-	
-	protected static ConcurrentHashMap<Integer, BackupTask> reposBackupTaskHashMap = new ConcurrentHashMap<Integer, BackupTask>();	
-	
+	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
+		
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
 		reposRemoteStorageHashMap.remove(repos.getId());
 		reposRemoteServerHashMap.remove(repos.getId());		
 	}		
 	
-	protected static BackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
+	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
 		try {
 			JSONObject jsonObj = JSON.parseObject(autoBackup);
 			if(jsonObj == null)
@@ -345,7 +342,7 @@ public class BaseFunction{
 			
 			Log.printObject("parseAutoBackupConfig() ", jsonObj);
 			
-			LocalBackupConfig localBackupConfig = null;
+			BackupConfig localBackupConfig = null;
 			JSONObject localBackupObj = jsonObj.getJSONObject("localBackup");
 			if(localBackupObj != null)
 			{
@@ -354,7 +351,7 @@ public class BaseFunction{
 			}
 			
 			
-			RemoteBackupConfig remoteBackupConfig = null;
+			BackupConfig remoteBackupConfig = null;
 			JSONObject remoteBackupObj = jsonObj.getJSONObject("remoteBackup");
 			if(remoteBackupObj != null)
 			{
@@ -362,7 +359,7 @@ public class BaseFunction{
 				remoteBackupConfig = getRemoteBackupConfig(repos, remoteBackupObj);
 			}
 			
-			BackupConfig backupConfig = new BackupConfig();
+			ReposBackupConfig backupConfig = new ReposBackupConfig();
 			backupConfig.localBackupConfig = localBackupConfig;
 			backupConfig.remoteBackupConfig = remoteBackupConfig;
 			return backupConfig;				
@@ -373,14 +370,14 @@ public class BaseFunction{
 		}
 	}
 	
-	private static RemoteBackupConfig getRemoteBackupConfig(Repos repos, JSONObject remoteBackupObj) {
+	private static BackupConfig getRemoteBackupConfig(Repos repos, JSONObject remoteBackupObj) {
 		String remoteStorageStr = remoteBackupObj.getString("remoteStorage");
 		if(remoteStorageStr == null || remoteStorageStr.isEmpty())
 		{
 			return null;
 		}
 		
-		RemoteBackupConfig remoteBackupConfig = new RemoteBackupConfig();
+		BackupConfig remoteBackupConfig = new BackupConfig();
 		remoteBackupConfig.realTimeBackup = remoteBackupObj.getInteger("realTimeBackup");
 		remoteBackupConfig.backupTime = remoteBackupObj.getInteger("backupTime");
 		remoteBackupConfig.weekDay1 = remoteBackupObj.getInteger("weekDay1");
@@ -401,14 +398,14 @@ public class BaseFunction{
 		return remoteBackupConfig;
 	}
 
-	private static LocalBackupConfig getLocalBackupConfig(Repos repos, JSONObject localBackupObj) {
+	private static BackupConfig getLocalBackupConfig(Repos repos, JSONObject localBackupObj) {
 		String localRootPath = localBackupObj.getString("localRootPath");
 		if(localRootPath == null)
 		{
 			return null;
 		}
 			
-		LocalBackupConfig localBackupConfig = new LocalBackupConfig();
+		BackupConfig localBackupConfig = new BackupConfig();
 		localBackupConfig.realTimeBackup = localBackupObj.getInteger("realTimeBackup");
 		localBackupConfig.backupTime = localBackupObj.getInteger("backupTime");
 		localBackupConfig.weekDay1 = localBackupObj.getInteger("weekDay1");
