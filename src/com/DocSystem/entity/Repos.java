@@ -1,7 +1,6 @@
 package com.DocSystem.entity;
 
 import com.DocSystem.common.TextSearchConfig;
-import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposBackupConfig;
