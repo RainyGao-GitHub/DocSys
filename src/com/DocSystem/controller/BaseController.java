@@ -10670,10 +10670,56 @@ public class BaseController  extends BaseFunction{
 		Log.debug("getDelayTimeForNextBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
 				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + backupConfig.backupTime);
 		
-		Integer delayDays = null;
-		int index = curWeekDay;
+		Long delayTime  = getNextBackupDelayTime(curWeekDay, curMinuteOfDay, offsetMinute, backupConfig.backupTime, weekDayBackupEnTab);
+		return delayTime;
+	}
+	
+	private Long getNextBackupDelayTime(int curWeekDay, int curMinuteOfDay, int offsetMinute, Integer backupMinuteOfDay, int[] weekDayBackupEnTab) 
+	{
+		//获取备份日期
+		Integer backupWeekDay = getNextBackupWeekDay(curWeekDay, curMinuteOfDay + offsetMinute, backupMinuteOfDay, weekDayBackupEnTab);
+		if(backupWeekDay == null)
+		{
+			Log.debug("getNextBackupDelayTime() 未找到备份任务");
+			return null;	
+		}
 		
-		if((curMinuteOfDay + offsetMinute) > backupConfig.backupTime)
+		Integer delayDays = 0;
+		if(backupWeekDay < curWeekDay)
+		{
+			delayDays = 7 - (curWeekDay - backupWeekDay);			
+		}
+		else
+		{
+			delayDays = backupWeekDay - curWeekDay;
+		}
+		Log.debug("getNextBackupDelayTime() delayDays:" + delayDays);
+		
+		Long delayTime = null;
+		//delayDays == 0 是一种特殊情况
+		if(delayDays == 0)
+		{
+			if(backupMinuteOfDay > curMinuteOfDay)
+			{
+				delayTime = (long) ((backupMinuteOfDay - curMinuteOfDay) * 60);
+			}
+			else //I think there must be some mistake, push the task to next day
+			{
+				delayTime = (long) (24*60*60 + (backupMinuteOfDay - curMinuteOfDay) * 60);				
+			}
+		}
+		
+		delayTime = (long) (delayDays*24*60*60 + (backupMinuteOfDay - curMinuteOfDay) * 60);
+		Log.debug("getNextBackupDelayTime() delayTime:" + delayTime);
+		return delayTime;
+	}
+
+	private Integer getNextBackupWeekDay(int curWeekDay, int curMinuteOfDay, Integer backupMinuteOfDay, int[] weekDayBackupEnTab) {
+		Integer backupWeekDay = null;
+		
+		//当前时间已经过了备份时间，从明天开始检查是否有备份任务
+		int index = curWeekDay;
+		if(curMinuteOfDay > backupMinuteOfDay)
 		{
 			index = (index + 1) % 7;
 		}
@@ -10683,41 +10729,16 @@ public class BaseController  extends BaseFunction{
 		{
 			if(weekDayBackupEnTab[index % 7] == 1)
 			{
-				Log.debug("getDelayTimeForNextBackupTask() curWeekDay:" + index % 7 + " backup enabled");
-				if(delayDays == null)
-				{
-					delayDays = 0;
-				}
-				else
-				{
-					delayDays++;
-				}
+				Log.debug("getDelayTimeForNextBackupTask() weekDay:" + index % 7 + " backup enabled");
+				backupWeekDay = index % 7;
 				break;
 			}
 			index++;
 		}
 		
-		if(delayDays == null)
-		{
-			return null;
-		}
-		
-		Long delayTime = null;
-		if(curMinuteOfDay > backupConfig.backupTime)
-		{
-			delayDays += 1;
-			delayTime = (long) (delayDays*24*60*60 - (curMinuteOfDay - backupConfig.backupTime) * 60);
-		}
-		else
-		{
-			delayTime = (long) (delayDays*24*60*60 + (backupConfig.backupTime - curMinuteOfDay) * 60);
-		}
-		
-		
-		Log.debug("getDelayTimeForNextBackupTask() delayDays:" + delayDays + " delayTime:" + delayTime);
-		return delayTime;
+		return backupWeekDay;
 	}
-	
+
 	protected boolean setReposRemoteServer(Repos repos, String remoteServer) {
 		String reposRemoteServerConfigPath = Path.getReposRemoteServerConfigPath(repos);
 		
