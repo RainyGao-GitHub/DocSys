@@ -10691,6 +10691,7 @@ public class BaseController  extends BaseFunction{
 			return null;	
 		}
 		
+		Log.debug("getNextBackupDelayTime() backupWeekDay:" + backupWeekDay);
 		Integer delayDays = 0;
 		if(backupWeekDay < curWeekDay)
 		{
@@ -10728,7 +10729,7 @@ public class BaseController  extends BaseFunction{
 		int index = curWeekDay;
 		if(curMinuteOfDay > backupMinuteOfDay)
 		{
-			index = (index + 1) % 7;
+			index += 1;
 		}
 		Log.debug("getDelayTimeForNextBackupTask() index:" + index);		
 		
@@ -10737,7 +10738,8 @@ public class BaseController  extends BaseFunction{
 			if(weekDayBackupEnTab[index % 7] == 1)
 			{
 				Log.debug("getDelayTimeForNextBackupTask() weekDay:" + index % 7 + " backup enabled");
-				backupWeekDay = index % 7;
+				backupWeekDay = index;
+				Log.debug("getDelayTimeForNextBackupTask() backupWeekDay:" + backupWeekDay);
 				break;
 			}
 			index++;
