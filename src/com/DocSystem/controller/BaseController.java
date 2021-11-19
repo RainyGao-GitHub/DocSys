@@ -10343,7 +10343,9 @@ public class BaseController  extends BaseFunction{
 			for(int i=0; i<list.size(); i++)
 			{
 				Repos repos = list.get(i);
-				//Log.println("initReposRemoteStorageHashMap for repos:" + repos.getId() + " " + repos.getName());
+				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
+				
+				
 				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
 				
 				//int remoteServerConifg
@@ -10363,6 +10365,7 @@ public class BaseController  extends BaseFunction{
 				
 				initReposTextSearchConfig(repos);
 				initReposEncryptConfig(repos);
+				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");
 			}
 	    } catch (Exception e) {
 	        Log.debug("initReposExtentionConfig 异常");
@@ -10372,7 +10375,7 @@ public class BaseController  extends BaseFunction{
 
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
-		Log.debug("***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: ****" + autoBackup);
+		Log.debug("\n***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: ****" + autoBackup);
 		
 		if(isFSM(repos) == false)
 		{
@@ -10392,7 +10395,7 @@ public class BaseController  extends BaseFunction{
 		
 		//add backup config to hashmap
 		reposBackupConfigHashMap.put(repos.getId(), config);		
-		Log.debug("**** initReposRemoteServerConfig 自动备份初始化完成 *****");
+		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");
 	}
 	
 	public void addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute, boolean firstBackup) {
