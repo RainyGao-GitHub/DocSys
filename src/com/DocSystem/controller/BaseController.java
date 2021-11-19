@@ -10408,10 +10408,11 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		if(firstBackup == true)
+		if(firstBackup)
 		{
 			delayTime = 180L; //3分钟后执行第一次备份
 		}
+		Log.debug("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
@@ -10486,10 +10487,11 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		if(firstBackup == true)
+		if(firstBackup)
 		{
 			delayTime = 180L; //3分钟后执行第一次备份
 		}
+		Log.debug("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
