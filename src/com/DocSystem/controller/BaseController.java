@@ -16591,7 +16591,7 @@ public class BaseController  extends BaseFunction{
 				{
 					File subEntry = list[i];
 					String subEntryName = subEntry.getName();
-					int subEntryType = getEntryType(file);
+					int subEntryType = getEntryType(subEntry);
 					String subEntryRevision = subEntry.lastModified() + "";
 			    	long subEntrySize = subEntry.length();
 			    	long lastChangeTime = subEntry.lastModified();
@@ -16638,7 +16638,7 @@ public class BaseController  extends BaseFunction{
 				{
 					File subEntry = list[i];
 					String subEntryName = subEntry.getName();
-					int subEntryType = getEntryType(file);
+					int subEntryType = getEntryType(subEntry);
 					String subEntryRevision = subEntry.lastModified() + "";
 			    	long subEntrySize = subEntry.length();
 			    	long lastChangeTime = subEntry.lastModified();
