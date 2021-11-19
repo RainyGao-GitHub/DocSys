@@ -718,11 +718,11 @@ public class Path {
 		return path;
 	}
 	
-	public static String getRemoteOffsetPathForRealDoc(Repos repos) {
+	public static String getBackupOffsetPathForRealDoc(Repos repos) {
 		return "Backup/" + repos.getId() + "/latest/rdata/"; 
 	}
 
-	public static String getRemoteOffsetPathForVirtualDoc(Repos repos) {
+	public static String getBackupOffsetPathForVirtualDoc(Repos repos) {
 		return "Backup/" + repos.getId() + "/latest/vdata/"; 
 	}
 }

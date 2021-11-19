@@ -1,7 +1,5 @@
 package com.DocSystem.common.entity;
 
-import java.util.HashMap;
-
 public class BackupConfig {
 	public RemoteStorageConfig remoteStorageConfig;
 	public Integer fullBackupEn = 0;
@@ -14,5 +12,4 @@ public class BackupConfig {
 	public Integer weekDay5;
 	public Integer weekDay6;
 	public Integer weekDay7;
-	public HashMap<Long, BackupTask> backTaskHashMap;	
 }

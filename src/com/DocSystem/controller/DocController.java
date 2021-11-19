@@ -295,7 +295,7 @@ public class DocController extends BaseController{
 			return;
 	    }
 		
-		String offsetPath = Path.getRemoteOffsetPathForRealDoc(repos);
+		String offsetPath = Path.getBackupOffsetPathForRealDoc(repos);
 		doc.offsetPath = offsetPath;
 		if(dstDoc != null)
 		{
@@ -353,7 +353,7 @@ public class DocController extends BaseController{
 			return;
 	    }
 		
-		String offsetPath = Path.getRemoteOffsetPathForRealDoc(repos);
+		String offsetPath = Path.getBackupOffsetPathForRealDoc(repos);
 		doc.offsetPath = offsetPath;
 		if(dstDoc != null)
 		{

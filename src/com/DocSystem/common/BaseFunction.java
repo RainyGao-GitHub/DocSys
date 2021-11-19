@@ -67,6 +67,7 @@ import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.ReposBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
@@ -325,6 +326,8 @@ public class BaseFunction{
 	//远程存储
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
+	protected static ConcurrentHashMap<Integer, HashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, HashMap<Long, BackupTask>>();
+	protected static ConcurrentHashMap<Integer, HashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, HashMap<Long, BackupTask>>();
 		
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
@@ -348,6 +351,15 @@ public class BaseFunction{
 			{
 				Log.printObject("parseAutoBackupConfig() ", localBackupObj);
 				localBackupConfig = getLocalBackupConfig(repos, localBackupObj);
+				if(localBackupConfig != null)
+				{
+					HashMap<Long, BackupTask> backTaskHashMap = new HashMap<Long, BackupTask>();
+					reposLocalBackupTaskHashMap.put(repos.getId(), backTaskHashMap);
+				}
+				else
+				{
+					reposLocalBackupTaskHashMap.remove(repos.getId());					
+				}
 			}
 			
 			
@@ -357,6 +369,15 @@ public class BaseFunction{
 			{
 				Log.printObject("parseAutoBackupConfig() ", remoteBackupObj);
 				remoteBackupConfig = getRemoteBackupConfig(repos, remoteBackupObj);
+				if(remoteBackupConfig != null)
+				{
+					HashMap<Long, BackupTask> backTaskHashMap = new HashMap<Long, BackupTask>();
+					reposRemoteBackupTaskHashMap.put(repos.getId(), backTaskHashMap);
+				}
+				else
+				{
+					reposRemoteBackupTaskHashMap.remove(repos.getId());					
+				}
 			}
 			
 			ReposBackupConfig backupConfig = new ReposBackupConfig();
@@ -394,7 +415,6 @@ public class BaseFunction{
 			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/Doc";
 		}
 		remoteBackupConfig.remoteStorageConfig = remote;
-		remoteBackupConfig.backTaskHashMap = new HashMap<Long, BackupTask>();
 		return remoteBackupConfig;
 	}
 
@@ -428,7 +448,6 @@ public class BaseFunction{
 		}
 		
 		localBackupConfig.remoteStorageConfig = remote;	
-		localBackupConfig.backTaskHashMap = new HashMap<Long, BackupTask>();
 		return localBackupConfig;
 	}
 	
