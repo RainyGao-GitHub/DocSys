@@ -311,6 +311,11 @@ public class ReposController extends BaseController{
 		{
 			setReposAutoBackup(repos, autoBackup);
 			initReposAutoBackupConfig(repos, autoBackup);
+			if(repos.backupConfig != null)
+			{
+				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 0, true);
+				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 0, true);
+			}
 		}
 		
 		//初始化倉庫的全文搜索
@@ -553,6 +558,11 @@ public class ReposController extends BaseController{
 		{
 			setReposAutoBackup(reposInfo, autoBackup);
 			initReposAutoBackupConfig(reposInfo, autoBackup);
+			if(reposInfo.backupConfig != null)
+			{
+				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 0, true);
+				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 0, true);
+			}
 		}
 		
 		//设置全文搜索
