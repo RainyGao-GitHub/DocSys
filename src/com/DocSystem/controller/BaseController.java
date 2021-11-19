@@ -10255,6 +10255,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("docSysInit() updateVersion done");
 				
 				initReposExtentionConfig();
+				
 				return "ok";
 			}
 		}
@@ -10354,6 +10355,11 @@ public class BaseController  extends BaseFunction{
 				String autoBackup = getReposAutoBackup(repos);
 				repos.setAutoBackup(autoBackup);
 				initReposAutoBackupConfig(repos, autoBackup);
+				if(repos.backupConfig != null)
+				{
+					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, false);
+					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, false);
+				}
 				
 				initReposTextSearchConfig(repos);
 				initReposEncryptConfig(repos);
@@ -10383,14 +10389,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//add backup config to hashmap
-		reposBackupConfigHashMap.put(repos.getId(), config);
-		
-		addDelayTaskForLocalBackup(repos, config.localBackupConfig, 0);
-		addDelayTaskForRemoteBackup(repos, config.remoteBackupConfig, 0);	
+		reposBackupConfigHashMap.put(repos.getId(), config);		
 		Log.debug("**** initReposRemoteServerConfig 自动备份初始化完成 *****");
 	}
 	
-	private void addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute) {
+	public void addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute, boolean firstBackup) {
 		if(localBackupConfig == null)
 		{
 			return;
@@ -10401,6 +10404,11 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.debug("addDelayTaskForLocalBackup delayTime is null");			
 			return;
+		}
+		
+		if(firstBackup == true)
+		{
+			delayTime = 180L; //3分钟后执行第一次备份
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
@@ -10456,14 +10464,14 @@ public class BaseController  extends BaseFunction{
                         channel.reposBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
                         
                         //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30);                      
+                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30, false);                      
                     }
                 },
                 delayTime,
                 TimeUnit.SECONDS);
 	}
 	
-	private void addDelayTaskForRemoteBackup(Repos repos, BackupConfig remoteBackupConfig, int offsetMinute) {
+	public void addDelayTaskForRemoteBackup(Repos repos, BackupConfig remoteBackupConfig, int offsetMinute, boolean firstBackup) {
 		if(remoteBackupConfig == null)
 		{
 			return;
@@ -10474,6 +10482,11 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.debug("addDelayTaskForRemoteBackup delayTime is null");			
 			return;
+		}
+		
+		if(firstBackup == true)
+		{
+			delayTime = 180L; //3分钟后执行第一次备份
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
@@ -10528,7 +10541,7 @@ public class BaseController  extends BaseFunction{
                         channel.reposBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
                         
                         //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30);                      
+                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30, false);                      
                     }
                 },
                 delayTime,
