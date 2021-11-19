@@ -10381,6 +10381,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		ReposBackupConfig config = parseAutoBackupConfig(repos, autoBackup);
+		repos.backupConfig = config;
+		
 		if(config == null)
 		{
 			reposBackupConfigHashMap.remove(repos.getId());
