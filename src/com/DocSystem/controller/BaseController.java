@@ -14894,7 +14894,11 @@ public class BaseController  extends BaseFunction{
 			Log.debug("updateRemoteStorageDBEntry indexLib is null");
 			return false;
 		}
-		return LuceneUtil2.updateIndex(doc, null, indexLib);
+		
+		//TODO : updateIndex接口存在问题，无法更新成功，因此还是需要先删除再添加
+		//return LuceneUtil2.updateIndex(doc, null, indexLib);
+		LuceneUtil2.deleteIndexEx(doc, indexLib, 1);
+		return LuceneUtil2.addIndex(doc, null, indexLib);
 	}
 	
 	protected static boolean deleteRemoteStorageDBEntry(Repos repos, Doc doc, RemoteStorageConfig remote) {
@@ -15707,6 +15711,7 @@ public class BaseController  extends BaseFunction{
 			{
 				pushResult.successCount ++;
 
+				
 				doc.setRevision(newRemoteDoc.getRevision());
 				if(dbDoc == null)
 				{
