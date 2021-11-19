@@ -67,7 +67,6 @@ import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposBackupConfig;
-import com.DocSystem.common.entity.ReposBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;

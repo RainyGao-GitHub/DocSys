@@ -121,7 +121,6 @@ import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
-import com.DocSystem.common.entity.ReposBackupTask;
 import com.DocSystem.common.remoteStorage.FtpUtil;
 import com.DocSystem.common.remoteStorage.GitUtil;
 import com.DocSystem.common.remoteStorage.MxsDocUtil;
