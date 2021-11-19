@@ -121,6 +121,7 @@ import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.ReposBackupTask;
 import com.DocSystem.common.remoteStorage.FtpUtil;
 import com.DocSystem.common.remoteStorage.GitUtil;
 import com.DocSystem.common.remoteStorage.MxsDocUtil;
@@ -10383,7 +10384,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//add backup config to hashmap
-		reposBackupConfigHashMap.put(repos.getId(), config);	
+		reposBackupConfigHashMap.put(repos.getId(), config);
 		
 		addDelayTaskForLocalBackup(repos, config.localBackupConfig, 0);
 		addDelayTaskForRemoteBackup(repos, config.remoteBackupConfig, 0);	
@@ -10410,11 +10411,18 @@ public class BaseController  extends BaseFunction{
 			return;
 	    }
 		
+		HashMap<Long, BackupTask> backUpTaskHashMap = reposLocalBackupTaskHashMap.get(repos.getId());
+		if(backUpTaskHashMap == null)
+		{
+			Log.debug("addDelayTaskForLocalBackup backUpTaskHashMap 未初始化");
+			return;
+		}
+		
 		long curTime = new Date().getTime();
-		stopReposBackUpTasks(repos, localBackupConfig, curTime);
+		stopReposBackUpTasks(repos, localBackupConfig, backUpTaskHashMap, curTime);
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        startReposBackupTask(repos, localBackupConfig, curTime);
+        startReposBackupTask(repos, localBackupConfig, backUpTaskHashMap, curTime);
 		
 		executor.schedule(
         		new Runnable() {
@@ -10429,8 +10437,15 @@ public class BaseController  extends BaseFunction{
                         {
                         	return;
                         }
-                        BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;                        
-                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, curTime))
+                        BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;     
+                        
+                        HashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(repos.getId());
+                        if(latestBackupTask == null)
+                        {
+                        	return;
+                        }
+
+                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, latestBackupTask, curTime))
                         {
                         	return;
                         }
@@ -10439,7 +10454,7 @@ public class BaseController  extends BaseFunction{
                         String localRootPath = Path.getReposRealPath(latestReposInfo);
                         String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
                     	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-                        channel.localBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+                        channel.reposBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
                         
                         //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
                         addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30);                      
@@ -10458,28 +10473,34 @@ public class BaseController  extends BaseFunction{
 		Long delayTime = getDelayTimeForNextBackupTask(remoteBackupConfig, offsetMinute);
 		if(delayTime == null)
 		{
-			Log.debug("addDelayTaskForLocalBackup delayTime is null");			
+			Log.debug("addDelayTaskForRemoteBackup delayTime is null");			
 			return;
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
-			Log.debug("addDelayTaskForLocalBackup 非商业版本不支持自动备份");
+			Log.debug("addDelayTaskForRemoteBackup 非商业版本不支持自动备份");
 			return;
 	    }
 		
+        HashMap<Long, BackupTask> backupTaskHashMap = reposRemoteBackupTaskHashMap.get(repos.getId());
+        if(backupTaskHashMap == null)
+        {
+        	return;
+        }
+		
 		long curTime = new Date().getTime();
-		stopReposBackUpTasks(repos, remoteBackupConfig, curTime);
+		stopReposBackUpTasks(repos, remoteBackupConfig, backupTaskHashMap, curTime);
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        startReposBackupTask(repos, remoteBackupConfig, curTime);
+        startReposBackupTask(repos, remoteBackupConfig, backupTaskHashMap, curTime);
 		
 		executor.schedule(
         		new Runnable() {
                     @Override
                     public void run() {
-                        Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
+                        Log.debug("\n*************** RemoteBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
                         
                         //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
                 		Repos latestReposInfo = getReposEx(repos.getId());
@@ -10488,8 +10509,15 @@ public class BaseController  extends BaseFunction{
                         {
                         	return;
                         }
-                        BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;                        
-                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig, curTime))
+                        BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;
+                        
+                        HashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(repos.getId());
+                        if(latestBackupTask == null)
+                        {
+                        	return;
+                        }
+                        
+                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig,latestBackupTask, curTime))
                         {
                         	return;
                         }
@@ -10498,7 +10526,7 @@ public class BaseController  extends BaseFunction{
                         String localRootPath = Path.getReposRealPath(latestReposInfo);
                         String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
                     	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-                        channel.localBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+                        channel.reposBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
                         
                         //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
                         addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30);                      
@@ -10508,48 +10536,59 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
-	private boolean startReposBackupTask(Repos repos, BackupConfig backupConfig, long curTime) {
+	private boolean startReposBackupTask(Repos repos, BackupConfig backupConfig, HashMap<Long, BackupTask> backTaskHashMap, long curTime) {
 		if(backupConfig == null)
 		{
 			Log.debug("startReposBackupTask() backupConfig is null");			
 			return false;
 		}
 		
+		if(backTaskHashMap == null)
+		{
+			Log.debug("startReposBackupTask() backTaskHashMap is null");			
+			return false;			
+		}
+		
 		BackupTask backupTask = new BackupTask();
 		backupTask.createTime = curTime;
-		backupConfig.backTaskHashMap.put(curTime, backupTask);
+		backTaskHashMap.put(curTime, backupTask);
 		return true;
 	}
 	
-	private boolean stopReposBackUpTasks(Repos repos, BackupConfig backupConfig, Long curTime) {
+	private boolean stopReposBackUpTasks(Repos repos, BackupConfig backupConfig, HashMap<Long, BackupTask> backTaskHashMap, Long curTime) {
 		if(backupConfig == null)
 		{
 			Log.debug("stopReposBackUpTasks() backupConfig is null");			
 			return false;
 		}
 		
-		//go through all backupTask and close all task
-		HashMap<Long, BackupTask> map = backupConfig.backTaskHashMap;
-		if(map == null)
+		if(backTaskHashMap == null)
 		{
-			Log.debug("stopReposBackUpTasks() backTaskHashMap is null");
-			return false;
+			Log.debug("stopReposBackUpTasks() backTaskHashMap is null");			
+			return false;			
 		}
 		
-		for (BackupTask value : map.values()) {
+		//go through all backupTask and close all task
+		for (BackupTask value : backTaskHashMap.values()) {
 			value.stopFlag = true;
 		}		
 		return true;
 	}
 
-	protected boolean isBackUpTaskNeedToStop(Repos repos, BackupConfig backupConfig, long curTime) {
+	protected boolean isBackUpTaskNeedToStop(Repos repos, BackupConfig backupConfig, HashMap<Long, BackupTask> backupTaskHashMap, long curTime) {
 		if(backupConfig == null)
 		{
 			Log.debug("isBackUpTaskNeedToStop() backupConfig is null");			
 			return false;
 		}
 		
-		BackupTask backupTask = backupConfig.backTaskHashMap.get(curTime);
+		if(backupTaskHashMap == null)
+		{
+			Log.debug("isBackUpTaskNeedToStop() backupTaskHashMap is null");			
+			return false;			
+		}
+		
+		BackupTask backupTask = backupTaskHashMap.get(curTime);
 		if(backupTask == null)
 		{
 			Log.debug("isBackUpTaskNeedToStop() there is no running backup task for " + curTime);						
@@ -10559,7 +10598,7 @@ public class BaseController  extends BaseFunction{
 		if(backupTask.stopFlag == true)
 		{
 			//移除备份任务
-			backupConfig.backTaskHashMap.remove(curTime);
+			backupTaskHashMap.remove(curTime);
 			return true;
 		}	
 		

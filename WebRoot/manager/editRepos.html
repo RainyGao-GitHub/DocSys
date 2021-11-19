@@ -350,6 +350,23 @@
 	   	showRemoteStorageConfig(reposInfo);
 	   	
 	   	//版本管理
+	   	if(reposInfo.verCtrl == 0)
+	   	{
+	   		$("#verCtrlEnable").attr("checked",false);
+	   		$("#verCtrlConfigDiv").hide();		//隐藏 高级选项
+	   		$("#showVerCtrlConfig").hide();	//隐藏 高级选项提示
+	   		$("#showVerCtrlConfig").val(0);
+	   		$("#showVerCtrlConfig").text("显示高级选项");
+	   	}
+	   	else
+	   	{	
+	   		$("#verCtrlEnable").attr("checked","checked");
+	   		$("#verCtrlConfigDiv").hide();			//隐藏 高级选项
+	   		$("#showVerCtrlConfig").show();		//显示 高级选项提示
+	   		$("showVerCtrlConfig").val(0);
+	   		$("#showVerCtrlConfig").text("显示高级选项");						
+	   	}
+	   	
 	   	$("#verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
 	   	{
