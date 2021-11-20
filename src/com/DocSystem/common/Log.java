@@ -46,7 +46,7 @@ public class Log {
 			}
 			else
 			{
-				toFile(content, logFile);
+				toFile(content + "\n", logFile);
 			}
 		}
 	}
@@ -60,7 +60,7 @@ public class Log {
 			}
 			else
 			{
-				toFile(content, logFile);
+				toFile(content + "\n", logFile);
 			}
 		}
 	}
@@ -74,7 +74,7 @@ public class Log {
 			}
 			else
 			{
-				toFile("WARN:" + content, logFile);
+				toFile("WARN:" + content  + "\n", logFile);
 			}
 		}
 	}
@@ -88,7 +88,7 @@ public class Log {
 			}
 			else
 			{
-				toFile("ERROR:" + content, logFile);
+				toFile("ERROR:" + content  + "\n", logFile);
 			}
 		}
 	}
