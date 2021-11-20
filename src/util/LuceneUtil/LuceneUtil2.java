@@ -424,7 +424,11 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean deleteIndexEx(Doc doc, String indexLib, int deleteFlag)
     {
-    	deleteIndex(doc, indexLib);
+    	boolean ret = deleteIndex(doc, indexLib);
+    	if(ret == false)
+    	{
+    		return ret;
+    	}
     	
     	if(deleteFlag == 2)	//删除该路径下的所有doc的索引
     	{
@@ -453,14 +457,12 @@ public class LuceneUtil2   extends BaseFunction
 		        
 		        //Date date2 = new Date();
 		        //System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-		        return true;
 			} catch (Exception e) {
 				closeResource(indexWriter, directory, analyzer);
 				e.printStackTrace();
-				return false;
 			}
     	}
-		return false;
+		return ret;
     } 
 
 
