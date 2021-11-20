@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -27,6 +29,7 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.controller.BaseController;
@@ -307,6 +310,10 @@ public class ReposController extends BaseController{
 			initReposRemoteServerConfig(repos, remoteServer);		
 		}
 		
+		//自动备份初始化
+		//每个仓库都必须有备份任务状态HashMap（无论是否有自动备份任务，避免仓库修改时修改了HashMap导致旧的Task无法关闭，再addRepos和系统初始化时创建）
+		reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());
+		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());		
 		if(autoBackup != null)
 		{
 			setReposAutoBackup(repos, autoBackup);
@@ -317,6 +324,7 @@ public class ReposController extends BaseController{
 				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 0, true);
 			}
 		}
+		
 		
 		//初始化倉庫的全文搜索
 		initReposTextSearchConfig(repos);
