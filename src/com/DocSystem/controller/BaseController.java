@@ -10354,6 +10354,8 @@ public class BaseController  extends BaseFunction{
 				initReposRemoteServerConfig(repos, remoteServer);
 				
 				//init autoBackupConfig
+				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());
+				reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());		
 				String autoBackup = getReposAutoBackup(repos);
 				repos.setAutoBackup(autoBackup);
 				initReposAutoBackupConfig(repos, autoBackup);
@@ -10424,7 +10426,7 @@ public class BaseController  extends BaseFunction{
 			return;
 	    }
 		
-		HashMap<Long, BackupTask> backUpTaskHashMap = reposLocalBackupTaskHashMap.get(repos.getId());
+		ConcurrentHashMap<Long, BackupTask> backUpTaskHashMap = reposLocalBackupTaskHashMap.get(repos.getId());
 		if(backUpTaskHashMap == null)
 		{
 			Log.debug("addDelayTaskForLocalBackup backUpTaskHashMap 未初始化");
@@ -10432,6 +10434,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		long curTime = new Date().getTime();
+        Log.debug("addDelayTaskForLocalBackup() curTime:" + curTime);
+        
 		stopReposBackUpTasks(repos, localBackupConfig, backUpTaskHashMap, curTime);
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -10452,7 +10456,7 @@ public class BaseController  extends BaseFunction{
                         }
                         BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;     
                         
-                        HashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(repos.getId());
+                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(repos.getId());
                         if(latestBackupTask == null)
                         {
                         	return;
@@ -10503,13 +10507,15 @@ public class BaseController  extends BaseFunction{
 			return;
 	    }
 		
-        HashMap<Long, BackupTask> backupTaskHashMap = reposRemoteBackupTaskHashMap.get(repos.getId());
+        ConcurrentHashMap<Long, BackupTask> backupTaskHashMap = reposRemoteBackupTaskHashMap.get(repos.getId());
         if(backupTaskHashMap == null)
         {
         	return;
         }
 		
 		long curTime = new Date().getTime();
+        Log.debug("addDelayTaskForRemoteBackup() curTime:" + curTime);
+
 		stopReposBackUpTasks(repos, remoteBackupConfig, backupTaskHashMap, curTime);
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -10530,7 +10536,7 @@ public class BaseController  extends BaseFunction{
                         }
                         BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;
                         
-                        HashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(repos.getId());
+                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(repos.getId());
                         if(latestBackupTask == null)
                         {
                         	return;
@@ -10555,14 +10561,14 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
-	private boolean startReposBackupTask(Repos repos, BackupConfig backupConfig, HashMap<Long, BackupTask> backTaskHashMap, long curTime) {
+	private boolean startReposBackupTask(Repos repos, BackupConfig backupConfig, ConcurrentHashMap<Long, BackupTask> backUpTaskHashMap, long curTime) {
 		if(backupConfig == null)
 		{
 			Log.debug("startReposBackupTask() backupConfig is null");			
 			return false;
 		}
 		
-		if(backTaskHashMap == null)
+		if(backUpTaskHashMap == null)
 		{
 			Log.debug("startReposBackupTask() backTaskHashMap is null");			
 			return false;			
@@ -10570,44 +10576,46 @@ public class BaseController  extends BaseFunction{
 		
 		BackupTask backupTask = new BackupTask();
 		backupTask.createTime = curTime;
-		backTaskHashMap.put(curTime, backupTask);
+		backUpTaskHashMap.put(curTime, backupTask);
+		Log.debug("startReposBackupTask() start backupTask:" + backupTask.createTime);			
 		return true;
 	}
 	
-	private boolean stopReposBackUpTasks(Repos repos, BackupConfig backupConfig, HashMap<Long, BackupTask> backTaskHashMap, Long curTime) {
+	private boolean stopReposBackUpTasks(Repos repos, BackupConfig backupConfig, ConcurrentHashMap<Long, BackupTask> backUpTaskHashMap, Long curTime) {
 		if(backupConfig == null)
 		{
 			Log.debug("stopReposBackUpTasks() backupConfig is null");			
 			return false;
 		}
 		
-		if(backTaskHashMap == null)
+		if(backUpTaskHashMap == null)
 		{
 			Log.debug("stopReposBackUpTasks() backTaskHashMap is null");			
 			return false;			
 		}
 		
 		//go through all backupTask and close all task
-		for (BackupTask value : backTaskHashMap.values()) {
+		for (BackupTask value : backUpTaskHashMap.values()) {
+			Log.debug("stopReposBackUpTasks() stop backupTask:" + value.createTime);			
 			value.stopFlag = true;
 		}		
 		return true;
 	}
 
-	protected boolean isBackUpTaskNeedToStop(Repos repos, BackupConfig backupConfig, HashMap<Long, BackupTask> backupTaskHashMap, long curTime) {
+	protected boolean isBackUpTaskNeedToStop(Repos repos, BackupConfig backupConfig, ConcurrentHashMap<Long, BackupTask> latestBackupTask, long curTime) {
 		if(backupConfig == null)
 		{
 			Log.debug("isBackUpTaskNeedToStop() backupConfig is null");			
 			return false;
 		}
 		
-		if(backupTaskHashMap == null)
+		if(latestBackupTask == null)
 		{
 			Log.debug("isBackUpTaskNeedToStop() backupTaskHashMap is null");			
 			return false;			
 		}
 		
-		BackupTask backupTask = backupTaskHashMap.get(curTime);
+		BackupTask backupTask = latestBackupTask.get(curTime);
 		if(backupTask == null)
 		{
 			Log.debug("isBackUpTaskNeedToStop() there is no running backup task for " + curTime);						
@@ -10617,7 +10625,8 @@ public class BaseController  extends BaseFunction{
 		if(backupTask.stopFlag == true)
 		{
 			//移除备份任务
-			backupTaskHashMap.remove(curTime);
+			latestBackupTask.remove(curTime);
+			Log.debug("isBackUpTaskNeedToStop() stop DelayTask:" + curTime);
 			return true;
 		}	
 		
