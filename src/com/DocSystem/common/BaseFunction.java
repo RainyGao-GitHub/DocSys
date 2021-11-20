@@ -325,8 +325,8 @@ public class BaseFunction{
 	//远程存储
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
-	protected static ConcurrentHashMap<Integer, HashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, HashMap<Long, BackupTask>>();
-	protected static ConcurrentHashMap<Integer, HashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, HashMap<Long, BackupTask>>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
 		
 	protected void deleteRemoteStorageConfig(Repos repos) {
 		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
@@ -350,15 +350,6 @@ public class BaseFunction{
 			{
 				Log.printObject("parseAutoBackupConfig() ", localBackupObj);
 				localBackupConfig = getLocalBackupConfig(repos, localBackupObj);
-				if(localBackupConfig != null)
-				{
-					HashMap<Long, BackupTask> backTaskHashMap = new HashMap<Long, BackupTask>();
-					reposLocalBackupTaskHashMap.put(repos.getId(), backTaskHashMap);
-				}
-				else
-				{
-					reposLocalBackupTaskHashMap.remove(repos.getId());					
-				}
 			}
 			
 			
@@ -368,15 +359,6 @@ public class BaseFunction{
 			{
 				Log.printObject("parseAutoBackupConfig() ", remoteBackupObj);
 				remoteBackupConfig = getRemoteBackupConfig(repos, remoteBackupObj);
-				if(remoteBackupConfig != null)
-				{
-					HashMap<Long, BackupTask> backTaskHashMap = new HashMap<Long, BackupTask>();
-					reposRemoteBackupTaskHashMap.put(repos.getId(), backTaskHashMap);
-				}
-				else
-				{
-					reposRemoteBackupTaskHashMap.remove(repos.getId());					
-				}
 			}
 			
 			ReposBackupConfig backupConfig = new ReposBackupConfig();
