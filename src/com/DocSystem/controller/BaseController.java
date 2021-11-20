@@ -10464,8 +10464,10 @@ public class BaseController  extends BaseFunction{
 	                        	return;
 	                        }
 	
-	                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, latestBackupTask, curTime))
+	                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, latestBackupTask, createTime))
 	                        {
+	                			//移除备份任务
+	                			latestBackupTask.remove(createTime);
 	                        	return;
 	                        }
 	                        	                        
@@ -10477,7 +10479,7 @@ public class BaseController  extends BaseFunction{
 	                        
 	                        //将自己从任务备份任务表中删除
 	                        latestBackupTask.remove(createTime);
-
+	                        
 	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
 	                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30, false);                      
                         } catch(Exception e) {
@@ -10555,8 +10557,10 @@ public class BaseController  extends BaseFunction{
 	                        	return;
 	                        }
 	                        
-	                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig,latestBackupTask, curTime))
+	                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig,latestBackupTask, createTime))
 	                        {
+	                        	//移除备份任务
+	                        	latestBackupTask.remove(createTime);
 	                        	return;
 	                        }
 	                        	                        
@@ -10644,8 +10648,6 @@ public class BaseController  extends BaseFunction{
 		
 		if(backupTask.stopFlag == true)
 		{
-			//移除备份任务
-			latestBackupTask.remove(curTime);
 			Log.debug("isBackUpTaskNeedToStop() stop DelayTask:" + curTime);
 			return true;
 		}	
