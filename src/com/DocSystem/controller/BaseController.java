@@ -10525,7 +10525,7 @@ public class BaseController  extends BaseFunction{
         		new Runnable() {
                     @Override
                     public void run() {
-                        Log.debug("\n*************** RemoteBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
+                        Log.debug("\n*************** RemoteBackupDelayTask " + curTime + " for repos:" + repos.getId() + " " + repos.getName());
                         
                         //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
                 		Repos latestReposInfo = getReposEx(repos.getId());
