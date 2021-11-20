@@ -14897,7 +14897,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO : updateIndex接口存在问题，无法更新成功，因此还是需要先删除再添加
 		//return LuceneUtil2.updateIndex(doc, null, indexLib);
-		LuceneUtil2.deleteIndexEx(doc, indexLib, 1);
+		LuceneUtil2.deleteIndexEx(doc, indexLib, 2);
 		return LuceneUtil2.addIndex(doc, null, indexLib);
 	}
 	
