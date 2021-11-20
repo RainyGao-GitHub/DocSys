@@ -10443,10 +10443,11 @@ public class BaseController  extends BaseFunction{
 		
 		executor.schedule(
         		new Runnable() {
+        			long createTime = curTime;
                     @Override
                     public void run() {
                         try {
-	                        Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
+	                        Log.debug("\n*************** LocalBackupDelayTask [" + createTime + "] for repos:" + repos.getId() + " " + repos.getName());
 	                        
 	                        //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
 	                		Repos latestReposInfo = getReposEx(repos.getId());
@@ -10474,6 +10475,9 @@ public class BaseController  extends BaseFunction{
 	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
 	                        channel.reposBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
 	                        
+	                        //将自己从任务备份任务表中删除
+	                        latestBackupTask.remove(createTime);
+
 	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
 	                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30, false);                      
                         } catch(Exception e) {
@@ -10561,6 +10565,9 @@ public class BaseController  extends BaseFunction{
 	                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
 	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
 	                        channel.reposBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+	                        
+	                        //将自己从任务备份任务表中删除
+	                        latestBackupTask.remove(createTime);
 	                        
 	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
 	                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30, false);                      
