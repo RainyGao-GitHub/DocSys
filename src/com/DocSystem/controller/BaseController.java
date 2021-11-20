@@ -10445,36 +10445,43 @@ public class BaseController  extends BaseFunction{
         		new Runnable() {
                     @Override
                     public void run() {
-                        Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
-                        
-                        //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
-                		Repos latestReposInfo = getReposEx(repos.getId());
-                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
-                        if(latestBackupConfig == null)
-                        {
-                        	return;
+                        try {
+	                        Log.debug("\n*************** LocalBackupDelayTask for repos:" + repos.getId() + " " + repos.getName());
+	                        
+	                        //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
+	                		Repos latestReposInfo = getReposEx(repos.getId());
+	                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
+	                        if(latestBackupConfig == null)
+	                        {
+	                        	return;
+	                        }
+	                        BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;     
+	                        
+	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(repos.getId());
+	                        if(latestBackupTask == null)
+	                        {
+	                        	return;
+	                        }
+	
+	                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, latestBackupTask, curTime))
+	                        {
+	                        	return;
+	                        }
+	                        	                        
+	                        ReturnAjax rt = new ReturnAjax();
+	                        String localRootPath = Path.getReposRealPath(latestReposInfo);
+	                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
+	                        channel.reposBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+	                        
+	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30, false);                      
+                        } catch(Exception e) {
+                        	Log.debug("LocalBackupDelayTask 执行异常");
+                        	e.printStackTrace();
+                        	
                         }
-                        BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;     
                         
-                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(repos.getId());
-                        if(latestBackupTask == null)
-                        {
-                        	return;
-                        }
-
-                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, latestBackupTask, curTime))
-                        {
-                        	return;
-                        }
-                        	                        
-                        ReturnAjax rt = new ReturnAjax();
-                        String localRootPath = Path.getReposRealPath(latestReposInfo);
-                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
-                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-                        channel.reposBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
-                        
-                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30, false);                      
                     }
                 },
                 delayTime,
@@ -10523,38 +10530,44 @@ public class BaseController  extends BaseFunction{
 		
 		executor.schedule(
         		new Runnable() {
+        			long createTime = curTime;
                     @Override
-                    public void run() {
-                        Log.debug("\n*************** RemoteBackupDelayTask " + curTime + " for repos:" + repos.getId() + " " + repos.getName());
-                        
-                        //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
-                		Repos latestReposInfo = getReposEx(repos.getId());
-                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
-                        if(latestBackupConfig == null)
-                        {
-                        	return;
+                    public void run() {                        
+                        try {
+                        	Log.debug("\n*************** RemoteBackupDelayTask [" + createTime + "] for repos:" + repos.getId() + " " + repos.getName());
+                            
+                        	//需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
+	                		Repos latestReposInfo = getReposEx(repos.getId());
+	                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
+	                        if(latestBackupConfig == null)
+	                        {
+	                        	return;
+	                        }
+	                        BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;
+	                        
+	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(repos.getId());
+	                        if(latestBackupTask == null)
+	                        {
+	                        	return;
+	                        }
+	                        
+	                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig,latestBackupTask, curTime))
+	                        {
+	                        	return;
+	                        }
+	                        	                        
+	                        ReturnAjax rt = new ReturnAjax();
+	                        String localRootPath = Path.getReposRealPath(latestReposInfo);
+	                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
+	                        channel.reposBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+	                        
+	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30, false);                      
+                        } catch(Exception e) {
+                        	Log.debug("RemoteBackupDelayTask 执行异常");
+                        	e.printStackTrace();
                         }
-                        BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;
-                        
-                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(repos.getId());
-                        if(latestBackupTask == null)
-                        {
-                        	return;
-                        }
-                        
-                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig,latestBackupTask, curTime))
-                        {
-                        	return;
-                        }
-                        	                        
-                        ReturnAjax rt = new ReturnAjax();
-                        String localRootPath = Path.getReposRealPath(latestReposInfo);
-                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
-                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-                        channel.reposBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
-                        
-                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30, false);                      
                     }
                 },
                 delayTime,
