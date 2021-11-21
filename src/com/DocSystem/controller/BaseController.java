@@ -10444,13 +10444,15 @@ public class BaseController  extends BaseFunction{
 		executor.schedule(
         		new Runnable() {
         			long createTime = curTime;
+        			int reposId = repos.getId();
+        			Repos reposInfo = repos;
                     @Override
                     public void run() {
                         try {
-	                        Log.debug("\n*************** LocalBackupDelayTask [" + createTime + "] for repos:" + repos.getId() + " " + repos.getName());
+	                        Log.debug("\n******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId);
 	                        
-	                        //需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
-	                		Repos latestReposInfo = getReposEx(repos.getId());
+	                		//线程中读取从数据库读取有些时候会报错，因此直接只更新更新掉的部分
+	                		Repos latestReposInfo = getReposEx(reposInfo);
 	                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
 	                        if(latestBackupConfig == null)
 	                        {
@@ -10458,7 +10460,7 @@ public class BaseController  extends BaseFunction{
 	                        }
 	                        BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;     
 	                        
-	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(repos.getId());
+	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(reposId);
 	                        if(latestBackupTask == null)
 	                        {
 	                        	return;
@@ -10481,9 +10483,10 @@ public class BaseController  extends BaseFunction{
 	                        latestBackupTask.remove(createTime);
 	                        
 	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-	                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 30, false);                      
+	                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 5, false);                      
+                        	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行完成\n");
                         } catch(Exception e) {
-                        	Log.debug("LocalBackupDelayTask 执行异常");
+                        	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行异常\n");
                         	e.printStackTrace();
                         	
                         }
@@ -10537,13 +10540,15 @@ public class BaseController  extends BaseFunction{
 		executor.schedule(
         		new Runnable() {
         			long createTime = curTime;
+        			int reposId = repos.getId();
+        			Repos reposInfo = repos;
                     @Override
                     public void run() {                        
                         try {
-                        	Log.debug("\n*************** RemoteBackupDelayTask [" + createTime + "] for repos:" + repos.getId() + " " + repos.getName());
+                        	Log.debug("\n******** RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId);
                             
-                        	//需要重新获取仓库备份信息（任务真正执行时可能配置已经发生了变化）
-	                		Repos latestReposInfo = getReposEx(repos.getId());
+	                		//线程中读取从数据库读取有些时候会报错，因此直接只更新更新掉的部分
+                        	Repos latestReposInfo = getReposEx(reposInfo);
 	                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
 	                        if(latestBackupConfig == null)
 	                        {
@@ -10551,7 +10556,7 @@ public class BaseController  extends BaseFunction{
 	                        }
 	                        BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;
 	                        
-	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(repos.getId());
+	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(reposId);
 	                        if(latestBackupTask == null)
 	                        {
 	                        	return;
@@ -10574,9 +10579,10 @@ public class BaseController  extends BaseFunction{
 	                        latestBackupTask.remove(createTime);
 	                        
 	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-	                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 30, false);                      
+	                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 5, false);                      
+                        	Log.debug("******** RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行完成\n");
                         } catch(Exception e) {
-                        	Log.debug("RemoteBackupDelayTask 执行异常");
+                        	Log.debug("******** RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行异常\n");
                         	e.printStackTrace();
                         }
                     }
