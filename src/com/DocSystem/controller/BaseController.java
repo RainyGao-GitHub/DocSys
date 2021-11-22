@@ -15318,10 +15318,10 @@ public class BaseController  extends BaseFunction{
 	protected static boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
 		
-		Log.printObject("doPushSubEntriesToRemoteStorage() doc:", doc);		
-		Log.printObject("doPushSubEntriesToRemoteStorage() localDoc:", localDoc);
-		Log.printObject("doPushSubEntriesToRemoteStorage() dbDoc:", dbDoc);
-		Log.printObject("doPushSubEntriesToRemoteStorage() remoteDoc:", remoteDoc);
+		Log.printObject("doPushEntryToRemoteStorage() doc:", doc);		
+		Log.printObject("doPushEntryToRemoteStorage() localDoc:", localDoc);
+		Log.printObject("doPushEntryToRemoteStorage() dbDoc:", dbDoc);
+		Log.printObject("doPushEntryToRemoteStorage() remoteDoc:", remoteDoc);
 				
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
