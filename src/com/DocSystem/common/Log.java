@@ -128,7 +128,7 @@ public class Log {
 		if(isLogEnable(debug, allowGeneral))
 		{
 			String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
-			System.out.println(Head + json);
+			debug(Head + json);
 		}
 	}
 		
