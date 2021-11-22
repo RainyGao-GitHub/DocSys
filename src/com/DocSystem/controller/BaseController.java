@@ -15317,6 +15317,12 @@ public class BaseController  extends BaseFunction{
 
 	protected static boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+		
+		Log.printObject("doPushSubEntriesToRemoteStorage() doc:", doc);		
+		Log.printObject("doPushSubEntriesToRemoteStorage() localDoc:", localDoc);
+		Log.printObject("doPushSubEntriesToRemoteStorage() dbDoc:", dbDoc);
+		Log.printObject("doPushSubEntriesToRemoteStorage() remoteDoc:", remoteDoc);
+				
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
 			System.out.println("doPushEntryToRemoteStorage() 推送根目录");
@@ -15517,11 +15523,7 @@ public class BaseController  extends BaseFunction{
 		{
 			Doc subLocalDoc  = localList.get(i);
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
-			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());
-			//Log.printObject("doPushSubEntriesToRemoteStorage() subLocalDoc:", subLocalDoc);
-			//Log.printObject("doPushSubEntriesToRemoteStorage() subDbDoc:", subDbDoc);
-			//Log.printObject("doPushSubEntriesToRemoteStorage() subRemoteDoc:", subRemoteDoc);
-			
+			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());			
 			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
 		}
 		return true;
