@@ -15525,6 +15525,7 @@ public class BaseController  extends BaseFunction{
 		HashMap<String, Doc> dbHashMap = getRemoteStorageDBHashMap(repos, doc, remote);
 		HashMap<String, Doc>  remoteHashMap = getRemoteStorageEntryHashMap(session, remote, repos, doc, null);
 		
+		//TODO: 目前的推送有个问题，已删除的文件因为不在localList中，因此永远都是无法删除的（解决方法就是遍历一次dbDocList将不再localList中的文件都删除）
 		for(int i=0; i<localList.size(); i++)
 		{
 			Doc subLocalDoc  = localList.get(i);
