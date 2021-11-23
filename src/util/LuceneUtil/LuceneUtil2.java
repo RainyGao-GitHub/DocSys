@@ -1275,7 +1275,7 @@ public class LuceneUtil2   extends BaseFunction
     //在IndexLib中根据doc进行搜索
 	public static List<Doc> getDocList(Repos repos, Doc doc, String indexLib)
 	{		
-		Log.debug("getDocList() for doc vid:" + doc.getVid() + " docId:" + doc.getDocId() + " pid:" + doc.getPid());
+		Log.debug("getDocList() for doc vid:" + doc.getVid() + " docId:" + doc.getDocId() + " pid:" + doc.getPid() + " indexLib:" + indexLib);
 		return multiQueryForDoc(repos, doc, indexLib);
 	}
 	
