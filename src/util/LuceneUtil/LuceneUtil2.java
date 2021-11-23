@@ -122,7 +122,7 @@ public class LuceneUtil2   extends BaseFunction
     public static boolean addIndex(Doc doc, String content, String indexLib)
     {	
     	Log.debug("addIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
-    	//System.out.println("addIndex() content:" + content);
+    	//Log.debug("addIndex() content:" + content);
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -148,13 +148,13 @@ public class LuceneUtil2   extends BaseFunction
 	        analyzer.close();
 	        analyzer = null;
 	        
-	        //System.out.println("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
+	        //Log.debug("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
 			Date date2 = new Date();
 	        Log.debug("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        System.out.println("addIndex() 异常");
+	        Log.debug("addIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -192,7 +192,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		else
 		{
-			System.out.println("buildDocument() vid is null");
+			Log.debug("buildDocument() vid is null");
 		}
 		
 		if(doc.getPid() != null)
@@ -201,7 +201,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		else
 		{
-			System.out.println("buildDocument() pid is null");
+			Log.debug("buildDocument() pid is null");
 		}
 		
 		if(doc.getDocId() != null)
@@ -210,7 +210,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		else
 		{
-			System.out.println("buildDocument() docId is null");
+			Log.debug("buildDocument() docId is null");
 		}
 		
 		if(doc.getPath() != null)
@@ -219,7 +219,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		else
 		{
-			System.out.println("buildDocument() path is null");
+			Log.debug("buildDocument() path is null");
 		}
 		
 		if(doc.getName() != null)
@@ -230,7 +230,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		else
 		{
-			System.out.println("buildDocument() name is null");
+			Log.debug("buildDocument() name is null");
 		}
 		
 		if(doc.getType() != null)
@@ -239,7 +239,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		else
 		{
-			System.out.println("buildDocument() type is null");
+			Log.debug("buildDocument() type is null");
 		}
 		
 		//Size
@@ -249,7 +249,7 @@ public class LuceneUtil2   extends BaseFunction
         }
 		else
 		{
-			System.out.println("buildDocument() size is null");
+			Log.debug("buildDocument() size is null");
 		}
 
         //latestEditTime
@@ -259,7 +259,7 @@ public class LuceneUtil2   extends BaseFunction
         }
 		else
 		{
-			System.out.println("buildDocument() pid is null");
+			Log.debug("buildDocument() pid is null");
 		}
 
         //Revision
@@ -456,7 +456,7 @@ public class LuceneUtil2   extends BaseFunction
 			        directory = null;
 			        
 			        Date date2 = new Date();
-			        System.out.println("删除子目录索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+			        Log.debug("删除子目录索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 				} catch (Exception e) {
 					closeResource(indexWriter, directory, analyzer);
 					e.printStackTrace();
@@ -469,7 +469,7 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
-		//System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		//Log.debug("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 
 		//利用Index的切词器将查询条件切词后进行精确查找
 		Analyzer analyzer = null;
@@ -486,7 +486,7 @@ public class LuceneUtil2   extends BaseFunction
 			stream.reset(); //这句很重要
 	
 			while(stream.incrementToken()) {
-				//System.out.println(cta.toString());
+				//Log.debug(cta.toString());
 				list.add(cta.toString());
 			}
 	
@@ -545,7 +545,7 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
-		//System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
+		//Log.debug("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
 		
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
 		if(str != null && !str.isEmpty())
@@ -580,7 +580,7 @@ public class LuceneUtil2   extends BaseFunction
     
     public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, HashMap<String, HitDoc> searchResult, int weight, int hitType)
 	{
-		//System.out.println("multiSearch() indexLib:" + indexLib + " weight:" + weight);
+		//Log.debug("multiSearch() indexLib:" + indexLib + " weight:" + weight);
 		
 	    Directory directory = null;
         DirectoryReader ireader = null;
@@ -590,7 +590,7 @@ public class LuceneUtil2   extends BaseFunction
     		File file = new File(indexLib);
     		if(!file.exists())
     		{
-    			//System.out.println("multiSearch() indexLib:" + indexLib + " 不存在！");
+    			//Log.debug("multiSearch() indexLib:" + indexLib + " 不存在！");
     			return false;
     		}
     		
@@ -638,7 +638,7 @@ public class LuceneUtil2   extends BaseFunction
 				}
 			}
 			
-			System.out.println("search() 异常");
+			Log.debug("search() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -828,7 +828,7 @@ public class LuceneUtil2   extends BaseFunction
  	}
 
 	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, Document hitDocument) {
-    	//System.out.println("BuildHitDocFromDocument_FS hitDocument docId:" + hitDocument.get("docId") + " pid:" + hitDocument.get("pid")  + " path:" + hitDocument.get("path") + " name:" + hitDocument.get("name") + " type:" + hitDocument.get("type") + " size:" + hitDocument.get("size") + " latestEditTime:" + hitDocument.get("latestEditTime"));
+    	//Log.debug("BuildHitDocFromDocument_FS hitDocument docId:" + hitDocument.get("docId") + " pid:" + hitDocument.get("pid")  + " path:" + hitDocument.get("path") + " name:" + hitDocument.get("name") + " type:" + hitDocument.get("type") + " size:" + hitDocument.get("size") + " latestEditTime:" + hitDocument.get("latestEditTime"));
 
 		try {
 			String docParentPath = hitDocument.get("path");
@@ -890,7 +890,7 @@ public class LuceneUtil2   extends BaseFunction
 	    	
 	    	return hitDoc;
         } catch (Exception e) {
-			System.out.println("BuildHitDocFromDocument_FS() 异常");
+			Log.debug("BuildHitDocFromDocument_FS() 异常");
 			e.printStackTrace();
 			return null;
 		}
@@ -1219,7 +1219,7 @@ public class LuceneUtil2   extends BaseFunction
 			String code = FileUtils2.getFileEncode(filePath);
 			if(FileUtils2.isBinaryFile(code) == true)
 			{
-				//System.out.println("addIndexForFile() BinaryFile will not add Index");
+				//Log.debug("addIndexForFile() BinaryFile will not add Index");
 				return true;
 			}
 			
@@ -1281,7 +1281,7 @@ public class LuceneUtil2   extends BaseFunction
 	{
 		if(doc == null)
 		{
-			System.out.println("multiQuery() 查询条件不能为空！");
+			Log.debug("multiQuery() 查询条件不能为空！");
 			return null;
 		}
 		
@@ -1295,7 +1295,7 @@ public class LuceneUtil2   extends BaseFunction
     		File file = new File(indexLib);
     		if(!file.exists())
     		{
-    			System.out.println("multiQuery() " + indexLib + " 不存在！");
+    			Log.debug("multiQuery() " + indexLib + " 不存在！");
     			return null;
     		}
     		
@@ -1316,7 +1316,7 @@ public class LuceneUtil2   extends BaseFunction
 	        	}
 	        }
 		} catch (Exception e) {
-			System.out.println("search() 异常");
+			Log.debug("search() 异常");
 			e.printStackTrace();
 		} finally {
 			if(ireader != null)
@@ -1350,7 +1350,7 @@ public class LuceneUtil2   extends BaseFunction
     		File file = new File(indexLib);
     		if(!file.exists())
     		{
-    			System.out.println("getDocListByDocId() " + indexLib + " 不存在！");
+    			Log.debug("getDocListByDocId() " + indexLib + " 不存在！");
     			return null;
     		}
     		
@@ -1362,7 +1362,7 @@ public class LuceneUtil2   extends BaseFunction
 	        Query query =NumericRangeQuery.newLongRange("docId", doc.getDocId(), doc.getDocId(), true,true);
 
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-			System.out.println("getDocListByDocId() hitCount:" + hits.length);
+			Log.debug("getDocListByDocId() hitCount:" + hits.length);
 
 	        docList = new ArrayList<Doc>();
 	        for (int i = 0; i < hits.length; i++) 
@@ -1372,7 +1372,7 @@ public class LuceneUtil2   extends BaseFunction
 		        docList.add(hitDoc);
 	        }
 		} catch (Exception e) {
-			System.out.println("getDocListByDocId() 异常");
+			Log.debug("getDocListByDocId() 异常");
 			e.printStackTrace();
 		} finally {
 	        if(ireader != null)
@@ -1441,7 +1441,7 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			System.out.println("buildCsvTitleStrForObject() fieldType:" + type + " fieldName:" + fieldName);
+			Log.debug("buildCsvTitleStrForObject() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
@@ -1479,7 +1479,7 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			System.out.println("buildCsvStrForObject() fieldType:" + type + " fieldName:" + fieldName);
+			Log.debug("buildCsvStrForObject() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
@@ -1529,7 +1529,7 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			//System.out.println("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
+			//Log.debug("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
@@ -1574,12 +1574,12 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			//System.out.println("buildObjectForDocument() fieldType:" + type + " fieldName:" + fieldName);
+			//Log.debug("buildObjectForDocument() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
 					String val = document.get(fieldName);
-					//System.out.println("buildObjectForDocument() fieldVal:" + val);
+					//Log.debug("buildObjectForDocument() fieldVal:" + val);
 					if(val != null)
 					{
 						switch(fieldType)
@@ -1630,7 +1630,7 @@ public class LuceneUtil2   extends BaseFunction
             String type = f.getType().toString();
             Integer fieldType = getFieldType(type);
 			String fieldName = f.getName();
-			//System.out.println("buildQueryConditionsForObject() fieldType:" + type + " fieldName:" + fieldName);
+			//Log.debug("buildQueryConditionsForObject() fieldType:" + type + " fieldName:" + fieldName);
 			if(fieldType != null)
 			{
 	            try {
