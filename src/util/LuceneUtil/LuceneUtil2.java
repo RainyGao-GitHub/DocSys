@@ -1273,13 +1273,13 @@ public class LuceneUtil2   extends BaseFunction
 	
 	
     //在IndexLib中根据doc进行搜索
-	public static List<Doc> getDocList(Repos repos, Doc doc, String indexLib)
+	public static List<Doc> getDocList(Repos repos, Doc doc, String indexLib, Integer maxCount)
 	{		
 		Log.debug("getDocList() for doc vid:" + doc.getVid() + " docId:" + doc.getDocId() + " pid:" + doc.getPid() + " indexLib:" + indexLib);
-		return multiQueryForDoc(repos, doc, indexLib);
+		return multiQueryForDoc(repos, doc, indexLib, maxCount);
 	}
 	
-	public static List<Doc> multiQueryForDoc(Repos repos, Doc doc, String indexLib)
+	public static List<Doc> multiQueryForDoc(Repos repos, Doc doc, String indexLib, Integer maxCount)
 	{
 		if(doc == null)
 		{
@@ -1309,13 +1309,13 @@ public class LuceneUtil2   extends BaseFunction
 	        if(builder != null)
 	        {
 	        	docList = new ArrayList<Doc>();
-	        	TopDocs hits = isearcher.search( builder, 1000);
+	        	TopDocs hits = isearcher.search( builder, maxCount);
 	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
 	        	{
 	        		Document document = isearcher.doc( scoreDoc.doc );
 	        		Doc hitDoc = BuildDoc(document);	        		
 	        		docList.add(hitDoc);
-	    			Log.debug("multiQuery() hitDoc docId:" + hitDoc.getDocId() + " pid:" + hitDoc.getPid() + " path:" + hitDoc.getPath() + " name:" + hitDoc.getName());
+	    			//Log.debug("multiQuery() hitDoc docId:" + hitDoc.getDocId() + " pid:" + hitDoc.getPid() + " path:" + hitDoc.getPath() + " name:" + hitDoc.getName());
 	        	}
 	        }
 		} catch (Exception e) {

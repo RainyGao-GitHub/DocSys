@@ -5550,7 +5550,7 @@ public class BaseController  extends BaseFunction{
 		qDoc.setDocId(doc.getDocId());
 		
 		String indexLib = getIndexLibPath(repos, IndexLibType);
-		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib, 100);
 		if(list == null || list.size() == 0)
 		{
 			return null;
@@ -14859,9 +14859,10 @@ public class BaseController  extends BaseFunction{
 		//查询数据库
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
-		//Pid设置成docId
 		qDoc.setPid(doc.getDocId());
-		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
+		
+		//子目录下的文件个数可能很多，但一万个应该是比较夸张了
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib, 10000);
 		return list;
 	}
 
@@ -14894,7 +14895,7 @@ public class BaseController  extends BaseFunction{
 		qDoc.setVid(doc.getVid());
 		qDoc.setDocId(doc.getDocId());
 		
-		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib, 100);
 		if(list == null || list.size() == 0)
 		{
 			return null;
