@@ -14902,7 +14902,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(list.size() > 1)
 			{
-				System.out.println("getRemoteStorageDBEntry() 数据库存在多个DOC记录(" + doc.getName() + ")，自动清理"); 
+				Log.debug("getRemoteStorageDBEntry() 数据库存在多个DOC记录(" + doc.getName() + ")，自动清理"); 
 				for(int i=0; i <list.size(); i++)
 				{
 					//delete Doc directly
@@ -15137,7 +15137,7 @@ public class BaseController  extends BaseFunction{
 		SvnUtil svn = new SvnUtil(remote.SVN.userName, remote.SVN.pwd, remote.SVN.url);
 		if(false == svn.login())
 		{
-			System.out.println("remoteStorageLoginForSvn() svnUtil.Init Failed");
+			Log.debug("remoteStorageLoginForSvn() svnUtil.Init Failed");
 			return null;
 		}
 		
@@ -15150,7 +15150,7 @@ public class BaseController  extends BaseFunction{
 		GitUtil git = new GitUtil(remote.GIT.userName, remote.GIT.pwd, remote.GIT.url, remote.GIT.localVerReposPath, remote.GIT.isRemote);
 		if(false == git.login())
 		{
-			System.out.println("remoteStorageLoginForGit() gitUtil.Init Failed");
+			Log.debug("remoteStorageLoginForGit() gitUtil.Init Failed");
 			return null;
 		}
 		
@@ -15209,7 +15209,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			System.out.println("doPullEntryFromRemoteStorage() 拉取根目录");
+			Log.debug("doPullEntryFromRemoteStorage() 拉取根目录");
 			return doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);					
 		}
 		
@@ -15326,7 +15326,7 @@ public class BaseController  extends BaseFunction{
 				
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			System.out.println("doPushEntryToRemoteStorage() 推送根目录");
+			Log.debug("doPushEntryToRemoteStorage() 推送根目录");
 			
 			return doPushSubEntriesToRemoteStorage(session, remote, repos, doc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);			
 		}
@@ -17118,7 +17118,7 @@ public class BaseController  extends BaseFunction{
 			    	int subEntryType = getEntryType(subEntry.getKind());
 			    	if(subEntryType <= 0)
 			    	{
-			    		System.out.println("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
+			    		Log.debug("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
 			    		continue;
 			    	}
 					
@@ -17379,7 +17379,7 @@ public class BaseController  extends BaseFunction{
 		    	int subEntryType = getEntryType(subEntry.getKind());
 		    	if(subEntryType <= 0)
 		    	{
-		    		System.out.println("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
+		    		Log.debug("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
 		    		continue;
 		    	}
 				
@@ -17683,7 +17683,7 @@ public class BaseController  extends BaseFunction{
             RevCommit commit = session.git.getLatestRevCommit(doc);
             if(commit == null)
             {
-            	System.out.println("getRemoteStorageEntryForGit() Failed to getLatestRevCommit");
+            	Log.debug("getRemoteStorageEntryForGit() Failed to getLatestRevCommit");
             	return null;
             }
     		
