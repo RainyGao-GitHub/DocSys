@@ -324,7 +324,7 @@ public class DocController extends BaseController{
 		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 		//	break;
 		default:
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		}		
 	}
@@ -382,7 +382,7 @@ public class DocController extends BaseController{
 		//	channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 		//	break;
 		default:
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
 			break;
 		}			
 	}
