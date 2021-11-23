@@ -218,15 +218,15 @@ public class DocController extends BaseController{
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -237,7 +237,7 @@ public class DocController extends BaseController{
 		//	channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
 		//	break;
 		default:
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
 			break;
 		}			
 	}
