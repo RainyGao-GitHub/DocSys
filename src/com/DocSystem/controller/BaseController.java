@@ -10415,7 +10415,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(firstBackup)
 		{
-			delayTime = 180L; //3分钟后执行第一次备份
+			delayTime = 60L; //1分钟后执行第一次备份
 		}
 		Log.debug("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
 		
@@ -10512,7 +10512,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(firstBackup)
 		{
-			delayTime = 180L; //3分钟后执行第一次备份
+			delayTime = 60L; //1分钟后执行第一次备份
 		}
 		Log.debug("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
 		
@@ -14847,6 +14847,8 @@ public class BaseController  extends BaseFunction{
 	//******************* 远程存储 接口 *********************************
 	//Remote Storage DB Interfaces
 	protected static List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
+		Log.debug("getRemoteStorageDBEntryList for doc:[" + doc.getPath() + doc.getName() + "]");
+
 		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
 		if(indexLib == null)
 		{
