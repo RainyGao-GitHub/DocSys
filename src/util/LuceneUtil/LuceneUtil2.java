@@ -65,6 +65,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.common.Log;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
@@ -120,7 +121,7 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean addIndex(Doc doc, String content, String indexLib)
     {	
-    	//System.out.println("addIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
+    	Log.debug("addIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
     	//System.out.println("addIndex() content:" + content);
     	
     	Analyzer analyzer = null;
@@ -128,7 +129,7 @@ public class LuceneUtil2   extends BaseFunction
 		IndexWriter indexWriter = null;
     	
 		try {
-	    	//Date date1 = new Date();
+	    	Date date1 = new Date();
 	    	analyzer = new IKAnalyzer();
 	    	directory = FSDirectory.open(new File(indexLib));
 
@@ -148,8 +149,8 @@ public class LuceneUtil2   extends BaseFunction
 	        analyzer = null;
 	        
 	        //System.out.println("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
-			//Date date2 = new Date();
-	        //System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+			Date date2 = new Date();
+	        Log.debug("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
@@ -336,8 +337,8 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean updateIndex(Doc doc, String content, String indexLib)
     {
-    	System.out.println("updateIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
-    	System.out.println("updateIndex() content:" + content);
+    	Log.debug("updateIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
+    	//Log.debug("updateIndex() content:" + content);
     
     	Analyzer analyzer = null;
     	Directory directory = null;
@@ -365,11 +366,11 @@ public class LuceneUtil2   extends BaseFunction
 	        analyzer = null;
 	         
 	        Date date2 = new Date();
-	        System.out.println("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Log.debug("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (IOException e) {
 			closeResource(indexWriter, directory, analyzer);
-			System.out.println("updateIndex() 异常");
+			Log.debug("updateIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -384,13 +385,13 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean deleteIndex(Doc doc, String indexLib)
     {
-    	//System.out.println("deleteIndex() docId:" + doc.getDocId() + " indexLib:"+indexLib);
+    	Log.debug("deleteIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
     	Analyzer analyzer = null;
     	Directory directory = null;
     	IndexWriter indexWriter = null;
     	
 		try {
-			//Date date1 = new Date();
+			Date date1 = new Date();
 			directory = FSDirectory.open(new File(indexLib));
 		
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
@@ -405,8 +406,8 @@ public class LuceneUtil2   extends BaseFunction
 	        directory.close();
 	        directory = null;
 	        
-	        //Date date2 = new Date();
-	        //System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        Date date2 = new Date();
+	        Log.debug("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
@@ -424,45 +425,45 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean deleteIndexEx(Doc doc, String indexLib, int deleteFlag)
     {
+    	Log.debug("deleteIndexEx() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	    	
     	boolean ret = deleteIndex(doc, indexLib);
-    	if(ret == false)
+    	if(ret == true)
     	{
-    		return ret;
+    		if(deleteFlag == 2)	//删除该路径下的所有doc的索引
+    		{
+    			Log.debug("deleteIndexEx() 删除子目录");    	    	            	
+		    	Analyzer analyzer = null;
+		    	Directory directory = null;
+		    	IndexWriter indexWriter = null;
+		    	
+				try {
+					Date date1 = new Date();
+					directory = FSDirectory.open(new File(indexLib));
+				
+			        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+			        indexWriter = new IndexWriter(directory, config);
+			        
+			        String docPath = doc.getPath() + doc.getName() + "/";
+			        Query query = new WildcardQuery(new Term("path", docPath + "*"));
+			        //Query query = new PrefixQuery(new Term("path", docPath));
+			        
+			        indexWriter.deleteDocuments(query);
+			        indexWriter.commit();
+		
+			        indexWriter.close();
+			        indexWriter = null;
+			        directory.close();
+			        directory = null;
+			        
+			        Date date2 = new Date();
+			        System.out.println("删除子目录索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+				} catch (Exception e) {
+					closeResource(indexWriter, directory, analyzer);
+					e.printStackTrace();
+				}
+	    	}
     	}
-    	
-    	if(deleteFlag == 2)	//删除该路径下的所有doc的索引
-    	{
-	    	Analyzer analyzer = null;
-	    	Directory directory = null;
-	    	IndexWriter indexWriter = null;
-	    	
-			try {
-				//Date date1 = new Date();
-				directory = FSDirectory.open(new File(indexLib));
-			
-		        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
-		        indexWriter = new IndexWriter(directory, config);
-		        
-		        String docPath = doc.getPath() + doc.getName() + "/";
-		        Query query = new WildcardQuery(new Term("path", docPath + "*"));
-		        //Query query = new PrefixQuery(new Term("path", docPath));
-		        
-		        indexWriter.deleteDocuments(query);
-		        indexWriter.commit();
-	
-		        indexWriter.close();
-		        indexWriter = null;
-		        directory.close();
-		        directory = null;
-		        
-		        //Date date2 = new Date();
-		        //System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-			} catch (Exception e) {
-				closeResource(indexWriter, directory, analyzer);
-				e.printStackTrace();
-			}
-    	}
-		return ret;
+    	return ret;
     } 
 
 

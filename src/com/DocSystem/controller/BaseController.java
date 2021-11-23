@@ -14857,6 +14857,7 @@ public class BaseController  extends BaseFunction{
 		//查询数据库
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
+		//Pid设置成docId
 		qDoc.setPid(doc.getDocId());
 		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
 		return list;
