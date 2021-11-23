@@ -10466,7 +10466,7 @@ public class BaseController  extends BaseFunction{
 	                        	return;
 	                        }
 	
-	                        if(isBackUpTaskNeedToStop(repos, latestLocalBackupConfig, latestBackupTask, createTime))
+	                        if(isBackUpTaskNeedToStop(latestReposInfo, latestLocalBackupConfig, latestBackupTask, createTime))
 	                        {
 	                			//移除备份任务
 	                			latestBackupTask.remove(createTime);
@@ -10476,6 +10476,8 @@ public class BaseController  extends BaseFunction{
 	                        ReturnAjax rt = new ReturnAjax();
 	                        String localRootPath = Path.getReposRealPath(latestReposInfo);
 	                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
+	                        
+	                        //DocUtil在系统初始化时，似乎还不能被调用，但又不是每次都发生
 	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
 	                        channel.reposBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
 	                        
@@ -10562,7 +10564,7 @@ public class BaseController  extends BaseFunction{
 	                        	return;
 	                        }
 	                        
-	                        if(isBackUpTaskNeedToStop(repos, latestRemoteBackupConfig,latestBackupTask, createTime))
+	                        if(isBackUpTaskNeedToStop(latestReposInfo, latestRemoteBackupConfig,latestBackupTask, createTime))
 	                        {
 	                        	//移除备份任务
 	                        	latestBackupTask.remove(createTime);
