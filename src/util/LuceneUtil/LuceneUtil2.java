@@ -1315,7 +1315,7 @@ public class LuceneUtil2   extends BaseFunction
 	        		Document document = isearcher.doc( scoreDoc.doc );
 	        		Doc hitDoc = BuildDoc(document);	        		
 	        		docList.add(hitDoc);
-	    			//Log.debug("multiQuery() hitDoc docId:" + hitDoc.getDocId() + " pid:" + hitDoc.getPid() + " path:" + hitDoc.getPath() + " name:" + hitDoc.getName());
+	    			Log.debug("multiQuery() hitDoc docId:" + hitDoc.getDocId() + " pid:" + hitDoc.getPid() + " path:" + hitDoc.getPath() + " name:" + hitDoc.getName());
 	        	}
 	        }
 		} catch (Exception e) {
