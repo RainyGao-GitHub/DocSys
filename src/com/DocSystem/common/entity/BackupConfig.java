@@ -12,4 +12,5 @@ public class BackupConfig {
 	public Integer weekDay5;
 	public Integer weekDay6;
 	public Integer weekDay7;
+	public String indexLibBase;
 }

@@ -10479,7 +10479,7 @@ public class BaseController  extends BaseFunction{
 	                        
 	                        //DocUtil在系统初始化时，似乎还不能被调用，但又不是每次都发生
 	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	                        channel.reposBackUp(latestLocalBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+	                        channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
 	                        
 	                        //将自己从任务备份任务表中删除
 	                        latestBackupTask.remove(createTime);
@@ -10575,7 +10575,7 @@ public class BaseController  extends BaseFunction{
 	                        String localRootPath = Path.getReposRealPath(latestReposInfo);
 	                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
 	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	                        channel.reposBackUp(latestRemoteBackupConfig.remoteStorageConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+	                        channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
 	                        
 	                        //将自己从任务备份任务表中删除
 	                        latestBackupTask.remove(createTime);
