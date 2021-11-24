@@ -10418,7 +10418,7 @@ public class BaseController  extends BaseFunction{
 			delayTime = 60L; //1分钟后执行第一次备份
 		}
 		Log.debug("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
-		
+				
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
@@ -15349,7 +15349,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		boolean ret = false;
-		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);		
 		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
 		
 		//远程没有改动（如果不是强制手动推送，那么只能推送新增的文件或目录）
@@ -17919,7 +17919,9 @@ public class BaseController  extends BaseFunction{
 		pushResult.actionList = new ArrayList<CommitAction>();
 				
 		Doc localDoc = fsGetDoc(repos, doc);
+
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
+		
 		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		
 		Log.printObject("doPushToRemoteStorage doc:", doc);
