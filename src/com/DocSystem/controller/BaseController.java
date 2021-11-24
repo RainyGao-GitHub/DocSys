@@ -17438,14 +17438,24 @@ public class BaseController  extends BaseFunction{
         
         if(doc.getDocId() == 0)	//rootDoc
         {
-        	Log.debug("getRemoteStorageEntryForLocal it is rootDoc");
+        	Log.debug("getRemoteStorageEntryForLocal() it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
-	    	return remoteDoc;
+	        File file = new File(remote.FILE.localRootPath + remote.rootPath + doc.offsetPath);
+	        if(file.exists() == false)
+	        {
+	        	remoteDoc.setType(0);
+	        }
+	        else if(file.isFile())
+	        {
+	        	Log.debug("getRemoteStorageEntryForLocal() rootDoc is File");
+	        	remoteDoc.setType(1);
+	        }
+			return remoteDoc;
         }	
         
         if(doc.getName().isEmpty())
 		{
-			Log.debug("getRemoteStorageEntryForLocal name 不能为空");
+			Log.debug("getRemoteStorageEntryForLocal() name 不能为空");
 			return null;
 		}
 
