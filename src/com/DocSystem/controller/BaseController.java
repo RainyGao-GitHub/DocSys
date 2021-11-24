@@ -15495,7 +15495,18 @@ public class BaseController  extends BaseFunction{
 			Doc subDbDoc = dbHashMap.get(subRemoteDoc.getName());
 			Doc subLocalDoc = localHashMap.get(subRemoteDoc.getName());
 			doPullEntryFromRemoteStorage(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
+			if(subDbDoc != null)
+			{
+				dbHashMap.remove(subDbDoc.getName());
+			}
 		}
+		
+		//The entries remained in dbHashMap is the docs which have been deleted on remote server
+		for (Doc subDbDoc : dbHashMap.values()) {
+			Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
+			Doc subLocalDoc = localHashMap.get(subDbDoc.getName());
+			doPullEntryFromRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, subLocalDoc, null, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
+		}	
 		return true;
 	}
 	
@@ -15532,7 +15543,19 @@ public class BaseController  extends BaseFunction{
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
 			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());			
 			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
+			if(subDbDoc != null)
+			{
+				dbHashMap.remove(subDbDoc.getName());
+			}
 		}
+		
+		//The entries remained in dbHashMap is the docs which have been deleted
+		for (Doc subDbDoc : dbHashMap.values()) {
+			Log.debug("doPushSubEntriesToRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
+			Doc subRemoteDoc = remoteHashMap.get(subDbDoc.getName());			
+			doPushEntryToRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, null, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
+		}	
+		
 		return true;
 	}
 
