@@ -1,5 +1,6 @@
 package com.DocSystem.common.channels;
 
+import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
@@ -24,7 +25,7 @@ public interface Channel {
 	void remoteStoragePush(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt);
 	
 	//AutoBackUp
-	void reposBackUp(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+	void reposBackUp(BackupConfig backupConfig, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
 	
 	//加解密算法实现
 	void encryptFile(Repos repos, String path, String name);	

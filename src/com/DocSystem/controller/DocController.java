@@ -295,6 +295,9 @@ public class DocController extends BaseController{
 			return;
 	    }
 		
+		//实时备份是不备份备注文件的
+		remote.remoteStorageIndexLib = remoteBackupConfig.indexLibBase + "Doc";		
+
 		String offsetPath = Path.getBackupOffsetPathForRealDoc(repos);
 		doc.offsetPath = offsetPath;
 		if(dstDoc != null)
@@ -352,6 +355,8 @@ public class DocController extends BaseController{
 			Log.debug("realTimeLocalBackup 非商业版本不支持本地备份");
 			return;
 	    }
+		
+		remote.remoteStorageIndexLib = localBackupConfig.indexLibBase + "Doc";
 		
 		String offsetPath = Path.getBackupOffsetPathForRealDoc(repos);
 		doc.offsetPath = offsetPath;
