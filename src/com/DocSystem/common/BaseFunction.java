@@ -389,12 +389,9 @@ public class BaseFunction{
 		remoteBackupConfig.weekDay5 = remoteBackupObj.getInteger("weekDay5");
 		remoteBackupConfig.weekDay6 = remoteBackupObj.getInteger("weekDay6");
 		remoteBackupConfig.weekDay7 = remoteBackupObj.getInteger("weekDay7");
+		remoteBackupConfig.indexLibBase = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/";
 
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr, "RemoteBackup");
-		if(remote != null)
-		{
-			remote.remoteStorageIndexLib = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/Doc";
-		}
 		remoteBackupConfig.remoteStorageConfig = remote;
 		return remoteBackupConfig;
 	}
@@ -416,6 +413,7 @@ public class BaseFunction{
 		localBackupConfig.weekDay5 = localBackupObj.getInteger("weekDay5");
 		localBackupConfig.weekDay6 = localBackupObj.getInteger("weekDay6");
 		localBackupConfig.weekDay7 = localBackupObj.getInteger("weekDay7");
+		localBackupConfig.indexLibBase = getDBStorePath() + "LocalBackup/" + repos.getId() + "/";
 		
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "file";
@@ -423,10 +421,6 @@ public class BaseFunction{
 		remote.FILE = new LocalConfig();
 		localRootPath = Path.localDirPathFormat(localRootPath, OSType);
 		remote.FILE.localRootPath = localRootPath;
-		if(remote != null)
-		{
-			remote.remoteStorageIndexLib = getDBStorePath() + "LocalBackup/" + repos.getId() + "/Doc";
-		}
 		
 		localBackupConfig.remoteStorageConfig = remote;	
 		return localBackupConfig;
