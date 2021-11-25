@@ -292,6 +292,7 @@ public class DocController extends BaseController{
 		{
 			dstDoc.offsetPath = offsetPath;
 		}
+		Log.debug("realTimeRemoteBackup() offsetPath [" + offsetPath + "]");			
 		
 		//push Options
 		boolean recurcive = true;
@@ -363,6 +364,7 @@ public class DocController extends BaseController{
 		{
 			dstDoc.offsetPath = offsetPath;
 		}
+		Log.debug("realTimeLocalBackup() offsetPath [" + offsetPath + "]");			
 			
 		//push options
 		boolean recurcive = true;

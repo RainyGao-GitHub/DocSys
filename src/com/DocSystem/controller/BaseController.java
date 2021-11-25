@@ -15393,7 +15393,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(pushLocalChangeOnly && localChangeType == DocChangeType.NOCHANGE)
 			{
-				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地未改动, 只推送本地改动，推送");				
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地未改动, 只推送本地改动，不推送");				
 				return true;
 			}
 			
