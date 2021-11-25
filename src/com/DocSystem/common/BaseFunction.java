@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -46,6 +47,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
@@ -326,14 +328,9 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
-		
-	protected void deleteRemoteStorageConfig(Repos repos) {
-		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
-		reposRemoteStorageHashMap.remove(repos.getId());
-		reposRemoteServerHashMap.remove(repos.getId());		
-	}		
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();	
 	
+	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
 		try {
 			JSONObject jsonObj = JSON.parseObject(autoBackup);
@@ -425,7 +422,92 @@ public class BaseFunction{
 		localBackupConfig.remoteStorageConfig = remote;	
 		return localBackupConfig;
 	}
+
+	protected String getBackupIndexLibForVirtualDoc(BackupConfig backupConfig, RemoteStorageConfig remote) {
+		if(remote.isVerRepos || backupConfig.fullBackupEn == null || backupConfig.fullBackupEn == 0)
+		{
+			return backupConfig.indexLibBase + "VDoc";
+		}
+		
+		//全量备份，只要将indexLib置空，就会触发所有文件的备份
+		return null;
+	}
+
+	protected String getBackupIndexLibForRealDoc(BackupConfig backupConfig, RemoteStorageConfig remote) {
+		if(remote.isVerRepos || backupConfig.fullBackupEn == null || backupConfig.fullBackupEn == 0)
+		{
+			return backupConfig.indexLibBase + "Doc";
+		}
+		
+		//全量备份，只要将indexLib置空，就会触发所有文件的备份
+		return null;
+	}
+
+	//实时备份没有全量备份
+	private String getRealTimeBackupIndexLibForVirtualDoc(BackupConfig backupConfig, RemoteStorageConfig remote) {
+		if(remote.isVerRepos)
+		{
+			return backupConfig.indexLibBase + "VDoc";
+		}
+		return backupConfig.indexLibBase + "VDoc-RealTime";
+	}
+
+	protected String getRealTimeBackupIndexLibForRealDoc(BackupConfig backupConfig, RemoteStorageConfig remote) {
+		if(remote.isVerRepos)
+		{
+			return backupConfig.indexLibBase + "Doc";
+		}
+		return backupConfig.indexLibBase + "Doc-RealTime";
+	}
+
 	
+	public static String getBackupOffsetPathForRealDoc(Repos repos, RemoteStorageConfig remote, Date date) {
+		if(remote.isVerRepos)
+		{
+			return "Backup/" + repos.getId() + "/data/rdata/";			
+		}
+		
+		String backupTime = DateFormat.dateTimeFormat2(date);
+		return "Backup/" + repos.getId() + "/data-" + backupTime + "/rdata/"; 
+	}
+
+	public static String getBackupOffsetPathForVirtualDoc(Repos repos, RemoteStorageConfig remote, Date date) {
+		//对于备份服务器是版本仓库，那么备份不按时间存放
+		if(remote.isVerRepos)
+		{
+			return "Backup/" + repos.getId() + "/latest/vdata/";
+		}
+		
+		String backupTime = DateFormat.dateTimeFormat2(date);
+		return "Backup/" + repos.getId() + "/data-" + backupTime + "/rdata/"; 
+	}
+
+	
+	public static String getRealTimeBackupOffsetPathForRealDoc(Repos repos, RemoteStorageConfig remote, Date date) {
+		if(remote.isVerRepos)
+		{
+			return "Backup/" + repos.getId() + "/data/rdata/";			
+		}
+		
+		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录
+		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
+		String backupTime = DateFormat.datetimeFormat(date); //9:33:05
+		return "RealTimeBackup/" + repos.getId() + "/rdata/" + backupDate + "/" + backupTime + "/"; 
+	}
+
+	public static String getRealTimeBackupOffsetPathForVirtualDoc(Repos repos, RemoteStorageConfig remote, Date date) {
+		if(remote.isVerRepos)
+		{
+			return "Backup/" + repos.getId() + "/data/vdata/";			
+		}
+		
+		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录		
+		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
+		String backupTime = DateFormat.datetimeFormat(date); //9:33:05
+		return "RealTimeBackup/" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/"; 
+	}
+	
+	//**** 服务器前置配置 *******
 	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage)
 	{
 		if(isFSM(repos))
@@ -458,6 +540,13 @@ public class BaseFunction{
 	protected static boolean isFSM(Repos repos) {
 		return repos.getType() < 3;
 	}
+	
+	//******** 远程存储配置 **********
+	protected void deleteRemoteStorageConfig(Repos repos) {
+		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
+		reposRemoteStorageHashMap.remove(repos.getId());
+		reposRemoteServerHashMap.remove(repos.getId());		
+	}	
 
 	private static String buildRemoteStorageStr(Repos repos) {
 		switch(repos.getType())
