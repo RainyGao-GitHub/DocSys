@@ -70,8 +70,8 @@ public class  DateFormat {
 		return sdf.format(date);
 	}
 	
-
-	
-	
-	
+	public static String dateTimeFormat3(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+		return sdf.format(date);
+	}	
 }
