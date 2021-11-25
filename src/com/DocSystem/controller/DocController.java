@@ -214,19 +214,25 @@ public class DocController extends BaseController{
 			Log.debug("realTimeRemoteStoragPush 非商业版本不支持远程存储");
 			return;
 	    }
-			
+		
+		//push Options
+		boolean recurcive = true;
+		boolean force = remote.autoPushForce == 1;
+		boolean isAutoPush = false;
+		boolean pushLocalChangeOnly = false;
+		
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -234,10 +240,8 @@ public class DocController extends BaseController{
 		//case "uploadDoc":
 		//case "uploadDocRS":
 		//case "revertDocHistory":
-		//	channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, true, rt);
-		//	break;
 		default:
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, remote.autoPushForce == 1, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		}			
 	}
@@ -289,18 +293,29 @@ public class DocController extends BaseController{
 			dstDoc.offsetPath = offsetPath;
 		}
 		
+		//push Options
+		boolean recurcive = true;
+		boolean force = true;
+		boolean isAutoPush = false;
+		boolean pushLocalChangeOnly = true;
+		if(remote.isVerRepos)
+		{
+			pushLocalChangeOnly = false;
+		}
+
+		
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly,  rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly,  rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly,  rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly,  rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -311,7 +326,7 @@ public class DocController extends BaseController{
 		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
 		//	break;
 		default:
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		}		
 	}
@@ -341,25 +356,36 @@ public class DocController extends BaseController{
 	    }
 		
 		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(localBackupConfig, remote);		
-		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());
-		doc.offsetPath = offsetPath;
+		//set offsetPath 
+		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());		
+		doc.offsetPath = offsetPath;		
 		if(dstDoc != null)
 		{
 			dstDoc.offsetPath = offsetPath;
+		}
+			
+		//push options
+		boolean recurcive = true;
+		boolean force = true;
+		boolean isAutoPush = false;
+		boolean pushLocalChangeOnly = true;
+		if(remote.isVerRepos)
+		{
+			pushLocalChangeOnly = false;
 		}
 		
 		switch(action)
 		{
 		case "copyDoc":
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		case "moveDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		case "renameDoc":
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -367,10 +393,8 @@ public class DocController extends BaseController{
 		//case "uploadDoc":
 		//case "uploadDocRS":
 		//case "revertDocHistory":
-		//	channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-		//	break;
 		default:
-			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, false, rt);
+			channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, isAutoPush, pushLocalChangeOnly, rt);
 			break;
 		}			
 	}

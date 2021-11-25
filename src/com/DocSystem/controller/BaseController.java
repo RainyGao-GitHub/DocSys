@@ -3958,7 +3958,7 @@ public class BaseController  extends BaseFunction{
 		        {	
 					if(remote.autoPush != null && remote.autoPush == 1)
 					{
-						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, true, rt);
+						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, true, false, rt);
 					}					
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
@@ -9164,7 +9164,7 @@ public class BaseController  extends BaseFunction{
     		return null;			
     	}	
         
-        doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, rt);
+        doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, false, rt);
         doRemoteStorageLogout(session);            
 		
         DocPushResult pushResult = (DocPushResult) rt.getDataEx();
@@ -15300,7 +15300,7 @@ public class BaseController  extends BaseFunction{
 	
 
 	protected static boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
-			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {
 		
 		Log.printObject("doPushEntryToRemoteStorage() doc:", doc);		
 		Log.printObject("doPushEntryToRemoteStorage() localDoc:", localDoc);
@@ -15311,7 +15311,7 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.debug("doPushEntryToRemoteStorage() 推送根目录");
 			
-			return doPushSubEntriesToRemoteStorage(session, remote, repos, doc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);			
+			return doPushSubEntriesToRemoteStorage(session, remote, repos, doc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);			
 		}
 		
 		boolean ret = false;
@@ -15373,7 +15373,7 @@ public class BaseController  extends BaseFunction{
 				if(pushResult.action != null)	//it is new add dir
 				{
 					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true);	
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true, pushLocalChangeOnly);	
 					if(subActionList.size() > 0)
 					{
 						CommitAction action = pushResult.action;
@@ -15382,7 +15382,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);						
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);						
 				}
 			}
 			return true;
@@ -15391,6 +15391,12 @@ public class BaseController  extends BaseFunction{
 		//远程改动（只有强制手动推送时才推送）
 		if(force == true && isAutoPush == false)
 		{
+			if(pushLocalChangeOnly && localChangeType == DocChangeType.NOCHANGE)
+			{
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地未改动, 只推送本地改动，推送");				
+				return true;
+			}
+			
 			//获取真实的localChangeType
 			localChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
 			
@@ -15437,7 +15443,7 @@ public class BaseController  extends BaseFunction{
 				if(pushResult.action != null)	//it is new add dir
 				{
 					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true);	
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true, pushLocalChangeOnly);	
 					if(subActionList.size() > 0)
 					{
 						CommitAction action = pushResult.action;
@@ -15446,7 +15452,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);						
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);						
 				}
 			}
 		}
@@ -15503,7 +15509,7 @@ public class BaseController  extends BaseFunction{
 	
 	//actionList and isSubAction is for Gvn/Git RemoteStorage
 	private static boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
-			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {
 		//子目录不递归
 		if(subEntryPushFlag == 0)
 		{
@@ -15533,7 +15539,7 @@ public class BaseController  extends BaseFunction{
 			Doc subLocalDoc  = localList.get(i);
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
 			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());			
-			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
+			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);
 			if(subDbDoc != null)
 			{
 				dbHashMap.remove(subDbDoc.getName());
@@ -15544,7 +15550,7 @@ public class BaseController  extends BaseFunction{
 		for (Doc subDbDoc : dbHashMap.values()) {
 			Log.debug("doPushSubEntriesToRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
 			Doc subRemoteDoc = remoteHashMap.get(subDbDoc.getName());			
-			doPushEntryToRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, null, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction);
+			doPushEntryToRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, null, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);
 		}	
 		
 		return true;
@@ -17876,7 +17882,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	protected static boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, ReturnAjax rt) {
+	protected static boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, boolean pushLocalChangeOnly, ReturnAjax rt) {
 		boolean ret = false;
 		DocPushResult pushResult = new DocPushResult();
 		pushResult.totalCount = 0;
@@ -17909,7 +17915,7 @@ public class BaseController  extends BaseFunction{
 		{
 			subEntryPushFlag = 2;
 		}
-		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, pushResult.actionList, false);
+		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
 		if(ret == true)
 		{
 			if(remote.isVerRepos == true)
