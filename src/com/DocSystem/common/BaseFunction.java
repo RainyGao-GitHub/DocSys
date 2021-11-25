@@ -479,7 +479,7 @@ public class BaseFunction{
 		}
 		
 		String backupTime = DateFormat.dateTimeFormat2(date);
-		return "Backup/" + repos.getId() + "/data-" + backupTime + "/rdata/"; 
+		return "Backup/" + repos.getId() + "/data-" + backupTime + "/vdata/"; 
 	}
 
 	
@@ -491,7 +491,7 @@ public class BaseFunction{
 		
 		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录
 		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
-		String backupTime = DateFormat.datetimeFormat(date); //9:33:05
+		String backupTime = DateFormat.dateTimeFormat2(date); //20211125091005
 		return "RealTimeBackup/" + repos.getId() + "/rdata/" + backupDate + "/" + backupTime + "/"; 
 	}
 
@@ -503,7 +503,7 @@ public class BaseFunction{
 		
 		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录		
 		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
-		String backupTime = DateFormat.datetimeFormat(date); //9:33:05
+		String backupTime = DateFormat.dateTimeFormat2(date); //9-33-05
 		return "RealTimeBackup/" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/"; 
 	}
 	
