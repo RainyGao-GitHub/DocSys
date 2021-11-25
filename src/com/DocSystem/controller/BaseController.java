@@ -10663,40 +10663,6 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	protected boolean checkCurrentTimeForBackup(BackupConfig backupConfig) {
-		//初始化weekDayBackupEnTab
-		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = backupConfig.weekDay1;
-		weekDayBackupEnTab[2] = backupConfig.weekDay2;
-		weekDayBackupEnTab[3] = backupConfig.weekDay3;
-		weekDayBackupEnTab[4] = backupConfig.weekDay4;
-		weekDayBackupEnTab[5] = backupConfig.weekDay5;
-		weekDayBackupEnTab[6] = backupConfig.weekDay6;
-		weekDayBackupEnTab[0] = backupConfig.weekDay7;
-		
-		Calendar calendar = Calendar.getInstance();
-		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-		int curMinute = calendar.get(Calendar.MINUTE);
-		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
-		int curMinuteOfDay = curHour*60 + curMinute;
-		Log.debug("checkCurrentTimeForBackup() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMiute:" + curMinute + " curMinuteOfDay:" + curMinuteOfDay);
-
-		if(weekDayBackupEnTab[curWeekDay] == 0)
-		{
-			//当天没有备份任务
-			Log.debug("checkCurrentTimeForBackup() Today have no remote backup task");
-			return false;
-		}
-		
-		if(curMinuteOfDay > (backupConfig.backupTime + 120))
-		{
-			Log.debug("checkCurrentTimeForBackup() 备份任务已超时两小时!");
-			return false;
-		}
-		
-		return true;
-	}
-	
 	private Long getDelayTimeForNextBackupTask(BackupConfig backupConfig, int offsetMinute) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];

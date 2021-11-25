@@ -717,12 +717,4 @@ public class Path {
 		String path = getOfficeEditPath(dockey, doc) + "save/";
 		return path;
 	}
-	
-	public static String getRealTimeBackupOffsetPathForRealDoc(Repos repos) {
-		return "Backup/" + repos.getId() + "/latest/rdata/"; 
-	}
-
-	public static String getRealTimeBackupOffsetPathForVirtualDoc(Repos repos) {
-		return "Backup/" + repos.getId() + "/latest/vdata/"; 
-	}
 }
