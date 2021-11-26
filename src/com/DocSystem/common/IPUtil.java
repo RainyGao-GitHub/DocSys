@@ -12,7 +12,7 @@ public class IPUtil {
 		try {
 			InetAddress ip4 = Inet4Address.getLocalHost();
 			IP = ip4.getHostAddress();
-			System.out.println(ip4.getHostAddress());
+			Log.debug("getIpAddress() IP:" + ip4.getHostAddress());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}	
