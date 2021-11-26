@@ -10456,6 +10456,7 @@ public class BaseController  extends BaseFunction{
 	                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
 	                        if(latestBackupConfig == null)
 	                        {
+		                        Log.debug("LocalBackupDelayTask latestBackupConfig is null");	                        	
 	                        	return;
 	                        }
 	                        BackupConfig latestLocalBackupConfig = latestBackupConfig.localBackupConfig;     
@@ -10463,14 +10464,16 @@ public class BaseController  extends BaseFunction{
 	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposLocalBackupTaskHashMap.get(reposId);
 	                        if(latestBackupTask == null)
 	                        {
+		                        Log.debug("LocalBackupDelayTask latestBackupTask is null");	                        	
 	                        	return;
 	                        }
 	
 	                        if(isBackUpTaskNeedToStop(latestReposInfo, latestLocalBackupConfig, latestBackupTask, createTime))
 	                        {
-	                			//移除备份任务
+	                			//移除备份任务	                        	
 	                			latestBackupTask.remove(createTime);
-	                        	return;
+		                        Log.debug("LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 任务已取消");	                        	
+	                			return;
 	                        }
 	                        	                        
 	                        ReturnAjax rt = new ReturnAjax();
@@ -10554,6 +10557,7 @@ public class BaseController  extends BaseFunction{
 	                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
 	                        if(latestBackupConfig == null)
 	                        {
+		                        Log.debug("RemoteBackupDelayTask latestBackupConfig is null");	                        	
 	                        	return;
 	                        }
 	                        BackupConfig latestRemoteBackupConfig = latestBackupConfig.remoteBackupConfig;
@@ -10561,6 +10565,7 @@ public class BaseController  extends BaseFunction{
 	                        ConcurrentHashMap<Long, BackupTask> latestBackupTask = reposRemoteBackupTaskHashMap.get(reposId);
 	                        if(latestBackupTask == null)
 	                        {
+		                        Log.debug("RemoteBackupDelayTask latestBackupTask is null");	                        	
 	                        	return;
 	                        }
 	                        
@@ -10568,6 +10573,7 @@ public class BaseController  extends BaseFunction{
 	                        {
 	                        	//移除备份任务
 	                        	latestBackupTask.remove(createTime);
+		                        Log.debug("RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId + " 任务已取消");                        	
 	                        	return;
 	                        }
 	                        	                        
@@ -10638,25 +10644,25 @@ public class BaseController  extends BaseFunction{
 		if(backupConfig == null)
 		{
 			Log.debug("isBackUpTaskNeedToStop() backupConfig is null");			
-			return false;
+			return true;
 		}
 		
 		if(latestBackupTask == null)
 		{
 			Log.debug("isBackUpTaskNeedToStop() backupTaskHashMap is null");			
-			return false;			
+			return true;			
 		}
 		
 		BackupTask backupTask = latestBackupTask.get(curTime);
 		if(backupTask == null)
 		{
-			Log.debug("isBackUpTaskNeedToStop() there is no running backup task for " + curTime);						
+			Log.debug("isBackUpTaskNeedToStop() there is no running backup task for [" + curTime + "]");						
 			return true;
 		}
 		
 		if(backupTask.stopFlag == true)
 		{
-			Log.debug("isBackUpTaskNeedToStop() stop DelayTask:" + curTime);
+			Log.debug("isBackUpTaskNeedToStop() stop DelayTask:[" + curTime + "]");
 			return true;
 		}	
 		
