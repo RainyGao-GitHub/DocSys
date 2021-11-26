@@ -15015,6 +15015,20 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	
+	private static Integer getRemoteStorageEntryType(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId)
+	{
+		//tmpDoc 是没有 offsetPath的doc
+		Doc tmpDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.offsetPath + doc.getPath(), doc.getName(), doc.getLevel(), null, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", "");
+		Doc remoteDoc =  getRemoteStorageEntry(session, remote, repos, tmpDoc, commitId);
+		if(remoteDoc == null)
+		{
+			return 0;
+		}
+		
+		return remoteDoc.getType();
+	}
+	
 	private static void updateRemoteStorageDbEntry( RemoteStorageConfig remote, Repos repos, DocPushResult pushResult, List<CommitAction> actionList, String revision) {
 		for(int i=0; i<actionList.size(); i++)
 		{
@@ -15282,7 +15296,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(remoteDoc == null)
 				{
-					Log.debug("doPushEntryToRemoteStorage 本地删除，远程删除，直接删除DBEntry");
+					Log.debug("doPullEntryFromRemoteStorage 本地删除，远程删除，直接删除DBEntry");
 					if(dbDoc != null)
 					{
 						deleteRemoteStorageDBEntry(repos, dbDoc, remote);
@@ -17442,17 +17456,12 @@ public class BaseController  extends BaseFunction{
         if(doc.getDocId() == 0)	//rootDoc
         {
         	Log.debug("getRemoteStorageEntryForLocal() it is rootDoc");
-			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
-	        File file = new File(remote.FILE.localRootPath + remote.rootPath + doc.offsetPath);
-	        if(file.exists() == false)
-	        {
-	        	remoteDoc.setType(0);
-	        }
-	        else if(file.isFile())
-	        {
-	        	Log.debug("getRemoteStorageEntryForLocal() rootDoc is File");
-	        	remoteDoc.setType(1);
-	        }
+			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath); 
+	    	if(doc.offsetPath != null && doc.offsetPath.isEmpty() == false)
+	    	{
+	    		Integer type = getRemoteStorageEntryType(session, remote, repos, doc, null);
+	    		remoteDoc.setType(type);
+	    	}
 			return remoteDoc;
         }	
         
@@ -17490,7 +17499,7 @@ public class BaseController  extends BaseFunction{
 		remoteDoc.setRevision(subEntryRevision);			    	
 		return remoteDoc;
 	}
-	
+
 	private static Doc getRemoteStorageEntryForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
 	{
         Doc remoteDoc = null;
@@ -17499,7 +17508,12 @@ public class BaseController  extends BaseFunction{
         {
         	Log.debug("getRemoteStorageEntryForSftp it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
-	    	return remoteDoc;
+			if(doc.offsetPath != null && doc.offsetPath.isEmpty() == false)
+	    	{
+	    		Integer type = getRemoteStorageEntryType(session, remote, repos, doc, null);
+	    		remoteDoc.setType(type);
+	    	}
+			return remoteDoc;
         }	
         
         if(doc.getName().isEmpty())
@@ -17537,7 +17551,7 @@ public class BaseController  extends BaseFunction{
 		}
         return remoteDoc;
 	}
-	
+
 	private static Doc getRemoteStorageEntryForFtp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
 	{
         Doc remoteDoc = null;
@@ -17546,7 +17560,12 @@ public class BaseController  extends BaseFunction{
         {
         	Log.debug("getRemoteStorageEntryForFtp it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
-	    	return remoteDoc;
+			if(doc.offsetPath != null && doc.offsetPath.isEmpty() == false)
+	    	{
+	    		Integer type = getRemoteStorageEntryType(session, remote, repos, doc, null);
+	    		remoteDoc.setType(type);
+	    	}
+			return remoteDoc;
         }	
         
         if(doc.getName().isEmpty())
@@ -17594,7 +17613,12 @@ public class BaseController  extends BaseFunction{
         {
         	Log.debug("getRemoteStorageEntryForSmb it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
-	    	return remoteDoc;
+			if(doc.offsetPath != null && doc.offsetPath.isEmpty() == false)
+	    	{
+	    		Integer type = getRemoteStorageEntryType(session, remote, repos, doc, null);
+	    		remoteDoc.setType(type);
+	    	}
+			return remoteDoc;
         }	
         
         if(doc.getName().isEmpty())
@@ -17636,7 +17660,12 @@ public class BaseController  extends BaseFunction{
         	Log.debug("getRemoteStorageEntryForSvn it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
 	    	remoteDoc.setRevision(commitId);
-			return remoteDoc;
+	    	if(doc.offsetPath != null && doc.offsetPath.isEmpty() == false)
+	    	{
+	    		Integer type = getRemoteStorageEntryType(session, remote, repos, doc, commitId);
+	    		remoteDoc.setType(type);
+	    	}
+	    	return remoteDoc;
         }	
         
         if(doc.getName().isEmpty())
@@ -17690,6 +17719,11 @@ public class BaseController  extends BaseFunction{
         	Log.debug("getRemoteStorageEntryForGit it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
 	    	remoteDoc.setRevision(commitId);
+	    	if(doc.offsetPath != null && doc.offsetPath.isEmpty() == false)
+	    	{
+	    		Integer type = getRemoteStorageEntryType(session, remote, repos, doc, commitId);
+	    		remoteDoc.setType(type);
+	    	}
 			return remoteDoc;
         }	
         
@@ -17900,6 +17934,7 @@ public class BaseController  extends BaseFunction{
 
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
 		
+		//TODO: 如果doc.offsetPath非空的话，那么远程根目录实际上并不是真正的根目录（此时是需要检查节点是否存在的）
 		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		
 		Log.printObject("doPushToRemoteStorage doc:", doc);
