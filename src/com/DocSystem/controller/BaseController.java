@@ -15020,7 +15020,7 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.debug("getRemoteStorageEntryType() doc offsetPath:" + doc.offsetPath);
 		//tmpDoc 是没有 offsetPath的doc
-		Doc tmpDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.offsetPath + doc.getPath(), doc.getName(), doc.getLevel(), null, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", "");
+		Doc tmpDoc = buildBasicDoc(doc.getVid(), null, null,  doc.getReposPath(), doc.offsetPath + doc.getPath(), doc.getName(), doc.getLevel(), null, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", "");
 		
 		Log.printObject("getRemoteStorageEntryType() tmpDoc:", tmpDoc);
 		
