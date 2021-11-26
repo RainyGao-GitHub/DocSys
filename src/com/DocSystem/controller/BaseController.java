@@ -14782,7 +14782,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	public static Doc remoteStorageGetEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
-		Log.debug("remoteStorageGetEntry() " + doc.getPath() + doc.getName());
+		Log.debug("remoteStorageGetEntry() [" + doc.getPath() + doc.getName() + "]");
 		Doc remoteDoc = null;
         
 		if(session == null) 
@@ -15018,8 +15018,12 @@ public class BaseController  extends BaseFunction{
 	
 	private static Integer getRemoteStorageEntryType(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId)
 	{
+		Log.debug("getRemoteStorageEntryType() doc offsetPath:" + doc.offsetPath);
 		//tmpDoc 是没有 offsetPath的doc
 		Doc tmpDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.offsetPath + doc.getPath(), doc.getName(), doc.getLevel(), null, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", "");
+		
+		Log.printObject("getRemoteStorageEntryType() tmpDoc:", tmpDoc);
+		
 		Doc remoteDoc =  getRemoteStorageEntry(session, remote, repos, tmpDoc, commitId);
 		if(remoteDoc == null)
 		{
