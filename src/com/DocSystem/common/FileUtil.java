@@ -94,25 +94,25 @@ public class FileUtil {
 	//使用指定或系统默认字符编码
 	public static boolean saveDocContentToFile(String content, String path, String name,  String encode)
 	{	
-		System.out.println("saveDocContentToFile() encode:" + encode);
+		Log.debug("saveDocContentToFile() encode:" + encode);
 		if(content == null)
 		{
-			System.out.println("saveDocContentToFile() content is null");
+			Log.debug("saveDocContentToFile() content is null");
 			return false;
 		}
 		
 		File folder = new File(path);
 		if(!folder.exists())
 		{
-			//System.out.println("saveDocContentToFile() path:" + path + " not exists!");
+			//Log.debug("saveDocContentToFile() path:" + path + " not exists!");
 			if(folder.mkdirs() == false)
 			{
-				System.out.println("saveDocContentToFile() mkdir path:" + path + " Failed!");
+				Log.debug("saveDocContentToFile() mkdir path:" + path + " Failed!");
 				return false;
 			}
 		}
 			
-		System.out.println("saveDocContentToFile " +path+ " encode:" + encode);
+		Log.debug("saveDocContentToFile " +path+ " encode:" + encode);
 		byte[] buff = getBytes(content, encode);
 		return saveDataToFile(buff, path, name);		
 	}
@@ -121,7 +121,7 @@ public class FileUtil {
 	{	
 		if(buff == null)
 		{
-			System.out.println("saveDataToFile() buff is null");
+			Log.debug("saveDataToFile() buff is null");
 			return false;
 		}
 		
@@ -130,7 +130,7 @@ public class FileUtil {
 		{
 			if(folder.mkdirs() == false)
 			{
-				System.out.println("saveDataToFile() mkdir path:" + path + " Failed!");
+				Log.debug("saveDataToFile() mkdir path:" + path + " Failed!");
 				return false;
 			}
 		}
@@ -143,7 +143,7 @@ public class FileUtil {
 			out.write(buff, 0, buff.length);
 			ret = true;
 		} catch (Exception e) {
-			System.out.println("saveDataToFile() new FileOutputStream failed");
+			Log.debug("saveDataToFile() new FileOutputStream failed");
 			e.printStackTrace();
 		} finally {
 			if(out != null)
@@ -161,7 +161,7 @@ public class FileUtil {
 	public static boolean saveDataToFile(byte[] buff, String path, String name, long offset, int size) {
 		if(buff == null)
 		{
-			System.out.println("saveDataToFile() buff is null");
+			Log.debug("saveDataToFile() buff is null");
 			return false;
 		}
 
@@ -174,24 +174,24 @@ public class FileUtil {
 			File file = new File(filePath);
 			if(!file.exists() || !file.isFile())
 			{
-				System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				Log.debug("readDocContentFromFile " +filePath+ " 不存在或不是文件");
 				return false;
 			}
 
 			long fileSize = file.length();
-			//System.out.println("readBufferFromFile fileSize:[" + fileSize + "]");
+			//Log.debug("readBufferFromFile fileSize:[" + fileSize + "]");
 			
 			if(offset >= fileSize)
 			{
 				return false;
 			}
 			
-			//System.out.println("readBufferFromFile size:[" + size + "]");
+			//Log.debug("readBufferFromFile size:[" + size + "]");
 			if(offset + size > fileSize)
 			{
 				size = (int) (fileSize - offset);
 			}
-			//System.out.println("readBufferFromFile size:[" + size + "]");
+			//Log.debug("readBufferFromFile size:[" + size + "]");
 			if(size  <= 0)
 			{
 				return false;
@@ -233,12 +233,12 @@ public class FileUtil {
 			File file = new File(filePath);
 			if(!file.exists() || !file.isFile())
 			{
-				//System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				//Log.debug("readDocContentFromFile " +filePath+ " 不存在或不是文件");
 				return null;
 			}
 			
 			int fileSize = (int) file.length();
-			//System.out.println("fileSize:[" + fileSize + "]");
+			//Log.debug("fileSize:[" + fileSize + "]");
 			if(fileSize  <= 0)
 			{
 				return null;
@@ -266,24 +266,24 @@ public class FileUtil {
 			File file = new File(filePath);
 			if(!file.exists() || !file.isFile())
 			{
-				System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				Log.debug("readDocContentFromFile " +filePath+ " 不存在或不是文件");
 				return null;
 			}
 
 			long fileSize = file.length();
-			//System.out.println("readBufferFromFile fileSize:[" + fileSize + "]");
+			//Log.debug("readBufferFromFile fileSize:[" + fileSize + "]");
 			
 			if(offset >= fileSize)
 			{
 				return null;
 			}
 			
-			//System.out.println("readBufferFromFile size:[" + size + "]");
+			//Log.debug("readBufferFromFile size:[" + size + "]");
 			if(offset + size > fileSize)
 			{
 				size = (int) (fileSize - offset);
 			}
-			//System.out.println("readBufferFromFile size:[" + size + "]");
+			//Log.debug("readBufferFromFile size:[" + size + "]");
 			if(size  <= 0)
 			{
 				return null;
@@ -330,7 +330,7 @@ public class FileUtil {
 	
 	public static String readDocContentFromFile(String path, String name, String encode, Long offset, int size) 
 	{	
-		System.out.println("readDocContentFromFile() encode:" + encode);
+		Log.debug("readDocContentFromFile() encode:" + encode);
 		byte buffer[] = readBufferFromFile(path, name, offset, size);
 		return getString(buffer, encode);			
 	}
@@ -339,7 +339,7 @@ public class FileUtil {
         File srcFile=new File(srcFilePath);
         if(srcFile.exists() == false)
         {
-    		System.err.println("copyFile() srcFilePath:" + srcFilePath + " not exists!");
+    		Log.error("copyFile() srcFilePath:" + srcFilePath + " not exists!");
     		return false;
         }
 
@@ -347,7 +347,7 @@ public class FileUtil {
     	if(cover == false && dstFile.exists())
     	{
         	//不允许覆盖
-        	System.err.println("copyFile() " + dstFilePath + " exists!");
+        	Log.error("copyFile() " + dstFilePath + " exists!");
         	return false;
         }
         
@@ -371,7 +371,7 @@ public class FileUtil {
 		    ret = true;
         }
     	catch (Exception e) { 
-    		System.err.println("copyFile() from " + srcFilePath + " to " + dstFilePath + " Exception"); 
+    		Log.error("copyFile() from " + srcFilePath + " to " + dstFilePath + " Exception"); 
     		e.printStackTrace(); 
     	} finally {
 			try {
@@ -402,11 +402,11 @@ public class FileUtil {
     //strict: true there is not file and dir, false: there is no file
 	public static boolean isEmptyDir(String dirPath, boolean strict) 
 	{
-		//System.out.println("isEmptyDir() dirPath:" + dirPath);
+		//Log.debug("isEmptyDir() dirPath:" + dirPath);
 		File dir = new File(dirPath);
 		if(isEmptyDir(dir, strict) == true)
 		{
-			//System.out.println("isEmptyDir() " + dirPath + " 本地是空目录");
+			//Log.debug("isEmptyDir() " + dirPath + " 本地是空目录");
 			return true;
 		}
 		return false;
@@ -451,7 +451,7 @@ public class FileUtil {
 	    	File srcDir = new File(srcPath); 
 	    	if(srcDir.exists() == false)
 	    	{
-    			System.err.println("copyDir() srcPath not exists:"+srcPath);
+    			Log.error("copyDir() srcPath not exists:"+srcPath);
     			return false;	    				    		
 	    	}
 	    	
@@ -461,7 +461,7 @@ public class FileUtil {
 	    	{
 	    		if(cover == false)
 	    		{
-	    			System.err.println("copyDir() dstPath exists:"+dstPath);
+	    			Log.error("copyDir() dstPath exists:"+dstPath);
 	    			return false;	    			
 	    		}
 	    	}
@@ -470,7 +470,7 @@ public class FileUtil {
 	    		//mkdirs will create the no exists parent dir, so I use the mkdir
 	    		if(dstDir.mkdir() == false)
 	    		{
-	    			System.err.println("copyDir() Failed to create dir:"+dstPath);
+	    			Log.error("copyDir() Failed to create dir:"+dstPath);
 	    			return false;
 	    		}
 	    	}
@@ -505,7 +505,7 @@ public class FileUtil {
 	    } 
 	    catch (Exception e) 
 	    { 
-	    	System.err.println("copyDir from " + srcPath  + " to " + dstPath + " 异常"); 
+	    	Log.error("copyDir from " + srcPath  + " to " + dstPath + " 异常"); 
 	    	e.printStackTrace(); 
 	    	return false;
 	    }
@@ -520,7 +520,7 @@ public class FileUtil {
 	    {
 	    	if(cover == false)
 	    	{
-	    		System.out.println("copyFileOrDir() dstPath exists:"+dstPath);
+	    		Log.debug("copyFileOrDir() dstPath exists:"+dstPath);
 	    		return false;	    			
 	    	}
 	    }
@@ -530,7 +530,7 @@ public class FileUtil {
 	    {
 	    	if(false == copyFile(srcPath, dstPath, cover))
 	    	{
-	    		System.out.println("copyFileOrDir() copyFile Failed:"+dstPath);
+	    		Log.debug("copyFileOrDir() copyFile Failed:"+dstPath);
 		    	return false;
 	    	}
 	    }
@@ -538,7 +538,7 @@ public class FileUtil {
 	    {
 	    	if(false == copyDir(srcPath, dstPath, cover))
 	    	{
-	    		System.out.println("copyFileOrDir() copyDir Failed:"+dstPath);
+	    		Log.debug("copyFileOrDir() copyDir Failed:"+dstPath);
 		    	return false;
 	    	}
 	    }
@@ -643,7 +643,7 @@ public class FileUtil {
                 {
                     if(delDir(subDirPath) == false)
                     {
-                    	System.out.println("delDir() delete subDir Failed:" + subDirPath);
+                    	Log.debug("delDir() delete subDir Failed:" + subDirPath);
                     	return false;
                     }
                 }
@@ -651,14 +651,14 @@ public class FileUtil {
                 {
                     if(tmp[i].delete() == false)
                     {
-                    	System.out.println("delDir() delete subFile Failed:" + subDirPath);
+                    	Log.debug("delDir() delete subFile Failed:" + subDirPath);
                     	return false;
                     }
                 }
             }
             if(dir.delete() == false)
             {
-            	System.out.println("delDir() delete Dir Failed:" + path);
+            	Log.debug("delDir() delete Dir Failed:" + path);
                 return false;
             }
         }
@@ -678,7 +678,7 @@ public class FileUtil {
 	            	String subDirPath = path+"/"+tmp[i].getName();
 	                if(delFileOrDir(subDirPath) == false)
 	                {
-	                	System.out.println("delFileOrDir() delete subDir Failed:" + subDirPath);
+	                	Log.debug("delFileOrDir() delete subDir Failed:" + subDirPath);
 	                    return false;
 	                }
 	            }
@@ -686,7 +686,7 @@ public class FileUtil {
             
             if(file.delete() == false)
             {
-            	System.out.println("delFileOrDir() delete Dir Failed:" + path);
+            	Log.debug("delFileOrDir() delete Dir Failed:" + path);
                 return false;
             }
         }
@@ -704,7 +704,7 @@ public class FileUtil {
 	        	String subDirPath = path+"/"+tmp[i].getName();
 	            if(delFileOrDir(subDirPath) == false)
 	            {
-	            	System.out.println("delFileOrDir() delete subDir Failed:" + subDirPath);
+	            	Log.debug("delFileOrDir() delete subDir Failed:" + subDirPath);
 	                return false;
 	            }
 	        }
@@ -721,7 +721,7 @@ public class FileUtil {
 	public static String saveFile(MultipartFile srcFile,String path,String fileName)throws Exception{		
 		if(fileName==null || "".equals(fileName))
 		{
-			System.out.println("saveFile() fileName is empty!");
+			Log.debug("saveFile() fileName is empty!");
 			return null;
 		}
 		
@@ -729,7 +729,7 @@ public class FileUtil {
 		File forder1 = new File(path);
 		if(!forder1.exists())
 		{
-			System.out.println("saveFile() path:" + path + " not exists!");
+			Log.debug("saveFile() path:" + path + " not exists!");
 			forder1.mkdirs(); //创建目录
 		}
 		
@@ -750,17 +750,17 @@ public class FileUtil {
             File oldfile=new File(oldFilePath);
             if(oldfile.exists() == false)
             {
-            	System.out.println("moveFile() oldFilePath:" + oldFilePath + " does not exist");
+            	Log.debug("moveFile() oldFilePath:" + oldFilePath + " does not exist");
             	return false;
             }
             
             File newfile=new File(newFilePath);
             if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
             {
-            	System.out.println("moveFile() newFilePath:" + newFilePath + " already exists");
+            	Log.debug("moveFile() newFilePath:" + newFilePath + " already exists");
             	if(cover)//覆盖
                 {
-                	System.out.println("moveFile() 强制覆盖！");
+                	Log.debug("moveFile() 强制覆盖！");
                     return oldfile.renameTo(newfile);
                 }
                 else
@@ -775,7 +775,7 @@ public class FileUtil {
         }
         else
         {
-        	System.out.println("moveFile() newFilePath:" + newFilePath + " is same to oldFilePath:" + oldFilePath);
+        	Log.debug("moveFile() newFilePath:" + newFilePath + " is same to oldFilePath:" + oldFilePath);
         	return true;
         }
     }
@@ -812,7 +812,7 @@ public class FileUtil {
     public static String getFileSuffix(String filePath)
     {
     	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
-    	//System.out.println("getFileSuffix() " + suffix);
+    	//Log.debug("getFileSuffix() " + suffix);
     	return suffix.toLowerCase();
     }
     
@@ -1129,7 +1129,7 @@ public class FileUtil {
     	
         File srcdir = new File(srcPathName); //srcFile or Dir
         if (!srcdir.exists()){
-        	System.out.println(srcPathName + "不存在！");
+        	Log.debug(srcPathName + "不存在！");
         	return false;
         }   
             
@@ -1248,7 +1248,7 @@ public class FileUtil {
 		if(fileSize==0){
 			return null;
 		}
-		System.out.println("文件大小：" + Math.floor(fileSize/1024));
+		Log.debug("文件大小：" + Math.floor(fileSize/1024));
 		if(limitType){
 			if(fileSize>200*1024*1024){
 				throw new FileUploadException("上传文件过大");
@@ -1300,7 +1300,7 @@ public class FileUtil {
 		ReturnAjax rt = new ReturnAjax();
 		String ext = fileName.substring(fileName.lastIndexOf("."));
 		long fileSize = file.length();
-		System.out.println("文件大小：" + Math.floor(fileSize/1024));
+		Log.debug("文件大小：" + Math.floor(fileSize/1024));
 		if(fileSize==0){
 			return null;
 		}
@@ -1325,7 +1325,7 @@ public class FileUtil {
 		try {
 			String _fileName = generateDateAndRadom() + ext;
 			Base64File.decode(file, folder + File.separator, _fileName);
-			System.out.println("上传路径："+folder+";上传名称：" + _fileName);
+			Log.debug("上传路径："+folder+";上传名称：" + _fileName);
 			//压缩图片到smallPic目录
 			if(limitType&&folder!=null&&!folder.equals("")&&compressPath!=null&&!compressPath.equals("")){
 				CompressPic cp = new CompressPic();
@@ -1348,7 +1348,7 @@ public class FileUtil {
 		Date date = new Date();
 		String dateStr = DateFormat.dateTimeFormat2(date);
 		String r = Math.round(Math.random()*100000)+"";
-		System.out.println(dateStr+";"+r);
+		Log.debug(dateStr+";"+r);
 		return "freeteam"+dateStr+"_"+r;
 	}
 	
@@ -1367,7 +1367,7 @@ public class FileUtil {
 		String str;
 		try {
 			str = new String(bytes, encode);
-			System.out.println("checkEncoding() str:" + str);
+			Log.debug("checkEncoding() str:" + str);
 	        if(Arrays.equals(str.getBytes(), bytes)) 
 			{   
 	        	return true;    
@@ -1404,7 +1404,7 @@ public class FileUtil {
 		File file = new File(path);
 		if(file.exists() == false)
 		{
-			System.out.println("getCharset() file [" + path + "] not exist");
+			Log.debug("getCharset() file [" + path + "] not exist");
 			return null;
 		}
 		
@@ -1503,7 +1503,7 @@ public class FileUtil {
 			e.printStackTrace();
 			charset = null;
 		}
-		System.out.println("getCharset() file [" + path + "] charset:" + charset);
+		Log.debug("getCharset() file [" + path + "] charset:" + charset);
 		return charset;
 	}
 	
@@ -1512,7 +1512,7 @@ public class FileUtil {
 		int buffSize = buff.length;
 		if(buffSize <= 0)
 		{
-			System.out.println("getCharset() buffSize:" + buffSize);
+			Log.debug("getCharset() buffSize:" + buffSize);
 			return null;
 		}
 
@@ -1606,7 +1606,7 @@ public class FileUtil {
 			e.printStackTrace();
 			charset = null;
 		}
-		System.out.println("\ngetCharset() charset:" + charset);
+		Log.debug("\ngetCharset() charset:" + charset);
 		return charset;		
 	}
 	
@@ -1641,7 +1641,7 @@ public class FileUtil {
 		}
 		System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
 		String encode = getEncoding(encodeDetectBuf);
-		System.out.println("getEncodeOfBuffer encode:[" + encode + "]");	
+		Log.debug("getEncodeOfBuffer encode:[" + encode + "]");	
 
 		return encode;
 	}

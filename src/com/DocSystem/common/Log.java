@@ -1,5 +1,8 @@
 package com.DocSystem.common;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
+
 import com.alibaba.fastjson.JSON;
 
 import util.ReturnAjax;
@@ -33,9 +36,38 @@ public class Log {
 	public static void toFile(String content, String filePath) {
 		if(filePath != null)
 		{
-			FileUtil.appendContentToFile(filePath, content, "UTF-8");	
+			appendContentToFile(filePath, content, "UTF-8");	
 		}
 	}
+	
+	//向文件末尾追加内容
+    public static boolean appendContentToFile(String filePath, String content, String encode) {
+        try {
+            // 打开一个随机访问文件流，按读写方式
+            RandomAccessFile randomFile = new RandomAccessFile(filePath, "rw");
+            // 文件长度，字节数
+            long fileLength = randomFile.length();
+            //将写文件指针移到文件尾。
+            randomFile.seek(fileLength);
+			
+            byte[] buff;
+			if(encode == null)
+			{
+				buff = content.getBytes();
+			}
+			else
+			{
+				buff = content.getBytes(encode); //将String转成指定charset的字节内容
+			}
+            randomFile.write(buff);
+            
+            randomFile.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 	
 	public static void debug(String content) {
 		if(isLogEnable(debug, allowGeneral))
@@ -108,16 +140,33 @@ public class Log {
 	public static void printByte(byte data) {
 		if(isLogEnable(debug, allowGeneral))
 		{
-			System.out.printf( "%02X ", data);
+			if(logFile == null)
+			{
+				System.out.printf( "%02X ", data);
+			}
+			else
+			{				
+				toFile(String.format("%02X ", data), logFile);
+			}
 		}
 	}
 	
 	public static void printBytes(byte[] data) {
 		if(isLogEnable(debug, allowGeneral))
 		{
-			for(int i=0; i<data.length; i++)
+			if(logFile == null)
 			{
-				System.out.printf( "%02X ", data[i]);
+				for(int i=0; i<data.length; i++)
+				{
+					System.out.printf( "%02X ", data[i]);
+				}
+			}
+			else
+			{
+				for(int i=0; i<data.length; i++)
+				{
+					toFile(String.format("%02X ", data[i]), logFile);
+				}
 			}
 		}
 	}
