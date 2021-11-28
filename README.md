@@ -53,9 +53,17 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 #### 1、下载[DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
 
 #### 2、升级
-（1）将DocSystem.war拷贝至tomcat/webapps目录
+（1）运行stop脚本停止系统
 
-（2）运行restart脚本重启系统
+（2）备份tomcat/webapps/DocSystem/WEB-INF/classes/jdbc.properties
+
+（3）删除tomcat/webapps/DocSystem目录
+
+（4）将DocSystem.war解压至tomcat/webapps/DocSystem目录
+
+（5）替换tomcat/webapps/DocSystem/WEB-INF/classes/jdbc.properties
+
+（6）运行start脚本启动系统
 
 
 # 限制与价格
