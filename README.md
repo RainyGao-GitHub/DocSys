@@ -134,14 +134,18 @@ fc-cache
 #### 5、重新生成office字体库
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 ### 五、Linux系统中文乱码
-#### 1、安装字体库
-yum -y install fontconfig
-#### 2、添加中文字体
-将 C:/Windows/Fonts 字体文件复制到 /usr/share/fonts 目录
-#### 3、生成 fonts.scale 文件
-yum -y install ttmkfdir 
-#### 4、刷新字体缓存
-fc-cache
+#### 1、查看当前使用的系统语言
+echo $LANG
+#### 2、查看是否已安装有中文语言包
+locale
+
+如有 zh cn 表示已经安装了中文语言
+#### 3、安装中文语言包
+yum groupinstall chinese-support
+#### 4、修改系统默认语言
+vi  /etc/sysconfig/i18n
+修改为 LANG="zh_CN.UTF-8" 并重启系统
+
 ### 六、什么是分布式远程存储
 1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、MxsDoc等文件存储系统）
 
@@ -157,7 +161,15 @@ fc-cache
 
 2. 在该仓库页面上，能够查看和操作文件服务器（ftp、sftp、smb、mxsdoc）上的文件和目录
 
-### 八、日志获取
+### 八、如何使用MxsDoc作为自动备份工具
+1. 新建仓库
+2. 设置文件存储路径，自定义为需要备份的目录
+3. 设置自动备份
+（1）本地自动备份需要指定本地备份目录
+（2）异地自动备份需要指定备份的文件服务器（目前支持FTP/SFTP/SMB/SVN/GTI/MXSDOC）
+（3）根据自己需求勾选备份时间
+
+### 九、日志获取
 1. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
 2. Linux系统： start.sh > docSys.log
 3. 设置日志等级：管理后台 -> 系统设置 -> 日志等级 -> debug
