@@ -144,6 +144,7 @@ locale
 yum groupinstall chinese-support
 #### 4、修改系统默认语言
 vi  /etc/sysconfig/i18n
+
 修改为 LANG="zh_CN.UTF-8" 并重启系统
 
 ### 六、什么是分布式远程存储
@@ -165,8 +166,11 @@ vi  /etc/sysconfig/i18n
 1. 新建仓库
 2. 设置文件存储路径，自定义为需要备份的目录
 3. 设置自动备份
+
 （1）本地自动备份需要指定本地备份目录
+
 （2）异地自动备份需要指定备份的文件服务器（目前支持FTP/SFTP/SMB/SVN/GTI/MXSDOC）
+
 （3）根据自己需求勾选备份时间
 
 ### 九、日志获取
