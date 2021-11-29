@@ -181,7 +181,7 @@ vi  /etc/sysconfig/i18n
 
 ### 六、什么是分布式远程存储
 
-1、仓库文件可以存储在远程文件服务器（包括ftp、sftp、smb、MxsDoc等文件存储系统）
+1、仓库文件可以存储在远程文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）
 
 2、在当前仓库可查看远程文件服务器文件
 
@@ -195,7 +195,7 @@ vi  /etc/sysconfig/i18n
 
 1. 设置为文件服务器前置的仓库，可以作为的文件服务器的客户端使用，
 
-2. 在该仓库页面上，能够查看和操作文件服务器（ftp、sftp、smb、mxsdoc）上的文件和目录
+2. 在该仓库页面上，能够查看和操作文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）上的文件和目录
 
 ### 八、如何使用MxsDoc作为自动备份工具
 
