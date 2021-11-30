@@ -851,6 +851,7 @@ function isText(suffix)
 			properties : true,
 			conf : true,
 			out : true,
+			bash: true,
 			sh : true,
 			bat : true,
 			msg : true,

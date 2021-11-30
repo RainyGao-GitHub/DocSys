@@ -1046,6 +1046,7 @@ public class FileUtil {
 		case "conf":
 		case "out":
 		case "sh":
+		case "bash":
 		case "bat":
 		case "msg":
 		case "cmake":
