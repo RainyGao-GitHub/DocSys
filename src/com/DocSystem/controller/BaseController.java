@@ -9181,6 +9181,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private String remoteServerDocCommit(Repos repos, Doc doc, String commitMsg, User accessUser, ReturnAjax rt, boolean modifyEnable, int subDocCommitFlag) {
+    	Log.debug("remoteServerDocCommit() for doc:[" + doc.getPath() + doc.getName() + "]");
+
 		RemoteStorageConfig remote = repos.remoteServerConfig;
 		if(remote == null)
 		{
@@ -15424,10 +15426,12 @@ public class BaseController  extends BaseFunction{
 			}
 			Log.debug("doPushEntryToRemoteStorage " + doc.getPath() + doc.getName() + "推送 ret:" + ret);				
 			
+			//TODO: 删除操作不需要再去推送子目录
+			
 			//pushSubEntries
 			if(ret == true && localDoc != null && localDoc.getType() != null && localDoc.getType() == 2)
 			{
-				if(pushResult.action != null)	//it is new add dir
+				if(pushResult.action != null)	//it is new added dir
 				{
 					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
 					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true, pushLocalChangeOnly);	
@@ -15566,7 +15570,9 @@ public class BaseController  extends BaseFunction{
 	
 	//actionList and isSubAction is for Gvn/Git RemoteStorage
 	private static boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
-			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {		
+		Log.debug("doPushSubEntriesToRemoteStorage() doc:[" + doc.getPath() + doc.getName() + "]");
+
 		//子目录不递归
 		if(subEntryPushFlag == 0)
 		{
@@ -15578,8 +15584,6 @@ public class BaseController  extends BaseFunction{
 		{
 			subEntryPushFlag = 0;
 		}
-		
-		Log.printObject("doPushSubEntriesToRemoteStorage() doc:", doc);
 		
 		List<Doc> localList = getLocalEntryList(repos, doc);
 		if(localList == null)
@@ -17960,6 +17964,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected static boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, boolean pushLocalChangeOnly, ReturnAjax rt) {
+		Log.debug("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "]");
+
 		boolean ret = false;
 		DocPushResult pushResult = new DocPushResult();
 		pushResult.totalCount = 0;
@@ -17974,16 +17980,15 @@ public class BaseController  extends BaseFunction{
 		//TODO: 如果doc.offsetPath非空的话，那么远程根目录实际上并不是真正的根目录（此时是需要检查节点是否存在的）
 		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		
-		Log.printObject("doPushToRemoteStorage doc:", doc);
-		Log.printObject("doPushToRemoteStorage localDoc:", localDoc);
-		Log.printObject("doPushToRemoteStorage dbDoc:", dbDoc);
-		Log.printObject("doPushToRemoteStorage remoteDoc:", remoteDoc);
+		Log.printObject("doPushToRemoteStorage() localDoc:", localDoc);
+		Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
+		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);
 		
 		if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
 		{
 			if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
 			{
-				Log.debug("doPushToRemoteStorage addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
+				Log.debug("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
 				addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath());
 			}
 		}
