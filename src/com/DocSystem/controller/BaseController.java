@@ -214,7 +214,11 @@ public class BaseController  extends BaseFunction{
 		if(logFilePath != null)
 		{
 	        File file = new File(logFilePath);
-	        if(!file.exists())
+	        if(file.exists())
+	        {
+	        	Log.logFile = logFilePath;
+	        }
+	        else
 	        {
 	        	try {
 						
@@ -3560,6 +3564,7 @@ public class BaseController  extends BaseFunction{
 			Log.docSysErrorLog(doc.getName() + " 删除失败！", rt);
 			return null;
 		}
+		Log.debug("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		
 		String revision = null;
 		if(isFSM(repos))
@@ -3629,6 +3634,7 @@ public class BaseController  extends BaseFunction{
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
 	{	
+		Log.debug("BuildMultiActionListForDocDelete() for doc:[" + doc.getPath() + doc.getName() + "]");
 		if(deleteSubDocs == true)
 		{
 			List<Doc> subDocList = docSysGetDocList(repos, doc, false);
@@ -9249,6 +9255,8 @@ public class BaseController  extends BaseFunction{
 	//commitActionList : 改动扫描结果，非空表示该列表需要被外部使用（只用于自动同步接口）
 	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{	
+		Log.debug("verReposDocCommit() for doc:[" + doc.getPath() + doc.getName() + "]");
+
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
