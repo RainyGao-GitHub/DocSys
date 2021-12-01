@@ -1,13 +1,11 @@
 package com.DocSystem.common.remoteStorage;
 
 import com.DocSystem.common.Log;
-import com.DocSystem.entity.Doc;
 import com.jcraft.jsch.*;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
@@ -168,10 +166,12 @@ public class SFTPUtil {
     {
     	boolean ret = false;
         try {
-			sftp.cd(directory);
-	        sftp.rm(fileName);
+			//sftp.cd(directory);
+	        //sftp.rm(fileName);
+	        sftp.rm(directory + fileName);
 	        ret = true;
         } catch (Exception e) {
+			Log.debug("delete() delete file [" + directory + fileName + "] Failed");
 			e.printStackTrace();
 		}
         return ret;
@@ -181,27 +181,31 @@ public class SFTPUtil {
     	boolean ret = false;
 		try {       	        	
 			Vector<?> list = sftp.ls(directory + fileName);
-			for(int i=0; i<list.size(); i++)
+			if(list != null)
 			{
-				LsEntry subEntry = (LsEntry) list.get(i);
-				String subEntryName = subEntry.getFilename();
-				if(subEntryName.equals(".") || subEntryName.equals(".."))
+				for(int i=0; i<list.size(); i++)
 				{
-					continue;
-				}
-				
-				if(subEntry.getAttrs().isDir())
-				{
-					if(delDirs(directory + fileName, subEntryName) == false)
+					LsEntry subEntry = (LsEntry) list.get(i);
+					String subEntryName = subEntry.getFilename();
+					if(subEntryName.equals(".") || subEntryName.equals(".."))
 					{
-						return false;
+						continue;
 					}
-				}
-				else
-				{
-					if(delFile(directory + fileName, subEntryName) == false)
+					
+					if(subEntry.getAttrs().isDir())
 					{
-						return false;
+						if(delDirs(directory + fileName + "/", subEntryName) == false)
+						{
+							Log.debug("delDirs() delete folder [" + directory + fileName + subEntryName + "] Failed");
+							return false;
+						}
+					}
+					else
+					{
+						if(delFile(directory + fileName + "/", subEntryName) == false)
+						{
+							return false;
+						}
 					}
 				}
 			}
@@ -218,6 +222,7 @@ public class SFTPUtil {
             sftp.rmdir(directory + fileName);
             ret =  true;
         } catch (SftpException e) {
+			Log.debug("delDir() delete file [" + directory + fileName + "] Failed");
         	e.printStackTrace();
         }
     	return ret;
@@ -229,6 +234,7 @@ public class SFTPUtil {
             sftp.rm(directory + fileName);
             ret =  true;
         } catch (SftpException e) {
+			Log.debug("delFile() delete file [" + directory + fileName + "] Failed");
         	e.printStackTrace();
         }
     	return ret;
