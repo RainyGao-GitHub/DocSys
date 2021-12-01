@@ -16588,7 +16588,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				ret = session.sftp.delDir(remotePath, fileName);
+				ret = session.sftp.delDirs(remotePath, fileName);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

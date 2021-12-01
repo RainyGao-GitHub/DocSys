@@ -1,9 +1,13 @@
 package com.DocSystem.common.remoteStorage;
 
 import com.DocSystem.common.Log;
+import com.DocSystem.entity.Doc;
 import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
+
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
@@ -171,6 +175,41 @@ public class SFTPUtil {
 			e.printStackTrace();
 		}
         return ret;
+    }
+    
+    public boolean delDirs(String directory, String fileName) throws SftpException {
+    	boolean ret = false;
+		try {       	        	
+			Vector<?> list = sftp.ls(directory + fileName);
+			for(int i=0; i<list.size(); i++)
+			{
+				LsEntry subEntry = (LsEntry) list.get(i);
+				String subEntryName = subEntry.getFilename();
+				if(subEntryName.equals(".") || subEntryName.equals(".."))
+				{
+					continue;
+				}
+				
+				if(subEntry.getAttrs().isDir())
+				{
+					if(delDirs(directory + fileName, subEntryName) == false)
+					{
+						return false;
+					}
+				}
+				else
+				{
+					if(delFile(directory + fileName, subEntryName) == false)
+					{
+						return false;
+					}
+				}
+			}
+			ret = delDir(directory, fileName);
+		} catch (SftpException e) {
+			e.printStackTrace();
+		}
+    	return ret;
     }
     
     public boolean delDir(String directory, String fileName) throws SftpException {
