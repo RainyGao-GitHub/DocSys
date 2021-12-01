@@ -734,7 +734,7 @@ public class ManageController extends BaseController{
 		config.put("javaHome", javaHome);
 		config.put("ldapConfig", ldapConfig);
 		config.put("logLevel", Log.logLevel);
-		config.put("logFile", Log.logFile);
+		config.put("logFile", Log.logFileConfig);
 		
 		if(docSysType < 1)
 		{
@@ -888,8 +888,8 @@ public class ManageController extends BaseController{
 		
 		if(logFile == null)
 		{
-			Log.logFile = logFile;
-			setLogFileToFile(logFile);
+			Log.logFileConfig = null;
+			setLogFileToFile(null);
 		}
 		else
 		{
@@ -898,8 +898,9 @@ public class ManageController extends BaseController{
 			{
 				logFile = null;
 			}
-			Log.logFile = logFile;
+			Log.logFileConfig = logFile;
 			setLogFileToFile(logFile);
+			initLogFile(logFile);
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)

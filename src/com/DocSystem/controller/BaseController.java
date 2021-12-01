@@ -146,6 +146,7 @@ import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alipay.api.internal.util.file.FileUtils;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jsch.SftpException;
@@ -197,12 +198,44 @@ public class BaseController  extends BaseFunction{
 		Log.logLevel = getLogLevelFromFile();
 		Log.debug("initLogLevel Log.logLevel:" + Log.logLevel);
 
-		Log.logFile = getLogFileFromFile();
-		Log.debug("initLogLevel Log.logFile:" + Log.logFile);
+		String logFilePath = getLogFileFromFile();
+		Log.logFileConfig = logFilePath;
+		initLogFile(logFilePath);
 		
 		//Log.logMask = Log.allowAll;
 		//Log.logFile = Path.getSystemLogParentPath(docSysWebPath); 
 		//Log.debug("initLogLevel Log.logFile:" + Log.logFile);
+	}
+	
+	protected static void initLogFile(String logFilePath) 
+	{
+	    Log.debug("initLogFile() logFilePath:" + logFilePath);
+		Log.logFile = null;
+		if(logFilePath != null)
+		{
+	        File file = new File(logFilePath);
+	        if(!file.exists())
+	        {
+	        	try {
+						
+		        	File parentFile = file.getParentFile();
+		        	if(parentFile.exists() == false)
+		        	{
+		        		parentFile.mkdirs();
+		        	}
+		        	
+	        		if(file.createNewFile() == true)
+	        		{
+	        			Log.logFile = logFilePath;
+	        		}
+	        	} catch (IOException e) {
+					Log.debug("initLogFile() Failed to create logFile:" + logFilePath);
+					e.printStackTrace();
+					Log.logFile = null;
+				}
+			}
+		}
+	    Log.debug("initLogFile() Log.logFile:" + Log.logFile);
 	}
 
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {

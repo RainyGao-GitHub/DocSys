@@ -22,7 +22,8 @@ public class Log {
 	
 	public static int logLevel = debug;
 	public static int logMask = allowAll;
-	public static String logFile = null;
+	public static String logFileConfig = null;	//logFileConfig	
+	public static String logFile = null;	//run time
 	
 	public static boolean isLogEnable(int level, int mask)
 	{
