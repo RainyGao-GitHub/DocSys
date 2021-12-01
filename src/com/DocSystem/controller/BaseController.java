@@ -15705,7 +15705,7 @@ public class BaseController  extends BaseFunction{
 	private static boolean remoteStorageChangeDirToFile(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
 			User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
 		
-		if(deleteEntryFromRemoteStorage(session, remote, repos, doc, pushResult, actionList, isSubAction) == true)
+		if(deleteEntryFromRemoteStorage(session, remote, repos, remoteDoc, pushResult, actionList, isSubAction) == true)
 		{
 			return remoteStorageAddFile(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
 		}
@@ -15714,7 +15714,7 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean remoteStorageChangeFileToDir(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,
 			User accessUser, DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction) {
-		if(deleteEntryFromRemoteStorage(session, remote, repos, doc, pushResult, actionList, isSubAction) == true)
+		if(deleteEntryFromRemoteStorage(session, remote, repos, remoteDoc, pushResult, actionList, isSubAction) == true)
 		{
 			return remoteStorageAddDir(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, actionList, isSubAction);
 		}
@@ -15727,7 +15727,7 @@ public class BaseController  extends BaseFunction{
 		
 		pushResult.totalCount ++;
 
-		ret = deleteEntryFromRemoteStorage(session, remote, repos, doc, pushResult, actionList, ret);
+		ret = deleteEntryFromRemoteStorage(session, remote, repos, remoteDoc, pushResult, actionList, ret);
 		if(ret == true && remote.isVerRepos == false)
 		{
 			pushResult.successCount ++;	
@@ -16313,6 +16313,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		if(doc == null || doc.getType() == null || doc.getType() == 0)
+		{
+			Log.debug("deleteEntryFromRemoteStorage doc not exist");			
+			return true;
+		}
+		
 		switch(remote.protocol)
 		{
 		case "file":
@@ -16576,7 +16582,14 @@ public class BaseController  extends BaseFunction{
 		Log.debug("deleteEntryFromeSftpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
 
 		try {
-			ret = session.sftp.delete(remotePath, fileName); 
+			if(type == 1)
+			{
+				ret = session.sftp.delete(remotePath, fileName);
+			}
+			else
+			{
+				ret = session.sftp.delDir(remotePath, fileName);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
