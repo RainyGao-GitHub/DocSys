@@ -8743,6 +8743,12 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean moveRealDoc(Repos repos, Doc srcDoc, Doc dstDoc, ReturnAjax rt) 
 	{
+		if(isFSM(repos) == false)
+		{
+			Log.debug("moveRealDoc 前置仓库不需要本地移动");
+			return true;
+		}	
+		
 		String reposRPath = Path.getReposRealPath(repos);
 		String srcParentPath = srcDoc.getPath();
 		String srcName = srcDoc.getName();
@@ -8774,6 +8780,12 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean copyRealDoc(Repos repos, Doc srcDoc, Doc dstDoc, ReturnAjax rt) 
 	{
+		if(isFSM(repos) == false)
+		{
+			Log.debug("copyRealDoc 前置仓库不需要本地复制");
+			return true;
+		}	
+		
 		String reposRPath = Path.getReposRealPath(repos);
 		String srcParentPath = srcDoc.getPath();
 		String srcName = srcDoc.getName();
@@ -16045,7 +16057,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static boolean gitServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, DocPushResult pushResult) {
-        Log.debug("gitServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+        Log.debug("gitServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		boolean ret = false;
 		try {
 			pushResult.revision = session.git.doCopy(srcRemotePath, srcName, dstRemotePath, dstName, commitMsg, commitUser, isMove);
@@ -16057,7 +16069,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private static boolean svnServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, DocPushResult pushResult) {
-        Log.debug("svnServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+        Log.debug("svnServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		boolean ret = false;
 		try {
 			pushResult.revision = session.svn.doCopy(srcRemotePath, srcName, dstRemotePath, dstName, commitMsg, commitUser, isMove);
@@ -16069,7 +16081,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static boolean mxsDocServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
-        Log.debug("mxsDocServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+        Log.debug("mxsDocServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 
         return session.mxsdoc.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);	       	
 	}
@@ -16077,7 +16089,7 @@ public class BaseController  extends BaseFunction{
 	private static boolean smbServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
         boolean ret = false;
         
-        Log.debug("smbServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+        Log.debug("smbServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		try {
  			ret = session.smb.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);			
 		} catch (Exception e) {
@@ -16089,7 +16101,7 @@ public class BaseController  extends BaseFunction{
 	private static boolean ftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
         boolean ret = false;
         
-        Log.debug("ftpServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+        Log.debug("ftpServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		try {
  			ret = session.ftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);			
 		} catch (Exception e) {
@@ -16101,7 +16113,7 @@ public class BaseController  extends BaseFunction{
 	private static boolean sftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
         boolean ret = false;
         
-        Log.debug("sftpServerMoveEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
+        Log.debug("sftpServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		try {
  			ret = session.sftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);
 		} catch (Exception e) {
