@@ -6678,8 +6678,6 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 		}
-				
-
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
@@ -16032,23 +16030,23 @@ public class BaseController  extends BaseFunction{
 		{
 		case "file":
 			pushResult.revision = "";
-			return localDiskCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
+			return localDiskCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove, srcDoc.getType());
 		case "sftp":
 			pushResult.revision = "";
-			return sftpServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
+			return sftpServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove, srcDoc.getType());
 		case "ftp":
 			pushResult.revision = "";			
-			return ftpServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
+			return ftpServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove, srcDoc.getType());
 		case "smb":
 			pushResult.revision = "";			
-			return smbServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
+			return smbServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove, srcDoc.getType());
 		case "mxsdoc":
 			pushResult.revision = "";			
-			return mxsDocServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove);
+			return mxsDocServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), isMove, srcDoc.getType());
 		case "svn":
-			return svnServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), commitMsg, accessUser.getName(), isMove, pushResult);
+			return svnServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), commitMsg, accessUser.getName(), isMove, srcDoc.getType(), pushResult);
 		case "git":
-			return gitServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), commitMsg, accessUser.getName(), isMove, pushResult);
+			return gitServerCopyEntry(session, remote,  remote.rootPath + srcDoc.offsetPath + srcDoc.getPath(), srcDoc.getName(), remote.rootPath + dstDoc.offsetPath + dstDoc.getPath(), dstDoc.getName(), commitMsg, accessUser.getName(), isMove, srcDoc.getType(), pushResult);
 		default:
 			Log.debug("remoteStorageMoveEntry unknown remoteStorage protocol:" + remote.protocol);
 			break;
@@ -16056,7 +16054,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private static boolean gitServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, DocPushResult pushResult) {
+	private static boolean gitServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, Integer type, DocPushResult pushResult) {
         Log.debug("gitServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		boolean ret = false;
 		try {
@@ -16068,7 +16066,7 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 	
-	private static boolean svnServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, DocPushResult pushResult) {
+	private static boolean svnServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, String commitMsg, String commitUser, boolean isMove, Integer type, DocPushResult pushResult) {
         Log.debug("svnServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		boolean ret = false;
 		try {
@@ -16080,13 +16078,13 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private static boolean mxsDocServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+	private static boolean mxsDocServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
         Log.debug("mxsDocServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 
         return session.mxsdoc.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);	       	
 	}
 
-	private static boolean smbServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+	private static boolean smbServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
         boolean ret = false;
         
         Log.debug("smbServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
@@ -16098,7 +16096,7 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private static boolean ftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+	private static boolean ftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
         boolean ret = false;
         
         Log.debug("ftpServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
@@ -16110,19 +16108,19 @@ public class BaseController  extends BaseFunction{
         return ret;
 	}
 
-	private static boolean sftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+	private static boolean sftpServerCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
         boolean ret = false;
         
         Log.debug("sftpServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		try {
- 			ret = session.sftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);
+ 			ret = session.sftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove, type);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
         return ret;
 	}
 
-	private static boolean localDiskCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+	private static boolean localDiskCopyEntry(RemoteStorageSession session, RemoteStorageConfig remote, String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
         boolean ret = false;
         
         Log.debug("downloadFileFromLocalDisk srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);

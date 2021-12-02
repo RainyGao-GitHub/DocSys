@@ -1031,17 +1031,16 @@ public class DocController extends BaseController{
 			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc srcDocTmp = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
-		if(srcDbDoc == null || srcDbDoc.getType() == 0)
+		Doc srcDoc = docSysGetDoc(repos, srcDocTmp, false);
+		if(srcDoc == null || srcDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
-		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
@@ -1155,17 +1154,16 @@ public class DocController extends BaseController{
 			}
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDoc = buildBasicDoc(reposId, null, null, reposPath, srcPath, srcName, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc srcDocTmp = buildBasicDoc(reposId, null, null, reposPath, srcPath, srcName, null, null, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, dstName, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
-		if(srcDbDoc == null || srcDbDoc.getType() == 0)
+		Doc srcDoc = docSysGetDoc(repos, srcDocTmp, false);
+		if(srcDoc == null || srcDoc.getType() == 0)
 		{
 			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
-		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
@@ -1440,8 +1438,8 @@ public class DocController extends BaseController{
 		return false;
 	}
 
-	private Doc getSameDoc(Long size, String checkSum, Integer reposId) {
-
+	private Doc getSameDoc(Long size, String checkSum, Integer reposId) 
+	{
 		Doc qdoc = new Doc();
 		qdoc.setSize(size);
 		qdoc.setCheckSum(checkSum);
