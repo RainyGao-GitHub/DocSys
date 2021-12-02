@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+
+import org.apache.commons.net.ftp.FTPFile;
  
 public class SFTPUtil {
  
@@ -249,12 +251,48 @@ public class SFTPUtil {
        
        return copy(srcRemotePath, srcName, dstRemotePath, dstName);
     }  
-
+    
 	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
     	boolean ret = false;
     	try {
-    		sftp.put(srcRemotePath + srcName, dstRemotePath + dstName); 
-    		ret = true;
+			Vector<?> list = sftp.ls(srcRemotePath + srcName);
+			if(list != null && list.size() > 0)
+			{
+            	//it is folder
+            	ret = mkdir(dstRemotePath + dstName);
+            	if(ret == true)
+            	{
+	            	for(int i=0; i < list.size(); i++)
+		            {
+	            		LsEntry subEntry = (LsEntry) list.get(i);
+	            		if(subEntry.getAttrs().isDir() == false)
+		            	{
+		            		copyFile(srcRemotePath + srcName + "/", subEntry.getFilename(), dstRemotePath + dstName + "/", subEntry.getFilename());
+		            	}
+		            	else
+		            	{
+		            		copy(srcRemotePath + srcName + "/", subEntry.getFilename(),  dstRemotePath + dstName + "/", subEntry.getFilename());
+		            	}
+	    			}
+            	}
+			}
+			else
+			{
+				ret = copyFile(srcRemotePath, srcName, dstRemotePath, dstName);
+			}
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	} 
+	
+	public boolean copyFile(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+    	boolean ret = false;
+        try {
+        	InputStream fos = sftp.get(srcRemotePath + srcName);
+        	sftp.put(fos, dstRemotePath + dstName);
+	        fos.close();
+            ret = true;
         } catch (Exception e) {
 			e.printStackTrace();
 		}
