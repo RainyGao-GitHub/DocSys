@@ -11,11 +11,6 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
-import com.DocSystem.common.Log;
-import com.DocSystem.common.entity.RemoteStorageConfig;
-import com.DocSystem.entity.Doc;
-import com.DocSystem.entity.Repos;
-
 
 public class FtpUtil { 
     
