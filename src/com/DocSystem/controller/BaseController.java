@@ -10097,9 +10097,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/****************************DocSys系统初始化接口 *********************************/
-	//static String JDBC_DRIVER = "org.sqlite.JDBC";  
+	//static String JDBC_DRIVER = "org.sqlite.JDBC";
     //static String DB_TYPE = "sqlite";
-	//static String DB_URL = "jdbc:sqlite::resource:data/DocSystem"; //classess目录下在eclipse下会导致重启 
+	//static String DB_URL = "jdbc:sqlite:${catalina.home}/DocSystem.db"; //classess目录下在eclipse下会导致重启 
 	//static String DB_USER = "";
     //static String DB_PASS = "";
     
@@ -11945,15 +11945,17 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private static String getJdbcDriverName(String type) {
+	protected static String getJdbcDriverName(String type) {
 		if(type == null)
 		{
-			return JDBC_DRIVER;
+			return "org.sqlite.JDBC"; //默认用sqlite
 		}
 		switch(type)
 		{
 		case "sqlite":
 			return "org.sqlite.JDBC";
+		case "mysql":
+			return "com.mysql.cj.jdbc.Driver";
 		}
 		
 		return JDBC_DRIVER;
@@ -11962,19 +11964,13 @@ public class BaseController  extends BaseFunction{
 	private static boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		Log.debug("getAndSetDBInfoFromFile " + JDBCSettingPath );
 		
-		String jdbcDriver = ReadProperties.getValue(JDBCSettingPath, "db.driver");
-		if(jdbcDriver == null || "".equals(jdbcDriver))
-		{
-			return false;
-		}
-		JDBC_DRIVER = jdbcDriver;
-		
 		String dbType = ReadProperties.getValue(JDBCSettingPath, "db.type");
 		if(dbType == null || "".equals(dbType))
 		{
 			dbType = "mysql";
 		}
 		DB_TYPE = dbType;
+		JDBC_DRIVER = getJdbcDriverName(dbType);
 		
 		String jdbcUrl = ReadProperties.getValue(JDBCSettingPath, "db.url");
 		if(jdbcUrl == null || "".equals(jdbcUrl))
