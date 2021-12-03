@@ -486,11 +486,11 @@ public class ManageController extends BaseController{
 			pwd = ReadProperties.getValue(tmpDocSystemConfigPath + configFileName, "db.password");
 		}
 		String jdbcConfig = "";
-		jdbcConfig += "db.type=" + type + "/n";
-		jdbcConfig += "db.url=" + url + "/n";
-		jdbcConfig += "db.username=" + user + "/n";
-		jdbcConfig += "db.password=" + pwd + "/n";
-		jdbcConfig += "db.driver=" + jdbcDriver + "/n";
+		jdbcConfig += "db.type=" + type + "\n";
+		jdbcConfig += "db.url=" + url + "\n";
+		jdbcConfig += "db.username=" + user + "\n";
+		jdbcConfig += "db.password=" + pwd + "\n";
+		jdbcConfig += "db.driver=" + jdbcDriver;
 		if(FileUtil.saveDocContentToFile(jdbcConfig, tmpDocSystemConfigPath, configFileName, "UTF-8") == false)
 		{
 			Log.debug("setSystemDBConfig() Failed to modify " + tmpDocSystemConfigPath + configFileName);
