@@ -444,6 +444,7 @@ public class ManageController extends BaseController{
 		if(type != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.type", type);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.driver", getJdbcDriverName(type));
 		}
 		if(url != null)
 		{
