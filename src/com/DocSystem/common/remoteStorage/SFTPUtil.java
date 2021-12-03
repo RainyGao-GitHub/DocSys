@@ -140,15 +140,15 @@ public class SFTPUtil {
             os = new FileOutputStream(file);
             sftp.get(remotePath + fileName, os);
             ret = true;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e1) {
+            e1.printStackTrace();
         } finally {
         	if(os != null)
         	{
         		try {
 					os.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+				} catch (IOException e2) {
+					e2.printStackTrace();
 				}
         	}
         }
@@ -309,15 +309,15 @@ public class SFTPUtil {
         	fos = sftp.get(srcRemotePath + srcName);
         	sftp.put(fos, dstRemotePath + dstName);
             ret = true;
-        } catch (SftpException e) {
-			e.printStackTrace();
+        } catch (SftpException e1) {
+			e1.printStackTrace();
 		} finally {
 			if(fos != null)
 			{
 				try {
 					fos.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+				} catch (IOException e2) {
+					e2.printStackTrace();
 				}
 			}
 		}
