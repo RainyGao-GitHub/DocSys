@@ -10227,12 +10227,13 @@ public class BaseController  extends BaseFunction{
 		String UserJDBCSettingPath = docSysIniPath + "jdbc.properties";
 		if(FileUtil.isFileExist(UserJDBCSettingPath))
 		{
+			Log.debug("docSysInit() 用户自定义 数据库 配置文件存在！");
 			String checkSum1 = getFileCheckSum(UserJDBCSettingPath);
 			String checkSum2 = getFileCheckSum(JDBCSettingPath);
 			//检查UserJDBCSettingPath是否与JDBCSettingPath是否一致，如果不一致则更新应用的数据库配置，等待用户重启服务器
 			if(checkSum1 == null || checkSum2 == null || !checkSum1.equals(checkSum2))
 			{
-				Log.debug("docSysInit() 用户自定义数据库配置文件与系统数据库配置文件不一致，等待重启生效！");
+				Log.debug("docSysInit() 用户自定义 数据库 配置文件与默认配置文件不一致，等待重启生效！");
 				//如果之前的版本号低于V2.0.47则需要更新数据库的驱动和链接
 				UserJDBCSettingUpgrade(UserJDBCSettingPath);
 				FileUtil.copyFile(UserJDBCSettingPath, JDBCSettingPath, true);
@@ -10245,12 +10246,13 @@ public class BaseController  extends BaseFunction{
 		String userDocSysConfigPath = docSysIniPath + "docSysConfig.properties";
 		if(FileUtil.isFileExist(userDocSysConfigPath))
 		{
+			Log.debug("docSysInit() 用户自定义 系统 配置文件存在！");
 			//检查userDocSysConfigPath是否与docSysConfigPath一致，如果不一致则更新
 			String checkSum1 = getFileCheckSum(userDocSysConfigPath);
 			String checkSum2 = getFileCheckSum(docSysConfigPath);
 			if(checkSum1 == null || checkSum2 == null || !checkSum1.equals(checkSum2))
 			{
-				Log.debug("docSysInit() 用户自定义配置文件与系统默认配置文件不一致，更新文件！");
+				Log.debug("docSysInit() 用户自定义 系统 配置文件与默认配置文件不一致，更新文件！");
 				FileUtil.copyFile(userDocSysConfigPath, docSysConfigPath, true);
 			}
 		}
@@ -10280,17 +10282,17 @@ public class BaseController  extends BaseFunction{
 		//测试数据库连接
 		if(testDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
-			Log.debug("docSysInit() testDB failed force:" + force);
+			Log.debug("docSysInit() 数据库连接测试失败 force:" + force);
 			if(force == false)
 			{
-				Log.debug("docSysInit() testDB failed (SytemtStart triggered docSysInit)");
+				Log.debug("docSysInit() 数据库连接测试失败 (SytemtStart triggered docSysInit)");
 				//系统启动时的初始化force要设置成false,否则数据库初始化时间过长会导致服务器重启
 				Log.debug("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");				
 				return "ERROR_DBNotExists";
 			}
 			else
 			{
-				Log.debug("docSysInit() testDB failed (User triggered docSysInit)");
+				Log.debug("docSysInit() 数据库连接测试失败 (User triggered docSysInit)，尝试创建数据库并初始化！");
 				
 				//自动创建数据库
 				createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
