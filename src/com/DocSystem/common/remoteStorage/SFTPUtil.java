@@ -296,7 +296,7 @@ public class SFTPUtil {
 	    			}
             	}
 			}
-        } catch (Exception e) {
+        } catch (SftpException e) {
 			e.printStackTrace();
 		}
         return ret;
@@ -308,9 +308,8 @@ public class SFTPUtil {
         try {
         	fos = sftp.get(srcRemotePath + srcName);
         	sftp.put(fos, dstRemotePath + dstName);
-	        fos.close();
             ret = true;
-        } catch (Exception e) {
+        } catch (SftpException e) {
 			e.printStackTrace();
 		} finally {
 			if(fos != null)
