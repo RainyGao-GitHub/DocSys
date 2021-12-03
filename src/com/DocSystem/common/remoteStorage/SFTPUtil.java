@@ -304,13 +304,23 @@ public class SFTPUtil {
 	
 	public boolean copyFile(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
     	boolean ret = false;
+    	InputStream fos = null;
         try {
-        	InputStream fos = sftp.get(srcRemotePath + srcName);
+        	fos = sftp.get(srcRemotePath + srcName);
         	sftp.put(fos, dstRemotePath + dstName);
 	        fos.close();
             ret = true;
         } catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			if(fos != null)
+			{
+				try {
+					fos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
         return ret;
 	} 
