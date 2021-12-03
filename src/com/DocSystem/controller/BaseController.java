@@ -16906,7 +16906,7 @@ public class BaseController  extends BaseFunction{
 		    		subEntryList.add(subDoc);
 				}
 			}
-		} catch (SftpException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}		
         return subEntryList;
@@ -17311,7 +17311,7 @@ public class BaseController  extends BaseFunction{
 		    	subDoc.setRevision(subEntryRevision);
 	    		subEntryList.put(subDoc.getName(), subDoc);
 			}			
-		} catch (SftpException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
         return subEntryList;
@@ -17624,7 +17624,7 @@ public class BaseController  extends BaseFunction{
 					break;
 				}
 			}
-		} catch (SftpException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
         return remoteDoc;
