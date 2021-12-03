@@ -6604,13 +6604,15 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean copyDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList)
-	{				
+	{	
+		Log.debug("copyDoc_FSM() srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] to dstDoc [" +  dstDoc.getPath() + dstDoc.getName() + "]");
 		//Set the doc Creator and LasteEditor
 		dstDoc.setCreator(login_user.getId());
 		dstDoc.setCreatorName(login_user.getName());
 		dstDoc.setLatestEditor(login_user.getId());
 		dstDoc.setLatestEditorName(login_user.getName());
 		
+		Log.debug("copyDoc_FSM() lockDoc");		
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
@@ -6641,6 +6643,7 @@ public class BaseController  extends BaseFunction{
 		}
 						
 		//复制文件或目录
+		Log.debug("copyDoc_FSM() copyRealDoc");		
 		if(copyRealDoc(repos, srcDoc, dstDoc, rt) == false)
 		{
 			unlockDoc(srcDoc, lockType, login_user);
@@ -6653,6 +6656,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFSM(repos))
 		{
+			Log.debug("copyDoc_FSM() verReposDocCopy");		
 			//需要将文件Commit到VerRepos上去
 			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 			if(revision == null)
@@ -6671,6 +6675,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
+			Log.debug("copyDoc_FSM() remoteServerDocCopy");		
 			if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, false) == null)
 			{
 				Log.debug("文件复制失败！");
@@ -6679,9 +6684,12 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
-		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
 		
+		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
+		Log.debug("copyDoc_FSM() BuildMultiActionListForDocCopy");		
+		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
+
+		Log.debug("copyDoc_FSM() unlockDoc");		
 		unlockDoc(srcDoc, lockType, login_user);
 		unlockDoc(dstDoc, lockType, login_user);
 		

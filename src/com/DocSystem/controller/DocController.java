@@ -994,13 +994,15 @@ public class DocController extends BaseController{
 		Log.debug("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
+		Log.debug("copyDoc check reposAccess");
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, srcPath, srcName, true, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
 			return;	
 		}
-	
+
+		Log.debug("copyDoc getReposEx");
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
@@ -1013,7 +1015,8 @@ public class DocController extends BaseController{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
-		
+
+		Log.debug("copyDoc checkUserAddRight");
 		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
@@ -1041,12 +1044,15 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
+
+		Log.debug("copyDoc do copyDoc");
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		if(ret == true || isFSM(repos))
 		{
+			Log.debug("copyDoc realTimeRemoteStoragePush");			
 			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
+			Log.debug("copyDoc realTimeBackup");			
 			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
 		}
 		
@@ -1055,6 +1061,7 @@ public class DocController extends BaseController{
 		if(ret)
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", "成功",  repos, srcDoc, dstDoc, "");
+			Log.debug("copyDoc executeCommonActionList");			
 			executeCommonActionList(actionList, rt);
 			return;
 		}
