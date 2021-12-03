@@ -441,28 +441,68 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		//注意：数据库和其他配置文件不一样，为了避免setValue导致转义字符的影响，所以每次都是读取后重新写入
+		boolean configChanged = false;		
 		if(type != null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.type", type);
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.driver", getJdbcDriverName(type));
-		}
+			configChanged = true;	
+		}			
 		if(url != null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.url", url);
+			configChanged = true;	
 		}
 		if(user != null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.username", user);
+			configChanged = true;
 		}
 		if(pwd != null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.password", pwd);
+			configChanged = true;
+		}
+		if(configChanged == false)
+		{
+			Log.debug("setSystemDBConfig() 数据库配置未改动");
+			Log.docSysErrorLog("配置未改动！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//set Values to configFile
+		if(type == null)
+		{
+			type = ReadProperties.getValue(tmpDocSystemConfigPath + configFileName, "db.type");
+		}
+		String jdbcDriver = getJdbcDriverName(type);		
+		if(url == null)
+		{			
+			url = ReadProperties.getValue(tmpDocSystemConfigPath + configFileName, "db.url");
+		}
+		if(user == null)
+		{
+			user = ReadProperties.getValue(tmpDocSystemConfigPath + configFileName, "db.username");			
+		}
+		if(pwd == null)
+		{
+			pwd = ReadProperties.getValue(tmpDocSystemConfigPath + configFileName, "db.password");
+		}
+		String jdbcConfig = "";
+		jdbcConfig += "db.type=" + type + "/n";
+		jdbcConfig += "db.url=" + url + "/n";
+		jdbcConfig += "db.username=" + user + "/n";
+		jdbcConfig += "db.password=" + pwd + "/n";
+		jdbcConfig += "db.driver=" + jdbcDriver + "/n";
+		if(FileUtil.saveDocContentToFile(jdbcConfig, tmpDocSystemConfigPath, configFileName, "UTF-8") == false)
+		{
+			Log.debug("setSystemDBConfig() Failed to modify " + tmpDocSystemConfigPath + configFileName);
+			Log.docSysErrorLog("配置文件修改失败！", rt);
+			writeJson(rt, response);
+			return;			
 		}
 		
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
 			Log.debug("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
-			Log.docSysErrorLog("写入配置文件失败！", rt);
+			Log.docSysErrorLog("配置文件拷贝失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
