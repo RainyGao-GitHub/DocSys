@@ -98,8 +98,14 @@ public class SFTPUtil {
     }
  
     //获取文件列表
-    public Vector<?> listFiles(String directory) throws SftpException {
-    	return sftp.ls(directory);
+    public Vector<?> listFiles(String directory) {
+    	Vector<?> list = null;
+        try {        	
+        	list = sftp.ls(directory);
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
+        return list;
     }
     
     //上传文件
@@ -150,7 +156,7 @@ public class SFTPUtil {
     }
  
     //新增目录
-    public boolean mkdir(String directory) throws SftpException {
+    public boolean mkdir(String directory) {
     	boolean ret = false;
     	try {
             sftp.mkdir(directory);
@@ -177,7 +183,7 @@ public class SFTPUtil {
         return ret;
     }
     
-    public boolean delDirs(String directory, String fileName) throws SftpException {
+    public boolean delDirs(String directory, String fileName) {
     	boolean ret = false;
 		try {       	        	
 			Vector<?> list = sftp.ls(directory + fileName);
@@ -216,7 +222,7 @@ public class SFTPUtil {
     	return ret;
     }
     
-    public boolean delDir(String directory, String fileName) throws SftpException {
+    public boolean delDir(String directory, String fileName) {
     	boolean ret = false;
     	try {
             sftp.rmdir(directory + fileName);
@@ -228,7 +234,7 @@ public class SFTPUtil {
     	return ret;
     }
 
-    public boolean delFile(String directory, String fileName) throws SftpException {
+    public boolean delFile(String directory, String fileName) {
         boolean ret = false;
     	try {
             sftp.rm(directory + fileName);
@@ -241,7 +247,7 @@ public class SFTPUtil {
     }    
 
     //移动或重命名
-    public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) throws SftpException {
+    public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
        if(isMove)
        {
     	   return move(srcRemotePath, srcName, dstRemotePath, dstName);
@@ -309,7 +315,7 @@ public class SFTPUtil {
         return ret;
 	} 
     
-    public boolean move(String srcRemotePath, String srcName, String dstRemotePath, String dstName) throws SftpException {
+    public boolean move(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
         boolean ret = false;
     	try {
             sftp.rename(srcRemotePath + srcName, dstRemotePath + dstName);
