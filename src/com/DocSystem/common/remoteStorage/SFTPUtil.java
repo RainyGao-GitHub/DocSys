@@ -161,7 +161,7 @@ public class SFTPUtil {
     	try {
             sftp.mkdir(directory);
             ret =  true;
-        } catch (SftpException e) {
+        } catch (Exception e) {
         	e.printStackTrace();
         }
     	return ret;
@@ -216,7 +216,7 @@ public class SFTPUtil {
 				}
 			}
 			ret = delDir(directory, fileName);
-		} catch (SftpException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
     	return ret;
@@ -227,7 +227,7 @@ public class SFTPUtil {
     	try {
             sftp.rmdir(directory + fileName);
             ret =  true;
-        } catch (SftpException e) {
+        } catch (Exception e) {
 			Log.debug("delDir() delete file [" + directory + fileName + "] Failed");
         	e.printStackTrace();
         }
@@ -239,7 +239,7 @@ public class SFTPUtil {
     	try {
             sftp.rm(directory + fileName);
             ret =  true;
-        } catch (SftpException e) {
+        } catch (Exception e) {
 			Log.debug("delFile() delete file [" + directory + fileName + "] Failed");
         	e.printStackTrace();
         }
@@ -296,7 +296,7 @@ public class SFTPUtil {
 	    			}
             	}
 			}
-        } catch (SftpException e) {
+        } catch (Exception e) {
 			e.printStackTrace();
 		}
         return ret;
@@ -329,7 +329,7 @@ public class SFTPUtil {
     	try {
             sftp.rename(srcRemotePath + srcName, dstRemotePath + dstName);
             ret =  true;
-        } catch (SftpException e) {
+        } catch (Exception e) {
         	e.printStackTrace();
         }
         return ret;        
@@ -339,7 +339,7 @@ public class SFTPUtil {
     public void cd(String directory){
         try {
 			sftp.cd(directory);
-		} catch (SftpException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
     }
@@ -350,7 +350,7 @@ public class SFTPUtil {
     	try {
 			sftp.cd(directory);
 			ret = true;
-        } catch (SftpException e) {
+        } catch (Exception e) {
 			e.printStackTrace();
 		}
         return ret;
@@ -371,7 +371,7 @@ public class SFTPUtil {
  
         try {
             sftp.ls(directory, selector);
-        } catch (SftpException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
  
