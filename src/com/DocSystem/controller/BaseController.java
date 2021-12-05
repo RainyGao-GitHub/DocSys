@@ -14990,6 +14990,12 @@ public class BaseController  extends BaseFunction{
 
 	//Remote Storage remoteEntry Interfaces
 	protected static List<Doc> getRemoteStorageEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
+		if(doc.getType() != null && doc.getType() != 2)
+		{
+			Log.debug("getRemoteStorageEntryList() doc:[" + doc.getPath() + doc.getName() + "] is not a directory");
+			return null;
+		}
+		
 		switch(remote.protocol)
 		{
 		case "file":
