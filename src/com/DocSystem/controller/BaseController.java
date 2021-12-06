@@ -17613,23 +17613,26 @@ public class BaseController  extends BaseFunction{
         	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
         	Vector<?> list = session.sftp.listFiles(remoteParentPath);
 			//Log.printObject("list:", list);
-			for(int i=0; i<list.size(); i++)
+			if(list != null)
 			{
-				LsEntry entry = (LsEntry) list.get(i);
-				String entryName = entry.getFilename();
-				if(entryName.equals(doc.getName()))
+	        	for(int i=0; i<list.size(); i++)
 				{
-					int subEntryType = getEntryType(entry);
-					String subEntryRevision = entry.getAttrs().getMtimeString();
-			    	long subEntrySize = entry.getAttrs().getSize();
-			    	long lastChangeTime = entry.getAttrs().getMTime();
-			    	long createTime = entry.getAttrs().getATime();
-			    	remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), entryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
-			    	remoteDoc.setSize(subEntrySize);
-			    	remoteDoc.setCreateTime(createTime);
-			    	remoteDoc.setLatestEditTime(lastChangeTime);
-			    	remoteDoc.setRevision(subEntryRevision);			    	
-					break;
+					LsEntry entry = (LsEntry) list.get(i);
+					String entryName = entry.getFilename();
+					if(entryName.equals(doc.getName()))
+					{
+						int subEntryType = getEntryType(entry);
+						String subEntryRevision = entry.getAttrs().getMtimeString();
+				    	long subEntrySize = entry.getAttrs().getSize();
+				    	long lastChangeTime = entry.getAttrs().getMTime();
+				    	long createTime = entry.getAttrs().getATime();
+				    	remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), entryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntrySize, "", doc.offsetPath);
+				    	remoteDoc.setSize(subEntrySize);
+				    	remoteDoc.setCreateTime(createTime);
+				    	remoteDoc.setLatestEditTime(lastChangeTime);
+				    	remoteDoc.setRevision(subEntryRevision);			    	
+						break;
+					}
 				}
 			}
 		} catch (Exception e) {
