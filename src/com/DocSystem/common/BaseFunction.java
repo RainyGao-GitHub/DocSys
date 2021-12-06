@@ -332,6 +332,14 @@ public class BaseFunction{
 	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
 		try {
+			//autoBackup中不允许出现转义字符 \ ,否则会导致JSON解析错误
+			if(autoBackup == null || autoBackup.isEmpty())
+			{
+				return null;
+			}
+			
+			autoBackup = autoBackup.replace('\\', '/');	
+			
 			JSONObject jsonObj = JSON.parseObject(autoBackup);
 			if(jsonObj == null)
 			{
