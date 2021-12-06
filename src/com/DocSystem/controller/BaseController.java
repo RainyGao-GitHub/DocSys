@@ -437,7 +437,7 @@ public class BaseController  extends BaseFunction{
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
-		Log.debug("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );				
+		Log.debug("getAccessableSubDocList() docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");				
 		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, true, rt);
 	
 		if(docList != null)
@@ -474,6 +474,7 @@ public class BaseController  extends BaseFunction{
 
 	protected List<Doc> docSysGetDocList(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
+		Log.debug("docSysGetDocList() docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 		//文件管理系统
 		if(isFSM(repos))
 		{
@@ -5407,6 +5408,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected Doc docSysGetDoc(Repos repos, Doc doc, boolean remoteStorageEn) 
 	{
+		Log.debug("docSysGetDoc() doc:[" + doc.getPath() + doc.getName() + "]");
 		//文件管理系统
 		if(isFSM(repos))
 		{	
@@ -14821,7 +14823,7 @@ public class BaseController  extends BaseFunction{
 	
 	/************* RemoteStorage Interfaces *******************************/
 	public List<Doc> remoteStorageGetEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
-		Log.debug("remoteStorageGetEntryList() " + doc.getPath() + doc.getName());
+		Log.debug("remoteStorageGetEntryList() docId:" + doc.getDocId() + "[" + doc.getPath() + doc.getName() + "]");
         List<Doc> list = null;
 		if(session == null) 
 		{
@@ -16779,7 +16781,7 @@ public class BaseController  extends BaseFunction{
 			subDocParentPath = doc.getPath();
 		}
 		
-        Log.debug("getRemoteStorageEntryListForLocal doc:" + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryListForLocal doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
         	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
@@ -16874,7 +16876,7 @@ public class BaseController  extends BaseFunction{
 			subDocParentPath = doc.getPath();
 		}
 		
-        Log.debug("getRemoteStorageEntryListForSftp doc:" + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryListForSftp doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
         	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
@@ -16928,7 +16930,7 @@ public class BaseController  extends BaseFunction{
 			subDocParentPath = doc.getPath();
 		}
 		
-        Log.debug("getRemoteStorageEntryListForFtp doc:" + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryListForFtp doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
         	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
@@ -16983,7 +16985,7 @@ public class BaseController  extends BaseFunction{
 			subDocParentPath = doc.getPath();
 		}
 		
-        Log.debug("getRemoteStorageEntryListForSmb doc:" + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryListForSmb doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
         	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
@@ -17037,7 +17039,7 @@ public class BaseController  extends BaseFunction{
 			subDocParentPath = doc.getPath();
 		}
 		
-        Log.debug("getRemoteStorageEntryListForMxsDoc doc:" + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryListForMxsDoc doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
         	String fileRemotePath = remote.rootPath + doc.offsetPath + doc.getPath();
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
@@ -17175,7 +17177,7 @@ public class BaseController  extends BaseFunction{
 		}
 		int subDocLevel = doc.getLevel() + 1;
 		
-        Log.debug("getRemoteStorageEntryHashMapForGit doc:" + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryHashMapForGit doc:[" + doc.getPath() + doc.getName() + "]");
 		try {       	        	
         	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
@@ -17228,7 +17230,7 @@ public class BaseController  extends BaseFunction{
 		}
 		int subDocLevel = doc.getLevel() + 1;
 		
-        Log.debug("getRemoteStorageEntryHashMapForSvn doc:" + doc.getPath() + doc.getName());
+        Log.debug("getRemoteStorageEntryHashMapForSvn doc:[" + doc.getPath() + doc.getName() + "]");
 		try {       	        	
         	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
