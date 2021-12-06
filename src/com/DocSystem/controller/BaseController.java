@@ -10442,7 +10442,7 @@ public class BaseController  extends BaseFunction{
 
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
-		Log.debug("\n***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: ****" + autoBackup);
+		Log.debug("\n***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: " + autoBackup);
 		
 		if(isFSM(repos) == false)
 		{
