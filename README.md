@@ -211,7 +211,13 @@ vi  /etc/sysconfig/i18n
 
 （3）根据自己需求勾选备份时间
 
-### 九、日志获取
+### 九、Windows的共享文件夹无法远程访问
+
+1. 打开控制面板-->程序和功能-->启用或关闭windows功能-->勾选SMB 1.0/CIFS文件共享支持
+
+2. 重启系统
+
+### 十、日志获取
 
 1. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
 
