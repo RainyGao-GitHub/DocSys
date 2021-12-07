@@ -16103,7 +16103,7 @@ public class BaseController  extends BaseFunction{
         
         Log.debug("smbServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		try {
- 			ret = session.smb.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);			
+ 			ret = session.smb.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove, type);			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
