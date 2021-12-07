@@ -7,6 +7,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+
+import com.DocSystem.common.Log;
+
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFileInputStream;
@@ -21,7 +25,7 @@ public class SmbUtil {
 	private String username = ""; 
 	private String password = ""; 
             
-	NtlmPasswordAuthentication auth;
+	NtlmPasswordAuthentication auth = null;
 	String remoteBaseUrl;
 	
     public SmbUtil(String userdomain, String username, String password, String host) {
@@ -35,10 +39,13 @@ public class SmbUtil {
      * 连接sftp服务器
      */
     public boolean login() {
+    	//Log.debug("login username:" + username + " pwd:" + password);
     	auth = new NtlmPasswordAuthentication(userdomain, username, password);
     	remoteBaseUrl = "smb://" + host;
     	return true;
     }
+    
+    
     
     public void logout() {
     }
@@ -48,7 +55,7 @@ public class SmbUtil {
     	String remoteUrl = remoteBaseUrl + directory;
     	SmbFile remoteFile;
 		try {
-			remoteFile = new SmbFile(remoteUrl, auth);
+			remoteFile =getSmbFile(remoteUrl);
 	        if (remoteFile.exists()) 
 	        {
 	        	list =  remoteFile.listFiles();
@@ -63,19 +70,27 @@ public class SmbUtil {
     	String remoteUrl = remoteBaseUrl + path + name;
     	SmbFile remoteFile = null;
 		try {
-			remoteFile = new SmbFile(remoteUrl, auth);
+			remoteFile = getSmbFile(remoteUrl);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}        
         return remoteFile;
     }
     
-    public boolean upload( String pathname, String fileName, InputStream input){ 
+    private SmbFile getSmbFile(String smbUrlPath) throws MalformedURLException {
+		if(auth == null)
+		{
+			return new SmbFile(smbUrlPath);
+		}
+		return new SmbFile(smbUrlPath, auth);
+	}
+
+	public boolean upload( String pathname, String fileName, InputStream input){ 
       boolean ret = false;
       String remoteUrl = remoteBaseUrl + pathname;
       OutputStream out = null;
       try{
-    	  SmbFile remoteFile = new SmbFile(remoteUrl + fileName);
+    	  SmbFile remoteFile =getSmbFile(remoteUrl + fileName);
     	  out = new BufferedOutputStream(new SmbFileOutputStream(remoteFile));
           byte[] buffer = new byte[1024];
           while (input.read(buffer) != -1) 
@@ -106,7 +121,7 @@ public class SmbUtil {
             	localDir.mkdirs();
             }
             
-            SmbFile remoteFile = new SmbFile(remoteUrl + fileName, auth);
+            SmbFile remoteFile = getSmbFile(remoteUrl + fileName);
             if (remoteFile.exists()) {
             	file = new File(localPath + fileName);
             	os = new FileOutputStream(file);
@@ -146,7 +161,7 @@ public class SmbUtil {
     	 boolean ret = false; 
     	 String remoteUrl = remoteBaseUrl + dir;
     	 try { 
-    		 SmbFile remoteFile = new SmbFile(remoteUrl, auth);
+    		 SmbFile remoteFile = getSmbFile(remoteUrl);
     		 if(remoteFile.exists() == false)
     		 {
     			 remoteFile.mkdir();
@@ -164,7 +179,7 @@ public class SmbUtil {
    	 	String remoteUrl = remoteBaseUrl + directory;
    	 
    	 	try {
-   	 		SmbFile remoteFile = new SmbFile(remoteUrl, auth);
+   	 		SmbFile remoteFile = getSmbFile(remoteUrl);
    		 	if(remoteFile.exists())
    		 	{
    			 	remoteFile.delete();
@@ -179,10 +194,10 @@ public class SmbUtil {
 	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
     	boolean ret = false;   	 
    	 	try {
-   	 		SmbFile remoteFile = new SmbFile(remoteBaseUrl + srcRemotePath + srcName, auth);
+   	 		SmbFile remoteFile = getSmbFile(remoteBaseUrl + srcRemotePath + srcName);
    		 	if(remoteFile.exists())
    		 	{
-   		 		SmbFile dstRemoteFile = new SmbFile(remoteBaseUrl + dstRemotePath + dstName, auth);
+   		 		SmbFile dstRemoteFile = getSmbFile(remoteBaseUrl + dstRemotePath + dstName);
    			 	if(isMove)
    			 	{
    			 		remoteFile.renameTo(dstRemoteFile);
