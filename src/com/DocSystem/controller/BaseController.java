@@ -17010,12 +17010,17 @@ public class BaseController  extends BaseFunction{
 				{
 					SmbFile subEntry = list[i];
 					String subEntryName = subEntry.getName();
-					if(subEntryName.equals(".") || subEntryName.equals(".."))
+					if(subEntry.isDirectory())
 					{
-						continue;
+						//smb entry 的目录名字最后带了斜杠，必须去掉，否则会导致路径异常
+						subEntryName = subEntryName.substring(0, subEntryName.length() - 1);
 					}
+					//if(subEntryName.equals(".") || subEntryName.equals(".."))
+					//{
+					//	continue;
+					//}
 					
-					//Log.println(fileRemotePath + subEntryName);
+					Log.debug("getRemoteStorageEntryListForSmb subEntryName:" + subEntryName);
 					
 					int subEntryType = getEntryType(subEntry);
 					String subEntryRevision = subEntry.lastModified() + "";
