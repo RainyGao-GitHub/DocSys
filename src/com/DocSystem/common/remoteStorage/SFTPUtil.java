@@ -166,21 +166,6 @@ public class SFTPUtil {
     	return ret;
     }
     
-    //删除操作
-    public boolean delete(String directory, String fileName)  {
-    	boolean ret = false;
-        try {
-			//sftp.cd(directory);
-	        //sftp.rm(fileName);
-	        sftp.rm(directory + fileName);
-	        ret = true;
-        } catch (Exception e) {
-			Log.debug("delete() delete file [" + directory + fileName + "] Failed");
-			e.printStackTrace();
-		}
-        return ret;
-    }
-    
     public boolean delDirs(String directory, String fileName) {
     	boolean ret = false;
 		try {       	        	
