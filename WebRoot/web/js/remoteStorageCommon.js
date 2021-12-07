@@ -52,6 +52,10 @@ function buildRemoteStorageConfigStr(remoteStorageConfig)
 		{
 			remoteStorage += ";pwd=" + remoteStorageConfig.FTP.pwd;
 		}
+		if(remoteStorageConfig.FTP.charset)
+		{
+			remoteStorage += ";charset=" + remoteStorageConfig.FTP.charset;
+		}
 		break;
 	case "sftp":
 		remoteStorage = protocol + "://" + remoteStorageConfig.SFTP.host;
