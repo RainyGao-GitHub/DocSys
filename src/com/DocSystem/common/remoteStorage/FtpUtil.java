@@ -7,11 +7,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.util.Vector;
+
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 import com.DocSystem.common.Log;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
 
 
 public class FtpUtil { 
@@ -142,7 +145,7 @@ public class FtpUtil {
 		return ret; 
 	}
     
-    public boolean delete(String directory, String fileName)
+    public boolean delFile(String directory, String fileName)
     {
     	boolean ret = false;
         try {
@@ -156,7 +159,51 @@ public class FtpUtil {
         return ret;
     }
     
+	public boolean delDir(String directory, String fileName) {
+    	boolean ret = false;
+        try {
+             ftpClient.removeDirectory(directory + fileName);
+             ret = true;
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
     
+    public boolean delDirs(String directory, String fileName) {
+    	boolean ret = false;
+		try {       	        	
+			FTPFile[] list = ftpClient.listFiles(directory + fileName);
+			if(list != null)
+			{
+				for(int i=0; i<list.length; i++)
+				{
+					FTPFile subEntry = list[i];
+					String subEntryName = subEntry.getName();
+					if(subEntry.isDirectory())
+					{
+						if(delDirs(directory + fileName + "/", subEntryName) == false)
+						{
+							Log.debug("delDirs() delete folder [" + directory + fileName + subEntryName + "] Failed");
+							return false;
+						}
+					}
+					else
+					{
+						if(delFile(directory + fileName + "/", subEntryName) == false)
+						{
+							return false;
+						}
+					}
+				}
+			}
+			ret = delDir(directory, fileName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return ret;
+    }
+
 	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
        if(isMove)
        {

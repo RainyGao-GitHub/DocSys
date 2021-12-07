@@ -16608,7 +16608,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			if(type == 1)
 			{
-				ret = session.sftp.delete(remotePath, fileName);
+				ret = session.sftp.delFile(remotePath, fileName);
 			}
 			else
 			{
@@ -16626,7 +16626,14 @@ public class BaseController  extends BaseFunction{
 		Log.debug("deleteEntryFromeFtpServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
 
 		try {
-			ret = session.ftp.delete(remotePath, fileName); 
+			if(type == 1)
+			{
+				ret = session.ftp.delFile(remotePath, fileName); 
+			}
+			else
+			{
+				ret = session.ftp.delDirs(remotePath, fileName);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
