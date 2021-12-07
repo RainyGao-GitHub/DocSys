@@ -16115,7 +16115,7 @@ public class BaseController  extends BaseFunction{
         
         Log.debug("ftpServerCopyEntry srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName);
 		try {
- 			ret = session.ftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove);			
+ 			ret = session.ftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove, type);			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

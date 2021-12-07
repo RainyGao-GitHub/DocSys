@@ -11,6 +11,8 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
+import com.DocSystem.common.Log;
+
 
 public class FtpUtil { 
     
@@ -45,15 +47,15 @@ public class FtpUtil {
     	ftpClient.setControlEncoding(this.charset); 
     	
     	try { 
-    		System.out.println("connecting...ftp服务器:"+this.host+":"+this.port);  
+    		Log.debug("connecting...ftp服务器:"+this.host+":"+this.port);  
     		ftpClient.connect(host, port); //连接ftp服务器 
     		ftpClient.login(username, password); //登录ftp服务器 
     		int replyCode = ftpClient.getReplyCode(); //是否成功登录服务器 
     		if(!FTPReply.isPositiveCompletion(replyCode)){ 
-    			System.out.println("connect failed...ftp服务器:"+this.host+":"+this.port);
+    			Log.debug("connect failed...ftp服务器:"+this.host+":"+this.port);
     			return false;
     		} 
-    		System.out.println("connect successfu...ftp服务器:"+this.host+":"+this.port);  
+    		Log.debug("connect successfu...ftp服务器:"+this.host+":"+this.port);  
     	}catch (MalformedURLException e) {  
     		e.printStackTrace();
     		return false;
@@ -100,7 +102,7 @@ public class FtpUtil {
     } 
     
     public boolean download(String remotePath, String localPath, String fileName) {
-        System.out.println("download remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+        Log.debug("download remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
         boolean ret = false;
         File file = null;
         FileOutputStream os = null;
@@ -144,8 +146,9 @@ public class FtpUtil {
     {
     	boolean ret = false;
         try {
-        	 ftpClient.changeWorkingDirectory(directory);  
-             ftpClient.dele(fileName);
+        	 //ftpClient.changeWorkingDirectory(directory);  
+             //ftpClient.dele(fileName);
+             ftpClient.dele(directory + fileName);
              ret = true;
         } catch (Exception e) {
 			e.printStackTrace();
@@ -154,25 +157,37 @@ public class FtpUtil {
     }
     
     
-	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {
        if(isMove)
        {
     	   return move(srcRemotePath, srcName, dstRemotePath, dstName);
        }
  
-       return copy(srcRemotePath, srcName, dstRemotePath, dstName);
+       return copy(srcRemotePath, srcName, dstRemotePath, dstName, type);
 	} 
     
-	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
-    	boolean ret = false;
-    	try {
-    		FTPFile[] list = ftpClient.listFiles(srcRemotePath + srcName); 
-            if (list.length > 0) 
-            { 
-            	//it is folder
-            	ret = mkdir(dstRemotePath + dstName);
-            	if(ret == true)
-            	{
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, Integer type) {
+    	if(type == 1)
+    	{
+    		Log.debug("copy() " + srcRemotePath + srcName + " is file");
+    		return copyFile(srcRemotePath, srcName, dstRemotePath, dstName);
+    	}
+
+		Log.debug("copy() " + srcRemotePath + srcName + " is directory");
+    	return copyDir(srcRemotePath, srcName, dstRemotePath, dstName);
+	} 
+	
+	private boolean copyDir(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+		boolean ret = false;
+		ret = mkdir(dstRemotePath + dstName);
+    	
+		if(ret == true)
+		{
+			//copy subEntries
+			try {
+	    		FTPFile[] list = ftpClient.listFiles(srcRemotePath + srcName); 
+	    		if(list != null)
+	            { 
 	            	for(int i=0; i < list.length; i++)
 		            {
 		            	FTPFile srcFile = list[i];
@@ -182,21 +197,17 @@ public class FtpUtil {
 		            	}
 		            	else
 		            	{
-		            		copy(srcRemotePath + srcName + "/", srcFile.getName(),  dstRemotePath + dstName + "/", srcFile.getName());
+		            		copyDir(srcRemotePath + srcName + "/", srcFile.getName(),  dstRemotePath + dstName + "/", srcFile.getName());
 		            	}
 	    			}
-            	}
-            } 
-            else
-            {
-            	ret = copyFile(srcRemotePath, srcName, dstRemotePath, dstName);
-            }            
-        } catch (Exception e) {
-			e.printStackTrace();
+	            } 
+	        } catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
         return ret;
-	} 
-	
+	}
+
 	public boolean copyFile(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
     	boolean ret = false;
         try {
