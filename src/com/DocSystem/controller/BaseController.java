@@ -16645,7 +16645,14 @@ public class BaseController  extends BaseFunction{
 		Log.debug("deleteEntryFromeSmbServer remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
 
 		try {
-			ret = session.smb.delete(remotePath, fileName); 
+			if(type == 1)
+			{
+				ret = session.smb.delFile(remotePath, fileName); 
+			}
+			else
+			{
+				ret = session.smb.delDir(remotePath, fileName);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
