@@ -56,10 +56,7 @@ public class SmbUtil {
     	SmbFile remoteFile;
 		try {
 			remoteFile =getSmbFile(remoteUrl);
-	        if (remoteFile.exists()) 
-	        {
-	        	list =  remoteFile.listFiles();
-	        }
+	        list =  remoteFile.listFiles();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}        
@@ -115,18 +112,19 @@ public class SmbUtil {
         
         String remoteUrl = remoteBaseUrl + remotePath;
         try {
-        	File localDir = new File(localPath);
-            if(localDir.exists() == false)
-            {
-            	localDir.mkdirs();
-            }
-            
             SmbFile remoteFile = getSmbFile(remoteUrl + fileName);
             if (remoteFile.exists()) {
+            	File localDir = new File(localPath);
+                if(localDir.exists() == false)
+                {
+                	localDir.mkdirs();
+                }            
             	file = new File(localPath + fileName);
+            	
             	os = new FileOutputStream(file);
             	in = new BufferedInputStream(new SmbFileInputStream(remoteFile));
-                byte[] buffer = new byte[1024];
+                
+            	byte[] buffer = new byte[1024];
                 while (in.read(buffer) != -1) {
                 	os.write(buffer);
                     buffer = new byte[1024];
@@ -162,10 +160,7 @@ public class SmbUtil {
     	 String remoteUrl = remoteBaseUrl + dir;
     	 try { 
     		 SmbFile remoteFile = getSmbFile(remoteUrl);
-    		 if(remoteFile.exists() == false)
-    		 {
-    			 remoteFile.mkdir();
-    		 }
+    		 remoteFile.mkdir();
     		 ret = true;
     	 } catch (Exception e) { 
     		 e.printStackTrace(); 
@@ -173,17 +168,25 @@ public class SmbUtil {
     	 return ret; 
 	}
     
-    public boolean delete(String directory, String fileName)
+    public boolean delFile(String directory, String fileName)
     {
-    	boolean ret = false;
-   	 	String remoteUrl = remoteBaseUrl + directory;
-   	 
+    	boolean ret = false;   	 
    	 	try {
-   	 		SmbFile remoteFile = getSmbFile(remoteUrl);
-   		 	if(remoteFile.exists())
-   		 	{
-   			 	remoteFile.delete();
-   		 	}
+   	 		SmbFile remoteFile = getSmbFile(remoteBaseUrl + directory + fileName);
+   		 	remoteFile.delete();
+   		 	ret = true;
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+   	 	return ret;
+    }
+
+    public boolean delDir(String directory, String fileName)
+    {
+    	boolean ret = false;   	 
+   	 	try {
+   	 		SmbFile remoteFile = getSmbFile(remoteBaseUrl + directory + fileName + "/");
+   		 	remoteFile.delete();
    		 	ret = true;
         } catch (Exception e) {
 			e.printStackTrace();
