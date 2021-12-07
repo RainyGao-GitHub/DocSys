@@ -75,6 +75,7 @@ public class SmbUtil {
     }
     
     private SmbFile getSmbFile(String smbUrlPath) throws MalformedURLException {
+    	Log.debug("getSmbFile() url:" + smbUrlPath);
 		if(auth == null)
 		{
 			return new SmbFile(smbUrlPath);
@@ -86,6 +87,7 @@ public class SmbUtil {
       boolean ret = false;
       String remoteUrl = remoteBaseUrl + pathname;
       OutputStream out = null;
+      
       try{
     	  SmbFile remoteFile =getSmbFile(remoteUrl + fileName);
     	  out = new BufferedOutputStream(new SmbFileOutputStream(remoteFile));
@@ -99,7 +101,16 @@ public class SmbUtil {
     	  ret = true; 
       }catch (Exception e) { 
     	  e.printStackTrace(); 
-      } 
+      } finally {
+    	  if(out != null)
+    	  {
+    		try {
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    	  }
+      }
       return ret; 
     }	 
     
@@ -194,21 +205,23 @@ public class SmbUtil {
    	 	return ret;
     }
 
-	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
-    	boolean ret = false;   	 
-   	 	try {
+	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove, Integer type) {	 
+   	 	if(isMove)
+   	 	{
+   	 		return move(srcRemotePath, srcName, dstRemotePath, dstName);
+   	 	}
+    	
+   	 	return copy(srcRemotePath, srcName, dstRemotePath, dstName, type);
+	}
+
+	private boolean move(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+    	boolean ret = false;
+		try {
    	 		SmbFile remoteFile = getSmbFile(remoteBaseUrl + srcRemotePath + srcName);
    		 	if(remoteFile.exists())
    		 	{
    		 		SmbFile dstRemoteFile = getSmbFile(remoteBaseUrl + dstRemotePath + dstName);
-   			 	if(isMove)
-   			 	{
-   			 		remoteFile.renameTo(dstRemoteFile);
-   			 	}
-   			 	else
-   			 	{
-   			 		remoteFile.copyTo(dstRemoteFile);   			 		
-   			 	}
+   			 	remoteFile.renameTo(dstRemoteFile);
    	   		 	ret = true;
    		 	}
         } catch (Exception e) {
@@ -216,4 +229,45 @@ public class SmbUtil {
 		}
    	 	return ret;
 	}
+	
+	private boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, Integer type) {
+		if(type == 1)
+		{
+			return copyFile(srcRemotePath, srcName, dstRemotePath, dstName);
+		}
+		
+		return copyDir(srcRemotePath, srcName, dstRemotePath, dstName);
+	}
+
+	private boolean copyFile(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+		boolean ret = false;
+		try {
+   	 		SmbFile remoteFile = getSmbFile(remoteBaseUrl + srcRemotePath + srcName);
+   		 	if(remoteFile.exists())
+   		 	{
+   		 		SmbFile dstRemoteFile = getSmbFile(remoteBaseUrl + dstRemotePath + dstName);
+   			 	remoteFile.copyTo(dstRemoteFile);   			 		
+   	   		 	ret = true;
+   		 	}
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+   	 	return ret;
+	}
+	
+	private boolean copyDir(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+		boolean ret = false;
+		try {
+   	 		SmbFile remoteFile = getSmbFile(remoteBaseUrl + srcRemotePath + srcName + "/");
+   		 	if(remoteFile.exists())
+   		 	{
+   		 		SmbFile dstRemoteFile = getSmbFile(remoteBaseUrl + dstRemotePath + dstName + "/");
+   			 	remoteFile.copyTo(dstRemoteFile);   			 		
+   	   		 	ret = true;
+   		 	}
+        } catch (Exception e) {
+			e.printStackTrace();
+		}
+   	 	return ret;
+	}	
 }
