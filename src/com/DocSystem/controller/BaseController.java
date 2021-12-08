@@ -6630,7 +6630,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
-			dstDocLock = lockDoc(dstDoc,1, 2*60*60*1000,login_user,rt,true);
+			dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(dstDocLock == null)
 			{
 				SyncLock.unlock(syncLock); 
@@ -7449,15 +7449,16 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		int lockState = getLockState(lockType);
+		Log.debug("unlockDoc() curLockState:" + curLockState + " lockState:" + lockState);
 		Integer newLockState = curLockState & (~lockState);
 		if(newLockState == 0)
 		{
 			deleteDocLock(doc);
-			Log.debug("unlockDoc() success:" + doc.getName());
+			Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName());
 			return true;
 		}
 		curDocLock.setState(newLockState);
-		Log.debug("unlockDoc() success:" + doc.getName());
+		Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName() + " newLockState:" + newLockState);
 		return true;
 	}
 
