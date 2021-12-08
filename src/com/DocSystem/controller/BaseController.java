@@ -6680,6 +6680,9 @@ public class BaseController  extends BaseFunction{
 			Log.debug("copyDoc_FSM() remoteServerDocCopy");		
 			if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, false) == null)
 			{
+				unlockDoc(srcDoc, lockType, login_user);
+				unlockDoc(dstDoc, lockType, login_user);
+	
 				Log.debug("文件复制失败！");
 				rt.setError("远程推送失败！");
 				return false;
