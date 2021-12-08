@@ -1381,7 +1381,7 @@ public class GitUtil {
 
 		//删除源文件
 		try {	
-			git.add().addFilepattern(srcRemoteEntryPath).call();
+			git.rm().addFilepattern(srcRemoteEntryPath).call();
 		} catch (Exception e) {
 			System.out.println("addEntry() git.add.addFilepattern.call for " + srcRemoteEntryPath + " 失败");	
 			e.printStackTrace();
