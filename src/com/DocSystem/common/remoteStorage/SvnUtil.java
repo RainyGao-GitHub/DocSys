@@ -184,6 +184,7 @@ public class SvnUtil {
 	
 	public String doCopy(String srcPath, String srcName, String dstPath, String dstName, String commitMsg,String commitUser,  boolean isMove)
 	{	
+		long latestRevision = getLatestRevision();
 		Integer type = checkPath(srcPath + srcName, -1L);
 		if(type == null || type == -1 || type == 0)
 		{
@@ -198,7 +199,7 @@ public class SvnUtil {
 	        return null;
 	    }
 	    
-	    if(copyEntry(editor, srcPath, srcName, dstPath, dstName, type == 2, -1L, isMove) == false)
+	    if(copyEntry(editor, srcPath, srcName, dstPath, dstName, type == 2, latestRevision, isMove) == false)
 	    {
 	    	System.out.println("doCopy() copyEntry Failed");
 	        return null;	    	
@@ -215,6 +216,16 @@ public class SvnUtil {
 	}
 	
     
+	private long getLatestRevision() {
+		long revision = -1L;
+		try {
+			revision =  repository.getLatestRevision();
+		} catch (SVNException e) {
+			e.printStackTrace();
+		}
+		return revision;
+	}
+
 	public String doCommit(String commitMsg,String commitUser, DocPushResult pushResult, List<CommitAction> commitActionList)
 	{		
 	    if(commitActionList == null || commitActionList.size() ==0)
@@ -747,6 +758,8 @@ public class SvnUtil {
     		System.out.println("copyEntry() 非法参数：srcParentPath srcEntryName dstParentPath or dstEntryName is null!");
     		return false;
     	}
+    	
+    	
     
         try {
 			editor.openRoot(-1);
@@ -756,7 +769,6 @@ public class SvnUtil {
 	    	//Copy the file
 		    String dstEntryPath = dstParentPath + dstEntryName;
 	    	String srcEntryPath = srcParentPath + srcEntryName;
-	    	//目前svnkit无法针对文件进行copy
 	    	if(isDir)
 			{
 				editor.addDir(dstEntryPath, srcEntryPath, revision);
@@ -765,10 +777,7 @@ public class SvnUtil {
 			else
 			{	
 				editor.addFile(dstEntryPath, srcEntryPath, revision);
-	    		editor.applyTextDelta(srcEntryPath, null);
-	    		//SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-	    		String checksum = "d41d8cd98f00b204e9800998ecf8427e";
-				editor.closeFile(dstEntryPath, checksum);	//CheckSum need to be given
+				editor.closeFile(dstEntryPath, null);
 			}	
 	    	
 
