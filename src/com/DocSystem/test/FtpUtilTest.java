@@ -1,6 +1,8 @@
-package com.DocSystem.common.remoteStorage;
+package com.DocSystem.test;
 
 import java.io.FileInputStream;
+
+import com.DocSystem.common.remoteStorage.FtpUtil;
 
 public class FtpUtilTest { 
     
