@@ -1646,7 +1646,8 @@ public class BaseFunction{
 	}
 	
 	/****************** 线程锁接口 *********************************************/
-	protected static final Object syncLock = new Object(); 
+	protected static final Object syncLock = new Object(); //For Doc
+	protected static final Object syncLockForRepos = new Object(); //For Repos (add/update)
 	
 	/****************** 路径相关的接口 *****************************************/
 	//WebTmpPath was accessable for web

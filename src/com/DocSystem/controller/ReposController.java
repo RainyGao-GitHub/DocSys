@@ -242,23 +242,28 @@ public class ReposController extends BaseController{
 		repos.setSvnPwd1(svnPwd1);
 		repos.setAutoBackup(autoBackup);
 		
-		//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
-		if(checkReposInfoForAdd(repos, rt) == false)
+		//以下这段代码是为了避免有用户同时发起addRepos(前端快速点击添加操作也会引起该行为)，导致两个仓库的文件存储路径信息相同
+		synchronized(syncLockForRepos)
 		{
-			Log.debug("checkReposInfoForAdd() failed");
-			writeJson(rt, response);		
-			return;			
+			//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
+			if(checkReposInfoForAdd(repos, rt) == false)
+			{
+				Log.debug("checkReposInfoForAdd() failed");
+				writeJson(rt, response);		
+				return;			
+			}
+			
+			if(reposService.addRepos(repos) == 0)
+			{
+				rt.setError("新增仓库记录失败");
+				writeJson(rt, response);		
+				return;
+			}
+			Integer reposId = repos.getId();
+			Log.debug("new ReposId" + reposId);
+			SyncLock.unlock(syncLockForRepos);			
 		}
 		
-		if(reposService.addRepos(repos) == 0)
-		{
-			rt.setError("新增仓库记录失败");
-			writeJson(rt, response);		
-			return;
-		}
-		Integer reposId = repos.getId();
-		Log.debug("new ReposId" + reposId);
-
 		//Lock the repos
 		DocLock reposLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
