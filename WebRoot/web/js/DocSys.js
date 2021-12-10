@@ -1299,7 +1299,7 @@ function openOffice(docInfo, openInNewPage, preview)
     				docInfo.fileLink = ret.data;
     				showPdf(docInfo, openInNewPage);
                 }
-            	else
+            	else if(ret.dataEx == "office")
                 {
             		if(openInNewPage != "openInNewPage")
             		{
@@ -1307,6 +1307,11 @@ function openOffice(docInfo, openInNewPage, preview)
             		}
             		showOffice(docInfo, openInNewPage);
                 }
+            	else
+            	{
+                	console.log("previewOfficeInDialog getDocOfficeLink Failed (maybe office not supported or not installed)");
+                	showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容            		
+            	}
             }
             else
             {
