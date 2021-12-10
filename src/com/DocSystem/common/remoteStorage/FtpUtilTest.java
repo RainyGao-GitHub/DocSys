@@ -22,7 +22,7 @@ public class FtpUtilTest {
       ftp.download(remotePath, localPath, fileName); 
 
       //Delte Test
-      ftp.delete(remotePath, fileName); 
+      ftp.delFile(remotePath, fileName); 
       
       ftp.logout();
 	}

@@ -22,6 +22,8 @@ public class SFTPUtil {
     private String privateKey;
  
     private ChannelSftp sftp;
+    //远程文件复制，使用同一个channel会导致put接口卡死，因此需要使用另外一个channel来获取InputStream
+    private ChannelSftp sftpForCopy = null;
     private Session session;
  
     /**
@@ -90,6 +92,13 @@ public class SFTPUtil {
                 sftp.disconnect();
             }
         }
+
+        if (sftpForCopy != null) {
+            if (sftpForCopy.isConnected()) {
+            	sftpForCopy.disconnect();
+            }
+        }
+        
         if (session != null) {
             if (session.isConnected()) {
                 session.disconnect();
@@ -121,6 +130,30 @@ public class SFTPUtil {
         return ret;
     }
     
+	public boolean upload(String remotePath, String localPath, String fileName) {
+        boolean ret = false;
+		FileInputStream is = null;
+
+		Log.debug("upload remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
+
+		try {
+        	is = new FileInputStream(localPath + fileName);
+        	ret = upload(remotePath, fileName, is);   
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+        return ret;
+	}
+	
     //下载文件
     public boolean download(String remotePath, String localPath, String fileName)  {
         System.out.println("download remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
@@ -286,24 +319,25 @@ public class SFTPUtil {
         return ret;
 	} 
 	
+
+    
 	public boolean copyFile(String srcRemotePath, String srcName, String dstRemotePath, String dstName)  {
     	boolean ret = false;
     	Log.debug("copyFile() " + srcRemotePath + srcName + " to " + dstRemotePath + dstName);
-    	InputStream fos = null;
+    	InputStream is = null;
         try {
-        	fos = sftp.get(srcRemotePath + srcName);
-        	Log.debug("copyFile() get " + srcRemotePath + srcName + " ok ");       	
-
-        	sftp.put(fos, dstRemotePath + dstName);
-        	Log.debug("copyFile() put " + dstRemotePath + dstName + " ok ");       	
+        	is = getInputStreamForCopy(srcRemotePath + srcName);
+        	Log.debug("copyFile() " + srcRemotePath + srcName + " get ok ");       	
+        	sftp.put(is, dstRemotePath + dstName);
+            Log.debug("copyFile() " + dstRemotePath + dstName + " put ok ");
         	ret = true;
         } catch (Exception e1) {
 			e1.printStackTrace();
 		} finally {
-			if(fos != null)
+			if(is != null)
 			{
 				try {
-					fos.close();
+					is.close();
 				} catch (Exception e2) {
 					e2.printStackTrace();
 				}
@@ -312,7 +346,19 @@ public class SFTPUtil {
         return ret;
 	} 
     
-    public boolean move(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
+    private InputStream getInputStreamForCopy(String remoteFilePath) throws JSchException, SftpException {
+    	InputStream is = null;
+    	if(sftpForCopy == null)
+    	{
+	    	Channel channel = session.openChannel("sftp");
+	        channel.connect();
+	        sftpForCopy = (ChannelSftp) channel;
+    	}
+        is = sftpForCopy.get(remoteFilePath);
+		return is;
+	}
+
+	public boolean move(String srcRemotePath, String srcName, String dstRemotePath, String dstName) {
         boolean ret = false;
     	try {
             sftp.rename(srcRemotePath + srcName, dstRemotePath + dstName);
