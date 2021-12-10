@@ -23,6 +23,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
+import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
@@ -2328,7 +2329,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), true, rt);				
+			downloadDocPrepare_FSM(repos, doc, reposAccess, true, rt);				
 		}
 		
 		writeJson(rt, response);
@@ -2343,7 +2344,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser,  boolean remoteStorageEn, ReturnAjax rt)
+	public void downloadDocPrepare_FSM(Repos repos, Doc doc, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
 		if(isFSM(repos) == false)
 		{
@@ -2361,7 +2362,7 @@ public class DocController extends BaseController{
 			if(remoteStorage != null && remoteStorage.autoPull != null && remoteStorage.autoPull == 1)
 			{
 				Log.debug("downloadDocPrepare_FSM() 远程自动拉取");
-				remoteStorageCheckOut(repos, doc, accessUser, "远程存储自动拉取", true, true, true, rt);
+				remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, true, true, rt);
 				remoteStorageAutoPullDone = true;
 			}
 		}
@@ -2383,7 +2384,7 @@ public class DocController extends BaseController{
 			    if(remoteStorageAutoPullDone == false)
 				{
 			    	//本地文件不存在且没有自动拉取过，则从远程存储服务器自动拉取文件
-					if(remoteStorageCheckOut(repos, doc, accessUser, "文件下载拉取", true, true, true, rt) == true)
+					if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "文件下载拉取", true, true, true, rt) == true)
 					{
 						localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
 					}
@@ -2423,12 +2424,26 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			//TODO: 这里存在越权下载文件的风险，需要增加权限检查，避免下载了不应该下载的文件
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
+			Doc downloadDoc = null;
+			if(repos.encryptType != null && repos.encryptType != 0)
+			{
+				//对于加密的仓库，使用直接下载目录的方式
+				downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
+				rt.setData(downloadDoc);
+				rt.setMsgData(0);	//下载完成后不删除已下载的文件
+				Log.docSysDebugLog("本地目录: 原始路径下载", rt);
+				return;						
+			}
+			
+			//提前压缩有权限的文件(因为这里涉及加密仓库的文件解密问题，对于加密的仓库每次下载都需要先解密再加密，会增加大量的硬盘使用空间)
+			targetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+			targetName = targetName + ".zip";
+			compressAuthedFiles(targetPath, targetName, repos, doc, reposAccess);
+			downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 0);
 			rt.setData(downloadDoc);
-			rt.setMsgData(0);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("本地目录: 原始路径下载", rt);
-			return;						
+			rt.setMsgData(1);	//下载完成后删除已下载的文件
+			Log.docSysDebugLog("本地目录: 非原始路径下载", rt);
+			return;
 		}
 		
 		if(localEntry.getType() == 0)
@@ -2442,7 +2457,7 @@ public class DocController extends BaseController{
 			}
 			
 			//本地文件不存在（尝试从版本仓库中下载）
-			targetPath = Path.getReposTmpPathForDownload(repos,accessUser);
+			targetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
@@ -2481,6 +2496,7 @@ public class DocController extends BaseController{
 				return;				
 			}
 				
+			//TODO: 从历史版本里取出来的文件放到了临时目录里，目前没有进行权限控制
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
@@ -2491,6 +2507,98 @@ public class DocController extends BaseController{
 		Log.docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
 		return;		
 	}
+	
+    //递归压缩
+    public boolean compressAuthedFiles(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
+    {
+    	DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
+		
+    	boolean ret = false;
+    	SevenZOutputFile out = null;
+    	try {
+	    	File input = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+	        if (!input.exists()) 
+	        {
+	        	Log.debug(doc.getLocalRootPath() + doc.getPath() + doc.getName() + " 不存在");
+	        	return false;
+	        }
+	        
+	        out = new SevenZOutputFile(new File(targetPath, targetName));
+	        compressAuthedFiles(out, input, repos, doc, curDocAuth, docAuthHashMap);
+	        ret = true;
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	} finally {
+    		if(out != null)
+    		{
+    			try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+    		}
+    	}
+    	return ret;
+    }
+	public void compressAuthedFiles(SevenZOutputFile out, File input, Repos repos, Doc doc, DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap) throws Exception 
+    {		
+		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
+		{
+			Log.debug("compressAuthedFiles() have no right to download for [" + doc.getPath() + doc.getName() + "]");
+			return;
+		}
+
+	    SevenZArchiveEntry entry = null;
+        //如果路径为目录（文件夹）
+        if (input.isDirectory()) {
+        	//取出文件夹中的文件（或子文件夹）
+            File[] flist = input.listFiles();
+
+            if (flist.length == 0)//如果文件夹为空，则只需在目的地.7z文件中写入一个目录进入
+            {
+            	entry = out.createArchiveEntry(input, doc.getName() + "/");
+                out.putArchiveEntry(entry);
+            } 
+            else//如果文件夹不为空，则递归调用compress，文件夹中的每一个文件（或文件夹）进行压缩
+            {
+            	String subDocParentPath = doc.getPath() + doc.getName() + "/";
+            	String localRootPath = doc.getLocalRootPath();
+            	String localVRootPath = doc.getLocalVRootPath();
+            	
+            	for (int i = 0; i < flist.length; i++) {    
+            		File subFile = flist[i];
+            		String subDocName = subFile.getName();
+            		Integer subDocLevel = getSubDocLevel(doc);
+    	    		int type = 1;
+    	    		if(subFile.isDirectory())
+    	    		{
+    	    			type = 2;
+    	    		}
+    	    		long size = subFile.length();
+            		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc.offsetPath);
+            		DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
+            		compressAuthedFiles(out, flist[i], repos, subDoc, subDocAuth, docAuthHashMap);
+                }
+            }
+        } 
+        else//如果不是目录（文件夹），即为文件，则先写入目录进入点，之后将文件写入7z文件中
+        {
+        	FileInputStream fos = new FileInputStream(input);
+            BufferedInputStream bis = new BufferedInputStream(fos);
+            entry = out.createArchiveEntry(input, doc.getName());
+            out.putArchiveEntry(entry);
+            int len = -1;
+            //将源文件写入到7z文件中
+            byte[] buf = new byte[1024];
+            while ((len = bis.read(buf)) != -1) {
+            	out.write(buf, 0, len);
+            }
+            bis.close();
+            fos.close();
+            out.closeArchiveEntry();
+       }
+    }
 	
 	private boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt)
 	{
@@ -3744,7 +3852,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), false, rt);							
+		downloadDocPrepare_FSM(repos, doc, reposAccess, false, rt);							
 		
 		//rt里保存了下载文件的信息
 		String status = rt.getStatus();
