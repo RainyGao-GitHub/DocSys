@@ -1,6 +1,7 @@
-package com.DocSystem.common.remoteStorage;
+package com.DocSystem.test;
 
 import com.DocSystem.common.Log;
+import com.DocSystem.common.remoteStorage.SFTPUtil;
 
 class SFTPUtilTest {  
 	
