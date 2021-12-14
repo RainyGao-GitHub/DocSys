@@ -7,4 +7,5 @@ public class FtpConfig {
 	public String host;
 	public Integer port;
 	public String charset;
+	public Boolean isPassive;
 }
