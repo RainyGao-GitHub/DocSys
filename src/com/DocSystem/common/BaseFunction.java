@@ -900,6 +900,16 @@ public class BaseFunction{
 			remote.FTP.userName = config.getString("userName");
 			remote.FTP.pwd = config.getString("pwd");
 			remote.FTP.charset = config.getString("charset");
+			remote.FTP.isPassive = false;
+			String isPassive = config.getString("isPassive");
+			if(isPassive != null)
+			{
+				isPassive = isPassive.toLowerCase();
+				if(isPassive.equals("true") || isPassive.equals("1"))
+				{
+					remote.FTP.isPassive = true;					
+				}
+			}
 			
 			Log.debug("parseRemoteStorageConfigForFtp userName:" + remote.FTP.userName + " pwd:" + remote.FTP.pwd + " autoPull:" + remote.autoPull);
 		}
