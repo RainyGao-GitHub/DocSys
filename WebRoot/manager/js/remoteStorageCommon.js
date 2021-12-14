@@ -56,6 +56,10 @@ function buildRemoteStorageConfigStr(remoteStorageConfig)
 		{
 			remoteStorage += ";charset=" + remoteStorageConfig.FTP.charset;
 		}
+		if(remoteStorageConfig.FTP.isPassive)
+		{
+			remoteStorage += ";isPassive=" + remoteStorageConfig.FTP.isPassive;
+		}
 		break;
 	case "sftp":
 		remoteStorage = protocol + "://" + remoteStorageConfig.SFTP.host;

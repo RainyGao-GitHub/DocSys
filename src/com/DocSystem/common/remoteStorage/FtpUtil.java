@@ -26,8 +26,9 @@ public class FtpUtil {
       
     public FTPClient ftpClient = null;
 	private String charset = "utf-8"; 
+	private Boolean isPassive = false; 	
       
-    public FtpUtil(String username, String password, String host, int port, String charset) {
+    public FtpUtil(String username, String password, String host, int port, String charset, Boolean isPassive) {
         this.username = username;
         this.password = password;
         this.host = host;
@@ -36,6 +37,7 @@ public class FtpUtil {
         {
         	this.charset = charset;
         }
+        this.isPassive = isPassive; //PassiveMode()
     }
     
     public FtpUtil() {
@@ -52,6 +54,13 @@ public class FtpUtil {
     	try { 
     		Log.debug("connecting...ftp服务器:"+this.host+":"+this.port);  
     		ftpClient.connect(host, port); //连接ftp服务器 
+    		
+    		if(isPassive)
+    		{
+    			//ftpClient.enterLocalActiveMode();    //主动模式
+    			ftpClient.enterLocalPassiveMode(); //被动模式
+    		}
+    		
     		ftpClient.login(username, password); //登录ftp服务器 
     		int replyCode = ftpClient.getReplyCode(); //是否成功登录服务器 
     		if(!FTPReply.isPositiveCompletion(replyCode)){ 
