@@ -325,8 +325,8 @@ public class ReposController extends BaseController{
 			initReposAutoBackupConfig(repos, autoBackup);
 			if(repos.backupConfig != null)
 			{
-				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 0, true);
-				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 0, true);
+				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 0, 60L);
+				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 0, 60L);
 			}
 		}
 		
@@ -573,8 +573,8 @@ public class ReposController extends BaseController{
 			initReposAutoBackupConfig(reposInfo, autoBackup);
 			if(reposInfo.backupConfig != null)
 			{
-				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 0, true);
-				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 0, true);
+				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 0, 60L);
+				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 0, 60L);
 			}
 		}
 		

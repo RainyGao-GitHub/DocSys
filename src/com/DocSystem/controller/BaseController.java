@@ -10430,8 +10430,8 @@ public class BaseController  extends BaseFunction{
 				initReposAutoBackupConfig(repos, autoBackup);
 				if(repos.backupConfig != null)
 				{
-					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, false);
-					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, false);
+					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null);
+					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, null);
 				}
 				
 				initReposTextSearchConfig(repos);
@@ -10469,7 +10469,7 @@ public class BaseController  extends BaseFunction{
 		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");
 	}
 	
-	public void addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute, boolean firstBackup) {
+	public void addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute, Long forceStartDelay) {
 		if(localBackupConfig == null)
 		{
 			return;
@@ -10482,9 +10482,10 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		if(firstBackup)
+		if(forceStartDelay != null)
 		{
-			delayTime = 60L; //1分钟后执行第一次备份
+			Log.debug("addDelayTaskForLocalBackup forceStartDelay:" + forceStartDelay + " 秒后强制开始备份！" );											
+			delayTime = forceStartDelay; //1分钟后执行第一次备份
 		}
 		Log.debug("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
 				
@@ -10556,9 +10557,20 @@ public class BaseController  extends BaseFunction{
 	                        //将自己从任务备份任务表中删除
 	                        latestBackupTask.remove(createTime);
 	                        
-	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-	                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 5, false);                      
-                        	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行完成\n");
+	                        String msgInfo = (String) rt.getMsgInfo();
+	                        if(msgInfo != null && msgInfo.equals("LockDocFailed"))  //TODO: 目前只考虑锁定失败的情况
+	                        {
+	                        	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行失败\n");		                        
+	                        	Log.debug("******** LocalBackupDelayTask repos is busy, start backup 5 minuts later\n");
+		                        addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 5, 300L); //5分钟后强制开始备份                      	                        	
+	                        }
+	                        else
+	                        {
+		                        Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行完成\n");
+	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        	addDelayTaskForLocalBackup(latestReposInfo, latestLocalBackupConfig, 5, null);                      
+	                        }
+                        	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行结束\n");		                        
                         } catch(Exception e) {
                         	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行异常\n");
                         	e.printStackTrace();
@@ -10571,7 +10583,7 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
-	public void addDelayTaskForRemoteBackup(Repos repos, BackupConfig remoteBackupConfig, int offsetMinute, boolean firstBackup) {
+	public void addDelayTaskForRemoteBackup(Repos repos, BackupConfig remoteBackupConfig, int offsetMinute, Long forceStartDelay) {
 		if(remoteBackupConfig == null)
 		{
 			return;
@@ -10584,11 +10596,13 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		if(firstBackup)
+		if(forceStartDelay != null)
 		{
-			delayTime = 60L; //1分钟后执行第一次备份
+			Log.debug("addDelayTaskForRemoteBackup forceStartDelay:" + forceStartDelay + " 秒后强制开始备份！" );											
+			delayTime = forceStartDelay; //1分钟后执行第一次备份
+
 		}
-		Log.debug("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
+		Log.debug("addDelayTaskForRemoteBackup delayTime:" + delayTime + " 秒后开始备份！" );											
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
@@ -10655,9 +10669,21 @@ public class BaseController  extends BaseFunction{
 	                        //将自己从任务备份任务表中删除
 	                        latestBackupTask.remove(createTime);
 	                        
-	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
-	                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 5, false);                      
-                        	Log.debug("******** RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行完成\n");
+	                        String msgInfo = (String) rt.getMsgInfo();
+	                        if(msgInfo != null && msgInfo.equals("LockDocFailed")) //TODO: 目前只考虑锁定失败的情况
+	                        {
+	                        	Log.debug("******** RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行失败\n");
+		                        
+	                        	Log.debug("******** RemoteBackupDelayTask repos is busy, start backup 5 minuts later\n");
+		                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 5, 300L);                      
+	                        }
+	                        else
+	                        {
+	                            Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行完成\n");
+		                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+		                        addDelayTaskForRemoteBackup(latestReposInfo, latestRemoteBackupConfig, 5, null);                      
+	                        }
+                            Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行结束\n");
                         } catch(Exception e) {
                         	Log.debug("******** RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行异常\n");
                         	e.printStackTrace();
