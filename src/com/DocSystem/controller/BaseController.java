@@ -17502,28 +17502,31 @@ public class BaseController  extends BaseFunction{
         	Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
             
 			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
-			//Log.printObject("list:", list);
-			while(treeWalk.next())
-	    	{
-	    		int type = getEntryType(treeWalk.getFileMode(0));
-		    	if(type <= 0)
+			if(treeWalk != null)
+			{
+				//Log.printObject("list:", list);
+				while(treeWalk.next())
 		    	{
-		    		continue;
+		    		int type = getEntryType(treeWalk.getFileMode(0));
+			    	if(type <= 0)
+			    	{
+			    		continue;
+			    	}
+			    	
+		    		String name = treeWalk.getNameString();            			
+		    		Doc subDoc = new Doc();
+		    		subDoc.setVid(repos.getId());
+		    		subDoc.setDocId(Path.buildDocIdByName(subDocLevel,subDocParentPath,name));
+		    		subDoc.setPid(doc.getDocId());
+		    		subDoc.setPath(subDocParentPath);
+		    		subDoc.setName(name);
+		    		subDoc.setLevel(subDocLevel);
+		    		subDoc.setType(type);
+		    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+		    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+		    		subEntryList.put(subDoc.getName(), subDoc);
 		    	}
-		    	
-	    		String name = treeWalk.getNameString();            			
-	    		Doc subDoc = new Doc();
-	    		subDoc.setVid(repos.getId());
-	    		subDoc.setDocId(Path.buildDocIdByName(subDocLevel,subDocParentPath,name));
-	    		subDoc.setPid(doc.getDocId());
-	    		subDoc.setPath(subDocParentPath);
-	    		subDoc.setName(name);
-	    		subDoc.setLevel(subDocLevel);
-	    		subDoc.setType(type);
-	    		subDoc.setLocalRootPath(doc.getLocalRootPath());
-	    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
-	    		subEntryList.put(subDoc.getName(), subDoc);
-	    	}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

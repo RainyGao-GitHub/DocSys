@@ -482,7 +482,7 @@ public class BaseFunction{
 		//对于备份服务器是版本仓库，那么备份不按时间存放
 		if(remote.isVerRepos)
 		{
-			return "Backup/" + repos.getId() + "/latest/vdata/";
+			return "Backup/" + repos.getId() + "/data/vdata/";
 		}
 		
 		String backupTime = DateFormat.dateTimeFormat2(date);
