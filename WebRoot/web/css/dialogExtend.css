@@ -1,0 +1,158 @@
+*, *:before, *:after {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+}
+.aui-btn-box {
+    position: absolute;
+    top: 0;
+    right: 4px;
+    width: auto;
+    z-index: 10;
+}
+.aui-btn-box .aui-min, .aui-btn-box .aui-max, .aui-btn-box .aui-close , .aui-btn-box .aui-resize {
+    display: block;
+    text-decoration: none;
+    float: left;
+        
+    outline: none;
+    cursor: pointer;
+    border-top: none;
+    font-size: 1.15em;
+    text-align: center;
+    background-color: transparent;
+    height: 30px;
+    width: 38px;
+    line-height: 30px;
+    text-shadow: 1px 1px 0 #fff;
+    color: #888;
+    background-position: center center;
+    background-repeat: no-repeat;
+    -webkit-transition: background 1s;
+    -moz-transition: background 1s;
+    -o-transition: background 1s;
+    transition: background 1s;
+}
+.aui-btn-box .aui-min:hover, .aui-btn-box .aui-max:hover, .aui-btn-box .aui-close:hover, .aui-btn-box .aui-resize:hover {
+    color: #333;
+    background-color: rgba(0,0,0,0.2);
+}
+.aui-btn-box .aui-min {
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAEUlEQVQYV2NgGGbgP5F40AMAIN0J96UZJscAAAAASUVORK5CYII=");
+}
+.aui-btn-box .aui-max {
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGElEQVQYlWNgYGD4TySGEATAqELiFBLEAISgI91xKgmgAAAAAElFTkSuQmCC");
+}
+.aui-btn-box .aui-close {
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAOUlEQVQYlWNgYGD4D8TGDLiBMVQNgzErOwcuxRhy2BTjNABZAp8tCMWEFBGtkCirifIM0cFDVIADAOrvG43QTSHZAAAAAElFTkSuQmCC");
+}
+.aui-btn-box .aui-resize {
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQY02NgQID/BDCKQlzgP7Em/SfKpCGg8D8pJhIf0AByMSzUi15HSgAAAABJRU5ErkJggg==");
+}
+
+.dialog-can-resize .resize-handle {
+    position: absolute;
+    z-index: 100;
+    display: block;
+}
+.dialog-can-resize .resize-top {
+    cursor: n-resize;
+    top: -3px;
+    left: 0;
+    height: 7px;
+    width: 100%;
+}
+.dialog-can-resize .resize-right {
+    cursor: e-resize;
+    right: -3px;
+    top: 0;
+    width: 7px;
+    height: 100%;
+}
+.dialog-can-resize .resize-bottom {
+    cursor: s-resize;
+    bottom: -3px;
+    left: 0;
+    height: 7px;
+    width: 100%;
+}
+.dialog-can-resize .resize-left {
+    cursor: w-resize;
+    left: -3px;
+    top: 0;
+    width: 7px;
+    height: 100%;
+}
+.dialog-can-resize .resize-top-right:before, .dialog-can-resize .resize-bottom-right:before, .dialog-can-resize .resize-bottom-left:before, .dialog-can-resize .resize-top-left:before {
+    position: absolute;
+    content: "";
+    -webkit-transition: all 1s;
+    -moz-transition: all 1s;
+    -o-transition: all 1s;
+    transition: all 1s;
+    width: 15px;
+    height: 15px;
+    opacity: 0;
+    pointer-events: none;
+    border: 1px solid #1890ff;
+    border-radius: 0;
+}
+.dialog-can-resize .resize-top-right {
+    cursor: ne-resize;
+    width: 16px;
+    height: 16px;
+    right: -8px;
+    top: -8px;
+}
+.dialog-can-resize .resize-top-right:before {
+    border-left: none;
+    border-bottom: none;
+    border-radius: 0 4px 0 0;
+    left: -8px;
+    top: 8px;
+}
+.dialog-can-resize .resize-bottom-right {
+    cursor: se-resize;
+    width: 20px;
+    height: 20px;
+    right: -8px;
+    bottom: -8px;
+    background: url('../images/resize_corner.png') no-repeat;
+    opacity: .4;
+    filter: alpha(opacity=40);
+}
+.dialog-can-resize .resize-bottom-right:before {
+    border-left: none;
+    border-top: none;
+    border-radius: 0 0 4px 0;
+    left: -4px;
+    top: -4px;
+}
+.dialog-can-resize .resize-bottom-left {
+    cursor: sw-resize;
+    width: 16px;
+    height: 16px;
+    left: -8px;
+    bottom: -8px;
+}
+.dialog-can-resize .resize-bottom-left:before {
+    border-right: none;
+    border-top: none;
+    border-radius: 0 0 0 4px;
+    left: 8px;
+    top: -8px;
+}
+.dialog-can-resize .resize-top-left {
+    cursor: nw-resize;
+    width: 16px;
+    height: 16px;
+    left: -8px;
+    top: -8px;
+}
+.dialog-can-resize .resize-top-left:before {
+    border-right: none;
+    border-bottom: none;
+    border-radius: 4px 0 0 0;
+    left: 8px;
+    top: 8px;
+}
