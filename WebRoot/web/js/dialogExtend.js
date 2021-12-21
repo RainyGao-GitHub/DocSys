@@ -160,6 +160,8 @@ function dialogExtendInit(docid, dialogObj) {
         $(dialogTitleEl.find(".aui-close")).bind("click", function () {
             dialogClose(docid)
         });
+        // 拖拉功能
+        dialogToolsInit(docid);
     }
 }
 
@@ -252,4 +254,351 @@ function dialogResize(docid, dialogObj, dialogTitleEl, resetWidth, resetHeight) 
  */
 function dialogClose(docid) {
     $("div[aria-labelledby='title:ArtDialog" + docid + "'] .ui-dialog-header button.ui-dialog-close").click();
+}
+
+function DialogExtends() {
+    // 确定dialog的唯一id
+    this.docid = undefined;
+    // 起始坐标x
+    this.startX = 0;
+    // 起始坐标y
+    this.startY = 0;
+    // 当前鼠标坐标X
+    this.currentX = 0;
+    // 当前鼠标坐标Y
+    this.currentY = 0;
+    // 激活的拖动工具栏：top,right,bottom,left,top-right,bottom-right,bottom-left,top-left
+    this.active;
+    // 拖动栏辅助变量
+    this.dialogEl = undefined;
+    this.artDialogIframe = undefined;
+    this.maxWidth = 0;
+    this.maxHeight = 0;
+    this.minHeight = 0;
+    this.minWidth = 0;
+    this.startTop = 0;
+    this.startLeft = 0;
+    this.startHeight = 0;
+    this.startWidth = 0;
+    this.offsetY = 0;
+    this.absOffsetY = 0;
+    this.offsetX = 0;
+    this.absOffsetX = 0;
+    // 弹窗偏移后的实际width,height,top,left
+    this.dialogWidth = 0;
+    this.dialogHeight = 0;
+    this.dialogTop = 0;
+    this.dialogLeft = 0;
+    // 宽度偏移量
+    this.offsetWidth = 0;
+    // 高偏移量
+    this.offsetHeight = 0;
+    // 顶部偏移量
+    this.offsetTop = 0;
+    // 左侧偏移量
+    this.offsetLeft = 0;
+    // 初始化方法
+    this.init = function(docid) {
+        if (docid === undefined || docid === "") {
+            return;
+        }
+        // 1.初始化部分变量
+        this.docid = docid;
+        // 拖动范围限制
+        this.maxWidth = getArtDialogMaxWidth();
+        this.maxHeight = getArtDialogMaxHeight();
+        this.minHeight = getArtDialogInitHeight();
+        this.minWidth = getArtDialogInitWidth();
+    };
+    this.updateDialogStyle = function() {
+        if (this.active !== undefined && this.active !== "") {
+            console.log(this.docid + "..." + this.active);
+            this.dialogEl = $("div[aria-labelledby='title:ArtDialog" + this.docid + "']");
+            this.artDialogIframe = $("iframe[name='ArtDialog" + this.docid + "']");
+
+            // 获取当前dialog的top高度和开始高度
+            this.startTop = parseFloat(this.dialogEl.css("top"));
+            this.startLeft = parseFloat(this.dialogEl.css("left"));
+            this.startHeight = this.dialogEl.innerHeight();
+            this.startWidth = this.dialogEl.innerWidth();
+
+            // 获取偏移量，鼠标的y轴减去dialog开始的y起点
+            this.offsetY = this.currentY - this.startY;
+            this.absOffsetY = Math.abs(this.offsetY);
+            this.startY = this.currentY;
+
+            // 获取偏移量，鼠标的y轴减去dialog开始的y起点
+            this.offsetX = this.currentX - this.startX;
+            this.absOffsetX = Math.abs(this.offsetX);
+            this.startX = this.currentX;
+
+            // 改变dialogEl的高度和top偏移
+            if (this.active === 'top') {
+                this.updateDialogTopStyle();
+            }
+            if (this.active === 'bottom') {
+                this.updateDialogBottomStyle();
+            }
+            if (this.active === 'left') {
+                this.updateDialogLeftStyle();
+            }
+            if (this.active === 'right') {
+                this.updateDialogRightStyle();
+            }
+            if (this.active === 'top-left') {
+                this.updateDialogTopStyle();
+                this.updateDialogLeftStyle();
+            }
+            if (this.active === 'top-right') {
+                this.updateDialogTopStyle();
+                this.updateDialogRightStyle();
+            }
+            if (this.active === 'bottom-left') {
+                this.updateDialogBottomStyle();
+                this.updateDialogLeftStyle();
+            }
+            if (this.active === 'bottom-right') {
+                this.updateDialogBottomStyle();
+                this.updateDialogRightStyle();
+            }
+            // 刷新样式
+            this.refresh();
+        }
+    };
+    this.refresh = function() {
+        if (this.active === 'top') {
+            this.dialogEl.css("top", this.dialogTop + "px");
+            this.dialogEl.css("height", this.dialogHeight + "px");
+            this.artDialogIframe.css("height", this.dialogHeight + "px");
+        }
+        if (this.active === 'bottom') {
+            this.dialogEl.css("height", this.dialogHeight + "px");
+            this.artDialogIframe.css("height", this.dialogHeight + "px");
+        }
+        if (this.active === 'left') {
+            this.dialogEl.css("left", this.dialogLeft + "px");
+            this.dialogEl.css("width", this.dialogWidth + "px");
+            this.artDialogIframe.css("width", this.dialogWidth + "px");
+        }
+        if (this.active === 'right') {
+            this.dialogEl.css("width", this.dialogWidth + "px");
+            this.artDialogIframe.css("width", this.dialogWidth + "px");
+        }
+        if (this.active === 'top-left') {
+            this.dialogEl.css("top", this.dialogTop + "px");
+            this.dialogEl.css("height", this.dialogHeight + "px");
+            this.artDialogIframe.css("height", this.dialogHeight + "px");
+            this.dialogEl.css("left", this.dialogLeft + "px");
+            this.dialogEl.css("width", this.dialogWidth + "px");
+            this.artDialogIframe.css("width", this.dialogWidth + "px");
+        }
+        if (this.active === 'top-right') {
+            this.dialogEl.css("top", this.dialogTop + "px");
+            this.dialogEl.css("height", this.dialogHeight + "px");
+            this.artDialogIframe.css("height", this.dialogHeight + "px");
+            this.dialogEl.css("width", this.dialogWidth + "px");
+            this.artDialogIframe.css("width", this.dialogWidth + "px");
+        }
+        if (this.active === 'bottom-left') {
+            this.dialogEl.css("height", this.dialogHeight + "px");
+            this.artDialogIframe.css("height", this.dialogHeight + "px");
+            this.dialogEl.css("left", this.dialogLeft + "px");
+            this.dialogEl.css("width", this.dialogWidth + "px");
+            this.artDialogIframe.css("width", this.dialogWidth + "px");
+        }
+        if (this.active === 'bottom-right') {
+            this.dialogEl.css("height", this.dialogHeight + "px");
+            this.artDialogIframe.css("height", this.dialogHeight + "px");
+            this.dialogEl.css("width", this.dialogWidth + "px");
+            this.artDialogIframe.css("width", this.dialogWidth + "px");
+        }
+    };
+    this.updateDialogTopStyle = function() {
+        if (this.offsetY > 0) {
+            // 向下移动，最大限制dialog窗口高度为184px，到最大限制，则只调整top
+            this.offsetHeight = this.startHeight - this.absOffsetY;
+            if (this.dialogHeight + this.offsetHeight >= this.minHeight) {
+                this.dialogHeight = this.offsetHeight;
+            }
+            this.dialogTop = this.startTop + this.absOffsetY;
+            this.startY = this.currentY;
+        } else {
+            // 向上移动，最小限制dialog窗口的top为0
+            this.offsetTop = this.startTop - this.absOffsetY;
+            if (this.offsetTop >= 0) {
+                this.dialogHeight = this.startHeight + this.absOffsetY;
+                this.dialogTop = this.offsetTop;
+            }
+        }
+    };
+    this.updateDialogBottomStyle = function() {
+        if (this.offsetY > 0) {
+            // 向下移动，只调整height，top不变
+            this.dialogHeight = this.startHeight + this.absOffsetY;
+        } else {
+            // 向上移动，只调整height，top不变，最高限制184
+            this.offsetHeight = this.startHeight - this.absOffsetY;
+            if (this.offsetHeight >= this.minHeight) {
+                this.dialogHeight = this.offsetHeight;
+            }
+        }
+    };
+    this.updateDialogLeftStyle = function(){
+        if (this.offsetX > 0) {
+            // 向右移动，减小width，增大left，
+            this.offsetWidth = this.startWidth - this.absOffsetX;
+            if(this.offsetWidth >= this.minWidth) {
+                this.dialogWidth = this.offsetWidth;
+            }
+            this.dialogLeft = this.startLeft + this.absOffsetX;
+        } else {
+            // 向左移动，加大width，减小left，加上left为0的限制
+            this.dialogWidth = this.startWidth - this.absOffsetX;
+            this.offsetLeft = this.startLeft - this.absOffsetX;
+            if (this.offsetLeft >= 0) {
+                this.dialogWidth = this.startWidth + this.absOffsetX;
+                this.dialogLeft = this.offsetLeft;
+            }
+        }
+    };
+    this.updateDialogRightStyle = function () {
+        if (this.offsetX > 0) {
+            // 向右移动，增大width
+            this.offsetWidth = this.startWidth + this.absOffsetX;
+            this.offsetLeft = this.startLeft + this.absOffsetX;
+            if(this.offsetWidth + this.offsetLeft <= this.maxWidth) {
+                this.dialogWidth = this.offsetWidth;
+            }
+        } else {
+            // 向左移动，减小width
+            this.offsetWidth = this.startWidth - this.absOffsetX;
+            if(this.offsetWidth >= this.minWidth) {
+                this.dialogWidth = this.offsetWidth;
+            }
+        }
+    }
+}
+// 弹窗拖拉结束触发事件
+function dialogMouseup(evt,dialogExtends) {
+    dialogExtends.active = "";
+    // 停止冒泡
+    evt.stopPropagation();
+}
+// 弹窗拖拉过程触发事件
+function dialogMouseMove(evt,dialogExtends) {
+    dialogExtends.currentX = evt.pageX;
+    dialogExtends.currentY = evt.pageY;
+    dialogExtends.updateDialogStyle();
+    // 停止冒泡
+    evt.stopPropagation();
+}
+// 弹窗拖拉开启触发事件
+function dialogMouseDown(evt,dialogExtends,_this) {
+    dialogExtends.startX = evt.pageX;
+    dialogExtends.startY = evt.pageY;
+    if(dialogExtends.active === undefined || dialogExtends.active === "") {
+        dialogExtends.active = _this.getAttribute("resize");
+    }
+    // 停止冒泡
+    evt.stopPropagation();
+}
+// 弹窗拖拉事件绑定方法
+function dialogBindEventsInit(docid,dialogExtends) {
+    // 1.获取需要绑定事件的元素
+    var dialogEl = $("div[aria-labelledby='title:ArtDialog" + docid + "']");
+    var topEl = $(dialogEl.find(".resize-top"));
+    var rightEl = $(dialogEl.find(".resize-right"));
+    var bottomEl = $(dialogEl.find(".resize-bottom"));
+    var leftEl = $(dialogEl.find(".resize-left"));
+    var topRightEl = $(dialogEl.find(".resize-top-right"));
+    var bottomRightEl = $(dialogEl.find(".resize-bottom-right"));
+    var bottomLeftEl = $(dialogEl.find(".resize-bottom-left"));
+    var topLeftEl = $(dialogEl.find(".resize-top-left"));
+    var iframeEl = $("iframe[name='ArtDialog" + docid + "']")[0];
+    var artDialogIframe = $(iframeEl.contentWindow);
+    iframeEl.contentWindow.dialogExtends = this;
+    var $window = $(window.document);
+
+    // 2.给document绑定一个鼠标移动事件，绑定一个鼠标松开事件
+    $window.bind("mousemove", function (evt) {
+        dialogMouseMove(evt, dialogExtends)
+    });
+    $window.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+
+    // 3.给ifreme加一个鼠标移动和鼠标放下事件
+    artDialogIframe.bind("mousemove", function (evt) {
+        dialogMouseMove(evt, dialogExtends)
+    });
+    artDialogIframe.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+
+    // 4.给8个方向的元素添加鼠标按下事件
+    topEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+    rightEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+    bottomEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+    leftEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+    topRightEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+    bottomRightEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+    bottomLeftEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+    topLeftEl.bind("mousedown", function (evt) {
+        dialogMouseDown(evt, dialogExtends, this)
+    });
+
+    // 5.给8个方向的元素添加鼠标抬起事件
+    topEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+    rightEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+    bottomEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+    leftEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+    topRightEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+    bottomRightEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+    bottomLeftEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+    topLeftEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+
+    // 6.给dialog本身绑定一个鼠标移动事件，绑定一个鼠标松开事件
+    dialogEl.bind("mousemove", function (evt) {
+        dialogMouseMove(evt, dialogExtends)
+    });
+    dialogEl.bind("mouseup", function (evt) {
+        dialogMouseup(evt, dialogExtends)
+    });
+}
+function dialogToolsInit(docid) {
+    var dialogExtends = new DialogExtends();
+    // 初始化绑定拖拉事件
+    dialogBindEventsInit(docid,dialogExtends);
+    // 初始化
+    dialogExtends.init(docid);
 }
