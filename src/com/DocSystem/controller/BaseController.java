@@ -15493,13 +15493,13 @@ public class BaseController  extends BaseFunction{
 			//pushSubEntries
 			if(ret == true && localDoc != null && localDoc.getType() != null && localDoc.getType() == 2)
 			{
-				if(pushResult.action != null)	//it is new added dir
+				CommitAction action = pushResult.action;
+				if(action != null)	//it is new added dir
 				{
 					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
 					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true, pushLocalChangeOnly);	
 					if(subActionList.size() > 0)
 					{
-						CommitAction action = pushResult.action;
 						action.setSubActionList(subActionList);
 					}
 				}
