@@ -28,12 +28,13 @@
     <div class="form-group">
 		<div id="remoteServerDiv" style="margin-top:10px;padding-left:30px; display:none">
 	    	<label>文件服务器</label>
-	    	<select class="form-control" id="remoteServerProtocol" onchange="doSelectremoteServerProtocol();" style="width:86%">   
+	    	<select class="form-control" id="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:86%">   
 	            <option value="ftp">FTP</option>   
 	            <option value="sftp">SFTP</option>   
 	            <option value="smb">SMB</option>  
 	            <option value="svn">SVN</option>  
 	            <option value="git">GIT</option>  
+		        <option value="mxsdoc">MXSDOC</option>  
 		    </select>
 	        <input class="form-control" type="text" id="remoteServer"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
 	     </div>
@@ -67,6 +68,7 @@
 	            <option value="smb">SMB</option>  
 	            <option value="svn">SVN</option>  
 	            <option value="git">GIT</option>  
+		        <option value="mxsdoc">MXSDOC</option>  
 		    </select>
 	 	    <div id="remoteStorageConfig" style="margin-top:10px; display:none">
 	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
