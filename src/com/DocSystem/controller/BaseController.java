@@ -16316,8 +16316,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//这个函数只是添加远程目录
-	protected static boolean addDirsToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, String basePath, String offsetPath) {
-		
+	protected static boolean addDirsToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, String basePath, String offsetPath, String commitMsg, String commitUser) {
 		String remotePath = basePath;
 		String path[] = offsetPath.split("/");
 		for(int i=0; i<path.length; i++)
@@ -16345,11 +16344,13 @@ public class BaseController  extends BaseFunction{
 			case "mxsdoc":
 				addDirToMxsDocServer(session, remote, remotePath, path[i]);
 				break;
-			//svn和git会自动添加parentDir所以不需要添加
-			//case "svn":
-			//	return addDirsToSvnServer(session, remote, remotePath, path[i]);
-			//case "git":
+			case "svn":
+				addDirToSvnServer(session, remote, remotePath, path[i], commitMsg, commitUser);
+				break;
+			//git会不跟踪目录节点，因此不需要处理
+			case "git":
 			//	return addDirsToGitServer(session, remote, remotePath, path[i]);
+				return true;
 			default:
 				Log.debug("addDirsToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
 				return false;
@@ -16563,6 +16564,17 @@ public class BaseController  extends BaseFunction{
 
 		try {
 			ret = session.mxsdoc.add(remotePath, fileName, 2); 	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return ret;
+	}
+	
+	private static boolean addDirToSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name, String commitMsg, String commitUser) {
+		boolean ret = false;
+		try {
+			session.svn.mkdir(remotePath, name, commitMsg, commitUser);
+			ret = true;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -17820,30 +17832,32 @@ public class BaseController  extends BaseFunction{
         	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
 
         	Collection<SVNDirEntry> list = session.svn.listFiles(remoteParentPath, commitId);
-			
-    	    Iterator<SVNDirEntry> iterator = list.iterator();
-    	    while (iterator.hasNext()) 
-    	    {
-    	    	SVNDirEntry subEntry = iterator.next();
-    	    	int subEntryType = getEntryType(subEntry.getKind());
-    	    	if(subEntryType <= 0)
-    	    	{
-    	    		continue;
-    	    	}
-    	    	
-    	    	String subEntryName = subEntry.getName();
-    	    	if(subEntryName.equals(doc.getName()))
-    	    	{
-    	    		Long lastChangeTime = subEntry.getDate().getTime();
-    	    		remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null, doc.offsetPath);
-    	    		remoteDoc.setSize(subEntry.getSize());
-    	    		remoteDoc.setCreateTime(lastChangeTime);
-    	    		remoteDoc.setLatestEditTime(lastChangeTime);
-    	    		remoteDoc.setCreatorName(subEntry.getAuthor());
-    	    		remoteDoc.setLatestEditorName(subEntry.getAuthor());
-    	    		remoteDoc.setRevision(subEntry.getRevision()+"");
-    	    		break;
-    	    	}
+			if(list != null)
+			{
+				Iterator<SVNDirEntry> iterator = list.iterator();
+    	        while (iterator.hasNext()) 
+	    	    {
+	    	    	SVNDirEntry subEntry = iterator.next();
+	    	    	int subEntryType = getEntryType(subEntry.getKind());
+	    	    	if(subEntryType <= 0)
+	    	    	{
+	    	    		continue;
+	    	    	}
+	    	    	
+	    	    	String subEntryName = subEntry.getName();
+	    	    	if(subEntryName.equals(doc.getName()))
+	    	    	{
+	    	    		Long lastChangeTime = subEntry.getDate().getTime();
+	    	    		remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null, doc.offsetPath);
+	    	    		remoteDoc.setSize(subEntry.getSize());
+	    	    		remoteDoc.setCreateTime(lastChangeTime);
+	    	    		remoteDoc.setLatestEditTime(lastChangeTime);
+	    	    		remoteDoc.setCreatorName(subEntry.getAuthor());
+	    	    		remoteDoc.setLatestEditorName(subEntry.getAuthor());
+	    	    		remoteDoc.setRevision(subEntry.getRevision()+"");
+	    	    		break;
+	    	    	}
+	    	    }
     	    }
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -18089,7 +18103,7 @@ public class BaseController  extends BaseFunction{
 			if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
 			{
 				Log.debug("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
-				addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath());
+				addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath(), commitMsg,  accessUser.getName());
 			}
 		}
 		
