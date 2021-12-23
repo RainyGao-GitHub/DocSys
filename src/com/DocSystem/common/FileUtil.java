@@ -339,18 +339,34 @@ public class FileUtil {
         File srcFile=new File(srcFilePath);
         if(srcFile.exists() == false)
         {
-    		Log.error("copyFile() srcFilePath:" + srcFilePath + " not exists!");
+    		Log.info("copyFile() srcFilePath:" + srcFilePath + " not exists!");
     		return false;
         }
 
     	File dstFile=new File(dstFilePath);
-    	if(cover == false && dstFile.exists())
+    	if(dstFile.exists())
+    	{		    	
+	    	if(cover == false)
+	    	{
+	    		//不允许覆盖
+	    		Log.info("copyFile() " + dstFilePath + " exists!");
+	    		return false;
+	    	}
+    	}
+    	else
     	{
-        	//不允许覆盖
-        	Log.error("copyFile() " + dstFilePath + " exists!");
-        	return false;
-        }
-        
+    		//检查parentFile是否存在，不存在则创建
+    		File parentFile = dstFile.getParentFile();
+    		if(parentFile.exists() == false)
+    		{
+    			if(parentFile.mkdirs() == false)
+    			{
+    				Log.info("copyFile() create parent folder:" + parentFile.getAbsolutePath() + " failed!");
+    				return false;
+    			}
+    		}
+    	}    	
+    	
     	boolean ret = false;
         FileInputStream in=null;
         FileOutputStream out=null;
