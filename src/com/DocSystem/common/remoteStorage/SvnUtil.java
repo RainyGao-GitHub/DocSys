@@ -225,6 +225,44 @@ public class SvnUtil {
 		}
 		return revision;
 	}
+	
+	public boolean mkdir(String path, String name, String commitMsg, String commitUser)
+	{		
+	    Integer type = checkPath(path + name, null);
+	    if(type != null && type != 0)
+	    {
+	    	if(type == 2)
+	    	{
+	    		return true;
+	    	}
+	    	
+	    	Log.debug("mkdir() mkdir failed " + path + name + " is file");
+	    	return false;
+	    }
+	    
+	    ISVNEditor editor = getCommitEditor(commitMsg);
+	    if(editor == null)
+	    {
+	    	System.out.println("mkdir() getCommitEditor Failed");
+	        return false;
+	    }
+	    
+	    if(addDir(editor, path, name) == false)
+	    {
+	    	System.out.println("mkdir() addDir Failed");
+	    	abortEdit(editor);
+	        return false;
+	    }
+	      	        
+	    SVNCommitInfo commitInfo = commit(editor);
+	    if(commitInfo == null)
+	    {
+	    	System.out.println("doCommit() commit failed: " + commitInfo);
+	        return false;
+	    }
+	    System.out.println("doCommit() commit success: " + commitInfo);
+	    return true;
+	}
 
 	public String doCommit(String commitMsg,String commitUser, DocPushResult pushResult, List<CommitAction> commitActionList)
 	{		
