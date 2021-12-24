@@ -41,7 +41,7 @@ public class Path {
 		String [] paths = entryPath.split("/");
 		
 		int deepth = paths.length;
-		//System.out.println("seperatePathAndName() deepth:" + deepth); 
+		//Log.debug("seperatePathAndName() deepth:" + deepth); 
 		
 		String  path = "";
 		String name = "";
@@ -240,7 +240,7 @@ public class Path {
 	protected static String getParentPath(String path) {
 		if(path == null || path.length() < 2)
 		{
-			System.out.println("getParentPath() failed to get parentPath for path:" + path);
+			Log.debug("getParentPath() failed to get parentPath for path:" + path);
 			return null;
 		}
 		
@@ -248,11 +248,11 @@ public class Path {
 		int pos = path.lastIndexOf("/", path.length() - 2);
 		if(pos == -1)
 		{
-			System.out.println("getParentPath() failed to get parentPath for path:" + path);
+			Log.debug("getParentPath() failed to get parentPath for path:" + path);
 			return null;
 		}
 		String parentPath = path.substring(0, pos+1);
-        System.out.println("getParentPath() parentPath:" + parentPath);
+        Log.debug("getParentPath() parentPath:" + parentPath);
 		return parentPath;
 	}
 	
@@ -276,11 +276,11 @@ public class Path {
 		} 
 		catch (Exception e)
 		{
-			System.err.println("getWebPath() 异常，系统出现严重错误,请检查系统!!");
-			e.printStackTrace();
+			Log.info("getWebPath() 异常，系统出现严重错误,请检查系统!!");
+			Log.printException(e);
 		}
         webPath = localDirPathFormat(webPath, OSType);
-        System.out.println("getWebPath() webPath:" + webPath);
+        Log.debug("getWebPath() webPath:" + webPath);
 		return webPath;
 	}
 	
@@ -388,7 +388,7 @@ public class Path {
 		{
 			reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
 		}
-		//System.out.println("getReposRealPath() " + reposRPath);
+		//Log.debug("getReposRealPath() " + reposRPath);
 		return reposRPath;
 	}
 	
@@ -396,7 +396,7 @@ public class Path {
 	public static String getReposVirtualPath(Repos repos)
 	{
 		String reposVPath = getReposPath(repos) + "data/vdata/";	//实文件系统的存储数据放在data目录下 
-		//System.out.println("getReposVirtualPath() " + reposVPath);
+		//Log.debug("getReposVirtualPath() " + reposVPath);
 		return reposVPath;
 	}
 	
@@ -404,7 +404,7 @@ public class Path {
 	public static String getReposPwdPath(Repos repos)
 	{
 		String reposPwdPath = getReposPath(repos) + "data/pwd/";	//实文件系统的存储数据放在data目录下 
-		//System.out.println("getReposPwdPath() " + reposPwdPath);
+		//Log.debug("getReposPwdPath() " + reposPwdPath);
 		return reposPwdPath;
 	}
 	
@@ -491,7 +491,7 @@ public class Path {
 	protected static String getHashId(String path) 
 	{
 		String hashId = MD5.md5(path);
-		System.out.println("getHashId() " + hashId + " for " + path);
+		Log.debug("getHashId() " + hashId + " for " + path);
 		return hashId;
 	}
 

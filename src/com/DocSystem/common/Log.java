@@ -1,6 +1,8 @@
 package com.DocSystem.common;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.RandomAccessFile;
 
 import com.alibaba.fastjson.JSON;
@@ -179,6 +181,22 @@ public class Log {
 		{
 			String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
 			debug(Head + json);
+		}
+	}
+	
+	public static void printException(Exception e) {
+		if(isLogEnable(info, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				e.printStackTrace();
+			}
+			else
+			{
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				e.printStackTrace(new PrintStream(baos));
+				toFile(baos.toString(), logFile);
+			}
 		}
 	}
 		
