@@ -78,7 +78,7 @@ public class SFTPUtil {
             sftp = (ChannelSftp) channel;
             ret = true;
         } catch (JSchException e) {
-            e.printStackTrace();
+            Log.printException(e);
         }
     	return ret;
     }

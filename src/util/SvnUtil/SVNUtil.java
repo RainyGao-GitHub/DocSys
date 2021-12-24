@@ -36,6 +36,7 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.controller.BaseController;
@@ -104,8 +105,8 @@ public class SVNUtil  extends BaseController{
         try {
         	repositoryURL = SVNURL.parseURIEncoded(reposURL);
         } catch (Exception e) {
-			System.out.println("Init() parseURIEncoded " + reposURL + " Failed");
-            e.printStackTrace();
+			Log.debug("Init() parseURIEncoded " + reposURL + " Failed");
+            Log.printException(e);
             return false;
         }
 
@@ -114,8 +115,8 @@ public class SVNUtil  extends BaseController{
         try {
 			repository = SVNRepositoryFactory.create(repositoryURL);
 		} catch (SVNException e) {
-			System.out.println("Init() create " + repositoryURL.toString() + " Failed");
-			e.printStackTrace();
+			Log.debug("Init() create " + repositoryURL.toString() + " Failed");
+			Log.printException(e);
 			return false;
 		}
         //设置权限验证对象
@@ -151,8 +152,8 @@ public class SVNUtil  extends BaseController{
     	try {
 			return repository.getLatestRevision() + "";
 		} catch (SVNException e) {
-			System.err.println("getLatestRevision() 异常");
-			e.printStackTrace();
+			Log.info("getLatestRevision() 异常");
+			Log.printException(e);
 			return null;
 		}
 	}
@@ -174,7 +175,7 @@ public class SVNUtil  extends BaseController{
     		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, false);
     		if(logEntries == null)
     		{
-    			System.out.println("getLatestRevCommit() there is no history for " + entryPath);
+    			Log.debug("getLatestRevCommit() there is no history for " + entryPath);
     			return null;
     		}
             
@@ -189,8 +190,8 @@ public class SVNUtil  extends BaseController{
             return logEntry;
             
         } catch (Exception e) {
-            System.out.println("getLogEntryList() repository.log() 异常");
-            e.printStackTrace();
+            Log.debug("getLogEntryList() repository.log() 异常");
+            Log.printException(e);
         }
 
         return null;
@@ -219,13 +220,13 @@ public class SVNUtil  extends BaseController{
     	Integer type = checkPath(entryPath, revision);
     	if(type == null)
     	{
-	    	System.out.println("getDoc() checkPath exception for " + entryPath + " at revision:" + revision); 
+	    	Log.debug("getDoc() checkPath exception for " + entryPath + " at revision:" + revision); 
     		return null;
     	}
     	
         if(type ==  0) 
 		{
-	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
+	    	Log.debug("getDoc() " + entryPath + " not exist for revision:" + revision); 
 	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    	remoteEntry.setRevision(commitId);
 	    	return remoteEntry;
@@ -244,14 +245,14 @@ public class SVNUtil  extends BaseController{
         {
         	if(type != 2)
         	{
-    	    	System.out.println("getDoc() root Doc is not directory");      		
+    	    	Log.debug("getDoc() root Doc is not directory");      		
     	    	return null;
         	}
 
         	String latestRevision = getLatestReposRevision();
         	if(latestRevision == null)
         	{
-    	    	System.out.println("getDoc() getLatestReposRevision Failed for " + entryPath);      		
+    	    	Log.debug("getDoc() getLatestReposRevision Failed for " + entryPath);      		
         		return null;
         	}
 
@@ -264,7 +265,7 @@ public class SVNUtil  extends BaseController{
 		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath(), revision);
 		if(entries == null)
 		{
-			System.out.println("getDoc() there is not subEntries under " + doc.getPath());      		
+			Log.debug("getDoc() there is not subEntries under " + doc.getPath());      		
     		return null;
 		}
 		
@@ -283,7 +284,7 @@ public class SVNUtil  extends BaseController{
 	    	{
 		    	if(subEntryType != type)
 		    	{
-					System.out.println("getDoc() type not matched subEntryType:" + subEntryType + " type:" + type);      			    		
+					Log.debug("getDoc() type not matched subEntryType:" + subEntryType + " type:" + type);      			    		
 		    	}
 	    		
 	    		Long lastChangeTime = subEntry.getDate().getTime();
@@ -304,10 +305,10 @@ public class SVNUtil  extends BaseController{
     //getHistory filePath: remote File Path under repositoryURL
 	public List<LogEntry> getHistoryLogs(String entryPath,long startRevision, long endRevision, int maxLogNum) 
     {
-    	System.out.println("getHistoryLogs entryPath:" + entryPath);	
+    	Log.debug("getHistoryLogs entryPath:" + entryPath);	
     	if(entryPath == null)
     	{
-        	System.out.println("getHistoryLogs() 非法参数：entryPath is null");
+        	Log.debug("getHistoryLogs() 非法参数：entryPath is null");
         	return null;
     	}
     	
@@ -317,7 +318,7 @@ public class SVNUtil  extends BaseController{
         	try {
 	    	    endRevision = repository.getLatestRevision();
 	        } catch (SVNException svne) {
-	            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
+	            Log.info("error while fetching the latest repository revision: " + svne.getMessage());
 	            return null;
 	        }
     	}
@@ -336,7 +337,7 @@ public class SVNUtil  extends BaseController{
     }
 	
 	private List<LogEntry> getLogEntryList(String entryPath, long startRevision, long endRevision, int maxLogNum) {
-		System.out.println("getLogEntryList() entryPath:" + entryPath + " startRevision:" + startRevision + " endRevision:" + endRevision + " maxLogNum:" + maxLogNum);
+		Log.debug("getLogEntryList() entryPath:" + entryPath + " startRevision:" + startRevision + " endRevision:" + endRevision + " maxLogNum:" + maxLogNum);
         List<LogEntry> logList = new ArrayList<LogEntry>();
         
 		String[] targetPaths = new String[]{entryPath};
@@ -345,7 +346,7 @@ public class SVNUtil  extends BaseController{
         try {
             logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, false);
         } catch (SVNException svne) {
-            System.out.println("getLogEntryList() repository.log() 异常: " + svne.getMessage());
+            Log.debug("getLogEntryList() repository.log() 异常: " + svne.getMessage());
             return null;
         }
         
@@ -363,12 +364,12 @@ public class SVNUtil  extends BaseController{
             String commitMessage= logEntry.getMessage();
             long commitTime = logEntry.getDate().getTime();            
             
-//            System.out.println("revision:"+revision);
-//            System.out.println("commitId:"+commitId);
-//            System.out.println("commitUser:"+commitUser);
-//            System.out.println("commitMessage:"+commitMessage);
-//            System.out.println("commitName:"+commitUser);
-//            System.out.println("commitTime:"+commitTime);
+//            Log.debug("revision:"+revision);
+//            Log.debug("commitId:"+commitId);
+//            Log.debug("commitUser:"+commitUser);
+//            Log.debug("commitMessage:"+commitMessage);
+//            Log.debug("commitName:"+commitUser);
+//            Log.debug("commitTime:"+commitTime);
             
             LogEntry log = new LogEntry();
             log.setRevision(revision);
@@ -399,7 +400,7 @@ public class SVNUtil  extends BaseController{
 	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) 
 	{
 		String entryPath = doc.getPath() + doc.getName();
-    	System.out.println("getHistoryDetail entryPath:" + entryPath);	
+    	Log.debug("getHistoryDetail entryPath:" + entryPath);	
 		
 		long revision = -1;
 		if(commitId != null)
@@ -415,7 +416,7 @@ public class SVNUtil  extends BaseController{
         try {
             logEntries = repository.log(targetPaths, null,revision, revision, true, false);
         } catch (SVNException svne) {
-            System.out.println("getHistoryDetail() 获取日志异常：" + svne.getMessage());
+            Log.debug("getHistoryDetail() 获取日志异常：" + svne.getMessage());
             return null;
         }
         
@@ -429,7 +430,7 @@ public class SVNUtil  extends BaseController{
             {
             	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
                 
-            	System.out.println("changed Entries:");
+            	Log.debug("changed Entries:");
                 Set<String> changedPathsSet = logEntry.getChangedPaths().keySet();
                 for (Iterator<String> changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
                 {
@@ -443,11 +444,11 @@ public class SVNUtil  extends BaseController{
                     
                     if(srcEntryPath == null)
                     {
-                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath);                                     	
+                    	Log.debug(" " + svnLogEntryPath.getType() + "	" + nodePath);                                     	
                     }
                     else
                     {
-                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath + " from " + srcEntryPath + " at revision " + commitId);                
+                    	Log.debug(" " + svnLogEntryPath.getType() + "	" + nodePath + " from " + srcEntryPath + " at revision " + commitId);                
                     }
                     
                     //Add to changedItemList
@@ -521,10 +522,10 @@ public class SVNUtil  extends BaseController{
 
 	//FSFS格式SVN仓库创建接口
 	public static String CreateRepos(String name,String path){
-		System.out.println("CreateRepos reposName:" + name + "under Path:" + path);
+		Log.debug("CreateRepos reposName:" + name + "under Path:" + path);
     	if(path == null || name == null)
     	{
-        	System.out.println("CreateRepos() 非法参数：path or name is null");
+        	Log.debug("CreateRepos() 非法参数：path or name is null");
         	return null;
     	}
     	
@@ -533,11 +534,11 @@ public class SVNUtil  extends BaseController{
 		try {  			   
 				String reposPath = path + name;
 				tgtURL = SVNRepositoryFactory.createLocalRepository( new File( reposPath ), true ,false );  
-				System.out.println("tgtURL:" + tgtURL.toString());			   
+				Log.debug("tgtURL:" + tgtURL.toString());			   
 		} catch ( SVNException e ) {  
 				//处理异常  
-				e.printStackTrace();
-				System.out.println("创建svn仓库失败");
+				Log.printException(e);
+				Log.debug("创建svn仓库失败");
 				return null;			   
 		}
 		//return tgtURL.toString();	//直接将tatURL转成String会导致中文乱码
@@ -560,8 +561,8 @@ public class SVNUtil  extends BaseController{
 		try {
 			nodeKind = repository.checkPath(entryPath, revision);
 		} catch (SVNException e) {
-			System.out.println("getEntryType() checkPath Error:" + entryPath);
-			e.printStackTrace();
+			Log.debug("getEntryType() checkPath Error:" + entryPath);
+			Log.printException(e);
 			return null;
 		}
 		
@@ -592,7 +593,7 @@ public class SVNUtil  extends BaseController{
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
 		
-		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
+		Log.debug("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
 		if(commitActionList == null)
 		{
@@ -605,7 +606,7 @@ public class SVNUtil  extends BaseController{
 		//LocalEntry does not exist
 		if(!localEntry.exists())	//Delete Commit
 		{
-			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
+			Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
 			Integer type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
@@ -614,11 +615,11 @@ public class SVNUtil  extends BaseController{
 		    
 		    if(type == 0)
 		    {
-				System.out.println("doAutoCommit() remoteEnry " + entryPath + " not exists");
+				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
 		        return getLatestReposRevision();
 		    }
 		    
-		    System.out.println("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		    Log.debug("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			CommitAction.insertDeleteAction(commitActionList,doc, false);
 		}
 		else
@@ -626,12 +627,12 @@ public class SVNUtil  extends BaseController{
 	    	File localParentDir = new File(localRootPath+doc.getPath());
 			if(!localParentDir.exists())
 			{
-				System.out.println("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
+				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
 				return null;
 			}
 			if(!localParentDir.isDirectory())
 			{
-				System.out.println("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
+				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
 				return null;
 			}
 			
@@ -654,7 +655,7 @@ public class SVNUtil  extends BaseController{
 			//LocalEntry is File
 			if(localEntry.isFile())
 			{
-				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
+				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
 					
 			    type = checkPath(entryPath, null);
 			    if(type == null)
@@ -663,12 +664,12 @@ public class SVNUtil  extends BaseController{
 			    }
 			    if(type == 0)
 			    {
-					System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					Log.debug("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else if(type != 1)
 			    {
-					System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					Log.debug("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			    	CommitAction.insertDeleteAction(commitActionList,doc, false);
 					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
@@ -679,7 +680,7 @@ public class SVNUtil  extends BaseController{
 		    		{
 			            if(modifyEnable)
 			            {
-		            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		            		Log.debug("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 		            		CommitAction.insertModifyAction(commitActionList,doc, false);
 		            	}
 		    		}
@@ -690,7 +691,7 @@ public class SVNUtil  extends BaseController{
 		    			{
 		    				if(docChange.getType() == DocChangeType.LOCALCHANGE)	//要保证commitAction也是修改才commit,因为可能是add
 		    				{
-			            		System.out.println("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			            		Log.debug("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			            		CommitAction.insertModifyAction(commitActionList,doc, false);
 		    				}
 		    			}
@@ -700,27 +701,27 @@ public class SVNUtil  extends BaseController{
 			else
 			{
 				//LocalEntry is Directory
-				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
 				scheduleForCommit(commitActionList, doc, modifyEnable, false, localChanges, subDocCommitFlag);
 			}
 		}
 		
 	    if(commitActionList == null || commitActionList.size() ==0)
 	    {
-	    	System.out.println("doAutoCommmit() There is nothing to commit");
+	    	Log.debug("doAutoCommmit() There is nothing to commit");
 	        return getLatestReposRevision();
 	    }
 	    
 	    ISVNEditor editor = getCommitEditor(commitMsg);
 	    if(editor == null)
 	    {
-	    	System.out.println("doAutoCommit() getCommitEditor Failed");
+	    	Log.debug("doAutoCommit() getCommitEditor Failed");
 	        return null;
 	    }
 	        
 	    if(executeCommitActionList(editor,commitActionList,true) == false)
 	    {
-	    	System.out.println("doAutoCommit() executeCommitActionList Failed");
+	    	Log.debug("doAutoCommit() executeCommitActionList Failed");
 	    	abortEdit(editor);
 	        return null;
 	    }
@@ -728,10 +729,10 @@ public class SVNUtil  extends BaseController{
 	    SVNCommitInfo commitInfo = commit(editor);
 	    if(commitInfo == null)
 	    {
-	    	System.out.println("doAutoCommit() commit failed: " + commitInfo);
+	    	Log.debug("doAutoCommit() commit failed: " + commitInfo);
 	        return null;
 	    }
-	    System.out.println("doAutoCommit() commit success: " + commitInfo);
+	    Log.debug("doAutoCommit() commit success: " + commitInfo);
 	    return commitInfo.getNewRevision()+"";
 	}
 
@@ -739,15 +740,15 @@ public class SVNUtil  extends BaseController{
 		try {
 			editor.abortEdit();
 		} catch (SVNException e) {
-		    System.err.println("abortEdit() 异常");
-			e.printStackTrace();
+		    Log.info("abortEdit() 异常");
+			Log.printException(e);
 		}	
 	}
 
 	private String doAutoCommitParent(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, List<CommitAction> commitActionList)
     {
     	String parentPath = doc.getPath();
-        System.out.println("doAutoCommitParent() parentPath:" + parentPath);
+        Log.debug("doAutoCommitParent() parentPath:" + parentPath);
     	if(parentPath.isEmpty())
     	{
     		return null;
@@ -780,14 +781,14 @@ public class SVNUtil  extends BaseController{
 	    		path = path + name + "/";  		
 	    	}
     	} catch (Exception e) {
-    		System.out.println("doAutoCommitParent() Exception");
-    		e.printStackTrace();
+    		Log.debug("doAutoCommitParent() Exception");
+    		Log.printException(e);
     	}
     	return null;
 	}
 
 	private boolean executeCommitActionList(ISVNEditor editor,List<CommitAction> commitActionList,boolean openRoot) {
-		System.out.println("executeCommitActionList() szie: " + commitActionList.size());
+		Log.debug("executeCommitActionList() szie: " + commitActionList.size());
 		try {
 	    	if(openRoot)
 	    	{
@@ -819,8 +820,8 @@ public class SVNUtil  extends BaseController{
 	
 	    	return true;
 		} catch (SVNException e) {
-			System.out.println("executeCommitActionList() 异常");	
-			e.printStackTrace();
+			Log.debug("executeCommitActionList() 异常");	
+			Log.printException(e);
 			return false;
 		}
 	}
@@ -833,7 +834,7 @@ public class SVNUtil  extends BaseController{
 		String entryPath = doc.getPath() + doc.getName();
 		String localPath = doc.getLocalRootPath();
 		String localRefPath = doc.getLocalRefRootPath();
-		System.out.println("executeModifyAction() " + doc.getPath() + doc.getName());
+		Log.debug("executeModifyAction() " + doc.getPath() + doc.getName());
 		
 		
 		InputStream oldData = null;
@@ -866,7 +867,7 @@ public class SVNUtil  extends BaseController{
 		Doc doc = action.getDoc();
 
 		//printObject("executeModifyAction:",doc);
-		System.out.println("executeDeleteAction() " + doc.getPath() + doc.getName());
+		Log.debug("executeDeleteAction() " + doc.getPath() + doc.getName());
 		boolean ret = deleteEntry(editor, doc, false);
 		action.setResult(ret);
 		return ret;
@@ -883,7 +884,7 @@ public class SVNUtil  extends BaseController{
 		String entryName = doc.getName();
 		String entryPath = doc.getPath() + doc.getName();
 		
-		System.out.println("executeAddAction() " + doc.getPath() + doc.getName());
+		Log.debug("executeAddAction() " + doc.getPath() + doc.getName());
 
 		boolean ret = false;
 
@@ -941,8 +942,8 @@ public class SVNUtil  extends BaseController{
 					editor.closeDir();
 				} catch (SVNException e) {
 					action.setResult(false);
-					System.out.println("executeAddAction() closeDir failed");
-					e.printStackTrace();
+					Log.debug("executeAddAction() closeDir failed");
+					Log.printException(e);
 					return false;
 				}
     			return true;
@@ -977,8 +978,8 @@ public class SVNUtil  extends BaseController{
 					editor.closeDir();	//close parent
 				} catch (SVNException e) {
 					action.setResult(false);
-					System.out.println("executeAddAction() closeDir failed");
-					e.printStackTrace();
+					Log.debug("executeAddAction() closeDir failed");
+					Log.printException(e);
 					return false;
 				}
     			return true;
@@ -989,7 +990,7 @@ public class SVNUtil  extends BaseController{
 	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
 	{	
 		String localRootPath = doc.getLocalRootPath(); 
-		//System.out.println("scheduleForCommit() localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
+		//Log.debug("scheduleForCommit() localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
 		
     	if(doc.getName().isEmpty())
     	{
@@ -999,7 +1000,7 @@ public class SVNUtil  extends BaseController{
     	
     	if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
     	{
-    		System.out.println("scheduleForCommit() " + doc.getName() + " was ignored");
+    		Log.debug("scheduleForCommit() " + doc.getName() + " was ignored");
     		return;
     	}
  	
@@ -1010,7 +1011,7 @@ public class SVNUtil  extends BaseController{
 		Integer remoteEntryType = checkPath(entryPath, null);
     	if(remoteEntryType == null)
     	{
-    		System.out.println("scheduleForCommit() checkPath 异常!");
+    		Log.debug("scheduleForCommit() checkPath 异常!");
 			return;
 		}
     	
@@ -1022,7 +1023,7 @@ public class SVNUtil  extends BaseController{
     			//已同步
     			return;
     		}
-    		//System.out.println("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+    		//Log.debug("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     		CommitAction.insertDeleteAction(actionList,doc, false);
     		return;
     	}
@@ -1035,14 +1036,14 @@ public class SVNUtil  extends BaseController{
     	case 1:	//文件
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
-        		//System.out.println("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+        		//Log.debug("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			CommitAction.insertAddFileAction(actionList,doc,isSubAction, false);
 	            return;
     		}
     		
     		if(remoteEntryType != 1)	//文件类型改变
     		{
-        		//System.out.println("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+        		//Log.debug("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			CommitAction.insertDeleteAction(actionList,doc, false);
     			CommitAction.insertAddFileAction(actionList,doc,isSubAction, false);
 	            return;
@@ -1053,7 +1054,7 @@ public class SVNUtil  extends BaseController{
     		{
 	            if(modifyEnable)
 	            {
-            		//System.out.println("scheduleForCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+            		//Log.debug("scheduleForCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
             		CommitAction.insertModifyAction(actionList,doc, false);
             		return;
             	}
@@ -1065,7 +1066,7 @@ public class SVNUtil  extends BaseController{
     			{
     				if(docChange.getType() == DocChangeType.LOCALCHANGE)
     				{
-	            		//System.out.println("scheduleForCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+	            		//Log.debug("scheduleForCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 	            		CommitAction.insertModifyAction(actionList,doc, false);
 	            		return;
     				}
@@ -1075,7 +1076,7 @@ public class SVNUtil  extends BaseController{
     	case 2:
     		if(remoteEntryType == 0) 	//新增目录
 	    	{
-        		//System.out.println("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+        		//Log.debug("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			//Add Dir
     			CommitAction.insertAddDirAction(actionList,doc,isSubAction, false);
 	            return;
@@ -1083,7 +1084,7 @@ public class SVNUtil  extends BaseController{
     		
     		if(remoteEntryType != 2)	//文件类型改变
     		{
-    			//System.out.println("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+    			//Log.debug("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			CommitAction.insertDeleteAction(actionList,doc, false);
 	        	CommitAction.insertAddDirAction(actionList,doc, isSubAction, false);
 	            return;
@@ -1100,7 +1101,7 @@ public class SVNUtil  extends BaseController{
 			HashMap<Long, DocChange> localChanges, int subDocCommitFlag) {
 
 		String localRootPath = doc.getLocalRootPath(); 
-		//System.out.println("scanForSubDocCommit() localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
+		//Log.debug("scanForSubDocCommit() localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -1122,7 +1123,7 @@ public class SVNUtil  extends BaseController{
 		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
-		//System.out.println("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
+		//Log.debug("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
 		Collection<SVNDirEntry> entries = getSubEntries(subDocParentPath, -1L);
         if(entries != null)
         {
@@ -1132,7 +1133,7 @@ public class SVNUtil  extends BaseController{
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
 	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.getSize(), "");
-	            //System.out.println("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
+	            //Log.debug("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
 	            
 	            docHashMap.put(subDoc.getName(), subDoc);
 	            scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
@@ -1140,7 +1141,7 @@ public class SVNUtil  extends BaseController{
         }
         
         //Go Through localSubDocs
-		//System.out.println("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
+		//Log.debug("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
         File dir = new File(localRootPath + subDocParentPath);
         File[] tmp=dir.listFiles();
         for(int i=0;i<tmp.length;i++)
@@ -1148,7 +1149,7 @@ public class SVNUtil  extends BaseController{
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
         	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-        	//System.out.println("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+        	//Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
         	
         	if(docHashMap.get(subDoc.getName()) == null)
         	{
@@ -1168,7 +1169,7 @@ public class SVNUtil  extends BaseController{
 		//检查文件路径
 		if(filePath == null || "".equals(filePath))
 		{
-			System.out.println("getFileInputStream(): filePath is empty");
+			Log.debug("getFileInputStream(): filePath is empty");
 			return null;
 		}
 		
@@ -1176,7 +1177,7 @@ public class SVNUtil  extends BaseController{
 		File file = new File(filePath);  
 		if(file.exists() == false)
 		{
-			System.out.println("getFileInputStream(): 文件 " + filePath + " 不存在");
+			Log.debug("getFileInputStream(): 文件 " + filePath + " 不存在");
 			return null;
 		}
 		
@@ -1184,8 +1185,8 @@ public class SVNUtil  extends BaseController{
 		try {
 			fileInputStream = new FileInputStream(file);
 		} catch (FileNotFoundException e) {
-			System.out.println("getFileInputStream(): fileInputStream is null for " + filePath);
-			e.printStackTrace();
+			Log.debug("getFileInputStream(): fileInputStream is null for " + filePath);
+			Log.printException(e);
 			return null;
 		}  
 		return fileInputStream;
@@ -1196,8 +1197,8 @@ public class SVNUtil  extends BaseController{
 		try {
 			fileData.close();
 		} catch (Exception e) {
-			System.out.println("closeFileInputStream() close failed");
-			e.printStackTrace();
+			Log.debug("closeFileInputStream() close failed");
+			Log.printException(e);
 			return false;
 		}
 		return true;
@@ -1222,10 +1223,10 @@ public class SVNUtil  extends BaseController{
 	            SVNNodeKind nodeKind = repository.checkPath(filePath,revision);
 	            
 	            if (nodeKind == SVNNodeKind.NONE) {
-	                System.err.println("There is no entry at '" + repositoryURL + "'.");
+	                Log.info("There is no entry at '" + repositoryURL + "'.");
 	                return null;
 	            } else if (nodeKind == SVNNodeKind.DIR) {
-	                System.err.println("The entry at '" + repositoryURL + "' is a directory while a file was expected.");
+	                Log.info("The entry at '" + repositoryURL + "' is a directory while a file was expected.");
 	                return null;
 	            }
 	            /*
@@ -1236,7 +1237,7 @@ public class SVNUtil  extends BaseController{
 	            repository.getFile(filePath, revision, fileProperties, baos);
 
 	        } catch (SVNException svne) {
-	            System.err.println("error while fetching the file contents and properties: " + svne.getMessage());
+	            Log.info("error while fetching the file contents and properties: " + svne.getMessage());
 	            return null;
 	        }
 	        return baos.toByteArray();
@@ -1249,13 +1250,13 @@ public class SVNUtil  extends BaseController{
 		Integer type = checkPath(srcEntryPath,null);
 		if(type == null)
 		{
-			System.out.println("copyDoc() Exception");
+			Log.debug("copyDoc() Exception");
 			return null;
 		}
 		
 		if (type == 0) 
 		{
-		    System.out.println("copyDoc() There is no entry for " + srcEntryPath + " at latest revision");
+		    Log.debug("copyDoc() There is no entry for " + srcEntryPath + " at latest revision");
 		    return null;
 		}
 
@@ -1265,12 +1266,12 @@ public class SVNUtil  extends BaseController{
 	    //Do copy File Or Dir
 	    if(isMove)
 	    {
-	       System.out.println("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
+	       Log.debug("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
   			CommitAction.insertDeleteAction(commitActionList,srcDoc, false);
 	    }
         else
         {
- 	       System.out.println("copyDoc() copy " + srcEntryPath + " to " + dstEntryPath);
+ 	       Log.debug("copyDoc() copy " + srcEntryPath + " to " + dstEntryPath);
         }
 	    
 		if(dstDoc.getType() == 1)
@@ -1290,7 +1291,7 @@ public class SVNUtil  extends BaseController{
         
 	    if(executeCommitActionList(editor,commitActionList,true) == false)
 	    {
-	    	System.out.println("copyDoc() executeCommitActionList Failed");
+	    	Log.debug("copyDoc() executeCommitActionList Failed");
 	    	abortEdit(editor);
 	        return null;
 	    }
@@ -1298,10 +1299,10 @@ public class SVNUtil  extends BaseController{
 	    SVNCommitInfo commitInfo = commit(editor);
 	    if(commitInfo == null)
 	    {
-	    	System.out.println("copyDoc() commit failed: " + commitInfo);
+	    	Log.debug("copyDoc() commit failed: " + commitInfo);
 	        return null;
 	    }
-	    System.out.println("copyDoc() commit success: " + commitInfo);
+	    Log.debug("copyDoc() commit success: " + commitInfo);
 	    return commitInfo.getNewRevision()+"";
 	}
   	
@@ -1313,8 +1314,8 @@ public class SVNUtil  extends BaseController{
 		try {
 			editor = repository.getCommitEditor(commitMsg, null);
 		} catch (SVNException e) {
-			System.out.println("getCommitEditor() getCommitEditor Exception");
-			e.printStackTrace();
+			Log.debug("getCommitEditor() getCommitEditor Exception");
+			Log.printException(e);
 			return null;
 		}
 		return editor;
@@ -1327,8 +1328,8 @@ public class SVNUtil  extends BaseController{
         try {
         	commitInfo = editor.closeEdit();
 		} catch (SVNException e) {
-			System.out.println("commmit() closeEdit Exception");
-			e.printStackTrace();
+			Log.debug("commmit() closeEdit Exception");
+			Log.printException(e);
 			return null;
 		}
         return commitInfo;
@@ -1336,11 +1337,11 @@ public class SVNUtil  extends BaseController{
 	
 	//add Entry
     private boolean addEntry(ISVNEditor editor,String parentPath, String entryName,boolean isFile,InputStream fileData,boolean openRoot, boolean openParent,boolean keepOpen){    
-    	//System.out.println("addEntry() parentPath:" + parentPath + " entryName:" + entryName + " isFile:" + isFile);
+    	//Log.debug("addEntry() parentPath:" + parentPath + " entryName:" + entryName + " isFile:" + isFile);
     	
     	if(parentPath == null || entryName == null)
     	{
-    		System.out.println("addEntry() 非法参数：parentPath or entryName is null!");
+    		Log.debug("addEntry() 非法参数：parentPath or entryName is null!");
     		return false;
     	}
     	
@@ -1362,7 +1363,7 @@ public class SVNUtil  extends BaseController{
 	    		editor.applyTextDelta(entryPath, null);
 	    		SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
 	    		String checksum = deltaGenerator.sendDelta(entryPath, fileData, editor, true);
-	    		//System.out.println("addEntry() checksum[" + checksum +"]");
+	    		//Log.debug("addEntry() checksum[" + checksum +"]");
 	    		//close new added File
 	    		editor.closeFile(entryPath, checksum);
 	    	}
@@ -1388,8 +1389,8 @@ public class SVNUtil  extends BaseController{
 	    		editor.closeDir();
 	    	}
     	} catch (SVNException e) {
-	    	System.out.println("addFile(): Schedule to addFile Failed!");
-			e.printStackTrace();
+	    	Log.debug("addFile(): Schedule to addFile Failed!");
+			Log.printException(e);
 			return false;
 	    }    
         return true;
@@ -1415,8 +1416,8 @@ public class SVNUtil  extends BaseController{
 	        	editor.closeDir();
 	        }
     	} catch (SVNException e) {
-			System.out.println("deleteEntry(): Schedule to deleteEntry Failed!");
-    		e.printStackTrace();
+			Log.debug("deleteEntry(): Schedule to deleteEntry Failed!");
+    		Log.printException(e);
 			return false;
 		}
         return true;
@@ -1428,7 +1429,7 @@ public class SVNUtil  extends BaseController{
     {
     	if(parentPath == null || entryName == null)
     	{
-    		System.out.println("modifyFile() 非法参数：parentPath or entryName is null!");
+    		Log.debug("modifyFile() 非法参数：parentPath or entryName is null!");
     		return false;
     	}
     	
@@ -1453,18 +1454,18 @@ public class SVNUtil  extends BaseController{
 	        if(oldFileData == null)
 	        {
 	        	checksum = deltaGenerator.sendDelta(entryPath, newFileData, editor, true);
-	        	System.out.println("modifyFile(): whole checkSum:" + checksum);
+	        	Log.debug("modifyFile(): whole checkSum:" + checksum);
 	        }
 	        else
 	        {
 	            try {
 	            	checksum = deltaGenerator.sendDelta(entryPath, oldFileData, 0, newFileData, editor, true);
-	            	System.out.println("modifyFile(): diff checkSum:" + checksum);
+	            	Log.debug("modifyFile(): diff checkSum:" + checksum);
 	    		}catch (SVNException e) {
-	    			System.out.println("modifyFile(): sendDelta failed try to sendDelta with oleFileData is null!");
-	    			e.printStackTrace();
+	    			Log.debug("modifyFile(): sendDelta failed try to sendDelta with oleFileData is null!");
+	    			Log.printException(e);
 	    			checksum = deltaGenerator.sendDelta(entryPath, newFileData, editor, true); 	
-	            	System.out.println("modifyFile(): whole checkSum:" + checksum);
+	            	Log.debug("modifyFile(): whole checkSum:" + checksum);
 
 	    		}
 	        }
@@ -1484,8 +1485,8 @@ public class SVNUtil  extends BaseController{
 	        	editor.closeDir();
 	        }
 		} catch (SVNException e) {
-			System.out.println("modifyFile(): Schedule to modifyFile Failed!");
-			e.printStackTrace();
+			Log.debug("modifyFile(): Schedule to modifyFile Failed!");
+			Log.printException(e);
 			return false;
 		}
         return true;
@@ -1496,7 +1497,7 @@ public class SVNUtil  extends BaseController{
     {
     	if(srcParentPath == null || srcEntryName == null || dstParentPath == null || dstEntryName == null)
     	{
-    		System.out.println("copyEntry() 非法参数：srcParentPath srcEntryName dstParentPath or dstEntryName is null!");
+    		Log.debug("copyEntry() 非法参数：srcParentPath srcEntryName dstParentPath or dstEntryName is null!");
     		return false;
     	}
 
@@ -1538,8 +1539,8 @@ public class SVNUtil  extends BaseController{
 	        editor.closeDir();
 
 		} catch (SVNException e) {
-			System.out.println("copyFile(): Schedule to copyEntry Failed!");
-			e.printStackTrace();
+			Log.debug("copyFile(): Schedule to copyEntry Failed!");
+			Log.printException(e);
 			return false;
 		}
         return true;
@@ -1581,7 +1582,7 @@ public class SVNUtil  extends BaseController{
 	    	int subEntryType = getEntryType(subEntry.getKind());
 	    	if(subEntryType <= 0)
 	    	{
-	    		System.out.println("getDocList() invalid subEntry subEntryType:" + subEntryType);
+	    		Log.debug("getDocList() invalid subEntry subEntryType:" + subEntryType);
 	    		continue;
 	    	}
 			
@@ -1611,8 +1612,8 @@ public class SVNUtil  extends BaseController{
 			long revision = Long.parseLong(commitId);
 			return revision;
 		} catch (Exception e) {
-			System.out.println("getRevisionByCommitId() 非法SVN commitId:" + commitId);
-			e.printStackTrace();
+			Log.debug("getRevisionByCommitId() 非法SVN commitId:" + commitId);
+			Log.printException(e);
 			return null;
 		}	
 	}
@@ -1631,8 +1632,8 @@ public class SVNUtil  extends BaseController{
 		try {
 			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
 		} catch (Exception e) {
-			System.out.println("getSubEntries() getDir Failed:" + remoteEntryPath);
-			e.printStackTrace();
+			Log.debug("getSubEntries() getDir Failed:" + remoteEntryPath);
+			Log.printException(e);
 			return null;
 		}
 		return entries;
@@ -1640,14 +1641,14 @@ public class SVNUtil  extends BaseController{
 		
 	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String commitId, boolean force, HashMap<String, String> downloadList) {
 		
-		System.out.println("getEntry() revision:" + commitId + " 注意递归过程中，该值必须不变");
+		Log.debug("getEntry() revision:" + commitId + " 注意递归过程中，该值必须不变");
 		
 		long revision = getRevisionByCommitId(commitId);
 		
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
-		//System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		//Log.debug("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		List<Doc> successDocList = new ArrayList<Doc>();	
 		
@@ -1665,11 +1666,11 @@ public class SVNUtil  extends BaseController{
 			//entryName是空，表示当前访问的远程的根目录，必须存在
 			if(remoteEntryPath.isEmpty())
 			{
-				System.out.println("getEntry() remote root Entry not exists");
+				Log.debug("getEntry() remote root Entry not exists");
 				return null;
 			}
 			
-			System.out.println("getEntry() remote Entry " + remoteEntryPath  +" not exists");
+			Log.debug("getEntry() remote Entry " + remoteEntryPath  +" not exists");
 			return null;
 		}
 		
@@ -1681,26 +1682,26 @@ public class SVNUtil  extends BaseController{
 				Object downloadItem = downloadList.get(remoteEntryPath);
 				if(downloadItem == null)
 				{
-					//System.out.println("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
+					//Log.debug("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
 					return null;
 				}
 				else
 				{
-					System.out.println("getEntry() " + remoteEntryPath + " 在下载列表,需要下载！"); 
+					Log.debug("getEntry() " + remoteEntryPath + " 在下载列表,需要下载！"); 
 					downloadList.remove(downloadItem);
 				}
 			}
 			
 			if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force) == false)
 			{
-				System.out.println("getEntry() getRemoteFile Failed:" + remoteEntryPath); 
+				Log.debug("getEntry() getRemoteFile Failed:" + remoteEntryPath); 
 				return null;
 			}
 			
 			File localEntry = new File(localParentPath, targetName);
 			if(!localEntry.exists())
 			{
-				System.out.println("getEntry() Checkout Ok, but localEntry not exists"); 
+				Log.debug("getEntry() Checkout Ok, but localEntry not exists"); 
 				return null;
 			}
 				
@@ -1724,7 +1725,7 @@ public class SVNUtil  extends BaseController{
 				{
 					if(localEntry.isFile())
 					{
-						System.out.println("getEntry() " + localParentPath + targetName + " 是文件，已存在"); 					
+						Log.debug("getEntry() " + localParentPath + targetName + " 是文件，已存在"); 					
 						return null;
 					}
 				}
@@ -1732,7 +1733,7 @@ public class SVNUtil  extends BaseController{
 				{
 					if(localEntry.mkdir() == false)
 					{
-						System.out.println("getEntry() mkdir failed:" + localParentPath + targetName); 					
+						Log.debug("getEntry() mkdir failed:" + localParentPath + targetName); 					
 						return null;
 					}
 					
@@ -1778,7 +1779,7 @@ public class SVNUtil  extends BaseController{
 			//To Get SubDocs
 			if(downloadList != null && downloadList.size() == 0)
 			{
-				System.err.println("getEntry() downloadList is empty"); 
+				Log.info("getEntry() downloadList is empty"); 
 				return successDocList;
 			}
 			
@@ -1848,14 +1849,14 @@ public class SVNUtil  extends BaseController{
 				revision = repository.getLatestRevision();
 			} catch (SVNException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Log.printException(e);
 				return null;
 			}
 		}
 		
 		if(revision == 0)
 		{
-			System.out.println("getPreviousCommmitId() it is oldest revision:" + revision);
+			Log.debug("getPreviousCommmitId() it is oldest revision:" + revision);
 			return null;
 		}
 		
@@ -1868,7 +1869,7 @@ public class SVNUtil  extends BaseController{
 		{
 			if(localEntry.exists())
 			{
-				System.out.println("getRemoteFile() " + localParentPath+targetName + " 已存在");
+				Log.debug("getRemoteFile() " + localParentPath+targetName + " 已存在");
 				return false;
 			}
 			else
@@ -1900,8 +1901,8 @@ public class SVNUtil  extends BaseController{
 		try {
 			out = new FileOutputStream(localParentPath + targetName);
 		} catch (Exception e) {
-			System.out.println("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
-			e.printStackTrace();
+			Log.debug("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
+			Log.printException(e);
 			return false;
 		}
 		
@@ -1911,8 +1912,8 @@ public class SVNUtil  extends BaseController{
 			out.close();
             out = null;
         } catch (Exception e) {
-			System.out.println("getRemoteFile() getFile Exception");
-			e.printStackTrace();
+			Log.debug("getRemoteFile() getFile Exception");
+			Log.printException(e);
 			if(out != null)
 			{
 				try {
@@ -1958,7 +1959,7 @@ public class SVNUtil  extends BaseController{
      * Displays error information and exits. 
      */
     public static void error(String message, Exception e){
-        System.err.println(message+(e!=null ? ": "+e.getMessage() : ""));
+        Log.info(message+(e!=null ? ": "+e.getMessage() : ""));
     }
     
     /*************** Rainy Added Interfaces Based on Low Level APIs End **************/
@@ -1976,23 +1977,23 @@ public class SVNUtil  extends BaseController{
              */
             SVNNodeKind nodeKind = repository.checkPath("", -1);
             if (nodeKind == SVNNodeKind.NONE) {
-                System.err.println("There is no entry at '" + repositoryURL + "'.");
+                Log.info("There is no entry at '" + repositoryURL + "'.");
             } else if (nodeKind == SVNNodeKind.FILE) {
-                System.err.println("The entry at '" + repositoryURL + "' is a file while a directory was .r");
+                Log.info("The entry at '" + repositoryURL + "' is a file while a directory was .r");
             }
             /*
              * getRepositoryRoot() returns the actual root directory where the
              * repository was created. 'true' forces to connect to the repository 
              * if the root url is not cached yet. 
              */
-            System.out.println("Repository Root: " + repository.getRepositoryRoot(true));
+            Log.debug("Repository Root: " + repository.getRepositoryRoot(true));
             /*
              * getRepositoryUUID() returns Universal Unique IDentifier (UUID) of the 
              * repository. 'true' forces to connect to the repository 
              * if the UUID is not cached yet.
              */
-            System.out.println("Repository UUID: " + repository.getRepositoryUUID(true));
-            System.out.println("");
+            Log.debug("Repository UUID: " + repository.getRepositoryUUID(true));
+            Log.debug("");
 
             /*
              * Displays the repository tree at the current path - "" (what means
@@ -2000,7 +2001,7 @@ public class SVNUtil  extends BaseController{
              */
             listEntries(repository, "");
         } catch (SVNException svne) {
-            System.err.println("error while listing entries: "
+            Log.info("error while listing entries: "
                     + svne.getMessage());
             System.exit(1);
         }
@@ -2016,9 +2017,9 @@ public class SVNUtil  extends BaseController{
                             + svne.getMessage());
             System.exit(1);
         }
-        System.out.println("");
-        System.out.println("---------------------------------------------");
-        System.out.println("Repository latest revision: " + latestRevision);
+        Log.debug("");
+        Log.debug("---------------------------------------------");
+        Log.debug("Repository latest revision: " + latestRevision);
         //System.exit(0);
     }
 
@@ -2054,7 +2055,7 @@ public class SVNUtil  extends BaseController{
         Iterator iterator = entries.iterator();
         while (iterator.hasNext()) {
             SVNDirEntry entry = (SVNDirEntry) iterator.next();
-            System.out.println("/" + (path.equals("") ? "" : path + "/")
+            Log.debug("/" + (path.equals("") ? "" : path + "/")
                     + entry.getName() + " (author: '" + entry.getAuthor()
                     + "'; revision: " + entry.getRevision() + "; date: " + entry.getDate() + ")");
             /*
@@ -2088,10 +2089,10 @@ public class SVNUtil  extends BaseController{
             SVNNodeKind nodeKind = repository.checkPath(filePath, -1);
             
             if (nodeKind == SVNNodeKind.NONE) {
-                System.err.println("There is no entry at '" + repositoryURL + "'.");
+                Log.info("There is no entry at '" + repositoryURL + "'.");
                 System.exit(1);
             } else if (nodeKind == SVNNodeKind.DIR) {
-                System.err.println("The entry at '" + repositoryURL + "' is a directory while a file was expected.");
+                Log.info("The entry at '" + repositoryURL + "' is a directory while a file was expected.");
                 System.exit(1);
             }
             /*
@@ -2102,7 +2103,7 @@ public class SVNUtil  extends BaseController{
             repository.getFile(filePath, -1, fileProperties, baos);
 
         } catch (SVNException svne) {
-            System.err.println("error while fetching the file contents and properties: " + svne.getMessage());
+            Log.info("error while fetching the file contents and properties: " + svne.getMessage());
             System.exit(1);
         }
 
@@ -2126,19 +2127,18 @@ public class SVNUtil  extends BaseController{
         while (iterator.hasNext()) {
             String propertyName = (String) iterator.next();
             String propertyValue = fileProperties.getStringValue(propertyName);
-            System.out.println("File property: " + propertyName + "="
+            Log.debug("File property: " + propertyName + "="
                     + propertyValue);
         }
         /*
          * Displays the file contents in the console if the file is a text.
          */
         if (isTextType) {
-            System.out.println("File contents:");
-            System.out.println();
+            Log.debug("File contents:");
             try {
                 baos.writeTo(System.out);
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                Log.printException(ioe);
             }
         } else {
             System.out
@@ -2151,12 +2151,12 @@ public class SVNUtil  extends BaseController{
         try {
             latestRevision = repository.getLatestRevision();
         } catch (SVNException svne) {
-            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
+            Log.info("error while fetching the latest repository revision: " + svne.getMessage());
             System.exit(1);
         }
-        System.out.println("");
-        System.out.println("---------------------------------------------");
-        System.out.println("Repository latest revision: " + latestRevision);
+        Log.debug("");
+        Log.debug("---------------------------------------------");
+        Log.debug("Repository latest revision: " + latestRevision);
         //System.exit(0);
     }
     
@@ -2169,7 +2169,7 @@ public class SVNUtil  extends BaseController{
         try {
             endRevision = repository.getLatestRevision();
         } catch (SVNException svne) {
-            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
+            Log.info("error while fetching the latest repository revision: " + svne.getMessage());
             System.exit(1);
         }
 
@@ -2211,37 +2211,36 @@ public class SVNUtil  extends BaseController{
                     startRevision, endRevision, true, true);
 
         } catch (SVNException svne) {
-            System.out.println("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
+            Log.debug("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
         }
         for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
             /*
              * gets a next SVNLogEntry
              */
             SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-            System.out.println("---------------------------------------------");
+            Log.debug("---------------------------------------------");
             /*
              * gets the revision number
              */
-            System.out.println("revision: " + logEntry.getRevision());
+            Log.debug("revision: " + logEntry.getRevision());
             /*
              * gets the author of the changes made in that revision
              */
-            System.out.println("author: " + logEntry.getAuthor());
+            Log.debug("author: " + logEntry.getAuthor());
             /*
              * gets the time moment when the changes were committed
              */
-            System.out.println("date: " + logEntry.getDate());
+            Log.debug("date: " + logEntry.getDate());
             /*
              * gets the commit log message
              */
-            System.out.println("log message: " + logEntry.getMessage());
+            Log.debug("log message: " + logEntry.getMessage());
             /*
              * displaying all paths that were changed in that revision; cahnged
              * path information is represented by SVNLogEntryPath.
              */
             if (logEntry.getChangedPaths().size() > 0) {
-                System.out.println();
-                System.out.println("changed paths:");
+                Log.debug("changed paths:");
                 /*
                  * keys are changed paths
                  */
@@ -2266,7 +2265,7 @@ public class SVNUtil  extends BaseController{
                      * SVNLogEntryPath.getCopyRevision tells where it was copied
                      * from and what revision the origin path was at.
                      */
-                    System.out.println(" "
+                    Log.debug(" "
                             + entryPath.getType()
                             + "	"
                             + entryPath.getPath()
