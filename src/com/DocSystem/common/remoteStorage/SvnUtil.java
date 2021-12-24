@@ -74,7 +74,7 @@ public class SvnUtil {
             repository.setAuthenticationManager(authManager);
             ret = true;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.printException(e);
         }
     	return ret;
     }
@@ -98,7 +98,7 @@ public class SvnUtil {
     	try {
 			list = repository.getDir(directory,  revision, null,(Collection) null);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.printException(e);
 		}
     	return list;
     }
@@ -140,8 +140,8 @@ public class SvnUtil {
 			long revision = Long.parseLong(commitId);
 			return revision;
 		} catch (Exception e) {
-			Log.debug("getRevisionByCommitId() 非法SVN commitId:" + commitId);
-			e.printStackTrace();
+			Log.info("getRevisionByCommitId() 非法SVN commitId:" + commitId);
+			Log.printException(e);
 			return null;
 		}	
 	}
@@ -162,8 +162,8 @@ public class SvnUtil {
 		try {
 			nodeKind = repository.checkPath(entryPath, revision);
 		} catch (SVNException e) {
-			Log.debug("getEntryType() checkPath Error:" + entryPath);
-			e.printStackTrace();
+			Log.info("getEntryType() checkPath Error:" + entryPath);
+			Log.printException(e);
 			return null;
 		}
 		
@@ -221,7 +221,7 @@ public class SvnUtil {
 		try {
 			revision =  repository.getLatestRevision();
 		} catch (SVNException e) {
-			e.printStackTrace();
+			Log.printException(e);
 		}
 		return revision;
 	}
@@ -379,8 +379,8 @@ public class SvnUtil {
 	    	
 	    	pushResult.actionList = realCommitActionList;
     	} catch (Exception e) {
-    		Log.debug("doAutoCommitParent() Exception");
-    		e.printStackTrace();
+    		Log.info("doAutoCommitParent() Exception");
+    		Log.printException(e);
     	}
     	
     	return realCommitActionList;
@@ -390,8 +390,8 @@ public class SvnUtil {
 		try {
 			editor.abortEdit();
 		} catch (SVNException e) {
-		    System.err.println("abortEdit() 异常");
-			e.printStackTrace();
+		    Log.info("abortEdit() 异常");
+			Log.printException(e);
 		}	
 	}
 
@@ -429,8 +429,8 @@ public class SvnUtil {
 	
 	    	return true;
 		} catch (SVNException e) {
-			Log.debug("executeCommitActionList() 异常");	
-			e.printStackTrace();
+			Log.info("executeCommitActionList() 异常");	
+			Log.printException(e);
 			return false;
 		}
 	}
@@ -556,8 +556,8 @@ public class SvnUtil {
 					editor.closeDir();
 				} catch (SVNException e) {
 					action.setResult(false);
-					Log.debug("executeAddAction() closeDir failed");
-					e.printStackTrace();
+					Log.info("executeAddAction() closeDir failed");
+					Log.printException(e);
 					return false;
 				}
     			return true;
@@ -592,8 +592,8 @@ public class SvnUtil {
 					editor.closeDir();	//close parent
 				} catch (SVNException e) {
 					action.setResult(false);
-					Log.debug("executeAddAction() closeDir failed");
-					e.printStackTrace();
+					Log.info("executeAddAction() closeDir failed");
+					Log.printException(e);
 					return false;
 				}
     			return true;
@@ -609,8 +609,8 @@ public class SvnUtil {
 		try {
 			editor = repository.getCommitEditor(commitMsg, null);
 		} catch (SVNException e) {
-			Log.debug("getCommitEditor() getCommitEditor Exception");
-			e.printStackTrace();
+			Log.info("getCommitEditor() getCommitEditor Exception");
+			Log.printException(e);
 			return null;
 		}
 		return editor;
@@ -623,8 +623,8 @@ public class SvnUtil {
         try {
         	commitInfo = editor.closeEdit();
 		} catch (SVNException e) {
-			Log.debug("commmit() closeEdit Exception");
-			e.printStackTrace();
+			Log.info("commmit() closeEdit Exception");
+			Log.printException(e);
 			return null;
 		}
         return commitInfo;
@@ -684,8 +684,8 @@ public class SvnUtil {
 	    		editor.closeDir();
 	    	}
     	} catch (SVNException e) {
-	    	Log.debug("addFile(): Schedule to addFile Failed!");
-			e.printStackTrace();
+	    	Log.info("addFile(): Schedule to addFile Failed!");
+			Log.printException(e);
 			return false;
 	    }    
         return true;
@@ -713,8 +713,8 @@ public class SvnUtil {
 	        	editor.closeDir();
 	        }
     	} catch (SVNException e) {
-			Log.debug("deleteEntry(): Schedule to deleteEntry Failed!");
-    		e.printStackTrace();
+			Log.info("deleteEntry(): Schedule to deleteEntry Failed!");
+    		Log.printException(e);
 			return false;
 		}
         return true;
@@ -759,10 +759,10 @@ public class SvnUtil {
 	            	checksum = deltaGenerator.sendDelta(entryPath, oldFileData, 0, newFileData, editor, true);
 	            	Log.debug("modifyFile(): diff checkSum:" + checksum);
 	    		}catch (SVNException e) {
-	    			Log.debug("modifyFile(): sendDelta failed try to sendDelta with oleFileData is null!");
-	    			e.printStackTrace();
+	    			Log.info("modifyFile(): sendDelta failed try to sendDelta with oleFileData is null!");
+	    			Log.printException(e);
 	    			checksum = deltaGenerator.sendDelta(entryPath, newFileData, editor, true); 	
-	            	Log.debug("modifyFile(): whole checkSum:" + checksum);
+	            	Log.info("modifyFile(): whole checkSum:" + checksum);
 
 	    		}
 	        }
@@ -782,8 +782,8 @@ public class SvnUtil {
 	        	editor.closeDir();
 	        }
 		} catch (SVNException e) {
-			Log.debug("modifyFile(): Schedule to modifyFile Failed!");
-			e.printStackTrace();
+			Log.info("modifyFile(): Schedule to modifyFile Failed!");
+			Log.printException(e);
 			return false;
 		}
         return true;
@@ -833,8 +833,8 @@ public class SvnUtil {
 	        editor.closeDir();
 
 		} catch (SVNException e) {
-			Log.debug("copyFile(): Schedule to copyEntry Failed!");
-			e.printStackTrace();
+			Log.info("copyFile(): Schedule to copyEntry Failed!");
+			Log.printException(e);
 			return false;
 		}
         return true;
@@ -860,8 +860,8 @@ public class SvnUtil {
 		try {
 			fileInputStream = new FileInputStream(file);
 		} catch (FileNotFoundException e) {
-			Log.debug("getFileInputStream(): fileInputStream is null for " + filePath);
-			e.printStackTrace();
+			Log.info("getFileInputStream(): fileInputStream is null for " + filePath);
+			Log.printException(e);
 			return null;
 		}  
 		return fileInputStream;
@@ -872,8 +872,8 @@ public class SvnUtil {
 		try {
 			fileData.close();
 		} catch (Exception e) {
-			Log.debug("closeFileInputStream() close failed");
-			e.printStackTrace();
+			Log.info("closeFileInputStream() close failed");
+			Log.printException(e);
 			return false;
 		}
 		return true;
@@ -917,8 +917,8 @@ public class SvnUtil {
 		try {
 			out = new FileOutputStream(localParentPath + targetName);
 		} catch (Exception e) {
-			Log.debug("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
-			e.printStackTrace();
+			Log.info("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
+			Log.printException(e);
 			return false;
 		}
 		
@@ -928,8 +928,8 @@ public class SvnUtil {
 			out.close();
             out = null;
         } catch (Exception e) {
-			Log.debug("getRemoteFile() getFile Exception:" + remoteEntryPath);
-			e.printStackTrace();
+			Log.info("getRemoteFile() getFile Exception:" + remoteEntryPath);
+			Log.printException(e);
 			if(out != null)
 			{
 				try {
@@ -960,7 +960,8 @@ public class SvnUtil {
         	try {
 	    	    endRevision = repository.getLatestRevision();
 	        } catch (SVNException svne) {
-	            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
+	            Log.info("error while fetching the latest repository revision");
+	            Log.printException(svne);
 	            return null;
 	        }
     	}
@@ -988,7 +989,8 @@ public class SvnUtil {
         try {
             logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, false);
         } catch (SVNException svne) {
-            Log.debug("getLogEntryList() repository.log() 异常: " + svne.getMessage());
+            Log.info("getLogEntryList() repository.log() 异常");
+            Log.printException(svne);
             return null;
         }
         
@@ -1057,7 +1059,8 @@ public class SvnUtil {
         try {
             logEntries = repository.log(targetPaths, null,revision, revision, true, false);
         } catch (SVNException svne) {
-            Log.debug("getHistoryDetail() 获取日志异常：" + svne.getMessage());
+            Log.info("getHistoryDetail() 获取日志异常");
+            Log.printException(svne);
             return null;
         }
         
