@@ -69,6 +69,7 @@
 	<url-pattern>*.bcmap</url-pattern>	
 	<url-pattern>*.less</url-pattern>	
 	<url-pattern>/web/static/video-js/*</url-pattern>
+	<url-pattern>/web/static/office-editor/sdkjs/*</url-pattern>
 	<url-pattern>/web/static/office-editor/fonts/*</url-pattern>
 </servlet-mapping>
 <filter>  
