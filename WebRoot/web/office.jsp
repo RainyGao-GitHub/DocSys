@@ -79,6 +79,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	                    "callbackUrl": saveFileLink,
 	                    "lang": "zh-CN",
 	                    "user": user,
+	                    "spellcheck": false,
 	                },
 	                "height": "100%",
 	                "width": "100%",
