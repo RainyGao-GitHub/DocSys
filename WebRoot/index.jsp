@@ -6,7 +6,7 @@
 <title>系统引导</title>
 </head>
 <body>
-	<p>系统初始化中,请稍候...</p>
+	<p id="dispInfo">系统初始化中,请稍候</p>
 </body>
 
 <script src="web/static/scripts/jquery.min.js" type="text/javascript"></script>
@@ -40,7 +40,32 @@ function pageInit()
 	else
 	{
 		docSysInit();
+		//更新显示
+		setTimeout(function () {
+			updateDispInfo();
+		},500);	//update 500ms later
 	}
+}
+
+var count = 0;
+var dispInfo = "系统初始化中,请稍候";
+function updateDispInfo()
+{	
+	if(count > 3)
+	{
+		count = 0;
+		dispInfo = "系统初始化中,请稍候";
+	}
+	else
+	{
+		count++;
+		dispInfo = dispInfo + "...";		
+	}
+	$('#dispInfo').text(dispInfo);
+	
+	setTimeout(function () {
+		updateDispInfo(); //reEnter uploadDoc
+	},500);	//check it 500ms later
 }
 
 function docSysInit()
@@ -58,7 +83,8 @@ function docSysInit()
             {
             	if(ret.data && ret.data == "needRestart")
             	{
-            		showErrorMessage("数据库配置有变更，请先重启服务！");	
+            		alert("数据库配置有变更，请先重启服务！");	
+                	window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
             	}
             	else
             	{
@@ -68,13 +94,12 @@ function docSysInit()
             }
             else
             {
-	        	//showErrorMessage("系统初始化失败:" + ret.msgInfo);
-            	console.log("系统初始化失败:" + ret.msgInfo);
+            	alert("系统初始化失败:" + ret.msgInfo);
             	window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
             }
         },
         error : function () {
-        	console.log("系统初始化失败:服务器异常");
+        	alert("系统初始化失败:服务器异常");
         	window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
        }
     });
