@@ -98,7 +98,8 @@ public class SvnUtil {
     	try {
 			list = repository.getDir(directory,  revision, null,(Collection) null);
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.debug("listFiles() getDir Exception");
+			Log.debug(e);
 		}
     	return list;
     }

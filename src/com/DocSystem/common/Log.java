@@ -86,6 +86,38 @@ public class Log {
 		}
 	}
 	
+	public static void debug(Exception e) {
+		if(isLogEnable(debug, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				e.printStackTrace(System.out);
+			}
+			else
+			{
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				e.printStackTrace(new PrintStream(baos));
+				toFile(baos.toString(), logFile);
+			}
+		}
+	}
+	
+	public static void printException(Exception e) {
+		if(isLogEnable(info, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				e.printStackTrace(System.out);
+			}
+			else
+			{
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				e.printStackTrace(new PrintStream(baos));
+				toFile(baos.toString(), logFile);
+			}
+		}
+	}
+	
 	public static void info(String content) {
 		if(isLogEnable(info, allowGeneral))
 		{
@@ -124,6 +156,22 @@ public class Log {
 			else
 			{
 				toFile("ERROR:" + content  + "\n", logFile);
+			}
+		}
+	}
+	
+	public static void error(Exception e) {
+		if(isLogEnable(error, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				e.printStackTrace();
+			}
+			else
+			{
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				e.printStackTrace(new PrintStream(baos));
+				toFile(baos.toString(), logFile);
 			}
 		}
 	}
@@ -184,22 +232,6 @@ public class Log {
 		}
 	}
 	
-	public static void printException(Exception e) {
-		if(isLogEnable(info, allowGeneral))
-		{
-			if(logFile == null)
-			{
-				e.printStackTrace();
-			}
-			else
-			{
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				e.printStackTrace(new PrintStream(baos));
-				toFile(baos.toString(), logFile);
-			}
-		}
-	}
-		
 	public static void docSysDebugLog(String logStr, ReturnAjax rt) {
 		if(rt != null)
 		{
