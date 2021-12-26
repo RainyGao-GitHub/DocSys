@@ -137,11 +137,11 @@ public class Log {
 		{
 			if(logFile == null)
 			{
-				System.out.println("WARN:" + content);
+				System.out.println("[warn] " + content);
 			}
 			else
 			{
-				toFile("WARN:" + content  + "\n", logFile);
+				toFile("[warn] " + content  + "\n", logFile);
 			}
 		}
 	}
@@ -151,11 +151,11 @@ public class Log {
 		{
 			if(logFile == null)
 			{
-				System.err.println("ERROR:" +content);
+				System.out.println("[error] " +content);
 			}
 			else
 			{
-				toFile("ERROR:" + content  + "\n", logFile);
+				toFile("[error] " + content  + "\n", logFile);
 			}
 		}
 	}
@@ -165,7 +165,7 @@ public class Log {
 		{
 			if(logFile == null)
 			{
-				e.printStackTrace();
+				e.printStackTrace(System.out);
 			}
 			else
 			{
