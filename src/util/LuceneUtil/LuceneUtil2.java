@@ -469,7 +469,7 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
-		//Log.debug("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		Log.debug("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 
 		//利用Index的切词器将查询条件切词后进行精确查找
 		Analyzer analyzer = null;
@@ -508,9 +508,18 @@ public class LuceneUtil2   extends BaseFunction
 			}
 		}
 		
+		//TODO: 切词后的结果既然是与条件，那么只要将所以切词结果组成一个查询条件即可，否则效率太低下
+		if(list.size() > 0)
+		{
+			return search(repos, preConditions, field, list, pathFilter, indexLib, searchResult, searchType, weight, hitType);
+		}
+		
+		return false;
+		/*
 		if(list.size() == 1)
 		{
 			String searchStr = list.get(0);
+			Log.debug("smartSearch subSearchStr[0]:" + searchStr);
 			return search(repos, preConditions, field, searchStr, pathFilter, indexLib, searchResult, searchType, weight, hitType);
 		}
 		
@@ -519,6 +528,7 @@ public class LuceneUtil2   extends BaseFunction
 		{
 			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
 			String searchStr = list.get(i);
+			Log.debug("smartSearch subSearchStr[" + i + "]:" + searchStr);
 			search(repos, preConditions, field, searchStr, pathFilter, indexLib, subSearchResult, searchType, weight, hitType);
 			if(subSearchResult.size() <= 0)
 			{
@@ -532,6 +542,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		combineSubSearchResults(subSearcResults, searchResult);		
 		return true;
+		*/
     }
     
     /**
@@ -545,8 +556,7 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
-		//Log.debug("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
-		
+		Log.debug("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);		
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
 		if(str != null && !str.isEmpty())
 		{
@@ -555,6 +565,53 @@ public class LuceneUtil2   extends BaseFunction
 			condition.setValue(str);
 			condition.setQueryType(searchType);
 			conditions.add(condition);
+		}
+		
+		if(pathFilter != null && !pathFilter.isEmpty())
+		{
+			QueryCondition pathFilterCondition = new QueryCondition();
+			pathFilterCondition.setField("path");
+			pathFilterCondition.setValue(pathFilter);
+			pathFilterCondition.setQueryType(QueryCondition.SEARCH_TYPE_Wildcard_Prefix);
+			conditions.add(pathFilterCondition);
+		}
+		
+		if(preConditions != null)
+		{
+			conditions.addAll(preConditions);
+		}
+		
+		if(conditions.size() == 0)
+		{
+			return false;
+		}
+	    return multiSearch(repos, conditions, indexLib, searchResult, weight, hitType);
+    }
+    
+    /**
+     * 	关键字模糊查询， 返回docId List
+     * @param weight 
+     * @param hitType 
+     * @param parentPath 
+     * @param <SearchResult>
+     * @param strList: 关键字列表
+     * @param indexLib: 索引库名字
+     */
+    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, List<String> strList, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
+	{
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+		for(int i = 0; i < strList.size(); i++)
+		{
+			String str = strList.get(i);
+			Log.debug("search() subKeyWord[" + i + "]:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);						
+			if(str != null && !str.isEmpty())
+			{
+				QueryCondition condition = new QueryCondition();
+				condition.setField(field);
+				condition.setValue(str);
+				condition.setQueryType(searchType);
+				conditions.add(condition);
+			}
 		}
 		
 		if(pathFilter != null && !pathFilter.isEmpty())
