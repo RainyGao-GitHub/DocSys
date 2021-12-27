@@ -15514,7 +15514,7 @@ public class BaseController  extends BaseFunction{
 		//远程改动（只有强制手动推送时才推送）
 		if(force == true && isAutoPush == false)
 		{
-			if(pushLocalChangeOnly && localChangeType == DocChangeType.NOCHANGE && remoteChangeType != DocChangeType.REMOTEDELETE)
+			if(pushLocalChangeOnly && remote.isVerRepos == false && localChangeType == DocChangeType.NOCHANGE)
 			{
 				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地未改动, 只推送本地改动，不推送");				
 				return true;
