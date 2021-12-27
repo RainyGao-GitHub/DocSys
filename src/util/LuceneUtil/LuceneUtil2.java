@@ -474,41 +474,47 @@ public class LuceneUtil2   extends BaseFunction
 		//利用Index的切词器将查询条件切词后进行精确查找
 		Analyzer analyzer = null;
 		TokenStream stream = null;
+
 		
+		//TODO: 对特殊字符进行预处理（将+-x/\_!=^|&()替换成空格，并拆分成subStr然后再进行切词处理）
+        String[] subStrs=str.split("_|-|&|;|,|.");
 		List <String> list = new ArrayList<String>();
-		try {
-			analyzer = new IKAnalyzer();;
-			stream = analyzer.tokenStream("field", new StringReader(str));
+		for(int i=0; i<subStrs.length; i++)
+		{
+			Log.debug("smartSearch() sub keyword:" + subStrs[i]);
+			try {
+				analyzer = new IKAnalyzer();;
+				stream = analyzer.tokenStream("field", new StringReader(subStrs[i]));
+				
+				//保存分词后的结果词汇
+				CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
 		
-			//保存分词后的结果词汇
-			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
-	
-			stream.reset(); //这句很重要
-	
-			while(stream.incrementToken()) {
-				//Log.debug(cta.toString());
-				list.add(cta.toString());
-			}
-	
-			stream.end(); //这句很重要
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if(stream != null)
-			{
-				try {
-					stream.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
+				stream.reset(); //这句很重要
+		
+				while(stream.incrementToken()) {
+					//Log.debug(cta.toString());
+					list.add(cta.toString());
 				}
-			}
-			if(analyzer != null)
-			{
-				analyzer.close();
+		
+				stream.end(); //这句很重要
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				if(stream != null)
+				{
+					try {
+						stream.close();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				}
+				if(analyzer != null)
+				{
+					analyzer.close();
+				}
 			}
 		}
 		
-		//TODO: 切词后的结果既然是与条件，那么只要将所以切词结果组成一个查询条件即可，否则效率太低下
 		if(list.size() > 0)
 		{
 			return search(repos, preConditions, field, list, pathFilter, indexLib, searchResult, searchType, weight, hitType);
