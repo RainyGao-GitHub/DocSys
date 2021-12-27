@@ -1280,9 +1280,12 @@ public class ManageController extends BaseController{
 
 			if(login_user.getType().equals(tempUser.getType()))
 			{
-				Log.docSysErrorLog("越权操作：您无权修改同级别用户的设置！", rt);
-				writeJson(rt, response);
-				return;			
+				if(login_user.getId() != 0)	//系统第一个管理员用户拥有最高级权限，可以修改其他超级管理员信息
+				{
+					Log.docSysErrorLog("越权操作：您无权修改同级别用户的设置！", rt);
+					writeJson(rt, response);
+					return;
+				}
 			}
 			
 			//检查用户名是否有改动
@@ -1385,9 +1388,12 @@ public class ManageController extends BaseController{
 			
 			if(tempUser.getType().equals(login_user.getType()))
 			{
-				Log.docSysErrorLog("越权操作：您无权修改同级别用户的密码！", rt);
-				writeJson(rt, response);
-				return;			
+				if(login_user.getId() != 0)	//系统第一个管理员用户拥有最高级权限，可以重置其他超级管理员密码
+				{
+					Log.docSysErrorLog("越权操作：您无权修改同级别用户的密码！", rt);
+					writeJson(rt, response);
+					return;			
+				}
 			}
 		}	
 				
@@ -1461,9 +1467,12 @@ public class ManageController extends BaseController{
 	
 			if(tempUser.getType().equals(login_user.getType()))
 			{
-				Log.docSysErrorLog("越权操作：您无权删除同级别用户！", rt);
-				writeJson(rt, response);
-				return;			
+				if(login_user.getId() != 0)	//系统第一个管理员用户拥有最高级权限，可以删除其他超级管理员
+				{
+					Log.docSysErrorLog("越权操作：您无权删除同级别用户！", rt);
+					writeJson(rt, response);
+					return;			
+				}
 			}		
 		}
 		
