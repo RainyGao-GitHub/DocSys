@@ -15782,12 +15782,16 @@ public class BaseController  extends BaseFunction{
 		pushResult.totalCount ++;
 
 		ret = deleteEntryFromRemoteStorage(session, remote, repos, remoteDoc, pushResult, actionList, ret);
-		if(ret == true && remote.isVerRepos == false)
+		if(ret == true)
 		{
-			pushResult.successCount ++;	
-			if(dbDoc != null)
-			{
-				deleteRemoteStorageDBEntry(repos, doc, remote);
+			//版本仓库还需要commit，这里不是标志成功的地方
+			if(remote.isVerRepos == false)
+			{			
+				pushResult.successCount ++;	
+				if(dbDoc != null)
+				{
+					deleteRemoteStorageDBEntry(repos, doc, remote);
+				}
 			}
 		}
 		else
@@ -15894,28 +15898,32 @@ public class BaseController  extends BaseFunction{
 		pushResult.totalCount ++;
 
 		ret = uploadFileToRemoteStorage(session, remote, repos, doc, pushResult, actionList, ret);
-		if(ret == true && remote.isVerRepos == false)
+		if(ret == true)
 		{
-			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
-			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
-			{
-				pushResult.successCount ++;
-
-				
-				doc.setRevision(newRemoteDoc.getRevision());
-				if(dbDoc == null)
+			//版本仓库还需要commit，这里不是标志成功的地方
+			if(remote.isVerRepos == false)
+			{			
+				//获取并更新remoteDoc Info
+				Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
+				if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 				{
-					addRemoteStorageDBEntry(repos, doc, remote);
+					pushResult.successCount ++;
+	
+					
+					doc.setRevision(newRemoteDoc.getRevision());
+					if(dbDoc == null)
+					{
+						addRemoteStorageDBEntry(repos, doc, remote);
+					}
+					else
+					{
+						updateRemoteStorageDBEntry(repos, doc, remote);
+					}
 				}
 				else
 				{
-					updateRemoteStorageDBEntry(repos, doc, remote);
+					pushResult.failCount ++;					
 				}
-			}
-			else
-			{
-				pushResult.failCount ++;					
 			}
 		}
 		else
@@ -15932,27 +15940,31 @@ public class BaseController  extends BaseFunction{
 
 		
 		ret = addFileToRemoteStorage(session, remote, repos, doc, pushResult, actionList, ret);
-		if(ret == true && remote.isVerRepos == false)
+		if(ret == true)
 		{
-			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
-			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
+			//版本仓库还需要commit，这里不是标志成功的地方
+			if(remote.isVerRepos == false)
 			{
-				pushResult.successCount ++;
-
-				doc.setRevision(newRemoteDoc.getRevision());
-				if(dbDoc == null)
+				//获取并更新remoteDoc Info
+				Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
+				if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 				{
-					addRemoteStorageDBEntry(repos, doc, remote);
+					pushResult.successCount ++;
+	
+					doc.setRevision(newRemoteDoc.getRevision());
+					if(dbDoc == null)
+					{
+						addRemoteStorageDBEntry(repos, doc, remote);
+					}
+					else
+					{
+						updateRemoteStorageDBEntry(repos, doc, remote);
+					}
 				}
 				else
 				{
-					updateRemoteStorageDBEntry(repos, doc, remote);
+					pushResult.failCount ++;					
 				}
-			}
-			else
-			{
-				pushResult.failCount ++;					
 			}
 		}
 		else
@@ -15969,26 +15981,30 @@ public class BaseController  extends BaseFunction{
 		pushResult.totalCount ++;
 
 		ret = addDirToRemoteStorage(session, remote, repos, doc, pushResult, actionList, isSubAction);
-		if(ret == true && remote.isVerRepos == false)
+		if(ret == true)
 		{
-			//获取并更新remoteDoc Info
-			Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
-			if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
+			//版本仓库还需要commit，这里不是标志成功的地方
+			if(remote.isVerRepos == false)
 			{
-				pushResult.successCount ++;
-				doc.setRevision(newRemoteDoc.getRevision());
-				if(dbDoc == null)
+				//获取并更新remoteDoc Info
+				Doc newRemoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null);
+				if(newRemoteDoc != null && newRemoteDoc.getType() != 0)
 				{
-					addRemoteStorageDBEntry(repos, doc, remote);
+					pushResult.successCount ++;
+					doc.setRevision(newRemoteDoc.getRevision());
+					if(dbDoc == null)
+					{
+						addRemoteStorageDBEntry(repos, doc, remote);
+					}
+					else
+					{
+						updateRemoteStorageDBEntry(repos, doc, remote);
+					}
 				}
 				else
 				{
-					updateRemoteStorageDBEntry(repos, doc, remote);
+					pushResult.failCount ++;					
 				}
-			}
-			else
-			{
-				pushResult.failCount ++;					
 			}
 		}
 		else
