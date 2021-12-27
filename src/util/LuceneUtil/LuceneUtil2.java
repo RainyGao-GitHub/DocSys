@@ -486,7 +486,7 @@ public class LuceneUtil2   extends BaseFunction
 			stream.reset(); //这句很重要
 	
 			while(stream.incrementToken()) {
-				//Log.debug(cta.toString());
+				Log.debug("smartSearch() subKeyword:" + cta.toString());
 				list.add(cta.toString());
 			}
 	
@@ -544,6 +544,7 @@ public class LuceneUtil2   extends BaseFunction
 		*/
     }
 	
+	//TODO: 该函数可以删除，手动处理特殊字符没有意义，切词器会自动进行处理
 	public static boolean smartSearchEx(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
 		Log.debug("smartSearchEx() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
@@ -598,6 +599,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		return false;
     }
+    
     
     /**
      * 	关键字模糊查询， 返回docId List
