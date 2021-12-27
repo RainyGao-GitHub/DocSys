@@ -5854,9 +5854,9 @@ public class DocController extends BaseController{
 		//文件名通配符搜索（带空格）
 		if((searchMask & SEARCH_MASK[0]) > 0)
 		{
-			//Log.println("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
+			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
 			LuceneUtil2.search(repos, preConditions, "nameForSearch", searchWord.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, SEARCH_MASK[0]); 	//Search By DocName
-			//Log.println("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
+			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
 		}
 		
 		//空格是或条件
@@ -5870,28 +5870,28 @@ public class DocController extends BaseController{
 				{
 					//0x00000001; //文件内容
 					//文件名通配符搜索（不切词搜索）
-					//Log.println("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
+					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
 					LuceneUtil2.search(repos, preConditions, "nameForSearch", searchStr.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1, SEARCH_MASK[0]);	//Search By FileName
-					//Log.println("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
+					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
 
 					//文件名智能搜索（切词搜索）
-					//Log.println("luceneSearch() 文件名智能搜索:" + searchStr);
+					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr);
 					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, 1, SEARCH_MASK[0]);	//Search By FileName
-					//Log.println("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
+					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
 					//0x00000002; //文件内容搜索
-					//Log.println("luceneSearch() 文件内容智能搜索:" + searchStr);
+					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr);
 					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);	//Search By FileContent
-					//Log.println("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());
+					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
 				if((searchMask & SEARCH_MASK[2]) > 0)
 				{	
 					//0x00000004; //文件备注搜索
-					//Log.println("luceneSearch() 文件备注智能搜索:" + searchStr);
+					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr);
 					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);	//Search By VDoc
-					//Log.println("luceneSearch() 文件备注智能搜索:" + searchStr + " count:" + searchResult.size());
+					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
 			}
 		}

@@ -2338,7 +2338,7 @@ public class BaseController  extends BaseFunction{
 					response.setHeader("Content-Range", contentRange);
 					bis.skip(p);
 				} else if (rangeSwitch == 2) {
-					String contentRange = range.replace("=", " ") + "/" + new Long(fileLength).toString();
+					String contentRange = range.replaceAll("=", " ") + "/" + new Long(fileLength).toString();
 					response.setHeader("Content-Range", contentRange);
 					bis.skip(p);
 				} else {
