@@ -544,62 +544,63 @@ public class LuceneUtil2   extends BaseFunction
 		*/
     }
 	
-	//TODO: 该函数可以删除，手动处理特殊字符没有意义，切词器会自动进行处理
 	public static boolean smartSearchEx(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
 	{
-		Log.debug("smartSearchEx() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		Log.debug("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 
 		//利用Index的切词器将查询条件切词后进行精确查找
 		Analyzer analyzer = null;
 		TokenStream stream = null;
-		
-		//对特殊字符进行预处理
-        String[] subStrs=str.split("[_|-|—|&|;|,|.]");
+
 		List <String> list = new ArrayList<String>();
-		for(int i=0; i<subStrs.length; i++)
-		{
-			Log.debug("smartSearchEx() sub keyword:" + subStrs[i]);
-			try {
-				analyzer = new IKAnalyzer();;
-				stream = analyzer.tokenStream("field", new StringReader(subStrs[i]));
-				
-				//保存分词后的结果词汇
-				CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
-		
-				stream.reset(); //这句很重要
-		
-				while(stream.incrementToken()) {
-					//Log.debug(cta.toString());
-					list.add(cta.toString());
+		try {
+			analyzer = new IKAnalyzer();;
+			stream = analyzer.tokenStream("field", new StringReader(str));
+			
+			//保存分词后的结果词汇
+			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
+	
+			stream.reset(); //这句很重要
+	
+			while(stream.incrementToken()) {
+				Log.debug("smartSearch() subKeyword:" + cta.toString());
+				list.add(cta.toString());
+			}
+	
+			stream.end(); //这句很重要
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(stream != null)
+			{
+				try {
+					stream.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
 				}
-		
-				stream.end(); //这句很重要
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				if(stream != null)
-				{
-					try {
-						stream.close();
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-				}
-				if(analyzer != null)
-				{
-					analyzer.close();
-				}
+			}
+			if(analyzer != null)
+			{
+				analyzer.close();
 			}
 		}
 		
 		if(list.size() > 0)
 		{
+			//如果第一个字符和str相同，那么结果不一定存在，因此需要去掉整个字符串再搜索
+			if(list.size() > 1)
+			{
+				if(list.get(0).equals(str.toLowerCase()))
+				{
+					list.remove(0);
+				}
+			}
 			return search(repos, preConditions, field, list, pathFilter, indexLib, searchResult, searchType, weight, hitType);
 		}
 		
 		return false;
     }
-    
+	
     
     /**
      * 	关键字模糊查询， 返回docId List
