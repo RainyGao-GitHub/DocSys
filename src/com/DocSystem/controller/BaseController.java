@@ -9987,19 +9987,19 @@ public class BaseController  extends BaseFunction{
 		File file =new File(filePath);
 		if(!file.exists())
 		{
-			Log.debug("addIndexForRDoc() " + filePath + " 不存在");
+			Log.info("addIndexForRDoc() " + filePath + " 不存在");
 			return false;
 		}
 		
 		if(file.isDirectory())
 		{
-			//Log.debug("addIndexForRDoc() isDirectory");
+			Log.debug("addIndexForRDoc() isDirectory");
 			return false; //LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
 		}
 		
 		if(file.length() == 0)
 		{
-			//Log.debug("addIndexForRDoc() fileSize is 0, do delete index");
+			Log.debug("addIndexForRDoc() fileSize is 0, do delete index");
 			return LuceneUtil2.deleteIndex(doc,indexLib);
 		}
 		
@@ -10007,7 +10007,7 @@ public class BaseController  extends BaseFunction{
 		String fileSuffix = FileUtil.getFileSuffix(doc.getName());
 		if(fileSuffix != null)
 		{
-			//Log.debug("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+			Log.debug("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 			switch(fileSuffix)
 			{
 			case "doc":
@@ -10033,7 +10033,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 
-		//Log.debug("addIndexForRDoc() 未知文件类型不支持索引");
+		Log.debug("addIndexForRDoc() 未知文件类型不支持索引");
 		return false;
 	}
 	
