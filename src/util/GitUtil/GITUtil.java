@@ -124,7 +124,7 @@ public class GITUtil  extends BaseController{
 			git = Git.open(new File(gitDir));
 		} catch (IOException e) {
 			Log.debug("OpenRepos() Failed to open gitDir:" + gitDir);
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
         
@@ -166,7 +166,7 @@ public class GITUtil  extends BaseController{
 			Git.init().setGitDir(dir).setDirectory(wcdir).call();
 		} catch (Exception e) {
 			Log.info("CreateRepos error");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
         
@@ -195,7 +195,7 @@ public class GITUtil  extends BaseController{
 			cloneCommand.call();
 		} catch (Exception e) {
 			Log.info("CloneRepos error");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
         
@@ -237,7 +237,7 @@ public class GITUtil  extends BaseController{
             
 		} catch (IOException e) {
 			Log.info("getLatestRevision() Exception");        	
-			Log.printException(e);
+			Log.info(e);
 			CloseRepos();
 			return null;
 		}
@@ -273,7 +273,7 @@ public class GITUtil  extends BaseController{
 	        return null;
 	    } catch (Exception e) {
 			Log.debug("getLatestRevCommit 异常");	
-			Log.printException(e);
+			Log.info(e);
 			CloseRepos();
 		}
 		return null;
@@ -409,7 +409,7 @@ public class GITUtil  extends BaseController{
 	        return logList;
 	    } catch (Exception e) {
 			Log.info("getHistoryLogs Error");	
-			Log.printException(e);
+			Log.info(e);
 			CloseRepos();
 			return null;
 		}
@@ -425,7 +425,7 @@ public class GITUtil  extends BaseController{
 			git = Git.open(new File(wcDir));
 		} catch (IOException e) {
 			Log.debug("getWCHistoryLogs() Failed to open gitDir:" + gitDir);
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
         
@@ -476,7 +476,7 @@ public class GITUtil  extends BaseController{
 	        return logList;
 	    } catch (Exception e) {
 			Log.info("getHistoryLogs Exception");	
-			Log.printException(e);
+			Log.info(e);
 			CloseRepos();
 			return null;
 		}
@@ -551,7 +551,7 @@ public class GITUtil  extends BaseController{
 	    	    	}
 	    		} catch(Exception e){
 	    			Log.info("getHistoryDetail() treeWalk.next() Exception"); 
-	                Log.printException(e);
+	                Log.info(e);
 	    			return null;
 	    		}
 				return changedItemList;	        	
@@ -602,7 +602,7 @@ public class GITUtil  extends BaseController{
 	        return changedItemList;
 		} catch (Exception e) {
 			Log.info("getHistoryDetail() entryPath:" + entryPath + " 异常");	
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}	
 	}
@@ -693,7 +693,7 @@ public class GITUtil  extends BaseController{
 	        }            
         } catch (Exception e) {
             Log.info("getSubEntries() getTreeWalkByPath Exception"); 
-            Log.printException(e);
+            Log.info(e);
             CloseRepos();
             return null;
          }
@@ -771,7 +771,7 @@ public class GITUtil  extends BaseController{
 	    	}
 		} catch(Exception e){
 			Log.info("getDocList() treeWalk.next() Exception"); 
-            Log.printException(e);
+            Log.info(e);
             CloseRepos();
 			return null;
 		}
@@ -863,7 +863,7 @@ public class GITUtil  extends BaseController{
             return revTree;
 		} catch (Exception e) {
 	    	Log.info("getRevTree() 异常");
-	        Log.printException(e);
+	        Log.info(e);
 		}
         return null;
 	}
@@ -1071,7 +1071,7 @@ public class GITUtil  extends BaseController{
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				Log.printException(e);
+				Log.info(e);
 			}
 		  
 		    return successDocList;
@@ -1113,7 +1113,7 @@ public class GITUtil  extends BaseController{
 			return previsouCommit.getName();
 		} catch (Exception e) {
 			Log.info("getPreviousCommmitId() for:" + revision + " 异常");	
-			Log.printException(e);
+			Log.info(e);
 		}	
 		
 		return null;
@@ -1188,7 +1188,7 @@ public class GITUtil  extends BaseController{
 			out = new FileOutputStream(localParentPath + targetName);
 		} catch (Exception e) {
 			Log.info("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
-			Log.printException(e);
+			Log.info(e);
 	        CloseRepos();
 			return false;
 		}
@@ -1202,7 +1202,7 @@ public class GITUtil  extends BaseController{
 	        out = null;
 		} catch (Exception e) {
 			Log.info("getRemoteFile() loader.copy Failed:" + localParentPath + targetName);
-			Log.printException(e);
+			Log.info(e);
 			CloseRepos();
 			if(out != null)
 			{
@@ -1241,7 +1241,7 @@ public class GITUtil  extends BaseController{
 			return treeWalk;
         }catch (Exception e) {
             Log.info("getTreeWalkByPath() Exception"); 
-            Log.printException(e);
+            Log.info(e);
         }
 		return null;
 	}
@@ -1376,7 +1376,7 @@ public class GITUtil  extends BaseController{
 			git = Git.open(new File(wcDir));
 		} catch (Exception e) {
 			Log.info("doAutoCommit() Failed to open wcDir:" + wcDir);
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 		
@@ -1452,7 +1452,7 @@ public class GITUtil  extends BaseController{
 			git = Git.open(new File(wcDir));
 		} catch (Exception e) {
 			Log.info("copyDoc() Failed to open wcDir:" + wcDir);
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 		
@@ -1492,7 +1492,7 @@ public class GITUtil  extends BaseController{
 			Log.debug("doAutoCommmit() commitId:" + ret.getName());
 		} catch (Exception e) {
 			Log.info("doAutoCommmit() commit error");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 		return ret.getName();
@@ -1546,7 +1546,7 @@ public class GITUtil  extends BaseController{
 			return false;
 		} catch (Exception e) {
 			Log.info("doPush() Push Exception");	
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 	}
@@ -1590,7 +1590,7 @@ public class GITUtil  extends BaseController{
 		    return true;
 	    } catch (Exception e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		    CloseRepos();
 			return false;
 	    }
@@ -1658,7 +1658,7 @@ public class GITUtil  extends BaseController{
 			}
 		} catch (IOException e) {
 			Log.info("checkAndCleanBranch get branchName Exception");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		if(curBranchName == null || !curBranchName.equals(branchName))
@@ -1668,7 +1668,7 @@ public class GITUtil  extends BaseController{
 			try {
 				ret = git.checkout().setName(branchName).call();
 			} catch (Exception e) {
-				Log.printException(e);
+				Log.info(e);
 				return false;
 			} 
 			
@@ -1696,7 +1696,7 @@ public class GITUtil  extends BaseController{
             return doCleanBranch(git, repo, status);            
 		} catch (Exception e) {
 			Log.info("checkAndCleanBranch check and clean branch Exception");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 	}
@@ -1719,7 +1719,7 @@ public class GITUtil  extends BaseController{
 				branchName = fullBranch.substring(Constants.R_HEADS.length());
 			}
 		} catch (IOException e) {
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		Log.debug("doPullEx branchName:" + branchName);
@@ -1779,7 +1779,7 @@ public class GITUtil  extends BaseController{
 		try {
 			fetchRes = fetch.call();
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		
@@ -1817,7 +1817,7 @@ public class GITUtil  extends BaseController{
 		try {
 			rebaseRes = rebase.setUpstream(commitToMerge).setUpstreamName(upstreamName).call();
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		
@@ -1844,16 +1844,16 @@ public class GITUtil  extends BaseController{
 			return ret.getStatus().isSuccessful();
 		} catch (NoHeadException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		} catch (RefNotFoundException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		} catch (WrongRepositoryStateException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		} catch (GitAPIException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		}
 		return false;
 	}
@@ -1865,16 +1865,16 @@ public class GITUtil  extends BaseController{
 			return ret.getStatus().isSuccessful();
 		} catch (NoHeadException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		} catch (RefNotFoundException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		} catch (WrongRepositoryStateException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		} catch (GitAPIException e) {
 			// TODO Auto-generated catch block
-			Log.printException(e);
+			Log.info(e);
 		}
 		return false;
 	}
@@ -1899,7 +1899,7 @@ public class GITUtil  extends BaseController{
 		try {
 			status = git.status().call();
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		
@@ -1932,7 +1932,7 @@ public class GITUtil  extends BaseController{
 				out = new FileOutputStream(wcEntryPath);
 			} catch (Exception e) {
 				Log.info("doFixRebaseConflict() new FileOutputStream Failed:" + wcEntryPath);
-				Log.printException(e);
+				Log.info(e);
 				return false;
 			}
 			
@@ -1947,7 +1947,7 @@ public class GITUtil  extends BaseController{
 				git.add().addFilepattern(entryPath).call();
 			} catch (Exception e) {
 				Log.info("doFixRebaseConflict() loader.copy Failed:" + wcEntryPath);
-				Log.printException(e);
+				Log.info(e);
 				if(out != null)
 				{
 					try {
@@ -1972,7 +1972,7 @@ public class GITUtil  extends BaseController{
 	        return true;
 		} catch (Exception e) {
 			Log.info("ResetWcDir() Failed to open wcDir:" + wcDir);
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}			    
 	}
@@ -1992,7 +1992,7 @@ public class GITUtil  extends BaseController{
 	        return doResetBranch(git, preVision);
 		} catch (Exception e) {
 			Log.info("rollBackCommit() Exception");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 	}
@@ -2009,7 +2009,7 @@ public class GITUtil  extends BaseController{
 			checkoutCmd.call();
 		} catch (Exception e) {
 			Log.info("rollBackIndex() Exception");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
         return true;
@@ -2052,7 +2052,7 @@ public class GITUtil  extends BaseController{
 	    	return true;
 		} catch (Exception e) {
 			Log.debug("executeCommitActionList() 异常");	
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 	}
@@ -2142,7 +2142,7 @@ public class GITUtil  extends BaseController{
 			git.add().addFilepattern(entryPath).call();
 		} catch (Exception e) {
 			Log.info("addEntry() add Index Error");	
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		return true;
@@ -2163,7 +2163,7 @@ public class GITUtil  extends BaseController{
 			git.rm().addFilepattern(entryPath).call();
 		} catch (Exception e) {
 			Log.info("addEntry() add Index Error");	
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		return true;
@@ -2201,7 +2201,7 @@ public class GITUtil  extends BaseController{
 			git.add().addFilepattern(entryPath).call();
 		} catch (Exception e) {
 			Log.info("addEntry() git.add.addFilepattern.call for " + entryPath + " 失败");	
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		return true;
@@ -2352,7 +2352,7 @@ public class GITUtil  extends BaseController{
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				Log.printException(e);
+				Log.info(e);
 			}
 		}
 		
@@ -2400,7 +2400,7 @@ public class GITUtil  extends BaseController{
     			git = Git.open(new File(wcDir));
     		} catch (Exception e) {
     			Log.debug("doAutoCommitParent() Failed to open wcDir:" + wcDir);
-    			Log.printException(e);
+    			Log.info(e);
     			return null;
     		}
     		
@@ -2452,7 +2452,7 @@ public class GITUtil  extends BaseController{
 	    	}
     	} catch (Exception e) {
     		Log.info("doAutoCommitParent() Exception");
-    		Log.printException(e);
+    		Log.info(e);
     	}
     	return null;
 	}
@@ -2475,7 +2475,7 @@ public class GITUtil  extends BaseController{
 	    	}
 		} catch(Exception e){
 			Log.info("getDocList() treeWalk.next() Exception"); 
-            Log.printException(e);
+            Log.info(e);
 			return true;
 		}
 		return true;

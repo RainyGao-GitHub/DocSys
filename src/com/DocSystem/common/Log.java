@@ -102,7 +102,21 @@ public class Log {
 		}
 	}
 	
-	public static void printException(Exception e) {
+	public static void info(String content) {
+		if(isLogEnable(info, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				System.out.println(content);
+			}
+			else
+			{
+				toFile(content + "\n", logFile);
+			}
+		}
+	}
+	
+	public static void info(Exception e) {
 		if(isLogEnable(info, allowGeneral))
 		{
 			if(logFile == null)
@@ -118,20 +132,6 @@ public class Log {
 		}
 	}
 	
-	public static void info(String content) {
-		if(isLogEnable(info, allowGeneral))
-		{
-			if(logFile == null)
-			{
-				System.out.println(content);
-			}
-			else
-			{
-				toFile(content + "\n", logFile);
-			}
-		}
-	}
-	
 	public static void warn(String content) {
 		if(isLogEnable(warn, allowAll))
 		{
@@ -142,6 +142,22 @@ public class Log {
 			else
 			{
 				toFile("[warn] " + content  + "\n", logFile);
+			}
+		}
+	}
+	
+	public static void warn(Exception e) {
+		if(isLogEnable(warn, allowGeneral))
+		{
+			if(logFile == null)
+			{
+				e.printStackTrace(System.out);
+			}
+			else
+			{
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				e.printStackTrace(new PrintStream(baos));
+				toFile(baos.toString(), logFile);
 			}
 		}
 	}
