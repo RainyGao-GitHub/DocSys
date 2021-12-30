@@ -4079,39 +4079,44 @@ public class BaseController  extends BaseFunction{
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNC)
 		{
-			Log.debug("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			Log.info("**************************** checkAndUpdateIndex() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
 				if(doc.getDocId() == 0)
 				{
 					//Delete All Index Lib
+					Log.info("checkAndUpdateIndex() delete all index lib");
 					deleteDocNameIndexLib(repos);
 					deleteRDocIndexLib(repos);
 					deleteVDocIndexLib(repos);
 					//Build All Index For Doc
+					Log.info("checkAndUpdateIndex() buildIndexForDoc");
 					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
 				}
 				else
 				{
 					//deleteAllIndexUnderDoc
+					Log.info("checkAndUpdateIndex() delete all index for doc");
 					deleteAllIndexForDoc(repos, doc, 2);
 					//buildAllIndexForDoc
+					Log.info("checkAndUpdateIndex() buildIndexForDoc");
 					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
 				}
 			}
-			Log.debug("**************************** syncupForDocChange() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 		}
 		else	//页面刷新：只在检测到文件有改动的时候才刷新索引
 		{
 			if(localChanges.size() > 0 || remoteChanges.size() > 0)
 			{
-				Log.debug("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+				Log.info("**************************** checkAndUpdateIndex() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 				if(docDetect(repos, doc))
 				{	
 					HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
+					Log.info("checkAndUpdateIndex() rebuildIndexForDoc");					
 					rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
 				}
-				Log.debug("**************************** syncupForDocChange() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+				Log.info("**************************** checkAndUpdateIndex() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			}
 		}
 	}
