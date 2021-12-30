@@ -1342,7 +1342,7 @@ public class LuceneUtil2   extends BaseFunction
 			String code = FileUtils2.getFileEncode(filePath);
 			if(FileUtils2.isBinaryFile(code) == true)
 			{
-				//Log.debug("addIndexForFile() BinaryFile will not add Index");
+				Log.debug("addIndexForFile() BinaryFile will not add Index");
 				return true;
 			}
 			
