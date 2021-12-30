@@ -106,7 +106,7 @@ public class SVNUtil  extends BaseController{
         	repositoryURL = SVNURL.parseURIEncoded(reposURL);
         } catch (Exception e) {
 			Log.debug("Init() parseURIEncoded " + reposURL + " Failed");
-            Log.printException(e);
+            Log.info(e);
             return false;
         }
 
@@ -116,7 +116,7 @@ public class SVNUtil  extends BaseController{
 			repository = SVNRepositoryFactory.create(repositoryURL);
 		} catch (SVNException e) {
 			Log.debug("Init() create " + repositoryURL.toString() + " Failed");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
         //设置权限验证对象
@@ -153,7 +153,7 @@ public class SVNUtil  extends BaseController{
 			return repository.getLatestRevision() + "";
 		} catch (SVNException e) {
 			Log.info("getLatestRevision() 异常");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 	}
@@ -191,7 +191,7 @@ public class SVNUtil  extends BaseController{
             
         } catch (Exception e) {
             Log.debug("getLogEntryList() repository.log() 异常");
-            Log.printException(e);
+            Log.info(e);
         }
 
         return null;
@@ -537,7 +537,7 @@ public class SVNUtil  extends BaseController{
 				Log.debug("tgtURL:" + tgtURL.toString());			   
 		} catch ( SVNException e ) {  
 				//处理异常  
-				Log.printException(e);
+				Log.info(e);
 				Log.debug("创建svn仓库失败");
 				return null;			   
 		}
@@ -562,7 +562,7 @@ public class SVNUtil  extends BaseController{
 			nodeKind = repository.checkPath(entryPath, revision);
 		} catch (SVNException e) {
 			Log.debug("getEntryType() checkPath Error:" + entryPath);
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 		
@@ -741,7 +741,7 @@ public class SVNUtil  extends BaseController{
 			editor.abortEdit();
 		} catch (SVNException e) {
 		    Log.info("abortEdit() 异常");
-			Log.printException(e);
+			Log.info(e);
 		}	
 	}
 
@@ -782,7 +782,7 @@ public class SVNUtil  extends BaseController{
 	    	}
     	} catch (Exception e) {
     		Log.debug("doAutoCommitParent() Exception");
-    		Log.printException(e);
+    		Log.info(e);
     	}
     	return null;
 	}
@@ -821,7 +821,7 @@ public class SVNUtil  extends BaseController{
 	    	return true;
 		} catch (SVNException e) {
 			Log.debug("executeCommitActionList() 异常");	
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 	}
@@ -943,7 +943,7 @@ public class SVNUtil  extends BaseController{
 				} catch (SVNException e) {
 					action.setResult(false);
 					Log.debug("executeAddAction() closeDir failed");
-					Log.printException(e);
+					Log.info(e);
 					return false;
 				}
     			return true;
@@ -979,7 +979,7 @@ public class SVNUtil  extends BaseController{
 				} catch (SVNException e) {
 					action.setResult(false);
 					Log.debug("executeAddAction() closeDir failed");
-					Log.printException(e);
+					Log.info(e);
 					return false;
 				}
     			return true;
@@ -1186,7 +1186,7 @@ public class SVNUtil  extends BaseController{
 			fileInputStream = new FileInputStream(file);
 		} catch (FileNotFoundException e) {
 			Log.debug("getFileInputStream(): fileInputStream is null for " + filePath);
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}  
 		return fileInputStream;
@@ -1198,7 +1198,7 @@ public class SVNUtil  extends BaseController{
 			fileData.close();
 		} catch (Exception e) {
 			Log.debug("closeFileInputStream() close failed");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		return true;
@@ -1315,7 +1315,7 @@ public class SVNUtil  extends BaseController{
 			editor = repository.getCommitEditor(commitMsg, null);
 		} catch (SVNException e) {
 			Log.debug("getCommitEditor() getCommitEditor Exception");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 		return editor;
@@ -1329,7 +1329,7 @@ public class SVNUtil  extends BaseController{
         	commitInfo = editor.closeEdit();
 		} catch (SVNException e) {
 			Log.debug("commmit() closeEdit Exception");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
         return commitInfo;
@@ -1390,7 +1390,7 @@ public class SVNUtil  extends BaseController{
 	    	}
     	} catch (SVNException e) {
 	    	Log.debug("addFile(): Schedule to addFile Failed!");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 	    }    
         return true;
@@ -1417,7 +1417,7 @@ public class SVNUtil  extends BaseController{
 	        }
     	} catch (SVNException e) {
 			Log.debug("deleteEntry(): Schedule to deleteEntry Failed!");
-    		Log.printException(e);
+    		Log.info(e);
 			return false;
 		}
         return true;
@@ -1463,7 +1463,7 @@ public class SVNUtil  extends BaseController{
 	            	Log.debug("modifyFile(): diff checkSum:" + checksum);
 	    		}catch (SVNException e) {
 	    			Log.debug("modifyFile(): sendDelta failed try to sendDelta with oleFileData is null!");
-	    			Log.printException(e);
+	    			Log.info(e);
 	    			checksum = deltaGenerator.sendDelta(entryPath, newFileData, editor, true); 	
 	            	Log.debug("modifyFile(): whole checkSum:" + checksum);
 
@@ -1486,7 +1486,7 @@ public class SVNUtil  extends BaseController{
 	        }
 		} catch (SVNException e) {
 			Log.debug("modifyFile(): Schedule to modifyFile Failed!");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
         return true;
@@ -1540,7 +1540,7 @@ public class SVNUtil  extends BaseController{
 
 		} catch (SVNException e) {
 			Log.debug("copyFile(): Schedule to copyEntry Failed!");
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
         return true;
@@ -1613,7 +1613,7 @@ public class SVNUtil  extends BaseController{
 			return revision;
 		} catch (Exception e) {
 			Log.debug("getRevisionByCommitId() 非法SVN commitId:" + commitId);
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}	
 	}
@@ -1633,7 +1633,7 @@ public class SVNUtil  extends BaseController{
 			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
 		} catch (Exception e) {
 			Log.debug("getSubEntries() getDir Failed:" + remoteEntryPath);
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 		return entries;
@@ -1849,7 +1849,7 @@ public class SVNUtil  extends BaseController{
 				revision = repository.getLatestRevision();
 			} catch (SVNException e) {
 				// TODO Auto-generated catch block
-				Log.printException(e);
+				Log.info(e);
 				return null;
 			}
 		}
@@ -1902,7 +1902,7 @@ public class SVNUtil  extends BaseController{
 			out = new FileOutputStream(localParentPath + targetName);
 		} catch (Exception e) {
 			Log.debug("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		
@@ -1913,7 +1913,7 @@ public class SVNUtil  extends BaseController{
             out = null;
         } catch (Exception e) {
 			Log.debug("getRemoteFile() getFile Exception");
-			Log.printException(e);
+			Log.info(e);
 			if(out != null)
 			{
 				try {
@@ -2138,7 +2138,7 @@ public class SVNUtil  extends BaseController{
             try {
                 baos.writeTo(System.out);
             } catch (IOException ioe) {
-                Log.printException(ioe);
+                Log.info(ioe);
             }
         } else {
             System.out

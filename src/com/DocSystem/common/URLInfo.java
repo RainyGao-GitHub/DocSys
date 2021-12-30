@@ -1,4 +1,4 @@
-package com.DocSystem.controller;
+package com.DocSystem.common;
 
 public class URLInfo {
 

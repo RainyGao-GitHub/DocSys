@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.DocSystem.common.DocUtil;
+import com.DocSystem.common.Log;
 import com.DocSystem.entity.Doc;
 
 public class CommitAction{
@@ -108,7 +109,7 @@ public class CommitAction{
 			return;
 		}
 		//printObject("insertAddDirAction:", doc);
-		System.out.println("insertAddDirAction() " + doc.getPath() + doc.getName());
+		Log.debug("insertAddDirAction() " + doc.getPath() + doc.getName());
 
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File dir = new File(localParentPath, doc.getName());
@@ -166,7 +167,7 @@ public class CommitAction{
 
 		//printObject("insertDeleteAction:", doc);
 		
-		System.out.println("insertDeleteAction() " + doc.getPath() + doc.getName());
+		Log.debug("insertDeleteAction() " + doc.getPath() + doc.getName());
 
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.DELETE);
@@ -181,7 +182,7 @@ public class CommitAction{
 		}
 
 		//printObject("insertModifyAction:", doc);
-		System.out.println("insertModifyAction() " + doc.getPath() + doc.getName());
+		Log.debug("insertModifyAction() " + doc.getPath() + doc.getName());
 
 		CommitAction action = new CommitAction();
     	action.setAction(CommitType.MODIFY);
@@ -196,7 +197,7 @@ public class CommitAction{
 		}
 
 		//printObject("insertAction:", doc);
-		System.out.println("insertAction() actionType:" + actionType + " doc:" + doc.getPath() + doc.getName());
+		Log.debug("insertAction() actionType:" + actionType + " doc:" + doc.getPath() + doc.getName());
 
 		CommitAction action = new CommitAction();
     	action.setAction(actionType);

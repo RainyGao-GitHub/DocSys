@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -71,6 +72,7 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.SyncLock;
+import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
@@ -134,7 +136,7 @@ public class DocController extends BaseController{
 	{
 		Log.info("\n************** addDoc ****************");
 		Log.debug("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
-		//Log.println(Charset.defaultCharset());
+		Log.debug("addDoc default charset:" + Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -410,7 +412,6 @@ public class DocController extends BaseController{
 	{
 		Log.info("\n************** addDocRS ****************");
 		Log.debug("addDocRS reposId:" + reposId + " remoteDirectory:[" + remoteDirectory + "] path:[" + path + "] name:" + name  + " type:" + type + " content:" + " authCode:" + authCode);
-		//Log.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -587,7 +588,7 @@ public class DocController extends BaseController{
 		
 		if(ret == false)
 		{
-			Log.println("feeback() addDoc failed");
+			Log.debug("feeback() addDoc failed");
 			return;
 		}
 		
@@ -2135,8 +2136,8 @@ public class DocController extends BaseController{
 	{
 		Log.info("\n************** updateDocContent ****************");
 		Log.debug("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
-		//Log.println("updateDocContent content:[" + content + "]");
-		//Log.println("content size: " + content.length());
+		//Log.debug("updateDocContent content:[" + content + "]");
+		//Log.debug("content size: " + content.length());
 			
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -2242,7 +2243,7 @@ public class DocController extends BaseController{
 	{
 		Log.info("\n************** tmpSaveDocContent ****************");
 		Log.debug("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
-		//Log.println("tmpSaveVirtualDocContent content:[" + content + "]");
+		//Log.debug("tmpSaveVirtualDocContent content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -2528,14 +2529,14 @@ public class DocController extends BaseController{
 	        compressAuthedFiles(out, input, repos, doc, curDocAuth, docAuthHashMap);
 	        ret = true;
     	} catch(Exception e) {
-    		e.printStackTrace();
+    		Log.error(e);
     	} finally {
     		if(out != null)
     		{
     			try {
 					out.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.error(e);
 				}
     		}
     	}
@@ -3031,7 +3032,7 @@ public class DocController extends BaseController{
 		catch (Exception e) 
 		{
 			Log.debug("getCheckSum() Exception"); 
-			e.printStackTrace();
+			Log.error(e);
 			return null;
 		}
 		return hash;
@@ -5749,14 +5750,14 @@ public class DocController extends BaseController{
       	    {
       	    	hitText = getDocContent(repos, doc, 0, 120, null);
       	    	hitText = Base64Util.base64Encode(hitText);
-      	    	//Log.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
+      	    	Log.debug("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
       	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
       	    {
       	    	hitText = readVirtualDocContent(repos, doc, 0, 120);
       	    	hitText = Base64Util.base64Encode(hitText);
      	    	//hitText = removeSpecialJsonChars(hitText);
-      	    	//Log.println("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
+      	    	Log.debug("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
       	    }
   	    	doc.setContent(hitText);
 		}
@@ -6117,7 +6118,7 @@ public class DocController extends BaseController{
             ISimpleInArchive simpleInArchive = inArchive.getSimpleInterface();
             
             for (ISimpleInArchiveItem entry : simpleInArchive.getArchiveItems()) {
-               //Log.println(String.format("%9s | %9s | %s", // 
+               //Log.debug(String.format("%9s | %9s | %s", // 
                //         entry.getSize(), 
                //         entry.getPackedSize(), 
                //         entry.getPath()));
@@ -6126,20 +6127,23 @@ public class DocController extends BaseController{
                subDocList.add(subDoc);
             }
         } catch (Exception e) {
-            System.err.println("Error occurs: " + e);
+            Log.error("getSubDocListForRar() Error occurs");
+            Log.error(e);
         } finally {
             if (inArchive != null) {
                 try {
                     inArchive.close();
                 } catch (SevenZipException e) {
-                    System.err.println("Error closing archive: " + e);
+                    Log.error("getSubDocListForRar() Error closing archive");
+                    Log.error(e);
                 }
             }
             if (randomAccessFile != null) {
                 try {
                     randomAccessFile.close();
                 } catch (IOException e) {
-                    System.err.println("Error closing file: " + e);
+                    Log.error("getSubDocListForRar() Error closing file");
+                    Log.error(e);
                 }
             }
         }
@@ -6185,7 +6189,7 @@ public class DocController extends BaseController{
 				subDocList.add(subDoc);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.error(e);
         }finally {
             try {
                 if(archive != null){
@@ -6195,7 +6199,7 @@ public class DocController extends BaseController{
                     outputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.error(e);
             }
         }
 		return subDocList;
@@ -6287,7 +6291,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.error(e);
         }finally {
             try {
                 if(fis != null){
@@ -6303,7 +6307,7 @@ public class DocController extends BaseController{
                     tis.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.error(e);
             }
         }
 		return subDocList;
@@ -6346,7 +6350,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.error(e);
         }finally {
             try {
                 if(out != null){
@@ -6365,7 +6369,7 @@ public class DocController extends BaseController{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.error(e);
             }
         }
 		return subDocList;
@@ -6401,7 +6405,7 @@ public class DocController extends BaseController{
                 }
                 //tgz文件中的name可能带./需要预处理
                 String entryPath = entry.getName();
-                //Log.println("subEntry:" + entryPath);
+                Log.debug("subEntry:" + entryPath);
                 
                 if(entryPath.indexOf("./") == 0)
                 {
@@ -6412,16 +6416,16 @@ public class DocController extends BaseController{
                 	entryPath = entryPath.substring(2);
                 }
 				String subDocPath = rootPath + entryPath;
-				//Log.println("subDoc: " + subDocPath);
+				Log.debug("subDoc: " + subDocPath);
 				
 				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocHashMap.put(subDoc.getDocId(), subDoc);
 				
-				//Log.printObject("subDoc:", subDoc);
+				Log.printObject("subDoc:", subDoc);
 				subDocList.add(subDoc);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.error(e);
         }finally {
             try {
                 if(out != null){
@@ -6440,7 +6444,7 @@ public class DocController extends BaseController{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.error(e);
             }
         }
 		return subDocList;
@@ -6477,7 +6481,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.error(e);
         }finally {
             try {
                 if(sevenZFile != null){
@@ -6487,7 +6491,7 @@ public class DocController extends BaseController{
                     outputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.error(e);
             }
         }
         return subDocList;
@@ -6595,7 +6599,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-           e.printStackTrace();
+           Log.error(e);
         }finally {
             try {
                 if(fis != null){
@@ -6608,7 +6612,7 @@ public class DocController extends BaseController{
                     tarInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.error(e);
             }
         }
 		return subDocList;
@@ -6720,12 +6724,12 @@ public class DocController extends BaseController{
 					}
 				}
 				String subDocPath = rootPath + entry.getName();
-				//Log.println("getSubDocListForZip() subDoc: " + subDocPath);
+				Log.debug("getSubDocListForZip() subDoc: " + subDocPath);
 				Doc subDoc = buildBasicDocFromZipEntry(rootDoc, subDocPath, entry);
 				subDocList.add(subDoc);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e);
 			subDocList = null;
 		} finally {
 			if(zipFile != null)
@@ -6733,7 +6737,7 @@ public class DocController extends BaseController{
 				try {
 					zipFile.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.error(e);
 				}
 			}
 		}
