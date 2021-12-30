@@ -900,7 +900,7 @@ public class LuceneUtil2   extends BaseFunction
 			}	
         } catch (ParseException e) {
         	Log.info("buidStringQuery() 异常");
-			Log.printException(e);
+			Log.info(e);
 		}
 		return query;
 	}
@@ -1007,7 +1007,7 @@ public class LuceneUtil2   extends BaseFunction
 	    	return hitDoc;
         } catch (Exception e) {
 			Log.info("BuildHitDocFromDocument_FS() 异常");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}
 	}
@@ -1039,7 +1039,7 @@ public class LuceneUtil2   extends BaseFunction
     	    ret = addIndex(doc, content.toString().trim(), indexLib);
 		} catch (Exception e) {
 			Log.info("addIndexForWord() 异常");
-    		Log.printException(e);
+    		Log.info(e);
     	}	finally {
 			if(doc1 != null)
 			{
@@ -1080,7 +1080,7 @@ public class LuceneUtil2   extends BaseFunction
         	ret = addIndex(doc,str.toString().trim(), indexLib);
 		} catch (Exception e) {	
 			Log.info("addIndexForWord2007() 异常");
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(extractor != null)
 			{
@@ -1131,7 +1131,7 @@ public class LuceneUtil2   extends BaseFunction
             ret = addIndex(doc, text.toString().trim(), indexLib);
         } catch(Exception e) {
 			Log.info("addIndexForExcel() 异常");
-			Log.printException(e);
+			Log.info(e);
             return false;
         } finally {
 			if(extractor != null)
@@ -1180,7 +1180,7 @@ public class LuceneUtil2   extends BaseFunction
             ret = addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) { 
 			Log.info("addIndexForExcel2007() 异常");
-			Log.printException(e);
+			Log.info(e);
         } finally {
 			if(extractor != null)
 			{
@@ -1225,7 +1225,7 @@ public class LuceneUtil2   extends BaseFunction
             ret = addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
 			Log.info("addIndexForPPT() 异常");
-			Log.printException(e);
+			Log.info(e);
         } finally {
 			if(extractor != null)
 			{
@@ -1263,7 +1263,7 @@ public class LuceneUtil2   extends BaseFunction
             ret = addIndex(doc, text.toString().trim(), indexLib);
         } catch (Exception e) {  
 			Log.info("addIndexForPPT2007() 异常");
-			Log.printException(e);
+			Log.info(e);
         } finally {
 			if(extractor != null)
 			{
@@ -1316,7 +1316,7 @@ public class LuceneUtil2   extends BaseFunction
             ret = addIndex(doc, content.toString().trim(), indexLib);
 	   } catch(Exception e) {		
 			Log.info("addIndexForPdf() 异常");
-			Log.printException(e);
+			Log.info(e);
 	   } finally {
 			if(document != null)
 			{
@@ -1372,7 +1372,7 @@ public class LuceneUtil2   extends BaseFunction
 			ret = true;
 		} catch(Exception e){
 			Log.info("addIndexForFile() 异常");
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(reader != null)
 			{
@@ -1585,7 +1585,7 @@ public class LuceneUtil2   extends BaseFunction
 					}
 	            } catch (IllegalArgumentException e) {
 	            	Log.info("buildCsvTitleStrForObject() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				}
 			}
         }
@@ -1634,10 +1634,10 @@ public class LuceneUtil2   extends BaseFunction
 					}
 	            } catch (IllegalArgumentException e) {
 	            	Log.info("buildCsvStrForObject() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				} catch (IllegalAccessException e) {
 	            	Log.info("buildCsvStrForObject() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				}
 			}
         }
@@ -1683,10 +1683,10 @@ public class LuceneUtil2   extends BaseFunction
 					}
 	            } catch (IllegalArgumentException e) {
 	            	Log.info("buildDocumentForObject() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				} catch (IllegalAccessException e) {
 	            	Log.info("buildDocumentForObject() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				}
 			}
         }
@@ -1731,10 +1731,10 @@ public class LuceneUtil2   extends BaseFunction
 					}
 	            } catch (IllegalArgumentException e) {
 	            	Log.info("buildObjectForDocument() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				} catch (IllegalAccessException e) {
 	            	Log.info("buildObjectForDocument() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				}
 			}
         }
@@ -1780,10 +1780,10 @@ public class LuceneUtil2   extends BaseFunction
 					}
 	            } catch (IllegalArgumentException e) {
 	            	Log.info("buildQueryConditionsForObject() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				} catch (IllegalAccessException e) {
 	            	Log.info("buildQueryConditionsForObject() 异常");
-	            	Log.printException(e);
+	            	Log.info(e);
 				}
 			}
         }		

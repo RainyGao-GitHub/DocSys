@@ -75,7 +75,6 @@ import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.commonService.ProxyThread;
 import com.DocSystem.commonService.ShareThread;
-import com.DocSystem.controller.URLInfo;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;

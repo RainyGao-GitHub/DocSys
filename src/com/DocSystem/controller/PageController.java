@@ -9,12 +9,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.DocSystem.common.Log;
+
 @Controller
 public class PageController extends BaseController{
 	
 	@RequestMapping(value="pageTo")
 	public String pageTo(HttpServletRequest request,HttpSession session,URL url,String p,ModelMap model){
-		System.out.println("pageTo: " + p);
+		Log.info("pageTo: " + p);
 		return p;
 	}
 }

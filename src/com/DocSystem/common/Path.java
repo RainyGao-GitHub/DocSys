@@ -277,7 +277,7 @@ public class Path {
 		catch (Exception e)
 		{
 			Log.info("getWebPath() 异常，系统出现严重错误,请检查系统!!");
-			Log.printException(e);
+			Log.info(e);
 		}
         webPath = localDirPathFormat(webPath, OSType);
         Log.debug("getWebPath() webPath:" + webPath);

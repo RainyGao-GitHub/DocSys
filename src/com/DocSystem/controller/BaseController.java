@@ -234,7 +234,7 @@ public class BaseController  extends BaseFunction{
 	        		}
 	        	} catch (IOException e) {
 					Log.debug("initLogFile() Failed to create logFile:" + logFilePath);
-					Log.printException(e);
+					Log.info(e);
 					Log.logFile = null;
 				}
 			}
@@ -670,7 +670,7 @@ public class BaseController  extends BaseFunction{
 	    	return subEntryList;
     	}catch(Exception e){
     		Log.debug("getLocalEntryList() Excepiton for " + doc.getDocId() + " " + doc.getPath() + doc.getName());    		
-    		Log.printException(e);
+    		Log.info(e);
     		return null;
     	}
 	}
@@ -738,7 +738,7 @@ public class BaseController  extends BaseFunction{
 	    	return subEntryHashMap;
     	}catch(Exception e){
     		Log.debug("getLocalEntryHashMap() Excepiton for " + doc.getDocId() + " " + doc.getPath() + doc.getName());    		
-    		Log.printException(e);
+    		Log.info(e);
     		return null;
     	}
 	}
@@ -1965,7 +1965,7 @@ public class BaseController  extends BaseFunction{
 			//关闭输出流
 			out.close();	
 		}catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 			Log.debug("sendDataToWebPage() Exception");
 		}
 	}
@@ -2162,7 +2162,7 @@ public class BaseController  extends BaseFunction{
 			{
 				out.close();						
 			}
-			Log.printException(e);
+			Log.info(e);
 			Log.debug("sendFileToWebPage() Exception");
 		}
 	}
@@ -2224,7 +2224,7 @@ public class BaseController  extends BaseFunction{
 			{
 				out.close();						
 			}
-			Log.printException(e);
+			Log.info(e);
 			Log.debug("sendFileToWebPage() Exception");
 		}
 	}
@@ -2380,7 +2380,7 @@ public class BaseController  extends BaseFunction{
 		} catch (IOException ie) {
 			// 忽略 ClientAbortException 之类的异常
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
 	}
 
@@ -2621,11 +2621,11 @@ public class BaseController  extends BaseFunction{
             HashEnv.put(Context.PROVIDER_URL, LDAP_URL);
             ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
 		} catch (AuthenticationException e) {
-			Log.printException(e);
+			Log.info(e);
 		} catch (CommunicationException e) {
-			Log.printException(e);
+			Log.info(e);
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
     	
         return ctx;
@@ -2686,7 +2686,7 @@ public class BaseController  extends BaseFunction{
 			 }
 		}catch (Exception e) {
 			Log.debug("获取用户信息异常:");
-			Log.printException(e);
+			Log.info(e);
 		}
 		 
 		return lm;
@@ -3934,7 +3934,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("executeUniqueCommonActionList completed for repos: " + reposId);			
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(uniqueAction.getIsRunning())
 			{
@@ -8447,7 +8447,7 @@ public class BaseController  extends BaseFunction{
 		} catch (Exception e) {
 			Log.debug("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
 			Log.docSysDebugLog(e.toString(), rt);
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		
@@ -8632,7 +8632,7 @@ public class BaseController  extends BaseFunction{
 		} catch (Exception e) {
 			Log.debug("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
 			Log.docSysDebugLog(e.toString(), rt);
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
 		
@@ -8671,7 +8671,7 @@ public class BaseController  extends BaseFunction{
 		    return fileName;
 		} catch (Exception e) {
 			Log.debug("combineChunks() Failed to combine the chunks");
-			Log.printException(e);
+			Log.info(e);
 			return null;
 		}        
 	}
@@ -8693,7 +8693,7 @@ public class BaseController  extends BaseFunction{
 	    	}
 		} catch (Exception e) {
 			Log.debug("deleteChunks() Failed to combine the chunks");
-			Log.printException(e);
+			Log.info(e);
 		}  
 	}
 	
@@ -8713,14 +8713,14 @@ public class BaseController  extends BaseFunction{
 			in.close();
 		} catch (Exception e) {
 			Log.debug("isChunkMatched() Exception"); 
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(in != null)
 			{
 				try {
 					in.close();
 				} catch (Exception e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
 		}
@@ -10444,8 +10444,8 @@ public class BaseController  extends BaseFunction{
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");
 			}
 	    } catch (Exception e) {
-	        Log.debug("initReposExtentionConfig 异常");
-	        Log.printException(e);
+	        Log.info("initReposExtentionConfig 异常");
+	        Log.info(e);
 		}	
 	}
 
@@ -10578,7 +10578,7 @@ public class BaseController  extends BaseFunction{
                         	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行结束\n");		                        
                         } catch(Exception e) {
                         	Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行异常\n");
-                        	Log.printException(e);
+                        	Log.info(e);
                         	
                         }
                         
@@ -10691,7 +10691,7 @@ public class BaseController  extends BaseFunction{
                             Log.debug("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行结束\n");
                         } catch(Exception e) {
                         	Log.debug("******** RemoteBackupDelayTask [" + createTime + "] for repos:" + reposId + " 执行异常\n");
-                        	Log.printException(e);
+                        	Log.info(e);
                         }
                     }
                 },
@@ -11192,7 +11192,7 @@ public class BaseController  extends BaseFunction{
             ret = true;
         } catch (Exception e) {
             Log.debug("sql脚本执行发生异常");
-            Log.printException(e);
+            Log.info(e);
         }finally{
 	        // 关闭资源
 	        try{
@@ -11201,7 +11201,7 @@ public class BaseController  extends BaseFunction{
 	            if(in!=null) in.close();
 	            if(read!=null) read.close();
 	        }catch(Exception se){
-	            Log.printException(se);
+	            Log.info(se);
 	        }
 	    }
         
@@ -11253,7 +11253,7 @@ public class BaseController  extends BaseFunction{
             ret = true;
         } catch (Exception e) {
             Log.debug("initDBTables 数据库表初始化发生异常");
-            Log.printException(e);
+            Log.info(e);
         }finally{
 	        // 关闭资源
 	        try{
@@ -11262,7 +11262,7 @@ public class BaseController  extends BaseFunction{
 	            if(in!=null) in.close();
 	            if(read!=null) read.close();
 	        }catch(Exception se){
-	            Log.printException(se);
+	            Log.info(se);
 	        }
 	    }
         
@@ -11613,7 +11613,7 @@ public class BaseController  extends BaseFunction{
         try {
 			Class.forName(getJdbcDriverName(dbType));
 		} catch (ClassNotFoundException e) {
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
         
@@ -11744,10 +11744,10 @@ public class BaseController  extends BaseFunction{
             conn.close();
         }catch(SQLException se){
             // 处理 JDBC 错误
-            Log.printException(se);
+            Log.info(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            Log.printException(e);
+            Log.info(e);
         }finally{
             // 关闭资源
             try{
@@ -11757,7 +11757,7 @@ public class BaseController  extends BaseFunction{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                Log.printException(se);
+                Log.info(se);
             }
         }
 		return ret;
@@ -11788,7 +11788,7 @@ public class BaseController  extends BaseFunction{
         try {
 			Class.forName(getJdbcDriverName(dbType));
 		} catch (ClassNotFoundException e) {
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
         
@@ -11850,10 +11850,10 @@ public class BaseController  extends BaseFunction{
             conn.close();
         }catch(SQLException se){
             // 处理 JDBC 错误
-            Log.printException(se);
+            Log.info(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            Log.printException(e);
+            Log.info(e);
         }finally{
             // 关闭资源
             try{
@@ -11863,7 +11863,7 @@ public class BaseController  extends BaseFunction{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                Log.printException(se);
+                Log.info(se);
             }
         }
 		return ret;
@@ -11946,7 +11946,7 @@ public class BaseController  extends BaseFunction{
 			Class.forName(getJdbcDriverName(type));
 			
 		} catch (ClassNotFoundException e) {
-			Log.printException(e);
+			Log.info(e);
 			return false;
 		}
     
@@ -11962,12 +11962,12 @@ public class BaseController  extends BaseFunction{
 			}
 		} catch (Exception e) {
 			Log.debug("连接数据库失败");
-			Log.printException(e);
+			Log.info(e);
 		} finally{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                Log.printException(se);
+                Log.info(se);
             }
         }
         return ret;        
@@ -11985,7 +11985,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			return DriverManager.getConnection(dbUrl, user, pwd);
 		} catch (SQLException e) {
-			Log.printException(e);
+			Log.info(e);
 		}
 		return null;
 	}
@@ -12153,7 +12153,7 @@ public class BaseController  extends BaseFunction{
     	    ret = true;
         } catch (Exception e) {
             Log.debug("initDBTables 数据库表初始化发生异常");
-            Log.printException(e);
+            Log.info(e);
         }finally{
 	        // 关闭资源
 	        try{
@@ -12162,7 +12162,7 @@ public class BaseController  extends BaseFunction{
 	            if(in!=null) in.close();
 	            if(read!=null) read.close();
 	        }catch(Exception se){
-	            Log.printException(se);
+	            Log.info(se);
 	        }
 	    }
         
@@ -12238,10 +12238,10 @@ public class BaseController  extends BaseFunction{
             ret = true;
         }catch(SQLException se){
             // 处理 JDBC 错误
-            Log.printException(se);
+            Log.info(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            Log.printException(e);
+            Log.info(e);
         }finally{
             // 关闭资源
             try{
@@ -12251,7 +12251,7 @@ public class BaseController  extends BaseFunction{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                Log.printException(se);
+                Log.info(se);
             }
         }
 		return ret;
@@ -12281,10 +12281,10 @@ public class BaseController  extends BaseFunction{
             ret = true;
         }catch(SQLException se){
             // 处理 JDBC 错误
-            Log.printException(se);
+            Log.info(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            Log.printException(e);
+            Log.info(e);
         }finally{
             // 关闭资源
             try{
@@ -12294,7 +12294,7 @@ public class BaseController  extends BaseFunction{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                Log.printException(se);
+                Log.info(se);
             }
         }
 		return ret;
@@ -12705,7 +12705,7 @@ public class BaseController  extends BaseFunction{
 		    		try {
 		    			qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
 		    		} catch(Exception e){
-		    			Log.printException(e);
+		    			Log.info(e);
 		    			continue;
 		    		}
 		    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC, type, url, user, pwd);
@@ -12765,10 +12765,10 @@ public class BaseController  extends BaseFunction{
             return list;
         }catch(SQLException se){
             // 处理 JDBC 错误
-            Log.printException(se);
+            Log.info(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            Log.printException(e);
+            Log.info(e);
         }finally{
             // 关闭资源
             try{
@@ -12778,7 +12778,7 @@ public class BaseController  extends BaseFunction{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                Log.printException(se);
+                Log.info(se);
             }
         }
 		return null;
@@ -12847,10 +12847,10 @@ public class BaseController  extends BaseFunction{
             return ret;
         }catch(SQLException se){
             // 处理 JDBC 错误
-            Log.printException(se);
+            Log.info(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            Log.printException(e);
+            Log.info(e);
         }finally{
             // 关闭资源
             try{
@@ -12860,7 +12860,7 @@ public class BaseController  extends BaseFunction{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                Log.printException(se);
+                Log.info(se);
             }
         }
 		return ret;
@@ -13107,7 +13107,7 @@ public class BaseController  extends BaseFunction{
 			try {
 				value = Reflect.getFieldValue(obj, name);
 			} catch (Exception e) {
-				Log.printException(e);
+				Log.info(e);
 				return null;
 			}
 			
@@ -13172,7 +13172,7 @@ public class BaseController  extends BaseFunction{
 				//Log.debug("enocdeString() tmpSqlValue:" + tmpStr);
 				return tmpStr;
 			} catch (Exception e) {
-				Log.printException(e);
+				Log.info(e);
 			}
 		}
 		return str;
@@ -13402,7 +13402,7 @@ public class BaseController  extends BaseFunction{
         	ps.destroy();
             
         } catch (Exception e) {
-            Log.printException(e);
+            Log.info(e);
         }
         return result;
     }
@@ -13434,7 +13434,7 @@ public class BaseController  extends BaseFunction{
         	runResult.exitCode = exitCode;
         	runResult.result = result;
         } catch (Exception e) {
-            Log.printException(e);
+            Log.info(e);
         }
         return ret;
     }
@@ -13514,7 +13514,7 @@ public class BaseController  extends BaseFunction{
              ret = true;
              Log.debug("连接可用");  
         } catch (Exception e) {
-        	Log.printException(e);
+        	Log.info(e);
             Log.debug("连接打不开!");
         } 
         Log.debug("testUrl() used time:" + (System.currentTimeMillis()-lo) + " ms");
@@ -13534,7 +13534,7 @@ public class BaseController  extends BaseFunction{
              ret = true;
              Log.debug("连接可用");  
         } catch (Exception e) {
-        	Log.printException(e);
+        	Log.info(e);
             Log.debug("连接打不开!");  
         }  
         Log.debug("testUrlWithTimeOut() used time:" + (System.currentTimeMillis()-lo) + " ms");
@@ -13750,7 +13750,7 @@ public class BaseController  extends BaseFunction{
             fos.flush();
             ret = true;
         } catch (IOException e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(fis != null){
@@ -13763,7 +13763,7 @@ public class BaseController  extends BaseFunction{
                     bis.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
 		return ret;
@@ -13810,7 +13810,7 @@ public class BaseController  extends BaseFunction{
             out.flush();
             ret = true;
         } catch (IOException e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(out != null){
@@ -13823,7 +13823,7 @@ public class BaseController  extends BaseFunction{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
 		return ret;
@@ -13869,7 +13869,7 @@ public class BaseController  extends BaseFunction{
             out.flush();
             ret = true;
         } catch (IOException e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(out != null){
@@ -13882,7 +13882,7 @@ public class BaseController  extends BaseFunction{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
         return ret;
@@ -13950,7 +13950,7 @@ public class BaseController  extends BaseFunction{
             	}
             }
         } catch (IOException e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(fis != null){
@@ -13966,7 +13966,7 @@ public class BaseController  extends BaseFunction{
                     tis.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
 		return ret;
@@ -14037,7 +14037,7 @@ public class BaseController  extends BaseFunction{
             	}
             }
         } catch (IOException e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(out != null){
@@ -14056,7 +14056,7 @@ public class BaseController  extends BaseFunction{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
         return ret;
@@ -14129,7 +14129,7 @@ public class BaseController  extends BaseFunction{
             	}
             }
         } catch (IOException e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(out != null){
@@ -14148,7 +14148,7 @@ public class BaseController  extends BaseFunction{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
 		return ret;
@@ -14219,7 +14219,7 @@ public class BaseController  extends BaseFunction{
             	}
             }
         } catch (IOException e) {
-           Log.printException(e);
+           Log.info(e);
         }finally {
             try {
                 if(fis != null){
@@ -14232,7 +14232,7 @@ public class BaseController  extends BaseFunction{
                     tarInputStream.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
 		return ret;
@@ -14293,7 +14293,7 @@ public class BaseController  extends BaseFunction{
             	}
             }
         } catch (IOException e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(sevenZFile != null){
@@ -14303,7 +14303,7 @@ public class BaseController  extends BaseFunction{
                     outputStream.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
 		return ret;
@@ -14444,7 +14444,7 @@ public class BaseController  extends BaseFunction{
             	}
             }
         } catch (Exception e) {
-            Log.printException(e);
+            Log.info(e);
         }finally {
             try {
                 if(archive != null){
@@ -14454,7 +14454,7 @@ public class BaseController  extends BaseFunction{
                     outputStream.close();
                 }
             } catch (IOException e) {
-                Log.printException(e);
+                Log.info(e);
             }
         }
         return ret;
@@ -14491,14 +14491,14 @@ public class BaseController  extends BaseFunction{
 			
 			ret = dumpZipEntryToFile(parentZipFile, entry, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
 		} catch (IOException e) {
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(parentZipFile != null)
 			{
 				try {
 					parentZipFile.close();
 				} catch (IOException e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
 		}		
@@ -14560,7 +14560,7 @@ public class BaseController  extends BaseFunction{
 	      zipFile.close(); 
 	      ret = true;
 	    }catch(IOException ioe){ 
-	      Log.printException(ioe); 
+	      Log.info(ioe); 
 	    }finally{ 
 	       try{ 
 	       if(bos != null){ 
@@ -14576,7 +14576,7 @@ public class BaseController  extends BaseFunction{
 	         zipFile.close(); 
 	       } 
 	       }catch(Exception e) { 
-	         Log.printException(e); 
+	         Log.info(e); 
 	       } 
 	    } 
 	    return ret;
@@ -14636,14 +14636,14 @@ public class BaseController  extends BaseFunction{
 			}
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(fileOutputStream != null)
 			{
 				try {
 					fileOutputStream.close();
 				} catch (IOException e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
 			if(inputStream != null)
@@ -14651,7 +14651,7 @@ public class BaseController  extends BaseFunction{
 				try {
 					inputStream.close();
 				} catch (IOException e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
 		}
@@ -14752,9 +14752,9 @@ public class BaseController  extends BaseFunction{
 						param.put(fieldName, val+"");
 					}
 	            } catch (IllegalArgumentException e) {
-					Log.printException(e);
+					Log.info(e);
 				} catch (IllegalAccessException e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
         }
@@ -16126,7 +16126,7 @@ public class BaseController  extends BaseFunction{
 			pushResult.revision = session.git.doCopy(srcRemotePath, srcName, dstRemotePath, dstName, commitMsg, commitUser, isMove);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16138,7 +16138,7 @@ public class BaseController  extends BaseFunction{
 			pushResult.revision = session.svn.doCopy(srcRemotePath, srcName, dstRemotePath, dstName, commitMsg, commitUser, isMove);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16156,7 +16156,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = session.smb.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove, type);			
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16168,7 +16168,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = session.ftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove, type);			
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16180,7 +16180,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = session.sftp.copy(srcRemotePath, srcName, dstRemotePath, dstName, isMove, type);
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16199,7 +16199,7 @@ public class BaseController  extends BaseFunction{
 				ret = FileUtil.copyFileOrDir(remote.FILE.localRootPath + srcRemotePath + srcName, remote.FILE.localRootPath + dstRemotePath + dstName, false);				
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16425,7 +16425,7 @@ public class BaseController  extends BaseFunction{
 			session.svn.modifyFile(doc, isSubAction, commitActionList);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16436,7 +16436,7 @@ public class BaseController  extends BaseFunction{
 			session.git.modifyFile(doc, isSubAction, commitActionList);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16448,7 +16448,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = FileUtil.copyFile(remote.FILE.localRootPath + remotePath + fileName, localPath + fileName, true);
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16460,7 +16460,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = session.sftp.download(remotePath, localPath, fileName);			
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16472,7 +16472,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = session.ftp.download(remotePath, localPath, fileName);			
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16485,7 +16485,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = session.smb.download(remotePath, localPath, fileName);			
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16497,7 +16497,7 @@ public class BaseController  extends BaseFunction{
 		try {
  			ret = session.mxsdoc.download(remotePath, localPath, fileName);			
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16513,7 +16513,7 @@ public class BaseController  extends BaseFunction{
 			session.svn.getRemoteFile(remotePath + fileName, localPath, fileName, revision, true);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16524,7 +16524,7 @@ public class BaseController  extends BaseFunction{
 			session.git.getRemoteFile(remotePath + fileName, localPath, fileName, commitId, true);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16538,7 +16538,7 @@ public class BaseController  extends BaseFunction{
 			File dir = new File(remote.FILE.localRootPath + remotePath + fileName);
 			ret = dir.mkdir();
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16550,7 +16550,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			ret = session.sftp.mkdir(remotePath + fileName); 
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16562,7 +16562,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			ret = session.ftp.mkdir(remotePath + fileName); 
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16574,7 +16574,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			ret = session.smb.mkdir(remotePath + fileName); 
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16586,7 +16586,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			ret = session.mxsdoc.add(remotePath, fileName, 2); 	
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16597,7 +16597,7 @@ public class BaseController  extends BaseFunction{
 			session.svn.mkdir(remotePath, name, commitMsg, commitUser);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16608,7 +16608,7 @@ public class BaseController  extends BaseFunction{
 			session.svn.addEntry(doc, isSubAction, commitActionList);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16619,7 +16619,7 @@ public class BaseController  extends BaseFunction{
 			session.git.addEntry(doc, isSubAction, commitActionList);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16632,7 +16632,7 @@ public class BaseController  extends BaseFunction{
 			pushResult.action = action;
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16645,7 +16645,7 @@ public class BaseController  extends BaseFunction{
 			pushResult.action = action;
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16658,7 +16658,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			ret = FileUtil.delFileOrDir(remote.FILE.localRootPath + remotePath + fileName);
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 
@@ -16678,7 +16678,7 @@ public class BaseController  extends BaseFunction{
 				ret = session.sftp.delDirs(remotePath, fileName);
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16698,7 +16698,7 @@ public class BaseController  extends BaseFunction{
 				ret = session.ftp.delDirs(remotePath, fileName);
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16717,7 +16717,7 @@ public class BaseController  extends BaseFunction{
 				ret = session.smb.delDir(remotePath, fileName);
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16729,7 +16729,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			ret = session.mxsdoc.delete(remotePath, fileName); 
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16740,7 +16740,7 @@ public class BaseController  extends BaseFunction{
 			session.svn.deleteEntry(doc, isSubAction, commitActionList);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16751,7 +16751,7 @@ public class BaseController  extends BaseFunction{
 			session.git.deleteEntry(doc, isSubAction, commitActionList);
 			ret = true;
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16763,7 +16763,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			ret = FileUtil.copyFile(localPath + fileName, remote.FILE.localRootPath + remotePath + fileName, true);
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return ret;
 	}
@@ -16778,14 +16778,14 @@ public class BaseController  extends BaseFunction{
         	is = new FileInputStream(localPath + fileName);
         	ret = session.sftp.upload(remotePath, fileName, is);   
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(is != null)
 			{
 				try {
 					is.close();
 				} catch (IOException e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
 		}
@@ -16803,14 +16803,14 @@ public class BaseController  extends BaseFunction{
         	is = new FileInputStream(localPath + fileName);
         	ret = session.ftp.upload(remotePath, fileName, is);        	
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(is != null)
 			{
 				try {
 					is.close();
 				} catch (IOException e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
 		}
@@ -16828,14 +16828,14 @@ public class BaseController  extends BaseFunction{
         	is = new FileInputStream(localPath + fileName);
         	ret = session.smb.upload(remotePath, fileName, is);        	
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		} finally {
 			if(is != null)
 			{
 				try {
 					is.close();
 				} catch (IOException e) {
-					Log.printException(e);
+					Log.info(e);
 				}
 			}
 		}
@@ -16891,7 +16891,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}		
         return subEntryList;
 	}
@@ -16938,7 +16938,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}	
         return subEntryList;
 	}
@@ -16992,7 +16992,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}		
         return subEntryList;
 	}
@@ -17046,7 +17046,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}		
         return subEntryList;
 	}
@@ -17106,7 +17106,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}		
         return subEntryList;
 	}
@@ -17153,7 +17153,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}		
         return subEntryList;
 	}
@@ -17204,7 +17204,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}		
         return subEntryList;
 	}
@@ -17243,7 +17243,7 @@ public class BaseController  extends BaseFunction{
 			    remoteDoc.setRevision(subEntryRevision);
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return remoteDoc;	
     }
@@ -17296,7 +17296,7 @@ public class BaseController  extends BaseFunction{
 		    	}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return subEntryList;
 	}
@@ -17351,7 +17351,7 @@ public class BaseController  extends BaseFunction{
 			    }	
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return subEntryList;
 	}
@@ -17402,7 +17402,7 @@ public class BaseController  extends BaseFunction{
 	    		subEntryList.put(subDoc.getName(), subDoc);
 			}			
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return subEntryList;
 	}
@@ -17455,7 +17455,7 @@ public class BaseController  extends BaseFunction{
 				}		
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return subEntryList;
 	}
@@ -17508,7 +17508,7 @@ public class BaseController  extends BaseFunction{
 				}		
 			}	
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return subEntryList;
 	}
@@ -17561,7 +17561,7 @@ public class BaseController  extends BaseFunction{
 		    	}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return subEntryList;
 	}
@@ -17614,7 +17614,7 @@ public class BaseController  extends BaseFunction{
 		        subEntryList.put(subDoc.getName(), subDoc);
 		    }	
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return subEntryList;
 	}
@@ -17721,7 +17721,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return remoteDoc;
 	}
@@ -17774,7 +17774,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return remoteDoc;
 	}
@@ -17820,7 +17820,7 @@ public class BaseController  extends BaseFunction{
 			    remoteDoc.setRevision(subEntryRevision);
 			}
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return remoteDoc;
 	}
@@ -17881,7 +17881,7 @@ public class BaseController  extends BaseFunction{
 	    	    }
     	    }
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return remoteDoc;
 	}
@@ -17951,7 +17951,7 @@ public class BaseController  extends BaseFunction{
             remoteDoc.setLatestEditorName(commitUser);
             remoteDoc.setLatestEditTime(commitTime);
 		} catch (Exception e) {
-			Log.printException(e);
+			Log.info(e);
 		}
         return remoteDoc;
 	}
@@ -18009,7 +18009,7 @@ public class BaseController  extends BaseFunction{
 				return 1;
 			}
 		} catch (SmbException e) {
-			Log.printException(e);
+			Log.info(e);
 		}
 		return 0;
 	}

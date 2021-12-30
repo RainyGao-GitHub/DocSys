@@ -65,8 +65,8 @@ public class UserController extends BaseController {
 				return;
 			}
 		} catch (Exception e) {
-			Log.debug("login 异常！");
-			e.printStackTrace();
+			Log.error("login 异常！");
+			Log.error(e);
 			rt.setError("用户登录异常，请检查数据库配置是否正常!");
 			rt.setData("needCheckDBSetting");
 			docSysIniState = -1;
@@ -773,8 +773,8 @@ public class UserController extends BaseController {
 		try {
 			retName = FileUtil.saveFile(uploadFile, imgDirPath,usrImgName);
 		} catch (Exception e) {
-			Log.debug("saveUserImg() saveFile " + usrImgName +" 异常！");
-			e.printStackTrace();
+			Log.error("saveUserImg() saveFile " + usrImgName +" 异常！");
+			Log.error(e);
 			return null;
 		}
 		
