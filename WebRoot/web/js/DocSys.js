@@ -1652,7 +1652,7 @@ function showImgInArtDialog(docInfo)
 		drag: true,
 		data: docInfo,
 		onshow: function(){
-			dialogExtendInit(docInfo.docId, d);
+			//dialogExtendInit(docInfo.docId, d);
 		},
 		oniframeload: function () {
 			console.log('oniframeload');
@@ -1726,7 +1726,7 @@ function showVideoInArtDialog(docInfo)
 		drag: true,
 		data: docInfo,
 		onshow: function(){
-			dialogExtendInit(docInfo.docId, d);
+			//dialogExtendInit(docInfo.docId, d);
 		},
 		oniframeload: function () {
 			console.log('oniframeload');
@@ -1799,7 +1799,7 @@ function showZipInArtDialog(docInfo)
 		drag: true,
 		data: docInfo,
 		onshow: function(){
-			dialogExtendInit(docInfo.docId, d);
+			//dialogExtendInit(docInfo.docId, d);
 		},
 		oniframeload: function () {
 			console.log('oniframeload');
@@ -1872,7 +1872,7 @@ function showPdfInArtDialog(docInfo)
 		drag: true,
 		data: docInfo,
 		onshow: function(){
-			dialogExtendInit(docInfo.docId, d);
+			//dialogExtendInit(docInfo.docId, d);
 		},
 		oniframeload: function () {
 			console.log('oniframeload');
@@ -1963,7 +1963,7 @@ function showMarkdownInArtDialog(docInfo)
 			drag: true,
 			data: docInfo,
 			onshow: function(){
-				dialogExtendInit(docInfo.docId, d);
+				//dialogExtendInit(docInfo.docId, d);
 			},
 			oniframeload: function () {
 				console.log('oniframeload');
@@ -2060,7 +2060,7 @@ function showTextInArtDialog(docInfo, openType)
 				setTimeout(function () {
 					TextViewer.textViewerPageInit(docInfo);
 				}, 2000);
-				dialogExtendInit(docInfo.docId, d);
+				//dialogExtendInit(docInfo.docId, d);
 			},
 		});
 		d.show();
@@ -2081,7 +2081,7 @@ function showTextInArtDialog(docInfo, openType)
 			drag: true,
 			data: docInfo,
 			onshow: function(){
-				dialogExtendInit(docInfo.docId, d);
+				//dialogExtendInit(docInfo.docId, d);
 			},
 			oniframeload: function () {
 				console.log('oniframeload');
@@ -2210,7 +2210,7 @@ function showOfficeInArtDialog(docInfo)
 		drag: true,
 		data: docInfo,
 		onshow: function(){
-			dialogExtendInit(docInfo.docId, d);
+			//dialogExtendInit(docInfo.docId, d);
 		},
 		oniframeload: function () {
 			console.log('oniframeload');
