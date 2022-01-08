@@ -370,7 +370,7 @@ public class BaseFunction{
 			return backupConfig;				
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			Log.error(e);
 			return null;
 		}
 	}
@@ -1318,7 +1318,7 @@ public class BaseFunction{
 			pw.close();
 		} catch (IOException e) {
 			Log.debug("BaseController>writeJson  ERROR!");
-			e.printStackTrace();
+			Log.error(e);
 		}
 		
 	}
@@ -1340,7 +1340,7 @@ public class BaseFunction{
 			pw.close();
 		} catch (IOException e) {
 			Log.debug("BaseController>writeJson  ERROR!");
-			e.printStackTrace();
+			Log.error(e);
 		}
 		
 	}
@@ -1362,7 +1362,7 @@ public class BaseFunction{
 			pw.close();
 		} catch (IOException e) {
 			Log.debug("BaseController>writeJson  ERROR!");
-			e.printStackTrace();
+			Log.error(e);
 		}
 
 	}
@@ -1537,7 +1537,7 @@ public class BaseFunction{
 			}
 		} catch (IOException e) {
 			Log.debug("syncUpFolder() Exception!");
-			e.printStackTrace();
+			Log.error(e);
 			return false;
 		}
 		return true;
@@ -1863,7 +1863,7 @@ public class BaseFunction{
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        Log.debug("addSystemLogIndex() 异常");
-			e.printStackTrace();
+			Log.error(e);
 			return false;
 		}
     }
@@ -1883,7 +1883,7 @@ public class BaseFunction{
 			try {
 				directory.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.error(e);
 			}
 		}
 		if(analyzer != null)
@@ -2114,7 +2114,7 @@ public class BaseFunction{
 			conn.disconnect();			
         } catch (Exception e) {
             Log.debug("postFileStreamAndJsonObj 发送POST请求出现异常！" + e);
-            e.printStackTrace();
+            Log.error(e);
         }
         
         Log.debug("*********************** postFileStreamAndJsonObj End\n");
@@ -2168,11 +2168,11 @@ public class BaseFunction{
 			// 断开连接
 			connection.disconnect();
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			Log.error(e);
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			Log.error(e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e);
 		}
 		return returnJson;
 	}
@@ -2196,14 +2196,14 @@ public class BaseFunction{
 	        readInputStream(is, os);
 	        ret = true;
         } catch (Exception e) {
-        	e.printStackTrace();        	
+        	Log.error(e);        	
         } finally {
         	if(is != null)
         	{
         		try {
 					is.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.error(e);
 				}
         	}
         }
@@ -2369,7 +2369,7 @@ public class BaseFunction{
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        Log.debug("updateUserPreferServerIndex() 异常");
-			e.printStackTrace();
+			Log.error(e);
 			return false;
 		}
     }
@@ -2408,7 +2408,7 @@ public class BaseFunction{
 	        return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-			e.printStackTrace();
+			Log.error(e);
 			return false;
 		}
     }  
@@ -2446,7 +2446,7 @@ public class BaseFunction{
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        Log.debug("addUserPreferServerIndex() 异常");
-			e.printStackTrace();
+			Log.error(e);
 			return false;
 		}
     }
@@ -2519,7 +2519,7 @@ public class BaseFunction{
 	        }
 		} catch (Exception e) {
 			System.out.println("search() 异常");
-			e.printStackTrace();
+			Log.error(e);
 		} finally {
 			if(ireader != null)
 			{
@@ -2605,7 +2605,7 @@ public class BaseFunction{
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        Log.debug("addPreferLinkIndex() 异常");
-			e.printStackTrace();
+			Log.error(e);
 			return false;
 		}
 	}
@@ -2652,7 +2652,7 @@ public class BaseFunction{
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        Log.debug("updatePreferLinkIndex() 异常");
-			e.printStackTrace();
+			Log.error(e);
 			return false;
 		}
 	}
@@ -2724,7 +2724,7 @@ public class BaseFunction{
 	        }
 		} catch (Exception e) {
 			System.out.println("search() 异常");
-			e.printStackTrace();
+			Log.error(e);
 		} finally {
 			if(ireader != null)
 			{
