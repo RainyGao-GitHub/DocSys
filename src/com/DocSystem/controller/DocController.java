@@ -6072,11 +6072,11 @@ public class DocController extends BaseController{
 		{
 		case "zip":
 		case "war":
-			return getSubDocListForZip(repos, rootDoc, path, name, rt);
+			//return getSubDocListForZip(repos, rootDoc, path, name, rt);
+		case "7z":
+			//return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
 		case "rar":
 			return getSubDocListForCompressFile(repos, rootDoc, path, name, rt);			
-		case "7z":
-			return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
 		case "tar":
 			return getSubDocListForTar(repos, rootDoc, path, name, rt);	
 		case "tgz":
@@ -6100,9 +6100,9 @@ public class DocController extends BaseController{
 	
 	//使用SevenZip方式（支持多种格式）
 	private List<Doc> getSubDocListForCompressFile(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.debug("getSubDocListForRar() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.debug("getSubDocListForRar() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() zipFilePath:" + zipFilePath);
 		
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
 
@@ -6127,14 +6127,14 @@ public class DocController extends BaseController{
                subDocList.add(subDoc);
             }
         } catch (Exception e) {
-            Log.error("getSubDocListForRar() Error occurs");
+            Log.error("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error occurs");
             Log.error(e);
         } finally {
             if (inArchive != null) {
                 try {
                     inArchive.close();
                 } catch (SevenZipException e) {
-                    Log.error("getSubDocListForRar() Error closing archive");
+                    Log.error("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error closing archive");
                     Log.error(e);
                 }
             }
@@ -6142,7 +6142,7 @@ public class DocController extends BaseController{
                 try {
                     randomAccessFile.close();
                 } catch (IOException e) {
-                    Log.error("getSubDocListForRar() Error closing file");
+                    Log.error("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error closing file");
                     Log.error(e);
                 }
             }
