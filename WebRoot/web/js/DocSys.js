@@ -1551,8 +1551,16 @@ function showImgInNewPage(docInfo, fileLink)
 	{
 		docInfo.fileLink = fileLink;
 	}
+	
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/imageList.html?" + urlParamStr);
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		window.open("/DocSystem/web/image.html?" + urlParamStr);				
+	}
+	else
+	{
+		window.open("/DocSystem/web/imageList.html?" + urlParamStr);		
+	}
 }
 
 function showVideoInNewPage(docInfo, fileLink){
@@ -1618,6 +1626,12 @@ function showOfficeInNewPage(docInfo)
 function showImgInDialog(docInfo)
 {
 	console.log("showImgInDialog docInfo:", docInfo);
+	var url = 'imgListViewer.html';
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		url = 'imgViewer.html';
+	}
+	
 	bootstrapQ.dialog({
 		id: "ImgListViewer",
 		title: docInfo.name,
@@ -1635,13 +1649,19 @@ function showImgInDialog(docInfo)
 function showImgInArtDialog(docInfo)
 {
 	console.log("showImgInArtDialog docInfo:", docInfo);
+	var url = 'imgListViewerForArt.html';
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		url = 'imgViewerForArt.html';
+	}
+	
 	//获取窗口的高度并设置高度
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();	
 	var d = dialog({
 		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
-		url: 'imgListViewerForArt.html',
+		url: url,
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
