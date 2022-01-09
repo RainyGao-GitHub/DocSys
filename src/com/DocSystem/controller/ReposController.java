@@ -781,18 +781,59 @@ public class ReposController extends BaseController{
 		
 		if(clearReposFileCache(repos, rt) == false)
 		{
-			Log.docSysErrorLog("清除仓库文件缓存失败！", rt);
+			Log.docSysErrorLog("仓库 [" + repos.getName() +"] 缓存清除失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
-		new Thread(new Runnable() {
-			public void run() {
-				Log.debug("clearReposCache() rebuildReposAllDocIndex() in new Thread");
-				//重建仓库的所有文件索引
-				rebuildReposAllDocIndex(repos);
+		//刷新操作可以完成重建索引，因此不需要在这里处理
+//		new Thread(new Runnable() {
+//			public void run() {
+//				Log.debug("clearReposCache() rebuildReposAllDocIndex() in new Thread");
+//				//重建仓库的所有文件索引
+//				rebuildReposAllDocIndex(repos);
+//			}
+//		}).start();
+		
+		writeJson(rt, response);		
+	}
+	
+	/****************   clear Repository File Cache ******************/
+	@RequestMapping("/clearAllReposCache.do")
+	public void clearAllReposCache(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("\n****************** clearAllReposCache.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查是否是超级管理员或者仓库owner
+		if(login_user.getType() != 2)	//超级管理员 或 仓库的拥有者可以清除仓库缓存
+		{
+			rt.setError("您无权进行该操作!");				
+			writeJson(rt, response);	
+			return;
+		}
+		
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0;i<reposList.size();i++)
+		{
+			Repos repos = reposList.get(i);
+			if(clearReposFileCache(repos, rt) == false)
+			{
+				Log.info("仓库 [" + repos.getName() + "] 缓存清除失败！");
 			}
-		}).start();
+			else
+			{
+				Log.info("仓库 [" + repos.getName() + "] 缓存清除成功！");				
+			}
+		}
 		
 		writeJson(rt, response);		
 	}

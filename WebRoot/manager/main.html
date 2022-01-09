@@ -3514,6 +3514,49 @@
 		}, null);
 	}
 	
+	function clearAllReposCacheConfirm()
+	{	
+		console.log("clearAllReposCacheConfirm");
+		qiao.bs.confirm({
+			id: "clearAllReposCacheConfirmDialog",
+	        title: "清除缓存",
+	        msg: "是否清除所有仓库缓存？",
+	        okbtn: "确定",
+	        qubtn: "取消",
+	    },function () {
+	    	clearAllReposCache();
+	    	return true;   
+	    });
+	}
+	
+	function clearAllReposCache()
+	{
+		console.log("clearAllReposCache()");
+	    $.ajax({
+	        url : "/DocSystem/Repos/clearAllReposCache.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+	            	// 普通消息提示条
+					bootstrapQ.msg({
+							msg : '清除成功！',
+							type : 'success',
+							time : 2000,
+						    });
+	            }
+	            else
+	            {
+	            	showErrorMessage("清除失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	           	showErrorMessage('清除失败:服务器异常！');
+	        }
+		});
+	}
+	
 	function delReposConfirm(id)
 	{	
 		console.log("delReposConfirm");
