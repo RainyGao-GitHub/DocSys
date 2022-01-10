@@ -2984,6 +2984,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
+		Log.info("\n************** doGetTmpFile ****************");
 		Log.debug("doGetTmpFile  reposId:" + reposId + " path:" + path + " fileName:" + fileName+ " shareId:" + shareId);
 
 		if(path == null)
@@ -3045,6 +3046,8 @@ public class DocController extends BaseController{
 			String rootName,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
+		
+		Log.info("\n************** getZipDocContent ****************");
 		Log.debug("getZipDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " shareId:" + shareId);
 
 		if(path == null)
@@ -3923,6 +3926,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, rootPath, rootName, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc tempRootDoc = decryptRootZipDoc(repos, rootDoc);
 		
 		//build tmpDoc
 		String tmpLocalRootPath = Path.getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
@@ -3933,7 +3937,6 @@ public class DocController extends BaseController{
 		}
 		Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tmpLocalRootPath, null, null, null);
 		
-		Doc tempRootDoc = decryptRootZipDoc(repos, rootDoc);
 		checkAndExtractEntryFromCompressDoc(repos, tempRootDoc, tmpDoc);
 		
 		String authCode = addDocDownloadAuthCode();
@@ -5960,26 +5963,6 @@ public class DocController extends BaseController{
 		rt.setData(docList);	
 		writeJson(rt, response);
 	}
-	
-	private Doc decryptRootZipDoc(Repos repos, Doc rootZipDoc) {
-		Doc tempRootDoc = rootZipDoc;
-		if(repos.encryptType != null && repos.encryptType != 0)
-		{
-			//TODO: getReposTmpPathForZipDecrypt 返回的路径没有区分用户，也就是说用户将共用解压后的zip文件，这里没有上锁，所以存在风险
-			String zipDocDecryptPath = Path.getReposTmpPathForZipDecrypt(repos, rootZipDoc);
-			File rootFile = new File(rootZipDoc.getLocalRootPath() + rootZipDoc.getPath(), rootZipDoc.getName());
-			String tmpLocalRootPathForZipDoc = zipDocDecryptPath + rootFile.lastModified() + "/";
-			if(FileUtil.isFileExist(tmpLocalRootPathForZipDoc + rootZipDoc.getPath() + rootZipDoc.getName()) == false)
-			{
-				FileUtil.clearDir(tmpLocalRootPathForZipDoc);	//删除旧的临时文件
-				FileUtil.createDir(tmpLocalRootPathForZipDoc);
-				FileUtil.copyFile(rootZipDoc.getLocalRootPath() + rootZipDoc.getPath() + rootZipDoc.getName(), tmpLocalRootPathForZipDoc + rootZipDoc.getPath() + rootZipDoc.getName(), true);
-				decryptFile(repos, tmpLocalRootPathForZipDoc + rootZipDoc.getPath(), rootZipDoc.getName());
-			}
-			tempRootDoc = buildBasicDoc(rootZipDoc.getVid(), null, null, rootZipDoc.getReposPath(), rootZipDoc.getPath(), rootZipDoc.getName(), null, 1, true, tmpLocalRootPathForZipDoc, null, null, null);
-		}
-		return tempRootDoc;
-	}
 
 	/****************   get Zip SubDocList ******************/
 	@RequestMapping("/getZipSubDocList.do")
@@ -6013,8 +5996,6 @@ public class DocController extends BaseController{
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
-
-		//decrypt rootZipFile
 		Doc tempRootDoc = decryptRootZipDoc(repos, rootDoc);
 		
 		List <Doc> subDocList = null;
