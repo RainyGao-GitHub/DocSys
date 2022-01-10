@@ -1279,6 +1279,10 @@ function openOffice(docInfo, openInNewPage, preview)
 {
 	console.log("openOffice preview:" + preview);
     var url = "/DocSystem/Bussiness/getDocOfficeLink.do";
+    if(docInfo.isZip && docInfo.isZip == 1)
+    {
+        var url = "/DocSystem/Bussiness/getZipDocOfficeLink.do";    	
+    }
 	$.ajax({
         url : url,
         type : "post",
@@ -1287,6 +1291,8 @@ function openOffice(docInfo, openInNewPage, preview)
         	reposId: docInfo.vid,
             path: docInfo.path,
             name: docInfo.name,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
             commitId: docInfo.commitId,
             shareId: docInfo.shareId,
             preview: preview,  //preview表示是否是预览，预览则是转成pdf
