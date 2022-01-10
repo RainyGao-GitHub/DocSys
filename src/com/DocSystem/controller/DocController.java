@@ -2354,19 +2354,6 @@ public class DocController extends BaseController{
 			//从文件服务器拉取文件
 			remoteServerCheckOut(repos, doc, null, null, null, null, true, true, null);
 		}
-		
-		//如果设置了远程存储自动拉取，那么先自动拉取，并设置allPullDone标记，避免后面本地文件不存在时再次远程拉取
-		boolean remoteStorageAutoPullDone = false;
-		if(remoteStorageEn)
-		{	
-			RemoteStorageConfig remoteStorage = repos.remoteStorageConfig;
-			if(remoteStorage != null && remoteStorage.autoPull != null && remoteStorage.autoPull == 1)
-			{
-				Log.debug("downloadDocPrepare_FSM() 远程自动拉取");
-				remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, true, true, rt);
-				remoteStorageAutoPullDone = true;
-			}
-		}
 
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
@@ -2382,13 +2369,9 @@ public class DocController extends BaseController{
 			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			if(remoteStorageEn)
 			{
-			    if(remoteStorageAutoPullDone == false)
+			    if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, true, false, rt) == true)
 				{
-			    	//本地文件不存在且没有自动拉取过，则从远程存储服务器自动拉取文件
-					if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "文件下载拉取", true, true, true, rt) == true)
-					{
-						localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
-					}
+					localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
 				}
 			}
 			
@@ -2601,7 +2584,7 @@ public class DocController extends BaseController{
        }
     }
 	
-	private boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt)
+	private boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt)
 	{
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
@@ -2619,7 +2602,7 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		channel.remoteStoragePull(remote, repos, doc, accessUser, "远程存储自动拉取", recurcive, force, isAutoPull, rt);
+		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, force, isAutoPull, rt);
 		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
 		if(pullResult == null)
 		{
@@ -3048,7 +3031,7 @@ public class DocController extends BaseController{
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 		
 		Log.info("\n************** getZipDocContent ****************");
-		Log.debug("getZipDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " shareId:" + shareId);
+		Log.debug("getZipDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " rootPath:" + rootPath + " rootName:" + rootName + " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -3176,26 +3159,15 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					//远程存储自动拉取
-					boolean autoPullDone = false;
-					RemoteStorageConfig remote = repos.remoteStorageConfig;
-					if(remote != null && remote.autoPull != null && remote.autoPull == 1)
-					{
-						remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt);
-						autoPullDone = true;
-					}
-					
-					
 					Doc localEntry = fsGetDoc(repos, doc);
+					//只在文件不存在时才从远程存储下载
 					if(localEntry.getType() == 0)
 					{
-						Log.debug("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在");
-						if(autoPullDone == false)
+						Log.debug("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在，从远程存储拉取");
+						RemoteStorageConfig remote = repos.remoteStorageConfig;
+						if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, remote.autoPullForce == 1, false, rt) == true)
 						{
-							if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), "远程存储自动拉取", true, remote.autoPullForce == 1, true, rt) == true)
-							{
-								localEntry = fsGetDoc(repos, doc); //重新读取文件信息
-							}
+							localEntry = fsGetDoc(repos, doc); //重新读取文件信息
 						}
 					}		
 				}
@@ -3902,7 +3874,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("\n*************** getZipDocFileLink ********************");		
-		Log.debug("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
+		Log.debug("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " rootPath:" + rootPath + " rootName:" + rootName + " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		

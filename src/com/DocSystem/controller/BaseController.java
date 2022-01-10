@@ -4002,7 +4002,7 @@ public class BaseController  extends BaseFunction{
 					}					
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
-						channel.remoteStoragePull(remote, repos, doc, login_user, "远程存储自动拉取", subDocSyncupFlag == 2, remote.autoPullForce == 1, true, rt);
+						channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, true, rt);
 					}
 				}
 			}
@@ -18116,15 +18116,6 @@ public class BaseController  extends BaseFunction{
 		pullResult.successCount = 0;
 		pullResult.successDocList = new ArrayList<Doc>();
 	
-		if(commitId != null)
-		{
-			if(remote.isVerRepos == false)
-			{
-				Log.debug("doPullFromRemoteStorage() 非远程版本仓库不支持历史版本获取！");
-				return false;
-			}					
-		}
-		
 		Doc localDoc = fsGetDoc(repos, doc);
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
 		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, commitId); 
