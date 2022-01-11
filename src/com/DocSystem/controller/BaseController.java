@@ -13636,8 +13636,9 @@ public class BaseController  extends BaseFunction{
 	//注意：该接口需要返回真正的parentZipDoc
 	protected Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 
 	{
+		Log.debug("\n");
 		Log.debug("checkAndExtractEntryFromCompressDoc() rootDoc:" + rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName());
-		Log.debug("checkAndExtractEntryFromCompressDoc() doc:" + doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		Log.debug("checkAndExtractEntryFromCompressDoc() doc:" +  doc.getLocalRootPath() + doc.getPath() + doc.getName());
 		if(rootDoc.getName() == null || rootDoc.getName().isEmpty())
 		{
 			Log.error("checkAndExtractEntryFromCompressDoc() rootDoc.name 不能为空");			
@@ -13664,13 +13665,22 @@ public class BaseController  extends BaseFunction{
 			File parentFile = new File(parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName());
 			if(parentFile.exists() == false)
 			{
+				Log.debug("checkAndExtractEntryFromCompressDoc() parentCompressDoc 不存在，call checkAndExtractEntryFromCompressDoc");
 				//此时无法区分该parentCompressDoc是否是目录，只能将其解压出来，然后让extractEntryFromCompressFile来找到真正的parentCompressDoc
 				checkAndExtractEntryFromCompressDoc(repos, rootDoc, parentCompressDoc);				
 			}
-			else if(parentFile.isDirectory())
+			else 
 			{
-				//表明parentCompressDoc是目录，因此需要继续向上找到真正的parentCompressDoc
-				parentCompressDoc = checkAndExtractEntryFromCompressDoc(repos, rootDoc, parentCompressDoc);
+				if(parentFile.isDirectory())
+				{
+					//表明parentCompressDoc是目录，因此需要继续向上找到真正的parentCompressDoc
+					Log.debug("checkAndExtractEntryFromCompressDoc() parentCompressDoc 是目录");
+					parentCompressDoc = checkAndExtractEntryFromCompressDoc(repos, rootDoc, parentCompressDoc);
+				}
+				else
+				{
+					Log.debug("checkAndExtractEntryFromCompressDoc() parentCompressDoc 是压缩文件");					
+				}
 			}
 		}
 		
@@ -13681,13 +13691,17 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean extractEntryFromCompressFile(Repos repos, Doc rootDoc, Doc parentCompressDoc, Doc doc) 
 	{
+		Log.debug("extractEntryFromCompressFile() parentCompressDoc:" + parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName());
+		Log.debug("extractEntryFromCompressFile() doc:" + doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		
 		parentCompressDoc = checkAndGetRealParentCompressDoc(repos, rootDoc, parentCompressDoc);
 		if(parentCompressDoc == null)
 		{
-			Log.debug("extractEntryFromCompressFile() " + parentCompressDoc + " is null");
+			Log.debug("extractEntryFromCompressFile() real parentCompressDoc is null");
 			return false;
 		}
 		
+		Log.debug("extractEntryFromCompressFile() real parentCompressDoc:" + parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName());
 		String compressFileType = FileUtil.getCompressFileType(parentCompressDoc.getName());
 		if(compressFileType == null)
 		{
@@ -13699,7 +13713,11 @@ public class BaseController  extends BaseFunction{
 		{
 		case "zip":
 		case "war":
-			return extractEntryFromZipFile(parentCompressDoc, doc);
+			if(extractEntryFrom7zFile(parentCompressDoc, doc) == false)
+			{
+				return extractEntryFromZipFile(parentCompressDoc, doc);
+			}
+			return true;
 		case "7z":
 			return extractEntryFrom7zFile(parentCompressDoc, doc);			
 		case "rar":
@@ -14619,21 +14637,19 @@ public class BaseController  extends BaseFunction{
 
 	//获取doc的parentZipDoc(这里有风险parentZipDoc里面的目录的名字带压缩后缀)
 	private Doc getParentCompressDoc(Repos repos, Doc rootDoc, Doc doc) {
-		//TODO: 这里存在风险，如果rootDoc传入错误会导致死循环
+		Log.debug("getParentCompressDoc() doc:" + doc.getPath() + doc.getName());
+		if(doc.getName() == null || doc.getName().isEmpty())
+		{
+			Log.error("getParentCompressDoc() doc.name 不能为空");
+			return null;
+		}
+		
 		Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), rootDoc.getReposPath(), doc.getPath(), "", null, 1, true, null, null, 0L, "");
 		if(parentDoc.getDocId().equals(rootDoc.getDocId()))
 		{
 			return rootDoc;
 		}
-		
-		if(parentDoc.getDocId() == 0)
-		{
-			Log.error("getParentCompressDoc() parentDoc错误, 请检查rootDoc和doc");
-			Log.printObject("getParentCompressDoc() rootDoc:", rootDoc);
-			Log.printObject("getParentCompressDoc() doc:" , doc);
-			return null;
-		}
-		
+				
 		String tmpLocalRootPath = Path.getReposTmpPathForDoc(repos, parentDoc);	
 		parentDoc.setLocalRootPath(tmpLocalRootPath);
 		
