@@ -10982,7 +10982,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		return FileUtil.moveFileOrDir(path, name, path, "olde" + name, true);
+		return FileUtil.moveFileOrDir(path, name, path, "old" + name, true);
 	}
 	
 	protected EncryptConfig recoverReposEncryptConfig(Repos repos) 
@@ -10992,10 +10992,12 @@ public class BaseController  extends BaseFunction{
 		File file = new File(path, "old" + name);
 		if(file.exists() == false)
 		{
+			Log.info("recoverReposEncryptConfig() there is no old config:" + path + "old" + name);
 			return null;
 		}
 		if(FileUtil.moveFileOrDir(path, "old" + name, path, name, true) == false)
 		{
+			Log.info("recoverReposEncryptConfig() move config failed, from " + path + "old" + name + " to " + path + name);
 			return null;
 		}
 		
@@ -11031,7 +11033,7 @@ public class BaseController  extends BaseFunction{
 		String jsonStr = JSON.toJSONString(config);
 		if(FileUtil.saveDocContentToFile(jsonStr, path, name, "UTF-8") == false)
     	{
-    		Log.debug("generateReposEncryptConfig() 密钥保存失败");
+    		Log.info("generateReposEncryptConfig() 密钥保存失败");
     		return null;
     	}
 		return config;
