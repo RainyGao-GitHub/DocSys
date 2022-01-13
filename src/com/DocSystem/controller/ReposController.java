@@ -367,20 +367,19 @@ public class ReposController extends BaseController{
 			{
 				config = generateReposEncryptConfig(repos, encryptType);
 			}
+			
+			if(config != null)
+			{
+				reposEncryptHashMap.put(repos.getId(), config);
+			}
 		}
 		else
 		{
-			removeReposEncryptConfig(repos);
-		}
-		
-		if(config == null)
-		{
-			reposEncryptHashMap.remove(repos.getId());
-		}
-		else
-		{
-			reposEncryptHashMap.put(repos.getId(), config);
-		}
+			if(removeReposEncryptConfig(repos) == true)
+			{
+				reposEncryptHashMap.remove(repos.getId());				
+			}
+		}		
 	}
 
 	/****************   delete a Repository ******************/
