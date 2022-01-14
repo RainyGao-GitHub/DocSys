@@ -1,8 +1,4 @@
 /**
- * 0.1.0.20151217
- */
-
-/**
  * qiao.util.js
  * 1.qser
  * 2.qdata
@@ -299,9 +295,9 @@ qiao.bs.modalstr = function(opt){
 	
 	var foot = '';
 	if(opt.foot){
-		foot += '<div class="modal-footer"><button type="button" class="btn btn-primary bsok">'+opt.okbtn+'</button>';
+		foot += '<div class="modal-footer"><button type="button" class="btn btn-primary mybtn-primary bsok">'+opt.okbtn+'</button>';
 		if(opt.btn){
-			foot += '<button type="button" class="btn btn-default bscancel">'+opt.qubtn+'</button>';
+			foot += '<button type="button" class="btn btn-danger mybtn bscancel ml15">'+opt.qubtn+'</button>';
 		}
 		foot += '</div>';
 	}
@@ -355,6 +351,7 @@ qiao.bs.confirm = function(options, ok, cancel){
 	
 	// init
 	var $modal = $('#' + opt.id); 
+	console.log($modal);
 	$modal.modal(opt);
 	
 	// bind
@@ -376,19 +373,40 @@ qiao.bs.confirm = function(options, ok, cancel){
 qiao.bs.dialog = function(options, func){
 	// options
 	var opt = $.extend({}, qiao.bs.modaloptions, options);
-	opt.big = true;
+	opt.big = false;
 	
 	// append
 	$('body').append(qiao.bs.modalstr(opt));
 	
-	// ajax page
-	qiao.ajax({
-		url:options.url,
-		dataType:'html'
-	}, function(html){
+	//Rainy added to make the startsWith and endsWith functions can work under IE 
+	if(typeof String.prototype.startsWith != 'function') {
+		 String.prototype.startsWith = function (prefix){
+		  return this.slice(0, prefix.length) === prefix;
+		 };
+	}
+	//if (typeof String.prototype.endsWith != 'function') {
+	//	 String.prototype.endsWith = function(suffix) {
+	//	  return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	//	 };
+	//}
+	//Rainy added to make the startsWith and endsWith functions can work under IE 
+	
+	var url = options.url;
+	if( url.startsWith("#") ){
+		var html = $(options.url).html();
 		$('#' + opt.id + ' div.modal-body').empty().append(html);
 		if(options.callback) options.callback();
-	});
+	}else{
+		// ajax page
+		qiao.ajax({
+			url:options.url,
+			dataType:'html'
+		}, function(html){
+			$('#' + opt.id + ' div.modal-body').empty().append(html);
+			if(options.callback) options.callback();
+		});
+	}
+
 		
 	// init
 	var $modal = $('#' + opt.id); 
@@ -804,7 +822,7 @@ qiao.crud.bindcrud = function(){
 	qiao.on('.delBtn', 'click', function(){qiao.crud.del();});
 	qiao.on('.delbtn', 'click', function(){qiao.crud.del($(this).parents('tr').qdata().id);});
 };
-qiao.crud.listopt = {pageNumber:1,pageSize:10};
+qiao.crud.listopt = {pageNumber:1,pageSize:50};
 qiao.crud.list = function(data){
 	var opt = {url : qiao.crud.url + '/index'};
 	if(data) $.extend(qiao.crud.listopt, data);
@@ -814,7 +832,7 @@ qiao.crud.list = function(data){
 	qiao.ajax(opt, function(html){$('#cruddiv').empty().append(html);});
 };
 qiao.crud.reset = function(){
-	qiao.crud.listopt = {pageNumber:1,pageSize:10};
+	qiao.crud.listopt = {pageNumber:1,pageSize:50};
 	qiao.crud.list();
 };
 qiao.crud.search = function(title){
@@ -905,3 +923,5 @@ qiao.crud.bindpage = function(){
 		qiao.crud.list({pageSize:value});
 	});
 };
+
+var bootstrapQ = qiao.bs;
