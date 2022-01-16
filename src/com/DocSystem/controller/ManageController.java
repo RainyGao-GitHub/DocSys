@@ -35,7 +35,6 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.constants;
-import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.controller.BaseController;
 
@@ -763,10 +762,9 @@ public class ManageController extends BaseController{
 		String tomcatPath = getTomcatPath();
 		String javaHome = getJavaHome();
 		String officeEditorApi = Path.getOfficeEditorApi();
-		String defaultReposStorePath = Path.getDefaultReposRootPath(OSType);
 		String ldapConfig = getLdapConfig();
 
-		JSONObject config = new JSONObject();
+		JSONObject config = getSystemInfo();
 		config.put("docSysType", docSysType);
 		config.put("isSalesServer", isSalesServer);
 		
@@ -783,7 +781,6 @@ public class ManageController extends BaseController{
 			config.put("openOfficePath", openOfficePath);
 		}
 		config.put("officeEditorApi", officeEditorApi);
-		config.put("defaultReposStorePath", defaultReposStorePath);
 		rt.setData(config);
 		writeJson(rt, response);
 	}
