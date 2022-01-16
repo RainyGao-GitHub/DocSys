@@ -18203,4 +18203,22 @@ public class BaseController  extends BaseFunction{
 		rt.setDataEx(pushResult);
 		return ret;	
 	}
+	
+	protected JSONObject getSystemInfo() {
+		JSONObject systemInfo = new JSONObject();
+		
+		String defaultReposStorePath = Path.getDefaultReposRootPath(OSType);
+		systemInfo.put("defaultReposStorePath", defaultReposStorePath);
+		
+		String salesDataStorePath = Path.getSaleDataStorePath(OSType);
+		systemInfo.put("salesDataStorePath", salesDataStorePath);
+		
+		String systemLogStorePath = Path.getSystemLogStorePath(OSType);
+		systemInfo.put("systemLogStorePath", systemLogStorePath);
+		
+		String indexDBStorePath = getDBStorePath();
+		systemInfo.put("indexDBStorePath", indexDBStorePath);
+			
+		return systemInfo;
+	}
 }
