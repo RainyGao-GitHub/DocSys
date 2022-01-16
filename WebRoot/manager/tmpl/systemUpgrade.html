@@ -74,6 +74,22 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
+	                    <td>系统日志存储位置</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="systemLogStorePath" name="systemLogStorePath" value="{{value.systemLogStorePath}}" disabled="disabled">
+	                    </td>
+	                    <td class="edit">
+	                    </td>
+	                  </tr>
+	                  <tr>
+	                    <td>索引数据库存储位置</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="indexDBStorePath" name="indexDBStorePath" value="{{value.indexDBStorePath}}" disabled="disabled">
+	                    </td>
+	                    <td class="edit">
+	                    </td>
+	                  </tr>
+	                  <tr>
 	                    <td>LDAP设置</td>
 	                    <td>
 							<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">
@@ -98,6 +114,14 @@
 	                      	<button onclick="generateLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
 	                      	<button onclick="exportLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
 	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+	                    </td>
+	                  </tr>
+	                  <tr>
+	                    <td>销售数据存储位置</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="salesDataStorePath" name="salesDataStorePath" value="{{value.salesDataStorePath}}" disabled="disabled">
+	                    </td>
+	                    <td class="edit">
 	                    </td>
 	                  </tr>
 	                  {{/if}}
