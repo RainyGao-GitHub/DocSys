@@ -2242,7 +2242,12 @@ function showOfficeInArtDialog(docInfo)
 			console.log('oniframeload');
 		},
         cancel: function(){
-		    // 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
+		    if(docInfo.isZip && docInfo.isZip == 1)
+		    {
+		    	//压缩文件的Office为只读，不需要检测
+		    	return true;
+		    }
+        	// 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
         	// 获取该文档唯一iframe,其name是文档唯一值
 			let docIframe = $(ArtDialogDivContentId).find(`iframe[name=${ArtDialogId}]`)[0];
 			if (docIframe !== undefined) {
