@@ -1212,6 +1212,9 @@
 			openOfficePath:"",
 			officeEditorApi:"",
 			defaultReposStorePath:"",
+			systemLogStorePath:"",
+			indexDBStorePath:"",
+			salesDataStorePath:"",			
 			ldapConfig:"",
 			logLevel: 1,	//default info
 			logFile : "", //defualt not set
@@ -1226,6 +1229,9 @@
 		$("#openOfficePath").val(systemInfo.openOfficePath);
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
+		$("#systemLogStorePath").val(systemInfo.systemLogStorePath);
+		$("#indexDBStorePath").val(systemInfo.indexDBStorePath);
+		$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
 		$("#logFile").val(systemInfo.logFile);
@@ -1235,6 +1241,9 @@
 		$("#openOfficePath").attr('disabled',false);
 		$("#officeEditorApi").attr('disabled',false);
 		$("#defaultReposStorePath").attr('disabled',false);
+		$("#systemLogStorePath").attr('disabled',false);
+		$("#indexDBStorePath").attr('disabled',false);
+		$("#salesDataStorePath").attr('disabled',false);
 		$("#ldapConfig").attr('disabled',false);
 		$("#logLevel").attr('disabled',false);
 		$("#logFile").attr('disabled',false);
@@ -1250,6 +1259,9 @@
 		$("#openOfficePath").attr('disabled',true);
 		$("#officeEditorApi").attr('disabled',true);
 		$("#defaultReposStorePath").attr('disabled',true);
+		$("#systemLogStorePath").attr('disabled',true);
+		$("#indexDBStorePath").attr('disabled',true);
+		$("#salesDataStorePath").attr('disabled',true);
 		$("#ldapConfig").attr('disabled',true);
 		$("#logLevel").attr('disabled',true);
 		$("#logFile").attr('disabled',true);
@@ -1259,6 +1271,9 @@
 		$("#openOfficePath").val(systemInfo.openOfficePath);
 		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
+		$("#systemLogStorePath").val(systemInfo.systemLogStorePath);
+		$("#indexDBStorePath").val(systemInfo.indexDBStorePath);
+		$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
 		$("#logFile").val(systemInfo.logFile);		
@@ -1274,6 +1289,10 @@
 		$("#openOfficePath").attr('disabled',true);
 		$("#officeEditorApi").attr('disabled',true);
 		$("#defaultReposStorePath").attr('disabled',true);
+		$("#systemLogStorePath").attr('disabled',true);
+		$("#indexDBStorePath").attr('disabled',true);
+		$("#salesDataStorePath").attr('disabled',true);
+				
 		$("#ldapConfig").attr('disabled',true);
 		$("#logLevel").attr('disabled',true);
 		$("#logFile").attr('disabled',true);
@@ -1284,14 +1303,37 @@
 		var openOfficePath = $("#openOfficePath").val();
 		var officeEditorApi = $("#officeEditorApi").val();
 		var defaultReposStorePath = $("#defaultReposStorePath").val();
+		var systemLogStorePath = $("#systemLogStorePath").val();
+		var indexDBStorePath = $("#indexDBStorePath").val();
+		var salesDataStorePath = $("#salesDataStorePath").val();
 		var ldapConfig = $("#ldapConfig").val();
 		var logLevel = $("#logLevel").val();
 		var logFile =  $("#logFile").val();
 		
-		updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel, logFile);
+		updateSystemInfo(tomcatPath, 
+				javaHome, 
+				openOfficePath, 
+				officeEditorApi, 
+				defaultReposStorePath,
+				systemLogStorePath, 
+				indexDBStorePath,
+				salesDataStorePath,
+				ldapConfig, 
+				logLevel, 
+				logFile);
 	}
 	
-	function updateSystemInfo(tomcatPath, javaHome, openOfficePath, officeEditorApi, defaultReposStorePath, ldapConfig, logLevel, logFile){
+	function updateSystemInfo(tomcatPath, 
+			javaHome, 
+			openOfficePath, 
+			officeEditorApi, 
+			defaultReposStorePath, 
+			systemLogStorePath, 
+			indexDBStorePath,
+			salesDataStorePath,
+			ldapConfig, 
+			logLevel, 
+			logFile){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
 	        type : "post",
@@ -1302,6 +1344,9 @@
 	        	openOfficePath: openOfficePath,
 	        	officeEditorApi: officeEditorApi,
 	        	defaultReposStorePath: defaultReposStorePath,
+	        	systemLogStorePath: systemLogStorePath,
+	        	indexDBStorePath: indexDBStorePath,
+	        	salesDataStorePath: salesDataStorePath,
 	        	ldapConfig: ldapConfig,
 	        	logLevel: logLevel,
 	        	logFile: logFile,
@@ -1315,6 +1360,9 @@
 	        		systemInfo.openOfficePath = openOfficePath;
 	        		systemInfo.officeEditorApi = officeEditorApi;
 	        		systemInfo.defaultReposStorePath = defaultReposStorePath;
+	        		systemInfo.systemLogStorePath = systemLogStorePath;
+	        		systemInfo.indexDBStorePath = indexDBStorePath;
+	        		systemInfo.salesDataStorePath = salesDataStorePath;
 	        		systemInfo.ldapConfig = ldapConfig;
 	        		systemInfo.logLevel = logLevel;
 	        		systemInfo.logFile = logFile;
@@ -1330,6 +1378,9 @@
 	        		$("#openOfficePath").val(systemInfo.openOfficePath);
 	        		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 	        		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
+	        		$("#systemLogStorePath").val(systemInfo.systemLogStorePath);
+	        		$("#indexDBStorePath").val(systemInfo.indexDBStorePath);
+	        		$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
 	        		$("#ldapConfig").val(systemInfo.ldapConfig);
 	        		$("#logLevel").val(systemInfo.logLevel);
 	        		$("#logFile").val(systemInfo.logFile);
@@ -1343,6 +1394,9 @@
         		$("#openOfficePath").val(systemInfo.openOfficePath);
         		$("#officeEditorApi").val(systemInfo.officeEditorApi);
         		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
+        		$("#systemLogStorePath").val(systemInfo.systemLogStorePath);
+        		$("#indexDBStorePath").val(systemInfo.indexDBStorePath);
+        		$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
         		$("#ldapConfig").val(systemInfo.ldapConfig);
         		$("#logLevel").val(systemInfo.logLevel);
         		$("#logFile").val(systemInfo.logFile);

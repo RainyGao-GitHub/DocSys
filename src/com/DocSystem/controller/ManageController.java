@@ -829,6 +829,9 @@ public class ManageController extends BaseController{
 			String openOfficePath, 
 			String officeEditorApi,
 			String defaultReposStorePath,
+			String systemLogStorePath,
+			String indexDBStorePath,
+			String salesDataStorePath,
 			String ldapConfig,
 			Integer logLevel,
 			String logFile,
@@ -839,6 +842,9 @@ public class ManageController extends BaseController{
 		Log.debug("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome 
 				+ " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
 				+ " defaultReposStorePath:" + defaultReposStorePath 
+				+ " systemLogStorePath:" + systemLogStorePath 
+				+ " indexDBStorePath:" + indexDBStorePath 
+				+ " salesDataStorePath:" + salesDataStorePath 
 				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel + " logFile:" + logFile);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -899,6 +905,24 @@ public class ManageController extends BaseController{
 		{
 			defaultReposStorePath = Path.localDirPathFormat(defaultReposStorePath, OSType);
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "defaultReposStorePath", defaultReposStorePath);
+		}
+		
+		if(systemLogStorePath != null)
+		{
+			systemLogStorePath = Path.localDirPathFormat(systemLogStorePath, OSType);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "SystemLogStorePath", systemLogStorePath);
+		}
+		
+		if(indexDBStorePath != null)
+		{
+			indexDBStorePath = Path.localDirPathFormat(indexDBStorePath, OSType);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "DBStorePath", indexDBStorePath);
+		}
+		
+		if(salesDataStorePath != null)
+		{
+			salesDataStorePath = Path.localDirPathFormat(salesDataStorePath, OSType);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "SalesDataStorePath", salesDataStorePath);
 		}
 		
 		if(ldapConfig != null && !ldapConfig.isEmpty())
