@@ -111,11 +111,13 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 # 常见问题
 ### 一、二次开发如何集成商业版功能
 
+#### 1、编译开源版本 DocSystem.war
+
 #### 1、下载对应的商业版本[DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
 
 #### 2、集成商业版功能
 
-解压DocSystem.war到本地，并分别复制 DocSystem\web\static\office-editor 和 DocSystem\WEB-INF\classes\com\DocSystem\websocket 到源码的 WebRoot\web\static 和 WebRoot\WEB-INF\classes\com\DocSystem 目录
+复制商业版本中的 DocSystem\web\static\office-editor 和 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录到开源版本对应的目录
 
 ### 二、Linux系统war包直接部署Office无法预览和编辑
 
