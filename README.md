@@ -113,9 +113,9 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 #### 1、编译开源版本 DocSystem.war
 
-#### 1、下载对应的商业版本[DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
+#### 2、下载对应的商业版本[DocSystem.war](https://github.com/RainyGao-GitHub/DocSys/releases)
 
-#### 2、集成商业版功能
+#### 3、集成商业版功能
 
 复制商业版本中的 DocSystem\web\static\office-editor 和 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录到开源版本对应的目录
 
