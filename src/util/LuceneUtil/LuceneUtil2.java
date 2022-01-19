@@ -444,7 +444,8 @@ public class LuceneUtil2   extends BaseFunction
 			        indexWriter = new IndexWriter(directory, config);
 			        
 			        String docPath = doc.getPath() + doc.getName() + "/";
-			        Query query = new WildcardQuery(new Term("path", docPath + "*"));
+			        Term term = new Term("path", docPath + "*");
+			        Query query = new WildcardQuery(term);
 			        //Query query = new PrefixQuery(new Term("path", docPath));
 			        
 			        indexWriter.deleteDocuments(query);
