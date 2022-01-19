@@ -15991,6 +15991,10 @@ public class BaseController  extends BaseFunction{
 					pushResult.failCount ++;					
 				}
 			}
+			else
+			{
+				pushResult.successCount ++;
+			}
 		}
 		else
 		{
@@ -16032,6 +16036,10 @@ public class BaseController  extends BaseFunction{
 					pushResult.failCount ++;					
 				}
 			}
+			else
+			{
+				pushResult.successCount ++;
+			}
 		}
 		else
 		{
@@ -16071,6 +16079,10 @@ public class BaseController  extends BaseFunction{
 				{
 					pushResult.failCount ++;					
 				}
+			}
+			else
+			{
+				pushResult.successCount ++;
 			}
 		}
 		else
@@ -18105,7 +18117,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	protected static void remoteStorageVerReposCommitAndPush(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, String commitUser, String commitMsg, DocPushResult pushResult) {
+	protected static String remoteStorageVerReposCommitAndPush(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, String commitUser, String commitMsg, DocPushResult pushResult) {
 		String revision = null;
 		switch(session.protocol)
 		{
@@ -18122,6 +18134,7 @@ public class BaseController  extends BaseFunction{
 			updateRemoteStorageDbEntry(remote, repos, pushResult, pushResult.actionList, revision);
 		}
 		pushResult.revision = revision;
+		return revision;
 	}
 	
 	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt) {
@@ -18192,12 +18205,18 @@ public class BaseController  extends BaseFunction{
 			{
 				if(pushResult.actionList.size() > 0)
 				{
-					remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult); 
+					if(remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult) == null)
+					{
+						pushResult.successCount = 0;
+						pushResult.failCount = pushResult.totalCount;
+					}
 				}
 			}
 			else
 			{
 				pushResult.revision = "";
+				pushResult.successCount = 0;
+				pushResult.failCount = pushResult.totalCount;
 			}
 		}
 		rt.setDataEx(pushResult);
