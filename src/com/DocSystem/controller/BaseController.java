@@ -2473,7 +2473,7 @@ public class BaseController  extends BaseFunction{
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
 			if(ret == false)
 			{
-				Log.debug("loginCheck() 登录失败");
+				Log.error("loginCheck() 登录失败");
 				return null;
 			}
 			return uLists.get(0);
@@ -2488,7 +2488,7 @@ public class BaseController  extends BaseFunction{
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
 			if(ret == false)
 			{
-				Log.debug("loginCheck() 登录失败");
+				Log.error("loginCheck() 登录失败");
 				return null;
 			}
 			return uLists.get(0);
@@ -2501,13 +2501,14 @@ public class BaseController  extends BaseFunction{
 			//Add LDAP User into DB
 			if(checkSystemUsersCount(rt) == false)
 			{
+				Log.error("loginCheck() checkSystemUsersCount Failed!");	
 				return null;			
 			}
 			
 			//For User added by LDAP login no need to check tel and email
 			if(userCheck(ldapLoginUser, false, false, rt) == false)
 			{
-				Log.debug("用户检查失败!");			
+				Log.error("loginCheck() userCheck Failed!");			
 				return null;			
 			}
 
