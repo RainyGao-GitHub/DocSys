@@ -55,40 +55,45 @@
 </div>
 
 <script type="text/javascript">
-var editor = ace.edit("editor");
-editor.setTheme("ace/theme/twilight");
-//editor.setTheme("ace/theme/chrome");
-//editor.setTheme("ace/theme/tomorrow_night");
-editor.session.setMode("ace/mode/text");
-editor.setReadOnly(true); // false to make it editable
+	var editor = ace.edit("editor");
+	editor.setTheme("ace/theme/twilight");
+	//editor.setTheme("ace/theme/chrome");
+	//editor.setTheme("ace/theme/tomorrow_night");
+	editor.session.setMode("ace/mode/text");
+	editor.setReadOnly(true); // false to make it editable
 
-//获取artDialog父窗口传递过来的参数
-var artDialog = top.dialog.get(window);
-var docInfo = {};
-if(artDialog)
-{
-	docInfo = artDialog.data; // 获取对话框传递过来的数据
-}
-else
-{
-	//解决artDialog递归调用的数据穿透问题
-	docInfo = window.parent.gDialogData[window.name];
-}
-console.log("docInfo:",docInfo)
-
-var docText = "";
-var tmpSavedDocText = "";
-var isContentChanged = false;
-
-//页面加载完成处理函数    
-$(document).ready(function()
-{
-	if(!docInfo.fileSuffix)
-	{
-		docInfo.fileSuffix = getFileSuffix(docInfo.name);
+	function GetRequest() {
+		var url = location.search; //获取url中"?"符后的字串
+		var theRequest = {};
+		if (url.indexOf("?") !== -1) {
+			var str = url.substr(1);
+			var strs = str.split("&");
+			for (var i = 0; i < strs.length; i++) {
+				theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+			}
+		}
+		return theRequest;
 	}
-	getDocText(docInfo, showText, showErrorMessage);
-});	
+
+	var params = GetRequest();
+	var docid = params['docid'];
+	//获取artDialog父窗口传递过来的参数
+	var artDialog2 = window.top.artDialogList['ArtDialog' + docid];
+	// 获取对话框传递过来的数据
+	var docInfo = artDialog2.config.data;
+	console.log("docInfo:", docInfo);
+
+	var docText = "";
+	var tmpSavedDocText = "";
+	var isContentChanged = false;
+
+	//页面加载完成处理函数
+	$(document).ready(function () {
+		if (!docInfo.fileSuffix) {
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		}
+		getDocText(docInfo, showText, showErrorMessage);
+	});
 			
 function showText(docText, tmpSavedDocText)
 {

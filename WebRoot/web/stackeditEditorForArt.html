@@ -121,10 +121,25 @@
 	</div>
 </div>
 <script type="text/javascript">
+	function GetRequest() {
+		var url = location.search; //获取url中"?"符后的字串
+		var theRequest = {};
+		if (url.indexOf("?") !== -1) {
+			var str = url.substr(1);
+			var strs = str.split("&");
+			for(var i = 0; i < strs.length; i ++) {
+				theRequest[strs[i].split("=")[0]]=unescape(strs[i].split("=")[1]);
+			}
+		}
+		return theRequest;
+	}
+	var params = GetRequest();
+	var docid = params['docid'];
 	//获取artDialog父窗口传递过来的参数
-	var artDialog = top.dialog.get(window);
+	var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
+
 	// 定义成员变量
-	var docInfo = {};
+	var docInfo = artDialog2.config.data; // 获取对话框传递过来的数据
 	var docText = "";
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
@@ -142,14 +157,6 @@
 	 * 文档信息初始化方法
 	 */
 	function docInfoInit() {
-		if(artDialog) {
-			docInfo = artDialog.data; // 获取对话框传递过来的数据
-		} else {
-			//解决artDialog递归调用的数据穿透问题
-			if (window.name !== undefined && window.name !== "") {
-				docInfo = window.parent.gDialogData[window.name];	
-			}
-		}
 		// 为空时获取文档的后缀
 		if(docInfo.fileSuffix !==  undefined || docInfo.fileSuffix !== "") {
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);

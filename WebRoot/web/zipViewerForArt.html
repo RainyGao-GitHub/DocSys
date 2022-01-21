@@ -15,15 +15,16 @@
 <script src="static/artDialog/lib/jquery-1.10.2.js" type="text/javascript"></script>
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<!-- artDialog -->
+<script src="static/artDialog/dist/dialog.js"></script>
+<script src="static/artDialog/dist/dialog-plus.js"></script>
+<link rel="stylesheet" href="./css/artDialog.css">
+<script src="./js/artDialog.js"></script>
 <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
-<!-- artDialog -->
-<script src="static/artDialog/dist/dialog.js"></script>
-<script src="static/artDialog/dist/dialog-plus.js"></script>
-<!-- <link href="css/dialogExtend.css" rel="stylesheet" type="text/css">  -->
-<!-- <script type="text/javascript" src="js/dialogExtend.js"></script>  -->
+
 <!-- contextMenu -->
 <link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
 <link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
@@ -35,8 +36,25 @@
 </div>
 
 <script type="text/javascript">
-	var artDialog = top.dialog.get(window);
-	var docInfo = artDialog.data;
+	function GetRequest() {
+		var url = location.search; //获取url中"?"符后的字串
+		var theRequest = {};
+		if (url.indexOf("?") !== -1) {
+			var str = url.substr(1);
+			var strs = str.split("&");
+			for (var i = 0; i < strs.length; i++) {
+				theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+			}
+		}
+		return theRequest;
+	}
+
+	var params = GetRequest();
+	var docid = params['docid'];
+	//获取artDialog父窗口传递过来的参数
+	var artDialog2 = window.top.artDialogList['ArtDialog' + docid];
+	// 获取对话框传递过来的数据
+	var docInfo = artDialog2.config.data;
 	console.log("docInfo:",docInfo);
 	var gShareId = docInfo.shareId;
 	var curRightClickedTreeNode = null;

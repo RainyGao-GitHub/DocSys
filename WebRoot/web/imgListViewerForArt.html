@@ -9,7 +9,7 @@
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
-<div align="center" style="margin-top:20px; min-height:500px;">
+<div align="center" style=" min-height:500px;" >
     <!--图片轮播显示-->
     <div class="swiper-container">
         <div class="swiper-wrapper">
@@ -23,18 +23,24 @@
 </div>
 
 <script type="text/javascript">
-	var artDialog = top.dialog.get(window);
-	var docInfo = {};
-	if(artDialog)
-	{
-		docInfo = artDialog.data; // 获取对话框传递过来的数据
-	}
-	else
-	{
-		//解决artDialog递归调用的数据穿透问题
-		docInfo = window.parent.gDialogData[window.name];
-	}
-	console.log("docInfo:",docInfo)
+    function GetRequest() {
+        var url = location.search; //获取url中"?"符后的字串
+        var theRequest = {};
+        if (url.indexOf("?") !== -1) {
+            var str = url.substr(1);
+            var strs = str.split("&");
+            for(var i = 0; i < strs.length; i ++) {
+                theRequest[strs[i].split("=")[0]]=unescape(strs[i].split("=")[1]);
+            }
+        }
+        return theRequest;
+    }
+    var params = GetRequest();
+    var docid = params['docid'];
+    //获取artDialog父窗口传递过来的参数
+    var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
+    // 获取对话框传递过来的数据
+    var docInfo = artDialog2.config.data;
 	
     var imgList = [];
     var index = 0;
