@@ -11,17 +11,24 @@ Boolean isBussienss = BaseController.isBussienss();
 <script type="text/javascript" src="<%=officeEditorApi%>"></script>
 <div id="placeholder" style="height: 100%"></div>
 <script type="text/javascript">
-	var artDialog = top.dialog.get(window);
-	var docInfo = {};
-	if(artDialog)
-	{
-		docInfo = artDialog.data; // 获取对话框传递过来的数据
-	}
-	else
-	{
-		//解决artDialog递归调用的数据穿透问题
-		docInfo = window.parent.gDialogData[window.name];
-	}
+    function GetRequest() {
+        var url = location.search; //获取url中"?"符后的字串
+        var theRequest = {};
+        if (url.indexOf("?") !== -1) {
+            var str = url.substr(1);
+            var strs = str.split("&");
+            for(var i = 0; i < strs.length; i ++) {
+                theRequest[strs[i].split("=")[0]]=unescape(strs[i].split("=")[1]);
+            }
+        }
+        return theRequest;
+    }
+    var params = GetRequest();
+    var docid = params['docid'];
+    //获取artDialog父窗口传递过来的参数
+    var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
+    // 获取对话框传递过来的数据
+    var docInfo = artDialog2.config.data;
 	console.log("docInfo:",docInfo);
 
 	var editor;
@@ -30,13 +37,11 @@ Boolean isBussienss = BaseController.isBussienss();
     var title = docInfo.name;
     var key = docInfo.docId + "";
     
-    $(document).ready(function()
-    {
+    $(document).ready(function() {
     	getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST", <%=isBussienss%>);
     });
     
-    function showOffice(data)
-   	{
+    function showOffice(data) {
 		var fileLink = buildFullLink(data.fileLink);
 		var saveFileLink = "";
 		var key = data.key + "";	//key是用来标志唯一性的，文件改动了key也必须改动
