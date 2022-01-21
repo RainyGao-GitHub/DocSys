@@ -182,6 +182,7 @@ public class BaseFunction{
 		}
 		
 		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings);
+		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings);		
 	}
 
 
@@ -212,6 +213,21 @@ public class BaseFunction{
 		}
 		
 		return 1;
+	}
+	
+	private static String getLdapLoginMode(JSONObject ldapSettings) {
+		if(ldapSettings == null)
+		{
+			return "uid";	//默认使用uid
+		}
+		
+		String loginMode = ldapSettings.getString("loginMode");
+		if(loginMode == null || loginMode.isEmpty())
+		{
+			return "uid"; //默认使用uid
+		}
+				
+		return loginMode;
 	}
 
 	private static JSONObject getLDAPSettings(String[] configs) {
