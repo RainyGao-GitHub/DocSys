@@ -2555,7 +2555,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		List<User> list = readLdap(ctx, "", userName);
+        String filter = "(&(objectClass=*)(" + systemLdapConfig.loginMode + "=" + userName+ "))";
+		List<User> list = readLdap(ctx, "", filter);
 		Log.printObject("ldapLoginCheck", list);
 		if(list == null || list.size() != 1)
 		{
@@ -2578,18 +2579,23 @@ public class BaseController  extends BaseFunction{
     		//String basedn = "o=NSN";
     		if(systemLdapConfig.enabled == null || systemLdapConfig.enabled == false)
     		{
+    			Log.error("getLDAPConnection() systemLdapConfig.enable is " + systemLdapConfig.enabled);
     			return null;
     		}
     				
     		String LDAP_URL = systemLdapConfig.url;
     		if(LDAP_URL == null || LDAP_URL.isEmpty())
     		{
-    			Log.debug("getLDAPConnection LDAP_URL is null or empty, LDAP_URL" + LDAP_URL);
+    			Log.debug("getLDAPConnection LDAP_URL is null or empty, LDAP_URL:" + LDAP_URL);
     			return null;
     		}
     			
     		String basedn = systemLdapConfig.basedn;
+    		Log.info("getLDAPConnection() basedn:" + basedn);    		
             
+    		String loginMode = systemLdapConfig.loginMode;
+    		Log.info("getLDAPConnection() loginMode:" + loginMode);    		
+    		
             Hashtable<String,String> HashEnv = new Hashtable<String,String>();
             HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
             
@@ -2600,7 +2606,7 @@ public class BaseController  extends BaseFunction{
     		}
             else
             {
-            	String userAccount = "uid=" + userName + "," + basedn;     
+            	String userAccount = loginMode + "=" + userName + "," + basedn;     
     			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
             	Log.debug("getLDAPConnection() authMode:" + systemLdapConfig.authMode); 
     			if(systemLdapConfig.authMode != null)
@@ -2632,21 +2638,17 @@ public class BaseController  extends BaseFunction{
         return ctx;
     }
     
-    public List<User> readLdap(LdapContext ctx, String basedn, String userId){
+    public List<User> readLdap(LdapContext ctx, String basedn, String filter){
 		
 		List<User> lm=new ArrayList<User>();
 		try {
 			 if(ctx!=null){
-				//过滤条件
-	            //String filter = "(&(objectClass=*)(uid=*))";
-	            String filter = "(&(objectClass=*)(uid=" +userId+ "))";
-				
 	            String[] attrPersonArray = { "uid", "userPassword", "displayName", "cn", "sn", "mail", "description" };
 	            SearchControls searchControls = new SearchControls();//搜索控件
 	            searchControls.setSearchScope(2);//搜索范围
 	            searchControls.setReturningAttributes(attrPersonArray);
 	            //1.要搜索的上下文或对象的名称；2.过滤条件，可为null，默认搜索所有信息；3.搜索控件，可为null，使用默认的搜索控件
-	            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter.toString(),searchControls);
+	            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter, searchControls);
 	            while (answer.hasMore()) {
 	                SearchResult result = (SearchResult) answer.next();
 	                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();

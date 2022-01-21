@@ -8,4 +8,5 @@ public class LDAPConfig {
 	public String basedn;
 	public JSONObject settings;
 	public Integer authMode;
+	public String loginMode;
 }
