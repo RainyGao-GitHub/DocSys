@@ -27,6 +27,9 @@ Boolean isBussienss = BaseController.isBussienss();
     var docid = params['docid'];
     //获取artDialog父窗口传递过来的参数
     var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
+    if (artDialog2 == null) {
+        artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
+    }
     // 获取对话框传递过来的数据
     var docInfo = artDialog2.config.data;
 	console.log("docInfo:",docInfo);
