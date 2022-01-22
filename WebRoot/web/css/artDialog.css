@@ -1618,22 +1618,6 @@
     color: #b58886
 }
 
-button, .btn, .kui-btn {
-    white-space: nowrap;
-    overflow: hidden;
-    text-align: center;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    outline: none;
-    user-select: none;
-    transition: all .16s
-}
-
-button[disabled], .btn[disabled], .kui-btn[disabled], input[disabled] {
-    cursor: not-allowed;
-    opacity: .6
-}
-
 .kui-btn {
     padding: .4em 1.2em;
     display: inline-block;
@@ -1968,44 +1952,6 @@ button[disabled], .btn[disabled], .kui-btn[disabled], input[disabled] {
     border-bottom-right-radius: 3px
 }
 
-body {
-    font-size: 13px;
-    color: #444;
-    padding: 0px;
-    margin: 0px;
-    font-family: "Helvetica Neue", "Helvetica", 'PingFangSC', "PingFang SC", 'NotoSansHans', 'Hiragino Sans GB', "Lantinghei SC", "Microsoft Yahei", "å¾®è½¯é›…é»‘", "STXihei", "WenQuanYi Micro Hei", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -khtml-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    user-select: none
-}
-
-textarea, input, button, pre, p, .can-select {
-    -khtml-user-select: text;
-    -webkit-touch-callout: text;
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    -o-user-select: text;
-    user-select: text
-}
-
-textarea, input, button, pre, p {
-    font-family: "Helvetica Neue", "Helvetica", 'PingFangSC', "PingFang SC", 'NotoSansHans', 'Hiragino Sans GB', "Lantinghei SC", "Microsoft Yahei", "å¾®è½¯é›…é»‘", "STXihei", "WenQuanYi Micro Hei", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased
-}
-
-input[type="text"], input[type="password"], input[type="number"], textarea {
-    -webkit-appearance: none;
-    appearance: none;
-    padding: 1px;
-    border-radius: 0
-}
-
 blockquote {
     padding: 10px 20px;
     margin: 0 0 20px 1em;
@@ -2016,40 +1962,6 @@ blockquote {
 blockquote p {
     font-size: 1em;
     margin: 0px
-}
-
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-    font-family: "Helvetica Neue", "Helvetica", 'PingFangSC', "PingFang SC", 'NotoSansHans', 'Hiragino Sans GB', "Lantinghei SC", "Microsoft Yahei", "å¾®è½¯é›…é»‘", "STXihei", "WenQuanYi Micro Hei", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased
-}
-
-pre, code {
-    tab-size: 4;
-    border: none;
-    border-radius: 0;
-    font-family: Menlo, Consolas, source-code-pro, Monaco, 'Liberation Mono', 'Ubuntu Mono', monospace, 'Microsoft Yahei', 'å¾®è½¯é›…é»‘', Courier, 'Helvetica Neue', 'Lantinghei SC', STXihei, WenQuanYi, sans-serif
-}
-
-label {
-    font-weight: normal
-}
-
-table {
-    border-collapse: collapse
-}
-
-a {
-    color: #40a9ff;
-    text-decoration: none
-}
-
-a:hover, a:active, a:focus {
-    color: #1890ff;
-    border-color: #1890ff
-}
-
-a:focus {
-    outline: none !important
 }
 
 ::-webkit-scrollbar-track-piece {
@@ -2101,16 +2013,6 @@ a:focus {
     -ms-user-select: none !important;
     -o-user-select: none !important;
     user-select: none !important
-}
-
-*, *:before, *:after {
-    -webkit-box-sizing: content-box;
-    -moz-box-sizing: content-box;
-    box-sizing: content-box
-}
-
-*:focus {
-    outline: none
 }
 
 .fl {

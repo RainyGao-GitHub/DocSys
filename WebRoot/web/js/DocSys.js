@@ -2003,7 +2003,7 @@ function showOfficeInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeEditorForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeEditorForArt.jsp?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -2013,15 +2013,14 @@ function showOfficeInArtDialog(docInfo) {
 		resize: true,
 		drag: true,
 		data: docInfo,
-		cancel: function(){
-			console.log("officeEditorForArt dialog cancel");
-			if(docInfo.isZip && docInfo.isZip == 1) {
+		cancel: function () {
+			if (docInfo.isZip && docInfo.isZip == 1) {
 				//压缩文件的Office为只读，不需要检测
 				return true;
 			}
 			// 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
 			// 获取该文档唯一iframe,其name是文档唯一值
-			let docIframe = $(ArtDialogDivContentId).find(`iframe[name=${ArtDialogId}]`)[0];
+			let docIframe = $("." + ArtDialogId).find(`iframe[name=${ArtDialogId}]`)[0];
 			if (docIframe !== undefined) {
 				// 根据该iframe获取下一级iframe
 				let officeIframe = $(docIframe.contentWindow.document).find("iframe[name=frameEditor]")[0];
@@ -2031,9 +2030,9 @@ function showOfficeInArtDialog(docInfo) {
 					if (saveButton !== undefined) {
 						// 获取该元素的禁用状态，开启则提示，禁用则直接关闭窗口即可
 						let check = $(saveButton).prop("disabled");
-						if(!check) {
-							qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function(){
-								dialog.get(ArtDialogId).close();
+						if (!check) {
+							qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function () {
+								d.close();
 							});
 							return false;
 						}
@@ -2048,7 +2047,7 @@ function showOfficeInArtDialog(docInfo) {
 	}
 	window.artDialogList["ArtDialog" + docInfo.docId] = d;
 	// 去除最后一列的按钮栏
-	$(".ui-dialog .ui-dialog-footer").parent().remove();
+	$("."+ArtDialogId+" .aui-footer").parent().remove();
 
 }
 
