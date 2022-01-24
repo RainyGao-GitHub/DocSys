@@ -2555,8 +2555,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-        String filter = "(&(objectClass=*)(" + systemLdapConfig.loginMode + "=" + userName+ "))";
-		List<User> list = readLdap(ctx, "", filter);
+		String filter = systemLdapConfig.filter;
+		List<User> list = readLdap(ctx, "", filter, systemLdapConfig.loginMode, userName);
 		Log.printObject("ldapLoginCheck", list);
 		if(list == null || list.size() != 1)
 		{
@@ -2594,7 +2594,10 @@ public class BaseController  extends BaseFunction{
     		Log.info("getLDAPConnection() basedn:" + basedn);    		
             
     		String loginMode = systemLdapConfig.loginMode;
-    		Log.info("getLDAPConnection() loginMode:" + loginMode);    		
+    		Log.info("getLDAPConnection() loginMode:" + loginMode);   
+    		
+    		String filter = systemLdapConfig.filter;
+    		Log.info("getLDAPConnection() filter:" + filter);       		
     		
             Hashtable<String,String> HashEnv = new Hashtable<String,String>();
             HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
@@ -2638,42 +2641,44 @@ public class BaseController  extends BaseFunction{
         return ctx;
     }
     
-    public List<User> readLdap(LdapContext ctx, String basedn, String filter){
+    public List<User> readLdap(LdapContext ctx, String basedn, String filter, String loginMode, String userName){
 		
 		List<User> lm=new ArrayList<User>();
 		try {
 			 if(ctx!=null){
-	            String[] attrPersonArray = { "uid", "userPassword", "displayName", "cn", "sn", "mail", "description" };
+	            String[] attrPersonArray = { loginMode, "userPassword", "displayName", "cn", "sn", "mail", "description"};
 	            SearchControls searchControls = new SearchControls();//搜索控件
-	            searchControls.setSearchScope(2);//搜索范围
+	            searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);//搜索范围
 	            searchControls.setReturningAttributes(attrPersonArray);
 	            //1.要搜索的上下文或对象的名称；2.过滤条件，可为null，默认搜索所有信息；3.搜索控件，可为null，使用默认的搜索控件
+	            filter = "(&" + filter + "("+ loginMode + "=" + userName + ")" + ")";
 	            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter, searchControls);
 	            while (answer.hasMore()) {
 	                SearchResult result = (SearchResult) answer.next();
 	                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
 	                
+	                Log.info("readLdap() userInfo:");
 	                User lu=new User();
 	                while (attrs.hasMore()) {
 	                    Attribute attr = (Attribute) attrs.next();
-	                    if("userPassword".equals(attr.getID())){
+	                    Log.info("readLdap() " + attr.getID() + " = " + attr.get().toString());
+	                    if(loginMode.equals(attr.getID())){
+	                    	lu.setName(attr.get().toString());
+	                    } 
+	                    else if("userPassword".equals(attr.getID()))
+	                    {
 	                    	Object value = attr.get();
 	                    	lu.setPwd(new String((byte [])value));
-	                    }else if("uid".equals(attr.getID())){
-	                    	lu.setName(attr.get().toString());
-	                    }else if("displayName".equals(attr.getID())){
-	                    	Log.debug("readLdap displayName:" + attr.get().toString());
-	                    	//lu.setRealName(attr.get().toString());
 	                    }
+	                    //else if("displayName".equals(attr.getID())){
+	                    	//lu.setRealName(attr.get().toString());
+	                    //}
 	                    else if("cn".equals(attr.getID())){
-	                    //	lu.cn = attr.get().toString();
-	                    	Log.debug("readLdap cn:" + attr.get().toString());
 	                    	lu.setRealName(attr.get().toString());
 	                    }
-	                	else if("sn".equals(attr.getID())){
-	                    //	lu.sn = attr.get().toString();
-	                		Log.debug("readLdap sn:" + attr.get().toString());
-	                    }
+	                	//else if("sn".equals(attr.getID())){
+	                	//	//	lu.sn = attr.get().toString();
+	                	//}
 	                    else if("mail".equals(attr.getID())){
 	                    	lu.setEmail(attr.get().toString());
 	                    }

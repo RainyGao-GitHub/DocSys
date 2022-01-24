@@ -182,20 +182,21 @@ public class BaseFunction{
 		}
 		
 		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings);
-		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings);		
+		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings);	
+		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings);			
 	}
 
 
 	private static Integer getLdapAuthMode(JSONObject ldapSettings) {
 		if(ldapSettings == null)
 		{
-			return 1;	//默认明文密码验证
+			return 0;	//默认不进行密码验证
 		}
 		
 		String authModeStr = ldapSettings.getString("authMode");
 		if(authModeStr == null || authModeStr.isEmpty())
 		{
-			return 1; //默认明文密码验证
+			return 0; //默认不进行密码验证
 		}
 				
 		switch(authModeStr.toLowerCase())
@@ -229,6 +230,21 @@ public class BaseFunction{
 				
 		return loginMode;
 	}
+	
+	private static String getLdapBaseFilter(JSONObject ldapSettings) {
+		if(ldapSettings == null)
+		{
+			return "(objectClass=*)";
+		}
+		
+		String baseFilter = ldapSettings.getString("filter");
+		if(baseFilter == null || baseFilter.isEmpty())
+		{
+			return "(objectClass=*)";
+		}
+				
+		return baseFilter;
+	}
 
 	private static JSONObject getLDAPSettings(String[] configs) {
 		if(configs.length < 2)
@@ -247,7 +263,19 @@ public class BaseFunction{
 				{
 					String key = subStr[0];
 					String value = subStr[1];
+					if(key.equals("filter"))	//将filter的等号补回来
+					{
+						if(subStr.length > 2)
+						{
+							for(int j=2; j < subStr.length -1; j++)
+							{
+								value = value + "=" + subStr[j];
+							}
+							value = value + "=" + subStr[subStr.length -1];				
+						}
+					}
 					settings.put(key, value);
+					Log.debug("getLDAPSettings() " + key + " : " + value);
 				}
 			}
 		}
