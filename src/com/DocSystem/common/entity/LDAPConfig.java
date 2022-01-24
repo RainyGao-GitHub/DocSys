@@ -9,4 +9,5 @@ public class LDAPConfig {
 	public JSONObject settings;
 	public Integer authMode;
 	public String loginMode;
+	public String filter;
 }
