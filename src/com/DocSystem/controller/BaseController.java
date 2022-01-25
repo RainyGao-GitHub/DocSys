@@ -18223,8 +18223,6 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				pushResult.revision = "";
-				pushResult.successCount = 0;
-				pushResult.failCount = pushResult.totalCount;
 			}
 		}
 		rt.setDataEx(pushResult);
