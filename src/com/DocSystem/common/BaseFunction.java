@@ -183,7 +183,8 @@ public class BaseFunction{
 		
 		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings);
 		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings);	
-		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings);			
+		systemLdapConfig.userAccount = getLdapUserAccount(systemLdapConfig.settings);				
+		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings);
 	}
 
 
@@ -231,6 +232,21 @@ public class BaseFunction{
 		return loginMode;
 	}
 	
+	private static String getLdapUserAccount(JSONObject ldapSettings) {
+		if(ldapSettings == null)
+		{
+			return null;
+		}
+		
+		String userAccount = ldapSettings.getString("userAccount");
+		if(userAccount == null || userAccount.isEmpty())
+		{
+			return null;
+		}
+				
+		return userAccount;
+	}
+	
 	private static String getLdapBaseFilter(JSONObject ldapSettings) {
 		if(ldapSettings == null)
 		{
@@ -263,7 +279,7 @@ public class BaseFunction{
 				{
 					String key = subStr[0];
 					String value = subStr[1];
-					if(key.equals("filter"))	//将filter的等号补回来
+					if(key.equals("filter") || key.equals("userAccount"))	//将等号补回来
 					{
 						if(subStr.length > 2)
 						{

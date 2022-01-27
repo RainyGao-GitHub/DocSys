@@ -8,6 +8,7 @@ public class LDAPConfig {
 	public String basedn;
 	public JSONObject settings;
 	public Integer authMode;
-	public String loginMode;
+	public String loginMode;	//用户名字段属性
+	public String userAccount;	//直接指定LDAPConnect使用的account
 	public String filter;
 }
