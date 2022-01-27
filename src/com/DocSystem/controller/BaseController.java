@@ -2609,7 +2609,13 @@ public class BaseController  extends BaseFunction{
     		}
             else
             {
-            	String userAccount = loginMode + "=" + userName + "," + basedn;     
+            	String userAccount =  systemLdapConfig.userAccount;
+            	if(userAccount == null)
+            	{
+            		userAccount = loginMode + "=" + userName + "," + basedn;     
+            	}
+            	Log.debug("getLDAPConnection() userAccount:" + userAccount);    			
+            	
     			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
             	Log.debug("getLDAPConnection() authMode:" + systemLdapConfig.authMode); 
     			if(systemLdapConfig.authMode != null)
