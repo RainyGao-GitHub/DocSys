@@ -81,6 +81,11 @@
                         <li id="mobileLogoutBtn"  style="display:none">
                             <a onclick="userLogout()" title="退出登录">退出登录</a>
                         </li>
+                        
+                        <li id="mobileSwitchDisplayBtn" style="display:none">
+                            <a  class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">图标排列</a>
+                        </li>
+                        
                     </ul>
                 </div>
              </div>
@@ -102,7 +107,10 @@
                     <li id="newReposBtn" style="display:none">
 						<a href="#" title="添加网站" onclick="addPreferLink()">添加网站</a>
 					</li>
-                    
+					
+					<li id="switchDisplayBtn" style="display:none">
+                        <a class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">图标排列</a>
+                    </li>                 
                 </ul>
             </nav>
         </div>
@@ -188,7 +196,7 @@
     	<li>
         	<a href="{{preferLink.url}}" class="box" title="" >
             	<div class="pull-left imgbox">
-                	<i class="fa fa-internet-explorer" style="color:#4662D9;"></i>
+                	<i class="fa fa-internet-explorer" style="color:#2ABB9B;"></i>
             	</div>
             	<h4>{{preferLink.showName}}</h4>
             	<span></span>
@@ -221,7 +229,7 @@
 	var gPageIndex = 1;
 	var gPageSize = 10;
 	var preferLinkList = [];
-	var showStyle = "icon"; //var showStyle = "list";
+	var showStyle = 0; //var showStyle = 1;
 	
 	function pageInit()
     {
@@ -360,7 +368,7 @@
         	}
         	
         	var html = "";
-        	if(showStyle == "icon")
+        	if(showStyle == 1)
         	{
                 html = template('tmpl-preferLinks-icon', {
                     list : list
@@ -383,6 +391,35 @@
     	loginBtnCtrl();
    	}
     
+    function switchDisplayStyle()
+   	{
+    	if(showStyle == 0)	//list
+    	{
+    		showStyle = 1;  //icon
+    		$('.display-style').text("列表排列");
+    	}
+    	else
+    	{
+    		showStyle = 0;	//list
+    		$('.display-style').text("图标排列");
+    	}
+    	
+    	if(showStyle == 1)
+    	{
+            html = template('tmpl-preferLinks-icon', {
+                list : preferLinkList
+            });        		
+    	}
+    	else
+    	{
+            html = template('tmpl-preferLinks', {
+                list : preferLinkList
+            });        		
+    	}
+        
+        $("#preferLink-box").html(html);
+   	}
+    
     function loginBtnCtrl(user)
     {
     	if(user)
@@ -395,6 +432,9 @@
            	
         	$('#newReposBtn').show();
         	$('#mobileNewReposBtn').show();
+
+        	$('#switchDisplayBtn').show();
+        	$('#mobileSwitchDisplayBtn').show();
     	}
     	else
     	{
@@ -406,6 +446,9 @@
 
            	$('#newReposBtn').hide();
         	$('#mobileNewReposBtn').hide();
+        	
+        	$('#switchDisplayBtn').hide();
+        	$('#mobileSwitchDisplayBtn').hide();
     	}
     }
     
