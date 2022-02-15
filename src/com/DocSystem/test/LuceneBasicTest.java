@@ -22,7 +22,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 class LuceneBasicTest  
 {        
-    private static String path = "d:/index";
+    private static String path = "C:/LueneTest";
 
      
     public static void main(String[] args){
@@ -32,11 +32,13 @@ class LuceneBasicTest
     	//addIndex(5,"1","77");
     	//addIndex(5,"1","88");
      	//updateIndex();
+    	addIndex(5,"1","1,21,31");
     	System.out.println("search");
-        search("55"); 
-        search("66"); 
-        search("77"); 
-        search("88"); 
+        search("1"); 
+        search("21"); 
+        search("31"); 
+        search("41"); 
+        search("51");         
     }
      
     public static void addIndex(Integer id,String docId,String content){
@@ -89,6 +91,7 @@ class LuceneBasicTest
     }
      
     public static void search(String str){
+    	System.out.println("search str = " + str);
         try {
             Directory directory = FSDirectory.open(new File(path));
             DirectoryReader ireader = DirectoryReader.open(directory);
