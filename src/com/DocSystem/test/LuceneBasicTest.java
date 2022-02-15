@@ -22,7 +22,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 class LuceneBasicTest  
 {        
-    private static String path = "C:/LueneTest";
+    private static String path = "C:/LueneBasicTest";
 
      
     public static void main(String[] args){
@@ -32,7 +32,7 @@ class LuceneBasicTest
     	//addIndex(5,"1","77");
     	//addIndex(5,"1","88");
      	//updateIndex();
-    	addIndex(5,"1","1,21,31");
+    	addIndex(5,"1","21,31");
     	System.out.println("search");
         search("1"); 
         search("21"); 
