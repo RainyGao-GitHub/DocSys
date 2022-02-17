@@ -15520,8 +15520,14 @@ public class BaseController  extends BaseFunction{
 		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
 		
 		//远程没有改动（如果不是强制手动推送，那么只能推送新增的文件或目录）
-		if(remoteChangeType == DocChangeType.NOCHANGE)
+		if(remoteChangeType == DocChangeType.NOCHANGE || remoteChangeType == DocChangeType.REMOTEDELETE)
 		{
+			if(remoteChangeType == DocChangeType.REMOTEDELETE)
+			{
+				//获取真实的localChangeType
+				localChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
+			}
+			
 			//本地有改动
 			if(localChangeType != DocChangeType.NOCHANGE)
 			{
@@ -15531,7 +15537,7 @@ public class BaseController  extends BaseFunction{
 					ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 				}
 				else 
-				{	
+				{
 					if(force == true && isAutoPush == false)
 					{
 						if(localChangeType == DocChangeType.LOCALCHANGE)
