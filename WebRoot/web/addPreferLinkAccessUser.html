@@ -22,22 +22,22 @@
 </div>
 
 <script type="text/javascript">
-	var preferLinkId;
+	var preferLinkInfo;
+    var preferLinkAccessUserSearchWord = "";
 	
-	function addPreferLinkAccessUserPageInit()
+	function addPreferLinkAccessUserPageInit(_preferLinkInfo)
 	{
 		console.log("addPreferLinkAccessUserPageInit");
-		preferLinkAccessUserSearchWord = "";
-		showPreferLinkAllUserList();		
+		preferLinkInfo = _preferLinkInfo;
+		showPreferLinkAllUserList(preferLinkInfo);		
 	}
 
         
     //页面初始化代码    
     $(function(){
-		addPreferLinkAccessUserPageInit();
+		//addPreferLinkAccessUserPageInit(preferLinkInfo);
 	});
 
-    var preferLinkAccessUserSearchWord = "";
     function searchPreferLinkAccessUser()
     {
     	preferLinkAccessUserSearchWord =  $("#search-preferLinkAccessUser").val();
@@ -47,14 +47,13 @@
 	function showPreferLinkAllUserList(){
 	   	console.log("showPreferLinkAllUserList()");
 	   	
-	
 	    $.ajax({
-	            url : "/DocSystem/Repos/getReposAllUsers.do",
+	            url : "/DocSystem/Bussiness/getPreferLinkAccessUsers.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
 	            	searchWord: preferLinkAccessUserSearchWord,
-	            	preferLinkId : preferLinkId,
+	            	preferLinkId : preferLinkInfo.id,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -66,17 +65,17 @@
 	                }
 	            },
 	            error : function () {
-	               alert('服务器异常：获取仓库用户列表失败！');
+	               alert('服务器异常：获取用户列表失败！');
 	            }
     	});
 
 		//根据获取到的目录权限用户列表数据，绘制列表
 		function showUserList(data){
 			console.log(data);
-			var c = $("#reposAllUsers").children();
+			var c = $("#preferLinkAccessUsers").children();
 			$(c).remove();
 			if(data.length==0){
-				$("#reposAllUsers").append("<p>暂无数据</p>");
+				$("#preferLinkAccessUsers").append("<p>暂无数据</p>");
 			}
 			
 			for(var i=0;i<data.length;i++){
@@ -103,7 +102,7 @@
 					+"	</i>"
 					+"</li>";
 				
-				$("#reposAllUsers").append(se);
+				$("#preferLinkAccessUsers").append(se);
 			}
 		}
 	}
@@ -111,21 +110,19 @@
 	function addPreferLinkAccessUser(userId)
 	{
 	   	console.log("addPreferLinkAccessUser(" + userId+")");
-	   	var vid = getQueryString("vid");
 	
 	    $.ajax({
-	            url : "/DocSystem/Repos/configReposAuth.do",
+	            url : "/DocSystem/Bussiness/configPreferLinkAccessUser.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
 	            	userId: userId,
-	                reposId : vid,
+	                preferLinkId : preferLinkId,
 	                access: 1,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
-	                    showAuthList();		//这个 接口是更新reposManager页面的权限列表用户的
-	                    showReposAllUserList();		//更新显示
+	                	showPreferLinkAllUserList();		//更新显示
 	                }
 	                else
 	                {
@@ -139,18 +136,18 @@
 	}
 
 
-	function deleteReposAuthConfirm(reposAuthId,userId)
+	function deletePreferLinkAccessUserConfirm(userId)
 	{
 			qiao.bs.confirm({
-	 	    	id: 'deleteReposAuthConfirm',
-	 	        msg: "是否删除该用户的仓库权限设置?",
+	 	    	id: 'deletePreferLinkAccessUserConfirm',
+	 	        msg: "是否删除该用户的访问权限?",
 	 	        close: false,		
 	 	        okbtn: "删除",
 	 	        qubtn: "取消",
 	 	    },function () {
 	 	    	
 	 	    	//alert("点击了确定");
-	 	    	deleteReposAuth(reposAuthId,userId);
+	 	    	deletePreferLinkAccessUser(userId);
 	 	    	return true;   
 	 	    },function(){
 	 	    	//alert("点击了取消");
@@ -158,24 +155,22 @@
 	 	    }); 
 	}
 	
-	function deleteReposAuth(reposAuthId,userId)
+	function deletePreferLinkAccessUser(userId)
 	{	
-	   	console.log("deleteReposAuth()");
+	   	console.log("deletePreferLinkAccessUser()");
 	   	
-	   	var vid = getQueryString("vid");
 	    $.ajax({
-	            url : "/DocSystem/Repos/deleteReposAuth.do",
+	            url : "/DocSystem/Bussiness/configPreferLinkAccessUser.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	                reposAuthId: reposAuthId,
-	                userId: userId,
-	                reposId: vid,
+	            	userId: userId,
+	                preferLinkId : preferLinkId,
+	                access: 0,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
-	                    showAuthList();
-	                    showReposAllUserList();		//更新显示
+	                	showPreferLinkAllUserList();		//更新显示
 	                }
 	                else
 	                {
