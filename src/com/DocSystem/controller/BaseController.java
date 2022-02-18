@@ -9265,6 +9265,20 @@ public class BaseController  extends BaseFunction{
         RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
         if(session == null)
         {
+        	//再尝试三次
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		session = doRemoteStorageLogin(repos, remote);
+        		if(session != null)
+        		{
+        			break;
+        		}
+        	}
+        }
+        
+        if(session == null)
+        {
         	Log.debug("remoteServerDocCommit() 文件服务器登录失败！");
     		rt.setError("文件服务器登录失败！");
     		return null;			
@@ -9295,6 +9309,20 @@ public class BaseController  extends BaseFunction{
 		}
 		
         RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session == null)
+        {
+        	//再尝试三次
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		session = doRemoteStorageLogin(repos, remote);
+        		if(session != null)
+        		{
+        			break;
+        		}
+        	}
+        }
+        
         if(session == null)
         {
         	Log.debug("remoteServerDocCopy() 文件服务器登录失败！");
@@ -9481,6 +9509,20 @@ public class BaseController  extends BaseFunction{
 		
 		ReturnAjax rt = new ReturnAjax();
 		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session == null)
+        {
+        	//再尝试三次
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		session = doRemoteStorageLogin(repos, remote);
+        		if(session != null)
+        		{
+        			break;
+        		}
+        	}
+        }
+        
         if(session != null)
         {
         	//如果checkOut到临时目录，则不能更新index
@@ -9518,6 +9560,20 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session == null)
+        {
+        	//再尝试三次
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		session = doRemoteStorageLogin(repos, remote);
+        		if(session != null)
+        		{
+        			break;
+        		}
+        	}
+        }
+        
         if(session != null)
         {
         	list = remoteStorageGetHistory(session, remote, repos, doc, maxLogNum);
@@ -9540,6 +9596,20 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session == null)
+        {
+        	//再尝试三次
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		session = doRemoteStorageLogin(repos, remote);
+        		if(session != null)
+        		{
+        			break;
+        		}
+        	}
+        }
+        
         if(session != null)
         {
         	list = remoteStorageGetHistoryDetail(session, remote, repos, doc, commitId);
@@ -14938,6 +15008,20 @@ public class BaseController  extends BaseFunction{
 		if(session == null) 
 		{
 			session = doRemoteStorageLogin(repos, remote);
+	        if(session == null)
+	        {
+	        	//再尝试三次
+	        	for(int i=0; i < 3; i++)
+	        	{
+	        		//Try Again
+	        		session = doRemoteStorageLogin(repos, remote);
+	        		if(session != null)
+	        		{
+	        			break;
+	        		}
+	        	}
+	        }
+	        
         	if(session == null)
         	{
         		return null;
@@ -14959,6 +15043,20 @@ public class BaseController  extends BaseFunction{
 		if(session == null) 
 		{
 			session = doRemoteStorageLogin(repos, remote);
+	        if(session == null)
+	        {
+	        	//再尝试三次
+	        	for(int i=0; i < 3; i++)
+	        	{
+	        		//Try Again
+	        		session = doRemoteStorageLogin(repos, remote);
+	        		if(session != null)
+	        		{
+	        			break;
+	        		}
+	        	}
+	        }
+			
 			if(session == null)
         	{
         		return null;
