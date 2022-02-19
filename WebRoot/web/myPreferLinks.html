@@ -167,6 +167,9 @@
                     <a href="{{preferLink.url}}" title="{{preferLink.url}}" target="_blank">{{preferLink.showName}}</a>
 					<ul class="pull-right">
 				    	<li>
+           					<span class="btn" title="分享" onclick="sharePreferLink({{i}});">
+								<i class="icons share {{preferLink.btnIconStyle}}"></i>
+							</span>
            					<span class="btn" title="修改" onclick="editPreferLink({{i}});">
 								<i class="icons set {{preferLink.btnIconStyle}}"></i>
 							</span>
@@ -554,6 +557,30 @@
 			big: false,
 			callback: function(){
 				addPreferLinkPageInit(getPreferLinks);
+			},
+		});
+	}
+	
+	function sharePreferLink(index)
+	{
+		console.log("sharePreferLink() index:" + index);		   	
+		showSharePreferLinkPanel(index);
+	}
+	
+	function showSharePreferLinkPanel(index)
+	{
+		console.log("showSharePreferLinkPanel");
+		
+		bootstrapQ.dialog({
+			id: 'sharePreferLink',
+			url: 'sharePreferLink.html',
+			title: '常用网站分享',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				var preferLink = preferLinkList[index];
+				sharePreferLinkPageInit(preferLink);
 			},
 		});
 	}
