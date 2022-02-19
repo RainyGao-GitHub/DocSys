@@ -1308,7 +1308,9 @@ public class DocController extends BaseController{
 		
 		if(UserDocAuth.getUploadSize() != null && UserDocAuth.getUploadSize() < size)
 		{
-			Log.docSysErrorLog("上传文件大小已超限，请联系管理员！", rt);
+			Log.info("checkDocInfo size:" + size + " UserDocAuth max uploadSize:" + UserDocAuth.getUploadSize());
+			String maxUploadSize = getMaxUploadSize(UserDocAuth.getUploadSize());
+			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}		
@@ -1652,8 +1654,9 @@ public class DocController extends BaseController{
 		
 		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
 		{
-			Log.debug("uploadDoc size:" + size + " max uploadSize:" + docUserAuth.getUploadSize());
-			rt.setError("上传文件大小超限，请联系管理员");
+			Log.info("uploadDoc size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
 			writeJson(rt, response);
 			return;							
 		}
@@ -1686,7 +1689,9 @@ public class DocController extends BaseController{
 			
 			if(parentDocUserAuth.getUploadSize() != null && parentDocUserAuth.getUploadSize() < size)
 			{
-				rt.setError("上传文件大小超限，请联系管理员");
+				Log.info("uploadDoc size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+				rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
 				writeJson(rt, response);
 				return;							
 			}
@@ -1769,6 +1774,39 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, "");	
 	}
 	
+	private String getMaxUploadSize(Long uploadSize) {
+		//字节
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "";
+		}
+		
+		//KB
+		uploadSize = uploadSize/1024;
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "K"; 
+		}
+		
+		//MB
+		uploadSize = uploadSize/1024;
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "M";
+		}
+		
+		//GB
+		uploadSize = uploadSize/1024;
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "G";
+		}
+		
+		//TB
+		uploadSize = uploadSize/1024;
+		return uploadSize + "T";
+	}
+
 	@RequestMapping("/uploadDocRS.do")
 	public void uploadDocRS(Integer reposId, String remoteDirectory, String path, String name, Long size, String checkSum,
 			MultipartFile uploadFile,
@@ -1909,8 +1947,9 @@ public class DocController extends BaseController{
 		
 		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
 		{
-			Log.debug("uploadDocRS size:" + size + " max uploadSize:" + docUserAuth.getUploadSize());
-			rt.setError("上传文件大小超限，请联系管理员");
+			Log.info("uploadDocRS size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
 			writeJson(rt, response);
 			return;							
 		}
@@ -1943,7 +1982,9 @@ public class DocController extends BaseController{
 			
 			if(parentDocUserAuth.getUploadSize() != null && parentDocUserAuth.getUploadSize() < size)
 			{
-				rt.setError("上传文件大小超限，请联系管理员");
+				Log.info("uploadDocRS size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+				rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
 				writeJson(rt, response);
 				return;							
 			}
