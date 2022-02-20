@@ -68,6 +68,8 @@ public class Doc  implements Comparable<Doc>{
 
 	public Boolean isBussiness;
 	
+	public Integer officeType;
+	
 	public Integer isRealDocTextSearchEnabled;
 	public Integer isVirutalDocTextSearchEnabled;
 	public DocChangeType localChangeType;

@@ -10234,7 +10234,6 @@ public class BaseController  extends BaseFunction{
     protected static String DB_USER = "root";
     protected static String DB_PASS = "";
     protected static String officeEditorApi = null;
-    protected static Integer officeType = 0; //0:内置 1:外置
     protected static String serverIP = null;
     
 	
