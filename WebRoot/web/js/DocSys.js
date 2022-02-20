@@ -2014,6 +2014,7 @@ function showOfficeInArtDialog(docInfo) {
 		drag: true,
 		data: docInfo,
 		cancel: function () {
+			console.log("showOfficeInArtDialog docInfo:",docInfo);
 			if ((docInfo.officeType && docInfo.officeType == 1) ||(docInfo.isZip && docInfo.isZip == 1)) {
 				//压缩文件的Office为只读，不需要检测
 				return true;
