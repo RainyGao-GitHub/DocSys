@@ -899,6 +899,14 @@ public class ManageController extends BaseController{
 			officeEditorApi.replace("\\", "/");
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "officeEditorApi", officeEditorApi);
 			setOfficeEditor(officeEditorApi);
+			if(officeEditorApi.isEmpty())
+			{	
+				officeType = 0;
+			}
+			else
+			{
+				officeType = 1;				
+			}
 		}
 		
 		if(defaultReposStorePath != null)

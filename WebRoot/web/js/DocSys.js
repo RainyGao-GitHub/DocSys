@@ -1213,6 +1213,8 @@ function copyDocInfo(doc, shareId)
 	{
 		var docInfo = {};
 		docInfo.isBussiness = doc.isBussiness;
+		docInfo.officeType = doc.officeType;
+		
 		if(doc.vid)
     	{
 			docInfo.vid = doc.vid;
@@ -1267,8 +1269,6 @@ function copyDocInfo(doc, shareId)
 				docInfo.fileLink = fileLink;
 			}
 		}
-		
-		docInfo.isBussiness = doc.isBussiness;
 		
 		return docInfo;
 	}
@@ -2014,7 +2014,7 @@ function showOfficeInArtDialog(docInfo) {
 		drag: true,
 		data: docInfo,
 		cancel: function () {
-			if (docInfo.isZip && docInfo.isZip == 1) {
+			if ((docInfo.officeType && docInfo.officeType == 1) ||(docInfo.isZip && docInfo.isZip == 1)) {
 				//压缩文件的Office为只读，不需要检测
 				return true;
 			}
