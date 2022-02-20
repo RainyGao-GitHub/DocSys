@@ -101,7 +101,8 @@ public class BaseFunction{
 	
     //OnlyOffice License
     public static OfficeLicense officeLicenseInfo = null;
-
+    public static Integer officeType = 0; //0:内置 1:外置
+    
     //系统LDAP设置
     public static LDAPConfig systemLdapConfig = null;
 	
@@ -1329,6 +1330,7 @@ public class BaseFunction{
 	{
 		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, "");
 		doc.isBussiness = systemLicenseInfo.hasLicense;
+		doc.officeType = officeType;
 		return doc;
 	}
 	
@@ -1336,6 +1338,7 @@ public class BaseFunction{
 	{
 		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, offsetPath);
 		doc.isBussiness = systemLicenseInfo.hasLicense;
+		doc.officeType = officeType;
 		return doc;
 	}
 	
