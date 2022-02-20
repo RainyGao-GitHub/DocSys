@@ -10234,6 +10234,7 @@ public class BaseController  extends BaseFunction{
     protected static String DB_USER = "root";
     protected static String DB_PASS = "";
     protected static String officeEditorApi = null;
+    protected static Integer officeType = 0; //0:内置 1:外置
     protected static String serverIP = null;
     
 	
@@ -10342,6 +10343,7 @@ public class BaseController  extends BaseFunction{
 		{
 			officeEditorApi = Path.getOfficeEditorApi();
 		}
+		officeType = getOfficeType(officeEditorApi);
 		Log.debug("docSysInit() officeEditorApi:" + officeEditorApi);
 		
 		serverIP = IPUtil.getIpAddress();
@@ -10451,6 +10453,14 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
+	private Integer getOfficeType(String officeEditorApi) {
+		if(officeEditorApi == null || officeEditorApi.isEmpty())
+		{
+			return 0;
+		}
+		return 1;
+	}
+
 	private static int getLogLevelFromFile() {
 		File file = new File(docSysIniPath + "debugLogLevel");
 		if(file.exists())
@@ -13708,6 +13718,7 @@ public class BaseController  extends BaseFunction{
 			repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
 			repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 			repos.isBussiness = systemLicenseInfo.hasLicense;
+			repos.officeType = officeType;
 			//get encrypt Config
 			repos.encryptType = 0;
 			EncryptConfig encryptConfig = reposEncryptHashMap.get(repos.getId());
