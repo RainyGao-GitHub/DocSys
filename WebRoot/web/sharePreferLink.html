@@ -13,7 +13,7 @@
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
-               		<div class="panel-body eventset-list" id="reposAllUsers">
+               		<div class="panel-body eventset-list" id="preferLinkAccessUsers">
 			 			<!-- 用户列表区域-->
 					</div>
 			 </div>
@@ -37,16 +37,36 @@
 	var SharePreferLink = (function () {
 		var preferLinkInfo;
 		var userSearchWord;
+		var accessUserMap = {};
 		
 		function init(_preferLinkInfo)
 		{
 			console.log("SharePreferLink.init() _preferLinkInfo:", _preferLinkInfo);
 			if(_preferLinkInfo)
 			{
-				preferLinkInfo = _preferLinkInfo;				
+				preferLinkInfo = _preferLinkInfo;
+				initAccessUserMap();
 				showPreferLinkAllUserList();
 			}			
 		}
+
+	    function initAccessUserMap()
+	    {
+	    	var accessUsers = preferLinkInfo.accessUsers;
+	    	if(!accessUsers || accessUsers == "")
+	    	{
+	    		accessUserMap = {};
+	    		return;
+	    	}
+			
+	    	//split accessUsers Str to array
+	    	var userArr = accessUsers.split(",");
+	    	for(var i=0;i<userArr.length;i++)
+	    	{
+	    		var userId = userArr[i];
+	    		accessUserMap[userId] = true;
+	    	}    	
+	    }
 		
 	    function searchPreferLinkAccessUser(_userSearchWord)
 	    {
@@ -66,6 +86,7 @@
 		            	preferLinkId : preferLinkInfo.id,
 		            },
 		            success : function (ret) {
+		            	console.log("getPreferLinkAccessUsers ret", ret);
 		                if( "ok" == ret.status ){
 		                    showUserList(ret.data);
 		                }
@@ -79,9 +100,25 @@
 		            }
 	    	});
 
+		    function isAccessUser(userId)
+		    {
+		    	if(!userId)
+		    	{
+		    		return false;
+		    	}
+		    	
+		    	var ret = accessUserMap[userId];
+		    	if (undefined == ret)
+		    	{
+		    		return false;
+		    	}
+		    	
+		    	return true;
+		    }
+		    
 			//根据获取到的目录权限用户列表数据，绘制列表
 			function showUserList(data){
-				console.log(data);
+				//console.log(data);
 				var c = $("#preferLinkAccessUsers").children();
 				$(c).remove();
 				if(data.length==0){
@@ -90,16 +127,16 @@
 				
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					var opBtn = "		<a href='javascript:void(0)' onclick='SharePreferLink.addPreferLinkAccessUser("+d.userId+");' class='mybtn-primary'>添加</a>";
-					if(d.id > 0) //已是访问用户的，操作按键显示为，已添加
+					var opBtn = "		<a href='javascript:void(0)' onclick='SharePreferLink.addPreferLinkAccessUser(" + d.id + ");' class='mybtn-primary'>添加</a>";
+					if(isAccessUser(d.id)) //已是访问用户的，操作按键显示为，已添加
 					{
-						opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='SharePreferLink.deletePreferLinkUserConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
+						opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='SharePreferLink.deletePreferLinkUserConfirm(" + d.id + ");' disabled='disabled'>删除</a>";
 					}
 														
 					var se = "<li value="+ i +">"
 						+"	<i class='cell username w15'>"
 						+"		<span class='name'>"
-						+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
+						+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.name+"</a>"
 						+"		</span>"
 						+"	</i>"
 						+"	<i class='cell realname w15'>"
