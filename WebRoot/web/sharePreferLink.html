@@ -25,7 +25,7 @@
 	function sharePreferLinkPageInit(_preferLinkInfo)
 	{
 		console.log("sharePreferLinkPageInit");
-		EditPreferLink.init(_preferLinkInfo);
+		SharePreferLink.init(_preferLinkInfo);
 	}
 	
     function searchPreferLinkAccessUser()
@@ -71,11 +71,11 @@
 		                }
 		                else
 		                {
-		                	alert("Error:" + ret.msgInfo);
+		                	showErrorMessage("获取用户列表失败:" + ret.msgInfo);
 		                }
 		            },
 		            error : function () {
-		               alert('服务器异常：获取用户列表失败！');
+		            	showErrorMessage('服务器异常：获取用户列表失败！');
 		            }
 	    	});
 
