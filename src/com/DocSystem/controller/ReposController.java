@@ -1395,7 +1395,7 @@ public class ReposController extends BaseController{
 	}
 	
 	private List<ReposAuth> getReposAllUsers(User user, Integer reposId) {
-		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓t库权限），结果实际是reposAuth列表
+		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓库权限），结果实际是reposAuth列表
 		List<ReposAuth> UserList = null;
 		if(user == null)
 		{

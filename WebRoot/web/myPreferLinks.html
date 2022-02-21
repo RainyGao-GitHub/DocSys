@@ -83,7 +83,7 @@
                         </li>
                         
                         <li id="mobileSwitchDisplayBtn" style="display:none">
-                            <a  class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">图标排列</a>
+                            <a  class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">设置</a>
                         </li>
                         
                     </ul>
@@ -109,7 +109,7 @@
 					</li>
 					
 					<li id="switchDisplayBtn" style="display:none">
-                        <a class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">图标排列</a>
+                        <a class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">设置</a>
                     </li>                 
                 </ul>
             </nav>
@@ -232,7 +232,7 @@
 	var gPageIndex = 1;
 	var gPageSize = 10;
 	var preferLinkList = [];
-	var showStyle = 0; //var showStyle = 1;
+	var showStyle = 1; //icon style
 	
 	function pageInit()
     {
@@ -399,12 +399,12 @@
     	if(showStyle == 0)	//list
     	{
     		showStyle = 1;  //icon
-    		$('.display-style').text("列表排列");
+    		$('.display-style').text("设置");
     	}
     	else
     	{
     		showStyle = 0;	//list
-    		$('.display-style').text("图标排列");
+    		$('.display-style').text("退出设置");
     	}
     	
     	if(showStyle == 1)
