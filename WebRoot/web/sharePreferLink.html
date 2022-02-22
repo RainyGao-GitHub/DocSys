@@ -52,20 +52,22 @@
 
 	    function initAccessUserMap()
 	    {
-	    	var accessUsers = preferLinkInfo.accessUsers;
-	    	if(!accessUsers || accessUsers == "")
+	    	accessUserMap = {};
+    		var accessUsers = preferLinkInfo.accessUserIds;
+	    	if(accessUsers && accessUsers != "")
 	    	{
-	    		accessUserMap = {};
-	    		return;
+		    	//split accessUsers Str to array
+		    	var userArr = accessUsers.split(",");
+		    	for(var i=0;i<userArr.length;i++)
+		    	{
+		    		var userId = userArr[i];
+		    		if(userId != "")
+		    		{
+		    			console.log("initAccessUserMap() userId:" + userId);
+		    			accessUserMap[userId] = true;
+		    		}
+		    	}    	
 	    	}
-			
-	    	//split accessUsers Str to array
-	    	var userArr = accessUsers.split(",");
-	    	for(var i=0;i<userArr.length;i++)
-	    	{
-	    		var userId = userArr[i];
-	    		accessUserMap[userId] = true;
-	    	}    	
 	    }
 		
 	    function searchPreferLinkAccessUser(_userSearchWord)
@@ -102,7 +104,7 @@
 
 		    function isAccessUser(userId)
 		    {
-		    	if(!userId)
+		    	if(undefined == userId)
 		    	{
 		    		return false;
 		    	}
@@ -130,7 +132,7 @@
 					var opBtn = "		<a href='javascript:void(0)' onclick='SharePreferLink.addPreferLinkAccessUser(" + d.id + ");' class='mybtn-primary'>添加</a>";
 					if(isAccessUser(d.id)) //已是访问用户的，操作按键显示为，已添加
 					{
-						opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='SharePreferLink.deletePreferLinkUserConfirm(" + d.id + ");' disabled='disabled'>删除</a>";
+						opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='SharePreferLink.deletePreferLinkAccessUserConfirm(" + d.id + ");' disabled='disabled'>删除</a>";
 					}
 														
 					var se = "<li value="+ i +">"
@@ -164,11 +166,14 @@
 		            dataType : "json",
 		            data : {
 		            	userId: userId,
-		                preferLinkId : preferLinkId,
+		                preferLinkId : preferLinkInfo.id,
 		                access: 1,
 		            },
 		            success : function (ret) {
+		            	console.log("addPreferLinkAccessUser ret", ret);
 		                if( "ok" == ret.status ){
+		                	preferLinkInfo.accessUserIds = ret.data;
+		    				initAccessUserMap();
 		                	showPreferLinkAllUserList();		//更新显示
 		                }
 		                else
@@ -212,12 +217,15 @@
 		            dataType : "json",
 		            data : {
 		            	userId: userId,
-		                preferLinkId : preferLinkId,
+		                preferLinkId : preferLinkInfo.id,
 		                access: 0,
 		            },
 		            success : function (ret) {
-		                if( "ok" == ret.status ){
-		                	showPreferLinkAllUserList();		//更新显示
+		            	console.log("deletePreferLinkAccessUser ret", ret);
+		            	if( "ok" == ret.status ){
+		                	preferLinkInfo.accessUserIds = ret.data;
+		    				initAccessUserMap();
+		            		showPreferLinkAllUserList();		//更新显示
 		                }
 		                else
 		                {
@@ -241,8 +249,8 @@
 			addPreferLinkAccessUser: function(userId){
 				addPreferLinkAccessUser(userId);
             },
-			deletePreferLinkAccessUser: function(userId){
-				deletePreferLinkAccessUser(userId);
+            deletePreferLinkAccessUserConfirm: function(userId){
+            	deletePreferLinkAccessUserConfirm(userId);
             },
 		};
 	})();
