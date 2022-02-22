@@ -31,6 +31,7 @@
     function searchPreferLinkAccessUser()
     {
     	var userSearchWord =  $("#search-preferLinkAccessUser").val();
+    	console.log("searchPreferLinkAccessUser() userSearchWord:" + userSearchWord);
     	SharePreferLink.searchPreferLinkAccessUser(userSearchWord);
     }
 	
@@ -73,11 +74,12 @@
 	    function searchPreferLinkAccessUser(_userSearchWord)
 	    {
 	    	userSearchWord = _userSearchWord;
+	    	console.log("searchPreferLinkAccessUser() userSearchWord:" + userSearchWord);
 	    	showPreferLinkAllUserList();
 	    }
 
 		function showPreferLinkAllUserList(){
-		   	console.log("showPreferLinkAllUserList()");
+		   	console.log("showPreferLinkAllUserList() userSearchWord:" + userSearchWord);
 		   	
 		    $.ajax({
 		            url : "/DocSystem/Bussiness/getPreferLinkAccessUsers.do",
@@ -243,8 +245,8 @@
 			init: function(_preferLinkInfo, _callback){
 				init(_preferLinkInfo, _callback);
 			},
-			searchPreferLinkAccessUser: function(){
-				searchPreferLinkAccessUser();
+			searchPreferLinkAccessUser: function(userSearchWord){
+				searchPreferLinkAccessUser(userSearchWord);
             },
 			addPreferLinkAccessUser: function(userId){
 				addPreferLinkAccessUser(userId);
