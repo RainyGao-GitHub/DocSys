@@ -131,8 +131,9 @@
         <div class="row">
             <div id="preferLink-box" class="project-box"></div>
             <div class="clearfix"></div>
-            <div class="manual-page">
-            </div>
+            <div id="sharedPreferLink-box" class="project-box" style="border-bottom: 2px solid #f2f2f2;"></div>
+            <div class="clearfix"></div>
+            <div class="manual-page"></div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -197,7 +198,7 @@
     <ul>
 	{{each list as preferLink i}}
     	<li>
-        	<a href="{{preferLink.url}}" class="box" title="" >
+        	<a href="{{preferLink.url}}" target="_blank" class="box" title="" >
             	<div class="pull-left imgbox">
                 	<i class="fa fa-internet-explorer" style="color:#2ABB9B;"></i>
             	</div>
@@ -205,7 +206,51 @@
             	<span></span>
         	</a>
         	<p class="summary hidden-xs hidden-sm hidden-md">
-            	<a href="{{preferLink.url}}" class="text">
+            	<a href="{{preferLink.url}}" target="_blank" class="text">
+                	{{  preferLink.content }}
+            	</a>
+        	</p>
+    	</li>
+    {{/each}}
+    </ul>
+</script>
+
+<script type="text/html" id="tmpl-sharedPreferLinks">
+    <div style="margin-top: 20px; "></div>
+    {{each list as preferLink i}}
+        <div class="s-box" style="margin-left: 50px">
+            <div class="s-content-box">
+                <h4 class="s-title">
+                    <i class="{{preferLink.iconType}} {{preferLink.iconStyle}}"></i>
+                    <a href="{{preferLink.url}}" title="{{preferLink.url}}" target="_blank">{{preferLink.showName}}</a>
+                </h4>
+                <div class="s-content">
+                    <p>{{# preferLink.content}}</p>
+                </div>
+            </div>     
+			<hr/>
+        </div>
+    {{/each}}
+    <!-- 分页功能 -->
+    <div class="wrap">
+        <ul id="newsList"></ul>
+        <div id="pagination" class="l-page"></div>
+    </div>
+</script>
+
+<script type="text/html" id="tmpl-sharedPreferLinks-icon">
+    <ul>
+	{{each list as preferLink i}}
+    	<li>
+        	<a href="{{preferLink.url}}" target="_blank" class="box" title="" >
+            	<div class="pull-left imgbox">
+                	<i class="fa fa-internet-explorer" style="color:#2ABB9B;"></i>
+            	</div>
+            	<h4>{{preferLink.showName}}</h4>
+            	<span></span>
+        	</a>
+        	<p class="summary hidden-xs hidden-sm hidden-md">
+            	<a href="{{preferLink.url}}" target="_blank" class="text">
                 	{{  preferLink.content }}
             	</a>
         	</p>
@@ -232,6 +277,7 @@
 	var gPageIndex = 1;
 	var gPageSize = 10;
 	var preferLinkList = [];
+	var sharedPreferLinkList = [];
 	var showStyle = 1; //icon style
 	
 	function pageInit()
@@ -265,6 +311,7 @@
                 	loginBtnCtrl(user);
                 	
                 	getPreferLinks();
+                	getSharedPreferLinks();
                 }
                 else 
                 {
@@ -385,6 +432,60 @@
         	}
             
             $("#preferLink-box").html(html);
+    	}
+	}
+	
+	function showSharedPreferLinkList(list)
+	{
+		console.log("showSharedPreferLinkList");
+    	if(list)
+    	{
+    		
+        	for(var i=0; i<list.length; i++)
+        	{
+        		var jsonObj = list[i];
+        		jsonObj.showName = jsonObj.url;
+        		if(jsonObj.name && jsonObj.name != "")
+        		{
+        			jsonObj.showName = jsonObj.name;
+        		}
+        		
+        		jsonObj.iconType = "icons webpage";
+        		if(jsonObj.type == 2)
+        		{
+        			jsonObj.iconType = "icons weblink";
+        		}
+        		else if(jsonObj.type == 3)
+        		{
+        			jsonObj.iconType = "icons webserver";	                			
+        		}
+        		if(gIsPC == true)
+        		{
+        			jsonObj.iconStyle = " bigicon";
+        			jsonObj.btnIconStyle = "";
+        		}
+        		else
+        		{
+        			jsonObj.iconStyle = " middleicon";
+        			jsonObj.btnIconStyle = "";	 //小图标                			
+        		}
+        	}
+        	
+        	var html = "";
+        	if(showStyle == 1)
+        	{
+                html = template('tmpl-sharedPreferLinks-icon', {
+                    list : list
+                });        		
+        	}
+        	else
+        	{
+                html = template('tmpl-sharedPreferLinks', {
+                    list : list
+                });        		
+        	}
+            
+            $("#sharedPreferLink-box").html(html);
     	}
 	}
     
@@ -625,6 +726,36 @@
                 	preferLinkList = list;
                 	
                 	showPreferLinkList(list);
+	            }
+	            else
+	            {
+	            	console.log(ret.msgInfo);
+	            	//showErrorMessage("获取常用网站列表失败：" + ret.msgInfo);
+	            }
+            },
+            error : function () {
+            	//showErrorMessage('获取常用网站列表失败：服务器异常');
+            }
+        });
+    }
+    
+    function getSharedPreferLinks()
+    {
+    	console.log("getSharedPreferLinks");
+        $.ajax({
+            url : "/DocSystem/Bussiness/getSharedPreferLinkList.do",
+            type :"post",
+            dataType :"json",
+            data : {
+            	userId : login_user.id,
+            },
+            success : function (ret) {
+                if(ret.status == "ok")
+                {
+                	console.log("getSharedPreferLinks ret:", ret);
+                	var list = ret.data;
+                	sharedPreferLinkList = list;
+                	showSharedPreferLinkList(list);
 	            }
 	            else
 	            {
