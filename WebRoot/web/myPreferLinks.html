@@ -350,35 +350,8 @@
 	
 	function searchPreferLink(pageIndex)
 	{
-		var searchWord = $("#searchWord").val();
-		var sort = "";
-		
-       	$.ajax({
-               url : "/DocSystem/Bussiness/getPreferLinkList.do",
-               type : "post",
-               dataType : "json",
-               data : {
-                   searchWord:searchWord,
-                   sort:sort,
-               },
-               success : function (ret) {
-	           		console.log("searchPreferLink ret:", ret);
-	        		if(ret.status == "ok")
-	           		{
-	           			console.log("搜索成功", ret);
-						var list = ret.data;
-						preferLinkList = list;
-						showPreferLinkList(list);						
-	               	}
-	               	else
-	               	{
-	               		showErrorMessage("搜索出错:" + ret.msgInfo);
-	               	}
-               },
-               error : function () {
-                   showErrorMessage("搜索出错:服务器异常");
-               }
-           });
+		getPreferLinks();
+		getSharedPreferLinks();
 	}
 	
 	function showPreferLinkList(list)
@@ -438,55 +411,58 @@
 	function showSharedPreferLinkList(list)
 	{
 		console.log("showSharedPreferLinkList");
-    	if(list)
+    	if(undefined == list || list.length == 0)
     	{
-    		
-        	for(var i=0; i<list.length; i++)
-        	{
-        		var jsonObj = list[i];
-        		jsonObj.showName = jsonObj.url;
-        		if(jsonObj.name && jsonObj.name != "")
-        		{
-        			jsonObj.showName = jsonObj.name;
-        		}
-        		
-        		jsonObj.iconType = "icons webpage";
-        		if(jsonObj.type == 2)
-        		{
-        			jsonObj.iconType = "icons weblink";
-        		}
-        		else if(jsonObj.type == 3)
-        		{
-        			jsonObj.iconType = "icons webserver";	                			
-        		}
-        		if(gIsPC == true)
-        		{
-        			jsonObj.iconStyle = " bigicon";
-        			jsonObj.btnIconStyle = "";
-        		}
-        		else
-        		{
-        			jsonObj.iconStyle = " middleicon";
-        			jsonObj.btnIconStyle = "";	 //小图标                			
-        		}
-        	}
-        	
-        	var html = "";
-        	if(showStyle == 1)
-        	{
-                html = template('tmpl-sharedPreferLinks-icon', {
-                    list : list
-                });        		
-        	}
-        	else
-        	{
-                html = template('tmpl-sharedPreferLinks', {
-                    list : list
-                });        		
-        	}
-            
-            $("#sharedPreferLink-box").html(html);
+    		$("#sharedPreferLink-box").hide();
+    		return;
     	}
+		
+    	for(var i=0; i<list.length; i++)
+       	{
+       		var jsonObj = list[i];
+       		jsonObj.showName = jsonObj.url;
+       		if(jsonObj.name && jsonObj.name != "")
+       		{
+       			jsonObj.showName = jsonObj.name;
+       		}
+       		
+       		jsonObj.iconType = "icons webpage";
+       		if(jsonObj.type == 2)
+       		{
+       			jsonObj.iconType = "icons weblink";
+       		}
+       		else if(jsonObj.type == 3)
+       		{
+       			jsonObj.iconType = "icons webserver";	                			
+       		}
+       		if(gIsPC == true)
+       		{
+       			jsonObj.iconStyle = " bigicon";
+       			jsonObj.btnIconStyle = "";
+       		}
+       		else
+       		{
+       			jsonObj.iconStyle = " middleicon";
+       			jsonObj.btnIconStyle = "";	 //小图标                			
+       		}
+       	}
+       	
+       	var html = "";
+       	if(showStyle == 1)
+       	{
+               html = template('tmpl-sharedPreferLinks-icon', {
+                   list : list
+               });        		
+       	}
+       	else
+       	{
+               html = template('tmpl-sharedPreferLinks', {
+                   list : list
+               });        		
+       	}
+           
+        $("#sharedPreferLink-box").html(html);
+        $("#sharedPreferLink-box").show();    	
 	}
     
     function userLogout()
@@ -714,12 +690,18 @@
     
     function getPreferLinks()
     {
-    	console.log("getPreferLinks");
+		var searchWord = $("#searchWord").val();
+		var sort = "";
+		
+    	console.log("getPreferLinks() searchWord:" + searchWord);
         $.ajax({
             url : "/DocSystem/Bussiness/getPreferLinkList.do",
             type :"post",
             dataType :"json",
-            data : null,
+            data : {
+                searchWord:searchWord,
+                sort:sort,
+            },
             success : function (ret) {
                 if(ret.status == "ok")
                 {
@@ -743,12 +725,18 @@
     
     function getSharedPreferLinks()
     {
-    	console.log("getSharedPreferLinks");
+		var searchWord = $("#searchWord").val();
+		var sort = "";
+		
+    	console.log("getSharedPreferLinks() searchWord:" + searchWord);
+    	
         $.ajax({
             url : "/DocSystem/Bussiness/getSharedPreferLinkList.do",
             type :"post",
             dataType :"json",
             data : {
+                searchWord:searchWord,
+                sort:sort,
             	userId : login_user.id,
             },
             success : function (ret) {
