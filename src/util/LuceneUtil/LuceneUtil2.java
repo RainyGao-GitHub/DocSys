@@ -1696,6 +1696,62 @@ public class LuceneUtil2   extends BaseFunction
 	}
 	
 	@SuppressWarnings("rawtypes")
+	public static Document buildDocumentForObject(Object obj, String textField) {
+		Document document = new Document();	
+		
+		Class userCla = (Class) obj.getClass();
+		java.lang.reflect.Field[] fs = userCla.getDeclaredFields();
+        for (int i = 0; i < fs.length; i++) 
+        {
+        	java.lang.reflect.Field f = fs[i];
+            f.setAccessible(true); // 设置些属性是可以访问的
+            String type = f.getType().toString();
+            Integer fieldType = getFieldType(type);
+			String fieldName = f.getName();
+			//Log.debug("buildDocumentForObject() fieldType:" + type + " fieldName:" + fieldName);
+			if(fieldType != null)
+			{
+	            try {
+					Object val = f.get(obj);
+					if(val != null)
+					{
+						switch(fieldType)
+						{
+						case QueryCondition.FIELD_TYPE_String:
+							if(fieldName.equals(textField))
+							{
+								document.add(new TextField(fieldName, (String)val, Store.YES));
+							}
+							else
+							{
+								document.add(new StringField(fieldName, (String)val, Store.YES));
+							}
+							break;
+						case QueryCondition.FIELD_TYPE_BigDecimal:	//浮点数用字符串表示
+							document.add(new StringField(fieldName, val+"", Store.YES));
+							break;
+						case QueryCondition.FIELD_TYPE_Integer:
+							document.add(new IntField(fieldName, (Integer)val, Store.YES));
+							break;
+						case QueryCondition.FIELD_TYPE_Long:
+							document.add(new LongField(fieldName, (Long)val, Store.YES));
+							break;				
+						}
+					}
+	            } catch (IllegalArgumentException e) {
+	            	Log.info("buildDocumentForObject() 异常");
+	            	Log.info(e);
+				} catch (IllegalAccessException e) {
+	            	Log.info("buildDocumentForObject() 异常");
+	            	Log.info(e);
+				}
+			}
+        }
+		
+		return document;
+	}
+	
+	@SuppressWarnings("rawtypes")
 	public static void buildObjectForDocument(Object obj, Document document) {
     	Class userCla = (Class) obj.getClass();
     	java.lang.reflect.Field[] fs = userCla.getDeclaredFields();

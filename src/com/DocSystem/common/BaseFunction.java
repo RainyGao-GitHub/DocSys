@@ -2650,7 +2650,7 @@ public class BaseFunction{
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        indexWriter = new IndexWriter(directory, config);
 	
-	        Document document = LuceneUtil2.buildDocumentForObject(link);
+	        Document document = LuceneUtil2.buildDocumentForObject(link, "accessUserIds");
 	        indexWriter.addDocument(document);	        
 	        
 	        indexWriter.commit();
@@ -2696,7 +2696,7 @@ public class BaseFunction{
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        indexWriter = new IndexWriter(directory, config);
 	
-	        Document document = LuceneUtil2.buildDocumentForObject(link);
+	        Document document = LuceneUtil2.buildDocumentForObject(link, "accessUserIds");
 	        indexWriter.addDocument(document);	        
 	        
 	        indexWriter.updateDocument(new Term("id", link.id), document);
