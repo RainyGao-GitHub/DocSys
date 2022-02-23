@@ -1497,7 +1497,8 @@ public class BaseController  extends BaseFunction{
 		docAuth.setDeleteEn(1);		//删除权限：可以删除仓库中的文件或目录
 		docAuth.setDownloadEn(1);;	//下载权限：可以下载仓库中的文件或目录
 		docAuth.setHeritable(1);;	//权限继承：0：不可继承  1：可继承
-
+		docAuth.setUploadSize(Long.MAX_VALUE);	//上传限制：最大值
+		
 		ret = reposService.addDocAuth(docAuth);
 		Log.debug("addRepos() addDocAuth return:" + ret);
 		if(ret == 0)
