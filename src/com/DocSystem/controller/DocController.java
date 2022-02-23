@@ -2582,11 +2582,13 @@ public class DocController extends BaseController{
 
             if (flist.length == 0)//如果文件夹为空，则只需在目的地.7z文件中写入一个目录进入
             {
-            	entry = out.createArchiveEntry(input, doc.getName() + "/");
+    			Log.debug("compressAuthedFiles() [" + doc.getPath() + doc.getName() + "] is empty folder");
+            	entry = out.createArchiveEntry(input, doc.getPath() + doc.getName() + "/");
                 out.putArchiveEntry(entry);
             } 
             else//如果文件夹不为空，则递归调用compress，文件夹中的每一个文件（或文件夹）进行压缩
             {
+    			Log.debug("compressAuthedFiles() [" + doc.getPath() + doc.getName() + "] is folder");
             	String subDocParentPath = doc.getPath() + doc.getName() + "/";
             	String localRootPath = doc.getLocalRootPath();
             	String localVRootPath = doc.getLocalVRootPath();
@@ -2609,9 +2611,10 @@ public class DocController extends BaseController{
         } 
         else//如果不是目录（文件夹），即为文件，则先写入目录进入点，之后将文件写入7z文件中
         {
+			Log.debug("compressAuthedFiles() [" + doc.getPath() + doc.getName() + "] is file");
         	FileInputStream fos = new FileInputStream(input);
             BufferedInputStream bis = new BufferedInputStream(fos);
-            entry = out.createArchiveEntry(input, doc.getName());
+            entry = out.createArchiveEntry(input, doc.getPath() + doc.getName());
             out.putArchiveEntry(entry);
             int len = -1;
             //将源文件写入到7z文件中
