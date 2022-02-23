@@ -3314,6 +3314,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 			{
+				unlockDoc(doc, lockType, login_user);
 				Log.debug("addDoc_FSM() remoteServerDocCommit Failed");
 				rt.setError("远程推送失败");
 				return false;
@@ -3422,6 +3423,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2) == null)
 			{
+				unlockDoc(doc, lockType, login_user);
 				Log.docSysWarningLog("addDocEx_FSM remoteServerDocCommit Failed", rt);
 				rt.setError("远程推送失败");
 				return false;
@@ -6430,6 +6432,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
 			{
+				unlockDoc(doc, lockType, login_user);
 				Log.debug("updateDoc_FSM() remoteServerDocCommit Failed");
 				rt.setError("远程推送失败");
 				return false;
@@ -6515,6 +6518,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2) == null)
 			{
+				unlockDoc(doc, lockType, login_user);
 				Log.debug("updateDocEx_FSM() remoteServerDocCommit Failed");
 				rt.setError("远程推送失败");
 				return false;
