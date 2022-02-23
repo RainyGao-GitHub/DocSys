@@ -1,6 +1,6 @@
 body {
     position: relative;
-    font-family: Verdana, "Lantinghei SC", "Hiragino Sans GB", "Microsoft Yahei", Helvetica, arial, \5b8b\4f53, sans-serif;
+    font-family: Verdana, "Lantinghei SC", "Hiragino Sans GB", "Microsoft Yahei", Helvetica, arial, \5b8b\4f53, sans-serif !important;
 }
 .dropdown-menu li>a{
     line-height: 2em;
@@ -647,14 +647,19 @@ body {
     padding-top: 0px;
 }
 
+h4.s-title {
+    font-size: 18px !important;
+}
+
 .s-title a{
-    text-decoration: underline;
+    color: #428bca !important;
+    text-decoration: underline !important;
 }
 
 /* 图标放到第一行后，与标题对齐 */
 .s-title i{
-    display: inline-block;
-    vertical-align: bottom;
+    display: inline-block !important;
+    vertical-align: bottom !important;
 }
 
 .s-footer a {
