@@ -1,0 +1,27 @@
+.logo{
+    width: 18px;
+    height: 18px;
+    font-size:15px;
+    margin-right:5px;
+    color:#2ABB9B;
+    display:inline-block;
+    text-align:center;
+}
+
+.logo.default{
+    width: 28px;
+    height: 28px;
+    margin-right:0px;
+	background: url("./img/default.svg") no-repeat;
+    background-position: 0px 0px;
+   	background-size: 28px 28px; 
+}
+
+.logo.small{
+    width: 16px;
+    height: 16px;
+    margin-right:0px;
+	background: url("./img/small.svg") no-repeat;
+    background-position: 0px 0px;
+   	background-size: 16px 16px; 
+}
