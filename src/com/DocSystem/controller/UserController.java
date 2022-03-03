@@ -288,6 +288,115 @@ public class UserController extends BaseController {
 		return;
 	}
 	
+	//注册接口(无校验码)
+	@RequestMapping(value="registerEx")
+	public void registerEx(
+			String userName, 
+			String pwd, 
+			String pwd2, 
+			String verifyCode,
+		    String realName,
+		    String nickName,
+		    String tel,
+		    String email,
+		    String intro,
+		    HttpServletRequest request, HttpSession session, HttpServletResponse response,ModelMap model)
+	{
+		Log.info("\n************** registerEx ****************");		
+		Log.debug("registerEx userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 
+				+ " realName:"+realName + " nickName:"+nickName + " tel:"+tel + " email:"+email + " intro:"+intro);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			rt.setError("账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(checkSystemUsersCount(rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		User user = new User();
+		user.setName(userName);
+		if(RegularUtil.isEmail(userName))	//邮箱注册
+		{
+			user.setEmail(userName);
+		}
+		else if(RegularUtil.IsMobliePhone(userName))
+		{
+			user.setTel(userName);
+		}
+		else
+		{
+			rt.setError("账号格式不正确！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(userCheck(user, true, true, rt) == false)
+		{
+			Log.debug("用户检查失败!");			
+			writeJson(rt, response);
+			return;			
+		}
+		
+		//检查密码是否为空
+		if(pwd==null||"".equals(pwd))
+		{
+			rt.setError("密码不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
+		{
+			Log.debug("注册密码："+pwd);
+			Log.debug("确认注册密码："+pwd2);
+			rt.setError("两次密码不一致，请重试！");
+			writeJson(rt, response);
+			return;
+		}
+		user.setPwd(pwd);
+		user.setCreateType(1);	//用户为自主注册
+		
+		
+		if(tel != null)
+		{
+			user.setTel(tel);
+		}
+		if(email != null)
+		{
+			user.setEmail(email);
+		}
+		user.setRealName(realName);
+		user.setNickName(nickName);
+		user.setIntro(intro);
+		
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		user.setCreateTime(createTime);	//设置川剧时间
+		user.setType(0);
+		if(isFirstAdminUserExists() == false)
+		{
+			user.setType(2);
+		}
+		userService.addUser(user);
+		
+		addSystemLog(request, user, "registerEx", "registerEx", "用户注册","成功", null, null, null, "");
+
+		user.setPwd("");	//密码不要返回回去
+		rt.setData(user);
+		writeJson(rt, response);
+		return;
+	}
+	
 	/**
 	 * 发送邮箱验证信息
 	 * @param response
