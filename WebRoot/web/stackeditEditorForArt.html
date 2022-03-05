@@ -234,6 +234,17 @@
 					}
 				}
 				break;
+			case 'uploadImages':
+				var images = event.data.payload.content.images;
+				var text = event.data.payload.content.text;
+				// TODO 在这里保存上传过来的images,获取上传后的url,并将参数回传给staticEdit
+				console.log("images:",images);
+				console.log("text:",text);
+				// var stackeditEl = $(".stackedit-iframe");
+				// if (stackeditEl !== undefined) {
+				// 	stackeditEl[0].contentWindow.postMessage({"type":"toggleEditor","flag":editFlag},"*")
+				// }
+				break;
 			default:
 		}
 	}
