@@ -294,7 +294,6 @@ public class UserController extends BaseController {
 			String userName, 
 			String pwd, 
 			String pwd2, 
-			String verifyCode,
 		    String realName,
 		    String nickName,
 		    String tel,
@@ -311,39 +310,10 @@ public class UserController extends BaseController {
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
+			Log.info("registerEx 账号不能为空");		
 			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
-		}
-		
-		if(checkSystemUsersCount(rt) == false)
-		{
-			writeJson(rt, response);
-			return;
-		}
-
-		User user = new User();
-		user.setName(userName);
-		if(RegularUtil.isEmail(userName))	//邮箱注册
-		{
-			user.setEmail(userName);
-		}
-		else if(RegularUtil.IsMobliePhone(userName))
-		{
-			user.setTel(userName);
-		}
-		else
-		{
-			rt.setError("账号格式不正确！");
-			writeJson(rt, response);
-			return;
-		}
-		
-		if(userCheck(user, true, true, rt) == false)
-		{
-			Log.debug("用户检查失败!");			
-			writeJson(rt, response);
-			return;			
 		}
 		
 		//检查密码是否为空
@@ -362,10 +332,23 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
-		user.setPwd(pwd);
-		user.setCreateType(1);	//用户为自主注册
-		
-		
+						
+		if(checkSystemUsersCount(rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		User user = new User();
+		user.setName(userName);
+		if(RegularUtil.isEmail(userName))	//邮箱注册
+		{
+			user.setEmail(userName);
+		}
+		else if(RegularUtil.IsMobliePhone(userName))
+		{
+			user.setTel(userName);
+		}		
 		if(tel != null)
 		{
 			user.setTel(tel);
@@ -374,6 +357,16 @@ public class UserController extends BaseController {
 		{
 			user.setEmail(email);
 		}
+		
+		if(userCheck(user, true, true, rt) == false)
+		{
+			Log.info("用户检查失败!");			
+			writeJson(rt, response);
+			return;			
+		}
+		
+		user.setPwd(pwd);
+		user.setCreateType(1);	//用户为自主注册
 		user.setRealName(realName);
 		user.setNickName(nickName);
 		user.setIntro(intro);
