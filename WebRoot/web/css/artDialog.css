@@ -3804,7 +3804,7 @@ body .dialog-bg-blur .aui-border {
     box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.2);
     border: none !important;
     border-radius: 4px;
-    overflow: hidden;
+    /*overflow: hidden;*/
     transition: all .15s
 }
 
