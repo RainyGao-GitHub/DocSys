@@ -237,16 +237,75 @@
 			case 'uploadImages':
 				var images = event.data.payload.content.images;
 				var text = event.data.payload.content.text;
-				// TODO 在这里保存上传过来的images,获取上传后的url,并将参数回传给staticEdit
 				console.log("images:",images);
 				console.log("text:",text);
-				// var stackeditEl = $(".stackedit-iframe");
-				// if (stackeditEl !== undefined) {
-				// 	stackeditEl[0].contentWindow.postMessage({"type":"toggleEditor","flag":editFlag},"*")
-				// }
+				for (let i = 0; i < images.length; i++) {
+					uploadMarkdownPic(images[i]);
+				}
 				break;
 			default:
 		}
+	}
+
+	// TODO 该接口无法直接套用，有其它逻辑，请帮助修改
+	function uploadMarkdownPic(file) {
+		console.log("uploadMarkdownPic() file:", file);
+
+		var xhr = new XMLHttpRequest();
+
+		var form = new FormData();
+		form.append("editormd-image-file", file);
+
+		//上传表单
+		var imgName =  file.lastModified + "_" + file.name;
+		var path = base64_urlsafe_encode(gDocInfo.path);
+		var name = base64_urlsafe_encode(gDocInfo.name);
+		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
+		if(gShareId)
+		{
+			imageUploadURL="&shareId="+gShareId;
+		}
+		xhr.open("post", imageUploadURL);
+		xhr.send(form);
+
+		//设置异步上传状态变化回调处a理函数
+		xhr.onreadystatechange = function() {
+			//文件上传状态
+			console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
+			if(xhr.status == 200)
+			{
+				if(xhr.readyState != 4)
+				{
+					//文件上传未结束
+					return;
+				}
+
+				//上传成功！
+				var ret = JSON.parse(xhr.responseText);
+				console.log("uploadMarkdownPic ret", ret);
+				if(1 == ret.success)
+				{
+					//上传失败
+					console.log("上传成功");
+					console.log(ret.url);
+				}
+				else	//上传失败
+				{
+					//上传失败
+					console.log("上传失败：" + ret.msgInfo);
+					return;
+				}
+			}else{
+				if(xhr.status < 300)
+				{
+					//不是真正的异常
+					return;
+				}
+				//上传失败
+				console.log("系统异常: 上传异常！");
+				return;
+			}
+		};
 	}
 
 	/**
