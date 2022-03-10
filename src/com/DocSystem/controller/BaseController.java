@@ -6376,7 +6376,7 @@ public class BaseController  extends BaseFunction{
 			{
 				SyncLock.unlock(syncLock); 
 	
-				Log.debug("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
+				Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
 				return false;
 			}
 			SyncLock.unlock(syncLock); 
@@ -6390,7 +6390,7 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(doc, lockType, login_user);
 
-			Log.debug("updateDoc_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
+			Log.info("updateDoc_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return false;
 		}
@@ -6433,7 +6433,7 @@ public class BaseController  extends BaseFunction{
 			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
-				Log.debug("updateDoc_FSM() remoteServerDocCommit Failed");
+				Log.info("updateDoc_FSM() remoteServerDocCommit Failed");
 				rt.setError("远程推送失败");
 				return false;
 			}
@@ -6465,7 +6465,7 @@ public class BaseController  extends BaseFunction{
 			{
 				SyncLock.unlock(syncLock); 
 	
-				Log.debug("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
+				Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
 				return false;
 			}
 			SyncLock.unlock(syncLock); 
@@ -6479,7 +6479,7 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(doc, lockType, login_user);
 	
-			Log.debug("updateDocEx_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
+			Log.info("updateDocEx_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return false;
 		}
@@ -6519,7 +6519,7 @@ public class BaseController  extends BaseFunction{
 			if(remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
-				Log.debug("updateDocEx_FSM() remoteServerDocCommit Failed");
+				Log.info("updateDocEx_FSM() remoteServerDocCommit Failed");
 				rt.setError("远程推送失败");
 				return false;
 			}
