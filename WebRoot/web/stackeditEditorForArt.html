@@ -106,7 +106,7 @@
 							<i class="fa fa-edit" name="edit" unselectable="on"></i>
 						</a>
 					</li>
-				</ul>				
+				</ul>
 			</div>
 		</div>
 	</div>-->
@@ -146,15 +146,15 @@
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
 	var editState = false;
-	
-	//页面加载完成处理函数    
+
+	//页面加载完成处理函数
 	$(document).ready(function() {
 		// 初始化文档信息
 		docInfoInit();
 		// 加载文档窗口，传入文档加载成功回调函数和加载失败函数
 		console.log("stackeditEditorForArt");
 		getDocText(docInfo, showText, showErrorMessage);
-	});	
+	});
 	/**
 	 * 文档信息初始化方法
 	 */
@@ -162,7 +162,7 @@
 		// 为空时获取文档的后缀
 		if(docInfo.fileSuffix !==  undefined || docInfo.fileSuffix !== "") {
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);
-		}	
+		}
 	}
 	/**
 	 * 文档加载类
@@ -174,7 +174,7 @@
 		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html",docText_);
 		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
 		var stackEditIframeEl = $(".stackedit-iframe");
-		stackEditIframeEl.prop("src",url);		
+		stackEditIframeEl.prop("src",url);
 
 		// Listen to StackEdit events and apply the changes to the textarea.
 		//监听iframe发来的消息
@@ -188,7 +188,7 @@
 
 	/**
 	 * staticEdit消息事件处理
-	 * 
+	 *
 	 * @param event 事件对象
 	 */
 	function messageHandler(event) {
@@ -212,12 +212,12 @@
 			case 'saveChange':
 				if(isContentChanged) {
 					//执行文档保存操作
-					saveDoc();	
+					saveDoc();
 				}
 				break;
 			case 'changeView':
 				//当文档处于编辑状态要切换只读时触发
-				if(event.data.flag) 
+				if(event.data.flag)
 				{
 					console.log("编辑器退出入编辑状态...");
 					if(editState == true)
@@ -274,13 +274,13 @@
 
 	/**
 	 * 设置编辑器的编辑状态为只读
-	 * 
+	 *
 	 * @param editFlag false代表编辑状态，true代表只读状态
 	 */
 	function setStaticEditReaOnly(editFlag) {
 		var stackeditEl = $(".stackedit-iframe");
 		if (stackeditEl !== undefined) {
-			stackeditEl[0].contentWindow.postMessage({"type":"toggleEditor","flag":editFlag},"*")	
+			stackeditEl[0].contentWindow.postMessage({"type":"toggleEditor","flag":editFlag},"*")
 		}
 	}
 
@@ -348,7 +348,7 @@
 			dataType : "json",
 			data : {
 				lockType : 1, //LockType: Online Edit
-				reposId : docInfo.vid, 
+				reposId : docInfo.vid,
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
@@ -368,21 +368,21 @@
 				{
 					//锁定失败，切换编辑状态，但要避免触发exitEdit
 					editState = false;
-					setStaticEditReaOnly(false);				
+					setStaticEditReaOnly(false);
 					return;
 				}
 			},
-			error : function () 
+			error : function ()
 			{
 				editState = false;
-				setStaticEditReaOnly(false);				
+				setStaticEditReaOnly(false);
 				return;
 			}
 		});
     }
-    
+
 	//退出文件编辑状态
-    function exitEdit() {   	
+    function exitEdit() {
 		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
@@ -390,14 +390,14 @@
 			setStaticEditReaOnly(false);
 			return;
 		}
-		
+
 		$.ajax({
 			url : "/DocSystem/Doc/unlockDoc.do",
 			type : "post",
 			dataType : "json",
 			data : {
 				lockType : 1, //unlock the doc
-				reposId : docInfo.vid, 
+				reposId : docInfo.vid,
             	docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
@@ -419,7 +419,7 @@
 					return;
 				}
 			},
-			error : function () 
+			error : function ()
 			{
 				editState = true;
 				setStaticEditReaOnly(true);
