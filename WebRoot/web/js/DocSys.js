@@ -2021,7 +2021,7 @@ function showOfficeInArtDialog(docInfo) {
 			}
 			// 原理：该按钮是内嵌office是否保存按钮，保存后该按钮处于禁用状态，未保存，该按钮处于启用状态就代表文档还未保存，则拦截
 			// 获取该文档唯一iframe,其name是文档唯一值
-			let docIframe = $("." + ArtDialogId).find(`iframe[name=${ArtDialogId}]`)[0];
+			let docIframe = $("." + ArtDialogId).find("iframe[name=${ArtDialogId}]")[0];
 			if (docIframe !== undefined) {
 				// 根据该iframe获取下一级iframe
 				let officeIframe = $(docIframe.contentWindow.document).find("iframe[name=frameEditor]")[0];
