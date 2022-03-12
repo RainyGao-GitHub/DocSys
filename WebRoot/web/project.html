@@ -2774,7 +2774,8 @@
 	   				+' createTime=' + node.createTime
 	   				+' latestEditTime=' + node.latestEditTime;
 
-       			if(node.state && (node.state | 0b00000010) != 0) //只显示文件编辑锁定
+       			//if(node.state && (node.state | 0b00000010) != 0) //只显示文件编辑锁定
+       			if(node.state && (node.state | 2)) //只显示文件编辑锁定
        			{
        				if(node.type == 2)
        				{
