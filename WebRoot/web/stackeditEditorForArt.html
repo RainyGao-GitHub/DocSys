@@ -258,12 +258,12 @@
 
 		//上传表单
 		var imgName =  file.lastModified + "_" + file.name;
-		var path = base64_urlsafe_encode(gDocInfo.path);
-		var name = base64_urlsafe_encode(gDocInfo.name);
-		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
-		if(gShareId)
+		var path = base64_urlsafe_encode(docInfo.path);
+		var name = base64_urlsafe_encode(docInfo.name);
+		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + docInfo.vid + "&docId=" + docInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
+		if(docInfo.shareId)
 		{
-			imageUploadURL="&shareId="+gShareId;
+			imageUploadURL="&shareId="+docInfo.shareId;
 		}
 		xhr.open("post", imageUploadURL);
 		xhr.send(form);
