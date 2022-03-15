@@ -15515,7 +15515,7 @@ public class BaseController  extends BaseFunction{
 					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，拉取");
 					ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 				}
-				else if(force == true && isAutoPull == false)
+				else if(force == true)
 				{
 					if(remoteChangeType == DocChangeType.REMOTECHANGE)
 					{
@@ -15558,7 +15558,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//本地改动（强制拉取）
-		if(force == true && isAutoPull == false) 
+		if(force == true) 
 		{
 			remoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
 			if(remoteChangeType == DocChangeType.REMOTEADD)
@@ -15651,7 +15651,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else 
 				{
-					if(force == true && isAutoPush == false)
+					if(force == true)
 					{
 						if(localChangeType == DocChangeType.LOCALCHANGE)
 						{
@@ -15710,8 +15710,8 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		//远程改动（只有强制手动推送时才推送）
-		if(force == true && isAutoPush == false)
+		//远程改动（只有强制推送时才推送）
+		if(force == true)
 		{
 			if(pushLocalChangeOnly && remote.isVerRepos == false && localChangeType == DocChangeType.NOCHANGE)
 			{
