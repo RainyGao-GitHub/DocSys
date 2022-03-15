@@ -4015,11 +4015,11 @@ public class BaseController  extends BaseFunction{
 		        {	
 					if(remote.autoPush != null && remote.autoPush == 1)
 					{
-						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, true, false, rt);
+						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, false, rt);
 					}					
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
-						channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, true, rt);
+						channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, rt);
 					}
 				}
 			}
@@ -9289,7 +9289,7 @@ public class BaseController  extends BaseFunction{
     		return null;			
     	}	
         
-        doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, false, rt);
+        doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, rt);
         doRemoteStorageLogout(session);            
 		
         DocPushResult pushResult = (DocPushResult) rt.getDataEx();
@@ -9536,7 +9536,7 @@ public class BaseController  extends BaseFunction{
         		session.indexUpdateEn = false;
         	}
         	
-        	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, force, false, rt );
+        	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, force, rt );
         	doRemoteStorageLogout(session);
         }
         
@@ -15490,12 +15490,12 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected static boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
+	protected static boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, Integer subEntryPullFlag, boolean force, DocPullResult pullResult) {
 		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
 			Log.debug("doPullEntryFromRemoteStorage() 拉取根目录");
-			return doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);					
+			return doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, pullResult);					
 		}
 		
 		boolean ret = false;		
@@ -15552,7 +15552,7 @@ public class BaseController  extends BaseFunction{
 			//pullSubEntries
 			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
-				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);					
+				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, pullResult);					
 			}
 			return true;
 		}
@@ -15601,7 +15601,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
-				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
+				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, pullResult);
 			}
 		}		
 		else
@@ -15613,7 +15613,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	protected static boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
+	protected static boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {
 		
 		Log.printObject("doPushEntryToRemoteStorage() doc:", doc);		
@@ -15625,7 +15625,7 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.debug("doPushEntryToRemoteStorage() 推送根目录");
 			
-			return doPushSubEntriesToRemoteStorage(session, remote, repos, doc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);			
+			return doPushSubEntriesToRemoteStorage(session, remote, repos, doc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);			
 		}
 		
 		boolean ret = false;
@@ -15696,7 +15696,7 @@ public class BaseController  extends BaseFunction{
 				if(action != null)	//it is new added dir
 				{
 					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true, pushLocalChangeOnly);	
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, pushResult, subActionList, true, pushLocalChangeOnly);	
 					if(subActionList.size() > 0)
 					{
 						action.setSubActionList(subActionList);
@@ -15704,7 +15704,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);						
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);						
 				}
 			}
 			return true;
@@ -15766,7 +15766,7 @@ public class BaseController  extends BaseFunction{
 				if(action != null)	//it is new add dir
 				{
 					ArrayList<CommitAction> subActionList = new ArrayList<CommitAction>();
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, subActionList, true, pushLocalChangeOnly);	
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, pushResult, subActionList, true, pushLocalChangeOnly);	
 					if(subActionList.size() > 0)
 					{
 						action.setSubActionList(subActionList);
@@ -15774,7 +15774,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);						
+					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);						
 				}
 			}
 		}
@@ -15785,7 +15785,7 @@ public class BaseController  extends BaseFunction{
 		return ret;		
 	}
 	
-	private static boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, Integer subEntryPullFlag, boolean force, boolean isAutoPull, DocPullResult pullResult) {
+	private static boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, Integer subEntryPullFlag, boolean force, DocPullResult pullResult) {
 		//子目录不递归
 		if(subEntryPullFlag == 0)
 		{
@@ -15813,7 +15813,7 @@ public class BaseController  extends BaseFunction{
 			//Log.println("doPullSubEntriesFromRemoteStorage subDocName:" + subRemoteDoc.getName());
 			Doc subDbDoc = dbHashMap.get(subRemoteDoc.getName());
 			Doc subLocalDoc = localHashMap.get(subRemoteDoc.getName());
-			doPullEntryFromRemoteStorage(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
+			doPullEntryFromRemoteStorage(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, commitId, subEntryPullFlag, force, pullResult);
 			if(subDbDoc != null)
 			{
 				dbHashMap.remove(subDbDoc.getName());
@@ -15824,13 +15824,13 @@ public class BaseController  extends BaseFunction{
 		for (Doc subDbDoc : dbHashMap.values()) {
 			Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
 			Doc subLocalDoc = localHashMap.get(subDbDoc.getName());
-			doPullEntryFromRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, subLocalDoc, null, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
+			doPullEntryFromRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, subLocalDoc, null, commitId, subEntryPullFlag, force, pullResult);
 		}	
 		return true;
 	}
 	
 	//actionList and isSubAction is for Gvn/Git RemoteStorage
-	private static boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, boolean isAutoPush, 
+	private static boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {		
 		Log.debug("doPushSubEntriesToRemoteStorage() doc:[" + doc.getPath() + doc.getName() + "]");
 
@@ -15861,7 +15861,7 @@ public class BaseController  extends BaseFunction{
 			Doc subLocalDoc  = localList.get(i);
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
 			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());			
-			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);
+			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);
 			if(subDbDoc != null)
 			{
 				dbHashMap.remove(subDbDoc.getName());
@@ -15872,7 +15872,7 @@ public class BaseController  extends BaseFunction{
 		for (Doc subDbDoc : dbHashMap.values()) {
 			Log.debug("doPushSubEntriesToRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
 			Doc subRemoteDoc = remoteHashMap.get(subDbDoc.getName());			
-			doPushEntryToRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, null, subRemoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, actionList, isSubAction, pushLocalChangeOnly);
+			doPushEntryToRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, null, subRemoteDoc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);
 		}	
 		
 		return true;
@@ -18270,7 +18270,7 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
-	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, boolean isAutoPull, ReturnAjax rt) {
+	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, ReturnAjax rt) {
 		Log.debug(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "]");
 		
 		boolean ret = false;
@@ -18290,13 +18290,13 @@ public class BaseController  extends BaseFunction{
 			subEntryPullFlag = 2;
 		}
 
-		ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, subEntryPullFlag, force, isAutoPull, pullResult);
+		ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, subEntryPullFlag, force, pullResult);
 		
 		rt.setDataEx(pullResult);
 		return ret;
 	}
 	
-	protected static boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean isAutoPush, boolean pushLocalChangeOnly, ReturnAjax rt) {
+	protected static boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean pushLocalChangeOnly, ReturnAjax rt) {
 		Log.debug("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "]");
 
 		boolean ret = false;
@@ -18331,7 +18331,7 @@ public class BaseController  extends BaseFunction{
 		{
 			subEntryPushFlag = 2;
 		}
-		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, isAutoPush, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
+		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
 		if(ret == true)
 		{
 			if(remote.isVerRepos == true)
