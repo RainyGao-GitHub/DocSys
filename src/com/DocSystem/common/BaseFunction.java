@@ -1026,17 +1026,6 @@ public class BaseFunction{
 	}
 	
 	private static void setRemoteAutoPushPull(RemoteStorageConfig remote, JSONObject config) {
-		remote.autoPull = config.getInteger("autoPull");
-		if(remote.autoPull == null)
-		{
-			remote.autoPull = 0;
-		}
-		remote.autoPullForce = config.getInteger("autoPullForce");
-		if(remote.autoPullForce == null)
-		{
-			remote.autoPullForce = 0;
-		}
-
 		remote.autoPush = config.getInteger("autoPush");
 		if(remote.autoPush == null)
 		{
@@ -1047,6 +1036,25 @@ public class BaseFunction{
 		if(remote.autoPushForce == null)
 		{
 			remote.autoPushForce = 0;
+		}
+		
+		remote.autoPull = config.getInteger("autoPull");
+		if(remote.autoPull == null)
+		{
+			remote.autoPull = 0;
+		}
+		remote.autoPullForce = config.getInteger("autoPullForce");
+		if(remote.autoPullForce == null)
+		{
+			remote.autoPullForce = 0;
+		}
+		else
+		{
+			//如果设置了强制推送，那么强制拉取将会自动失效
+			if(remote.autoPushForce != null && remote.autoPushForce == 1)
+			{
+				remote.autoPullForce = 0;				
+			}
 		}
 	}
 
