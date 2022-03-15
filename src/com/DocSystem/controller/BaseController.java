@@ -8237,14 +8237,34 @@ public class BaseController  extends BaseFunction{
 		{
 			auth.setDownloadEn(1);
 		}
-		if(tmpAuth.getUploadSize() == null || (auth.getUploadSize() != null && tmpAuth.getUploadSize() > auth.getUploadSize()))
-		{
-			auth.setUploadSize(tmpAuth.getUploadSize());
-		}
 		if(tmpAuth.getHeritable()!=null && tmpAuth.getHeritable().equals(1))
 		{
 			auth.setHeritable(1);
-		}	
+		}
+		
+		//如果tmpAuth的uploadSize大于auth那么取tmpAuth的值
+		Long tmpMaxUploadSize = tmpAuth.getUploadSize(); 
+		if(tmpMaxUploadSize != null && tmpMaxUploadSize > 0)
+		{
+			if(isUploadSizeExceeded(tmpMaxUploadSize, auth.getUploadSize()))
+			{
+				auth.setUploadSize(tmpAuth.getUploadSize());
+			}
+		}
+		else
+		{
+			auth.setUploadSize(Long.MAX_VALUE);
+		}
+	}
+	
+	//接口的第一个参数不能为空
+	protected boolean isUploadSizeExceeded(Long size, Long maxUploadSize) {
+		//注意：最大上传限制值小于等于0将被作为不限制处理		
+		if(maxUploadSize != null && maxUploadSize > 0 && size > maxUploadSize)
+		{
+			return true;
+		}
+		return false;
 	}
 	
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
