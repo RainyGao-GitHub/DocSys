@@ -1780,12 +1780,11 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//login_user不得设置超过自己的权限：超过了则无效
 		if(uploadSize == null)
 		{
 			uploadSize = Long.MAX_VALUE;
 		}
-		
-		//login_user不得设置超过自己的权限：超过了则无效
 		if(isUserAuthExpanded(repos, login_user, doc, isAdmin,access,editEn,addEn,deleteEn,downloadEn,uploadSize,heritable,rt) == true)
 		{
 			Log.debug("超过设置者的权限 ！");
@@ -1977,7 +1976,7 @@ public class ReposController extends BaseController{
 			rt.setError("您无权设置下载权限");
 			return true;
 		}
-		if(docAuth.getUploadSize() != null && (uploadSize == null || uploadSize > docAuth.getUploadSize()))
+		if(isUploadSizeExceeded(uploadSize, docAuth.getUploadSize()))
 		{
 			rt.setError("您设置上传大小超出您的权限");
 			return true;

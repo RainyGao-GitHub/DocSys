@@ -1303,7 +1303,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(UserDocAuth.getUploadSize() != null && UserDocAuth.getUploadSize() < size)
+		if(isUploadSizeExceeded(size, UserDocAuth.getUploadSize()))
 		{
 			Log.info("checkDocInfo size:" + size + " UserDocAuth max uploadSize:" + UserDocAuth.getUploadSize());
 			String maxUploadSize = getMaxUploadSize(UserDocAuth.getUploadSize());
@@ -1385,7 +1385,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	}
-	
+
 	private Repos getReposInfo(Integer reposId, DocShare docShare) {
 		if(docShare == null || docShare.getType() == null || docShare.getType() == 0)
 		{
@@ -1649,7 +1649,7 @@ public class DocController extends BaseController{
 			return;				
 		}
 		
-		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
+		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
 		{
 			Log.info("uploadDoc size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
 			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
@@ -1942,7 +1942,7 @@ public class DocController extends BaseController{
 			return;				
 		}
 		
-		if(docUserAuth.getUploadSize() != null && docUserAuth.getUploadSize() < size)
+		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
 		{
 			Log.info("uploadDocRS size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
 			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
