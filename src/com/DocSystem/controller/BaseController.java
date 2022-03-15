@@ -15519,28 +15519,28 @@ public class BaseController  extends BaseFunction{
 				{
 					if(remoteChangeType == DocChangeType.REMOTECHANGE)
 					{
-						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，手动强制拉取模式，拉取");
+						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，强制拉取模式，拉取");
 						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);						
 					}
 					else if(remoteChangeType == DocChangeType.REMOTEDELETE)
 					{
-						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动, 远程删除, 手动强制拉取模式， 拉取");
+						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动, 远程删除, 强制拉取模式， 拉取");
 						ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 					}
 					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
 					{
-						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程目录->文件，手动强制拉取模式，拉取");							
+						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程目录->文件，强制拉取模式，拉取");							
 						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);						
 					}
 					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
 					{
-						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程文件->目录，手动强制拉取模式，拉取");
+						Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程文件->目录，强制拉取模式，拉取");
 						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 					}
 				}
 				else
 				{
-					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，非手动强制拉取模式，不拉取");
+					Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，非强制拉取模式，不拉取");
 				}
 			}
 			else
@@ -15563,27 +15563,27 @@ public class BaseController  extends BaseFunction{
 			remoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
 			if(remoteChangeType == DocChangeType.REMOTEADD)
 			{
-				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，手动强制拉取模式，拉取");
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，强制拉取模式，拉取");
 				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 			}
 			else if(remoteChangeType == DocChangeType.REMOTECHANGE)
 			{
-				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 手动强制拉取模式, 拉取");
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 强制拉取模式, 拉取");
 				return remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 			}
 			else if(remoteChangeType == DocChangeType.REMOTEDELETE)
 			{
-				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程删除, 手动强制拉取模式，拉取");
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程删除, 强制拉取模式，拉取");
 				ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 			}
 			else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
 			{
-				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程目录->文件, 手动强制拉取模式，拉取");
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程目录->文件, 强制拉取模式，拉取");
 				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 			}
 			else if(remoteChangeType == DocChangeType.REMOTEFILETODIR)
 			{
-				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程文件->目录, 手动强制拉取模式，拉取");
+				Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程文件->目录, 强制拉取模式，拉取");
 				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 			}
 			else if(remoteChangeType == DocChangeType.NOCHANGE)
@@ -15606,7 +15606,7 @@ public class BaseController  extends BaseFunction{
 		}		
 		else
 		{
-			Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 非强制模式，不拉取");
+			Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 非强制拉取模式，不拉取");
 			return true;		
 		}
 		return ret;		
@@ -15632,7 +15632,7 @@ public class BaseController  extends BaseFunction{
 		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);		
 		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
 		
-		//远程没有改动（如果不是强制手动推送，那么只能推送新增的文件或目录）
+		//远程没有改动（如果不是强制推送，那么只能推送新增的文件或目录）
 		if(remoteChangeType == DocChangeType.NOCHANGE || remoteChangeType == DocChangeType.REMOTEDELETE)
 		{
 			if(remoteChangeType == DocChangeType.REMOTEDELETE)
@@ -15655,28 +15655,28 @@ public class BaseController  extends BaseFunction{
 					{
 						if(localChangeType == DocChangeType.LOCALCHANGE)
 						{
-							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地改动，强制手动推送模式，推送");
+							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地改动，强制推送模式，推送");
 							ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);						
 						}
 						else if(localChangeType == DocChangeType.LOCALDELETE)
 						{
-							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动, 本地删除, 强制手动推送模式， 推送");
+							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动, 本地删除, 强制推送模式， 推送");
 							ret = remoteStoragePushEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 						}
 						else if(localChangeType == DocChangeType.LOCALDIRTOFILE)
 						{
-							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地目录->文件，强制手动推送模式，推送");							
+							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地目录->文件，强制推送模式，推送");							
 							ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);						
 						}
 						else if(localChangeType == DocChangeType.LOCALDIRTOFILE)
 						{
-							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地文件->目录，强制手动推送模式，推送");
+							Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地文件->目录，强制推送模式，推送");
 							ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 						}
 					}
 					else
 					{
-						Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地改动，非强制手动推送模式，不推送");
+						Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程未改动，本地改动，非强制推送模式，不推送");
 					}
 				}
 			}
@@ -15724,27 +15724,27 @@ public class BaseController  extends BaseFunction{
 			
 			if(localChangeType == DocChangeType.LOCALADD)
 			{
-				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地新增, 手动强制推送模式，推送");
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地新增, 强制推送模式，推送");
 				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 			}
 			else if(localChangeType == DocChangeType.LOCALCHANGE)
 			{
-				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地改动,  手动强制推送模式，推送");
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地改动,  强制推送模式，推送");
 				return remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 			}
 			else if(localChangeType == DocChangeType.LOCALDELETE)
 			{
-				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地删除, 手动强制推送模式，推送");
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地删除, 强制推送模式，推送");
 				ret = remoteStoragePushEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);					
 			}
 			else if(localChangeType == DocChangeType.LOCALDIRTOFILE)
 			{
-				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地目录->文件, 手动强制推送模式，推送");
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地目录->文件, 强制推送模式，推送");
 				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);					
 			}
 			else if(localChangeType == DocChangeType.LOCALFILETODIR)
 			{
-				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地文件->目录, 手动强制推送模式，推送");
+				Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地文件->目录, 强制推送模式，推送");
 				ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 			} 
 			else if(localChangeType == DocChangeType.NOCHANGE)
@@ -15780,7 +15780,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动,本地改动, 非强制模式，不推送");
+			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动,本地改动, 非强制推送模式，不推送");
 		}
 		return ret;		
 	}
