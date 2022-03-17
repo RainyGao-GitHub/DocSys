@@ -990,7 +990,9 @@ function getDiyFileIconType(name)
 	        rar 	: 	"zip",
 	        "7z" 	: 	"zip",
 			exe 	: 	"exe",
-			psd 	: 	"psd",	
+			psd 	: 	"psd",
+			md		: 	"markdown",
+			markdown: 	"markdown",
 	};
     
     var suffix = getFileSuffix(name);
