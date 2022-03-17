@@ -926,23 +926,19 @@ public class ReposController extends BaseController{
 		List <Doc> docList = new ArrayList<Doc>();
 		if(rootDoc.getDocId() != 0) //不是仓库根目录
 		{
-			File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
-			if(rootFile.exists() == false)
+			rootDoc = docSysGetDoc(repos, rootDoc, false);
+			if(rootDoc == null || rootDoc.getType() == null || rootDoc.getType() == 0)
 			{
 				Log.docSysErrorLog("根目录不存在！",rt);
 				writeJson(rt, response);			
 				return;
 			}
 			
-			rootDoc.setSize(rootFile.length());
-			rootDoc.setCreateTime(rootFile.lastModified());
-			rootDoc.setLatestEditTime(rootFile.lastModified());
 			docList.add(rootDoc);
 			
 			//如果rootDoc是文件则不需要获取子目录文件
-			if(rootFile.isFile())
+			if(rootDoc.getType() == 1)
 			{
-				rootDoc.setType(1);
 				rt.setData(docList);
 				writeJson(rt, response);			
 				return;
