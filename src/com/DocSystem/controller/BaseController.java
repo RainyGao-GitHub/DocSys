@@ -10142,17 +10142,41 @@ public class BaseController  extends BaseFunction{
 			switch(fileSuffix)
 			{
 			case "doc":
-				return LuceneUtil2.addIndexForWord(filePath, doc, indexLib);
-			case "docx":
+				if(LuceneUtil2.addIndexForWord(filePath, doc, indexLib))
+				{
+					return true;
+				}
 				return LuceneUtil2.addIndexForWord2007(filePath, doc, indexLib);
+			case "docx":
+				if(LuceneUtil2.addIndexForWord2007(filePath, doc, indexLib))
+				{
+					return true;
+				}
+				return LuceneUtil2.addIndexForWord(filePath, doc, indexLib);
 			case "xls":
-				return LuceneUtil2.addIndexForExcel(filePath, doc, indexLib);
-			case "xlsx":
+				if(LuceneUtil2.addIndexForExcel(filePath, doc, indexLib))
+				{
+					return true;
+				}
 				return LuceneUtil2.addIndexForExcel2007(filePath, doc, indexLib);
+			case "xlsx":
+				if(LuceneUtil2.addIndexForExcel2007(filePath, doc, indexLib))
+				{
+					return true;
+				}
+				return LuceneUtil2.addIndexForExcel(filePath, doc, indexLib);
 			case "ppt":
-				return LuceneUtil2.addIndexForPPT(filePath, doc, indexLib);
-			case "pptx":
+				if(LuceneUtil2.addIndexForPPT(filePath, doc, indexLib))
+				{
+					return true;
+				}
 				return LuceneUtil2.addIndexForPPT2007(filePath, doc, indexLib);
+			case "pptx":
+				if(LuceneUtil2.addIndexForPPT2007(filePath, doc, indexLib))
+				{
+					return true;
+				}
+				return LuceneUtil2.addIndexForPPT(filePath, doc, indexLib);
 			case "pdf":
 				return LuceneUtil2.addIndexForPdf(filePath, doc, indexLib);
 			default:
