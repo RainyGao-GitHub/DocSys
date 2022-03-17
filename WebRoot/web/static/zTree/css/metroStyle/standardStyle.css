@@ -208,6 +208,14 @@ website:    http://code.google.com/p/jquerytree/
 	vertical-align:top; 
 	*vertical-align:middle
 }
+.ztree li span.button.markdown_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_markdown.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
 
 .ztree li span.button.edit {margin-left:2px; margin-right: -1px; background-position: -189px -21px; vertical-align:top; *vertical-align:middle}
 .ztree li span.button.edit:hover {
@@ -318,6 +326,11 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
 }
 .icons.file.swf{
 	background: url("./img/file_swf.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.markdown{
+	background: url("./img/file_markdown.svg") no-repeat; 
 	background-position: 0px 0px;
    	background-size: 18px 18px; 
 }
