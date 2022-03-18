@@ -67,22 +67,29 @@
     
     <div class="form-group">
 		<div id="remoteStorageDiv" style="margin-top:10px;padding-left:30px">
-	    	<label>远程存储</label>
-			<select class="form-control" id="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:86%">   
-	        	<option value="">无</option>
-	            <option value="ftp">FTP</option>   
-	            <option value="sftp">SFTP</option>   
-	            <option value="smb">SMB</option>  
-	            <option value="svn">SVN</option>  
-	            <option value="git">GIT</option>  
-				<option value="mxsdoc">MXSDOC</option>
-	        </select>		
-	 	    <div id="remoteStorageConfig"  style="margin-top:10px; display:none">
-	        	<input class="form-control" type="text" id="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456;"  value="" style="width: 86%"/>
-	    		<label style="margin-left:1px">自动拉取<span style="margin-left:3px"><input type="checkbox" id="autoPull" value="0"></span></label>
-		        <label style="margin-left:10px">强制拉取<span style="margin-left:3px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
-		        <label style="margin-left:10px">自动推送 <span style="margin-left:3px"><input type="checkbox" id="autoPush" value="0"></span></label>
-		        <label style="margin-left:10px">强制推送<span style="margin-left:3px"><input type="checkbox" id="autoPushForce" value="0"></span></label>
+	    	<label>远程存储
+	    		<span style="margin-left:5px">
+	            	<input type="checkbox" id="remoteStorageConfigEnable" value="0" onclick="doSelectRemoteStorageConfigEnable()">
+	            </span>
+	    	</label>
+	    	
+			<div id="remoteStorageConfigDiv" style="display:none">
+				<select class="form-control" id="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:86%">   
+		        	<option value="">无</option>
+		            <option value="ftp">FTP</option>   
+		            <option value="sftp">SFTP</option>   
+		            <option value="smb">SMB</option>  
+		            <option value="svn">SVN</option>  
+		            <option value="git">GIT</option>  
+					<option value="mxsdoc">MXSDOC</option>
+		        </select>		
+		 	    <div id="remoteStorageProtocolConfig"  style="margin-top:10px; display:none">
+		        	<input class="form-control" type="text" id="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456;"  value="" style="width: 86%"/>
+		    		<label style="margin-left:1px">自动拉取<span style="margin-left:3px"><input type="checkbox" id="autoPull" value="0"></span></label>
+			        <label style="margin-left:10px">强制拉取<span style="margin-left:3px"><input type="checkbox" id="autoPullForce" value="0"></span></label>
+			        <label style="margin-left:10px">自动推送 <span style="margin-left:3px"><input type="checkbox" id="autoPush" value="0"></span></label>
+			        <label style="margin-left:10px">强制推送<span style="margin-left:3px"><input type="checkbox" id="autoPushForce" value="0"></span></label>
+				</div>
 			</div>
 	     </div>
     </div>    
@@ -779,20 +786,26 @@
 		var remoteStorage = "";
 		if(reposInfo.remoteStorageConfig == undefined)
 	   	{
-			$("#remoteStorageConfig").hide();
+	    	$("#remoteStorageConfigDiv").hide();
+	       	$("#remoteStorageConfigEnable").attr("checked",false);
+			
+			$("#remoteStorageProtocolConfig").hide();
 			$("#remoteStorageProtocol option[value='']").attr("selected","selected");		
 			return;
 	   	}
+		
+    	$("#remoteStorageConfigDiv").show();
+       	$("#remoteStorageConfigEnable").attr("checked","checked");
 		
 		var protocol = reposInfo.remoteStorageConfig.protocol;
 		if(protocol == undefined || protocol == "")
 		{
 			$("#remoteStorageProtocol option[value='']").attr("selected","selected");			
-			$("#remoteStorageConfig").hide();
+			$("#remoteStorageProtocolConfig").hide();
 			return;
 		}
 		
-		$("#remoteStorageConfig").show();			
+		$("#remoteStorageProtocolConfig").show();			
 		$("#remoteStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
 		
 		var remoteStorage = buildRemoteStorageConfigStr(reposInfo.remoteStorageConfig);
@@ -835,23 +848,44 @@
 	   	}
 	}
 
+	function doSelectRemoteStorageConfigEnable()
+	{
+		var remoteStorageConfigEnable = $("#remoteStorageConfigEnable").is(':checked')? 1: 0;
+		console.log("doSelectRemoteStorageConfigEnable remoteStorageConfigEnable:" + remoteStorageConfigEnable);
+		if(remoteStorageConfigEnable == 0)
+		{
+			$("#remoteStorageConfigDiv").hide();
+		}
+		else
+		{	
+			$("#remoteStorageConfigDiv").show();
+		}		
+	}
+	
 	function doSelectRemoteStorageProtocol()
 	{
 		var protocol = $("#remoteStorageProtocol").val();
 		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
-			$("#remoteStorageConfig").hide();
+			$("#remoteStorageProtocolConfig").hide();
 			return;
 		}
 		
 		var placeholder = getPlacehoderForRemoteStorageProtocol(protocol);
 		$("#remoteStorage").attr('placeholder',placeholder);
-		$("#remoteStorageConfig").show();
+		$("#remoteStorageProtocolConfig").show();
 	}
 
 	function getRemoteStorageConfig()
 	{   
+		var remoteStorageConfigEnable = $("#remoteStorageConfigEnable").is(':checked')? 1: 0;
+		console.log("getRemoteStorageConfig remoteStorageConfigEnable:" + remoteStorageConfigEnable);
+		if(remoteStorageConfigEnable == 0)
+		{
+			return "none";
+		}
+		
 		var protocol = $("#remoteStorageProtocol").val();
 		console.log("getRemoteStorageConfig protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
