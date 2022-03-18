@@ -5964,6 +5964,24 @@ public class DocController extends BaseController{
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
 		docList.add(rootDoc);
 		
+		//rootZipDoc如果不存在，需要尝试从远程先下载
+		Doc localEntry = fsGetDoc(repos, rootDoc);
+		if(localEntry.getType() == 0)
+		{	
+			if(isFSM(repos))
+			{
+				Log.debug("getZipInitMenu() rootDoc " +rootDoc.getPath() + rootDoc.getName() + " 不存在，从远程存储拉取");
+				if(remoteStorageCheckOut(repos, rootDoc, reposAccess.getAccessUser(), null, true, true, false, rt) == true)
+				{
+					localEntry = fsGetDoc(repos, rootDoc); //重新读取文件信息
+				}		
+			}
+			else
+			{
+				remoteServerCheckOut(repos, rootDoc, null, null, null, null, true, true, null);
+			}
+		}
+		
 		//decrypt rootZipDoc
 		Doc tempRootDoc = decryptRootZipDoc(repos, rootDoc);
 		
