@@ -89,27 +89,6 @@
 	}
 </style>
 <div id="textEditor">
-	<!--<div id="textEditorToolBar" style="height:40px;">
-		<div class="editormd-toolbar" style="display: block;">
-			<div class="editormd-toolbar-container">
-				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
-					<li><a href="javascript:;" onclick="saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
-				</ul>
-				<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
-					<li id="textEditorCloseBtn" style="display:none;">
-						<a href="javascript:;" onclick="exitEdit()" title="退出编辑" unselectable="on">
-							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
-						</a>
-					</li>
-					<li id="textEditorEditBtn">
-						<a href="javascript:;" onclick="enableEdit()" title="编辑" unselectable="on">
-							<i class="fa fa-edit" name="edit" unselectable="on"></i>
-						</a>
-					</li>
-				</ul>
-			</div>
-		</div>
-	</div>-->
 	<div class="textEditorContent" style="min-height: 600px;">
 		<div id="editor">
 			<div class="stackedit-container">
@@ -236,74 +215,60 @@
 				break;
 			case 'uploadImages':
 				var images = event.data.payload.content.images;
-				var text = event.data.payload.content.text;
-				console.log("images:",images);
-				console.log("text:",text);
-				for (let i = 0; i < images.length; i++) {
-					uploadMarkdownPic(images[i]);
+				if (images && images.length > 0) {
+					// 仅上传第一个传输过来的图片
+					uploadMarkdownPic(images[0]);
 				}
 				break;
 			default:
 		}
 	}
 
-	// TODO 该接口无法直接套用，有其它逻辑，请帮助修改
+	/**
+	 * 图片上传
+	 */
 	function uploadMarkdownPic(file) {
-		console.log("uploadMarkdownPic() file:", file);
-
 		var xhr = new XMLHttpRequest();
-
 		var form = new FormData();
 		form.append("editormd-image-file", file);
-
 		//上传表单
 		var imgName =  file.lastModified + "_" + file.name;
 		var path = base64_urlsafe_encode(docInfo.path);
 		var name = base64_urlsafe_encode(docInfo.name);
 		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + docInfo.vid + "&docId=" + docInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
-		if(docInfo.shareId)
-		{
+		if(docInfo.shareId) {
 			imageUploadURL="&shareId="+docInfo.shareId;
 		}
 		xhr.open("post", imageUploadURL);
 		xhr.send(form);
-
 		//设置异步上传状态变化回调处a理函数
 		xhr.onreadystatechange = function() {
-			//文件上传状态
-			console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
-			if(xhr.status == 200)
-			{
-				if(xhr.readyState != 4)
-				{
+			if(xhr.status == 200) {
+				if(xhr.readyState != 4) {
 					//文件上传未结束
 					return;
 				}
-
 				//上传成功！
 				var ret = JSON.parse(xhr.responseText);
-				console.log("uploadMarkdownPic ret", ret);
-				if(1 == ret.success)
-				{
-					//上传失败
-					console.log("上传成功");
-					console.log(ret.url);
+				if(1 == ret.success) {
+					var stackeditEl = $(".stackedit-iframe");
+					if (stackeditEl !== undefined) {
+						var origin = window.location.protocol + '//' + window.location.host;
+						var imgUrl = origin + ret.url;
+						stackeditEl[0].contentWindow.postMessage({"type":"uploadCompleted","imgUrl":imgUrl},"*");
+					}
 				}
-				else	//上传失败
-				{
+				else {
 					//上传失败
-					console.log("上传失败：" + ret.msgInfo);
-					return;
+					console.error("上传失败：" + ret.msgInfo);
 				}
 			}else{
-				if(xhr.status < 300)
-				{
+				if(xhr.status < 300) {
 					//不是真正的异常
 					return;
 				}
 				//上传失败
-				console.log("系统异常: 上传异常！");
-				return;
+				console.error("系统异常: 上传异常！");
 			}
 		};
 	}
