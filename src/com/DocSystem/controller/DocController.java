@@ -6014,9 +6014,10 @@ public class DocController extends BaseController{
 		List <Doc> subDocList = null;
 		if(FileUtil.isCompressFile(name) == false)
 		{
-			String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
-			Log.debug("getZipSubDocList relativePath: " + relativePath);
-			subDocList = getZipSubDocList(repos, tempRootDoc, tempRootDoc.getPath(), tempRootDoc.getName(), rt);
+			//TODO: 目前压缩文件的目录是一次性获取的，理论上不存在需要再获取子目录的问题，所以下面这段代码暂不执行，以避免出现套娃现象
+			//String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
+			//Log.debug("getZipSubDocList relativePath: " + relativePath);
+			//subDocList = getZipSubDocList(repos, tempRootDoc, tempRootDoc.getPath(), tempRootDoc.getName(), rt);
 		}
 		else
 		{
