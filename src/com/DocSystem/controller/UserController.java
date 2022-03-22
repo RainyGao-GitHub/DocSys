@@ -824,8 +824,17 @@ public class UserController extends BaseController {
 			return;
 		}
 		
+		if(isPictureFile(uploadFile.getOriginalFilename()) == false)
+		{
+			Log.debug("uploadUserImg() file format error！");
+			rt.setMsgData("uploadUserImg() file format error！");
+			rt.setError("文件格式错误！");
+			writeJson(rt, response);
+			return;
+		}
+		
 		/*保存文件*/
-		Log.debug("uploadFile size is :" + uploadFile.getSize());
+		Log.debug("uploadFile size is :" + uploadFile.getSize());		
 		
 		String userImgName = saveUserImg(uploadFile,loginUser);
 		if(userImgName == null)
@@ -854,6 +863,15 @@ public class UserController extends BaseController {
 		rt.setData(loginUser);
 		writeJson(rt, response);
     }
+
+	private boolean isPictureFile(String fileName) {
+        String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+        if(suffix == null || suffix.isEmpty())
+        {
+        	return false;
+        }
+        return FileUtil.isPicture(suffix.toLowerCase());
+	}
 
 	private String saveUserImg(MultipartFile uploadFile,User user) 
 	{
