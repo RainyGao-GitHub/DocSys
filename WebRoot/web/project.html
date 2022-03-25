@@ -1121,6 +1121,46 @@
 </script>
 
 <script>
+	//下载状态框显示控制
+	$(".el-download-list").delegate(".downloadCloseBtn","click",function(){
+		var downloadStatus = DocDownload.getDownloadStatus();
+		console.log("downloadStatus:" + downloadStatus);
+		if(downloadStatus == "busy")
+	    {
+			qiao.bs.confirm({
+		        id: 'downloadCloseConfirm',
+		        msg: '下载还未结束，是否终止下载！'
+		    },function(){
+		        //alert('点击了确定！');
+		    	DocDownload.stopAllDownload();
+		    },function(){
+		        //alert('点击了取消！');
+		    });
+	    }
+	    else
+	    {
+	    	$(".el-download-list").hide();
+	    }
+	});
+	
+	var showDownloadList = true;
+	$(".el-download-list").delegate(".download-list-title","click",function(){
+		if(showDownloadList == true)
+		{
+			showDownloadList = false;
+			//收起状态
+			var height = - $(".el-download-list").height()+"px";
+			$(".el-download-list").animate({bottom: height});
+			$(".downloadCloseBtn").animate({opacity: 0});	//隐藏关闭按键
+		}
+		else
+		{
+			showDownloadList = true;
+			$(".el-download-list").animate({bottom: "0px"});
+			$(".downloadCloseBtn").animate({opacity: 1});	//显示关闭按键
+		}
+	});
+
 	//上传进度框显示控制
 	$(".el-upload-list").delegate(".uploadCloseBtn","click",function(){
 		var uploadStatus = DocUpload.getUploadStatus();
