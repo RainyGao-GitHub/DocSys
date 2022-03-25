@@ -190,7 +190,7 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()'>全部重传 </span><i class='el-icon-close closeBtn'></i></div>";
+				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()'>全部重传 </span><i class='el-icon-close uploadCloseBtn'></i></div>";
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
