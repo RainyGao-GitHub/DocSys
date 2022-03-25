@@ -1,4 +1,4 @@
-.el-upload-list {
+.el-download-list {
     border: 1px solid #e3e3e3;
     border-radius: 5px;
     position: fixed;
@@ -15,13 +15,13 @@
     padding: 10px 15px 25px 15px;
     list-style: none;
 }
-.upload-list-title{
+.download-list-title{
     display: inline-block;
     padding: 10px 0px;
     margin-top: -5px;
     width: 270px;
 }
-.uploadedFileList{
+.downloadedFileList{
 	border-top: 1px solid #eee;
 	border-bottom: 1px solid #eee;
 	max-height: 155px;
@@ -29,4 +29,11 @@
     overflow-y: auto;
     padding-right: 10px;
     margin-right: -5px;
+}
+.downloadCloseBtn{
+	position:absolute;
+	top:20px;
+	right:15px;
+	font-size:13px;
+	cursor: pointer;
 }

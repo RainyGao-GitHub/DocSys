@@ -31,7 +31,8 @@
 	<!-- contextMenu -->
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
-	<link rel="stylesheet" type="text/css" href="css/zjp-css.css">
+	<link rel="stylesheet" type="text/css" href="css/upload-css.css">
+	<link rel="stylesheet" type="text/css" href="css/download-css.css">
 	<!-- FreeTeam CSS-->
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" />
@@ -67,13 +68,6 @@
 		    z-index: 19;
 		    opacity: 0.5;
 		    display:none;
-        }
-        .closeBtn{
-        	position:absolute;
-        	top:20px;
-        	right:15px;
-        	font-size:13px;
-        	cursor: pointer;
         }
 
         .uploadFileName{
@@ -376,6 +370,10 @@
                 </div>
             </div>
         </div>
+        <div  class="downloadBox ">
+			<ul style="display:none" class="el-download-list el-download-list--text">
+			</ul>
+		</div>        
         <div  class="uploadBox ">
 			<ul style="display:none" class="el-upload-list el-upload-list--text">
 			</ul>
@@ -1124,7 +1122,7 @@
 
 <script>
 	//上传进度框显示控制
-	$(".el-upload-list").delegate(".closeBtn","click",function(){
+	$(".el-upload-list").delegate(".uploadCloseBtn","click",function(){
 		var uploadStatus = DocUpload.getUploadStatus();
 		//uploadStatus = "busy";
 		console.log("uploadStatus:" + uploadStatus);
@@ -1154,14 +1152,14 @@
 			//收起进度
 			var height = - $(".el-upload-list").height()+"px";
 			$(".el-upload-list").animate({bottom: height});
-			$(".closeBtn").animate({opacity: 0});	//隐藏关闭按键
+			$(".uploadCloseBtn").animate({opacity: 0});	//隐藏关闭按键
 			//$(this).animate({opacity: 0});	//隐藏title，好像title不应该隐藏
 		}
 		else
 		{
 			showUploadList = true;
 			$(".el-upload-list").animate({bottom: "0px"});
-			$(".closeBtn").animate({opacity: 1});	//显示关闭按键
+			$(".uploadCloseBtn").animate({opacity: 1});	//显示关闭按键
 			//$(this).animate({opacity: 1});	//this 指向的是title，显示title
 		}
 	});
