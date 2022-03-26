@@ -370,12 +370,12 @@
                 </div>
             </div>
         </div>
-        <div  class="downloadBox ">
+        <div id="downloadBox" class="downloadBox ">
 			<ul style="display:none" class="el-download-list el-download-list--text">
 			</ul>
 		</div>        
-        <div  class="uploadBox ">
-			<ul style="display:none" class="el-upload-list el-upload-list--text">
+        <div id="uploadBox" class="uploadBox ">
+			<ul id="uploadList" style="display:none" class="el-upload-list el-upload-list--text">
 			</ul>
 		</div>
         <div class="manual-progress"><b class="progress-bar"></b></div>
@@ -1145,22 +1145,45 @@
 	
 	var showDownloadList = true;
 	$(".el-download-list").delegate(".download-list-title","click",function(){
+		var offsetBottom = getOffsetBottomForDownloadBox();
+		console.log("offsetBottom:" + offsetBottom);
+		showDownloadBox(offsetBottom);
+	});
+	
+	function getOffsetBottomForDownloadBox()
+	{
+		if($(".el-upload-list").is(":hidden"))
+		{
+			return 0;
+		}
+		
+		if(showUploadList)
+		{
+			return $(".el-upload-list").height() + 20;
+		}
+		
+		return 20;
+	}
+
+	function showDownloadBox(offsetBottom)
+	{
+		var height = offsetBottom + "px";
 		if(showDownloadList == true)
 		{
 			showDownloadList = false;
 			//收起状态
-			var height = - $(".el-download-list").height()+"px";
+			height = offsetBottom - $(".el-download-list").height() + "px";
 			$(".el-download-list").animate({bottom: height});
 			$(".downloadCloseBtn").animate({opacity: 0});	//隐藏关闭按键
 		}
 		else
 		{
 			showDownloadList = true;
-			$(".el-download-list").animate({bottom: "0px"});
+			$(".el-download-list").animate({bottom: height});
 			$(".downloadCloseBtn").animate({opacity: 1});	//显示关闭按键
 		}
-	});
-
+	}
+	
 	//上传进度框显示控制
 	$(".el-upload-list").delegate(".uploadCloseBtn","click",function(){
 		var uploadStatus = DocUpload.getUploadStatus();
@@ -1181,19 +1204,22 @@
 	    else
 	    {
 	    	$(".el-upload-list").hide();
+	    	showDownloadBox(0);
 	    }
 	});
 
 	var showUploadList = true;
 	$(".el-upload-list").delegate(".upload-list-title","click",function(){
+		var uploadListHeight = $(".el-upload-list").height();
 		if(showUploadList == true)
 		{
 			showUploadList = false;
 			//收起进度
-			var height = - $(".el-upload-list").height()+"px";
+			var height = - uploadListHeight + "px";
 			$(".el-upload-list").animate({bottom: height});
 			$(".uploadCloseBtn").animate({opacity: 0});	//隐藏关闭按键
 			//$(this).animate({opacity: 0});	//隐藏title，好像title不应该隐藏
+			showDownloadBox(20);
 		}
 		else
 		{
@@ -1201,6 +1227,7 @@
 			$(".el-upload-list").animate({bottom: "0px"});
 			$(".uploadCloseBtn").animate({opacity: 1});	//显示关闭按键
 			//$(this).animate({opacity: 1});	//this 指向的是title，显示title
+			showDownloadBox(uploadListHeight + 20);
 		}
 	});
 
