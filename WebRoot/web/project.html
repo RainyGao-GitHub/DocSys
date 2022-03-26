@@ -1146,7 +1146,15 @@
 	var showDownloadList = true;
 	$(".el-download-list").delegate(".download-list-title","click",function(){
 		var offsetBottom = getOffsetBottomForDownloadBox();
-		console.log("offsetBottom:" + offsetBottom);
+		//Switch DownloadList Display
+		if(showDownloadList == true)
+		{
+			showDownloadList = false;
+		}
+		else
+		{
+			showDownloadList = true;
+		}
 		showDownloadBox(offsetBottom);
 	});
 	
@@ -1159,18 +1167,18 @@
 		
 		if(showUploadList)
 		{
-			return $(".el-upload-list").height() + 20;
+			return $(".el-upload-list").height() + 40;
 		}
 		
-		return 20;
+		return 40;
 	}
 
 	function showDownloadBox(offsetBottom)
 	{
+		console.log("offsetBottom:" + offsetBottom);
 		var height = offsetBottom + "px";
-		if(showDownloadList == true)
+		if(showDownloadList == false)
 		{
-			showDownloadList = false;
 			//收起状态
 			height = offsetBottom - $(".el-download-list").height() + "px";
 			$(".el-download-list").animate({bottom: height});
@@ -1178,7 +1186,6 @@
 		}
 		else
 		{
-			showDownloadList = true;
 			$(".el-download-list").animate({bottom: height});
 			$(".downloadCloseBtn").animate({opacity: 1});	//显示关闭按键
 		}
@@ -1219,7 +1226,7 @@
 			$(".el-upload-list").animate({bottom: height});
 			$(".uploadCloseBtn").animate({opacity: 0});	//隐藏关闭按键
 			//$(this).animate({opacity: 0});	//隐藏title，好像title不应该隐藏
-			showDownloadBox(20);
+			showDownloadBox(40);
 		}
 		else
 		{
@@ -1227,7 +1234,7 @@
 			$(".el-upload-list").animate({bottom: "0px"});
 			$(".uploadCloseBtn").animate({opacity: 1});	//显示关闭按键
 			//$(this).animate({opacity: 1});	//this 指向的是title，显示title
-			showDownloadBox(uploadListHeight + 20);
+			showDownloadBox(uploadListHeight + 40);
 		}
 	});
 
