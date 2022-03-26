@@ -109,6 +109,66 @@
 			//Build SubContextList(totalFileNum will also be caculated)
 			buildSubContextList(Content, SubContextList, 1000);
 			console.log("文件总的个数为："+totalNum);
+			
+			if(SubContextList.length > 0)
+		   	{
+		   		//初始化上传进度显示
+				var str="<div><span class='download-list-title'>下载列表  (共 " + totalNum + " 个) </span><i class='el-icon-close downloadCloseBtn'></i></div>";
+				str +="<div id='downloadedFileList' class='downloadedFileList'></div>";
+				$(".el-download-list").show();
+				$('.el-download-list').html(str);
+				checkAndDrawDownloadItems(SubContextList);
+		   	}
+      	}
+      	
+      	//初始化下载文件的SubContext,并绘制对应的进度条
+      	function checkAndDrawDownloadItems(SubContextList)
+      	{
+      			var totalNum = Content.initedFileNum;
+      			//Check if all items drawed
+      			if(drawedNum >= totalNum)
+      			{
+      				console.log("checkAndDrawDownloadItems() all items drawed");
+      				return;
+      			}
+      			
+      			//the drawedNum ahead of index less than 100, do draw the doc progress
+      			if((drawedNum - index) > 100)
+      			{
+      			    console.log("checkAndDrawDownloadItems() drawedNum:" + drawedNum + " index:" + index);
+      				return;
+      			}
+      			
+      			//Prepare to drawed
+      			var startIndex = drawedNum;
+      			var endIndex = totalNum;
+      			if((totalNum -drawedNum) > 200)	//每次最多绘制200个
+      			{
+      				endIndex = drawedNum + 200;
+      			}
+      			var str = "";
+      			for( var i = startIndex ; i < endIndex ; i++ )
+		    	{	
+		    		//console.log("index:" + i);
+		    		var SubContext = SubContextList[i];
+					str+="<li class='el-download-list__item file"+i+" is-downloading' value="+i+">"+
+		    				"<a class='el-download-list__item-name downloadFileName'><i class='el-icon-document'></i><span class='downloadFileName' >"+SubContext.name+"</span></a>"+
+		    				"<a class='downloadBtn download"+i+"' onclick='downloadDoc("+i+")'>下载</a>"+
+		    				"<label class='el-download-list__item-status-label'><i class='el-icon-download-success el-icon-circle-check'></i></label>"+
+		    				"<i class='el-icon-close stopDownload'  value="+i+" onclick='DocDownload.stopDownload("+i+")'></i>"+
+		    				"<div class='el-progress el-progress--line'>"+
+		    					"<div class='el-progress-bar'>"+
+		    						"<div class='el-progress-bar__outer' >"+
+		    							"<div class='el-progress-bar__inner'></div>"+
+		    						"</div>"+
+		    					"</div>"+
+		    					"<div class='el-progress__text' style='font-size: 12.8px;'></div>"+
+		    				"</div>"+
+		    			  "</li>";
+		    		//已绘制个数增1
+		    		drawedNum++;	    		
+				}
+				$('#downloadedFileList').append(str);		
       	}
       	
       	//增加下载文件
