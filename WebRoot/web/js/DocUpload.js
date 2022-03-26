@@ -194,6 +194,9 @@
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
+				
+				showDownloadBox($(".el-upload-list").height() + 40);
+				
 				checkAndDrawUploadItems(SubContextList);
 		   	}
       	}
