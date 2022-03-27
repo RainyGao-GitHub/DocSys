@@ -152,7 +152,7 @@
 		    		var SubContext = SubContextList[i];
 					str+="<li class='el-download-list__item downloadFile"+i+" is-downloading' value="+i+">"+
 		    				"<a class='el-download-list__item-name downloadFileName'><i class='el-icon-document'></i><span class='downloadFileName' >"+SubContext.name+"</span></a>"+
-		    				"<a class='downloadStatus downloadInfo"+i+"' >下载准备中...</a>"+
+		    				"<a class='downloadStatus downloadInfo"+i+"' >待下载...</a>"+
 		    				"<label class='el-download-list__item-status-label'><i class='el-icon-download-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopDownload'  value="+i+" onclick='DocDownload.stopDownload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -216,6 +216,8 @@
 			
 			//绘制文件下载列表
 			drawDownloadItems(SubContextList);
+			
+			$(".download-list-title").text("下载列表 (共   " + totalNum + " 个)");
 		}
       	
       	//并将需要下载的文件加入到SubContextList中
@@ -285,6 +287,7 @@
 		    		SubContext.index = i;
 		    	   	SubContext.state = 0;	//未开始下载
 		    	   	SubContext.status = "待下载";	//未开始下载
+		    	   	SubContext.stopFlag = false; //停止标记false
 		    	   			      								    	   	
 		    	   	//Push the SubContext
 		    	   	SubContextList.push(SubContext);
@@ -324,7 +327,13 @@
     		
     		var SubContext = SubContextList[index];
     		console.log("downloadDoc() index:" + index + " totalNum:" + totalNum, SubContext);
-  	    	
+    		if(SubContext.stopFlag == true)
+    		{
+    			downloadNextDoc();
+    			return;
+    		}
+    		
+    		$(".downloadInfo"+index).text("下载准备中...");
 			//执行后台downloadDoc操作
     		$.ajax({
                 url : "/DocSystem/Doc/downloadDocPrepare.do",
@@ -522,11 +531,39 @@
 					    }); 
       		}
   		}
+  		
+		function stopDownload(index)
+		{
+			console.log("stopDownload() index:" + index ,SubContextList[index]);
+			SubContextList[index].stopFlag = true;
+			$(".downloadInfo"+index).text("已取消");
+		}
+		
+		function stopAllDownload()
+		{
+			//将未上传的全部设置
+			for(i=index;i<totalNum;i++)
+			{
+				SubContextList[i].stopFlag = true;
+				$(".downloadInfo"+i).text("已取消");
+			}
+			stopFlag = true;
+			
+  			//清除标记
+  			isDownloading = false;
+  			redownloadFlag = false;
+		}
 		
 		//开放给外部的调用接口
         return {
             downloadDocs: function(treeNodes,dstParentNode,vid,downloadType){
             	downloadDocs(treeNodes,dstParentNode,vid,downloadType);
+            },
+            stopAllDownload: function(){
+            	stopAllDownload();
+            },
+            stopDownload: function(id){
+            	stopDownload(id);
             },
             getDownloadStatus: function(){
             	return getDownloadStatus();
