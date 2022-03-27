@@ -716,7 +716,7 @@ h6 {
     padding: 25px 5px;
     list-style: none;
 }
-.el-upload-list__item {
+.el-upload-list__item, .el-download-list__item {
     transition: all .5s cubic-bezier(.55,0,.1,1);
     font-size: 14px;
     color: #48576a;
@@ -728,10 +728,10 @@ h6 {
     
     position: relative;
 }
-.el-upload-list__item:first-child {
+.el-upload-list__item:first-child, .el-download-list__item:first-child {
     margin-top: 10px;
 }
-.el-upload-list__item-name {
+.el-upload-list__item-name, .el-download-list__item-name {
     color: #48576a;
     display: block;
     margin-right: 40px;
@@ -741,13 +741,14 @@ h6 {
     transition: color .3s;
     white-space: nowrap;
 }
-.el-upload-list__item.is-success .el-upload-list__item-status-label {
+.el-upload-list__item.is-success .el-upload-list__item-status-label, .el-download-list__item.is-success .el-download-list__item-status-label {
     display: block;
 }
-.el-upload-list__item.is-success .el-progress__text{
+
+.el-upload-list__item.is-success .el-progress__text, .el-download-list__item.is-success .el-progress__text{
 	display:none;
 }
-.el-upload-list__item-status-label {
+.el-upload-list__item-status-label, .el-download-list__item-status-label {
     position: absolute;
     right: 5px;
     top: 0;
@@ -758,11 +759,10 @@ h6 {
     position: relative;
     line-height: 1;
 }
-.el-upload-list__item .el-progress {
+.el-upload-list__item .el-progress, .el-download-list__item .el-progress {
     position: absolute;
     /* top: 20px; */
     width: 100%;
-    
 }
 .el-progress-bar {
     padding-right: 50px;
@@ -772,7 +772,7 @@ h6 {
     margin-right: -55px;
     box-sizing: border-box;
 }
-.el-upload-list__item .el-progress-bar {
+.el-upload-list__item .el-progress-bar, .el-download-list__item .el-progress-bar {
     margin-right: 0;
     padding-right: 0;
 }
@@ -784,7 +784,7 @@ h6 {
     margin-left: 10px;
     line-height: 1;
 }
-.el-upload-list__item .el-progress__text {
+.el-upload-list__item .el-progress__text, .el-download-list__item .el-progress__text {
     position: absolute;
     top: -16px;
     right: 0;
@@ -809,13 +809,13 @@ h6 {
     line-height: 1;
     white-space: nowrap;
 }
-.el-upload-list__item .el-icon-upload-success {
+.el-upload-list__item .el-icon-upload-success, .el-download-list__item .el-icon-download-success {
     color: #13ce66;
 }
-.el-upload-list__item.is-uploading:hover .el-icon-close {
+.el-upload-list__item.is-uploading:hover .el-icon-close, .el-download-list__item.is-downloading:hover .el-icon-close {
     display: inline-block;
 }
-.el-upload-list__item .el-icon-close {
+.el-upload-list__item .el-icon-close, .el-download-list__item .el-icon-close {
     display: none;
     position: absolute;
     top: 7px;
@@ -825,24 +825,24 @@ h6 {
     color: #48576a;
     transform: scale(.7);
 }
-.el-upload-list__item:hover {
+.el-upload-list__item:hover, .el-download-list__item:hover {
     background-color: #eef1f6;
 }
-.el-upload-list__item-name{
+.el-upload-list__item-name, .el-download-list__item-name{
 	text-decoration:none;
 	text-align:left;
 }
-.el-upload-list__item.is-success .el-upload-list__item-name:hover {
+.el-upload-list__item.is-success .el-upload-list__item-name:hover, .el-download-list__item.is-success .el-download-list__item-name:hover {
     color: #20a0ff;
     cursor: pointer;
     text-decoration:none;
 }
 
-.el-upload-list__item.is-uploading .el-upload-list__item .el-icon-close:hover {
+.el-upload-list__item.is-uploading .el-upload-list__item .el-icon-close:hover, .el-download-list__item.is-uploading .el-download-list__item .el-icon-close:hover {
     opacity: 1;
 }
 
-.el-upload-list__item:hover .el-progress__text {
+.el-upload-list__item:hover .el-progress__text, .el-download-list__item:hover .el-progress__text {
     display: none;
 }
 .el-icon-document{

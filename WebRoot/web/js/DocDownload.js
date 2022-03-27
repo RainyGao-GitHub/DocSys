@@ -4,6 +4,7 @@
         var reposId;
         var isDownloading = false;	//文件下载中标记
         var stopFlag = false;	//结束下载
+        var drawedNum = 0; //已绘制的进度条个数
         var downloadedNum = 0; //已下载个数
         var successNum = 0;	//成功下载个数
 		var failNum = 0; //下载失败个数
@@ -21,6 +22,19 @@
         var index = 0; //当前操作的索引
         var totalNum = 0; 
  		var SubContextList = []; //文件下载上下文List，用于记录单个文件的下载情况，在开始下载的时候初始化
+ 		
+ 		var downloadFileMap = {};
+
+        function getDownloadStatus()
+        {
+        	var downloadStatus = "idle";
+        	if(isDownloading == true)
+        	{
+        		downloadStatus = "busy";
+        	}
+        	console.log("downloadStatus: " + downloadStatus);
+        	return downloadStatus;
+        }
  		
 		//提供给外部的多文件download接口
 		function downloadDocs(treeNodes, dstParentNode, vid, downloadType)	//多文件下载函数
@@ -70,6 +84,7 @@
 	        downloadedNum = 0; //已下载个数
 	        successNum = 0;	//成功下载个数
 			failNum = 0; //下载失败个数
+			drawedNum =0; //已绘制个数
 			
 			//Build Batch
 			var Batch = {};
@@ -117,43 +132,27 @@
 				str +="<div id='downloadedFileList' class='downloadedFileList'></div>";
 				$(".el-download-list").show();
 				$('.el-download-list').html(str);
-				checkAndDrawDownloadItems(SubContextList);
+				drawDownloadItems(SubContextList);
 		   	}
       	}
       	
-      	//初始化下载文件的SubContext,并绘制对应的进度条
-      	function checkAndDrawDownloadItems(SubContextList)
+      	//初始化文件的SubContext,并绘制对应的进度条
+      	function drawDownloadItems(SubContextList)
       	{
+      			//获取当前总的下载文件数
       			var totalNum = Content.initedFileNum;
-      			//Check if all items drawed
-      			if(drawedNum >= totalNum)
-      			{
-      				console.log("checkAndDrawDownloadItems() all items drawed");
-      				return;
-      			}
-      			
-      			//the drawedNum ahead of index less than 100, do draw the doc progress
-      			if((drawedNum - index) > 100)
-      			{
-      			    console.log("checkAndDrawDownloadItems() drawedNum:" + drawedNum + " index:" + index);
-      				return;
-      			}
       			
       			//Prepare to drawed
       			var startIndex = drawedNum;
       			var endIndex = totalNum;
-      			if((totalNum -drawedNum) > 200)	//每次最多绘制200个
-      			{
-      				endIndex = drawedNum + 200;
-      			}
       			var str = "";
       			for( var i = startIndex ; i < endIndex ; i++ )
 		    	{	
 		    		//console.log("index:" + i);
 		    		var SubContext = SubContextList[i];
-					str+="<li class='el-download-list__item file"+i+" is-downloading' value="+i+">"+
+					str+="<li class='el-download-list__item downloadFile"+i+" is-downloading' value="+i+">"+
 		    				"<a class='el-download-list__item-name downloadFileName'><i class='el-icon-document'></i><span class='downloadFileName' >"+SubContext.name+"</span></a>"+
-		    				"<a class='downloadBtn download"+i+"' onclick='downloadDoc("+i+")'>下载</a>"+
+		    				"<a class='downloadStatus downloadInfo"+i+"' >下载准备中...</a>"+
 		    				"<label class='el-download-list__item-status-label'><i class='el-icon-download-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopDownload'  value="+i+" onclick='DocDownload.stopDownload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -199,7 +198,7 @@
 			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc
 
 			//Append to Content
-			Content.batchList.push(Batch);
+			Content.BatchList.push(Batch);
 			Content.batchNum++;
 			Content.totalFileNum += fileNum;
 			totalNum = Content.totalFileNum;
@@ -214,6 +213,9 @@
 			}
 			
 			console.log("文件总的个数为："+Content.totalFileNum);
+			
+			//绘制文件下载列表
+			drawDownloadItems(SubContextList);
 		}
       	
       	//并将需要下载的文件加入到SubContextList中
@@ -290,11 +292,16 @@
 	    	}
     		
     		Batch.state = 2;
-    		Content.batchIndex++;
-    		if(Content.batchIndex == Content.batchNum)
+    		if((Content.batchIndex + 1) == Content.batchNum) //It is the last batchIndex
     		{
     			Content.state = 2;
     			console.log("buildSubContextList() all Batch Inited");
+    		}
+    		else
+    		{
+    			Content.batchIndex++;
+    			Content.state = 1;
+    			console.log("buildSubContextList() there is more Batch need to be Inited");
     		}
 	   	}
       	
@@ -361,6 +368,10 @@
 	            		   	setTimeout(function(){
 	            		   		console.log("downloadDocPrepare download start for " + SubContext.name);
 	            		   		window.location.href = url;
+	            		   		
+	    						$('.downloadFile'+index).removeClass('is-downloading');
+	    						$('.downloadFile'+index).addClass('is-success');
+	    						$(".downloadInfo"+index).hide();
 	            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
 	                	   	}, 2000);
             		   	}
@@ -368,6 +379,9 @@
             		   	{
             		   		console.log("downloadDocPrepare download start for " + SubContext.name);
             		   		window.location.href = url;
+            		   		$('.downloadFile'+index).removeClass('is-downloading');
+    						$('.downloadFile'+index).addClass('is-success');
+    						$(".downloadInfo"+index).hide();
             		   		downloadSuccessHandler(SubContext, ret.msgInfo);
             		   	}
                 	   	return;
@@ -375,13 +389,19 @@
                    else	//后台报错，结束下载
                    {
                 	   console.log("downloadDocPrepare Error:" + ret.msgInfo);
+                	   $('.downloadFile'+index).removeClass('is-uploading');
+   					   $('.downloadFile'+index).addClass('is-fail');
+   					   $(".downloadInfo"+index).text(ret.msgInfo);
                        downloadErrorConfirm(SubContext,ret.msgInfo);
                        return;
                    }
                 },
                 error : function () {	//后台异常
  	               console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
-            	   downloadErrorConfirm(SubContext,"服务器异常");
+ 	               $('.downloadFile'+index).removeClass('is-uploading');
+				   $('.downloadFile'+index).addClass('is-fail');
+				   $(".downloadInfo"+index).text("服务器异常");
+				   downloadErrorConfirm(SubContext,"服务器异常");
             	   return;
                 }
         	});
@@ -507,6 +527,9 @@
         return {
             downloadDocs: function(treeNodes,dstParentNode,vid,downloadType){
             	downloadDocs(treeNodes,dstParentNode,vid,downloadType);
+            },
+            getDownloadStatus: function(){
+            	return getDownloadStatus();
             },
         };
     })();
