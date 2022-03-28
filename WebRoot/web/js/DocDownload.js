@@ -351,6 +351,12 @@
                     shareId: gShareId,
                 },
                 success : function (ret) {
+                   if(SubContext.stopFlag == true)
+                   {
+                	   console.log("downloadDoc download task 已取消", SubContext);
+                	   return;
+                   }
+                   
                    if( "ok" == ret.status )
                    {          
                 	    console.log("downloadDocPrepare Ok:",ret);        
@@ -408,7 +414,13 @@
                    }
                 },
                 error : function () {	//后台异常
- 	               console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
+                    if(SubContext.stopFlag == true)
+                    {
+                 	   console.log("downloadDoc download task 已取消", SubContext);
+                 	   return;
+                    }
+
+                	console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
  	               $('.downloadFile'+index).removeClass('is-uploading');
 				   $('.downloadFile'+index).addClass('is-fail');
 				   $(".downloadInfo"+index).text("服务器异常");
