@@ -126,7 +126,7 @@
 	                  </tr>
 	                  {{/if}}
 	                  <tr>
-	                    <td>调试等级</td>
+	                    <td>调试日志</td>
 	                    <td>
 			            	<select class="form-control" id="logLevel" style="width: 100%" disabled="disabled">   
 			            		<option value="0" {{if value.logLevel == 0}} selected="selected" {{/if}}>debug</option>
@@ -134,9 +134,12 @@
 			            		<option value="2" {{if value.logLevel == 2}} selected="selected" {{/if}}>warn</option>   
 			            		<option value="2" {{if value.logLevel == 3}} selected="selected" {{/if}}>error</option> 
 			            	</select>
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="outputToFileEn" value="0" onclick="selectOutputToFileEn()"/></span>输出到文件</div>
 	                    	<input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="如需输出到文件，请指定日志文件路径" disabled="disabled">			            		                    
 			            </td>
 	                    <td class="edit">
+	                      	<button onclick="downloadLogFile()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
+	                    	<button onclick="cleanLogFile()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>清除</button>
 	                    </td>
 	                  </tr>
 	                </tbody>
