@@ -81,6 +81,8 @@
 			var fileNum = treeNodes.length;
 			console.log("DocDownloadInit() fileNum:" + fileNum);				
 
+			//清空所有全局变量
+			stopFlag = false; //停止下载标志
 	        downloadedNum = 0; //已下载个数
 	        successNum = 0;	//成功下载个数
 			failNum = 0; //下载失败个数
