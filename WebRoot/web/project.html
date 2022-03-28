@@ -2637,12 +2637,11 @@
 		if(parentNode == null || parentNode.open == true)
 		{
 			console.log("addTreeNode() parentNode is open");
-
 			//add the treeNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
 			var treeNode = getNodeByNodeId(node.docId);
 			if(treeNode == null)
-			{
+			{				
 	      		var newNode = {
 	      				//For zTree
 	      				id : node.docId,	//it is for zTree
@@ -2660,6 +2659,16 @@
 	      				createTime: node.createTime,
 	      				latestEditTime: node.latestEditTime,
 	      				};
+
+	      		if(isParent == false)
+		        {
+		       	   var iconType = getDiyFileIconType(node.name);
+		           if(iconType && iconType != "")
+		           {
+		        	   newNode.iconSkin = iconType;
+		           }
+		        }
+
 	      		newNodes = treeObj.addNodes(parentNode, newNode);
 			}
 		}
