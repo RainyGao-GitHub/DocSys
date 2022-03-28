@@ -351,6 +351,7 @@
                     shareId: gShareId,
                 },
                 success : function (ret) {
+                   //TODO: 这是临时方案，使用异步压缩方案后，stopFlag判断可以取消
                    if(SubContext.stopFlag == true)
                    {
                 	   console.log("downloadDoc download task 已取消", SubContext);
@@ -414,6 +415,7 @@
                    }
                 },
                 error : function () {	//后台异常
+                	//TODO: 这是临时方案，使用异步压缩方案后，stopFlag判断可以取消
                     if(SubContext.stopFlag == true)
                     {
                  	   console.log("downloadDoc download task 已取消", SubContext);
