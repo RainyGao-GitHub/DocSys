@@ -553,10 +553,15 @@
 			console.log("stopDownload() index:" + index ,SubContextList[index]);
 			SubContextList[index].stopFlag = true;
 			$(".downloadInfo"+index).text("已取消");
+			
+			//触发下一个文件下载
+			downloadNextDoc();
 		}
 		
 		function stopAllDownload()
 		{
+			console.log("stopAllDownload()");
+			
 			//将未上传的全部设置
 			for(i=index;i<totalNum;i++)
 			{
