@@ -450,6 +450,22 @@
         	break;
        	}
     }
+ 
+	//系统设置
+    function selectOutputToFileEn()
+    {
+    	var outputToFileEn = $("#outputToFileEn").is(':checked')? 1: 0;
+    	console.log("selectOutputToFileEn outputToFileEn:" + outputToFileEn);
+    	if(outputToFileEn == 0)
+    	{
+    		$("#logFile").hide();
+    	}
+    	else
+    	{	
+    		$("#logFile").show();
+    	}		
+    }
+	
 	
 	//系统邮件服务设置
 	var systemEmailConfig = {
