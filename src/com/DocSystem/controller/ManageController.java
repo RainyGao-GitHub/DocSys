@@ -2022,5 +2022,88 @@ public class ManageController extends BaseController{
 		return;		
 	}
 	
+	@RequestMapping(value="downloadLogFile")
+	public void downloadLogFile(HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
+
+		Log.info("\n****************** downloadLogFile.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String logFilePath = Log.logFile;
+		if(logFilePath == null || logFilePath.isEmpty())
+		{
+			logFilePath = docSysWebPath + "logs/docsys.log";
+		}
+		
+		File file = new File(logFilePath);
+		if(file.exists() == false)
+		{
+			Log.docSysErrorLog("日志文件不存在！", rt);
+			writeJson(rt, response);			
+			return;							
+		}
+				
+		sendFileToWebPage(logFilePath, "", file.getName(), rt, response, request, null);
+		return;		
+	}
+	
+	//cleanLogFile
+	@RequestMapping("/cleanLogFile.do")
+	public void deleteLicenseKeyPair(String authCode, HttpSession session, HttpServletRequest request, HttpServletResponse response){
+		System.out.println("\n*********** cleanLogFile *******************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			Log.docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			Log.docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String logFilePath = Log.logFile;
+		if(logFilePath == null || logFilePath.isEmpty())
+		{
+			logFilePath = docSysWebPath + "logs/docsys.log";
+		}
+		
+		File file = new File(logFilePath);
+		if(file.exists() == false)
+		{
+			Log.docSysErrorLog("日志文件不存在！", rt);
+			writeJson(rt, response);			
+			return;							
+		}
+		
+		if(FileUtil.delFile(logFilePath) == false)
+		{
+			Log.docSysErrorLog("日志清除失败，请稍候重试！", rt);
+			writeJson(rt, response);			
+			return;							
+		}
+		
+        writeJson(rt, response);		
+	}
 
 }
