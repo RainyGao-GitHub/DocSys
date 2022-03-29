@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -93,6 +94,7 @@ public class BaseFunction{
 	//应用路径
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;
+    protected static String defaultLogFilePath = null;
     protected static String webappsPath = null;
 	
     //系统License
@@ -120,6 +122,7 @@ public class BaseFunction{
     static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
+    	defaultLogFilePath = docSysWebPath + "logs/docsys.log";
     	webappsPath = Path.getDocSysWebParentPath(docSysWebPath);
 		docSysIniPath = webappsPath + "docSys.ini/";   
     	initSystemLicenseInfo();
@@ -431,7 +434,7 @@ public class BaseFunction{
 			return backupConfig;				
 		}
 		catch(Exception e) {
-			Log.error(e);
+			Log.error(e, defaultLogFilePath);
 			return null;
 		}
 	}
@@ -1388,8 +1391,8 @@ public class BaseFunction{
 			pw.flush();
 			pw.close();
 		} catch (IOException e) {
-			Log.debug("BaseController>writeJson  ERROR!");
-			Log.error(e);
+			Log.error("BaseController>writeJson  ERROR!", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 		}
 		
 	}
@@ -1410,8 +1413,8 @@ public class BaseFunction{
 			pw.flush();
 			pw.close();
 		} catch (IOException e) {
-			Log.debug("BaseController>writeJson  ERROR!");
-			Log.error(e);
+			Log.error("BaseController>writeJson  ERROR!", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 		}
 		
 	}
@@ -1432,8 +1435,8 @@ public class BaseFunction{
 			pw.flush();
 			pw.close();
 		} catch (IOException e) {
-			Log.debug("BaseController>writeJson  ERROR!");
-			Log.error(e);
+			Log.error("BaseController>writeJson  ERROR!", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 		}
 
 	}
@@ -1607,8 +1610,8 @@ public class BaseFunction{
 				syncUpForAdd(srcParentPath,srcName,dstParentPath,dstName);
 			}
 		} catch (IOException e) {
-			Log.debug("syncUpFolder() Exception!");
-			Log.error(e);
+			Log.error("syncUpFolder() Exception!", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 			return false;
 		}
 		return true;
@@ -1933,8 +1936,8 @@ public class BaseFunction{
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("addSystemLogIndex() 异常");
-			Log.error(e);
+	        Log.error("addSystemLogIndex() 异常", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 			return false;
 		}
     }
@@ -1954,7 +1957,7 @@ public class BaseFunction{
 			try {
 				directory.close();
 			} catch (IOException e) {
-				Log.error(e);
+				Log.error(e, defaultLogFilePath);
 			}
 		}
 		if(analyzer != null)
@@ -2184,8 +2187,8 @@ public class BaseFunction{
 			// 断开连接
 			conn.disconnect();			
         } catch (Exception e) {
-            Log.debug("postFileStreamAndJsonObj 发送POST请求出现异常！" + e);
-            Log.error(e);
+            Log.error("postFileStreamAndJsonObj 发送POST请求出现异常！" + e, defaultLogFilePath);
+            Log.error(e, defaultLogFilePath);
         }
         
         Log.debug("*********************** postFileStreamAndJsonObj End\n");
@@ -2239,11 +2242,11 @@ public class BaseFunction{
 			// 断开连接
 			connection.disconnect();
 		} catch (MalformedURLException e) {
-			Log.error(e);
+			Log.error(e, defaultLogFilePath);
 		} catch (UnsupportedEncodingException e) {
-			Log.error(e);
+			Log.error(e, defaultLogFilePath);
 		} catch (IOException e) {
-			Log.error(e);
+			Log.error(e, defaultLogFilePath);
 		}
 		return returnJson;
 	}
@@ -2267,14 +2270,14 @@ public class BaseFunction{
 	        readInputStream(is, os);
 	        ret = true;
         } catch (Exception e) {
-        	Log.error(e);        	
+        	Log.error(e, defaultLogFilePath);        	
         } finally {
         	if(is != null)
         	{
         		try {
 					is.close();
 				} catch (IOException e) {
-					Log.error(e);
+					Log.error(e, defaultLogFilePath);
 				}
         	}
         }
@@ -2439,8 +2442,8 @@ public class BaseFunction{
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("updateUserPreferServerIndex() 异常");
-			Log.error(e);
+	        Log.error("updateUserPreferServerIndex() 异常", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 			return false;
 		}
     }
@@ -2479,7 +2482,7 @@ public class BaseFunction{
 	        return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-			Log.error(e);
+			Log.error(e, defaultLogFilePath);
 			return false;
 		}
     }  
@@ -2516,8 +2519,8 @@ public class BaseFunction{
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("addUserPreferServerIndex() 异常");
-			Log.error(e);
+	        Log.error("addUserPreferServerIndex() 异常", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 			return false;
 		}
     }
@@ -2589,15 +2592,15 @@ public class BaseFunction{
 	        	}
 	        }
 		} catch (Exception e) {
-			System.out.println("search() 异常");
-			Log.error(e);
+			Log.error("search() 异常", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 		} finally {
 			if(ireader != null)
 			{
 				try {
 					ireader.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.error(e1, defaultLogFilePath);
 				}
 			}
 			
@@ -2606,7 +2609,7 @@ public class BaseFunction{
 				try {
 					directory.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.error(e1, defaultLogFilePath);
 				}
 			}
 		}				
@@ -2675,8 +2678,8 @@ public class BaseFunction{
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("addPreferLinkIndex() 异常");
-			Log.error(e);
+	        Log.error("addPreferLinkIndex() 异常", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 			return false;
 		}
 	}
@@ -2722,8 +2725,8 @@ public class BaseFunction{
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        Log.debug("updatePreferLinkIndex() 异常");
-			Log.error(e);
+	        Log.error("updatePreferLinkIndex() 异常", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 			return false;
 		}
 	}
@@ -2794,15 +2797,15 @@ public class BaseFunction{
 	        	}
 	        }
 		} catch (Exception e) {
-			System.out.println("search() 异常");
-			Log.error(e);
+			Log.error("search() 异常", defaultLogFilePath);
+			Log.error(e, defaultLogFilePath);
 		} finally {
 			if(ireader != null)
 			{
 				try {
 					ireader.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.error(e1, defaultLogFilePath);
 				}
 			}
 			
@@ -2811,10 +2814,19 @@ public class BaseFunction{
 				try {
 					directory.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.error(e1, defaultLogFilePath);
 				}
 			}
 		}				
 		return list;
-	}	
+	}
+	
+	//errorLog
+	public static void errorLog(String content) {
+		Log.error(content, defaultLogFilePath);
+	}
+	
+	public static void errorLog(Exception e) {
+		Log.error(e, defaultLogFilePath);
+	}
 }

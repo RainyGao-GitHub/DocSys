@@ -471,6 +471,75 @@
     	}		
     }
 	
+	function downloadLogFile(){
+		$.ajax({
+	        url : "/DocSystem/Manage/downloadLogFile.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	         	    console.log("exportLicenseKeyPair Ok:",ret);	   		
+	            	window.location.href = ret.data;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("密钥导出失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("密钥导出失败:服务器异常");
+	        }
+	    });
+	}
+	
+	function cleanLogFile()
+	{
+		cleanLogFileConfirm();
+	}
+	
+	function cleanLogFileConfirm()
+	{
+		console.log("cleanLogFileConfirm()");
+	    qiao.bs.confirm({
+	    		id: "cleanLogFileConfirm",
+		        title: "清除日志",
+		        msg: "是否清除调试日志？",
+		        okbtn: "是",
+		        qubtn: "否",
+	    	},function () {
+				startCleanLogFile();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startCleanLogFile()
+	{
+        $.ajax({
+            url : "/DocSystem/Mange/startCleanLogFile.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showErrorMessage("清除日志成功");
+                }else {
+                	showErrorMessage("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("删除日志失败:服务器异常");
+            }
+        });
+	}
 	
 	//系统邮件服务设置
 	var systemEmailConfig = {

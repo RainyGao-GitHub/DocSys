@@ -192,6 +192,48 @@ public class Log {
 		}
 	}
 	
+	public static void error(String content, String defaultLogFile) {
+		if(isLogEnable(error, allowAll))
+		{
+			String logFilePath = logFile;
+			if(logFilePath == null)
+			{
+				logFilePath = defaultLogFile;
+			}
+			
+			if(logFilePath == null)
+			{
+				System.out.println("[error] " +content);
+			}
+			else
+			{
+				toFile("[error] " + content  + "\n", logFilePath);
+			}
+		}
+	}
+	
+	public static void error(Exception e, String defaultLogFile) {
+		if(isLogEnable(error, allowGeneral))
+		{
+			String logFilePath = logFile;
+			if(logFilePath == null)
+			{
+				logFilePath = defaultLogFile;
+			}
+			
+			if(logFilePath == null)
+			{
+				e.printStackTrace(System.out);
+			}
+			else
+			{
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				e.printStackTrace(new PrintStream(baos));
+				toFile(baos.toString(), logFilePath);
+			}
+		}
+	}
+	
 	public static void info(String Head, String msg) {
 		info(Head + " " + msg);
 	}
