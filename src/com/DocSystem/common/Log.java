@@ -195,17 +195,15 @@ public class Log {
 	public static void error(String content, String defaultLogFile) {
 		if(isLogEnable(error, allowAll))
 		{
+			System.out.println("[error] " +content);
+			
 			String logFilePath = logFile;
 			if(logFilePath == null)
 			{
 				logFilePath = defaultLogFile;
 			}
 			
-			if(logFilePath == null)
-			{
-				System.out.println("[error] " +content);
-			}
-			else
+			if(logFilePath != null)
 			{
 				toFile("[error] " + content  + "\n", logFilePath);
 			}
@@ -215,17 +213,15 @@ public class Log {
 	public static void error(Exception e, String defaultLogFile) {
 		if(isLogEnable(error, allowGeneral))
 		{
+			e.printStackTrace(System.out);
+
 			String logFilePath = logFile;
 			if(logFilePath == null)
 			{
 				logFilePath = defaultLogFile;
 			}
 			
-			if(logFilePath == null)
-			{
-				e.printStackTrace(System.out);
-			}
-			else
+			if(logFilePath != null)
 			{
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				e.printStackTrace(new PrintStream(baos));
@@ -288,29 +284,5 @@ public class Log {
 			String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
 			debug(Head + json);
 		}
-	}
-	
-	public static void docSysDebugLog(String logStr, ReturnAjax rt) {
-		if(rt != null)
-		{
-			rt.setDebugLog(logStr);
-		}
-		debug(logStr);		
-	}
-
-	public static void docSysWarningLog(String logStr, ReturnAjax rt) {
-		if(rt != null)
-		{
-			rt.setWarningMsg(logStr);
-		}
-		warn(logStr);
-	}
-	
-	public static void docSysErrorLog(String logStr, ReturnAjax rt) {
-		if(rt != null)
-		{
-			rt.setError(logStr);
-		}
-		error(logStr);
 	}
 }
