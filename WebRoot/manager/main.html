@@ -1309,11 +1309,11 @@
 		$("#logFile").val(systemInfo.logFile);
 		if(systemInfo.outputToFileEn == 1)
 		{
-			$("#outputToFileEn").attr("checked","checked");
+			$("#outputToFileEn").prop("checked", true);
 		}
 		else
 		{
-			$("#outputToFileEn").attr("checked",false);			
+			$("#outputToFileEn").prop("checked", false);			
 		}
 	}
 	
@@ -1435,11 +1435,11 @@
 	        		$("#logFile").val(systemInfo.logFile);
 	        		if(systemInfo.ouputToFileEn == 1)
 	        		{
-	        			$("#outputToFileEn").attr("checked","checked");
+	        			$("#outputToFileEn").prop("checked", true);
 	        		}
 	        		else
 	        		{
-	        			$("#outputToFileEn").attr("checked",false);			
+	        			$("#outputToFileEn").prop("checked",false);			
 	        		}	        		
 	            }
 	        },
@@ -1459,11 +1459,11 @@
         		$("#logFile").val(systemInfo.logFile);
         		if(systemInfo.ouputToFileEn == 1)
         		{
-        			$("#outputToFileEn").attr("checked","checked");
+        			$("#outputToFileEn").prop("checked", true);
         		}
         		else
         		{
-        			$("#outputToFileEn").attr("checked",false);			
+        			$("#outputToFileEn").prop("checked",false);			
         		}	        		
 	        }
 	    });
