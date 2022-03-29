@@ -481,17 +481,17 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {	        		
-	         	    console.log("exportLicenseKeyPair Ok:",ret);	   		
+	         	    console.log("downloadLogFile Ok:",ret);	   		
 	            	window.location.href = ret.data;
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("密钥导出失败:" + ret.msgInfo);
+	                showErrorMessage("日志下载失败:" + ret.msgInfo);
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("密钥导出失败:服务器异常");
+	        	showErrorMessage("日志下载失败:服务器异常");
 	        }
 	    });
 	}
@@ -523,7 +523,7 @@
 	function startCleanLogFile()
 	{
         $.ajax({
-            url : "/DocSystem/Mange/startCleanLogFile.do",
+            url : "/DocSystem/Manage/cleanLogFile.do",
             type : "post",
             dataType : "json",
             data : {
