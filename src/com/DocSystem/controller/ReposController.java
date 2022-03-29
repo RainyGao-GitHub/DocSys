@@ -185,7 +185,7 @@ public class ReposController extends BaseController{
 		//格式化参数
 		if((path == null) || path.equals(""))
 		{
-			Log.docSysErrorLog("仓库存储路径不能为空！", rt);
+			docSysErrorLog("仓库存储路径不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -780,7 +780,7 @@ public class ReposController extends BaseController{
 		
 		if(clearReposFileCache(repos, rt) == false)
 		{
-			Log.docSysErrorLog("仓库 [" + repos.getName() +"] 缓存清除失败！", rt);
+			docSysErrorLog("仓库 [" + repos.getName() +"] 缓存清除失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -913,7 +913,7 @@ public class ReposController extends BaseController{
 				String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + rootDoc.getDocId());
 				if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 				{
-					Log.docSysErrorLog("访问密码错误！", rt);
+					docSysErrorLog("访问密码错误！", rt);
 					rt.setMsgData("1"); //访问密码错误或未提供
 					rt.setData(rootDoc);
 					writeJson(rt, response);
@@ -929,7 +929,7 @@ public class ReposController extends BaseController{
 			rootDoc = docSysGetDoc(repos, rootDoc, false);
 			if(rootDoc == null || rootDoc.getType() == null || rootDoc.getType() == 0)
 			{
-				Log.docSysErrorLog("根目录不存在！",rt);
+				docSysErrorLog("根目录不存在！",rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -968,7 +968,7 @@ public class ReposController extends BaseController{
 					String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
 					if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 					{
-						Log.docSysErrorLog("访问密码错误！", rt);
+						docSysErrorLog("访问密码错误！", rt);
 						rt.setMsgData("1"); //访问密码错误或未提供
 						rt.setData(doc);
 						writeJson(rt, response);
@@ -1051,7 +1051,7 @@ public class ReposController extends BaseController{
 				File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
 				if(rootFile.exists() == false)
 				{
-					Log.docSysErrorLog("根目录不存在！",rt);
+					docSysErrorLog("根目录不存在！",rt);
 					writeJson(rt, response);			
 					return;
 				}
@@ -1088,7 +1088,7 @@ public class ReposController extends BaseController{
 			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
 			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 			{
-				Log.docSysErrorLog("访问密码错误！", rt);
+				docSysErrorLog("访问密码错误！", rt);
 				rt.setMsgData("1"); //访问密码错误或未提供
 				writeJson(rt, response);
 				return;
