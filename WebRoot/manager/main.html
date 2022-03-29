@@ -458,11 +458,16 @@
     	console.log("selectOutputToFileEn outputToFileEn:" + outputToFileEn);
     	if(outputToFileEn == 0)
     	{
-    		$("#logFile").hide();
+    		$("#logFile").attr('disabled',true);
     	}
     	else
     	{	
-    		$("#logFile").show();
+    		$("#logFile").attr('disabled',false);
+    		var logFile = $("#logFile").val();
+    		if(logFile == undefined || logFile == "")
+    		{
+    			$("#logFile").val(systemInfo.tomcatPath + "logs/docsys.log");
+    		}
     	}		
     }
 	
@@ -1237,6 +1242,8 @@
 	}
 	
 	function enableSystemInfoSet(){
+    	console.log("enableSystemInfoSet systemInfo:", systemInfo);
+
 		$("#btnEnableSystemInfoSet").hide();
 		$("#btnCancelSystemInfoSet").show();
 		$("#btnSaveSystemInfoSet").show();
@@ -1250,7 +1257,6 @@
 		$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
-		$("#logFile").val(systemInfo.logFile);
 		
 		$("#tomcatPath").attr('disabled',false);
 		$("#javaHome").attr('disabled',false);
@@ -1261,11 +1267,18 @@
 		$("#indexDBStorePath").attr('disabled',false);
 		$("#salesDataStorePath").attr('disabled',false);
 		$("#ldapConfig").attr('disabled',false);
-		$("#logLevel").attr('disabled',false);
-		$("#logFile").attr('disabled',false);
+		
+		$("#logLevel").attr('disabled',false);		
+		$("#outputToFileEn").attr('disabled',false);
+    	if(systemInfo.outputToFileEn == 1)
+    	{
+    		$("#logFile").attr('disabled',false);
+    	}
 	}
 	
 	function cancelSystemInfoSet(){
+    	console.log("cancelSystemInfoSet systemInfo:", systemInfo);
+
 		$("#btnEnableSystemInfoSet").show();
 		$("#btnCancelSystemInfoSet").hide();
 		$("#btnSaveSystemInfoSet").hide();
@@ -1280,8 +1293,9 @@
 		$("#salesDataStorePath").attr('disabled',true);
 		$("#ldapConfig").attr('disabled',true);
 		$("#logLevel").attr('disabled',true);
+		$("#outputToFileEn").attr('disabled',true);
 		$("#logFile").attr('disabled',true);
-
+    	
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#javaHome").val(systemInfo.javaHome);
 		$("#openOfficePath").val(systemInfo.openOfficePath);
@@ -1292,10 +1306,20 @@
 		$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
 		$("#ldapConfig").val(systemInfo.ldapConfig);
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
-		$("#logFile").val(systemInfo.logFile);		
+		$("#logFile").val(systemInfo.logFile);
+		if(systemInfo.outputToFileEn == 1)
+		{
+			$("#outputToFileEn").attr("checked","checked");
+		}
+		else
+		{
+			$("#outputToFileEn").attr("checked",false);			
+		}
 	}
 	
 	function saveSystemInfoSet(){
+    	console.log("saveSystemInfoSet systemInfo:", systemInfo);
+
 		$("#btnEnableSystemInfoSet").show();
 		$("#btnCancelSystemInfoSet").hide();
 		$("#btnSaveSystemInfoSet").hide();
@@ -1310,9 +1334,10 @@
 		$("#salesDataStorePath").attr('disabled',true);
 				
 		$("#ldapConfig").attr('disabled',true);
+		
 		$("#logLevel").attr('disabled',true);
+		$("#outputToFileEn").attr('disabled',true);
 		$("#logFile").attr('disabled',true);
-
 
 		var tomcatPath = $("#tomcatPath").val();
 		var javaHome = $("#javaHome").val();
@@ -1324,8 +1349,13 @@
 		var salesDataStorePath = $("#salesDataStorePath").val();
 		var ldapConfig = $("#ldapConfig").val();
 		var logLevel = $("#logLevel").val();
-		var logFile =  $("#logFile").val();
-		
+		var logFile = "";
+		var outputToFileEn = $("#outputToFileEn").is(':checked')? 1: 0;
+    	if(outputToFileEn == 1)
+    	{
+			logFile =  $("#logFile").val();
+    	}
+    	
 		updateSystemInfo(tomcatPath, 
 				javaHome, 
 				openOfficePath, 
@@ -1335,7 +1365,8 @@
 				indexDBStorePath,
 				salesDataStorePath,
 				ldapConfig, 
-				logLevel, 
+				logLevel,
+				outputToFileEn,
 				logFile);
 	}
 	
@@ -1349,6 +1380,7 @@
 			salesDataStorePath,
 			ldapConfig, 
 			logLevel, 
+			ouputToFileEn,
 			logFile){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
@@ -1382,6 +1414,7 @@
 	        		systemInfo.ldapConfig = ldapConfig;
 	        		systemInfo.logLevel = logLevel;
 	        		systemInfo.logFile = logFile;
+	        		systemInfo.ouputToFileEn = ouputToFileEn;
 	        		showErrorMessage("更新成功！");
 	            }
 	            else 
@@ -1400,6 +1433,14 @@
 	        		$("#ldapConfig").val(systemInfo.ldapConfig);
 	        		$("#logLevel").val(systemInfo.logLevel);
 	        		$("#logFile").val(systemInfo.logFile);
+	        		if(systemInfo.ouputToFileEn == 1)
+	        		{
+	        			$("#outputToFileEn").attr("checked","checked");
+	        		}
+	        		else
+	        		{
+	        			$("#outputToFileEn").attr("checked",false);			
+	        		}	        		
 	            }
 	        },
 	        error : function () {
@@ -1416,6 +1457,14 @@
         		$("#ldapConfig").val(systemInfo.ldapConfig);
         		$("#logLevel").val(systemInfo.logLevel);
         		$("#logFile").val(systemInfo.logFile);
+        		if(systemInfo.ouputToFileEn == 1)
+        		{
+        			$("#outputToFileEn").attr("checked","checked");
+        		}
+        		else
+        		{
+        			$("#outputToFileEn").attr("checked",false);			
+        		}	        		
 	        }
 	    });
 	}
@@ -1440,6 +1489,11 @@
 	            	{
 	            		systemInfo.logFile = "";
 	            	}
+        			systemInfo.outputToFileEn = 0;
+	        		if(systemInfo.logFile && systemInfo.logFile != "")
+	        		{
+	        			systemInfo.outputToFileEn = 1;
+	        		}
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
 	            else 
