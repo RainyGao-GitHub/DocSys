@@ -2046,7 +2046,7 @@ public class ManageController extends BaseController{
 		String logFilePath = Log.logFile;
 		if(logFilePath == null || logFilePath.isEmpty())
 		{
-			logFilePath = docSysWebPath + "logs/docsys.log";
+			logFilePath = defaultLogFilePath;
 		}
 		
 		File file = new File(logFilePath);
@@ -2056,8 +2056,23 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;							
 		}
-				
-		sendFileToWebPage(logFilePath, "", file.getName(), rt, response, request, null);
+		
+		String[] temp = new String[2]; 
+		if(Path.seperatePathAndName(logFilePath, temp) == -1)
+		{
+			docSysErrorLog("日志文件路径错误:" + logFilePath, rt);
+			writeJson(rt, response);			
+			return;										
+		}
+		String path = temp[0];
+		String name = temp[1];	
+		
+		Doc downloadDoc = buildDownloadDocInfo(0, "","", path, name, 0);
+		downloadDoc.encryptEn = 0;
+		
+		String downloadLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDoc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;
+		rt.setData(downloadLink);
+		writeJson(rt, response);			
 		return;		
 	}
 	
@@ -2085,13 +2100,13 @@ public class ManageController extends BaseController{
 		String logFilePath = Log.logFile;
 		if(logFilePath == null || logFilePath.isEmpty())
 		{
-			logFilePath = docSysWebPath + "logs/docsys.log";
+			logFilePath = defaultLogFilePath;
 		}
 		
 		File file = new File(logFilePath);
 		if(file.exists() == false)
 		{
-			docSysErrorLog("日志文件不存在！", rt);
+			docSysErrorLog("日志文件 "  + logFilePath + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;							
 		}

@@ -122,8 +122,12 @@ public class BaseFunction{
     static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
-    	defaultLogFilePath = docSysWebPath + "logs/docsys.log";
     	webappsPath = Path.getDocSysWebParentPath(docSysWebPath);
+    	if(docSysWebPath != null)
+    	{
+    		defaultLogFilePath = Path.getParentPath(docSysWebPath, 2, OSType) + "logs/docsys.log";
+    	}
+    	
 		docSysIniPath = webappsPath + "docSys.ini/";   
     	initSystemLicenseInfo();
     	initOfficeLicenseInfo();
