@@ -399,20 +399,20 @@ public class BaseController  extends BaseFunction{
 			{
 				return true;
 			}
-			Log.docSysErrorLog("无效授权码或授权码已过期！", rt);
+			docSysErrorLog("无效授权码或授权码已过期！", rt);
 			return false;
 		}
 		
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			Log.docSysErrorLog("用户未登录，请先登录！", rt);
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			return false;
 		}
 				
 		if(login_user.getType() < role)
 		{
-			Log.docSysErrorLog("您无权进行此操作，请联系系统管理员！", rt);
+			docSysErrorLog("您无权进行此操作，请联系系统管理员！", rt);
 			return false;
 		}
 		
@@ -1017,7 +1017,7 @@ public class BaseController  extends BaseFunction{
 			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
-				Log.docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + pPath+name, rt);
+				docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + pPath+name, rt);
 				break;
 			}
 			resultList.addAll(subDocList);
@@ -1479,7 +1479,7 @@ public class BaseController  extends BaseFunction{
 		Log.debug("addRepos() addReposAuth return:" + ret);
 		if(ret == 0)
 		{
-			Log.docSysDebugLog("addRepos() addReposAuth return:" + ret, rt);
+			docSysDebugLog("addRepos() addReposAuth return:" + ret, rt);
 			Log.debug("新增用户仓库权限失败");
 		}
 				
@@ -1503,7 +1503,7 @@ public class BaseController  extends BaseFunction{
 		Log.debug("addRepos() addDocAuth return:" + ret);
 		if(ret == 0)
 		{
-			Log.docSysDebugLog("addRepos() addReposAuth return:" + ret, rt);
+			docSysDebugLog("addRepos() addReposAuth return:" + ret, rt);
 			Log.debug("新增用户仓库根目录权限失败");
 		}		
 	}
@@ -1524,8 +1524,8 @@ public class BaseController  extends BaseFunction{
 					reposPath = Path.localDirPathFormat(reposPath, OSType);
 					if(path.indexOf(reposPath) == 0)	//不能把仓库放到其他仓库下面
 					{					
-						Log.docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
-						Log.docSysDebugLog("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath, rt); 
+						docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
+						docSysDebugLog("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath, rt); 
 						return true;
 					}
 				}
@@ -1536,8 +1536,8 @@ public class BaseController  extends BaseFunction{
 					realDocPath = Path.localDirPathFormat(realDocPath, OSType);
 					if(path.indexOf(realDocPath) == 0)	//不能把仓库放到其他仓库的文件存储目录
 					{					
-						Log.docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
-						Log.docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath, rt); 
+						docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
+						docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath, rt); 
 						return true;
 					}
 				}
@@ -1562,8 +1562,8 @@ public class BaseController  extends BaseFunction{
 				reposPath = Path.localDirPathFormat(reposPath, OSType);
 				if(isPathConflict(reposPath,newRealDocPath))
 				{					
-					Log.docSysErrorLog("文件存储目录：" + newRealDocPath + "已被  " + repos.getName() + " 使用", rt); 
-					Log.docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath,rt); 
+					docSysErrorLog("文件存储目录：" + newRealDocPath + "已被  " + repos.getName() + " 使用", rt); 
+					docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath,rt); 
 					return true;
 				}
 			}
@@ -1579,8 +1579,8 @@ public class BaseController  extends BaseFunction{
 //					realDocPath = Path.localDirPathFormat(realDocPath);
 //					if(isPathConflict(realDocPath,newRealDocPath))
 //					{					
-//						Log.docSysErrorLog("文件存储目录：" + newRealDocPath + "已被  " + repos.getName() + " 使用", rt); 
-//						Log.docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath, rt); 
+//						docSysErrorLog("文件存储目录：" + newRealDocPath + "已被  " + repos.getName() + " 使用", rt); 
+//						docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath, rt); 
 //						return true;
 //					}
 //				}
@@ -1816,7 +1816,7 @@ public class BaseController  extends BaseFunction{
 		File dir = new File(localVerRepos);
 		if(dir.exists())
 		{
-			Log.docSysDebugLog("GIT仓库:"+localVerRepos + "已存在，已直接设置！", rt);
+			docSysDebugLog("GIT仓库:"+localVerRepos + "已存在，已直接设置！", rt);
 			return localVerRepos;
 		}
 		
@@ -1852,7 +1852,7 @@ public class BaseController  extends BaseFunction{
 		File dir = new File(localPath,reposName);
 		if(dir.exists())
 		{
-			Log.docSysDebugLog("SVN仓库:"+localPath+reposName + "已存在，已直接设置！", rt);
+			docSysDebugLog("SVN仓库:"+localPath+reposName + "已存在，已直接设置！", rt);
 			return "file:///" + localPath + reposName;
 		}
 		
@@ -2045,7 +2045,7 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localParentPath,targetName);
 		if(false == localEntry.exists())
 		{
-			Log.docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", rt);
+			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -2057,7 +2057,7 @@ public class BaseController  extends BaseFunction{
 			String zipFileName = targetName + ".zip";
 			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
 			{
-				Log.docSysErrorLog("压缩目录失败：" + localParentPath + targetName, rt);
+				docSysErrorLog("压缩目录失败：" + localParentPath + targetName, rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -2112,7 +2112,7 @@ public class BaseController  extends BaseFunction{
 		File file = new File(dstPath);
 		if(!file.exists())
 		{	
-			Log.docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
+			docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -2177,7 +2177,7 @@ public class BaseController  extends BaseFunction{
 		File file = new File(dstPath);
 		if(!file.exists())
 		{	
-			Log.docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
+			docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -2393,7 +2393,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(FileUtil.createDir(dstParentPath) == false)
 			{
-				Log.docSysDebugLog("doCompressDir() Failed to create:" + dstParentPath, rt);
+				docSysDebugLog("doCompressDir() Failed to create:" + dstParentPath, rt);
 				return false;
 			}
 		}
@@ -2405,7 +2405,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			Log.debug("doCompressDir()  压缩失败！");
-			Log.docSysDebugLog("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败", rt);
+			docSysDebugLog("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败", rt);
 			return false;
 		}
 		
@@ -2474,7 +2474,7 @@ public class BaseController  extends BaseFunction{
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
 			if(ret == false)
 			{
-				Log.error("loginCheck() 登录失败");
+				errorLog("loginCheck() 登录失败");
 				return null;
 			}
 			return uLists.get(0);
@@ -2489,7 +2489,7 @@ public class BaseController  extends BaseFunction{
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
 			if(ret == false)
 			{
-				Log.error("loginCheck() 登录失败");
+				errorLog("loginCheck() 登录失败");
 				return null;
 			}
 			return uLists.get(0);
@@ -2502,14 +2502,14 @@ public class BaseController  extends BaseFunction{
 			//Add LDAP User into DB
 			if(checkSystemUsersCount(rt) == false)
 			{
-				Log.error("loginCheck() checkSystemUsersCount Failed!");	
+				errorLog("loginCheck() checkSystemUsersCount Failed!");	
 				return null;			
 			}
 			
 			//For User added by LDAP login no need to check tel and email
 			if(userCheck(ldapLoginUser, false, false, rt) == false)
 			{
-				Log.error("loginCheck() userCheck Failed!");			
+				errorLog("loginCheck() userCheck Failed!");			
 				return null;			
 			}
 
@@ -2523,7 +2523,7 @@ public class BaseController  extends BaseFunction{
 
 			if(userService.addUser(ldapLoginUser) == 0)
 			{
-				Log.docSysErrorLog("Failed to add new User in DB", rt);
+				docSysErrorLog("Failed to add new User in DB", rt);
 			}
 			return ldapLoginUser;
 		}
@@ -2580,7 +2580,7 @@ public class BaseController  extends BaseFunction{
     		//String basedn = "o=NSN";
     		if(systemLdapConfig.enabled == null || systemLdapConfig.enabled == false)
     		{
-    			Log.error("getLDAPConnection() systemLdapConfig.enable is " + systemLdapConfig.enabled);
+    			errorLog("getLDAPConnection() systemLdapConfig.enable is " + systemLdapConfig.enabled);
     			return null;
     		}
     				
@@ -2900,14 +2900,14 @@ public class BaseController  extends BaseFunction{
 		//检查用户名是否为空
 		if(userName ==null||"".equals(userName))
 		{
-			Log.docSysErrorLog("用户名不能为空！", rt);
+			docSysErrorLog("用户名不能为空！", rt);
 			return false;
 		}
 		
 		//用户是否已存在
 		if(isUserNameUsed(userName) == true)
 		{
-			Log.docSysErrorLog("该用户已存在！", rt);
+			docSysErrorLog("该用户已存在！", rt);
 			return false;
 		}
 		
@@ -2918,7 +2918,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(isTelUsed(userName) == true)
 				{
-					Log.docSysErrorLog("该手机已被使用！", rt);
+					docSysErrorLog("该手机已被使用！", rt);
 					return false;				
 				}
 			}
@@ -2931,7 +2931,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(isEmailUsed(userName) == true)
 				{
-					Log.docSysErrorLog("该邮箱已被使用！", rt);
+					docSysErrorLog("该邮箱已被使用！", rt);
 					return false;				
 				}
 			}	
@@ -2943,13 +2943,13 @@ public class BaseController  extends BaseFunction{
 			{
 				if(RegularUtil.IsMobliePhone(tel) == false)
 				{
-					Log.docSysErrorLog("手机格式错误！", rt);
+					docSysErrorLog("手机格式错误！", rt);
 					return false;
 				}
 				
 				if(isTelUsed(tel) == true)
 				{
-					Log.docSysErrorLog("该手机已被使用！", rt);
+					docSysErrorLog("该手机已被使用！", rt);
 					return false;				
 				}
 				user.setTelValid(1);
@@ -2962,13 +2962,13 @@ public class BaseController  extends BaseFunction{
 			{
 				if(RegularUtil.isEmail(email) == false)
 				{
-					Log.docSysErrorLog("邮箱格式错误！", rt);
+					docSysErrorLog("邮箱格式错误！", rt);
 					return false;
 				}
 				
 				if(isEmailUsed(email) == true)
 				{
-					Log.docSysErrorLog("该邮箱已被使用！", rt);
+					docSysErrorLog("该邮箱已被使用！", rt);
 					return false;				
 				}
 				user.setEmailValid(1);
@@ -2991,7 +2991,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isUserNameUsed(userName) == true)
 			{
-				Log.docSysErrorLog("该用户已存在！", rt);
+				docSysErrorLog("该用户已存在！", rt);
 				return false;
 			}
 			
@@ -3000,7 +3000,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(isTelUsed(userName) == true)
 				{
-					Log.docSysErrorLog("该手机已被使用！", rt);
+					docSysErrorLog("该手机已被使用！", rt);
 					return false;				
 				}
 			}
@@ -3010,7 +3010,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(isEmailUsed(userName) == true)
 				{
-					Log.docSysErrorLog("该邮箱已被使用！", rt);
+					docSysErrorLog("该邮箱已被使用！", rt);
 					return false;				
 				}
 			}			
@@ -3020,13 +3020,13 @@ public class BaseController  extends BaseFunction{
 		{
 			if(RegularUtil.IsMobliePhone(tel) == false)
 			{
-				Log.docSysErrorLog("手机格式错误！", rt);
+				docSysErrorLog("手机格式错误！", rt);
 				return false;
 			}
 			
 			if(isTelUsed(tel) == true)
 			{
-				Log.docSysErrorLog("该手机已被使用！", rt);
+				docSysErrorLog("该手机已被使用！", rt);
 				return false;				
 			}
 			user.setTelValid(1);
@@ -3036,13 +3036,13 @@ public class BaseController  extends BaseFunction{
 		{
 			if(RegularUtil.isEmail(email) == false)
 			{
-				Log.docSysErrorLog("邮箱格式错误！", rt);
+				docSysErrorLog("邮箱格式错误！", rt);
 				return false;
 			}
 			
 			if(isEmailUsed(email) == true)
 			{
-				Log.docSysErrorLog("该邮箱已被使用！", rt);
+				docSysErrorLog("该邮箱已被使用！", rt);
 				return false;				
 			}
 			user.setEmailValid(1);
@@ -3057,7 +3057,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(verifyEmail(email) == false)
 			{
-				Log.docSysErrorLog("邮箱验证失败", rt);
+				docSysErrorLog("邮箱验证失败", rt);
 				return false;			
 			}
 		}
@@ -3067,7 +3067,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(verifyTelephone(tel) == false)
 			{
-				Log.docSysErrorLog("手机验证失败", rt);
+				docSysErrorLog("手机验证失败", rt);
 				return false;			
 			}
 		}	
@@ -3142,7 +3142,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(successDocList == null || successDocList.size() == 0)
 		{
-			Log.docSysErrorLog("未找到需要恢复的文件！",rt);
+			docSysErrorLog("未找到需要恢复的文件！",rt);
 			return null;
 		}
 		
@@ -3155,7 +3155,7 @@ public class BaseController  extends BaseFunction{
 			revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
 			if(revision == null)
 			{			
-				Log.docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
+				docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
 				return null;
 			}
 			
@@ -3249,7 +3249,7 @@ public class BaseController  extends BaseFunction{
 		if(localEntry.exists())
 		{	
 			unlockDoc(doc, lockType, login_user);
-			Log.docSysDebugLog("addDoc_FSM() " +localDocPath + "　已存在！", rt);
+			docSysDebugLog("addDoc_FSM() " +localDocPath + "　已存在！", rt);
 		}
 		
 		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
@@ -3287,7 +3287,7 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 			if(revision == null)
 			{
-				Log.docSysWarningLog("verReposDocCommit Failed", rt);
+				docSysWarningLog("verReposDocCommit Failed", rt);
 			}
 			else
 			{
@@ -3295,7 +3295,7 @@ public class BaseController  extends BaseFunction{
 				doc.setRevision(revision);
 				if(dbAddDoc(repos, doc, false, false) == false)
 				{	
-					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+					docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 				}
 				
 				//Insert Push Action
@@ -3328,7 +3328,7 @@ public class BaseController  extends BaseFunction{
 		
 		rt.setData(doc);
 		rt.setMsgData("isNewNode");
-		Log.docSysDebugLog("新增成功", rt); 
+		docSysDebugLog("新增成功", rt); 
 		
 		return true;
 	}
@@ -3366,7 +3366,7 @@ public class BaseController  extends BaseFunction{
 		if(localEntry.exists())
 		{	
 			unlockDoc(doc, lockType, login_user);
-			Log.docSysDebugLog("addDocEx_FSM() " +localDocPath + "　已存在！", rt);
+			docSysDebugLog("addDocEx_FSM() " +localDocPath + "　已存在！", rt);
 		}
 		
 		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
@@ -3404,7 +3404,7 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 			if(revision == null)
 			{
-				Log.docSysWarningLog("verReposDocCommit Failed", rt);
+				docSysWarningLog("verReposDocCommit Failed", rt);
 			}
 			else
 			{
@@ -3412,7 +3412,7 @@ public class BaseController  extends BaseFunction{
 				doc.setRevision(revision);
 				if(dbAddDoc(repos, doc, false, false) == false)
 				{	
-					Log.docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+					docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 				}
 				
 				//Insert Push Action
@@ -3424,7 +3424,7 @@ public class BaseController  extends BaseFunction{
 			if(remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
-				Log.docSysWarningLog("addDocEx_FSM remoteServerDocCommit Failed", rt);
+				docSysWarningLog("addDocEx_FSM remoteServerDocCommit Failed", rt);
 				rt.setError("远程推送失败");
 				return false;
 			}			
@@ -3445,7 +3445,7 @@ public class BaseController  extends BaseFunction{
 		
 		rt.setData(doc);
 		rt.setMsgData("isNewNode");
-		Log.docSysDebugLog("新增成功", rt); 
+		docSysDebugLog("新增成功", rt); 
 		
 		return true;
 	}
@@ -3548,7 +3548,7 @@ public class BaseController  extends BaseFunction{
 		if(docId == 0)
 		{
 			//由于前台是根据docId和pid来组织目录结构的，所以前台可以删除docId=0的节点，表示数据库中存在一个docId=0的非法节点，直接删除掉
-			Log.docSysDebugLog("deleteDoc_FSM() 这是一个非法节点docId = 0", rt);
+			docSysDebugLog("deleteDoc_FSM() 这是一个非法节点docId = 0", rt);
 			dbDeleteDoc(repos, doc, false);
 			return null;
 		}
@@ -3562,7 +3562,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				SyncLock.unlock(syncLock); 
-				Log.docSysDebugLog("deleteDoc_FSM() Failed to lock Doc: " + docId, rt);
+				docSysDebugLog("deleteDoc_FSM() Failed to lock Doc: " + docId, rt);
 				return null;			
 			}
 			SyncLock.unlock(syncLock); 
@@ -3578,8 +3578,8 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(doc, lockType, login_user);
 			
-			Log.docSysDebugLog("deleteDoc_FSM() deleteRealDoc Failed", rt);
-			Log.docSysErrorLog(doc.getName() + " 删除失败！", rt);
+			docSysDebugLog("deleteDoc_FSM() deleteRealDoc Failed", rt);
+			docSysErrorLog(doc.getName() + " 删除失败！", rt);
 			return null;
 		}
 		Log.debug("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
@@ -3590,15 +3590,15 @@ public class BaseController  extends BaseFunction{
 			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 			if(revision == null)
 			{
-				Log.docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
-				Log.docSysWarningLog("verReposRealDocDelete Failed", rt);
+				docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
+				docSysWarningLog("verReposRealDocDelete Failed", rt);
 			}
 			else
 			{
 				//Delete DataBase Record and Build AsynActions For delete 
 				if(dbDeleteDocEx(actionList, repos, doc, commitMsg, commitUser, true) == false)
 				{	
-					Log.docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
+					docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
 				}
 				
 				//delete操作需要自动增加ParentDoc???
@@ -4415,7 +4415,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				SyncLock.unlock(syncLock); 
-				Log.docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
+				docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
 				Log.debug("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 				return false;
 			}
@@ -4476,7 +4476,7 @@ public class BaseController  extends BaseFunction{
 		Doc remoteEntry = verReposGetDoc(repos, doc, null);
 		if(remoteEntry == null)
 		{
-			Log.docSysDebugLog("syncupForDocChange_NoFS() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
+			docSysDebugLog("syncupForDocChange_NoFS() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
 			return true;
 		}
 		
@@ -4499,7 +4499,7 @@ public class BaseController  extends BaseFunction{
 				if(docLock == null)
 				{
 					SyncLock.unlock(syncLock); 
-					Log.docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
+					docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
 					return false;
 				}
 				SyncLock.unlock(syncLock); 
@@ -6408,8 +6408,8 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 			if(revision == null)
 			{
-				Log.docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-				Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+				docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+				docSysWarningLog("verReposRealDocCommit Failed", rt);	
 			}
 			else
 			{
@@ -6417,7 +6417,7 @@ public class BaseController  extends BaseFunction{
 				doc.setRevision(revision);
 				if(dbUpdateDoc(repos, doc, true) == false)
 				{
-					Log.docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
+					docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
 				}
 				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 				
@@ -6497,8 +6497,8 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 			if(revision == null)
 			{
-				Log.docSysDebugLog("updateDocEx_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-				Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+				docSysDebugLog("updateDocEx_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+				docSysWarningLog("verReposRealDocCommit Failed", rt);	
 			}
 			else
 			{
@@ -6506,7 +6506,7 @@ public class BaseController  extends BaseFunction{
 				doc.setRevision(revision);
 				if(dbUpdateDoc(repos, doc, true) == false)
 				{
-					Log.docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
+					docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
 				}
 				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 				
@@ -6556,7 +6556,7 @@ public class BaseController  extends BaseFunction{
 			{
 				SyncLock.unlock(syncLock); 
 		
-				Log.docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
+				docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
 				return false;
 			}
 			
@@ -6564,7 +6564,7 @@ public class BaseController  extends BaseFunction{
 			if(dstDocLock == null)
 			{
 				SyncLock.unlock(syncLock); 
-				Log.docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
+				docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
 				unlockDoc(srcDoc, lockType, login_user);
 				return false;
 			}
@@ -6577,7 +6577,7 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(srcDoc, lockType, login_user);
 			unlockDoc(dstDoc, lockType, login_user);
 
-			Log.docSysErrorLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
+			docSysErrorLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
 			return false;
 		}
 		
@@ -6586,14 +6586,14 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 			if(revision == null)
 			{
-				Log.docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
+				docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
 			}
 			else
 			{
 				dstDoc.setRevision(revision);
 				if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
 				{
-					Log.docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
+					docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
 				}
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
@@ -6688,14 +6688,14 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 			if(revision == null)
 			{
-				Log.docSysWarningLog("copyDoc_FSM() verReposRealDocCopy failed", rt);
+				docSysWarningLog("copyDoc_FSM() verReposRealDocCopy failed", rt);
 			}
 			else
 			{
 				dstDoc.setRevision(revision);
 				if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
 				{
-					Log.docSysWarningLog("copyDoc_FSM() dbCopyDoc failed", rt);			
+					docSysWarningLog("copyDoc_FSM() dbCopyDoc failed", rt);			
 				}
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
@@ -6776,8 +6776,8 @@ public class BaseController  extends BaseFunction{
 				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2, null);
 				if(revision == null)
 				{
-					Log.docSysDebugLog("updateRealDocContent_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-					Log.docSysWarningLog("verReposRealDocCommit Failed", rt);	
+					docSysDebugLog("updateRealDocContent_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
+					docSysWarningLog("verReposRealDocCommit Failed", rt);	
 				}
 				else
 				{
@@ -6786,7 +6786,7 @@ public class BaseController  extends BaseFunction{
 					doc.setContent(null); //实体文件的内容不能放入数据库
 					if(dbUpdateDoc(repos, doc, true) == false)
 					{
-						Log.docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
+						docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
 					}
 					dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 					//Insert Push Action
@@ -8411,7 +8411,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(false == FileUtil.createDir(localDocPath))
 			{
-				Log.docSysDebugLog("createRealDoc() 目录 " +localDocPath + " 创建失败！", rt);
+				docSysDebugLog("createRealDoc() 目录 " +localDocPath + " 创建失败！", rt);
 				return false;
 			}				
 		}
@@ -8419,7 +8419,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(false == FileUtil.createFile(localParentPath,name))
 			{
-				Log.docSysDebugLog("createRealDoc() FileUtil.createFile 文件 " + localDocPath + "创建失败！", rt);
+				docSysDebugLog("createRealDoc() FileUtil.createFile 文件 " + localDocPath + "创建失败！", rt);
 				return false;					
 			}
 		}
@@ -8435,7 +8435,7 @@ public class BaseController  extends BaseFunction{
 
 		if(FileUtil.delFileOrDir(localDocPath) == false)
 		{
-			Log.docSysDebugLog("deleteRealDoc() FileUtil.FileUtil.delFileOrDir " + localDocPath + "删除失败！", rt);
+			docSysDebugLog("deleteRealDoc() FileUtil.FileUtil.delFileOrDir " + localDocPath + "删除失败！", rt);
 			return false;
 		}
 		
@@ -8486,7 +8486,7 @@ public class BaseController  extends BaseFunction{
 			}			
 		} catch (Exception e) {
 			Log.debug("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
-			Log.docSysDebugLog(e.toString(), rt);
+			docSysDebugLog(e.toString(), rt);
 			Log.info(e);
 			return false;
 		}
@@ -8692,7 +8692,7 @@ public class BaseController  extends BaseFunction{
 			}			
 		} catch (Exception e) {
 			Log.debug("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
-			Log.docSysDebugLog(e.toString(), rt);
+			docSysDebugLog(e.toString(), rt);
 			Log.info(e);
 			return false;
 		}
@@ -8838,19 +8838,19 @@ public class BaseController  extends BaseFunction{
 
 		if(FileUtil.isFileExist(srcDocPath) == false)
 		{
-			Log.docSysDebugLog("moveRealDoc() 文件: " + srcDocPath + " 不存在", rt);
+			docSysDebugLog("moveRealDoc() 文件: " + srcDocPath + " 不存在", rt);
 			return false;
 		}
 		
 		if(FileUtil.isFileExist(dstDocPath) == true)
 		{
-			Log.docSysDebugLog("moveRealDoc() 文件: " + dstDocPath + " 已存在", rt);
+			docSysDebugLog("moveRealDoc() 文件: " + dstDocPath + " 已存在", rt);
 			return false;
 		}
 		
 		if(FileUtil.moveFileOrDir(reposRPath + srcParentPath,srcName,reposRPath + dstParentPath,dstName,true) == false)	//强制覆盖
 		{
-			Log.docSysDebugLog("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed", rt);
+			docSysDebugLog("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed", rt);
 			return false;
 		}
 		return true;
@@ -8875,20 +8875,20 @@ public class BaseController  extends BaseFunction{
 
 		if(FileUtil.isFileExist(srcDocPath) == false)
 		{
-			Log.docSysDebugLog("copyRealDoc() 文件: " + srcDocPath + " 不存在", rt);
+			docSysDebugLog("copyRealDoc() 文件: " + srcDocPath + " 不存在", rt);
 			return false;
 		}
 		
 		if(FileUtil.isFileExist(dstDocPath) == true)
 		{
-			Log.docSysDebugLog("copyRealDoc() 文件: " + dstDocPath + " 已存在", rt);
+			docSysDebugLog("copyRealDoc() 文件: " + dstDocPath + " 已存在", rt);
 			return false;
 		}
 		
 
 		if(false == FileUtil.copyFileOrDir(srcDocPath, dstDocPath, true))
 		{
-			Log.docSysDebugLog("copyRealDoc copy " + srcDocPath + " to " + dstDocPath + " 失败", rt);
+			docSysDebugLog("copyRealDoc copy " + srcDocPath + " to " + dstDocPath + " 失败", rt);
 			return false;
 		}
 		return true;
@@ -8917,17 +8917,17 @@ public class BaseController  extends BaseFunction{
 			
 		if(false == FileUtil.createDir(vDocPath))
 		{
-			Log.docSysDebugLog("目录 " + vDocPath + " 创建失败！", rt);
+			docSysDebugLog("目录 " + vDocPath + " 创建失败！", rt);
 			return false;
 		}
 		if(FileUtil.createDir(vDocPath + "/res") == false)
 		{
-			Log.docSysDebugLog("目录 " + vDocPath + "/res" + " 创建失败！", rt);
+			docSysDebugLog("目录 " + vDocPath + "/res" + " 创建失败！", rt);
 			return false;
 		}
 		if(FileUtil.createFile(vDocPath,"content.md") == false)
 		{
-			Log.docSysDebugLog("目录 " + vDocPath + "/content.md" + " 创建失败！", rt);
+			docSysDebugLog("目录 " + vDocPath + "/content.md" + " 创建失败！", rt);
 			return false;			
 		}
 		doc.setCharset("UTF-8");
@@ -9143,7 +9143,7 @@ public class BaseController  extends BaseFunction{
 		String localDocVPath = reposVPath + docVName;
 		if(FileUtil.delDir(localDocVPath) == false)
 		{
-			Log.docSysDebugLog("deleteVirtualDoc() FileUtil.delDir失败 " + localDocVPath, rt);
+			docSysDebugLog("deleteVirtualDoc() FileUtil.delDir失败 " + localDocVPath, rt);
 			return false;
 		}
 		return true;
@@ -9159,7 +9159,7 @@ public class BaseController  extends BaseFunction{
 				
 		if(FileUtil.moveFileOrDir(reposVPath, vDocName, reposVPath, newVDocName, true) == false)
 		{
-			Log.docSysDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed", rt);
+			docSysDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed", rt);
 			return false;
 		}
 		return true;
@@ -9177,7 +9177,7 @@ public class BaseController  extends BaseFunction{
 		String dstDocFullVPath = reposVPath + newVDocName;
 		if(FileUtil.copyDir(srcDocFullVPath,dstDocFullVPath,true) == false)
 		{
-			Log.docSysDebugLog("copyVirtualDoc() FileUtil.copyDir " + srcDocFullVPath +  " to " + dstDocFullVPath + " Failed", rt);
+			docSysDebugLog("copyVirtualDoc() FileUtil.copyDir " + srcDocFullVPath +  " to " + dstDocFullVPath + " Failed", rt);
 			return false;
 		}
 		return true;
@@ -13786,14 +13786,14 @@ public class BaseController  extends BaseFunction{
 		Log.debug("checkAndExtractEntryFromCompressDoc() doc:" +  doc.getLocalRootPath() + doc.getPath() + doc.getName());
 		if(rootDoc.getName() == null || rootDoc.getName().isEmpty())
 		{
-			Log.error("checkAndExtractEntryFromCompressDoc() rootDoc.name 不能为空");			
+			errorLog("checkAndExtractEntryFromCompressDoc() rootDoc.name 不能为空");			
 			return null;
 		}
 
 		Doc parentCompressDoc = getParentCompressDoc(repos, rootDoc, doc);
 		if(parentCompressDoc == null)
 		{
-			Log.error("checkAndExtractEntryFromCompressDoc() getParentCompressDoc 异常");
+			errorLog("checkAndExtractEntryFromCompressDoc() getParentCompressDoc 异常");
 			return null;
 		}
 		
@@ -14785,7 +14785,7 @@ public class BaseController  extends BaseFunction{
 		Log.debug("getParentCompressDoc() doc:" + doc.getPath() + doc.getName());
 		if(doc.getName() == null || doc.getName().isEmpty())
 		{
-			Log.error("getParentCompressDoc() doc.name 不能为空");
+			errorLog("getParentCompressDoc() doc.name 不能为空");
 			return null;
 		}
 		

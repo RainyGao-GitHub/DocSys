@@ -149,7 +149,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -169,7 +169,7 @@ public class DocController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, doc, false);
 		if(tmpDoc != null && tmpDoc.getType() != 0)
 		{
-			Log.docSysErrorLog(doc.getName() + " 已存在", rt);
+			docSysErrorLog(doc.getName() + " 已存在", rt);
 			rt.setMsgData(1);
 			rt.setData(tmpDoc);
 			writeJson(rt, response);
@@ -528,14 +528,14 @@ public class DocController extends BaseController{
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
 		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
 		
-		Log.docSysErrorLog("请在码云上提交意见与建议：<br>https://gitee.com/RainyGao/DocSys/issues", rt);
+		docSysErrorLog("请在码云上提交意见与建议：<br>https://gitee.com/RainyGao/DocSys/issues", rt);
 		writeJson(rt, response);	
 		return;
 		
 		/*
 		if(name == null)
 		{
-			Log.docSysErrorLog("意见不能为空！", rt);
+			docSysErrorLog("意见不能为空！", rt);
 			writeJson(rt, response);	
 			return;
 		}
@@ -556,7 +556,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -614,7 +614,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -672,7 +672,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -757,7 +757,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -807,14 +807,14 @@ public class DocController extends BaseController{
 		
 		if(name == null || "".equals(name))
 		{
-			Log.docSysErrorLog("文件名不能为空！", rt);
+			docSysErrorLog("文件名不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(dstName == null || "".equals(dstName))
 		{
-			Log.docSysErrorLog("目标文件名不能为空！", rt);
+			docSysErrorLog("目标文件名不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -829,7 +829,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -863,7 +863,7 @@ public class DocController extends BaseController{
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
-			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -917,7 +917,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -955,7 +955,7 @@ public class DocController extends BaseController{
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
-			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1005,7 +1005,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1039,7 +1039,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = docSysGetDoc(repos, srcDocTmp, false);
 		if(srcDoc == null || srcDoc.getType() == 0)
 		{
-			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1125,7 +1125,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1166,7 +1166,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = docSysGetDoc(repos, srcDocTmp, false);
 		if(srcDoc == null || srcDoc.getType() == 0)
 		{
-			Log.docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1210,7 +1210,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1284,7 +1284,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposInfo(reposId, reposAccess.getDocShare());
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1298,7 +1298,7 @@ public class DocController extends BaseController{
 		DocAuth UserDocAuth = getUserDocAuth(repos, reposAccess.getAccessUser().getId(), parentDoc);
 		if(UserDocAuth == null)
 		{
-			Log.docSysErrorLog("您无权在该目录上传文件!", rt);
+			docSysErrorLog("您无权在该目录上传文件!", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1323,7 +1323,7 @@ public class DocController extends BaseController{
 			{	
 				rt.setData(fsDoc);
 				rt.setMsgData("1");
-				Log.docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
+				docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -1331,7 +1331,7 @@ public class DocController extends BaseController{
 			{
 				rt.setData(fsDoc);
 				rt.setMsgData("0");
-				Log.docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
+				docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -1370,7 +1370,7 @@ public class DocController extends BaseController{
 		{
 			rt.setData(fsDoc);
 			rt.setMsgData("1");
-			Log.docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
+			docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
 			writeJson(rt, response);
 					
 			executeCommonActionList(actionList, rt);
@@ -1380,7 +1380,7 @@ public class DocController extends BaseController{
 		{
 			rt.setStatus("ok");
 			rt.setMsgData("3");
-			Log.docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
+			docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1506,7 +1506,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1520,12 +1520,12 @@ public class DocController extends BaseController{
 		if(false == isChunkMatched(chunkFilePath,chunkHash))
 		{
 			rt.setMsgData("0");
-			Log.docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
+			docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
 		}
 		else
 		{
 			rt.setMsgData("1");
-			Log.docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);
+			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);
 			
 			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
@@ -1608,7 +1608,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1702,7 +1702,7 @@ public class DocController extends BaseController{
 			String userTmpDir = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			if(FileUtil.saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
-				Log.docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -1765,7 +1765,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			Log.docSysErrorLog("文件上传失败！", rt);
+			docSysErrorLog("文件上传失败！", rt);
 		}
 		writeJson(rt, response);
 		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, "");	
@@ -1829,7 +1829,7 @@ public class DocController extends BaseController{
 		{
 			if(remoteDirectory == null)
 			{
-				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				docSysErrorLog("服务器路径不能为空！", rt);
 				writeJson(rt, response);			
 				return;				
 			}
@@ -1900,7 +1900,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1995,7 +1995,7 @@ public class DocController extends BaseController{
 			String userTmpDir = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			if(FileUtil.saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
-				Log.docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -2058,7 +2058,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			Log.docSysErrorLog("文件上传失败！", rt);
+			docSysErrorLog("文件上传失败！", rt);
 		}
 		writeJson(rt, response);
 		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, "");	
@@ -2188,7 +2188,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2201,7 +2201,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
-			Log.docSysErrorLog("文件 " + path + name + " 不存在！", rt);
+			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2227,7 +2227,7 @@ public class DocController extends BaseController{
 		{
 			if(FileUtil.isTextFile(name) == false)
 			{
-				Log.docSysErrorLog(name + " 不是文本文件，禁止修改！", rt);
+				docSysErrorLog(name + " 不是文本文件，禁止修改！", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -2294,7 +2294,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2309,14 +2309,14 @@ public class DocController extends BaseController{
 		{
 			if(saveTmpRealDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
-				Log.docSysErrorLog("saveVirtualDocContent Error!", rt);
+				docSysErrorLog("saveVirtualDocContent Error!", rt);
 			}			
 		}
 		else
 		{
 			if(saveTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
-				Log.docSysErrorLog("saveVirtualDocContent Error!", rt);
+				docSysErrorLog("saveVirtualDocContent Error!", rt);
 			}
 		}
 		writeJson(rt, response);
@@ -2344,7 +2344,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2397,7 +2397,7 @@ public class DocController extends BaseController{
 		if(localEntry == null)
 		{
 			Log.debug("downloadDocPrepare_FSM() locaDoc " +doc.getPath() + doc.getName() + " 获取异常");
-			Log.docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
+			docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
 			return;
 		}
 		
@@ -2427,14 +2427,14 @@ public class DocController extends BaseController{
 			{
 				rt.setData(downloadDocForOffice);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
-				Log.docSysDebugLog("本地文件: 非原始路径下载", rt);
+				docSysDebugLog("本地文件: 非原始路径下载", rt);
 				return;
 			}
 			
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(0);	//下载完成后不能删除下载的文件
-			Log.docSysDebugLog("本地文件: 原始路径下载", rt);
+			docSysDebugLog("本地文件: 原始路径下载", rt);
 			return;
 		}
 		
@@ -2442,7 +2442,7 @@ public class DocController extends BaseController{
 		{	
 			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
 			{
-				Log.docSysErrorLog("空目录无法下载！", rt);
+				docSysErrorLog("空目录无法下载！", rt);
 				return;				
 			}
 			
@@ -2453,7 +2453,7 @@ public class DocController extends BaseController{
 				downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 				rt.setData(downloadDoc);
 				rt.setMsgData(0);	//下载完成后不删除已下载的文件
-				Log.docSysDebugLog("本地目录: 原始路径下载", rt);
+				docSysDebugLog("本地目录: 原始路径下载", rt);
 				return;						
 			}
 			
@@ -2464,7 +2464,7 @@ public class DocController extends BaseController{
 			downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 0);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("本地目录: 非原始路径下载", rt);
+			docSysDebugLog("本地目录: 非原始路径下载", rt);
 			return;
 		}
 		
@@ -2474,7 +2474,7 @@ public class DocController extends BaseController{
 			if(isFSM(repos) == false)
 			{
 				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-				Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+				docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
 				return;					
 			}
 			
@@ -2483,23 +2483,23 @@ public class DocController extends BaseController{
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
-				Log.docSysDebugLog("downloadDocPrepare_FSM() remoteDoc " +doc.getPath() + doc.getName() + " 获取异常", rt);
-				Log.docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
+				docSysDebugLog("downloadDocPrepare_FSM() remoteDoc " +doc.getPath() + doc.getName() + " 获取异常", rt);
+				docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
 				return;
 			}
 				
 			if(remoteEntry.getType() == null || remoteEntry.getType() == 0)
 			{
 				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-				Log.docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+				docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
 				return;	
 			}
 				
 			//Do checkout to local
 			if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
 			{
-				Log.docSysErrorLog("远程下载失败", rt);
-				Log.docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
+				docSysErrorLog("远程下载失败", rt);
+				docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
 				return;
 			}
 				
@@ -2508,13 +2508,13 @@ public class DocController extends BaseController{
 				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 				rt.setData(downloadDoc);
 				rt.setMsgData(1);	//下载完成后删除已下载的文件
-				Log.docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
+				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
 				return;
 			}
 
 			if(FileUtil.isEmptyDir(targetPath + doc.getName(), true))
 			{
-				Log.docSysErrorLog("空目录无法下载！", rt);
+				docSysErrorLog("空目录无法下载！", rt);
 				return;				
 			}
 				
@@ -2522,11 +2522,11 @@ public class DocController extends BaseController{
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			Log.docSysDebugLog("远程目录: 已下载并存储在用户临时目录", rt);
+			docSysDebugLog("远程目录: 已下载并存储在用户临时目录", rt);
 			return;
 		}
 		
-		Log.docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
+		docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
 		return;		
 	}
 	
@@ -2550,14 +2550,14 @@ public class DocController extends BaseController{
 	        compressAuthedFiles(out, input, repos, doc, curDocAuth, docAuthHashMap);
 	        ret = true;
     	} catch(Exception e) {
-    		Log.error(e);
+    		errorLog(e);
     	} finally {
     		if(out != null)
     		{
     			try {
 					out.close();
 				} catch (IOException e) {
-					Log.error(e);
+					errorLog(e);
 				}
     		}
     	}
@@ -2631,7 +2631,7 @@ public class DocController extends BaseController{
 		if(remote == null)
 		{
 			Log.debug("remoteStorageCheckOut() remote is null");
-			Log.docSysErrorLog("远程存储未设置！", rt);
+			docSysErrorLog("远程存储未设置！", rt);
 			return false;
 		}
 		
@@ -2639,7 +2639,7 @@ public class DocController extends BaseController{
 		if(channel == null)
 		{
 			Log.debug("remoteStorageCheckOut() channel is null");
-			Log.docSysErrorLog("开源版不支持远程存储！", rt);			
+			docSysErrorLog("开源版不支持远程存储！", rt);			
 			return false;
 		}
 		
@@ -2648,7 +2648,7 @@ public class DocController extends BaseController{
 		if(pullResult == null)
 		{
 			Log.debug("remoteStorageCheckOut() 远程拉取失败");
-			Log.docSysErrorLog("文件远程下载失败！", rt);			
+			docSysErrorLog("文件远程下载失败！", rt);			
 			return false;			
 		}	
 		
@@ -2679,7 +2679,7 @@ public class DocController extends BaseController{
 			
 			if(FileUtil.isEmptyDir(vDoc.getLocalRootPath(), true))
 			{
-				Log.docSysErrorLog("空目录无法下载！", rt);
+				docSysErrorLog("空目录无法下载！", rt);
 				return;				
 			}
 		}
@@ -2688,7 +2688,7 @@ public class DocController extends BaseController{
 			File localEntry = new File(vDoc.getLocalRootPath() + vDoc.getPath() + vDoc.getName());
 			if(false == localEntry.exists())
 			{
-				Log.docSysErrorLog("文件 " + doc.getName() + " 没有备注！", rt);
+				docSysErrorLog("文件 " + doc.getName() + " 没有备注！", rt);
 				return;
 			}
 		}
@@ -2697,14 +2697,14 @@ public class DocController extends BaseController{
 		//doCompressDir and save the zip File under userTmpDir
 		if(doCompressDir(vDoc.getLocalRootPath() + vDoc.getPath(), vDoc.getName(), targetPath, targetName, rt) == false)
 		{
-			Log.docSysErrorLog("压缩本地目录失败！", rt);
+			docSysErrorLog("压缩本地目录失败！", rt);
 			return;
 		}
 		
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 0);
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
-		Log.docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
+		docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
 		return;		
 	}
 	
@@ -2738,7 +2738,7 @@ public class DocController extends BaseController{
 			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
 			if(reposAccess == null)
 			{
-				Log.docSysErrorLog("非法仓库访问！", rt);
+				docSysErrorLog("非法仓库访问！", rt);
 				writeJson(rt, response);
 				return;	
 			}
@@ -2746,7 +2746,7 @@ public class DocController extends BaseController{
 		
 		if(targetPath == null || targetName == null)
 		{
-			Log.docSysErrorLog("目标路径不能为空！", rt);
+			docSysErrorLog("目标路径不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2755,7 +2755,7 @@ public class DocController extends BaseController{
 		targetPath = Base64Util.base64Decode(targetPath);
 		if(targetPath == null)
 		{
-			Log.docSysErrorLog("目标路径解码失败！", rt);
+			docSysErrorLog("目标路径解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2764,7 +2764,7 @@ public class DocController extends BaseController{
 		targetName = Base64Util.base64Decode(targetName);
 		if(targetName == null)
 		{
-			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			docSysErrorLog("目标文件名解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2801,7 +2801,7 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		if(targetPath == null || targetName == null)
 		{
-			Log.docSysErrorLog("目标路径不能为空！", rt);
+			docSysErrorLog("目标路径不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2810,7 +2810,7 @@ public class DocController extends BaseController{
 		targetPath = Base64Util.base64Decode(targetPath);
 		if(targetPath == null)
 		{
-			Log.docSysErrorLog("目标路径解码失败！", rt);
+			docSysErrorLog("目标路径解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2819,7 +2819,7 @@ public class DocController extends BaseController{
 		targetName = Base64Util.base64Decode(targetName);
 		if(targetName == null)
 		{
-			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			docSysErrorLog("目标文件名解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2874,7 +2874,7 @@ public class DocController extends BaseController{
 			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
 			if(reposAccess == null)
 			{
-				Log.docSysErrorLog("非法仓库访问！", rt);
+				docSysErrorLog("非法仓库访问！", rt);
 				writeJson(rt, response);
 				return;	
 			}
@@ -2882,7 +2882,7 @@ public class DocController extends BaseController{
 		
 		if(targetPath == null || targetName == null)
 		{
-			Log.docSysErrorLog("目标路径不能为空！", rt);
+			docSysErrorLog("目标路径不能为空！", rt);
 			return;
 		}
 		
@@ -2890,7 +2890,7 @@ public class DocController extends BaseController{
 		targetPath = Base64Util.base64Decode(targetPath);
 		if(targetPath == null)
 		{
-			Log.docSysErrorLog("目标路径解码失败！", rt);
+			docSysErrorLog("目标路径解码失败！", rt);
 			return;
 		}
 	
@@ -2898,7 +2898,7 @@ public class DocController extends BaseController{
 		targetName = Base64Util.base64Decode(targetName);
 		if(targetName == null)
 		{
-			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			docSysErrorLog("目标文件名解码失败！", rt);
 			return;
 		}
 	
@@ -2957,7 +2957,7 @@ public class DocController extends BaseController{
 			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
 			if(reposAccess == null)
 			{
-				Log.docSysErrorLog("非法仓库访问！", rt);
+				docSysErrorLog("非法仓库访问！", rt);
 				writeJson(rt, response);
 				return;	
 			}
@@ -2965,7 +2965,7 @@ public class DocController extends BaseController{
 		
 		if(targetPath == null || targetName == null)
 		{
-			Log.docSysErrorLog("目标路径不能为空！", rt);
+			docSysErrorLog("目标路径不能为空！", rt);
 			return;
 		}
 		
@@ -2973,7 +2973,7 @@ public class DocController extends BaseController{
 		targetPath = Base64Util.base64Decode(targetPath);
 		if(targetPath == null)
 		{
-			Log.docSysErrorLog("目标路径解码失败！", rt);
+			docSysErrorLog("目标路径解码失败！", rt);
 			return;
 		}
 	
@@ -2981,7 +2981,7 @@ public class DocController extends BaseController{
 		targetName = Base64Util.base64Decode(targetName);
 		if(targetName == null)
 		{
-			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			docSysErrorLog("目标文件名解码失败！", rt);
 			return;
 		}
 	
@@ -3028,7 +3028,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3057,7 +3057,7 @@ public class DocController extends BaseController{
 		catch (Exception e) 
 		{
 			Log.debug("getCheckSum() Exception"); 
-			Log.error(e);
+			errorLog(e);
 			return null;
 		}
 		return hash;
@@ -3090,7 +3090,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3172,7 +3172,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3231,19 +3231,19 @@ public class DocController extends BaseController{
 				
 				if(remoteDoc == null)
 				{
-					Log.docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
+					docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
 					writeJson(rt, response);			
 					return;
 				}
 				if(remoteDoc.getType() == 0)
 				{
-					Log.docSysErrorLog(name + " 不存在！", rt);
+					docSysErrorLog(name + " 不存在！", rt);
 					writeJson(rt, response);			
 					return;				
 				}
 				else if(remoteDoc.getType() == 2)
 				{
-					Log.docSysErrorLog(name + " 是目录！", rt);
+					docSysErrorLog(name + " 是目录！", rt);
 					writeJson(rt, response);			
 					return;				
 				}
@@ -3401,7 +3401,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3456,7 +3456,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3580,7 +3580,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3606,7 +3606,7 @@ public class DocController extends BaseController{
 			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
 			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 			{
-				Log.docSysErrorLog("访问密码错误！", rt);
+				docSysErrorLog("访问密码错误！", rt);
 				rt.setMsgData("1"); //访问密码错误或未提供
 				rt.setData(doc);
 				writeJson(rt, response);
@@ -3633,7 +3633,7 @@ public class DocController extends BaseController{
 		
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
-			Log.docSysErrorLog("文件 " + path+name + " 不存在！", rt);
+			docSysErrorLog("文件 " + path+name + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3722,7 +3722,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3749,7 +3749,7 @@ public class DocController extends BaseController{
 			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
 			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 			{
-				Log.docSysErrorLog("访问密码错误！", rt);
+				docSysErrorLog("访问密码错误！", rt);
 				rt.setMsgData("1"); //访问密码错误或未提供
 				rt.setData(doc);
 				writeJson(rt, response);
@@ -3760,7 +3760,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
 		{
-			Log.docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -3788,7 +3788,7 @@ public class DocController extends BaseController{
 		
 		if(path == null || name == null)
 		{
-			Log.docSysErrorLog("目标路径不能为空！", rt);
+			docSysErrorLog("目标路径不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3797,7 +3797,7 @@ public class DocController extends BaseController{
 		path = Base64Util.base64Decode(path);
 		if(path == null)
 		{
-			Log.docSysErrorLog("目标路径解码失败！", rt);
+			docSysErrorLog("目标路径解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3806,7 +3806,7 @@ public class DocController extends BaseController{
 		name = Base64Util.base64Decode(name);
 		if(name == null)
 		{
-			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			docSysErrorLog("目标文件名解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3816,7 +3816,7 @@ public class DocController extends BaseController{
 		{
 			if(remoteDirectory == null)
 			{
-				Log.docSysErrorLog("服务器路径不能为空！", rt);
+				docSysErrorLog("服务器路径不能为空！", rt);
 				writeJson(rt, response);			
 				return;				
 			}
@@ -3824,7 +3824,7 @@ public class DocController extends BaseController{
 			remoteDirectory = Base64Util.base64Decode(remoteDirectory);
 			if(remoteDirectory == null)
 			{
-				Log.docSysErrorLog("服务器路径解码失败！", rt);
+				docSysErrorLog("服务器路径解码失败！", rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -3835,7 +3835,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3861,7 +3861,7 @@ public class DocController extends BaseController{
 			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
 			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
 			{
-				Log.docSysErrorLog("访问密码错误！", rt);
+				docSysErrorLog("访问密码错误！", rt);
 				rt.setMsgData("1"); //访问密码错误或未提供
 				rt.setData(doc);
 				writeJson(rt, response);
@@ -3887,7 +3887,7 @@ public class DocController extends BaseController{
 		targetPath = Base64Util.base64Decode(targetPath);
 		if(targetPath == null)
 		{
-			Log.docSysErrorLog("目标路径解码失败！", rt);
+			docSysErrorLog("目标路径解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3897,7 +3897,7 @@ public class DocController extends BaseController{
 		targetName = Base64Util.base64Decode(targetName);
 		if(targetName == null)
 		{
-			Log.docSysErrorLog("目标文件名解码失败！", rt);
+			docSysErrorLog("目标文件名解码失败！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3929,7 +3929,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3996,7 +3996,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4021,7 +4021,7 @@ public class DocController extends BaseController{
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
 			if(localDoc.getType() != 1)
 			{
-				Log.docSysErrorLog("不是文件", rt);
+				docSysErrorLog("不是文件", rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -4040,19 +4040,19 @@ public class DocController extends BaseController{
 			
 			if(remoteDoc == null)
 			{
-				Log.docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
+				docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
 				writeJson(rt, response);			
 				return;
 			}
 			if(remoteDoc.getType() == 0)
 			{
-				Log.docSysErrorLog(name + " 不存在！", rt);
+				docSysErrorLog(name + " 不存在！", rt);
 				writeJson(rt, response);			
 				return;				
 			}
 			else if(remoteDoc.getType() == 2)
 			{
-				Log.docSysErrorLog(name + " 是目录！", rt);
+				docSysErrorLog(name + " 是目录！", rt);
 				writeJson(rt, response);			
 				return;				
 			}
@@ -4131,7 +4131,7 @@ public class DocController extends BaseController{
 		
 //		if(docId == null)
 //		{
-//			Log.docSysErrorLog("docId is null", rt);
+//			docSysErrorLog("docId is null", rt);
 //			writeJson(rt, response);			
 //			return;
 //		}
@@ -4139,7 +4139,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4224,7 +4224,7 @@ public class DocController extends BaseController{
 		
 //		if(docId == null)
 //		{
-//			Log.docSysErrorLog("SyncLock.unlockDoc docId is null", rt);
+//			docSysErrorLog("SyncLock.unlockDoc docId is null", rt);
 //			writeJson(rt, response);			
 //			return;
 //		}
@@ -4232,7 +4232,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4290,7 +4290,7 @@ public class DocController extends BaseController{
 		
 		if(reposId == null)
 		{
-			Log.docSysErrorLog("reposId is null", rt);
+			docSysErrorLog("reposId is null", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -4298,7 +4298,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -4355,7 +4355,7 @@ public class DocController extends BaseController{
 		
 		if(reposId == null)
 		{
-			Log.docSysErrorLog("reposId is null", rt);
+			docSysErrorLog("reposId is null", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -4364,7 +4364,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -4425,7 +4425,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4485,7 +4485,7 @@ public class DocController extends BaseController{
 				buildDownloadList(repos, true, doc, commitId, downloadList);
 				if(downloadList != null && downloadList.size() == 0)
 				{
-					Log.docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 未改动",rt);
+					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 未改动",rt);
 					writeJson(rt, response);	
 					return;
 				}
@@ -4503,8 +4503,8 @@ public class DocController extends BaseController{
 				}
 				if(successDocList == null)
 				{
-					Log.docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
-					Log.docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
+					docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 					writeJson(rt, response);	
 					return;
 				}
@@ -4538,7 +4538,7 @@ public class DocController extends BaseController{
 				buildDownloadList(repos, false, vDoc, commitId, downloadList);
 				if(downloadList != null && downloadList.size() == 0)
 				{
-					Log.docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
+					docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
 					writeJson(rt, response);	
 					return;
 				}
@@ -4547,8 +4547,8 @@ public class DocController extends BaseController{
 			successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, true, true, downloadList);
 			if(successDocList == null)
 			{
-				Log.docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
-				Log.docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+				docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
+				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 				writeJson(rt, response);	
 				return;
 			}
@@ -4615,7 +4615,7 @@ public class DocController extends BaseController{
 		
 		if(reposId == null)
 		{
-			Log.docSysErrorLog("reposId is null", rt);
+			docSysErrorLog("reposId is null", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -4623,7 +4623,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -4704,7 +4704,7 @@ public class DocController extends BaseController{
 			if(docLock == null)
 			{
 				SyncLock.unlock(syncLock); //线程锁
-				Log.docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
+				docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -4723,7 +4723,7 @@ public class DocController extends BaseController{
 				Doc localEntry = fsGetDoc(repos, doc);
 				if(localEntry == null)
 				{
-					Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;				
@@ -4732,7 +4732,7 @@ public class DocController extends BaseController{
 				Doc remoteEntry = verReposGetDoc(repos, doc, null);
 				if(remoteEntry == null)
 				{
-					Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;				
@@ -4744,7 +4744,7 @@ public class DocController extends BaseController{
 				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, false) == false)
 				{
-					Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
 					Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
@@ -4753,12 +4753,12 @@ public class DocController extends BaseController{
 				
 				if(localChanges.size() > 0)
 				{
-					//Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
+					//docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 
 					Log.debug("revertDocHistory() 本地有改动！");
 					String localChangeInfo = buildChangeReminderInfo(localChanges);
-					Log.docSysErrorLog(localChangeInfo, rt);
+					docSysErrorLog(localChangeInfo, rt);
 					writeJson(rt, response);
 					return;
 				}
@@ -4767,7 +4767,7 @@ public class DocController extends BaseController{
 				{
 					Log.debug("revertDocHistory() 远程有改动！");
 					String remoteChangeInfo = buildChangeReminderInfo(remoteChanges);				
-					Log.docSysErrorLog(remoteChangeInfo,rt);
+					docSysErrorLog(remoteChangeInfo,rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;
@@ -4778,7 +4778,7 @@ public class DocController extends BaseController{
 					if(commitId.equals(remoteEntry.getRevision()))
 					{
 						Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
-						Log.docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
 						unlockDoc(doc, lockType, reposAccess.getAccessUser());
 						writeJson(rt, response);
 						return;
@@ -4796,7 +4796,7 @@ public class DocController extends BaseController{
 				if(latestCommitId != null && latestCommitId.equals(commitId))
 				{
 					Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
-					Log.docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
+					docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 					return;				
@@ -4836,7 +4836,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4899,7 +4899,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4960,7 +4960,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5035,7 +5035,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5137,7 +5137,7 @@ public class DocController extends BaseController{
 		
 		if(reposService.addDocShare(docShare) == 0)
 		{
-			Log.docSysErrorLog("创建文件分享失败！", rt);
+			docSysErrorLog("创建文件分享失败！", rt);
 		}
 		else
 		{
@@ -5242,7 +5242,7 @@ public class DocController extends BaseController{
 		Repos repos = getRepos(reposId);
 		if(repos == null)
 		{
-			Log.docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5288,7 +5288,7 @@ public class DocController extends BaseController{
 		String shareLink = null;
 		if(reposService.addDocShare(docShare) == 0)
 		{
-			Log.docSysErrorLog("创建文件分享失败！", rt);
+			docSysErrorLog("创建文件分享失败！", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "失败", repos, doc, null, "");	
 		}
 		else
@@ -5412,7 +5412,7 @@ public class DocController extends BaseController{
 		DocShare docShare = getDocShare(shareId);
 		if(docShare == null)
 		{
-			Log.docSysErrorLog("分享信息不存在！", rt);
+			docSysErrorLog("分享信息不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -5441,7 +5441,7 @@ public class DocController extends BaseController{
 				
 		if(reposService.updateDocShare(docShare) == 0)
 		{
-			Log.docSysErrorLog("更新文件分享失败！", rt);
+			docSysErrorLog("更新文件分享失败！", rt);
 		}
 		else
 		{
@@ -5470,7 +5470,7 @@ public class DocController extends BaseController{
 		
 		if(shareId == null)
 		{
-			Log.docSysErrorLog("文件分享信息不能为空！", rt);
+			docSysErrorLog("文件分享信息不能为空！", rt);
 			writeJson(rt, response);			
 			return;				
 		}
@@ -5478,7 +5478,7 @@ public class DocController extends BaseController{
 		DocShare docShare = getDocShare(shareId);
 		if(docShare == null)
 		{
-			Log.docSysErrorLog("分享信息不存在！", rt);
+			docSysErrorLog("分享信息不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -5487,7 +5487,7 @@ public class DocController extends BaseController{
 		qDocShare.setShareId(shareId);				
 		if(reposService.deleteDocShare(qDocShare) == 0)
 		{
-			Log.docSysErrorLog("删除文件分享失败！", rt);
+			docSysErrorLog("删除文件分享失败！", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocShare", "deleteDocShare", "删除文件分享", "失败", null, null, null, docShare.getVid() + "::" + docShare.getPath() + docShare.getName());	
 		}
 		else
@@ -5510,7 +5510,7 @@ public class DocController extends BaseController{
 		DocShare docShare = getDocShare(shareId);
 		if(docShare == null)
 		{
-			Log.docSysErrorLog("分享信息不存在！", rt);
+			docSysErrorLog("分享信息不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -5520,7 +5520,7 @@ public class DocController extends BaseController{
 		{
 			if(sharePwd == null || sharePwd.isEmpty() || !sharePwd.equals(pwd))
 			{
-				Log.docSysErrorLog("密码错误！", rt);
+				docSysErrorLog("密码错误！", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -5550,7 +5550,7 @@ public class DocController extends BaseController{
 		DocShare docShare = getDocShare(shareId);
 		if(docShare == null)
 		{
-			Log.docSysErrorLog("分享信息不存在！", rt);
+			docSysErrorLog("分享信息不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -5562,7 +5562,7 @@ public class DocController extends BaseController{
 			String sharePwd = (String) session.getAttribute("sharePwd_" + shareId);
 			if(sharePwd == null || sharePwd.isEmpty() || !sharePwd.equals(pwd))
 			{
-				Log.docSysErrorLog("分享密码错误！", rt);
+				docSysErrorLog("分享密码错误！", rt);
 				rt.setMsgData("1"); //分享密码错误或未提供
 				writeJson(rt, response);
 				return;
@@ -6140,23 +6140,23 @@ public class DocController extends BaseController{
                subDocList.add(subDoc);
             }
         } catch (Exception e) {
-            Log.error("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error occurs");
-            Log.error(e);
+            errorLog("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error occurs");
+            errorLog(e);
         } finally {
             if (inArchive != null) {
                 try {
                     inArchive.close();
                 } catch (SevenZipException e) {
-                    Log.error("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error closing archive");
-                    Log.error(e);
+                    errorLog("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error closing archive");
+                    errorLog(e);
                 }
             }
             if (randomAccessFile != null) {
                 try {
                     randomAccessFile.close();
                 } catch (IOException e) {
-                    Log.error("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error closing file");
-                    Log.error(e);
+                    errorLog("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error closing file");
+                    errorLog(e);
                 }
             }
         }
@@ -6202,7 +6202,7 @@ public class DocController extends BaseController{
 				subDocList.add(subDoc);
             }
         } catch (Exception e) {
-            Log.error(e);
+            errorLog(e);
         }finally {
             try {
                 if(archive != null){
@@ -6212,7 +6212,7 @@ public class DocController extends BaseController{
                     outputStream.close();
                 }
             } catch (IOException e) {
-                Log.error(e);
+                errorLog(e);
             }
         }
 		return subDocList;
@@ -6304,7 +6304,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-            Log.error(e);
+            errorLog(e);
         }finally {
             try {
                 if(fis != null){
@@ -6320,7 +6320,7 @@ public class DocController extends BaseController{
                     tis.close();
                 }
             } catch (IOException e) {
-                Log.error(e);
+                errorLog(e);
             }
         }
 		return subDocList;
@@ -6363,7 +6363,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-            Log.error(e);
+            errorLog(e);
         }finally {
             try {
                 if(out != null){
@@ -6382,7 +6382,7 @@ public class DocController extends BaseController{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                Log.error(e);
+                errorLog(e);
             }
         }
 		return subDocList;
@@ -6438,7 +6438,7 @@ public class DocController extends BaseController{
 				subDocList.add(subDoc);
             }
         } catch (IOException e) {
-            Log.error(e);
+            errorLog(e);
         }finally {
             try {
                 if(out != null){
@@ -6457,7 +6457,7 @@ public class DocController extends BaseController{
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                Log.error(e);
+                errorLog(e);
             }
         }
 		return subDocList;
@@ -6494,7 +6494,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-            Log.error(e);
+            errorLog(e);
         }finally {
             try {
                 if(sevenZFile != null){
@@ -6504,7 +6504,7 @@ public class DocController extends BaseController{
                     outputStream.close();
                 }
             } catch (IOException e) {
-                Log.error(e);
+                errorLog(e);
             }
         }
         return subDocList;
@@ -6612,7 +6612,7 @@ public class DocController extends BaseController{
             	subDocList.addAll(parentDocListForAdd);
             }
         } catch (IOException e) {
-           Log.error(e);
+           errorLog(e);
         }finally {
             try {
                 if(fis != null){
@@ -6625,7 +6625,7 @@ public class DocController extends BaseController{
                     tarInputStream.close();
                 }
             } catch (IOException e) {
-                Log.error(e);
+                errorLog(e);
             }
         }
 		return subDocList;
@@ -6742,7 +6742,7 @@ public class DocController extends BaseController{
 				subDocList.add(subDoc);
 			}
 		} catch (IOException e) {
-			Log.error(e);
+			errorLog(e);
 			subDocList = null;
 		} finally {
 			if(zipFile != null)
@@ -6750,7 +6750,7 @@ public class DocController extends BaseController{
 				try {
 					zipFile.close();
 				} catch (IOException e) {
-					Log.error(e);
+					errorLog(e);
 				}
 			}
 		}
