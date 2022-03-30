@@ -23,7 +23,7 @@
         var totalNum = 0; 
  		var SubContextList = []; //文件下载上下文List，用于记录单个文件的下载情况，在开始下载的时候初始化
  		
- 		var downloadFileMap = {};
+ 		var downloadHashMap = {};
 
         function getDownloadStatus()
         {
@@ -87,6 +87,9 @@
 	        successNum = 0;	//成功下载个数
 			failNum = 0; //下载失败个数
 			drawedNum =0; //已绘制个数
+
+			//清空downloadHashMap
+			downloadHashMap = {};
 			
 			//Build Batch
 			var Batch = {};
@@ -265,6 +268,7 @@
     	   		if(treeNode && treeNode != null)
     	   		{
     	   		   	var SubContext ={};
+    	   		   	var timestamp = Date.now();
     	   		   	//Doc Info
     	   		   	SubContext.treeNode = treeNode;
         			SubContext.vid = vid;
@@ -290,9 +294,13 @@
 		    	   	SubContext.state = 0;	//未开始下载
 		    	   	SubContext.status = "待下载";	//未开始下载
 		    	   	SubContext.stopFlag = false; //停止标记false
-		    	   			      								    	   	
+		    	   	
+		    	   	SubContext.startTime = Date.now();
+		    	   	
 		    	   	//Push the SubContext
 		    	   	SubContextList.push(SubContext);
+		    	   	
+		    	   	downloadHashMap[SubContext.docId + "-" + SubContext.startTime] = i;
     	   		}
 	    	}
     		
@@ -341,6 +349,7 @@
                 url : "/DocSystem/Doc/downloadDocPrepare.do",
                 type : "post",
                 dataType : "json",
+                timeout : 0,	//永不超时 
                 data : {
                     reposId: SubContext.vid,
                 	docId : SubContext.docId,
@@ -351,12 +360,19 @@
                     shareId: gShareId,
                 },
                 success : function (ret) {
-                   //TODO: 这是临时方案，使用异步压缩方案后，stopFlag判断可以取消
                    if(SubContext.stopFlag == true)
                    {
                 	   console.log("downloadDoc download task 已取消", SubContext);
                 	   return;
                    }
+                   
+                   var SubContextIndex = downloadHashMap[SubContext.docId + "-" + SubContext.startTime];
+                   if(SubContextIndex == undefined)
+                   {
+                	   console.log("downloadDoc 未找到对应的索引", SubContext);
+                	   return;                	   
+                   }
+                   console.log("downloadDoc SubContextIndex:" + SubContextIndex, SubContext);
                    
                    if( "ok" == ret.status )
                    {          
@@ -379,7 +395,7 @@
             		   	}
             		   	
             		   	
-            		   	if(index != 0)
+            		   	if(SubContextIndex != 0)
             		   	{
             		   		console.log("downloadDocPrepare 延时启动文件下载: " + SubContext.name);
             		   		//延时2秒启动下载
@@ -387,9 +403,9 @@
 	            		   		console.log("downloadDocPrepare download start for " + SubContext.name);
 	            		   		window.location.href = url;
 	            		   		
-	    						$('.downloadFile'+index).removeClass('is-downloading');
-	    						$('.downloadFile'+index).addClass('is-success');
-	    						$(".downloadInfo"+index).hide();
+	    						$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
+	    						$('.downloadFile'+SubContextIndex).addClass('is-success');
+	    						$(".downloadInfo"+SubContextIndex).hide();
 	            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
 	                	   	}, 2000);
             		   	}
@@ -397,9 +413,9 @@
             		   	{
             		   		console.log("downloadDocPrepare download start for " + SubContext.name);
             		   		window.location.href = url;
-            		   		$('.downloadFile'+index).removeClass('is-downloading');
-    						$('.downloadFile'+index).addClass('is-success');
-    						$(".downloadInfo"+index).hide();
+            		   		$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
+    						$('.downloadFile'+SubContextIndex).addClass('is-success');
+    						$(".downloadInfo"+SubContextIndex).hide();
             		   		downloadSuccessHandler(SubContext, ret.msgInfo);
             		   	}
                 	   	return;
@@ -407,25 +423,32 @@
                    else	//后台报错，结束下载
                    {
                 	   console.log("downloadDocPrepare Error:" + ret.msgInfo);
-                	   $('.downloadFile'+index).removeClass('is-uploading');
-   					   $('.downloadFile'+index).addClass('is-fail');
-   					   $(".downloadInfo"+index).text(ret.msgInfo);
+                	   $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
+   					   $('.downloadFile'+SubContextIndex).addClass('is-fail');
+   					   $(".downloadInfo"+SubContextIndex).text("下载失败");
                        downloadErrorConfirm(SubContext,ret.msgInfo);
                        return;
                    }
                 },
                 error : function () {	//后台异常
-                	//TODO: 这是临时方案，使用异步压缩方案后，stopFlag判断可以取消
-                    if(SubContext.stopFlag == true)
-                    {
+                   if(SubContext.stopFlag == true)
+                   {
                  	   console.log("downloadDoc download task 已取消", SubContext);
                  	   return;
-                    }
+                   }
+                    
+                   var SubContextIndex = downloadHashMap[SubContext.docId + "-" + SubContext.startTime];
+                   if(SubContextIndex == undefined)
+                   {
+                 	   console.log("downloadDoc 未找到对应的索引", SubContext);
+                 	   return;                	   
+                   }
+                   console.log("downloadDoc SubContextIndex:" + SubContextIndex, SubContext);
 
-                	console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
- 	               $('.downloadFile'+index).removeClass('is-uploading');
-				   $('.downloadFile'+index).addClass('is-fail');
-				   $(".downloadInfo"+index).text("服务器异常");
+                   console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
+ 	               $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
+				   $('.downloadFile'+SubContextIndex).addClass('is-fail');
+				   $(".downloadInfo"+SubContextIndex).text("下载失败");
 				   downloadErrorConfirm(SubContext,"服务器异常");
             	   return;
                 }
