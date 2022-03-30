@@ -909,9 +909,8 @@ public class UserController extends BaseController {
 	}
 	
 	private String getUserImgPath()
-	{
-		String webUploadPath = getWebUploadPath();
-		String imgDirPath = webUploadPath + "userImg/";
+	{	
+		String imgDirPath = docSysIniPath + "userImg/";
         return imgDirPath;
 	}
 		
