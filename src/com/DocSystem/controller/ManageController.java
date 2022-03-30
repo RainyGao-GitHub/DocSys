@@ -2064,9 +2064,10 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;										
 		}
-		String path = temp[0];
+		String path = Path.localDirPathFormat(temp[0], OSType);
 		String name = temp[1];	
 		
+		Log.debug("downloadLogFile() path:" + path + " name:" + name);		
 		Doc downloadDoc = buildDownloadDocInfo(0, "","", path, name, 0);
 		downloadDoc.encryptEn = 0;
 		
