@@ -902,7 +902,7 @@ var dialogList = {
             "fixed": !1,
             "left": "50%",
             "top": "38.2%",
-            "zIndex": 300,
+            "zIndex": 500,
             "displayTab": !0,
             "animate": !0,
             "animateOpen": "dialogShow",
