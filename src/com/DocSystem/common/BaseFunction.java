@@ -108,6 +108,7 @@ public class BaseFunction{
     //系统LDAP设置
     public static LDAPConfig systemLdapConfig = null;
 	
+    //TODO: 集群部署时，docLocks和reposLocks信息需要存储在redis中
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
 	
@@ -386,6 +387,7 @@ public class BaseFunction{
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
 
+	//TODO: 仓库配置缓存信息需要增加timestamp信息，集群部署时需要能够识别仓库配置已变更
 	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
 	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
 	//远程服务器前置
