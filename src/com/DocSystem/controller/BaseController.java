@@ -7009,6 +7009,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Lock Doc
+	//TODO: 文件锁定接口需要支持集群部署时服务器之间操作的原子性
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		Log.debug("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
 
