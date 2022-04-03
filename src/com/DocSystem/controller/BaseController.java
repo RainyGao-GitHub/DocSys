@@ -285,6 +285,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	//TODO: 集群部署时,authCode需要存储在redis中
 	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
 	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
 		Long curTime = new Date().getTime();
