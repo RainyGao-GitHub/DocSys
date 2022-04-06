@@ -125,7 +125,7 @@ var context = context || (function () {
 			y = e.pageY - 20 - $('#dropdown-' + id).height();
 		} else if (typeof options.above == 'string' && options.above == 'auto') {
 			$dd.removeClass('offset');
-			var autoH = $dd.height() + 120;
+			var autoH = $dd.height() + 160; //160 is the height of subMenu
 			if ((e.pageY + autoH) > $('html').height()) //如果从当前鼠标+下拉菜单长度超出页面高度，调整坐标起点
 			{
 				y = e.pageY - 20 - autoH;
@@ -162,7 +162,7 @@ var context = context || (function () {
 		if (typeof options.above == 'boolean' && options.above) {
 			y = top - 20 - $('#dropdown-' + id).height();
 		} else if (typeof options.above == 'string' && options.above == 'auto') {
-			var autoH = $dd.height() + 120;
+			var autoH = $dd.height() + 160; //160 is the height of subMenu
 			if ((e.pageY + autoH) > $('html').height())  //如果从当前鼠标+下拉菜单长度超出页面高度，调整坐标起点
 			{
 				y = e.pageY - 20 - autoH;
