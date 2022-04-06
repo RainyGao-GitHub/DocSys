@@ -63,7 +63,7 @@ public final class RegularUtil {
 	 * @return
 	 */
 	public static boolean IsMobliePhone(String str){
-		String regex = "^((13[0-9])|(15[0-9])|(18[0-9]))\\d{8}$";
+		String regex = "^((13[0-9])|(15[0-9])|(16[0-9])|(17[0-9])|(18[0-9]))\\d{8}$";
 		return match(regex, str);
 	}
 
@@ -316,9 +316,21 @@ public final class RegularUtil {
 	// }
 	
 	public static void main(String[] args) {
-		String test = "15138456324";
+		String test = "13738456324";
 		boolean flag = RegularUtil.IsMobliePhone(test);
-		System.out.println(flag);
+		System.out.println(test +  " isMoilbePhone:" + flag);
+		test = "15628599086";
+		flag = RegularUtil.IsMobliePhone(test);
+		System.out.println(test +  " isMoilbePhone:" + flag);	
+		test = "16628599086";
+		flag = RegularUtil.IsMobliePhone(test);
+		System.out.println(test +  " isMoilbePhone:" + flag);	
+		test = "17628599086";
+		flag = RegularUtil.IsMobliePhone(test);
+		System.out.println(test +  " isMoilbePhone:" + flag);	
+		test = "18928599086";
+		flag = RegularUtil.IsMobliePhone(test);
+		System.out.println(test +  " isMoilbePhone:" + flag);			
 	}
 	
 }
