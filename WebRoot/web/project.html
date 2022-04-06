@@ -4551,6 +4551,49 @@
 							}
 						},
 			   			{divider: true},
+						{text: '复制', subMenu: [
+				           	{text: '名字', action: function(e){
+									e.preventDefault();
+				        			copyDocName(curRightClickedTreeNode);
+								}
+							},
+							{text: '路径', action: function(e){
+										e.preventDefault();
+					        			copyDocPath(curRightClickedTreeNode);
+									}
+							},
+							{text: '链接', action: function(e){
+										e.preventDefault();
+					        			copyUrl(curRightClickedTreeNode);
+									}
+							},
+							{text: '本地路径', action: function(e){
+									e.preventDefault();
+									var localPath = getDocLocalPath(gReposInfo, curRightClickedTreeNode);
+									console.log("本地路径 localPath:" + localPath);
+									copyString(localPath);
+								}
+							},
+							{text: '下载链接', action: function(e){
+									e.preventDefault();
+									curRightClickedTreeNode.shareId = gShareId;
+							  		getDocFileLink(curRightClickedTreeNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+								}
+							},
+							]
+						},
+						{divider: true},
+						{text: '锁定', action: function(e){
+								e.preventDefault();
+								lockDoc(curRightClickedTreeNode, 1);
+							}
+						},
+						{text: '解锁', action: function(e){
+								e.preventDefault();
+								unlockDoc(curRightClickedTreeNode, 1);
+							}
+						},
+			   			{divider: true},
 						{text: '远程存储', subMenu: [
 							{text: '推送',  action: function(e){
 									e.preventDefault();
@@ -4571,51 +4614,11 @@
 									downloadDoc(treeNodes,true,2);
 								}
 						},
-						{divider: true},
-						{text: '锁定', action: function(e){
-								e.preventDefault();
-								lockDoc(curRightClickedTreeNode, 1);
-							}
-						},
-						{text: '解锁', action: function(e){
-								e.preventDefault();
-								unlockDoc(curRightClickedTreeNode, 1);
-							}
-						},
 						//{text: '强制锁定', action: function(e){
 						//		e.preventDefault();
 						//		lockDoc(curRightClickedTreeNode, 2);
 						//	}
 						//},
-						{divider: true},
-			           	{text: '复制名字', action: function(e){
-								e.preventDefault();
-			        			copyDocName(curRightClickedTreeNode);
-							}
-						},
-						{text: '复制路径', action: function(e){
-									e.preventDefault();
-				        			copyDocPath(curRightClickedTreeNode);
-								}
-						},
-						{text: '复制链接', action: function(e){
-									e.preventDefault();
-				        			copyUrl(curRightClickedTreeNode);
-								}
-						},
-						{text: '复制本地路径', action: function(e){
-								e.preventDefault();
-								var localPath = getDocLocalPath(gReposInfo, curRightClickedTreeNode);
-								console.log("本地路径 localPath:" + localPath);
-								copyString(localPath);
-							}
-						},
-						{text: '复制下载链接', action: function(e){
-								e.preventDefault();
-								curRightClickedTreeNode.shareId = gShareId;
-						  		getDocFileLink(curRightClickedTreeNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
-							}
-						},
 						//{divider: true},
 			           	//{text: '执行', action: function(e){
 			           	//运行需要进行远程登录后实现
@@ -5054,6 +5057,49 @@
 								}
 							},
 				   			{divider: true},
+							{text: '复制', subMenu: [
+					           	{text: '名字', action: function(e){
+											e.preventDefault();
+						        			copyDocName(curRightClickedDocListNode);
+										}
+								},
+								{text: '路径', action: function(e){
+											e.preventDefault();
+						        			copyDocPath(curRightClickedDocListNode);
+										}
+								},
+								{text: '链接', action: function(e){
+											e.preventDefault();
+						        			copyUrl(curRightClickedDocListNode);
+										}
+								},
+								{text: '本地路径', action: function(e){
+										e.preventDefault();
+										var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
+										console.log("本地路径 localPath:" + localPath);
+										copyString(localPath);
+									}
+								},
+								{text: '下载链接', action: function(e){
+										e.preventDefault();
+										curRightClickedDocListNode.shareId = gShareId;
+								  		getDocFileLink(curRightClickedDocListNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+									}
+								},
+								]
+							},
+							{divider: true},
+							{text: '锁定', action: function(e){
+									e.preventDefault();
+									lockDoc(curRightClickedDocListNode, 1);
+								}
+							},
+							{text: '解锁', action: function(e){
+									e.preventDefault();
+									unlockDoc(curRightClickedDocListNode, 1);
+								}
+							},
+							{divider: true},
 							{text: '远程存储', subMenu: [
 								{text: '推送',  action: function(e){
 										e.preventDefault();
@@ -5075,51 +5121,11 @@
 									downloadDoc(treeNodes,true,2);
 								}
 							},
-							{divider: true},
-							{text: '锁定', action: function(e){
-									e.preventDefault();
-									lockDoc(curRightClickedDocListNode, 1);
-								}
-							},
-							{text: '解锁', action: function(e){
-									e.preventDefault();
-									unlockDoc(curRightClickedDocListNode, 1);
-								}
-							},
 							//{text: '强制锁定', action: function(e){
 							//		e.preventDefault();
 							//		lockDoc(curRightClickedDocListNode, 2);
 							//	}
 							//},
-							{divider: true},
-				           	{text: '复制名字', action: function(e){
-										e.preventDefault();
-					        			copyDocName(curRightClickedDocListNode);
-									}
-							},
-							{text: '复制路径', action: function(e){
-										e.preventDefault();
-					        			copyDocPath(curRightClickedDocListNode);
-									}
-							},
-							{text: '复制链接', action: function(e){
-										e.preventDefault();
-					        			copyUrl(curRightClickedDocListNode);
-									}
-							},
-							{text: '复制本地路径', action: function(e){
-									e.preventDefault();
-									var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
-									console.log("本地路径 localPath:" + localPath);
-									copyString(localPath);
-								}
-							},
-							{text: '复制下载链接', action: function(e){
-									e.preventDefault();
-									curRightClickedDocListNode.shareId = gShareId;
-							  		getDocFileLink(curRightClickedDocListNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
-								}
-							},
 							//{divider: true},
 				           	//{text: '运行', action: function(e){
 				           	//运行需要进行远程登录后实现
