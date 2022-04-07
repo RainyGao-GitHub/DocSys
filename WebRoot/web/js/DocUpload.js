@@ -2022,7 +2022,7 @@
 		
 		function stopUpload(index)
 		{
-			console.log("stopUpload() index:" + index ,SubContext[index]);
+			console.log("stopUpload() index:" + index ,SubContextList[index]);
 			SubContextList[index].stopUploadFlag = true;
 		}
 		
