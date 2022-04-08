@@ -14465,7 +14465,7 @@ public class BaseController  extends BaseFunction{
             while((entry = sevenZFile.getNextEntry()) != null)
             {
             	String subEntryPath = entry.getName();
-            	Log.debug("subEntry:" + subEntryPath);
+            	Log.debug("extractEntryFrom7zFile() subEntry:" + subEntryPath);
             	if(subEntryPath.equals(expEntryPath))
             	{
 	            	if(entry.isDirectory())
@@ -14675,6 +14675,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
+			Log.debug("extractEntryFromZipFile() name:" + entry.getName());
 			//注意即使是目录也要生成目录，因为该目录将是用来区分名字压缩尾缀的目录和真正的压缩文件
 			if(entry.isDirectory())
 			{
