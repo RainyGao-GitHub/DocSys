@@ -6113,9 +6113,9 @@ public class DocController extends BaseController{
 	
 	//使用SevenZip方式（支持多种格式）
 	private List<Doc> getSubDocListForCompressFile(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
-		Log.debug("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
+		Log.debug("getSubDocListForCompressFile path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
-		Log.debug("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() zipFilePath:" + zipFilePath);
+		Log.debug("getSubDocListForCompressFile zipFilePath:" + zipFilePath);
 		
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
 
@@ -6131,10 +6131,7 @@ public class DocController extends BaseController{
             ISimpleInArchive simpleInArchive = inArchive.getSimpleInterface();
             
             for (ISimpleInArchiveItem entry : simpleInArchive.getArchiveItems()) {
-               //Log.debug(String.format("%9s | %9s | %s", // 
-               //         entry.getSize(), 
-               //         entry.getPackedSize(), 
-               //         entry.getPath()));
+               Log.debug("getSubDocListForCompressFile path:" + entry.getPath() + " size:" + entry.getSize() + " packedSize:" + entry.getPackedSize()); 
                String subDocPath = rootPath + entry.getPath().replace("\\", "/");
                Doc subDoc = buildBasicDocFromCompressEntry(rootDoc, subDocPath, entry);
                subDocList.add(subDoc);
@@ -6165,6 +6162,7 @@ public class DocController extends BaseController{
 
 	private Doc buildBasicDocFromCompressEntry(Doc rootDoc, String docPath, ISimpleInArchiveItem entry) throws SevenZipException {
 		Doc subDoc = null;
+		Log.debug("buildBasicDocFromCompressEntry docPath:" + docPath + " entryPath:" + entry.getPath());
 		if (entry.isFolder()) 
 		{
 			subDoc = buildBasicDoc(rootDoc.getVid(), null, null, rootDoc.getReposPath(), docPath,"", null, 2, true, rootDoc.getLocalRootPath(), rootDoc.getLocalVRootPath(), entry.getSize(), null);
