@@ -299,7 +299,7 @@
     	   		   	SubContext.dstName = treeNode.name;
 
 			    	//Status Info
-		    		SubContext.index = i;
+		    		SubContext.index = SubContextList.length; //SubContext在List中的index
 		    	   	SubContext.state = 0;	//未开始下载
 		    	   	SubContext.status = "待下载";	//未开始下载
 		    	   	SubContext.stopFlag = false; //停止标记false
@@ -312,7 +312,7 @@
 		    	   	//Push the SubContext
 		    	   	SubContextList.push(SubContext);
 		    	   	
-		    	   	downloadHashMap[SubContext.docId + "-" + SubContext.startTime] = i;
+		    	   	downloadHashMap[SubContext.docId + "-" + SubContext.startTime] = SubContext.index;
     	   		}
 	    	}
     		
