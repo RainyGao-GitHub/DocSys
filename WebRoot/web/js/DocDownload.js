@@ -72,6 +72,9 @@
 			if(isDownloading == true)
 			{
 				DocDownloadAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+	    		//尝试触发多线程下载
+	        	downloadNextDoc();
+
 			}
 			else
 			{
@@ -228,7 +231,7 @@
 			//绘制文件下载列表
 			drawDownloadItems(SubContextList);
 			
-			$(".download-list-title").text("下载列表 (共   " + totalNum + " 个)");
+			$(".download-list-title").text("下载列表 (共   " + totalNum + " 个)");			
 		}
       	
       	//并将需要下载的文件加入到SubContextList中
@@ -522,15 +525,16 @@
 				return;
 			}
 			
-	        index++;
-	        if(index < totalNum) //下载没结束，且回调函数存在则回调，否则表示结束
+	        console.log("downloadNextDoc index:" + index + " totalNum:" + totalNum);
+	        if(index < (totalNum-1)) //下载没结束，且回调函数存在则回调，否则表示结束
 	        {
-	        	console.log("downloadNextDoc Next");
+		        index++;
+	        	console.log("downloadNextDoc start download");
 	        	downloadDoc();
 	        }
 	        else	//下载任务已全部启动，检测是否全部下载都已结束
 	        {
-	        	console.log("downloadNextDoc ");
+	        	console.log("downloadNextDoc all download started");
 	        	downloadEndHandler();
 	        }
 		}
