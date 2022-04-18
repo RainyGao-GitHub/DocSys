@@ -653,6 +653,9 @@
 			$(".downloadInfo"+index).text("已取消");
 			DecThreadCount(SubContext)
 			
+			//停止的当做失败处理
+			failNum++;
+			
 			//触发下一个文件下载
 			downloadNextDoc();
 		}
@@ -668,6 +671,8 @@
 				SubContext.stopFlag = true;
 				$(".downloadInfo"+i).text("已取消");
 				DecThreadCount(SubContext)
+				//停止的当做失败处理
+				failNum++;
 			}
 			stopFlag = true;
 			
