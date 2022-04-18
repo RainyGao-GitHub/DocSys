@@ -9,6 +9,8 @@
         var successNum = 0;	//成功下载个数
 		var failNum = 0; //下载失败个数
 		
+		var previousTimestamp = 0; //上一个下载时间
+		
         /*Content 用于保存文件下载的初始信息*/
         var Content = {};
         Content.BatchList = [];
@@ -22,6 +24,10 @@
         var index = 0; //当前操作的索引
         var totalNum = 0; 
  		var SubContextList = []; //文件下载上下文List，用于记录单个文件的下载情况，在开始下载的时候初始化
+ 		
+ 		//下载线程计数器
+ 		var threadCount = 0;
+ 		var maxThreadCount = 3;
  		
  		var downloadHashMap = {};
 
@@ -295,6 +301,9 @@
 		    	   	SubContext.status = "待下载";	//未开始下载
 		    	   	SubContext.stopFlag = false; //停止标记false
 		    	   	
+		    	   	//threadState
+		    	   	SubContext.threadState = 0; //0:下载线程未启动, 1:下载线程已启动, 2:下载线程已终止
+		    	   			    	   	
 		    	   	SubContext.startTime = Date.now();
 		    	   	
 		    	   	//Push the SubContext
@@ -344,6 +353,9 @@
     		}
     		
     		$(".downloadInfo"+index).text("下载准备中...");
+    		
+    		IncThreadCount(SubContext);
+    		
 			//执行后台downloadDoc操作
     		$.ajax({
                 url : "/DocSystem/Doc/downloadDocPrepare.do",
@@ -374,6 +386,7 @@
                    }
                    console.log("downloadDoc SubContextIndex:" + SubContextIndex, SubContext);
                    
+                   DecThreadCount(SubContext);
                    if( "ok" == ret.status )
                    {          
                 	    console.log("downloadDocPrepare Ok:",ret);        
@@ -394,11 +407,11 @@
             		   		url += "&shareId=" + gShareId;
             		   	}
             		   	
-            		   	
-            		   	if(SubContextIndex != 0)
+            		   	var delayTime = getDownloadDelayTime();
+            		   	if(delayTime > 0)
             		   	{
             		   		console.log("downloadDocPrepare 延时启动文件下载: " + SubContext.name);
-            		   		//延时2秒启动下载
+            		   		//延时启动下载
 	            		   	setTimeout(function(){
 	            		   		console.log("downloadDocPrepare download start for " + SubContext.name);
 	            		   		window.location.href = url;
@@ -407,7 +420,7 @@
 	    						$('.downloadFile'+SubContextIndex).addClass('is-success');
 	    						$(".downloadInfo"+SubContextIndex).hide();
 	            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
-	                	   	}, 2000);
+	                	   	}, delayTime);
             		   	}
             		   	else
             		   	{
@@ -444,6 +457,7 @@
                  	   return;                	   
                    }
                    console.log("downloadDoc SubContextIndex:" + SubContextIndex, SubContext);
+                   DecThreadCount(SubContext);
 
                    console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
  	               $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
@@ -453,18 +467,70 @@
             	   return;
                 }
         	});
+    		
+    		//启动下一个下载线程
+        	downloadNextDoc();
     	}
+    	
+    	function getDownloadDelayTime()
+    	{
+		   	var delayTime = 0;
+		   	var curTimestamp = new Date().getTime();
+		   	console.log("getDownloadDelayTime() curTimestamp:" + curTimestamp + " previousTimestamp:" + previousTimestamp);
+
+		   	if(previousTimestamp != 0)
+		   	{
+			   	var passedTime = curTimestamp - previousTimestamp;
+			   	console.log("getDownloadDelayTime() passedTime:" + passedTime);
+			   	if(passedTime < 2000)
+			   	{
+			   		delayTime = 2000 - passedTime;
+			   	}
+			   	console.log("getDownloadDelayTime() delayTime:" + delayTime);
+		   	}
+			
+		   	previousTimestamp = curTimestamp + delayTime;
+		   	return delayTime;
+    	}
+    	
+    	function IncThreadCount(SubContext)
+        {
+    		if(SubContext.threadState == 0)
+    		{
+    			SubContext.threadState = 1;
+    			threadCount++;
+    		}
+        }
+    	
+    	function DecThreadCount(SubContext)
+        {
+    		if(SubContext.threadState == 1)
+    		{
+    			SubContext.threadState = 2;
+        		threadCount--;    			
+    		}
+        }
+
 
 		function downloadNextDoc()
 		{
-	        index++;	//download成功，则调用回调函
+			//检测当前运行中的下载线程
+        	console.log("downloadNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
+			if(threadCount > maxThreadCount)
+			{
+	        	console.log("downloadNextDoc 下载线程池已满，等待下载线程结束");				
+				return;
+			}
+			
+	        index++;
 	        if(index < totalNum) //下载没结束，且回调函数存在则回调，否则表示结束
 	        {
-	        	console.log("downloadDoc Next");
+	        	console.log("downloadNextDoc Next");
 	        	downloadDoc();
 	        }
-	        else	//下载结束，保存目录结构到后台
+	        else	//下载任务已全部启动，检测是否全部下载都已结束
 	        {
+	        	console.log("downloadNextDoc ");
 	        	downloadEndHandler();
 	        }
 		}
@@ -538,9 +604,17 @@
       	//downloadEndHandler
       	function downloadEndHandler()
       	{
-      		console.log("downloadEndHandler() 下载结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      		console.log("downloadEndHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
+      		if(totalNum > (successNum + failNum))
+      		{
+      			console.log("downloadEndHandler() 下载未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      			return;
+      		}
+
+  			console.log("downloadEndHandler() 下载结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
       		console.log("downloadEndHandler() SubContextList:", SubContextList);
-      		//清除标记
+
+  			//清除标记
   			isDownloading = false;
   			
       		//显示下载准备完成 
@@ -574,8 +648,10 @@
 		function stopDownload(index)
 		{
 			console.log("stopDownload() index:" + index ,SubContextList[index]);
-			SubContextList[index].stopFlag = true;
+			var SubContext = SubContextList[index];
+			SubContext.stopFlag = true;
 			$(".downloadInfo"+index).text("已取消");
+			DecThreadCount(SubContext)
 			
 			//触发下一个文件下载
 			downloadNextDoc();
@@ -588,8 +664,10 @@
 			//将未上传的全部设置
 			for(i=index;i<totalNum;i++)
 			{
-				SubContextList[i].stopFlag = true;
+				var SubContext = SubContextList[index];
+				SubContext.stopFlag = true;
 				$(".downloadInfo"+i).text("已取消");
+				DecThreadCount(SubContext)
 			}
 			stopFlag = true;
 			
