@@ -29,7 +29,7 @@
  		var threadCount = 0;
  		var maxThreadCount = 3;
  		
- 		var downloadHashMap = {};
+ 		var SubContextHashMap = {};
 
         function getDownloadStatus()
         {
@@ -96,9 +96,6 @@
 	        successNum = 0;	//成功下载个数
 			failNum = 0; //下载失败个数
 			drawedNum =0; //已绘制个数
-
-			//清空downloadHashMap
-			downloadHashMap = {};
 			
 			//Build Batch
 			var Batch = {};
@@ -131,6 +128,9 @@
 			
 			//清空上下文列表
 			SubContextList = [];
+
+			//清空SubContextHashMap
+			SubContextHashMap = {};
 			
 			//Set the Index
 			index = 0;
@@ -299,7 +299,6 @@
     	   		   	SubContext.dstName = treeNode.name;
 
 			    	//Status Info
-		    		SubContext.index = SubContextList.length; //SubContext在List中的index
 		    	   	SubContext.state = 0;	//未开始下载
 		    	   	SubContext.status = "待下载";	//未开始下载
 		    	   	SubContext.stopFlag = false; //停止标记false
@@ -310,9 +309,9 @@
 		    	   	SubContext.startTime = Date.now();
 		    	   	
 		    	   	//Push the SubContext
+		    		SubContext.index = SubContextList.length; //SubContext在List中的index
 		    	   	SubContextList.push(SubContext);
-		    	   	
-		    	   	downloadHashMap[SubContext.docId + "-" + SubContext.startTime] = SubContext.index;
+		    	   	SubContextHashMap[SubContext.docId + "-" + SubContext.startTime] = SubContext.index;
     	   		}
 	    	}
     		
@@ -381,7 +380,7 @@
                 	   return;
                    }
                    
-                   var SubContextIndex = downloadHashMap[SubContext.docId + "-" + SubContext.startTime];
+                   var SubContextIndex = SubContextHashMap[SubContext.docId + "-" + SubContext.startTime];
                    if(SubContextIndex == undefined)
                    {
                 	   console.log("downloadDoc 未找到对应的索引", SubContext);
@@ -453,7 +452,7 @@
                  	   return;
                    }
                     
-                   var SubContextIndex = downloadHashMap[SubContext.docId + "-" + SubContext.startTime];
+                   var SubContextIndex = SubContextHashMap[SubContext.docId + "-" + SubContext.startTime];
                    if(SubContextIndex == undefined)
                    {
                  	   console.log("downloadDoc 未找到对应的索引", SubContext);
@@ -570,6 +569,7 @@
       		console.log("downloadErrorHandler() "+ SubContext.name + " " + errMsg);
       		
       		failNum++;
+			DecThreadCount(SubContext);
       		
       		//设置下载状态
 			SubContext.state = 3;	//下载结束
@@ -584,6 +584,7 @@
       		console.log("downloadErrorAbortHandler() "+ SubContext.name + " " + errMsg);
       	
       		failNum++;
+			DecThreadCount(SubContext);
       		
     		//设置下载状态
 			SubContext.state = 3;	//下载结束
@@ -598,6 +599,7 @@
       		console.log("downloadSuccessHandler() "+ SubContext.name + " " + msgInfo);
       		
       		successNum++;
+			DecThreadCount(SubContext);
 	      	
 	      	SubContext.state = 2;	//下载结束
       		SubContext.status = "success";
@@ -651,17 +653,21 @@
   		
 		function stopDownload(index)
 		{
-			console.log("stopDownload() index:" + index ,SubContextList[index]);
+			console.log("stopDownload() index:" + index,SubContextList[index]);
 			var SubContext = SubContextList[index];
-			SubContext.stopFlag = true;
-			$(".downloadInfo"+index).text("已取消");
-			DecThreadCount(SubContext)
-			
-			//停止的当做失败处理
-			failNum++;
-			
-			//触发下一个文件下载
-			downloadNextDoc();
+			if(SubContext.stopFlag == false)
+			{
+				SubContext.stopFlag = true;
+				$(".downloadInfo"+index).text("已取消");
+				
+				//停止的当做失败处理
+				failNum++;
+				DecThreadCount(SubContext)
+
+				//触发下一个文件下载
+				downloadNextDoc();
+			}
+
 		}
 		
 		function stopAllDownload()
@@ -674,9 +680,10 @@
 				var SubContext = SubContextList[index];
 				SubContext.stopFlag = true;
 				$(".downloadInfo"+i).text("已取消");
-				DecThreadCount(SubContext)
+
 				//停止的当做失败处理
 				failNum++;
+				DecThreadCount(SubContext)
 			}
 			stopFlag = true;
 			
