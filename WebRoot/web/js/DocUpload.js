@@ -1119,28 +1119,30 @@
 		}
 		
  		var CheckSumCaculator = (function(){
- 			var caculateIndex = 0;
- 			var reuploadCaculateIndex = 0;
- 			
- 	      	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
- 	      	function caculate()
+ 	      	
+ 			//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
+ 	      	function caculate(SubContext)
  	      	{
- 	      		//console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
- 	      		var SubContext = SubContextList[caculateIndex];
+ 	      		console.log("caculateFileCheckSum(" + SubContext.index + ")");
+ 	      		if(stopFlag == true || SubContext.stopFlag == true)
+ 	      		{
+ 	 	      		console.log("caculateFileCheckSum(" + SubContext.index + ") upload was stoped, stop caculate");
+ 	 	      		return;
+ 	      		}
+ 	      		
  	 			if(1 == SubContext.checkSumState)
  	          	{
- 	      			//console.log("caculateFileCheckSum() checkSum is caculating for: " + SubContext.name );
+ 	      			console.log("caculateFileCheckSum(" + SubContext.index + ") checkSum is caculating for: " + SubContext.name );
  	      			return;
  	          	}
  	      		else if(2 == SubContext.checkSumState)
  	      		{
- 	      			//console.log("caculateFileCheckSum() checkSum is ready for:" + SubContext.name);
- 	      			caculateNext();
+ 	      			console.log("caculateFileCheckSum(" + SubContext.index + ") checkSum is ready for: " + SubContext.name );
  	      			return;
  	      		}
  	      		
  	      		//start to caculate the checkSum for SubContext
- 	      		//console.log("caculateFileCheckSum() start caculate checkSum for:",SubContext);
+ 	      		console.log("caculateFileCheckSum(" + SubContext.index + ") start caculate checkSum for:" + SubContext.name);
  	      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
  	            	chunkSize = 2097152,                           // read in chunks of 2MB
@@ -1158,7 +1160,7 @@
  		            //console.log("currentChunk=" + currentChunk);
  		            if(stopFlag == true || SubContext.stopFlag == true)
  		            {
- 		            	console.log("caculateFileCheckSum() upload was stoped, stop caculate");
+ 		            	console.log("caculateFileCheckSum(" + SubContext.index + ") upload was stoped, stop caculate");
  		                return;
  		            }
  		            
@@ -1181,9 +1183,6 @@
  		            	SubContext.checkSum = spark.end();	            	
  		                //console.log("caculateFileCheckSum() Computed hash:" + SubContext.checkSum); // computed hash
  		            	SubContext.checkSumState = 2; 		                
- 		                
- 		                //To caculateNext
- 		                caculateNext();
  		            }
  		        };
  		
@@ -1191,9 +1190,6 @@
  		        fileReader.onerror = function () {
  		        	SubContext.checkSumState = 3;
  	                console.log("caculateFileCheckSum() Fail to Computed hash"); //fail to compute hash
- 	                
-		            //To caculateNext
-		            caculateNext();
  		        };
  		
  		        function loadNext() {
@@ -1218,49 +1214,11 @@
  	      		SubContext.checkSum = "";
  		        loadNext();
  	      	}
- 	      	
- 	   		function caculateNext()
- 	   		{
- 	         	if(false == reuploadFlag)
- 	         	{
- 	   				if(caculateIndex < (totalNum-1))
- 	   				{
- 	 	   	      		caculateIndex++;
- 	   					caculate(); 
- 	   				}
- 	   				else
- 	   				{
- 	   					console.log("caculateNext() all upload doc checkSum was computed");
- 	   				}
- 	         	}
- 	         	else 
- 	         	{
- 	         		if(reuploadCaculateIndex < (reuploadTotalNum-1))
- 	         		{
- 	 	         		reuploadCaculateIndex ++;
- 	         			caculateIndex = reuploadList[reuploadCaculateIndex];
- 	         			caculate();
- 	         		}
- 	         		else
- 	         		{
- 	         			console.log("caculateNext() for all reupload doc checkSum was computed");
- 	         		}			
- 	         	}
- 	       }
  	   	   
  	   		//开放给外部的调用接口
  	        return {
- 	            caculate : function(startId){
- 	            	if(false == reuploadFlag)
- 	            	{
- 	            		caculateIndex = startId;
- 	            	}
- 	            	else
- 	            	{
- 	            		reuploadCaculateIndex = startId;
- 	            		caculateIndex = reuploadList[reuploadCaculateIndex];
- 	            	}
- 	            	caculate();
+ 	            caculate : function(SubContext){
+ 	            	caculate(SubContext);
  	            },
  	        };
  		})();
@@ -1274,14 +1232,7 @@
 			case 0:				
 				 //Start CheckSum Caculator: It will caculate for all upload or reupload Docs
 				 console.log("getFileCheckSum(" + SubContext.index + ") checkSum not computed, start compute");
-				 if(false == reuploadFlag)
-			     {
-					 CheckSumCaculator.caculate(index);					 
-			     }
-				 else
-			     {
-					 CheckSumCaculator.caculate(reuploadIndex);					 
-			     }
+				 CheckSumCaculator.caculate(SubContext);		
 				 //注意：CheckSumCaculator.caculate是异步调用，如果启动成功的话，则会把状态改为1，所以这里没有break
 			case 1:
 				//Start timer to wait for result
@@ -1460,9 +1411,9 @@
 				isUploading = true;
 				//trigger uploadDoc
 				reuploadIndex = 0;
-				var index = reuploadList[reuploadIndex];
-				console.log("reuploadFailDocs() 重传开始" + index);
-				uploadDocById(index);
+				var SubContextId = reuploadList[reuploadIndex];
+				console.log("reuploadFailDocs() 重传开始" + " reuploadIndex:" + reuploadIndex + " SubContextId:" + SubContextId);
+				uploadDocById(SubContextId);
 			}
 		}
 		
@@ -2000,7 +1951,7 @@
 				//计算当前文件上传百分比
 				$('.file'+SubContextIndex+' .el-progress__text').text(per+"%");
 				$('.file'+SubContextIndex+' .el-progress-bar__inner')[0].style.width=per+'%';
-				console.log("上传中："+per+"%！"); 
+				console.log("xhr onprogress(" + SubContext.index + ") 上传中："+per+"%！"); 
 	
 				//统计总的已上传大小、百分比、上传速度、剩余上传时间
 				uploadTime = new Date().getTime();
