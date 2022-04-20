@@ -1165,12 +1165,12 @@
  		            }
  		            
  		            if (currentChunk === 0) {
- 		                //console.log("caculateFileCheckSum() Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
+ 		                //console.log("caculateFileCheckSum(" + SubContext.index + ") Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
  		                if(chunks > 10)
  		                {
  		                	chunkStep = chunks / 10;
  		                }
- 		                //console.log("caculateFileCheckSum() chunkStep=" + chunkStep);
+ 		                //console.log("caculateFileCheckSum(" + SubContext.index + ") chunkStep=" + chunkStep);
  		            }
  		
  		            spark.appendBinary(e.target.result);                 // append array buffer
@@ -1181,7 +1181,7 @@
  		            } else {
 
  		            	SubContext.checkSum = spark.end();	            	
- 		                //console.log("caculateFileCheckSum() Computed hash:" + SubContext.checkSum); // computed hash
+ 		                console.log("caculateFileCheckSum(" + SubContext.index + ") checksum is ready, checksum:" + SubContext.checkSum); // computed hash
  		            	SubContext.checkSumState = 2; 		                
  		            }
  		        };
@@ -1189,7 +1189,7 @@
  		        //Fail to compute hash
  		        fileReader.onerror = function () {
  		        	SubContext.checkSumState = 3;
- 	                console.log("caculateFileCheckSum() Fail to Computed hash"); //fail to compute hash
+		            console.log("caculateFileCheckSum(" + SubContext.index + ") checksum caculate failed"); // computed hash
  		        };
  		
  		        function loadNext() {
@@ -1202,7 +1202,7 @@
  		            }
  		            else
  		            {
- 		            	console.log("caculateFileCheckSum() 当前浏览器不支持读取文件，无法计算CheckSum"); //fail to compute hash
+ 		            	console.log("caculateFileCheckSum(" + SubContext.index + ") 当前浏览器不支持读取文件，无法计算CheckSum"); //fail to compute hash
  		            	SubContext.checkSumState = 4;
  		            	SubContext.checkSum = "";	
  		            }
