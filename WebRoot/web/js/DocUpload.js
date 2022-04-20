@@ -203,7 +203,7 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()'>全部重传 </span><i class='el-icon-close uploadCloseBtn'></i></div>";
+				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()' style='display:none'>全部重传 </span><i class='el-icon-close uploadCloseBtn'></i></div>";
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
@@ -477,7 +477,7 @@
 		    		//console.log(SubContext);
 					str+="<li class='el-upload-list__item file"+i+" is-uploading' value="+i+">"+
 		    				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+SubContext.name+"</span></a>"+
-		    				"<a class='reuploadBtn reupload"+i+"' onclick='reuploadFailDocs("+i+")'>重传 </a>"+
+		    				"<a class='reuploadBtn reupload"+i+"' onclick='reuploadFailDocs("+i+")'  style='display:none'>重传</a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='DocUpload.stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -836,12 +836,13 @@
           	SubContext.status = "success";
           	SubContext.msgInfo = msgInfo;
     		//hide the reupload btn
-    		$(".reupload"+index).hide();
+    		$(".reupload"+SubContext.index).hide();
+    		
     		uploadNextDoc();
         }
       	
       	//uploadWarningAbortHandler
-      	function uploadErrorAbortHandler(SubContext,errMsg)
+      	function uploadWarningAbortHandler(SubContext,errMsg)
       	{
       		var FileName = SubContext.name;
       		console.log("uploadWarningAbortHandler() "+ FileName + " " + errMsg);
@@ -865,7 +866,8 @@
           	SubContext.status = "success";
           	SubContext.msgInfo = msgInfo;
     		//hide the reupload btn
-    		$(".reupload"+index).hide();
+    		$(".reupload"+SubContext.index).hide();
+    		
       		uploadEndHandler();
       	}
       	
@@ -918,6 +920,9 @@
 			SubContext.state = 3;	//上传结束
       		SubContext.status = "fail";
 			SubContext.msgInfo = errMsg;
+      		//show the reupload btn
+    		$(".reupload"+SubContext.index).show();
+			
 			uploadNextDoc();		 	
       	}
       	
@@ -949,6 +954,9 @@
 			SubContext.state = 3;	//上传结束
       		SubContext.status = "fail";
       		SubContext.msgInfo = errMsg;
+      		//show the reupload btn
+    		$(".reupload"+SubContext.index).show();
+      		
       		uploadEndHandler();
       	}
       	
@@ -990,7 +998,10 @@
       		if(successNum != totalNum)
       		{
       			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
-                // 普通消息提示条
+
+      			$(".reuploadAllBtn").show();
+
+      			// 普通消息提示条
     			bootstrapQ.msg({
     					msg : uploadEndInfo,
     					type : 'warning',
@@ -1484,6 +1495,8 @@
 			{
 				//更新failNum
 				failNum--;
+	      		//hide the reupload btn
+	    		$(".reupload"+SubContext.index).hide();
 			}
 			
 			console.log("setSubContextForReupload(" + SubContext.index + ") totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
@@ -2161,7 +2174,9 @@
 				SubContext.state = 3;	//上传失败
 	      		SubContext.status = "fail";
 	      		SubContext.msgInfo = "用户取消了上传";
-				
+	      		//show the reupload btn
+	    		$(".reupload"+SubContext.index).show();
+	    		
 				$('.file'+index).removeClass('is-uploading');
 				$('.file'+index).addClass('is-fail');
 							
@@ -2179,21 +2194,29 @@
   			reuploadFlag = false;
   			
 			//将未上传的全部设置为取消状态
-			for(i=index;i<totalNum;i++)
+			for(i=0;i<totalNum;i++)
 			{
 				var SubContext = SubContextList[i];
-				SubContext.stopFlag = true;
-				
-				failNum++;
-				DecreaseThreadCount(SubContext);
-
-				SubContext.state = 3;	//上传失败
-	      		SubContext.status = "fail";
-	      		SubContext.msgInfo = "用户取消了上传";
-				
-				$('.file'+i).removeClass('is-uploading');
-				$('.file'+i).addClass('is-fail');
+				if(SubContext.state != 2 && SubContext.state != 3)	//处理未成功也未失败的文件
+				{
+					SubContext.stopFlag = true;
+					
+					failNum++;
+					DecreaseThreadCount(SubContext);
+	
+					SubContext.state = 3;	//上传失败
+		      		SubContext.status = "fail";
+		      		SubContext.msgInfo = "用户取消了上传";
+		      		//show the reupload btn
+		    		$(".reupload"+SubContext.index).show();
+					
+					$('.file'+i).removeClass('is-uploading');
+					$('.file'+i).addClass('is-fail');
+				}
 			}
+			
+			//显示全部重传标记
+			$(".reuploadAllBtn").show();
 		}
 				
 		//开放给外部的调用接口
