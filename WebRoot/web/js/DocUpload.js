@@ -451,7 +451,7 @@
       			//Check if all items drawed
       			if(drawedNum >= totalNum)
       			{
-      				console.log("druawUploadItems() all items drawed");
+      				//console.log("druawUploadItems() all items drawed");
       				return;
       			}
       			
@@ -806,7 +806,7 @@
       	//uploadWarnignConfirmHandler
       	function uploadWarningConfirmHandler(SubContext,msgInfo)
       	{
-			console.log("警告：" + msgInfo);
+			console.log("uploadWarningConfirmHandler(" + SubContext.index + ") 警告：" + msgInfo);
 			var confirm = getUploadWarningConfirmSetting();
 			if(confirm == 1)
 			{
@@ -955,10 +955,10 @@
       	//uploadEndHandler
       	function uploadEndHandler()
       	{
-      		console.log("uploadEndHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
+      		//console.log("uploadEndHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
       		if(totalNum > (successNum + failNum))
       		{
-      			console.log("uploadEndHandler() 上传未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      			//console.log("uploadEndHandler() 上传未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
       			return;
       		}
       		
@@ -1011,16 +1011,16 @@
 		function uploadNextDoc()
 		{
 			//检测当前运行中的下载线程
-        	console.log("uploadNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
+        	//console.log("uploadNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
 			if(threadCount >= maxThreadCount)
 			{
-	        	console.log("uploadNextDoc 上传线程池已满，等待上传线程结束");				
+	        	//console.log("uploadNextDoc 上传线程池已满，等待上传线程结束");				
 				return;
 			}
 			
       		if(false == reuploadFlag)	//新传状态
       		{
-    	        console.log("uploadNextDoc index:" + index + " totalNum:" + totalNum);
+    	        //console.log("uploadNextDoc index:" + index + " totalNum:" + totalNum);
     	        if(index < (totalNum-1)) //还有文件上传线程未启动
     	        {
     		        index++;
@@ -1029,13 +1029,13 @@
     	        }
     	        else	//上传线程已全部启动，检测是否全部下载都已结束
     	        {
-    	        	console.log("uploadNextDoc all download started");
+    	        	//console.log("uploadNextDoc all download started");
     	        	uploadEndHandler();
     	        }      			
       		}
       		else //重传状态
       		{  	
-      			console.log("uploadNextDoc reuploadIndex:" + reuploadIndex + " reuploadTotalNum:" + reuploadTotalNum);
+      			//console.log("uploadNextDoc reuploadIndex:" + reuploadIndex + " reuploadTotalNum:" + reuploadTotalNum);
       			if(reuploadIndex < (reuploadTotalNum-1))
       			{
       				reuploadIndex++;
@@ -1179,7 +1179,7 @@
       	
 		function getFileCheckSum(SubContext)
 		{            
-			console.log("getFileCheckSum(" + SubContext.index + ") SubContext.checkSumState:" + SubContext.checkSumState);
+			//console.log("getFileCheckSum(" + SubContext.index + ") SubContext.checkSumState:" + SubContext.checkSumState);
 			switch(SubContext.checkSumState)
 			{
 			case 0:				
@@ -1197,16 +1197,16 @@
 				return false;
 			case 2:
 				//CheckSum ok
-				console.log("getFileCheckSum(" + SubContext.index + ") checkSum is ready");
+				//console.log("getFileCheckSum(" + SubContext.index + ") checkSum is ready");
 				return true;
 			case 3:
 				//CheckSum Failed, Skip to upload this file
-				console.log("getFileCheckSum(" + SubContext.index + ") checkSum calculate Failed");
+				//console.log("getFileCheckSum(" + SubContext.index + ") checkSum calculate Failed");
 				return true;
 			default:
 				//CheckSum Error
 				SubContext.checkSum = "";
-				console.log("getFileCheckSum(" + SubContext.index + ") checkSum calculate Error");
+				//console.log("getFileCheckSum(" + SubContext.index + ") checkSum calculate Error");
 				return true;
 			}
 		}
@@ -1218,7 +1218,7 @@
 	  	 	//console.log("checkDocInfo(" + SubContext.index + ") SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
    			if("checkDocInfo" == SubContext.SMState && 1 == SubContext.SMSubState)
    			{
-   				console.log("checkDocInfo(" + SubContext.index + ") have been done for " + SubContext.name);
+   				//console.log("checkDocInfo(" + SubContext.index + ") have been done for " + SubContext.name);
    	      		return true;
    			}
 
@@ -1431,7 +1431,10 @@
 			SubContext.uploadWarningConfirmSet = 0;
 			
 			//文件切片需要继续
-			SubContext.resumeCutFile = true; //文件切片需要重新开发
+			SubContext.resumeCutFile = true; //文件切片需要恢复
+			
+			//分片要重头开始
+			SubContext.chunkIndex = 0;
 			
 			reuploadList.push(id);
 		}
@@ -1482,7 +1485,7 @@
  	      	}
  	      	else
  	      	{
- 	      		console.log("CutFile(" + SubContext.index + ") is in processing for " + SubContext.name);
+ 	      		//console.log("CutFile(" + SubContext.index + ") is in processing for " + SubContext.name);
  	      		if(SubContext.resumeCutFile == false)
  	      		{
  	      			return false;
@@ -1535,7 +1538,7 @@
             	}
             	
             	//如果是重传，从失败或者未完成的那个chunk开始
-            	if(SubContext.resumeCutFile = true)
+            	if(SubContext.resumeCutFile == true)
             	{
             		SubContext.resumeCutFile = false;
             		for(i=0; i< SubContext.chunkNum; i++)
@@ -1761,7 +1764,7 @@
 		
     	function startUpload(SubContext)
     	{
-			console.log("startUpload(" + SubContext.index + ") SubContext:" , SubContext);
+			//console.log("startUpload(" + SubContext.index + ") SubContext:" , SubContext);
 
 			//新建文件上传表单
 			var form = new FormData();
@@ -1822,11 +1825,11 @@
 			//设置异步上传状态变化回调处a理函数
 			xhr.onreadystatechange = function() {				
 				//文件上传状态
-				console.log("xhr onreadystatechange(" + SubContext.index + ") status:" + xhr.status + " readyState:" + xhr.readyState);
+				//console.log("startUpload(" + SubContext.index + ") xhr onreadystatechange status:" + xhr.status + " readyState:" + xhr.readyState);
 				
 				if(stopFlag == true || SubContext.stopFlag == true)
 	            {
-					console.log("xhr onreadystatechange(" + SubContext.index + ") upload task 已取消", SubContext);
+					console.log("startUpload(" + SubContext.index + ") xhr onreadystatechange upload task 已取消", SubContext);
 	                return;
 	            }
 	                   
@@ -1834,10 +1837,10 @@
 	            if(SubContextIndex == undefined)
 	            {
 	            	//可能是上一次上传遗留的响应
-	            	console.log("xhr onreadystatechange(" + SubContext.index + ") 未找到对应的索引", SubContext);
+	            	console.log("startUpload(" + SubContext.index + ") xhr onreadystatechange 未找到对应的索引", SubContext);
 	                return;                	   
 	            }
-	            console.log("xhr onreadystatechange(" + SubContext.index + ") SubContextIndex:" + SubContextIndex, SubContext);	
+	            //console.log("startUpload(" + SubContext.index + ") xhr onreadystatechange SubContextIndex:" + SubContextIndex, SubContext);	
 									
 				if(xhr.status == 200) 
 				{
@@ -1880,7 +1883,7 @@
 					 else	//上传失败
 					 {
 						//上传失败
-						console.log("上传失败：" + ret.msgInfo);
+						console.log("startUpload(" + SubContext.index + ") 上传失败：" + ret.msgInfo);
 						uploadErrorHandler(SubContext, ret.msgInfo);
 						uploadErrorConfirmHandler(SubContext, ret.msgInfo);
 						return;
@@ -1892,9 +1895,8 @@
 						return;
 					}
 					//上传失败
-					console.log("系统异常: " + name + " 上传异常！");
-					$('.file'+SubContextIndex).removeClass('is-uploading');
-					$('.file'+SubContextIndex).addClass('is-fail');
+					console.log("startUpload(" + SubContext.index + ") 系统异常: " + name + " 上传异常！");
+					uploadErrorHandler(SubContext, name + " 上传异常！");
 					uploadErrorConfirmHandler(SubContext, name + " 上传异常！");
 					return;
 				}
@@ -1905,7 +1907,7 @@
 				//取消上传的文件，直接不处理即可
 				if(stopFlag == true || SubContext.stopFlag == true)
 	            {
-					console.log("xhr onprogress(" + SubContext.index + ") upload task 已取消", SubContext);
+					console.log("startUpload(" + SubContext.index + ") xhr onprogress upload task 已取消", SubContext);
 					//xhr.abort(); //结束当前上传,什么都不要处理即可	 
 					return;
 	            }
@@ -1914,10 +1916,10 @@
 	            if(SubContextIndex == undefined)
 	            {
 	            	//可能是上一次上传遗留的响应
-	            	console.log("xhr onprogress(" + SubContext.index + ") 未找到对应的索引", SubContext);
+	            	console.log("startUpload(" + SubContext.index + ") xhr onprogress 未找到对应的索引", SubContext);
 	                return;                	   
 	            }
-	            console.log("xhr onprogress(" + SubContext.index + ") SubContextIndex:" + SubContextIndex, SubContext);	
+	            //console.log("startUpload(" + SubContext.index + ") xhr onprogress SubContextIndex:" + SubContextIndex, SubContext);	
 				
 				//文件上传进度(evt获取到的是上传的所有数据的百分比，所有比实际文件要大)
 				var loaded = evt.loaded;	//已上传大小
@@ -1925,15 +1927,13 @@
 				if(tot <= 0)
 				{
 					xhr.abort(); //结束当前上传	
-					//update the uploadStatus
-					$('.file'+SubContextIndex).removeClass('is-uploading');
-					$('.file'+SubContextIndex).addClass('is-fail');
+					uploadErrorHandler(SubContext, "文件读取失败！");
 					uploadErrorConfirmHandler(SubContext, "文件读取失败！");
 					return;
 				}
 				
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
-				console.log("xhr onprogress(" + SubContext.index + ") loaded:" + loaded + " tot:" + tot + " per:" + per);
+				console.log("startUpload(" + SubContext.index + ") xhr onprogress loaded:" + loaded + " tot:" + tot + " per:" + per);
 				
 				//计算实际文件的分片上传进度
 				if(SubContext.chunked)
@@ -1950,7 +1950,7 @@
 				//计算当前文件上传百分比
 				$('.file'+SubContextIndex+' .el-progress__text').text(per+"%");
 				$('.file'+SubContextIndex+' .el-progress-bar__inner')[0].style.width=per+'%';
-				console.log("xhr onprogress(" + SubContext.index + ") 上传中："+per+"%！"); 
+				console.log("startUpload(" + SubContext.index + ") xhr onprogress 上传中："+per+"%！"); 
 	
 				//统计总的已上传大小、百分比、上传速度、剩余上传时间
 				uploadTime = new Date().getTime();
@@ -2025,22 +2025,12 @@
     		checkAndDrawUploadItems(SubContextList);
 			
     		//判断是否取消上传
-    		if(stopFlag == true)
+    		if(stopFlag == true || SubContext.stopFlag == true)
     		{
-    			console.log("uploadDoc(" + SubContext.index + "): 结束上传");
-    			//TODO: 感觉重复处理了
-    			uploadEndHandler();
+    			console.log("uploadDoc(" + SubContext.index + ") 用户取消了上传 "+ name);
     			return;
     		}
-    		
-    		//取消当前文件上传
-			if(SubContext.stopFlag == true)
-			{
-				console.log("uploadDoc(" + SubContext.index + ") 用户取消了上传 "+ name);
-				uploadNextDoc();
-				return;
-			}
-			
+    					
 			IncreaseThreadCount(SubContext);
 			
     		//设置上传状态
