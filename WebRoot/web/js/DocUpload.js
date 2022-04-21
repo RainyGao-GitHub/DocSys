@@ -623,7 +623,7 @@
 	  	 			}
 	  	 			else
 	  	 			{
-	  	 				uploadErrorHandler(docName,"文件已存在，跳过");
+	  	 				uploadErrorHandler(SubContext, "文件已存在，跳过");
 	  	 			}
 	    	    	return true;
 	    	    });      		
@@ -1217,13 +1217,14 @@
  		        loadNext();
 
  		        //启动超时定时器
- 	      		var timeOut = 6000; //60s
+ 	      		var timeOut = SubContext.size + 60000; //基础超时1分钟
+ 			    console.log("caculateFileCheckSum(" + SubContext.index + ") start timeout monitor for " + SubContext.name + " with " + timeOut + " ms");
 				setTimeout(function () {
 					console.log("caculateFileCheckSum(" + SubContext.index + ") timeout, SubContext.checkSumState:" + SubContext.checkSumState);
  		            if(SubContext.checkSumState == 1)
 					{
 						SubContext.stopFlag = true; //超时
-						uploadErrorHandler(SubCotext, "caculateFileCheckSum TimeOut");
+						uploadErrorHandler(SubContext, "caculateFileCheckSum TimeOut");
 					}
 			    },timeOut);	//check it 50ms later
  	      	}
@@ -1239,7 +1240,7 @@
       	
 		function getFileCheckSum(SubContext)
 		{            
-			console.log("getFileCheckSum(" + SubContext.index + ")");
+			console.log("getFileCheckSum(" + SubContext.index + ") SubContext.checkSumState:" + SubContext.checkSumState);
 			switch(SubContext.checkSumState)
 			{
 			case 0:				
@@ -1248,21 +1249,25 @@
 				 CheckSumCaculator.caculate(SubContext);		
 				 //注意：CheckSumCaculator.caculate是异步调用，如果启动成功的话，则会把状态改为1，所以这里没有break
 			case 1:
+				//TODO: 计算完成会自动回调（而且也有超时机制）,因此不需要主动查询，以下代码到时候需要去掉
 				//Start timer to wait for result
-		        console.log("getFileCheckSum(" + SubContext.index + ") checkSum not ready, wait for result 100 ms later"); 
-				setTimeout(function () {
-		            uploadDoc(SubContext); //reEnter uploadDoc
-		        },50);	//check it 50ms later
+		        //console.log("getFileCheckSum(" + SubContext.index + ") checkSum not ready, wait for result 100 ms later"); 
+				//setTimeout(function () {
+		        //    uploadDoc(SubContext); //reEnter uploadDoc
+		        //},50);	//check it 50ms later
 				return false;
 			case 2:
 				//CheckSum ok
+				console.log("getFileCheckSum(" + SubContext.index + ") checkSum is ready");
 				return true;
 			case 3:
 				//CheckSum Failed, Skip to upload this file
+				console.log("getFileCheckSum(" + SubContext.index + ") checkSum calculate Failed");
 				return true;
 			default:
 				//CheckSum Error
 				SubContext.checkSum = "";
+				console.log("getFileCheckSum(" + SubContext.index + ") checkSum calculate Error");
 				return true;
 			}
 		}
@@ -1523,16 +1528,16 @@
 					chunkList.push(chunk);
 				}
 				SubContext.chunkList = chunkList;
-				console.log("CutFile(" + SubContext.index + ") cut start",SubContext);
+				console.log("CutFile(" + SubContext.index + ") start for " + SubContext.name);
 			}
 			else if(2 == SubContext.cutFileState)
  	      	{
- 	      		//console.log("CutFile(" + SubContext.index + ") completed for:",SubContext);
+ 	      		console.log("CutFile(" + SubContext.index + ") completed for " + SubContext.name);
  	      		return true;
  	      	}
  	      	else
  	      	{
- 	      		console.log("CutFile(" + SubContext.index + ") is in processing for: ",SubContext);
+ 	      		console.log("CutFile(" + SubContext.index + ") is in processing for " + SubContext.name);
 	      		return false;
  	      	}
  	      		
@@ -1560,15 +1565,15 @@
             	currentChunk ++;
             	if (currentChunk < chunks) {
                 	loadNext();
-                	uploadDoc(SubContext);                	
-            	}
+                }
             	else
             	{
             		console.log("fileReader.onload(" + SubContext.index + ") all chunks checkSum is ready ",SubContext);
                 	SubContext.cutFileState = 2;
-                	uploadDoc(SubContext);
-            		return;
             	}
+            	
+            	//每完成一个chunk的CheckSum的计算都需要调用uploadDoc
+            	uploadDoc(SubContext);                	
             };
 		        
 		    function loadNext() {
@@ -1585,17 +1590,19 @@
 		        fileReader.readAsBinaryString(blobSlice.call(file, start, end));
 		    }
 		    
+		    //以下是分片的首次触发行为
 	      	//Trigger the fileRead
 		    loadNext();
 		    
 			//启动超时定式器
-			var timeOut = 6000; //60s
+			var timeOut = SubContext.size + 60000; //基础超时时间1分钟，文件size越大超时时间越长
+		    console.log("CutFile(" + SubContext.index + ") start timeout monitor for " + SubContext.name + " with " + timeOut + " ms");
 			setTimeout(function () {
 				 console.log("CutFile(" + SubContext.index + ") timeout, SubContext.cutFileState:" + SubContext.cutFileState);
 				 if(SubContext.cutFileState == 1)
 				 {
 			         SubContext.stopFlag = true; //超时
-			         uploadErrorHandler(SubCotext, "CutFile TimeOut");
+			         uploadErrorHandler(SubContext, "CutFile TimeOut");
 				 }
 		    },timeOut);	//check it 50ms later		    
 		    return false;
@@ -1618,11 +1625,12 @@
 			{
 			case 0:
 			case 1:
+				//TODO: 文件分片CutFile函数每计算完一个分片都会回调uploadDoc（也有超时机制），因此下面的代码可以删除
 				//Start timer to wait for result
-		        console.log("getChunkCheckSum(" + SubContext.index + ") chunk checkSum not ready, wait for result 100 ms later"); 
-				setTimeout(function () {
-		            uploadDoc(SubContext); //reEnter uploadDoc
-		        },100);	//check it one minute later
+		        //console.log("getChunkCheckSum(" + SubContext.index + ") chunk checkSum not ready, wait for result 100 ms later"); 
+				//setTimeout(function () {
+		        //    uploadDoc(SubContext); //reEnter uploadDoc
+		        //},100);	//check it one minute later
 				return false;
 			case 2:
 				//CheckSum ok
@@ -2092,7 +2100,7 @@
     			var file = SubContext.file;
 				if(!file) 
 				{
-					uploadErrorHandler("未知","不是文件");
+					uploadErrorHandler(SubContext,"不是文件");
 					return; 
 				}
     		}
