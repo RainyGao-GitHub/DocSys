@@ -13559,13 +13559,12 @@ public class BaseController  extends BaseFunction{
         	int exitCode = ps.waitFor();    	
         	if(exitCode == 0)
         	{
-        		Log.debug("执行成功！");
+        		Log.debug("BaseController run() command:" + command +  " 执行成功！");
         	}
         	else
         	{
-        		Log.debug("执行失败:" + exitCode);   
-        		Log.debug("错误日志:" + result);   
-            		
+        		Log.debug("BaseController run() command:" + command +  " 执行失败！exitCode:" + exitCode);
+        		Log.debug("BaseController run() 错误日志 result:" + result);   
         	}
         	ps.destroy();
             
