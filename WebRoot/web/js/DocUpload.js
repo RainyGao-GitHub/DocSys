@@ -1182,7 +1182,8 @@
 
  		            	SubContext.checkSum = spark.end();	            	
  		                console.log("caculateFileCheckSum(" + SubContext.index + ") checksum is ready, checksum:" + SubContext.checkSum); // computed hash
- 		            	SubContext.checkSumState = 2; 	
+ 		            	SubContext.checkSumState = 2; 
+ 		            	clearTimeOut(SubContext.timerForCheckSumCaculator);
  	                	uploadDoc(SubContext);
  		            }
  		        };
@@ -1191,6 +1192,7 @@
  		        fileReader.onerror = function () {
 		            console.log("caculateFileCheckSum(" + SubContext.index + ") checksum caculate failed"); // computed hash
  		        	SubContext.checkSumState = 3;
+ 		        	clearTimeOut(SubContext.timerForCheckSumCaculator);
                 	uploadDoc(SubContext);
  		        };
  		
@@ -1206,9 +1208,10 @@
  		            {
  		            	console.log("caculateFileCheckSum(" + SubContext.index + ") 当前浏览器不支持读取文件，无法计算CheckSum"); //fail to compute hash
  		            	SubContext.checkSumState = 4;
+ 		            	clearTimeOut(SubContext.timerForCheckSumCaculator);
  		            	SubContext.checkSum = "";	
- 		            }
- 		            
+ 		            	uploadDoc(SubContext);
+ 		            } 		            
  		        }
  		
  	      		//set the running state
@@ -1219,7 +1222,7 @@
  		        //启动超时定时器
  	      		var timeOut = SubContext.size + 60000; //基础超时1分钟
  			    console.log("caculateFileCheckSum(" + SubContext.index + ") start timeout monitor for " + SubContext.name + " with " + timeOut + " ms");
-				setTimeout(function () {
+ 			    SubContext.timerForCheckSumCaculator = setTimeout(function () {
 					console.log("caculateFileCheckSum(" + SubContext.index + ") timeout, SubContext.checkSumState:" + SubContext.checkSumState);
  		            if(SubContext.checkSumState == 1)
 					{
@@ -1275,17 +1278,16 @@
       	//返回false表示该接口触发异步调用，当前uploadDoc线程需要先退出，异步回调会根据check结果决定后续是否reenter uploadDoc
       	function checkDocInfo(SubContext)
       	{   
-      		console.log("checkDocInfo(" + SubContext.index + ") SubContext:", SubContext);
-      		var name = SubContext.name;
-	  	 	
 	  	 	//It is the first call for file, so we need to check the docInfo
 	  	 	//console.log("checkDocInfo(" + SubContext.index + ") SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
    			if("checkDocInfo" == SubContext.SMState && 1 == SubContext.SMSubState)
    			{
-   				return true;
+   				console.log("checkDocInfo(" + SubContext.index + ") have been done for " + SubContext.name);
+   	      		return true;
    			}
-   			
-   			console.log("checkDocInfo(" + SubContext.index + ") for file:"+ name);
+
+      		console.log("checkDocInfo(" + SubContext.index + ") for " + SubContext.name);
+      		var name = SubContext.name;
    			//Modify the SM
       		SubContext.SMState = "checkDocInfo";
       		SubContext.SMSubState = 1;
@@ -1494,10 +1496,10 @@
 		//CutFile will cut file to dedicated size slice
 		function CutFile(SubContext)
 		{ 	
-			console.log("CutFile(" + SubContext.index + ")");
+			//console.log("CutFile(" + SubContext.index + ")");
 			if(0 == SubContext.cutFileState)
 			{
-				console.log("CutFile(" + SubContext.index + ") for", SubContext);
+				console.log("CutFile(" + SubContext.index + ") for " + SubContext.name);
 				var cutSize = 2097152;
 				var minCutSize = cutSize * 10;
 				if(SubContext.size < minCutSize)	//< 20M do not cut
@@ -1553,13 +1555,13 @@
         	fileReader.onload = function (e) {
             	if(stopFlag == true || SubContext.stopFlag == true)
             	{
-            		console.log("fileReader.onload(" + SubContext.index + ") upload was stoped, stop caculate chunk checkSum");
+            		console.log("CutFile fileReader.onload(" + SubContext.index + ") upload was stoped, stop caculate chunk checkSum");
                 	return;
             	}
     	      	var hash = SparkMD5.hashBinary(e.target.result);   //compute Data Hash
     	      	SubContext.chunkList[currentChunk].checkSum = hash;
     	      	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
-            	console.log("fileReader.onload(" + SubContext.index + ") Chunk " + currentChunk + " data read ok, checkSum is " + hash);
+            	console.log("CutFile fileReader.onload(" + SubContext.index + ") Chunk " + currentChunk + " data read ok, checkSum is " + hash);
             	
             	//Try to start read next chunk data
             	currentChunk ++;
@@ -1568,8 +1570,9 @@
                 }
             	else
             	{
-            		console.log("fileReader.onload(" + SubContext.index + ") all chunks checkSum is ready ",SubContext);
+            		console.log("CutFile fileReader.onload(" + SubContext.index + ") all chunks checkSum is ready ",SubContext);
                 	SubContext.cutFileState = 2;
+                	clearTimeOut(SubContext.timerForCutFile);
             	}
             	
             	//每完成一个chunk的CheckSum的计算都需要调用uploadDoc
@@ -1579,7 +1582,7 @@
 		    function loadNext() {
             	if(stopFlag == true || SubContext.stopFlag == true)
             	{
-            		console.log("loadNext(" + SubContext.index + ") upload was stoped, stop caculate chunk checkSum");
+            		console.log("CutFile loadNext(" + SubContext.index + ") upload was stoped, stop caculate chunk checkSum");
                 	return;
             	}
             	
@@ -1597,7 +1600,7 @@
 			//启动超时定式器
 			var timeOut = SubContext.size + 60000; //基础超时时间1分钟，文件size越大超时时间越长
 		    console.log("CutFile(" + SubContext.index + ") start timeout monitor for " + SubContext.name + " with " + timeOut + " ms");
-			setTimeout(function () {
+		    SubContext.timerForCutFile = setTimeout(function () {
 				 console.log("CutFile(" + SubContext.index + ") timeout, SubContext.cutFileState:" + SubContext.cutFileState);
 				 if(SubContext.cutFileState == 1)
 				 {
@@ -1634,10 +1637,12 @@
 				return false;
 			case 2:
 				//CheckSum ok
+				console.log("getChunkCheckSum(" + SubContext.index + ") chunkCheckSum is ready for chunkIndex:" + SubContext.chunkIndex)
 				return true;
 			default:
 				//CheckSum Error
 				SubContext.checkSum = "";
+				console.log("getChunkCheckSum(" + SubContext.index + ") chunkCheckSum failed to calcaulate for chunkIndex:" + SubContext.chunkIndex)
 				return true;
 			}
 		}
@@ -2123,7 +2128,7 @@
    			//检查文件是否存在且是否相同，return false 表示内部有异步调用
    			if(false == checkDocInfo(SubContext))
    			{
-    			console.log("uploadDoc(" + SubContext.index + ") checkDocInfo be called, callback will re-enter uploadDoc");   				
+    			//console.log("uploadDoc(" + SubContext.index + ") checkDocInfo be called, callback will re-enter uploadDoc");   				
    	    		uploadNextDoc();
     			return;
    			}
