@@ -1154,7 +1154,7 @@
  	            	chunkStep = 1,
  	            	fileReader = new FileReader();
  	      		
- 	      		//console.log("caculateFileCheckSum() blobSlice",blobSlice);
+ 	      		//console.log("caculateFileCheckSum() blobSlice",blobSlice);			 
  	      		
  		        fileReader.onload = function (e) {
  		            //console.log("currentChunk=" + currentChunk);
@@ -1182,14 +1182,16 @@
 
  		            	SubContext.checkSum = spark.end();	            	
  		                console.log("caculateFileCheckSum(" + SubContext.index + ") checksum is ready, checksum:" + SubContext.checkSum); // computed hash
- 		            	SubContext.checkSumState = 2; 		                
+ 		            	SubContext.checkSumState = 2; 	
+ 	                	uploadDoc(SubContext);
  		            }
  		        };
  		
  		        //Fail to compute hash
  		        fileReader.onerror = function () {
- 		        	SubContext.checkSumState = 3;
 		            console.log("caculateFileCheckSum(" + SubContext.index + ") checksum caculate failed"); // computed hash
+ 		        	SubContext.checkSumState = 3;
+                	uploadDoc(SubContext);
  		        };
  		
  		        function loadNext() {
@@ -1213,6 +1215,17 @@
  	      		SubContext.checkSumState = 1;
  	      		SubContext.checkSum = "";
  		        loadNext();
+
+ 		        //启动超时定时器
+ 	      		var timeOut = 6000; //60s
+				setTimeout(function () {
+					console.log("caculateFileCheckSum(" + SubContext.index + ") timeout, SubContext.checkSumState:" + SubContext.checkSumState);
+ 		            if(SubContext.checkSumState == 1)
+					{
+						SubContext.stopFlag = true; //超时
+						uploadErrorHandler(SubCotext, "caculateFileCheckSum TimeOut");
+					}
+			    },timeOut);	//check it 50ms later
  	      	}
  	   	   
  	   		//开放给外部的调用接口
@@ -1510,7 +1523,7 @@
 					chunkList.push(chunk);
 				}
 				SubContext.chunkList = chunkList;
-				console.log("CutFile(" + SubContext.index + ") cut ok",SubContext);
+				console.log("CutFile(" + SubContext.index + ") cut start",SubContext);
 			}
 			else if(2 == SubContext.cutFileState)
  	      	{
@@ -1547,11 +1560,13 @@
             	currentChunk ++;
             	if (currentChunk < chunks) {
                 	loadNext();
+                	uploadDoc(SubContext);                	
             	}
             	else
             	{
             		console.log("fileReader.onload(" + SubContext.index + ") all chunks checkSum is ready ",SubContext);
                 	SubContext.cutFileState = 2;
+                	uploadDoc(SubContext);
             		return;
             	}
             };
@@ -1572,6 +1587,17 @@
 		    
 	      	//Trigger the fileRead
 		    loadNext();
+		    
+			//启动超时定式器
+			var timeOut = 6000; //60s
+			setTimeout(function () {
+				 console.log("CutFile(" + SubContext.index + ") timeout, SubContext.cutFileState:" + SubContext.cutFileState);
+				 if(SubContext.cutFileState == 1)
+				 {
+			         SubContext.stopFlag = true; //超时
+			         uploadErrorHandler(SubCotext, "CutFile TimeOut");
+				 }
+		    },timeOut);	//check it 50ms later		    
 		    return false;
 		}
 		
