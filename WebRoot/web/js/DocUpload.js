@@ -337,6 +337,7 @@
 		    	   	//分片上传状态 
 		    	   	SubContext.cutFileState = 0;
 		    	   	SubContext.chunked = false;
+					SubContext.resumeCutFile = false; //文件切片需要重新开发
 		    	   	
 		    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 		    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
@@ -1174,8 +1175,8 @@
  		            }
  		
  		            spark.appendBinary(e.target.result);                 // append array buffer
- 		            currentChunk += chunkStep;
- 		
+		            currentChunk += chunkStep;
+
  		            if (currentChunk < chunks) {
  		                loadNext();
  		            } else {
@@ -1183,7 +1184,8 @@
  		            	SubContext.checkSum = spark.end();	            	
  		                console.log("caculateFileCheckSum(" + SubContext.index + ") checksum is ready, checksum:" + SubContext.checkSum); // computed hash
  		            	SubContext.checkSumState = 2; 
- 		            	clearTimeOut(SubContext.timerForCheckSumCaculator);
+ 		            	console.log("caculateFileCheckSum(" + SubContext.index + ") clear timerForCheckSumCaculator");
+ 		            	clearTimeout(SubContext.timerForCheckSumCaculator);
  	                	uploadDoc(SubContext);
  		            }
  		        };
@@ -1192,7 +1194,8 @@
  		        fileReader.onerror = function () {
 		            console.log("caculateFileCheckSum(" + SubContext.index + ") checksum caculate failed"); // computed hash
  		        	SubContext.checkSumState = 3;
- 		        	clearTimeOut(SubContext.timerForCheckSumCaculator);
+		            console.log("caculateFileCheckSum(" + SubContext.index + ") clear timerForCheckSumCaculator");
+ 		        	clearTimeout(SubContext.timerForCheckSumCaculator);
                 	uploadDoc(SubContext);
  		        };
  		
@@ -1200,6 +1203,8 @@
  		        	var start = currentChunk * chunkSize;
  		            var end = start + chunkSize >= file.size ? file.size : start + chunkSize;
  		            
+ 		            console.log("caculateFileCheckSum(" + SubContext.index + ") loadNext start:" + start + " end:" + end);
+		            
  		            if(fileReader.readAsBinaryString)
  		            {
  		            	fileReader.readAsBinaryString(blobSlice.call(file, start, end));
@@ -1208,7 +1213,8 @@
  		            {
  		            	console.log("caculateFileCheckSum(" + SubContext.index + ") 当前浏览器不支持读取文件，无法计算CheckSum"); //fail to compute hash
  		            	SubContext.checkSumState = 4;
- 		            	clearTimeOut(SubContext.timerForCheckSumCaculator);
+ 			            console.log("caculateFileCheckSum(" + SubContext.index + ") clear timerForCheckSumCaculator");
+ 		            	clearTimeout(SubContext.timerForCheckSumCaculator);
  		            	SubContext.checkSum = "";	
  		            	uploadDoc(SubContext);
  		            } 		            
@@ -1490,6 +1496,9 @@
 			SubContext.uploadErrorConfirmSet = 0;
 			SubContext.uploadWarningConfirmSet = 0;
 			
+			//文件切片需要继续
+			SubContext.resumeCutFile = true; //文件切片需要重新开发
+			
 			reuploadList.push(id);
 		}
 		
@@ -1540,7 +1549,11 @@
  	      	else
  	      	{
  	      		console.log("CutFile(" + SubContext.index + ") is in processing for " + SubContext.name);
-	      		return false;
+ 	      		if(SubContext.resumeCutFile == false)
+ 	      		{
+ 	      			return false;
+ 	      		}
+ 	      		console.log("CutFile(" + SubContext.index + ") resume to caculate chunk checkSum for:" + SubContext.name);
  	      	}
  	      		
  	      	//start to caculate the chunk checkSum
@@ -1572,7 +1585,8 @@
             	{
             		console.log("CutFile fileReader.onload(" + SubContext.index + ") all chunks checkSum is ready ",SubContext);
                 	SubContext.cutFileState = 2;
-                	clearTimeOut(SubContext.timerForCutFile);
+		            console.log("CutFile fileReader.onload(" + SubContext.index + ") clear timerForCutFile");
+                	clearTimeout(SubContext.timerForCutFile);
             	}
             	
             	//每完成一个chunk的CheckSum的计算都需要调用uploadDoc
@@ -1584,6 +1598,22 @@
             	{
             		console.log("CutFile loadNext(" + SubContext.index + ") upload was stoped, stop caculate chunk checkSum");
                 	return;
+            	}
+            	
+            	//如果是重传，从失败或者未完成的那个chunk开始
+            	if(SubContext.resumeCutFile = true)
+            	{
+            		SubContext.resumeCutFile = false;
+            		for(i=0; i< SubContext.chunkNum; i++)
+    				{
+    					var chunk = SubContext.chunkList[i];
+    					if(chunk.checkSumState != 2)
+    					{
+    						currentChunk = i;
+    	            		console.log("CutFile loadNext(" + SubContext.index + ") resume caculate chunk checkSum from " + currentChunk);    						
+    						break;
+    					}
+    				}
             	}
             	
 		    	SubContext.chunkList[currentChunk].checkSumState = 1;
