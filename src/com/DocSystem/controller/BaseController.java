@@ -8711,32 +8711,69 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Long chunkSize, String chunkParentPath) {
+		FileOutputStream out = null;
+		FileInputStream in = null;	
+		FileChannel outputChannel = null;
+		FileChannel inputChannel = null;
+		String ret = null;
 		try {
 			String targetFilePath = targetParentPath + fileName;
-			FileOutputStream out;
-
+		
 			out = new FileOutputStream(targetFilePath);
-	        FileChannel outputChannel = out.getChannel();   
+	        outputChannel = out.getChannel();   
 
         	long offset = 0;
 	        for(int chunkIndex = 0; chunkIndex < chunkNum; chunkIndex ++)
 	        {
 	        	String chunkFilePath = chunkParentPath + fileName + "_" + chunkIndex;
-	        	FileInputStream in=new FileInputStream(chunkFilePath);
-	            FileChannel inputChannel = in.getChannel();    
+	        	in=new FileInputStream(chunkFilePath);
+	            inputChannel = in.getChannel();    
 	            outputChannel.transferFrom(inputChannel, offset, inputChannel.size());
 	        	offset += inputChannel.size();	        			
 	    	   	inputChannel.close();
+	    	   	inputChannel = null;
 	    	   	in.close();
+	    	   	in = null;
 	    	}
-	        outputChannel.close();
-		    out.close();
-		    return fileName;
+		    ret = fileName;
 		} catch (Exception e) {
 			Log.debug("combineChunks() Failed to combine the chunks");
 			Log.info(e);
-			return null;
-		}        
+		} finally {
+			if(inputChannel != null)
+			{
+				try {
+					inputChannel.close();
+				} catch (IOException e) {
+					Log.info(e);
+				}
+			}
+			if(in != null)
+			{
+				try {
+					in.close();
+				} catch (Exception e) {
+					Log.info(e);
+				}
+			}
+			if(outputChannel != null)
+			{
+				try {
+					outputChannel.close();
+				} catch (IOException e) {
+					Log.info(e);
+				}
+			}
+			if(out != null)
+			{	
+				try {
+					out.close();
+				} catch (IOException e) {
+					Log.info(e);
+				}
+			}		
+		}
+		return ret;
 	}
 	
 	public void deleteChunks(String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath) {
