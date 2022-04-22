@@ -1590,7 +1590,88 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
+	
+	//combine chunks
+	@RequestMapping("/combineChunks.do")
+	public void combineChunks(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
+			String commitMsg,
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{		
+		Log.info("\n************** combineChunks ****************");
+		Log.debug("combineChunks  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
+				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
+			
+		ReturnAjax rt = new ReturnAjax();
 
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
+		if(commitMsg == null)
+		{
+			commitMsg = "上传 " + path + name;
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+			
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+
+		String localParentPath = localRootPath + path;
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			localParentDir.mkdirs();
+		}
+			
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
+			
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		//新增文件
+		if(dbDoc == null || dbDoc.getType() == 0)
+		{
+			boolean ret = addDoc(repos, doc,
+							null,
+							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+			writeJson(rt, response);
+			if(ret == true)
+			{
+				executeCommonActionList(actionList, rt);
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+			}	
+			return;
+		}
+
+		//更新文件
+		boolean ret = updateDoc(repos, doc, 
+						null,   
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+		writeJson(rt, response);	
+		if(ret == true)
+		{
+			executeCommonActionList(actionList, rt);
+			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+			deletePreviewFile(doc);
+		}
+		
+	}
+	
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
