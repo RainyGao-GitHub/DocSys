@@ -1478,7 +1478,7 @@ public class DocController extends BaseController{
 	//check if chunk uploaded 
 	@RequestMapping("/checkChunkUploaded.do")
 	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
-			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, 
+			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, Integer combineDisabled,
 			String commitMsg,
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1525,9 +1525,16 @@ public class DocController extends BaseController{
 		else
 		{
 			rt.setMsgData("1");
-			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);
-			
+			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
 			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
+			if(combineDisabled != null)
+			{
+				Log.debug("checkChunkUploaded() combineDisabled!");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			//如果是最后一个分片则开始文件合并处理
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
 				if(commitMsg == null)
@@ -1588,7 +1595,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
-			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisable,
 			String commitMsg,
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
@@ -1707,12 +1714,20 @@ public class DocController extends BaseController{
 				return;
 			}
 			
+			if(combineDisable != null)
+			{
+				Log.debug("uploadDoc combineDisabled!");
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;				
+			}
+			
+			//如果是最后一个分片则开始文件合并处理
 			if(chunkIndex < (chunkNum-1))
 			{
 				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
 				writeJson(rt, response);
 				return;
-				
 			}
 		}
 		
