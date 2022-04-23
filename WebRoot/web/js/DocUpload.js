@@ -1075,12 +1075,12 @@
  	            }
  				
  				var index = 0;
-				for(i = 0; i< chunks;)
+				for(i = 0; i < chunks;)
 				{
 					var start = i * chunkSize;
  		            var end = start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
 					
-					var chunk = [];
+					var chunk = {};
 					chunk.index = chunkList.length;
 					chunk.start= start;
 					chunk.end = end;
@@ -1089,7 +1089,9 @@
 					chunk.checkSumState = 0;
 					chunk.threadState = 0;
 					chunk.state = 0;
-					chunkList.push(chunk);					
+					
+					chunkList.push(chunk);		
+					
 					i+=chunkStep;
 				}
 				chunkNum = chunkList.length;
@@ -1142,33 +1144,43 @@
  				}
  				return true;
  			}
+ 			
+	        function buildFileCheckSum()
+ 	      	{
+      		    var allChunkHash = "";
+      		    //console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() ", chunkList); // computed hash   
+	            
+      			for(i = 0; i < chunkList.length; i++)
+	            {
+	               //console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() chunk.checkSum:" + chunkList[i].checkSum); // computed hash   
+	               allChunkHash += "_" + chunkList[i].checkSum;
+	            }
+      			//console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() allChunkHash:" + allChunkHash); // computed hash
+            	return SparkMD5.hashBinary(allChunkHash);
+ 	      	}
 
  			function caculateChunk(chunk)
  	      	{
- 	      		//console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk()");
+ 	      		//console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() ", chunk);
  	      		if(stopFlag == true || SubContext.stopFlag == true)
  	      		{
  	 	      		console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() upload was stoped, stop caculate");
  	 	      		return;
  	      		}
  	      		
- 	      		IncreaseThreadCount(chunk);
+ 	      		if(chunk.state != 0)
+ 	      		{
+ 	 	      		console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() thread already be started"); 	      			
+ 	      			return;
+ 	      		}
+	 	      	
+ 	      		chunk.state = 1;	 	      		
+	 	      	IncreaseThreadCount(chunk);
  
 	      		console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() start caculate checkSum for:" + SubContext.name);
  	      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
  	            	fileReader = new FileReader();
-  	      		
- 	      		function buildFileCheckSum()
- 	      		{
- 	      			var allChunkHash = "";
- 	      			for(i = 0; i < chunkNum; i++)
- 		            {
- 		                var chunk = chunkList[i];
- 		               allChunkHash = allChunkHash + "-" + chunk.checkSum;
- 		            }
- 	      			return SparkMD5.hashBinary(allChunkHash);
- 	      		}
  	      		
  	      		fileReader.onload = function (e) {
  		            if(stopFlag == true || SubContext.stopFlag == true)
@@ -1176,9 +1188,10 @@
  		            	console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() upload was stoped, stop caculate");
  		                return;
  		            }
- 		             	
- 		            console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() chunk checksum is ready"); // computed hash
-	            	chunk.chunkSum = SparkMD5.hashBinary(e.target.result);
+ 		            
+ 		            chunk.state = 2;	
+	            	chunk.checkSum = SparkMD5.hashBinary(e.target.result);
+ 		            console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() chunk checksum is ready, checkSum:" + chunk.checkSum); // computed hash
 	            	
  		            successNum++;
  	 	      		DecreaseThreadCount(chunk);
@@ -1236,7 +1249,8 @@
 	      	SubContext.checkSumState = 1;
  	      	SubContext.checkSum = "";
  	      	buildChunkList(SubContext);
- 			caculateChunk(SubContext, chunkList[0]);
+ 	      	var chunk = chunkList[chunkIndex];
+ 			caculateChunk(chunk);
 		    
  			//启动超时定时器
 	      	var timeOut = SubContext.size + 60000; //基础超时1分钟
@@ -1495,7 +1509,7 @@
 				var chunkList = [];
 				for(i=0; i< SubContext.chunkNum; i++)
 				{
-					var chunk = [];
+					var chunk = {};
 					var start = i * cutSize;
 					chunk.index = i;
 					chunk.start= start;
