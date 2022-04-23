@@ -1057,65 +1057,147 @@
 		}
 		
  		function getFileCheckSum(SubContext){
+ 			var chunkList = [];
+ 			var chunkIndex = 0;
+ 			var chunkNum = 0;
+ 			var successNum = 0;
+ 			var threadCount = 0;
+ 			var maxThreadCount = 10;
  			
- 			function caculate(SubContext)
+ 			function buildChunkList()
+ 			{
+ 	 			var chunkSize = 2097152;
+ 	 			var chunks = Math.ceil(SubContext.size / chunkSize); 	 			
+ 				var chunkStep = 1;
+ 	 			if(chunks > 10)
+ 	            {
+ 	 				chunkStep = chunks / 10;
+ 	            }
+ 				
+ 				var index = 0;
+				for(i = 0; i< chunks;)
+				{
+					var start = i * chunkSize;
+ 		            var end = start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
+					
+					var chunk = [];
+					chunk.index = chunkList.length;
+					chunk.start= start;
+					chunk.end = end;
+					chunk.chunkSize = end - start;
+					chunk.checkSum = "";
+					chunk.checkSumState = 0;
+					chunk.threadState = 0;
+					chunk.state = 0;
+					chunkList.push(chunk);					
+					i+=chunkStep;
+				}
+				chunkNum = chunkList.length;
+				console.log("[" + SubContext.index + "] getFileCheckSum() buildChunkList() chunkNum:" + chunkNum);
+ 			}
+ 			
+ 	    	function IncreaseThreadCount(chunk)
+ 	        {    
+ 	    		if(chunk.threadState == 0)
+ 	    		{
+ 	    			chunk.threadState = 1;
+ 	    			threadCount++;
+ 	    		}
+ 	        }
+ 	    	
+ 	    	function DecreaseThreadCount(chunk)
+ 	        {
+ 	    		if(chunk.threadState == 1)
+ 	    		{
+ 	    			chunk.threadState = 0;
+ 	    			threadCount--;    			
+ 	    		}
+ 	        }
+ 	    	
+ 			function caculateNextChunk()
+ 			{
+ 	        	//console.log("[" + SubContext.index + "] getFileCheckSum() caculateNextChunk() threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
+ 	        	if(threadCount >= maxThreadCount)
+ 				{
+ 		        	//console.log("[" + SubContext.index + "] getFileCheckSum() caculateNextChunk() Chunk计算线程池已满，等待Chunk计算线程结束");				
+ 					return;
+ 				}
+ 				
+ 	      		//console.log("[" + SubContext.index + "] getFileCheckSum() caculateNextChunk() chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum);
+ 	    	    if(chunkIndex < (chunkNum-1)) //还有chunk计算线程未启动
+ 	    	    {
+ 	    	    	chunkIndex++;
+ 	    	        //console.log("[" + SubContext.index + "] getFileCheckSum() caculateNextChunk() start caculate chunk:" + chunkIndex);
+ 	    	        var chunk = chunkList[chunkIndex];
+ 	    	        caculateChunk(chunk);
+ 	    	    }
+ 			}
+ 			
+ 			function isLastChunk()
+ 			{
+ 				console.log("[" + SubContext.index + "] getFileCheckSum() successNum:" + successNum + " chunkNum:" + chunkNum);
+ 	 	      	if(successNum < chunkNum)
+ 				{
+ 					return false;
+ 				}
+ 				return true;
+ 			}
+
+ 			function caculateChunk(chunk)
  	      	{
- 	      		console.log("[" + SubContext.index + "] getFileCheckSum() caculate()");
+ 	      		//console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk()");
  	      		if(stopFlag == true || SubContext.stopFlag == true)
  	      		{
- 	 	      		console.log("[" + SubContext.index + "] getFileCheckSum() caculate() upload was stoped, stop caculate");
+ 	 	      		console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() upload was stoped, stop caculate");
  	 	      		return;
  	      		}
  	      		
- 	      		//start to caculate the checkSum for SubContext
- 	      		console.log("[" + SubContext.index + "] getFileCheckSum() caculate() start caculate checkSum for:" + SubContext.name);
+ 	      		IncreaseThreadCount(chunk);
+ 
+	      		console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() start caculate checkSum for:" + SubContext.name);
  	      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
- 	            	chunkSize = 2097152,                           // read in chunks of 2MB
- 	            	chunks = Math.ceil(SubContext.size / chunkSize),
- 	            	currentChunk = 0,
- 	            	spark = new SparkMD5(),
- 	            	time,
- 	            	uniqueId = 'chunk_' + (new Date().getTime()),
- 	            	chunkStep = 1,
  	            	fileReader = new FileReader();
+  	      		
+ 	      		function buildFileCheckSum()
+ 	      		{
+ 	      			var allChunkHash = "";
+ 	      			for(i = 0; i < chunkNum; i++)
+ 		            {
+ 		                var chunk = chunkList[i];
+ 		               allChunkHash = allChunkHash + "-" + chunk.checkSum;
+ 		            }
+ 	      			return SparkMD5.hashBinary(allChunkHash);
+ 	      		}
  	      		
- 	      		//console.log("getFileCheckSum() blobSlice",blobSlice);			 
- 	      		
- 		        fileReader.onload = function (e) {
- 		            //console.log("currentChunk=" + currentChunk);
+ 	      		fileReader.onload = function (e) {
  		            if(stopFlag == true || SubContext.stopFlag == true)
  		            {
- 		            	console.log("[" + SubContext.index + "] getFileCheckSum() caculate() fileReader.onload() upload was stoped, stop caculate");
+ 		            	console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() upload was stoped, stop caculate");
  		                return;
  		            }
- 		            
- 		            if (currentChunk === 0) {
- 		                //console.log("[" + SubContext.index + "] getFileCheckSum() Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
- 		                if(chunks > 10)
- 		                {
- 		                	chunkStep = chunks / 10;
- 		                }
- 		                //console.log("[" + SubContext.index + "] getFileCheckSum() chunkStep=" + chunkStep);
- 		            }
- 		
- 		            spark.appendBinary(e.target.result);                 // append array buffer
-		            currentChunk += chunkStep;
+ 		             	
+ 		            console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() chunk checksum is ready"); // computed hash
+	            	chunk.chunkSum = SparkMD5.hashBinary(e.target.result);
+	            	
+ 		            successNum++;
+ 	 	      		DecreaseThreadCount(chunk);
 
- 		            if (currentChunk < chunks) {
- 		                loadNext();
- 		            } else {
-
- 		            	SubContext.checkSum = spark.end();	            	
- 		                console.log("[" + SubContext.index + "] getFileCheckSum() caculate() fileReader.onload() checksum is ready, checksum:" + SubContext.checkSum); // computed hash
+ 		            if(isLastChunk() == true) 
+ 		            {
+ 		            	SubContext.checkSum = buildFileCheckSum();	            	
+ 		                console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() checksum is ready, checksum:" + SubContext.checkSum); // computed hash
  		            	SubContext.checkSumState = 2; 
- 		            	console.log("[" + SubContext.index + "] getFileCheckSum() caculate() fileReader.onload() clear timerForCheckSumCaculator");
+ 		            	console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() clear timerForCheckSumCaculator");
  		            	clearTimeout(SubContext.timerForCheckSumCaculator);
 
  		            	//Switch to CheckDocInfo
  		            	SubContext.state = 2;
  	                	uploadDoc(SubContext);
- 		            }
+ 	                	return;
+ 		            } 
+		            
+ 		            caculateNextChunk();
  		        };
  		
  		        //Fail to compute hash
@@ -1129,39 +1211,32 @@
  		        	uploadErrorHandler(SubContext, "校验码计算失败");
  		        	uploadNextDoc();
  		        };
- 		
- 		        function loadNext() {
- 		        	var start = currentChunk * chunkSize;
- 		            var end = start + chunkSize >= file.size ? file.size : start + chunkSize;
- 		            
- 		            console.log("[" + SubContext.index + "] getFileCheckSum() caculate() loadNext() start:" + start + " end:" + end);
-		            
- 		            if(fileReader.readAsBinaryString)
- 		            {
- 		            	fileReader.readAsBinaryString(blobSlice.call(file, start, end));
- 		            }
- 		            else
- 		            {
- 		            	console.log("[" + SubContext.index + "] getFileCheckSum()  caculate() loadNext() 当前浏览器不支持读取文件，无法计算CheckSum"); //fail to compute hash
- 		            	SubContext.checkSumState = 4;
- 		            	SubContext.checkSum = "";
- 		            	
- 		            	console.log("[" + SubContext.index + "] getFileCheckSum()  caculate() loadNext() clear timerForCheckSumCaculator");
- 		            	clearTimeout(SubContext.timerForCheckSumCaculator);
- 		            	
- 	 		        	uploadErrorHandler(SubContext, "校验码计算失败:当前浏览器不支持读取文件");
- 	 		        	uploadNextDoc();
- 		            } 		            
+ 		        
+ 		        //trigger chunk load
+		        if(fileReader.readAsBinaryString)
+ 		        {
+		        	 fileReader.readAsBinaryString(blobSlice.call(file, chunk.start, chunk.end));
+					 caculateNextChunk();
  		        }
- 		
- 	      		//trigger to calculate
- 	      		SubContext.checkSumState = 1;
- 	      		SubContext.checkSum = "";
- 		        loadNext();
+ 		        else
+ 		        {
+	            	console.log("[" + SubContext.index + "] getFileCheckSum()  caculate() loadNext() 当前浏览器不支持读取文件，无法计算CheckSum"); //fail to compute hash
+	            	SubContext.checkSumState = 4;
+	            	SubContext.checkSum = "";
+	            	
+	            	console.log("[" + SubContext.index + "] getFileCheckSum()  caculate() loadNext() clear timerForCheckSumCaculator");
+	            	clearTimeout(SubContext.timerForCheckSumCaculator);
+	            	
+ 		        	uploadErrorHandler(SubContext, "校验码计算失败:当前浏览器不支持读取文件");
+ 		        	uploadNextDoc();
+ 		        }		        
  	      	}
  			
- 			//启动计算
- 			caculate(SubContext);
+ 			//Start 
+	      	SubContext.checkSumState = 1;
+ 	      	SubContext.checkSum = "";
+ 	      	buildChunkList(SubContext);
+ 			caculateChunk(SubContext, chunkList[0]);
 		    
  			//启动超时定时器
 	      	var timeOut = SubContext.size + 60000; //基础超时1分钟
@@ -1174,7 +1249,7 @@
 					uploadNextDoc();
 				}
 		    },timeOut);	//check it 50ms later	
- 	   }
+ 	    }
       	
       	function checkDocInfo(SubContext)
       	{   
