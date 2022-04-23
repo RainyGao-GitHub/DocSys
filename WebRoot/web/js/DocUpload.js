@@ -1073,6 +1073,7 @@
  	            {
  	 				chunkStep = chunks / 10;
  	            }
+ 	 			console.log("[" + SubContext.index + "] getFileCheckSum() buildChunkList() chunkSize:" + chunkSize + " chunks:" + chunks + " chunkStep:" + chunkStep);
  				
  				var index = 0;
 				for(i = 0; i < chunks;)
@@ -1150,9 +1151,9 @@
       		    var allChunkHash = "";
       		    //console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() ", chunkList); // computed hash   
 	            
-      			for(i = 0; i < chunkList.length; i++)
+      			for(i = 0; i < chunkNum; i++)
 	            {
-	               //console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() chunk.checkSum:" + chunkList[i].checkSum); // computed hash   
+	               console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() chunk.checkSum:" + chunkList[i].checkSum); // computed hash   
 	               allChunkHash += "_" + chunkList[i].checkSum;
 	            }
       			//console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() allChunkHash:" + allChunkHash); // computed hash
