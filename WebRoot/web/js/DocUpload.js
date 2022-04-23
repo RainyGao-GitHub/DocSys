@@ -37,7 +37,7 @@
  		var maxThreadCount = 3;
  		
  		//最大分片上传线程数
- 		var maxChunkThreadCount = 3;
+ 		var maxChunkThreadCount = 10;
  		
  		var SubContextHashMap = {};
         
