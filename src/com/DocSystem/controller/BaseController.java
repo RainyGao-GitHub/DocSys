@@ -8409,15 +8409,7 @@ public class BaseController  extends BaseFunction{
 
 		String localDocPath = localParentPath + name;
 		
-		if(type == 2) //目录
-		{
-			if(false == FileUtil.createDir(localDocPath))
-			{
-				docSysDebugLog("createRealDoc() 目录 " +localDocPath + " 创建失败！", rt);
-				return false;
-			}				
-		}
-		else
+		if(type == null || type == 1)
 		{
 			if(false == FileUtil.createFile(localParentPath,name))
 			{
@@ -8425,6 +8417,15 @@ public class BaseController  extends BaseFunction{
 				return false;					
 			}
 		}
+		else //if(type == 2) //目录
+		{
+			if(false == FileUtil.createDir(localDocPath))
+			{
+				docSysDebugLog("createRealDoc() 目录 " +localDocPath + " 创建失败！", rt);
+				return false;
+			}				
+		}
+
 		return true;
 	}
 	
