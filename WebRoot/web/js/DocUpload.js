@@ -1610,9 +1610,9 @@
 	                name : SubContext.name,
 	                size: SubContext.size,
 	             	checkSum: SubContext.checkSum,
-	             	chunkIndex: SubContext.chunkIndex,
 	             	chunkNum: SubContext.chunkNum,
 	             	cutSize: SubContext.cutSize,
+	             	chunkIndex: chunk.index,
 	             	chunkSize: chunk.chunkSize,
 	             	chunkHash: chunk.checkSum,
 	             	combineDisabled: 1, //后台不自动合并
