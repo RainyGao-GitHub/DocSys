@@ -8402,7 +8402,7 @@ public class BaseController  extends BaseFunction{
 		Log.debug("createRealDoc() localRootPath:" + doc.getLocalRootPath() + " path:" + doc.getPath() + " name:" + doc.getName());
 		
 		String name = doc.getName();
-		int type = doc.getType();
+		Integer type = doc.getType();
 		
 		//获取 doc parentPath
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
