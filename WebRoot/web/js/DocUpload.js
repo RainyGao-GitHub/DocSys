@@ -1754,6 +1754,15 @@
 					return; 
 				}
 				
+				if(SubContext.size == 0)
+				{
+					SubContext.checkSumState = 2;
+					SubContext.checkSum = "";
+					SubContext.state = 3; //开始上传
+					uploadDoc(SubContext);		
+					return;
+				}
+				
 				//启动超时定式器
 				var timeOut = SubContext.size + 60000; //基础超时时间1分钟，文件越大超时时间越长
 			    console.log("[" + SubContext.index + "] uploadDoc()  start timeout monitor with " + timeOut + " ms");
