@@ -909,7 +909,7 @@
       		clearTimerForUpload(SubContext);
       		
       		console.log("[" + SubContext.index + "] uploadSuccessHandler() "+ SubContext.name + " " + msgInfo);
-      		
+      		      		
       		if(false == reuploadFlag)
       		{
       			successNum++;
@@ -936,6 +936,7 @@
 
   		function showUploadEndInfo()
   		{
+			printUploadedTime();
   			var uploadEndInfo = "上传完成(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
@@ -1957,6 +1958,29 @@
 				form.append("uploadFile", chunkData);
 			}
 			
+			function printUploadedTime()
+			{
+				var currentTime = new Date().getTime();
+				var usedTime = (currentTime - uploadStartTime)/1000; //转换成秒
+				console.log("printUploadedTime() usedTime:" + usedTime + "秒");   		
+
+				//计算显示用speed和时间
+	    		//var speed = uploadSpeed;
+				//var units = "b/s";	//速度单位
+				//if((speed/1024)>1)
+				//{
+				//	speed = speed/1024;
+				//	units = "k/s";
+				//	if((speed/1024)>1)
+				//	{
+				//		speed = speed/1024;
+				//		units = "M/s";
+				//	}
+				//}
+	       		//console.log("上传速度："+ speed + units);
+				//console.log("总进度：" + totPer + "% 已用时间：" + usedTime + " 剩余时间：" + remainTime);
+			}
+			
 			var name = SubContext.name;
 			//新建http异步请求
 			var xhr = new XMLHttpRequest();
@@ -2091,52 +2115,8 @@
 				//计算当前文件上传百分比
 				$('.file'+SubContextIndex+' .el-progress__text').text(per+"%");
 				$('.file'+SubContextIndex+' .el-progress-bar__inner')[0].style.width=per+'%';
-	
-				//统计总的已上传大小、百分比、上传速度、剩余上传时间
-				uploadTime = new Date().getTime();
-				if(per=="100")
-				{
-					uploadedFileSize = uploadedFileSize + tot; //已完成上传的文件大小
-					uploadedSize = uploadedFileSize;
-				}
-				else
-				{
-					uploadedSize = uploadedFileSize + loaded;
-				}
-				var remainSize = totalSize - uploadedSize;
-				var usedTime = (uploadTime - uploadStartTime)/1000; //转换成秒
-	    		//console.log("totalSize:" + totalSize + " remainSize:" + remainSize + " preUploadSize:" + preUploadSize + " uploadedSize:"+ uploadedSize);
-	    		if(remainSize < 0)
-	    		{
-	    			remainSize = 0;
-	    		}
 				
-				var perTime = (uploadTime - preUploadTime)/1000;
-	    		//console.log("preUploadTime:" + preUploadTime + " uploadTime:" + uploadTime + " perTime:" + perTime);
-				if(perTime > 1)	//每10秒更新一次下载速度
-	    		{
-	    			var bspeed = (uploadedSize - preUploadSize)/perTime; //上传速度(b/s)
-	        		uploadSpeed = bspeed;
-	        		preUploadSize = uploadedSize;
-					preUploadTime = uploadTime;
-	    		}				
-	    		var remainTime = remainSize/uploadSpeed;
-	    		var totPer = Math.floor(100 * uploadedSize / totalSize);
-				//计算显示用speed和时间
-	    		var speed = uploadSpeed;
-				var units = "b/s";	//速度单位
-				if((speed/1024)>1)
-				{
-					speed = speed/1024;
-					units = "k/s";
-					if((speed/1024)>1)
-					{
-						speed = speed/1024;
-						units = "M/s";
-					}
-				}
-	       		//console.log("上传速度："+ speed + units);
-				//console.log("总进度：" + totPer + " 已用时间：" + usedTime + " 剩余时间：" + remainTime);
+				//printUploadedTime();
 			};
 			
 			//上传表单			
@@ -2150,13 +2130,14 @@
 			SubContext.successChunkNum++;
 			DecreaseChunkThreadCount(SubContext, chunk);  			 		
 			console.log("[" + SubContext.index + "] [" + chunk.index + "] chunkUploadSuccessHandler() successChunkNum:" + SubContext.successChunkNum + " chunkNum:" +   SubContext.chunkNum + " chunkThreadCount:" + SubContext.chunkThreadCount);
-
+			
  			//Show current doc upload progress
- 			SubContext.uploadedSize += chunk.chunkSize
+ 			SubContext.uploadedSize += chunk.chunkSize;
+ 			
 			var per =  Math.floor(100 * SubContext.uploadedSize / SubContext.size);
  			$('.file'+SubContext.index+' .el-progress__text').text(per+"%");
 			$('.file'+SubContext.index+' .el-progress-bar__inner')[0].style.width=per+'%';			
-
+			
 			console.log("[" + SubContext.index + "] [" + chunk.index + "] chunkUploadSuccessHandler() uploadedSize:" + SubContext.uploadedSize + " fileSize:" +   SubContext.size + " per:" + per + "%");
 
 			//check if this is last success uploaded chunk
