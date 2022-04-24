@@ -1551,7 +1551,7 @@
             	console.log("[" + SubContext.index + "] [" + chunk.index + "] getChunkCheckSum() fileReader.onload()  data read ok, checkSum is " + hash);
             	
             	console.log("[" + SubContext.index + "] [" + chunk.index + "] getChunkCheckSum() fileReader.onload() clear timerForLoadChunk");
-                clearTimeout(SubContext.timerForLoadChunk);
+                clearTimeout(chunk.timerForLoadChunk);
             	
                 //uploadChunk
                 SubContext.state = 2; //checkChunkUploaded
