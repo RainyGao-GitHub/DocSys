@@ -1676,14 +1676,15 @@ public class DocController extends BaseController{
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
-			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisable,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
 			String commitMsg,
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.info("\n************** uploadDoc ****************");
 		Log.debug("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
-							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId + " commitMsg:" + commitMsg);
+							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
+							+ " shareId:" + shareId + " commitMsg:" + commitMsg);
 		ReturnAjax rt = new ReturnAjax();
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -1795,7 +1796,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			if(combineDisable != null)
+			if(combineDisabled != null)
 			{
 				Log.debug("uploadDoc combineDisabled!");
 				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
