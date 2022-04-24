@@ -1955,10 +1955,9 @@
 				//Get chunk data
 				var chunkData = SubContext.file.slice(chunk.start,chunk.end);
 				//console.log("[" + SubContext.index + "] [" + chunk.index + "] startUpload() chunkData:",chunkData);
-				
-				form.append("chunkIndex", chunk.index);
 				form.append("chunkNum", SubContext.chunkNum);
 				form.append("cutSize",SubContext.cutSize);
+				form.append("chunkIndex", chunk.index);
 				form.append("chunkSize",chunk.chunkSize);
 				form.append("chunkHash", chunk.checkSum);
 				form.append("combineDisabled", 1); //后台不自动合并
