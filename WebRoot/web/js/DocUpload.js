@@ -936,7 +936,6 @@
 
   		function showUploadEndInfo()
   		{
-			printUploadedTime();
   			var uploadEndInfo = "上传完成(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
@@ -963,6 +962,29 @@
       		}
       		$(".upload-list-title").text(uploadEndInfo);
   		}
+  		
+		function printUploadedTime()
+		{
+			var currentTime = new Date().getTime();
+			var usedTime = (currentTime - uploadStartTime)/1000; //转换成秒
+			console.log("printUploadedTime() usedTime:" + usedTime + "秒");   		
+
+			//计算显示用speed和时间
+    		//var speed = uploadSpeed;
+			//var units = "b/s";	//速度单位
+			//if((speed/1024)>1)
+			//{
+			//	speed = speed/1024;
+			//	units = "k/s";
+			//	if((speed/1024)>1)
+			//	{
+			//		speed = speed/1024;
+			//		units = "M/s";
+			//	}
+			//}
+       		//console.log("上传速度："+ speed + units);
+			//console.log("总进度：" + totPer + "% 已用时间：" + usedTime + " 剩余时间：" + remainTime);
+		}
 
       	//uploadEndHandler
       	function uploadEndHandler()
@@ -973,8 +995,8 @@
       			//console.log("uploadEndHandler() 上传未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
       			return;
       		}
-      		
       		console.log("uploadEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+			printUploadedTime();
 			
       		//显示上传完成 
       		showUploadEndInfo();      		
@@ -1154,14 +1176,14 @@
 	        function buildFileCheckSum()
  	      	{
       		    var allChunkHash = "";
-      		    //console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() ", chunkList); // computed hash   
+      		    console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() ", chunkList); // computed hash   
 	            
       			for(i = 0; i < chunkNum; i++)
 	            {
 	               console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() chunk.checkSum:" + chunkList[i].checkSum); // computed hash   
 	               allChunkHash += "_" + chunkList[i].checkSum;
 	            }
-      			//console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() allChunkHash:" + allChunkHash); // computed hash
+      			console.log("[" + SubContext.index + "] getFileCheckSum() buildFileCheckSum() allChunkHash:" + allChunkHash); // computed hash
             	return SparkMD5.hashBinary(allChunkHash);
  	      	}
 
@@ -1956,29 +1978,6 @@
 				form.append("chunkHash", chunk.checkSum);
 				form.append("combineDisabled", 1); //后台不自动合并
 				form.append("uploadFile", chunkData);
-			}
-			
-			function printUploadedTime()
-			{
-				var currentTime = new Date().getTime();
-				var usedTime = (currentTime - uploadStartTime)/1000; //转换成秒
-				console.log("printUploadedTime() usedTime:" + usedTime + "秒");   		
-
-				//计算显示用speed和时间
-	    		//var speed = uploadSpeed;
-				//var units = "b/s";	//速度单位
-				//if((speed/1024)>1)
-				//{
-				//	speed = speed/1024;
-				//	units = "k/s";
-				//	if((speed/1024)>1)
-				//	{
-				//		speed = speed/1024;
-				//		units = "M/s";
-				//	}
-				//}
-	       		//console.log("上传速度："+ speed + units);
-				//console.log("总进度：" + totPer + "% 已用时间：" + usedTime + " 剩余时间：" + remainTime);
 			}
 			
 			var name = SubContext.name;
