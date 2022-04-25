@@ -1601,6 +1601,7 @@ public class DocController extends BaseController{
 	}
 	
 	//combine chunks
+	//注意：chunkIndex不能小于chunkNum，否则deleteChunks逻辑会有问题
 	@RequestMapping("/combineChunks.do")
 	public void combineChunks(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
