@@ -1945,7 +1945,7 @@ public class ManageController extends BaseController{
 	}
 
 	private boolean isGroupMemberExist(GroupMember groupMember) {
-		List<UserGroup> list = userService.getGroupMemberListByGroupMemberInfo(groupMember);
+		List<GroupMember> list = userService.getGroupMemberListByGroupMemberInfo(groupMember);
 		if(list == null || list.size() == 0)
 		{
 			return false;
