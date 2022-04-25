@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.DocSystem.entity.GroupMember;
-import com.DocSystem.entity.User;
-import com.DocSystem.entity.UserGroup;
 
 public interface GroupMemberMapper {
     int deleteByPrimaryKey(Integer id);
@@ -25,7 +23,7 @@ public interface GroupMemberMapper {
 
 	List<GroupMember> queryGroupMemberWithParamLike(HashMap<String, String> param);
 
-	List<UserGroup> selectSelective(GroupMember groupMember);
+	List<GroupMember> selectSelective(GroupMember groupMember);
 
 	int deleteSelective(GroupMember groupMember);
 }
