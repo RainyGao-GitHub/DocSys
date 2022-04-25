@@ -4,7 +4,7 @@
         var isUploading = false;	//文件上传中标记
         var stopFlag = false;	//结束上传
         var drawedNum = 0; //已绘制的进度条个数
-        var uploadedNum = 0; //已上传个数
+        var uploadStartedNum = 0; //已上传个数
         var successNum = 0;	//成功上传个数
 		var failNum = 0; //上传失败个数
 		var totalSize = 0;	//总大小
@@ -52,7 +52,7 @@
         var reuploadTotalNum = 0;
         var reuploadFailNum = 0;
         var reuploadSuccessNum = 0;
-        var reuploadedNum = 0;
+        var reuploadStartedNum = 0;
         var reuploadList = []; //重传列表，保存的是SubContext的index
         var reuploadIndex = 0;	//This is for reupload, the index should be reuploadList[reuploadIndex]
         
@@ -178,7 +178,7 @@
 			fileCoverConfirmSet = 0;
 			uploadErrorConfirmSet = 0;
 			uploadWarningConfirmSet = 0;
-			uploadedNum = 0;
+			uploadStartedNum = 0;
 			successNum = 0;
 			failNum = 0;
 			drawedNum =0;
@@ -470,6 +470,8 @@
       			{
       				endIndex = drawedNum + 200;
       			}
+      		    console.log("druawUploadItems() startIndex:" + startIndex + " endIndex:" + endIndex);
+      			
       			var str = "";
       			for( var i = startIndex ; i < endIndex ; i++ )
 		    	{	
@@ -1045,10 +1047,10 @@
 		function uploadNextDoc()
 		{
 			//检测当前运行中的下载线程
-        	//console.log("uploadNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
+        	console.log("uploadNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
 			if(threadCount >= maxThreadCount)
 			{
-	        	//console.log("uploadNextDoc 上传线程池已满，等待上传线程结束");				
+	        	console.log("uploadNextDoc 上传线程池已满，等待上传线程结束");				
 				return;
 			}
 			
@@ -1346,11 +1348,11 @@
       	{
       		if(reuploadFlag == false)
       		{
-	      		$(".upload-list-title").text("正在上传   " + uploadedNum + " / " + totalNum);
+	      		$(".upload-list-title").text("正在上传   " + uploadStartedNum + " / " + totalNum);
       		}
       		else
       		{
-      			$(".upload-list-title").text("正在重传   " + reuploadedNum + " / " + reuploadTotalNum);
+      			$(".upload-list-title").text("正在重传   " + reuploadStartedNum + " / " + reuploadTotalNum);
       		}
       	}
       	
@@ -1372,7 +1374,7 @@
 				reuploadList = [];
 				reuploadIndex = 0;
 				reuploadTotalNum = 0;
-		        reuploadedNum = 0;
+		        reuploadStartedNum = 0;
 		    	reuploadFailNum = 0;
 		        reuploadSuccessNum = 0;
 				stopFlag = false;
@@ -1461,7 +1463,7 @@
 			}
 			
 			console.log("[" + SubContext.index + "] reuploadHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
-			console.log("[" + SubContext.index + "] reuploadHandler() reuploadTotalNum:" + totalNum +" reuploadSuccessNum:"+reuploadSuccessNum+" reuploadFailNum:"+reuploadFailNum);
+			console.log("[" + SubContext.index + "] reuploadHandler() reuploadTotalNum:" + reuploadTotalNum +" reuploadSuccessNum:"+reuploadSuccessNum+" reuploadFailNum:"+reuploadFailNum);
 			
 			//Reset all basick SubContext 
 			SubContext.state = 0;
@@ -1759,11 +1761,11 @@
 
 				if(false == reuploadFlag)
     			{
-    				uploadedNum++;
+    				uploadStartedNum++;
     			}
     			else
     			{
-    				reuploadedNum++;
+    				reuploadStartedNum++;
     			}
 				
 				showUploadingInfo();
