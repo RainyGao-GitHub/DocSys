@@ -1649,7 +1649,7 @@ public class DocController extends BaseController{
 			localParentDir.mkdirs();
 		}
 			
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true,localRootPath, localVRootPath, size, checkSum);
 			
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		//新增文件
