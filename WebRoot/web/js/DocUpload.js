@@ -387,7 +387,7 @@
     		{
     			relativePath = file.fullPath;
     		}
-    		console.log("getRealParentInfo() relativePath:" + relativePath);
+    		//console.log("getRealParentInfo() relativePath:" + relativePath);
       		
     		SubContext.relativePath = relativePath;
     		if(!relativePath || relativePath == "")
@@ -413,7 +413,7 @@
 	 			realLevel++;				
 				realParentPath = realParentPath + nodeName +"/";
 			}
-    		console.log("getRealParentInfo() realParentPath:" + realParentPath);
+    		//console.log("getRealParentInfo() realParentPath:" + realParentPath);
 
 			SubContext.realParentPath = realParentPath;
 			SubContext.realLevel = realLevel;
