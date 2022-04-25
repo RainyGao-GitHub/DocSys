@@ -3023,6 +3023,13 @@
 
     function addDocListNode(node)
     {
+		console.log("addDocListNode() node:",node);
+		if(!node || node == null)
+		{
+			console.log("addDocListNode() node is null");
+			return;
+		}
+    	
 		console.log("addDocListNode() pid:" + node.pid + " DocListParentDocId:" + DocListParentDocId );
 		if(node.pid == DocListParentDocId)
 		{
