@@ -3253,8 +3253,9 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("addDoc_FSM() " +localDocPath + "　已存在！", rt);
 		}
 		
-		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
-		if(uploadFile == null)
+		//addDoc接口用uploadFile以及chunkNum同时为空来判定是新建文件或上传了空文件
+		//TODO: 这个接口做的事情似乎有点太多了，后面有机会需要进行优化
+		if(uploadFile == null && chunkNum == null)
 		{	
 			//File must not exists
 			if(createRealDoc(repos, doc, rt) == false)
