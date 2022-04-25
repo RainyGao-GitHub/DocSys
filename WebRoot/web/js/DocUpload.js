@@ -719,6 +719,7 @@
                 }
     	 		else
     	 		{
+    	 			uploadErrorHandler(SubContext, errMsg);
              		uploadErrorConfirmHandler(SubContext, errMsg);
              		return;
     	 		}
