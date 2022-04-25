@@ -1317,7 +1317,16 @@ public class DocController extends BaseController{
 
 		Doc fsDoc = fsGetDoc(repos, doc);
 		if(fsDoc != null && fsDoc.getType() != 0)
-		{	
+		{
+			if(fsDoc.getType() == 2)
+			{
+				Log.info("checkDocInfo " + name + " 是已存在的目录");
+				rt.setError(name + "是已存在目录！");
+				//docSysDebugLog("checkDocInfo() " + name + " 已存在，且是目录！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
 			Doc dbDoc = dbGetDoc(repos, doc, true);
 			if(isUploadCanSkip(repos, doc, fsDoc, dbDoc))
 			{	
