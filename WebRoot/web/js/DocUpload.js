@@ -2164,24 +2164,35 @@
 		
 		function stopAllUpload()
 		{
-			stopFlag = true;
-			
-  			//清除标记
-  			isUploading = false;
-  			reuploadFlag = false;
-  			
-			//将未上传的全部设置为取消状态
-			for(i=0;i<totalNum;i++)
-			{
-				var SubContext = SubContextList[i];
-				if(SubContext.state != 4 && SubContext.state != 5)	//处理未成功也未失败的文件
+  			function stopAllUploadHanlder()
+  			{
+				//将未上传的全部设置为取消状态
+				for(i=0;i<totalNum;i++)
 				{
-					uploadErrorHandler(SubContext, "用户取消了上传");
+					var SubContext = SubContextList[i];
+					if(SubContext.state != 4 && SubContext.state != 5)	//处理未成功也未失败的文件
+					{
+						uploadErrorHandler(SubContext, "用户取消了上传");
+					}
 				}
+  			}	
+  		
+			if(stopFlag == false)
+			{
+				stopFlag = true;
+				
+	  			//清除标记
+	  			isUploading = false;
+	  			reuploadFlag = false;
+
+	  			//通过回调来处理每个文件的停止，否则会导致出现对话框卡顿现象
+	  			setTimeout(function () {
+	  				stopAllUploadHanlder();
+	  	  			
+	  				//显示全部重传标记
+	  				$(".reuploadAllBtn").show();
+	  			}, 100);
 			}
-			
-			//显示全部重传标记
-			$(".reuploadAllBtn").show();
 		}
 				
 		//开放给外部的调用接口
