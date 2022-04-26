@@ -1737,8 +1737,9 @@ public class BaseFunction{
 	/****************** 线程锁接口 *********************************************/
 	protected static final Object syncLock = new Object(); //For Doc
 	protected static final Object syncLockForRepos = new Object(); //For Repos (add/update)
-	protected static final Object syncLockForSvnCommit = new Object(); //For Doc
-	protected static final Object syncLockForGitCommit = new Object(); //For Doc
+	protected static final Object syncLockForSvnCommit = new Object(); //For SvnCommit
+	protected static final Object syncLockForGitCommit = new Object(); //For GitCommit
+	protected static final Object syncLockForSystemLog = new Object(); //For SystemLog	
 	
 	/****************** 路径相关的接口 *****************************************/
 	//WebTmpPath was accessable for web
@@ -1908,7 +1909,14 @@ public class BaseFunction{
 		log.id = log.userName  + "-" + log.event + "-" + log.subEvent + "-" + log.time;
 		
 		String indexLib = getIndexLibPathForSystemLog();
-		return addSystemLogIndex(log, indexLib);
+
+		boolean ret = false;
+		synchronized(syncLockForSystemLog)
+		{
+			ret = addSystemLogIndex(log, indexLib);
+			SyncLock.unlock(syncLockForSystemLog); //线程锁
+		}
+		return ret;
     }
 	
 	protected static boolean addSystemLogIndex(SystemLog log, String indexLib)
