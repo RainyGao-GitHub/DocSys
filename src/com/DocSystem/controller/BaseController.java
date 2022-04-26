@@ -9480,13 +9480,21 @@ public class BaseController  extends BaseFunction{
 	{			
 		boolean isRealDoc = doc.getIsRealDoc();
 		
-		SVNUtil verReposUtil = new SVNUtil();
-		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+		SVNUtil verReposUtil = new SVNUtil();		
+		String revision = null;
+		
+		synchronized(syncLockForSvnCommit)
 		{
-			return null;
-		}
+			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+			{
+				SyncLock.unlock(syncLockForSvnCommit); //线程锁
+				return null;
+			}
 
-		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			revision = verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			SyncLock.unlock(syncLockForSvnCommit); //线程锁
+		}
+		return revision;
 	}
 	
 	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
@@ -9494,21 +9502,24 @@ public class BaseController  extends BaseFunction{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
 		GITUtil verReposUtil = new GITUtil();
-		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
-		{
-			return null;
-		}
+		String revision = null;
 		
-		if(verReposUtil.checkAndClearnBranch() == false)
+		synchronized(syncLockForGitCommit)
 		{
-			Log.debug("gitDocCommit() master branch is dirty and failed to clean");
-			return null;
-		}
+			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+			{
+				SyncLock.unlock(syncLockForGitCommit); //线程锁
+				return null;
+			}
 		
-		String revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-		if(revision == null)
-		{
-			return null;
+			if(verReposUtil.checkAndClearnBranch() == false)
+			{
+				SyncLock.unlock(syncLockForGitCommit); //线程锁
+				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
+				return null;
+			}
+		
+			revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		}
 		return revision;
 	}
