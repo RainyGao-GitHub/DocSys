@@ -330,6 +330,8 @@ public class ReposController extends BaseController{
 			}
 		}
 		
+		//初始化仓库数据
+		initReposData(repos);
 		
 		//初始化倉庫的全文搜索
 		initReposTextSearchConfig(repos);

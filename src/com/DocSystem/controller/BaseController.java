@@ -95,6 +95,7 @@ import com.DocSystem.common.MyExtractCallback;
 import com.DocSystem.common.OS;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
+import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.TextSearchConfig;
@@ -9483,16 +9484,17 @@ public class BaseController  extends BaseFunction{
 		SVNUtil verReposUtil = new SVNUtil();		
 		String revision = null;
 		
-		synchronized(syncLockForSvnCommit)
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForSvnCommit)
 		{
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				SyncLock.unlock(syncLockForSvnCommit); //线程锁
+				SyncLock.unlock(reposData.syncLockForSvnCommit); //线程锁
 				return null;
 			}
 
 			revision = verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-			SyncLock.unlock(syncLockForSvnCommit); //线程锁
+			SyncLock.unlock(reposData.syncLockForSvnCommit); //线程锁
 		}
 		return revision;
 	}
@@ -9504,22 +9506,24 @@ public class BaseController  extends BaseFunction{
 		GITUtil verReposUtil = new GITUtil();
 		String revision = null;
 		
-		synchronized(syncLockForGitCommit)
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForGitCommit)
 		{
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				SyncLock.unlock(syncLockForGitCommit); //线程锁
+				SyncLock.unlock(reposData.syncLockForGitCommit); //线程锁
 				return null;
 			}
 		
 			if(verReposUtil.checkAndClearnBranch() == false)
 			{
-				SyncLock.unlock(syncLockForGitCommit); //线程锁
+				SyncLock.unlock(reposData.syncLockForGitCommit); //线程锁
 				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
 				return null;
 			}
 		
 			revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			SyncLock.unlock(reposData.syncLockForGitCommit); //线程锁
 		}
 		return revision;
 	}
@@ -10657,6 +10661,7 @@ public class BaseController  extends BaseFunction{
 				
 				initReposTextSearchConfig(repos);
 				initReposEncryptConfig(repos);
+				initReposData(repos);
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");
 			}
 	    } catch (Exception e) {
@@ -11231,6 +11236,14 @@ public class BaseController  extends BaseFunction{
     		return null;
     	}
 		return config;
+	}
+	
+	protected void initReposData(Repos repos) {
+		ReposData reposData = new ReposData();
+		reposData.reposId = repos.getId();
+		reposData.syncLockForSvnCommit = new Object();
+		reposData.syncLockForGitCommit = new Object();
+		reposDataHashMap.put(repos.getId(), reposData);
 	}
 	
 	protected void initReposTextSearchConfig(Repos repos) {
