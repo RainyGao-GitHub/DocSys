@@ -923,6 +923,27 @@ function isOffice(suffix)
 	return true;
 }
 
+function isCad(suffix)
+{
+	if(!suffix || suffix == "")
+	{
+		return false;
+	}
+	var fileTypeMap = {
+			dwg : true,
+			dxf: true,
+		 	stl: true,
+		};
+	
+	var type = fileTypeMap[suffix];
+	if ( undefined == type )
+	{
+		return false;
+	}
+	
+	return true;
+}
+
 function isPdf(suffix)
 {
 	if(!suffix || suffix == "")
@@ -1177,6 +1198,10 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 	{
 		openOffice(docInfo, openInNewPage, preview);
 	}
+	else if(isCad(docInfo.fileSuffix))
+	{
+		openCad(docInfo, openInNewPage);		
+	}
 	else if(isMarkdown(docInfo.fileSuffix))
 	{
 		showMarkdown(docInfo, openInNewPage);		
@@ -1331,6 +1356,55 @@ function openOffice(docInfo, openInNewPage, preview)
             //showErrorMessage("文件预览失败：服务器异常");
             console.log("previewOfficeInDialog getDocOfficeLink Failed 服务器异常");
             showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+        }
+    });
+}
+
+function openCad(docInfo, openInNewPage)
+{
+	console.log("openCad() openInNewPage:" + openInNewPage + " docInfo:", docInfo);
+    var url = "/DocSystem/Bussiness/getDocCadLink.do";
+    if(docInfo.isZip && docInfo.isZip == 1)
+    {
+        var url = "/DocSystem/Bussiness/getZipDocCadLink.do";    	
+    }
+	$.ajax({
+        url : url,
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
+            commitId: docInfo.commitId,
+            shareId: docInfo.shareId,
+            //preview: preview,  //cad总是预览，无法编辑
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	console.log("openCad ret", ret);
+            	if(ret.dataEx == "pdf")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdf(docInfo, openInNewPage);
+                }
+            	else
+            	{
+            		showErrorMessage("文件打开失败:" + ret.msgInfo);
+            	}
+            }
+            else
+            {
+            	console.log("openCad getDocCadLink Failed");
+        		showErrorMessage("文件打开失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+            //showErrorMessage("文件预览失败：服务器异常");
+            console.log("openCad getDocCadLink Failed 服务器异常");
+    		showErrorMessage("文件打开失败:" + ret.msgInfo);
         }
     });
 }

@@ -1141,6 +1141,26 @@ public class FileUtil {
 		return false;
 	}	
 	
+	public static boolean isCad(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "dwg":
+		case "dxf":
+		case "stl":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+
+	
     public static boolean compressExe(String srcPathName,String finalFile) {
     	File zipFile = new File(finalFile);	//finalFile
     	
