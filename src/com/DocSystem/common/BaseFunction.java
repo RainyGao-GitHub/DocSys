@@ -398,6 +398,9 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();	
 	
+	//仓库额外数据（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
+	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
+	
 	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
 		try {
@@ -1737,8 +1740,6 @@ public class BaseFunction{
 	/****************** 线程锁接口 *********************************************/
 	protected static final Object syncLock = new Object(); //For Doc
 	protected static final Object syncLockForRepos = new Object(); //For Repos (add/update)
-	protected static final Object syncLockForSvnCommit = new Object(); //For SvnCommit
-	protected static final Object syncLockForGitCommit = new Object(); //For GitCommit
 	protected static final Object syncLockForSystemLog = new Object(); //For SystemLog	
 	
 	/****************** 路径相关的接口 *****************************************/
