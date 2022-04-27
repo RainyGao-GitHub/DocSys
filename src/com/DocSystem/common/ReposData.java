@@ -7,4 +7,8 @@ public class ReposData {
 	//线程锁
 	public Object syncLockForSvnCommit; //用于svnCommit
 	public Object syncLockForGitCommit; //用于gitCommit
+
+	public Object syncLockForDocNameIndex;	//用于docNameIndex
+	public Object syncLockForRDocIndex; //用于RealDocIndex
+	public Object syncLockForVDocIndex; //用于VirtualDocIndex
 }

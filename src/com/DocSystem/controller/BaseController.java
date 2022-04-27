@@ -10016,17 +10016,39 @@ public class BaseController  extends BaseFunction{
 	
 	boolean deleteDocNameIndexLib(Repos repos)
 	{
-		return deleteIndexLib(repos, 0);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForDocNameIndex)
+		{
+			ret = deleteIndexLib(repos, 0);
+			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+		}
+		return ret;
+
 	}
 	
 	boolean deleteRDocIndexLib(Repos repos)
 	{
-		return deleteIndexLib(repos, 1);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForRDocIndex)
+		{
+			ret = deleteIndexLib(repos, 1);
+			SyncLock.unlock(reposData.syncLockForRDocIndex); //线程锁
+		}
+		return ret;
 	}
 
 	boolean deleteVDocIndexLib(Repos repos)
 	{
-		return deleteIndexLib(repos, 2);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForVDocIndex)
+		{
+			ret = deleteIndexLib(repos, 2);
+			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+		}
+		return ret;
 	}
 
 	//Add Index For DocName
@@ -10034,8 +10056,14 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.debug("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		String indexLib = getIndexLibPath(repos,0);
-
-		return LuceneUtil2.addIndex(doc, doc.getName(), indexLib);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForDocNameIndex)
+		{
+			ret = LuceneUtil2.addIndex(doc, doc.getName(), indexLib);
+			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+		}
+		return ret;
 	}
 
 	//Delete Indexs For DocName
@@ -10044,8 +10072,14 @@ public class BaseController  extends BaseFunction{
 		Log.debug("deleteIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibPath(repos,0);
-
-		return LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForDocNameIndex)
+		{
+			ret = LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
+			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+		}
+		return ret;
 	}
 		
 	//Update Index For DocName
@@ -10065,10 +10099,17 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		LuceneUtil2.deleteIndex(doc, indexLib);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForDocNameIndex)
+		{
+			LuceneUtil2.deleteIndex(doc, indexLib);
 
-		String content = newParentPath + newName;
-		return LuceneUtil2.addIndex(newDoc, content.trim(), indexLib);
+			String content = newParentPath + newName;
+			ret = LuceneUtil2.addIndex(newDoc, content.trim(), indexLib);
+			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+		}		
+		return ret;
 	}
 
 	//Add Index For VDoc
@@ -10084,13 +10125,23 @@ public class BaseController  extends BaseFunction{
 		
 		String indexLib = getIndexLibPath(repos,2);
 
-		if(content == null || content.isEmpty())
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForVDocIndex)
 		{
-			//Log.debug("addIndexForVDoc() content is null or empty, do delete Index");
-			return LuceneUtil2.deleteIndex(doc, indexLib);			
-		}
+			if(content == null || content.isEmpty())
+			{
+				//Log.debug("addIndexForVDoc() content is null or empty, do delete Index");
+				ret = LuceneUtil2.deleteIndex(doc, indexLib);			
+				SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+				return ret;
+			}
+			
+			ret = LuceneUtil2.addIndex(doc, content.toString().trim(), indexLib);
+			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+		}		
+		return ret;
 		
-		return LuceneUtil2.addIndex(doc, content.toString().trim(), indexLib);
 	}
 	
 	//Delete Indexs For VDoc
@@ -10100,7 +10151,14 @@ public class BaseController  extends BaseFunction{
 		
 		String indexLib = getIndexLibPath(repos,2);
 		
-		return LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForVDocIndex)
+		{
+			ret = LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
+			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+		}
+		return ret;
 	}
 	
 	//Update Index For VDoc
@@ -10122,9 +10180,17 @@ public class BaseController  extends BaseFunction{
 			content = readVirtualDocContent(repos, doc);
 		}		
 		
-		LuceneUtil2.deleteIndex(doc, indexLib);
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForVDocIndex)
+		{
+			LuceneUtil2.deleteIndex(doc, indexLib);
 
-		return LuceneUtil2.addIndex(doc, content.trim(), indexLib);
+			ret = LuceneUtil2.addIndex(doc, content.trim(), indexLib);
+			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+		}
+		
+		return ret;
 	}
 	
 	private static boolean isVirtuallDocTextSearchDisabled(Repos repos, Doc doc) {
@@ -10192,60 +10258,83 @@ public class BaseController  extends BaseFunction{
 		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
 		String fileSuffix = FileUtil.getFileSuffix(doc.getName());
-		if(fileSuffix != null)
+		if(fileSuffix == null)
 		{
-			Log.debug("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+			Log.debug("addIndexForRDoc() 未知文件类型不支持索引");
+			return false;
+		}
+
+		Log.debug("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForRDocIndex)
+		{
 			switch(fileSuffix)
 			{
 			case "doc":
 				if(LuceneUtil2.addIndexForWord(filePath, doc, indexLib))
 				{
-					return true;
+					ret = true;
+					break;
 				}
-				return LuceneUtil2.addIndexForWord2007(filePath, doc, indexLib);
+				ret = LuceneUtil2.addIndexForWord2007(filePath, doc, indexLib);
 			case "docx":
 				if(LuceneUtil2.addIndexForWord2007(filePath, doc, indexLib))
 				{
-					return true;
+					ret = true;
+					break;
 				}
-				return LuceneUtil2.addIndexForWord(filePath, doc, indexLib);
+				ret = LuceneUtil2.addIndexForWord(filePath, doc, indexLib);
+				break;
 			case "xls":
 				if(LuceneUtil2.addIndexForExcel(filePath, doc, indexLib))
 				{
-					return true;
+					ret = true;
+					break;
 				}
-				return LuceneUtil2.addIndexForExcel2007(filePath, doc, indexLib);
+				ret = LuceneUtil2.addIndexForExcel2007(filePath, doc, indexLib);
+				break;
 			case "xlsx":
 				if(LuceneUtil2.addIndexForExcel2007(filePath, doc, indexLib))
 				{
-					return true;
+					ret = true;
+					break;
 				}
-				return LuceneUtil2.addIndexForExcel(filePath, doc, indexLib);
+				ret = LuceneUtil2.addIndexForExcel(filePath, doc, indexLib);
+				break;
 			case "ppt":
 				if(LuceneUtil2.addIndexForPPT(filePath, doc, indexLib))
 				{
-					return true;
+					ret = true;
+					break;
 				}
-				return LuceneUtil2.addIndexForPPT2007(filePath, doc, indexLib);
+				ret = LuceneUtil2.addIndexForPPT2007(filePath, doc, indexLib);
+				break;
 			case "pptx":
 				if(LuceneUtil2.addIndexForPPT2007(filePath, doc, indexLib))
 				{
-					return true;
+					ret = true;
+					break;
 				}
-				return LuceneUtil2.addIndexForPPT(filePath, doc, indexLib);
+				ret = LuceneUtil2.addIndexForPPT(filePath, doc, indexLib);
+				break;
 			case "pdf":
-				return LuceneUtil2.addIndexForPdf(filePath, doc, indexLib);
+				ret = LuceneUtil2.addIndexForPdf(filePath, doc, indexLib);
+				break;
 			default:
 				if(FileUtil.isText(fileSuffix))
 				{
-					return LuceneUtil2.addIndexForFile(filePath, doc, indexLib);
+					ret = LuceneUtil2.addIndexForFile(filePath, doc, indexLib);
+					break;
 				}
+				Log.debug("addIndexForRDoc() 非文本文件，不支持索引");
 				break;
 			}
+			SyncLock.unlock(reposData.syncLockForRDocIndex); //线程锁
 		}
 
-		Log.debug("addIndexForRDoc() 未知文件类型不支持索引");
-		return false;
+		return ret;
 	}
 	
 	protected static Integer isReposTextSearchEnabled(Repos repos) {
@@ -10314,14 +10403,24 @@ public class BaseController  extends BaseFunction{
 		Log.debug("deleteIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibPath(repos, 1);
+		
+		boolean ret = false;
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		synchronized(reposData.syncLockForRDocIndex)
+		{
 			
-		return LuceneUtil2.deleteIndexEx(doc,indexLib, deleteFlag);
+			ret = LuceneUtil2.deleteIndexEx(doc,indexLib, deleteFlag);
+			SyncLock.unlock(reposData.syncLockForRDocIndex); //线程锁
+		}
+		
+		return ret;
 	}
 	
 	//Update Index For RDoc
 	public static boolean updateIndexForRDoc(Repos repos, Doc doc)
 	{
 		Log.debug("updateIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());		
+
 		deleteIndexForRDoc(repos, doc, 1);
 		return addIndexForRDoc(repos, doc);
 	}
@@ -11243,6 +11342,10 @@ public class BaseController  extends BaseFunction{
 		reposData.reposId = repos.getId();
 		reposData.syncLockForSvnCommit = new Object();
 		reposData.syncLockForGitCommit = new Object();
+		reposData.syncLockForDocNameIndex = new Object();
+		reposData.syncLockForRDocIndex = new Object();
+		reposData.syncLockForVDocIndex = new Object();
+		
 		reposDataHashMap.put(repos.getId(), reposData);
 	}
 	
