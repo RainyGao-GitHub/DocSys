@@ -176,7 +176,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "新增 " + path + name;
 		}
@@ -492,7 +492,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "新增 " + path + name;
 		}
@@ -624,7 +624,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "同步 " + doc.getPath() + doc.getName();
 		}
@@ -688,7 +688,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "删除 " + doc.getPath() + doc.getName();
 		}
@@ -774,7 +774,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "删除 " + doc.getPath() + doc.getName();
 		}
@@ -851,7 +851,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "重命名 " + path + name + " 为 " + dstName;
 		}
@@ -944,7 +944,7 @@ public class DocController extends BaseController{
 			dstName = srcName;
 		}
 		
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "移动 " + srcPath + srcName + " 至 " + dstPath + dstName;
 		}
@@ -1028,7 +1028,7 @@ public class DocController extends BaseController{
 			dstName = srcName;
 		}
 		
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
 		}
@@ -1148,7 +1148,7 @@ public class DocController extends BaseController{
 			dstName = srcName;
 		}
 		
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			if(move)
 			{
@@ -1368,7 +1368,7 @@ public class DocController extends BaseController{
 		}
 			
 		Log.debug("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "上传 " + path + name;
 		}
@@ -1546,7 +1546,7 @@ public class DocController extends BaseController{
 			//如果是最后一个分片则开始文件合并处理
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
-				if(commitMsg == null)
+				if(commitMsg == null || commitMsg.isEmpty())
 				{
 					commitMsg = "上传 " + path + name;
 				}
@@ -1631,7 +1631,7 @@ public class DocController extends BaseController{
 		}
 		
 		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
-		if(commitMsg == null)
+		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "上传 " + path + name;
 		}
@@ -1826,7 +1826,7 @@ public class DocController extends BaseController{
 		//非分片上传或LastChunk Received
 		if(uploadFile != null) 
 		{
-			if(commitMsg == null)
+			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "上传 " + path + name;
 			}
@@ -2119,7 +2119,7 @@ public class DocController extends BaseController{
 		//非分片上传或LastChunk Received
 		if(uploadFile != null) 
 		{
-			if(commitMsg == null)
+			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "上传 " + path + name;
 			}
@@ -2339,7 +2339,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			if(commitMsg == null)
+			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "更新 " + path + name;
 			}
@@ -2362,7 +2362,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(commitMsg == null)
+			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "更新 " + path + name + " 备注";
 			}
