@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Very Basic 3D Viewer</title>
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+  <!-- The Viewer JS & CSS-->
+  <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/style.min.css?v=v7.*" type="text/css">
+  <script language="JavaScript" src="https://developer.api.autodesk.com/modelderivative/v2/viewers/viewer3D.min.js?v=v7.*"></script>
+</head>
+
+<body>
+  <img src='/images/forge-logo.png' style="height:auto;width:20%;position:absolute;left:10px;top:10px;z-index:233">
+  <div id="MyViewerDiv"></div>
+
+
+
+  <!-- Developer JS -->
+  <script>
+      var myViewerDiv = document.getElementById('MyViewerDiv');
+      var viewer = new Autodesk.Viewing.Private.GuiViewer3D(myViewerDiv);
+      var options = {
+          'env' : 'Local',
+          'document' : './shaver/0.svf'
+      };
+      Autodesk.Viewing.Initializer(options, function() {
+        viewer.start(options.document, options);
+      });
+  </script>
+</body>
+
+</html>
