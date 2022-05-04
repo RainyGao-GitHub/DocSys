@@ -3510,7 +3510,6 @@
 				zTree.selectNode(parentNode);
 				showDocList(parentNode);
 				getAndShowDoc(parentNode, 1, false);
-				showRightDiv();				
 			}
 			else
 			{
@@ -3526,15 +3525,14 @@
 
 	function backToParentDocEx()
 	{
-		backToParentDoc();
-		//if(gIsPC == true)
-		//{
-		//	backToParentDoc();
-		//}
-		//else
-		//{
-		//	showCenterDiv();
-		//}
+		if(gIsPC == true)
+		{
+			backToParentDoc();
+		}
+		else
+		{
+			showCenterDiv();
+		}
 	}
 
 
