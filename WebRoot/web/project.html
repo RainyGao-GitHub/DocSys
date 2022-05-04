@@ -3100,12 +3100,13 @@
 		//显示预览或备注
 		getAndShowDoc(node, 1, false);
 
+		//TODO: 对于手机端，中间栏点击显示详情（在点击图标的时候才显示列表）
 		//如果是文件或者搜索结构那么在手机上显示详情
-		if(type == 1 || DocListState == 1)
-		{
+		//if(type == 1 || DocListState == 1)
+		//{
 		 	showRightDiv();
-		}
-
+		//}
+				
 		 //在zTree上选中该doc
 		 zTreeSelectDoc(docId, path, name);
   	}
@@ -3136,6 +3137,7 @@
 		{
 	 		//更新DocList
 			showDocList(node);
+			showCenterDiv();
 		}
 
 		//显示预览或备注
@@ -3508,6 +3510,7 @@
 				zTree.selectNode(parentNode);
 				showDocList(parentNode);
 				getAndShowDoc(parentNode, 1, false);
+				showRightDiv();				
 			}
 			else
 			{
@@ -3523,14 +3526,15 @@
 
 	function backToParentDocEx()
 	{
-		if(gIsPC == true)
-		{
-			backToParentDoc();
-		}
-		else
-		{
-			showCenterDiv();
-		}
+		backToParentDoc();
+		//if(gIsPC == true)
+		//{
+		//	backToParentDoc();
+		//}
+		//else
+		//{
+		//	showCenterDiv();
+		//}
 	}
 
 
