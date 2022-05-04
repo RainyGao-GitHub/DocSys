@@ -34,10 +34,10 @@
 
         //上传线程计数器
  		var threadCount = 0;
- 		var maxThreadCount = 20; //文件上传线程限制
+ 		var maxThreadCount = 10; //文件上传线程限制
  		
  		//最大分片上传线程数
- 		var maxChunkThreadCount = 10; //文件分片上传线程限制
+ 		var maxChunkThreadCount = 3; //文件分片上传线程限制
  		
  		var SubContextHashMap = {};
         
