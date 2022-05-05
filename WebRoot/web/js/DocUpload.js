@@ -34,10 +34,11 @@
 
         //上传线程计数器
  		var threadCount = 0;
- 		var maxThreadCount = 10; //文件上传线程限制
+ 		//文件上传线程限制(包括分片线程)
+ 		var maxThreadCount = 20;
  		
- 		//最大分片上传线程数
- 		var maxChunkThreadCount = 3; //文件分片上传线程限制
+ 		//单个文件最大分片上传线程数
+ 		var maxChunkThreadCount = 10; //文件分片上传线程限制
  		
  		var SubContextHashMap = {};
         
@@ -1047,7 +1048,7 @@
       	//uploadNextDoc，如果后续有未上传文件则上传下一个文件 
 		function uploadNextDoc()
 		{
-			//检测当前运行中的下载线程
+			//检测当前运行中的上传线程
         	console.log("uploadNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
 			if(threadCount >= maxThreadCount)
 			{
@@ -1129,7 +1130,7 @@
 				console.log("[" + SubContext.index + "] getFileCheckSum() buildChunkList() chunkNum:" + chunkNum);
  			}
  			
- 	    	function IncreaseThreadCount(chunk)
+ 	    	function IncreaseChunkThreadCount(chunk)
  	        {    
  	    		if(chunk.threadState == 0)
  	    		{
@@ -1138,7 +1139,7 @@
  	    		}
  	        }
  	    	
- 	    	function DecreaseThreadCount(chunk)
+ 	    	function DecreaseChunkThreadCount(chunk)
  	        {
  	    		if(chunk.threadState == 1)
  	    		{
@@ -1206,7 +1207,7 @@
  	      		}
 	 	      	
  	      		chunk.state = 1;	 	      		
-	 	      	IncreaseThreadCount(chunk);
+ 	      		IncreaseChunkThreadCount(chunk);
  
 	      		console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() start caculate checkSum for:" + SubContext.name);
  	      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
@@ -1225,7 +1226,7 @@
  		            console.log("[" + SubContext.index + "] [" + chunk.index + "] getFileCheckSum() caculateChunk() fileReader.onload() chunk checksum is ready, checkSum:" + chunk.checkSum); // computed hash
 	            	
  		            successNum++;
- 	 	      		DecreaseThreadCount(chunk);
+ 	 	      		DecreaseChunkThreadCount(chunk);
 
  		            if(isLastChunk() == true) 
  		            {
@@ -1893,11 +1894,28 @@
 		
 		function uploadNextChunk(SubContext)
 		{
-			//检测当前运行中的chunk上传线程
-        	//console.log("[" + SubContext.index + "] uploadNextChunk() chunkThreadCount:" + SubContext.chunkThreadCount + " maxChunkThreadCount:" + maxChunkThreadCount);				
-			if(SubContext.chunkThreadCount >= maxChunkThreadCount)
+			//检测当前运行中的上传总线程
+        	console.log("[" + SubContext.index + "] uploadNextChunk threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
+			if(threadCount >= maxThreadCount)
 			{
-	        	//console.log("[" + SubContext.index + "] uploadNextChunk() Chunk上传线程池已满，等待Chunk上传线程结束");				
+	        	console.log("[" + SubContext.index + "] uploadNextChunk 上传线程池已满，等待上传线程结束");				
+				return;
+			}
+			
+			var tmpMaxChunkThreadCount = maxChunkThreadCount;
+			//当总的剩余可用线程数小于10个时，单个大文件文件只允许单线程上传
+			var remainThreadCount = maxThreadCount - threadCount;
+			if(remainThreadCount < 10)
+			{
+				console.log("[" + SubContext.index + "] uploadNextChunk() remainThreadCount:" + remainThreadCount + " 只允许单线程分片上传！");				
+				tmpMaxChunkThreadCount = 1;
+			}
+			
+			//检测当前运行中的chunk上传线程
+        	console.log("[" + SubContext.index + "] uploadNextChunk() chunkThreadCount:" + SubContext.chunkThreadCount + " tmpMaxChunkThreadCount:" + tmpMaxChunkThreadCount);				
+			if(SubContext.chunkThreadCount >= tmpMaxChunkThreadCount)
+			{
+	        	console.log("[" + SubContext.index + "] uploadNextChunk() Chunk上传线程池已满，等待Chunk上传线程结束");				
 				return;
 			}
 			
@@ -1917,6 +1935,7 @@
     		{
     			chunk.threadState = 1;
     			SubContext.chunkThreadCount++;
+    			threadCount++;
     		}
         }
     	
@@ -1925,7 +1944,8 @@
     		if(chunk.threadState == 1)
     		{
     			chunk.threadState = 0;
-    			SubContext.chunkThreadCount--;    			
+    			SubContext.chunkThreadCount--;    	
+    			threadCount--;
     		}
         }
 		
