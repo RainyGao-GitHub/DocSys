@@ -34,15 +34,15 @@
 
         //文件上传线程计数器
  		var threadCount = 0;
- 		//最大文件上传线程数
- 		var maxThreadCount = 20;
+ 		//最大文件上传线程数(10个线程是普通电脑的极限，过大容易导致浏览器过度卡顿)
+ 		var maxThreadCount = 10;
  		
  		//分片上传线程总数（所有文件的分片线程）
  		var totalChunkThreadCount = 0;
  		//分片上传线程阈值
  		//当totalChunkThreadCount > totalChunkThreadThreshold时，单个文件分片上传线程数降为1（进入单线程模式）
  		//注意：不分片上传的文件（小文件）不受该阈值的影响
- 		var totalChunkThreadThreshold = 15;
+ 		var totalChunkThreadThreshold = 10;
  		
  		//单个文件最大分片上传线程数（每个文件的分片上传线程计数器在各自的上下文SubContext里）
  		var maxChunkThreadCount = 10; //文件分片上传线程限制
