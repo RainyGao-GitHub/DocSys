@@ -397,6 +397,9 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();	
+
+	//数据库备份
+	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();	
 	
 	//仓库额外数据（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
 	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	

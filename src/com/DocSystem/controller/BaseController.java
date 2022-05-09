@@ -10714,6 +10714,9 @@ public class BaseController  extends BaseFunction{
 				
 				initReposExtentionConfig();
 				
+				//start DataBase auto backup thread
+				addDelayTaskForDBBackup(10, null);
+				
 				return "ok";
 			}
 		}
@@ -10724,6 +10727,9 @@ public class BaseController  extends BaseFunction{
 		if(ret.equals("ok"))
 		{
 			initReposExtentionConfig();
+			
+			//start DataBase auto backup thread
+			addDelayTaskForDBBackup(10, null);
 		}
 		
 		return ret;
@@ -10834,12 +10840,106 @@ public class BaseController  extends BaseFunction{
 				initReposTextSearchConfig(repos);
 				initReposEncryptConfig(repos);
 				initReposData(repos);
-				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");
+				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
 			}
 	    } catch (Exception e) {
 	        Log.info("initReposExtentionConfig 异常");
 	        Log.info(e);
 		}	
+	}
+	
+	public void addDelayTaskForDBBackup(int offsetMinute, Long forceStartDelay) {
+		Long delayTime = getDelayTimeForNextDBBackupTask(offsetMinute);
+		if(delayTime == null)
+		{
+			Log.debug("addDelayTaskForDBBackup delayTime is null");			
+			return;
+		}
+		
+		if(forceStartDelay != null)
+		{
+			Log.debug("addDelayTaskForDBBackup forceStartDelay:" + forceStartDelay + " 秒后强制开始备份！" );											
+			delayTime = forceStartDelay; //1分钟后执行第一次备份
+		}
+		Log.info("addDelayTaskForDBBackup delayTime:" + delayTime + " 秒后开始备份！" );		
+		
+		//备份线程可能被多次启动，避免出现多次备份，每次启动一个新备份线程都需要先关闭旧的备份线程
+		if(dbBackupTaskHashMap == null)
+		{
+			Log.debug("addDelayTaskForDBBackup dbBackupTaskHashMap 未初始化");
+			return;
+		}
+		
+		long curTime = new Date().getTime();
+        Log.info("addDelayTaskForDBBackup() curTime:" + curTime);        
+		
+		//stopReposBackUpTasks
+		//go through all backupTask and close all task
+		for (BackupTask value : dbBackupTaskHashMap.values()) {
+			Log.debug("stopReposBackUpTasks() stop backupTask:" + value.createTime);			
+			value.stopFlag = true;
+		}
+		
+		//startReposBackupTask
+		BackupTask backupTask = new BackupTask();
+		backupTask.createTime = curTime;
+		dbBackupTaskHashMap.put(curTime, backupTask);
+
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+        			long createTime = curTime;
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("\n******** DBBackupDelayTask [" + createTime + "] for DataBase");
+	                        
+	                        //检查备份任务是否已被停止
+	                		BackupTask backupTask = dbBackupTaskHashMap.get(curTime);
+	                		if(backupTask == null)
+	                		{
+	                			Log.debug("DBBackupDelayTask() there is no running backup task for [" + curTime + "]");						
+	                			return;
+	                		}
+	                		if(backupTask.stopFlag == true)
+	                		{
+	                			Log.debug("DBBackupDelayTask() stop DelayTask:[" + curTime + "]");
+	                			return;
+	                		}	
+	                        
+	                        //将自己从任务备份任务表中删除
+	                		dbBackupTaskHashMap.remove(createTime);	                        
+	                        
+	                        //开始备份数据库
+	                		Date date = new Date();
+	                		String backUpTime = DateFormat.dateTimeFormat2(date);
+	                		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
+	                		boolean ret = backupDatabase(backUpPath, DB_TYPE, DB_URL, DB_USER, DB_PASS, true);
+	                        if(ret == false)
+	                        {
+	                        	Log.info("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行失败\n");		                        
+	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        	addDelayTaskForDBBackup(5, null);                      
+	                        	//注意: 数据库自动备份失败就等待下一次备份，不重试
+	                        	//Log.debug("******** DBBackupDelayTask start backup 5 minuts later\n");
+		                        //addDelayTaskForDBBackup(5, 300L); //5分钟后强制开始备份                      	                        	                     	
+	                        }
+	                        else
+	                        {
+		                        Log.info("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行成功\n");
+	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        	addDelayTaskForDBBackup(5, null);                      
+	                        }
+                        	Log.debug("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行结束\n");		                        
+                        } catch(Exception e) {
+                        	Log.debug("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行异常\n");
+                        	Log.info(e);                        	
+                        }
+                        
+                    }
+                },
+                delayTime,
+                TimeUnit.SECONDS);
 	}
 
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
@@ -11160,6 +11260,21 @@ public class BaseController  extends BaseFunction{
 		}	
 		
 		return false;
+	}
+	
+	private Long getDelayTimeForNextDBBackupTask(int offsetMinute)
+	{
+		//每天凌晨1:40备份
+		BackupConfig backupConfig = new BackupConfig();
+		backupConfig.backupTime = 60; //1:00
+		backupConfig.weekDay1 = 1;
+		backupConfig.weekDay2 = 1;
+		backupConfig.weekDay3 = 1;
+		backupConfig.weekDay4 = 1;
+		backupConfig.weekDay5 = 1;
+		backupConfig.weekDay6 = 1;
+		backupConfig.weekDay7 = 1;
+		return getDelayTimeForNextBackupTask(backupConfig, offsetMinute);
 	}
 	
 	private Long getDelayTimeForNextBackupTask(BackupConfig backupConfig, int offsetMinute) {
