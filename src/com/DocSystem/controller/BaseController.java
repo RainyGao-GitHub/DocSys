@@ -15832,7 +15832,7 @@ public class BaseController  extends BaseFunction{
 
 	private static RemoteStorageSession remoteStorageLoginForGit(Repos repos, RemoteStorageConfig remote,
 			RemoteStorageSession session) {
-		GitUtil git = new GitUtil(remote.GIT.userName, remote.GIT.pwd, remote.GIT.url, remote.GIT.localVerReposPath, remote.GIT.isRemote);
+		GitUtil git = new GitUtil(remote.GIT.userName, remote.GIT.pwd, remote.GIT.privateKey, remote.GIT.url, remote.GIT.localVerReposPath, remote.GIT.isRemote);
 		if(false == git.login())
 		{
 			Log.debug("remoteStorageLoginForGit() gitUtil.Init Failed");

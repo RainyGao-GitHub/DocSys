@@ -872,7 +872,10 @@ public class BaseFunction{
 			
 			remote.GIT.userName = config.getString("userName");
 			remote.GIT.pwd = config.getString("pwd");
-			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd + " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
+			remote.GIT.privateKey = config.getString("privateKey");
+			Log.debug("parseRemoteStorageConfigForGit userName:" + remote.GIT.userName + " pwd:" + remote.GIT.pwd 
+					+ " privateKey:" + remote.GIT.privateKey 
+					+ " autoPull:" + remote.autoPull + " rootPath:" + remote.rootPath);
 		}
 		
 		return remote;
