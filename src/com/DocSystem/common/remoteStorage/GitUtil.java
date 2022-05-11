@@ -17,6 +17,7 @@ import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RebaseResult;
 import org.eclipse.jgit.api.RebaseCommand.Operation;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
@@ -39,11 +40,17 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.transport.RemoteRefUpdate.Status;
+import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.util.FS;
 
 import com.DocSystem.common.DocUtil;
 import com.DocSystem.common.FileUtil;
@@ -54,11 +61,14 @@ import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 
 public class GitUtil {
 	private String user = null;
     private String pwd = null;
-    private String privateKey;
+    private String privateKey = null;
     
     private String localVerReposPath;
     private boolean isRemote;
@@ -70,17 +80,49 @@ public class GitUtil {
     private Repository repository = null;
     private RevWalk walk = null;
     
+    private JschConfigSessionFactory sshSessionFactory = null;
+    private TransportConfigCallback transportConfigCallback = null;
+    
+    
 	/**
      * 构造基于密码认证的sftp对象
 	 * @param isRemote 
 	 * @param localVerReposPath 
      */
-    public GitUtil(String username, String password, String url, String localVerReposPath, Integer isRemote) {
+    public GitUtil(String username, String password, String privateKey, String url, String localVerReposPath, Integer isRemote) {
         this.user = username;
         this.pwd = password;
         this.repositoryURL = url;
         this.localVerReposPath = localVerReposPath;
-        this.isRemote = (isRemote == 1);     
+        this.isRemote = (isRemote == 1);    
+        this.privateKey = privateKey;
+        
+		if(privateKey != null)	//使用密钥方式认证
+		{	
+			sshSessionFactory = new JschConfigSessionFactory() {
+				  @Override
+				  protected void configure( Host host, Session session ) {
+				    // do nothing
+				  }
+				  
+				  @Override
+				  protected JSch createDefaultJSch( FS fs ) throws JSchException {
+				    JSch defaultJSch = super.createDefaultJSch( fs );
+				    //defaultJSch.addIdentity( "/path/to/private_key" );
+				    defaultJSch.addIdentity(privateKey);
+				    return defaultJSch;
+				  }
+			};
+			
+			transportConfigCallback = new TransportConfigCallback() {
+				@Override
+				public void configure(Transport transport) {
+				    SshTransport sshTransport = ( SshTransport )transport;
+				    sshTransport.setSshSessionFactory( sshSessionFactory );
+					
+				}
+			};
+		}
     }
 
     
@@ -187,8 +229,11 @@ public class GitUtil {
 		
 		CloneCommand cloneCommand = Git.cloneRepository();
 		cloneCommand.setURI(repositoryURL);
-		
-		if(user != null && !user.isEmpty())
+		if(privateKey != null)	//使用密钥方式认证
+		{
+			cloneCommand.setTransportConfigCallback(transportConfigCallback);
+		}
+		else if(user != null && !user.isEmpty())
 		{
 			Log.debug("CloneRepos user:" + user);
 			cloneCommand.setCredentialsProvider( new UsernamePasswordCredentialsProvider(user, pwd));
@@ -659,7 +704,11 @@ public class GitUtil {
 		}
 		
 		FetchCommand fetch = git.fetch();
-		if(user != null && !user.isEmpty())
+		if(privateKey != null)	//使用密钥方式认证
+		{
+			fetch.setTransportConfigCallback(transportConfigCallback);
+		}
+		else if(user != null && !user.isEmpty())
 		{
 			UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
 			fetch.setCredentialsProvider(cp);
@@ -1074,7 +1123,11 @@ public class GitUtil {
 		try {
 			
 			PushCommand pushCmd = git.push();
-			if(user != null && !user.isEmpty())
+			if(privateKey != null)
+			{
+				pushCmd.setTransportConfigCallback(transportConfigCallback);
+			}
+			else if(user != null && !user.isEmpty())
 			{
 				UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
 				pushCmd.setCredentialsProvider(cp);
