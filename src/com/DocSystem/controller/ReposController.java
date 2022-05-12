@@ -245,9 +245,13 @@ public class ReposController extends BaseController{
 		//以下这段代码是为了避免有用户同时发起addRepos(前端快速点击添加操作也会引起该行为)，导致两个仓库的文件存储路径信息相同
 		synchronized(syncLockForRepos)
 		{
+    		String lockInfo = "addRepos() syncLockForRepos";
+    		SyncLock.lock(lockInfo);
+			
 			//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 			if(checkReposInfoForAdd(repos, rt) == false)
 			{
+				SyncLock.unlock(syncLockForRepos, lockInfo);
 				Log.debug("checkReposInfoForAdd() failed");
 				writeJson(rt, response);		
 				return;			
@@ -255,13 +259,14 @@ public class ReposController extends BaseController{
 			
 			if(reposService.addRepos(repos) == 0)
 			{
+				SyncLock.unlock(syncLockForRepos, lockInfo);
 				rt.setError("新增仓库记录失败");
 				writeJson(rt, response);		
 				return;
 			}
 			Integer reposId = repos.getId();
 			Log.debug("new ReposId" + reposId);
-			SyncLock.unlock(syncLockForRepos);			
+			SyncLock.unlock(syncLockForRepos, lockInfo);			
 		}
 		
 		//Lock the repos
@@ -269,9 +274,12 @@ public class ReposController extends BaseController{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{	
+    		String lockInfo = "addRepos() syncLock";
+    		SyncLock.lock(lockInfo);
+			
 			long lockTime = nowTimeStamp + 4*60*60*1000;
 			reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false); 
-			SyncLock.unlock(syncLock);
+			SyncLock.unlock(syncLock, lockInfo);
 		}	
 		
 		if(reposLock == null)

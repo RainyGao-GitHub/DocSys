@@ -3308,14 +3308,18 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "addDoc_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock);
+				SyncLock.unlock(syncLock, lockInfo);
 				Log.debug("addDoc_FSM() lockDoc " + doc.getName() + " Failed!");
 				return false;
 			}
+			SyncLock.unlock(syncLock, lockInfo);
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3426,14 +3430,18 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "addDocEx_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock);
+				SyncLock.unlock(syncLock, lockInfo);
 				Log.debug("addDocEx_FSM() lockDoc " + doc.getName() + " Failed!");
 				return false;
 			}
+			SyncLock.unlock(syncLock, lockInfo);
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3632,16 +3640,19 @@ public class BaseController  extends BaseFunction{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
-		{							
+		{
+			String lockInfo = "deleteDoc_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock the Doc
 			docLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock); 
 				docSysDebugLog("deleteDoc_FSM() Failed to lock Doc: " + docId, rt);
+				SyncLock.unlock(syncLock, lockInfo); 
 				return null;			
 			}
-			SyncLock.unlock(syncLock); 
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 		Log.debug("deleteDoc_FSM() " + docId + " " + doc.getName() + " Lock OK");
 		
@@ -4486,16 +4497,21 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "syncupLocalChanges_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock the Doc
 			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock); 
 				docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
 				Log.debug("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+				
+				SyncLock.unlock(syncLock, lockInfo); 
 				return false;
 			}
-			SyncLock.unlock(syncLock); 
+			
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 		
 		List<CommitAction> commitActionList = new ArrayList<CommitAction>();
@@ -4570,15 +4586,20 @@ public class BaseController  extends BaseFunction{
 			int lockType = DocLock.LOCK_TYPE_FORCE;
 			synchronized(syncLock)
 			{
+				String lockInfo = "syncupForDocChange() syncLock";
+				SyncLock.lock(lockInfo);
+				
 				//Try to lock the Doc
 				docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
 				if(docLock == null)
 				{
-					SyncLock.unlock(syncLock); 
 					docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
+					
+					SyncLock.unlock(syncLock, lockInfo); 
 					return false;
 				}
-				SyncLock.unlock(syncLock); 
+
+				SyncLock.unlock(syncLock, lockInfo); 
 			}
 			boolean ret = syncUpForRemoteChange_NoFS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
 			unlockDoc(doc, lockType, login_user);
@@ -6446,16 +6467,20 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "updateDoc_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock the doc
 			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock); 
-	
 				Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
+
+				SyncLock.unlock(syncLock, lockInfo); 
 				return false;
 			}
-			SyncLock.unlock(syncLock); 
+			
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 
 		//get RealDoc Full ParentPath
@@ -6535,16 +6560,20 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "updateDocEx_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock the doc
 			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock); 
-	
 				Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
+
+				SyncLock.unlock(syncLock, lockInfo); 
 				return false;
 			}
-			SyncLock.unlock(syncLock); 
+			
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 	
 		//get RealDoc Full ParentPath
@@ -6626,26 +6655,30 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "moveDoc_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock the srcDoc
 			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(srcDocLock == null)
 			{
-				SyncLock.unlock(syncLock); 
-		
 				docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
+
+				SyncLock.unlock(syncLock, lockInfo); 
 				return false;
 			}
 			
 			dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(dstDocLock == null)
 			{
-				SyncLock.unlock(syncLock); 
 				docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
+				SyncLock.unlock(syncLock, lockInfo); 
+				
 				unlockDoc(srcDoc, lockType, login_user);
 				return false;
 			}
 			
-			SyncLock.unlock(syncLock); 
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 		
 		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
@@ -6721,28 +6754,28 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "copyDoc_FSM() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock the srcDoc
 			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(srcDocLock == null)
 			{
-				SyncLock.unlock(syncLock); 
-		
 				Log.debug("copyDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed");
+				SyncLock.unlock(syncLock, lockInfo); 
 				return false;
 			}
 			
 			dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true);
 			if(dstDocLock == null)
 			{
-				SyncLock.unlock(syncLock); 
-				Log.debug("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");
-				
-				unlockDoc(srcDoc, lockType, login_user);
-				
+				Log.debug("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");				
+				unlockDoc(srcDoc, lockType, login_user);				
+				SyncLock.unlock(syncLock, lockInfo);
 				return false;
 			}
 			
-			SyncLock.unlock(syncLock); 
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 						
 		//复制文件或目录
@@ -6811,16 +6844,20 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "updateRealDocContent() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock Doc
 			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock); 
-	
 				Log.debug("updateRealDocContent() lockDoc Failed");
+
+				SyncLock.unlock(syncLock, lockInfo); 
 				return false;
 			}
-			SyncLock.unlock(syncLock); 
+			
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 		
 		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
@@ -6892,16 +6929,20 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_VFORCE;
 		synchronized(syncLock)
 		{
+			String lockInfo = "updateVirualDocContent() syncLock";
+			SyncLock.lock(lockInfo);
+			
 			//Try to lock Doc
 			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
 			if(docLock == null)
-			{
-				SyncLock.unlock(syncLock); 
-	
+			{	
 				Log.debug("updateVirualDocContent() lockDoc Failed");
+
+				SyncLock.unlock(syncLock, lockInfo); 
 				return false;
 			}
-			SyncLock.unlock(syncLock); 
+
+			SyncLock.unlock(syncLock, lockInfo); 
 		}
 		
 		boolean ret = updateVirualDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
@@ -9560,14 +9601,17 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForSvnCommit)
 		{
+			String lockInfo = "svnDocCommit() reposData.syncLockForSvnCommit";
+			SyncLock.lock(lockInfo);
+			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				SyncLock.unlock(reposData.syncLockForSvnCommit); //线程锁
+				SyncLock.unlock(reposData.syncLockForSvnCommit, lockInfo); //线程锁
 				return null;
 			}
 
 			revision = verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-			SyncLock.unlock(reposData.syncLockForSvnCommit); //线程锁
+			SyncLock.unlock(reposData.syncLockForSvnCommit, lockInfo); //线程锁
 		}
 		return revision;
 	}
@@ -9582,21 +9626,24 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForGitCommit)
 		{
+			String lockInfo = "gitDocCommit() reposData.syncLockForGitCommit";
+			SyncLock.lock(lockInfo);
+			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				SyncLock.unlock(reposData.syncLockForGitCommit); //线程锁
+				SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
 				return null;
 			}
 		
 			if(verReposUtil.checkAndClearnBranch() == false)
 			{
-				SyncLock.unlock(reposData.syncLockForGitCommit); //线程锁
 				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
+				SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
 				return null;
 			}
 		
 			revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-			SyncLock.unlock(reposData.syncLockForGitCommit); //线程锁
+			SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
 		}
 		return revision;
 	}
@@ -10093,8 +10140,11 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForDocNameIndex)
 		{
+			String lockInfo = "deleteDocNameIndexLib() reposData.syncLockForDocNameIndex";
+			SyncLock.lock(lockInfo);
+			
 			ret = deleteIndexLib(repos, 0);
-			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForDocNameIndex, lockInfo); //线程锁
 		}
 		return ret;
 
@@ -10106,8 +10156,11 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForRDocIndex)
 		{
+			String lockInfo = "deleteRDocIndexLib() reposData.syncLockForRDocIndex";
+			SyncLock.lock(lockInfo);
+			
 			ret = deleteIndexLib(repos, 1);
-			SyncLock.unlock(reposData.syncLockForRDocIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForRDocIndex, lockInfo); //线程锁
 		}
 		return ret;
 	}
@@ -10118,8 +10171,11 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForVDocIndex)
 		{
+			String lockInfo = "deleteVDocIndexLib() reposData.syncLockForVDocIndex";
+			SyncLock.lock(lockInfo);
+			
 			ret = deleteIndexLib(repos, 2);
-			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForVDocIndex, lockInfo); //线程锁
 		}
 		return ret;
 	}
@@ -10133,8 +10189,11 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForDocNameIndex)
 		{
+			String lockInfo = "addIndexForDocName() reposData.syncLockForDocNameIndex";
+			SyncLock.lock(lockInfo);
+			
 			ret = LuceneUtil2.addIndex(doc, doc.getName(), indexLib);
-			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForDocNameIndex, lockInfo); //线程锁
 		}
 		return ret;
 	}
@@ -10149,8 +10208,11 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForDocNameIndex)
 		{
+			String lockInfo = "deleteIndexForDocName() reposData.syncLockForDocNameIndex";
+			SyncLock.lock(lockInfo);
+			
 			ret = LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
-			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForDocNameIndex, lockInfo); //线程锁
 		}
 		return ret;
 	}
@@ -10176,11 +10238,14 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForDocNameIndex)
 		{
+			String lockInfo = "updateIndexForDocName() reposData.syncLockForDocNameIndex";
+			SyncLock.lock(lockInfo);
+			
 			LuceneUtil2.deleteIndex(doc, indexLib);
 
 			String content = newParentPath + newName;
 			ret = LuceneUtil2.addIndex(newDoc, content.trim(), indexLib);
-			SyncLock.unlock(reposData.syncLockForDocNameIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForDocNameIndex, lockInfo); //线程锁
 		}		
 		return ret;
 	}
@@ -10202,16 +10267,19 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForVDocIndex)
 		{
+			String lockInfo = "addIndexForVDoc() reposData.syncLockForVDocIndex";
+			SyncLock.lock(lockInfo);
+			
 			if(content == null || content.isEmpty())
 			{
 				//Log.debug("addIndexForVDoc() content is null or empty, do delete Index");
 				ret = LuceneUtil2.deleteIndex(doc, indexLib);			
-				SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+				SyncLock.unlock(reposData.syncLockForVDocIndex, lockInfo); //线程锁
 				return ret;
 			}
 			
 			ret = LuceneUtil2.addIndex(doc, content.toString().trim(), indexLib);
-			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForVDocIndex, lockInfo); //线程锁
 		}		
 		return ret;
 		
@@ -10228,8 +10296,11 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForVDocIndex)
 		{
+			String lockInfo = "deleteIndexForVDoc() reposData.syncLockForVDocIndex";
+			SyncLock.lock(lockInfo);
+			
 			ret = LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
-			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForVDocIndex, lockInfo); //线程锁
 		}
 		return ret;
 	}
@@ -10241,7 +10312,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(isVirtuallDocTextSearchDisabled(repos, doc))
 		{
-			Log.debug("addIndexForRDoc() VirtualDocTextSearchDisabled");
+			Log.debug("updateIndexForVDoc() VirtualDocTextSearchDisabled");
 			return false;
 		}
 		
@@ -10257,10 +10328,13 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForVDocIndex)
 		{
+			String lockInfo = "updateIndexForVDoc() reposData.syncLockForVDocIndex";
+			SyncLock.lock(lockInfo);
+			
 			LuceneUtil2.deleteIndex(doc, indexLib);
 
 			ret = LuceneUtil2.addIndex(doc, content.trim(), indexLib);
-			SyncLock.unlock(reposData.syncLockForVDocIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForVDocIndex, lockInfo); //线程锁
 		}
 		
 		return ret;
@@ -10343,6 +10417,9 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForRDocIndex)
 		{
+			String lockInfo = "addIndexForRDoc() reposData.syncLockForRDocIndex";
+			SyncLock.lock(lockInfo);
+			
 			switch(fileSuffix)
 			{
 			case "doc":
@@ -10352,6 +10429,7 @@ public class BaseController  extends BaseFunction{
 					break;
 				}
 				ret = LuceneUtil2.addIndexForWord2007(filePath, doc, indexLib);
+				break;
 			case "docx":
 				if(LuceneUtil2.addIndexForWord2007(filePath, doc, indexLib))
 				{
@@ -10404,7 +10482,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("addIndexForRDoc() 非文本文件，不支持索引");
 				break;
 			}
-			SyncLock.unlock(reposData.syncLockForRDocIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForRDocIndex, lockInfo); //线程锁
 		}
 
 		return ret;
@@ -10481,9 +10559,11 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = reposDataHashMap.get(repos.getId());
 		synchronized(reposData.syncLockForRDocIndex)
 		{
+			String lockInfo = "deleteIndexForRDoc() reposData.syncLockForRDocIndex";
+			SyncLock.lock(lockInfo);
 			
 			ret = LuceneUtil2.deleteIndexEx(doc,indexLib, deleteFlag);
-			SyncLock.unlock(reposData.syncLockForRDocIndex); //线程锁
+			SyncLock.unlock(reposData.syncLockForRDocIndex, lockInfo); //线程锁
 		}
 		
 		return ret;

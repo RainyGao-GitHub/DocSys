@@ -1039,7 +1039,7 @@ public class LuceneUtil2   extends BaseFunction
     		
     	    ret = addIndex(doc, content.toString().trim(), indexLib);
 		} catch (Exception e) {
-			Log.info("addIndexForWord() 异常");
+			Log.info("addIndexForWord() 异常:" + filePath);
     		Log.info(e);
     	}	finally {
 			if(doc1 != null)
@@ -1080,7 +1080,7 @@ public class LuceneUtil2   extends BaseFunction
     		str = extractor.getText();       	
         	ret = addIndex(doc,str.toString().trim(), indexLib);
 		} catch (Exception e) {	
-			Log.info("addIndexForWord2007() 异常");
+			Log.info("addIndexForWord2007() 异常:" + filePath);
 			Log.info(e);
 		} finally {
 			if(extractor != null)
@@ -1131,7 +1131,7 @@ public class LuceneUtil2   extends BaseFunction
             String text = extractor.getText();  
             ret = addIndex(doc, text.toString().trim(), indexLib);
         } catch(Exception e) {
-			Log.info("addIndexForExcel() 异常");
+			Log.info("addIndexForExcel() 异常:" + filePath);
 			Log.info(e);
             return false;
         } finally {
@@ -1180,7 +1180,7 @@ public class LuceneUtil2   extends BaseFunction
             String text = extractor.getText();  
             ret = addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) { 
-			Log.info("addIndexForExcel2007() 异常");
+			Log.info("addIndexForExcel2007() 异常:" + filePath);
 			Log.info(e);
         } finally {
 			if(extractor != null)
@@ -1225,7 +1225,7 @@ public class LuceneUtil2   extends BaseFunction
             String text=extractor.getText();  
             ret = addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
-			Log.info("addIndexForPPT() 异常");
+			Log.info("addIndexForPPT() 异常:" + filePath);
 			Log.info(e);
         } finally {
 			if(extractor != null)
@@ -1263,7 +1263,7 @@ public class LuceneUtil2   extends BaseFunction
             String text=extractor.getText();  
             ret = addIndex(doc, text.toString().trim(), indexLib);
         } catch (Exception e) {  
-			Log.info("addIndexForPPT2007() 异常");
+			Log.info("addIndexForPPT2007() 异常:" + filePath);
 			Log.info(e);
         } finally {
 			if(extractor != null)
@@ -1316,7 +1316,7 @@ public class LuceneUtil2   extends BaseFunction
 			
             ret = addIndex(doc, content.toString().trim(), indexLib);
 	   } catch(Exception e) {		
-			Log.info("addIndexForPdf() 异常");
+			Log.info("addIndexForPdf() 异常:" + filePath);
 			Log.info(e);
 	   } finally {
 			if(document != null)
@@ -1372,7 +1372,7 @@ public class LuceneUtil2   extends BaseFunction
 			
 			ret = true;
 		} catch(Exception e){
-			Log.info("addIndexForFile() 异常");
+			Log.info("addIndexForFile() 异常:" + filePath);
 			Log.info(e);
 		} finally {
 			if(reader != null)
