@@ -4266,6 +4266,9 @@ public class DocController extends BaseController{
 		
 		synchronized(syncLock)
 		{
+    		String lockInfo = "lockDoc() syncLock";
+    		SyncLock.lock(lockInfo);
+			
 			boolean subDocCheckFlag = false;
 			int lockDuration = 2*60*60*1000;	//文件编辑可以锁定两个小时
 			if(lockType == DocLock.LOCK_TYPE_FORCE)	//If want to force lock, must check all subDocs not locked
@@ -4278,12 +4281,13 @@ public class DocController extends BaseController{
 			DocLock docLock = lockDoc(doc,lockType,lockDuration,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock); //线程锁
 				Log.debug("lockDoc() Failed to lock Doc: " + doc.getName());
+				SyncLock.unlock(syncLock, lockInfo); //线程锁
+				
 				writeJson(rt, response);
 				return;			
 			}
-			SyncLock.unlock(syncLock); //线程锁
+			SyncLock.unlock(syncLock, lockInfo); //线程锁
 		}
 		
 		Log.debug("lockDoc : " + doc.getName() + " success");
@@ -4359,18 +4363,21 @@ public class DocController extends BaseController{
 		
 		synchronized(syncLock)
 		{
+    		String lockInfo = "unlockDoc() syncLock";
+    		SyncLock.lock(lockInfo);
+    		
 			//解锁不需要检查子目录的锁定，因为不会影响子目录
 			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
 			{
-				SyncLock.unlock(syncLock); //线程锁
+				SyncLock.unlock(syncLock, lockInfo); //线程锁
 				writeJson(rt, response);
 				return;
 			}				
 			unlockDoc(doc, lockType, reposAccess.getAccessUser());
-			SyncLock.unlock(syncLock); //线程锁
+			SyncLock.unlock(syncLock, lockInfo); //线程锁
 		}
 		
-		Log.debug("SyncLock.unlockDoc : " + doc.getName() + " success");
+		Log.debug("unlockDoc() unlock " + doc.getName() + " success");
 		rt.setData(doc);
 		writeJson(rt, response);	
 
@@ -4806,16 +4813,22 @@ public class DocController extends BaseController{
 		int lockType = isRealDoc? DocLock.LOCK_TYPE_FORCE : DocLock.LOCK_TYPE_VFORCE;
 		synchronized(syncLock)
 		{
+    		String lockInfo = "revertDocHistory() syncLock";
+    		SyncLock.lock(lockInfo);
+    		
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false);
 			if(docLock == null)
 			{
-				SyncLock.unlock(syncLock); //线程锁
 				docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
+				
+				SyncLock.unlock(syncLock, lockInfo); //线程锁
+				
 				writeJson(rt, response);
 				return;
 			}
-			SyncLock.unlock(syncLock);
+			
+			SyncLock.unlock(syncLock, lockInfo);
 		}
 
 		if(isRealDoc)
