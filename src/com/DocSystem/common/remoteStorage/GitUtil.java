@@ -45,13 +45,10 @@ import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.transport.RemoteRefUpdate.Status;
-import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.util.FS;
-
 import com.DocSystem.common.DocUtil;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
@@ -61,9 +58,8 @@ import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.UserInfo;
 
 public class GitUtil {
 	private String user = null;
@@ -102,24 +98,45 @@ public class GitUtil {
 			sshSessionFactory = new JschConfigSessionFactory() {
 				  @Override
 				  protected void configure( Host host, Session session ) {
-				    // do nothing
+					  session.setUserInfo(new UserInfo() {
+			              @Override
+			              public String getPassphrase() {
+			                return "passphrase";
+			              }
+	
+			              @Override
+			              public String getPassword() {return null;}
+	
+			              @Override
+			              public boolean promptPassword(String message) {return false;}
+	
+			              @Override
+			              public boolean promptPassphrase(String message) {return true;}
+	
+			              @Override
+			              public boolean promptYesNo(String message) {return false;}
+	
+			              @Override
+			              public void showMessage(String message) {}
+			            }); 					  
 				  }
 				  
-				  @Override
-				  protected JSch createDefaultJSch( FS fs ) throws JSchException {
-				    JSch defaultJSch = super.createDefaultJSch( fs );
-				    //defaultJSch.addIdentity( "/path/to/private_key" );
-				    defaultJSch.addIdentity(privateKey);
-				    return defaultJSch;
-				  }
+				  //TODO:指定privateKey路径会提示密钥错误
+				  //@Override
+				  //protected JSch createDefaultJSch( FS fs ) throws JSchException {
+				  //  JSch defaultJSch = super.createDefaultJSch( fs );
+				  //  //defaultJSch.addIdentity( "/path/to/private_key" );
+				  //  defaultJSch.addIdentity(privateKey);
+				  //  return defaultJSch;
+				  //}
 			};
 			
 			transportConfigCallback = new TransportConfigCallback() {
 				@Override
 				public void configure(Transport transport) {
 				    SshTransport sshTransport = ( SshTransport )transport;
-				    sshTransport.setSshSessionFactory( sshSessionFactory );
-					
+				    sshTransport.setTimeout(1500);
+				    sshTransport.setSshSessionFactory( sshSessionFactory );					
 				}
 			};
 		}
