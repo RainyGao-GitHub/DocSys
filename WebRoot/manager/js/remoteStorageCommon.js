@@ -120,6 +120,10 @@ function buildRemoteStorageConfigStr(remoteStorageConfig)
 		{
 			remoteStorage += ";pwd=" + remoteStorageConfig.GIT.pwd;
 		}
+		if(remoteStorageConfig.GIT.privateKey)
+		{
+			remoteStorage += ";privateKey=" + remoteStorageConfig.GIT.privateKey;
+		}
 		break;
 	case "mxsdoc":
 		remoteStorage = remoteStorageConfig.MXSDOC.url;
