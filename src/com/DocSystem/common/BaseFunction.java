@@ -1743,8 +1743,11 @@ public class BaseFunction{
 	}
 	
 	/****************** 线程锁接口 *********************************************/
+	//syncLock只用于lockDoc、checkDocLocked接口的同步执行，不能用于其他用途
 	protected static final Object syncLock = new Object(); //For Doc
+	//syncLockForRepos只用于新建仓库的同步执行，要保证每个仓库都有唯一的ID
 	protected static final Object syncLockForRepos = new Object(); //For Repos (add/update)
+	//syncLockForSystemLo用于保证系统日志的顺序写入
 	protected static final Object syncLockForSystemLog = new Object(); //For SystemLog	
 	
 	/****************** 路径相关的接口 *****************************************/
