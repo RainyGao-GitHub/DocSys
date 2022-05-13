@@ -147,10 +147,8 @@ import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alipay.api.internal.util.file.FileUtils;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
-import com.jcraft.jsch.SftpException;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jzlib.GZIPInputStream;
 
