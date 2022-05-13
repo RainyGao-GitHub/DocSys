@@ -2145,6 +2145,29 @@
 			}
 		});
 	}
+	
+	function showDocPwdSetPanel(node)
+	{
+		if(!node || node == null)
+		{
+			showErrorMessage("请选择文件！");
+			return;
+		}
+		
+		console.log("showDocPwdSetPanel node:", node);
+		bootstrapQ.dialog({
+			id: 'docPwdSet',
+			url: 'docPwdSet.html',
+			title: '密码设置:' + node.name,
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			//okbtn: "确定",
+			callback: function(){
+				DocPwdSetPageInit(gReposInfo.id, node);
+			}, 
+		}, null);
+	}
 </script>
 
 <SCRIPT type="text/javascript" >
@@ -4392,6 +4415,12 @@
 								unlockDoc(gRootDoc, 1);
 							}
 						},
+						{divider: true},
+						{text: '设置密码', action: function(e){
+								e.preventDefault();
+				        		showDocPwdSetPanel(gRootDoc);
+							}
+						},
 						//{text: '强制锁定', action: function(e){
 						//		e.preventDefault();
 						//		lockDoc(gRootDoc, 2);
@@ -4602,6 +4631,12 @@
 								unlockDoc(curRightClickedTreeNode, 1);
 							}
 						},
+						{divider: true},
+						{text: '设置密码', action: function(e){
+								e.preventDefault();
+				        		showDocPwdSetPanel(curRightClickedTreeNode);
+							}
+						},
 			   			{divider: true},
 						{text: '远程存储', subMenu: [
 							{text: '推送',  action: function(e){
@@ -4765,6 +4800,13 @@
 								e.preventDefault();
 								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 								unlockDoc(parentNode, 1);
+							}
+						},
+						{divider: true},
+						{text: '设置密码', action: function(e){
+								e.preventDefault();
+								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+				        		showDocPwdSetPanel(parentNode);
 							}
 						},
 						//{text: '强制锁定', action: function(e){
@@ -5106,6 +5148,12 @@
 							{text: '解锁', action: function(e){
 									e.preventDefault();
 									unlockDoc(curRightClickedDocListNode, 1);
+								}
+							},
+							{divider: true},
+							{text: '设置密码', action: function(e){
+									e.preventDefault();
+					        		showDocPwdSetPanel(curRightClickedDocListNode);
 								}
 							},
 							{divider: true},
