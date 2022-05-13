@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -403,9 +402,6 @@ public class BaseFunction{
 	
 	//仓库额外数据（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
 	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
-
-	//IndexLib Lock
-	protected static ConcurrentHashMap<Integer, Object> indexLibLockHashMap = new ConcurrentHashMap<Integer, Object>();	
 
 	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
