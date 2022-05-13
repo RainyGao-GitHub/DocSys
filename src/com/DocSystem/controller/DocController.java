@@ -4262,32 +4262,33 @@ public class DocController extends BaseController{
 		{
 			writeJson(rt, response);	
 			return;
+		}			
+
+		boolean subDocCheckFlag = false;
+		int lockDuration = 2*60*60*1000;	//文件编辑可以锁定两个小时
+		if(lockType == DocLock.LOCK_TYPE_FORCE)	//If want to force lock, must check all subDocs not locked
+		{
+			subDocCheckFlag = true;
+			lockDuration  =  60*60*1000; //强制锁定无法解锁，因此只能锁定一个小时
 		}
 		
+		DocLock docLock = null;
 		synchronized(syncLock)
 		{
     		String lockInfo = "lockDoc() syncLock";
     		SyncLock.lock(lockInfo);
 			
-			boolean subDocCheckFlag = false;
-			int lockDuration = 2*60*60*1000;	//文件编辑可以锁定两个小时
-			if(lockType == DocLock.LOCK_TYPE_FORCE)	//If want to force lock, must check all subDocs not locked
-			{
-				subDocCheckFlag = true;
-				lockDuration  =  60*60*1000; //强制锁定无法解锁，因此只能锁定一个小时
-			}
-				
-			//Try to lock the Doc
-			DocLock docLock = lockDoc(doc,lockType,lockDuration,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
-			if(docLock == null)
-			{
-				Log.debug("lockDoc() Failed to lock Doc: " + doc.getName());
-				SyncLock.unlock(syncLock, lockInfo); //线程锁
-				
-				writeJson(rt, response);
-				return;			
-			}
+    		//Try to lock the Doc
+			docLock = lockDoc(doc,lockType,lockDuration,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
+
 			SyncLock.unlock(syncLock, lockInfo); //线程锁
+		}
+		
+		if(docLock == null)
+		{
+			Log.debug("lockDoc() Failed to lock Doc: " + doc.getName());
+			writeJson(rt, response);
+			return;			
 		}
 		
 		Log.debug("lockDoc : " + doc.getName() + " success");
@@ -4818,17 +4819,15 @@ public class DocController extends BaseController{
     		
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false);
-			if(docLock == null)
-			{
-				docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
-				
-				SyncLock.unlock(syncLock, lockInfo); //线程锁
-				
-				writeJson(rt, response);
-				return;
-			}
-			
+
 			SyncLock.unlock(syncLock, lockInfo);
+		}
+		
+		if(docLock == null)
+		{
+			docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
+			writeJson(rt, response);
+			return;
 		}
 
 		if(isRealDoc)
