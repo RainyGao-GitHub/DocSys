@@ -3311,13 +3311,14 @@ public class BaseController  extends BaseFunction{
 			
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
-			if(docLock == null)
-			{
-				SyncLock.unlock(syncLock, lockInfo);
-				Log.debug("addDoc_FSM() lockDoc " + doc.getName() + " Failed!");
-				return false;
-			}
+
 			SyncLock.unlock(syncLock, lockInfo);
+		}
+		
+		if(docLock == null)
+		{
+			Log.debug("addDoc_FSM() lockDoc " + doc.getName() + " Failed!");
+			return false;
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3433,13 +3434,14 @@ public class BaseController  extends BaseFunction{
 			
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
-			if(docLock == null)
-			{
-				SyncLock.unlock(syncLock, lockInfo);
-				Log.debug("addDocEx_FSM() lockDoc " + doc.getName() + " Failed!");
-				return false;
-			}
+
 			SyncLock.unlock(syncLock, lockInfo);
+		}
+		
+		if(docLock == null)
+		{
+			Log.debug("addDocEx_FSM() lockDoc " + doc.getName() + " Failed!");
+			return false;
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3644,14 +3646,16 @@ public class BaseController  extends BaseFunction{
 			
 			//Try to lock the Doc
 			docLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
-			if(docLock == null)
-			{
-				docSysDebugLog("deleteDoc_FSM() Failed to lock Doc: " + docId, rt);
-				SyncLock.unlock(syncLock, lockInfo); 
-				return null;			
-			}
+
 			SyncLock.unlock(syncLock, lockInfo); 
 		}
+		
+		if(docLock == null)
+		{
+			docSysDebugLog("deleteDoc_FSM() Failed to lock Doc: " + docId, rt);
+			return null;			
+		}
+		
 		Log.debug("deleteDoc_FSM() " + docId + " " + doc.getName() + " Lock OK");
 		
 
@@ -4500,16 +4504,15 @@ public class BaseController  extends BaseFunction{
 			
 			//Try to lock the Doc
 			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
-			if(docLock == null)
-			{
-				docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
-				Log.debug("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
-				
-				SyncLock.unlock(syncLock, lockInfo); 
-				return false;
-			}
 			
 			SyncLock.unlock(syncLock, lockInfo); 
+		}
+		
+		if(docLock == null)
+		{
+			docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
+			Log.debug("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+			return false;
 		}
 		
 		List<CommitAction> commitActionList = new ArrayList<CommitAction>();
@@ -4589,16 +4592,16 @@ public class BaseController  extends BaseFunction{
 				
 				//Try to lock the Doc
 				docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
-				if(docLock == null)
-				{
-					docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
-					
-					SyncLock.unlock(syncLock, lockInfo); 
-					return false;
-				}
 
 				SyncLock.unlock(syncLock, lockInfo); 
 			}
+			
+			if(docLock == null)
+			{
+				docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
+				return false;
+			}
+			
 			boolean ret = syncUpForRemoteChange_NoFS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
 			unlockDoc(doc, lockType, login_user);
 			return ret;
@@ -6470,17 +6473,16 @@ public class BaseController  extends BaseFunction{
 			
 			//Try to lock the doc
 			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
-			if(docLock == null)
-			{
-				Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
-
-				SyncLock.unlock(syncLock, lockInfo); 
-				return false;
-			}
 			
 			SyncLock.unlock(syncLock, lockInfo); 
 		}
 
+		if(docLock == null)
+		{
+			Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
+			return false;
+		}
+		
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);		
 
@@ -6563,15 +6565,14 @@ public class BaseController  extends BaseFunction{
 			
 			//Try to lock the doc
 			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
-			if(docLock == null)
-			{
-				Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
-
-				SyncLock.unlock(syncLock, lockInfo); 
-				return false;
-			}
 			
 			SyncLock.unlock(syncLock, lockInfo); 
+		}
+		
+		if(docLock == null)
+		{
+			Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
+			return false;
 		}
 	
 		//get RealDoc Full ParentPath
@@ -6847,16 +6848,15 @@ public class BaseController  extends BaseFunction{
 			
 			//Try to lock Doc
 			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
-			if(docLock == null)
-			{
-				Log.debug("updateRealDocContent() lockDoc Failed");
-
-				SyncLock.unlock(syncLock, lockInfo); 
-				return false;
-			}
 			
 			SyncLock.unlock(syncLock, lockInfo); 
 		}
+		
+		if(docLock == null)
+		{
+			Log.debug("updateRealDocContent() lockDoc Failed");
+			return false;
+		}		
 		
 		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		
@@ -6932,15 +6932,14 @@ public class BaseController  extends BaseFunction{
 			
 			//Try to lock Doc
 			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
-			if(docLock == null)
-			{	
-				Log.debug("updateVirualDocContent() lockDoc Failed");
-
-				SyncLock.unlock(syncLock, lockInfo); 
-				return false;
-			}
 
 			SyncLock.unlock(syncLock, lockInfo); 
+		}
+		
+		if(docLock == null)
+		{	
+			Log.debug("updateVirualDocContent() lockDoc Failed");
+			return false;
 		}
 		
 		boolean ret = updateVirualDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
