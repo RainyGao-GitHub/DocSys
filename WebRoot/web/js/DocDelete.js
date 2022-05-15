@@ -240,7 +240,7 @@
 		    
 			checkAndBuildSubContextList();
     		
-    		//判断是否取消上传
+    		//判断是否取消删除
     		if(stopFlag == true || SubContext.stopFlag == true)
     		{
     			console.log("[" + SubContext.index + "] DeleteDoc() delete was stoped "+ SubContext.name);
@@ -256,7 +256,7 @@
 				 console.log("[" + SubContext.index + "] uploadDoc() timerForDelete triggered!");
 				 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
 				 {
-			         deleteErrorHandler(SubContext, "文件上传超时");
+			         deleteErrorHandler(SubContext, "文件删除超时");
 			         DeleteNextDoc();
 				 }
 		    },timeOut);	//check it 50ms later	
@@ -498,7 +498,7 @@
 	      		}
       		}
 	      	
-      		console.log("deleteEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      		console.log("deleteEndHandler() 删除结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			
       		//显示删除完成信息
       		showDeleteEndInfo();      		
