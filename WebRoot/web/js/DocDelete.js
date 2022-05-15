@@ -2,11 +2,15 @@
     var DocDelete = (function () {
         /*全局变量*/
         var isDeleteing = false;	//文件删除中标记
-        var stopDeleteFlag = false;	//结束删除
-        var DeleteedNum = 0; //已删除个数
+        var stopFlag = false;	//结束删除
         var successNum = 0;	//成功删除个数
 		var failNum = 0; //删除失败个数
         
+        //线程计数器
+ 		var threadCount = 0;
+ 		//最大线程数
+ 		var maxThreadCount = 10;
+		
         /*Content 用于保存文件删除的初始信息*/
         var Content = {};
         Content.DeleteBatchList = [];
@@ -27,15 +31,17 @@
 				
 			if(isDeleteing == true)
 			{
-				DocDeleteAppend(treeNodes, vid);
+				DocDeleteAppend(treeNodes, vid);				
+				DeleteNextDoc();	//start Delete
 			}
 			else
 			{
 				//初始化文件删除参数
 				DocDeleteInit(treeNodes, vid);
 	
-				//启动第一个Doc的Delete操作      		
-				DeleteDoc();	//start Delete
+        		console.log("DeleteDoc() index:" + index + " totalNum:" + totalNum);
+        		var SubContext = SubContextList[0];
+           		DeleteDoc(SubContext);
 			}
 		}
         
@@ -50,6 +56,19 @@
 				return;
 			}
 			
+	        /*清空全局变量*/
+	        isDeleteing = false;	//文件删除中标记
+	        stopFlag = false;	//结束删除
+	        successNum = 0;	//成功删除个数
+			failNum = 0; //删除失败个数
+	        
+	        //线程计数器
+	 		threadCount = 0;
+				        
+	 		index = 0; //当前操作的索引
+	        totalNum = 0; 
+	 		SubContextList = []; //文件删除上下文List，用于记录单个文件的删除情况，在开始删除的时候初始化
+	 		
 			var fileNum = treeNodes.length;
 			if(fileNum <= 0)
 			{
@@ -58,7 +77,7 @@
 				return;
 			}
 			
-			//Build CopyBatch
+			//Build DeleteBatch
 			var DeleteBatch = {};
 			DeleteBatch.treeNodes = treeNodes;
 			DeleteBatch.vid = vid;
@@ -77,17 +96,10 @@
 			Content.initedFileNum = 0;
 			Content.batchIndex = 0;
 			Content.state = 1;
-			console.log("DocCopyInit Content:", Content);
+			console.log("DocDeleteInit Content:", Content);
 	        
-			
 			isDeleteing = true;
-			
-			//清空上下文列表
-			SubContextList = [];
-			
-			//Set the Index
-			index = 0;
-			
+						
 			//Build SubContextList(totalFileNum will also be caculated)
 			buildSubContextList(Content, SubContextList, 1000);
       	}
@@ -186,7 +198,12 @@
 		    		SubContext.index = i;
 		    	   	SubContext.state = 0;	//未开始删除
 		    	   	SubContext.status = "待删除";	//未开始删除
-		    	   			      								    	   	
+		    	   	
+		    	   	//thread Status
+		    	   	SubContext.threadState = 0; //0:线程未启动, 1:线程已启动, 2:线程已终止
+		    	   	
+		    	    SubContext.stopFlag = false;
+		    	    
 		    	   	//Push the SubContext
 		    	   	SubContextList.push(SubContext);
 		    	}
@@ -205,18 +222,45 @@
     			console.log("buildSubContextList() there is more Batch need to be Inited");
     		}
 	   	}
-        		      		
-		//DeleteDoc接口，该接口是个递归调用
-		function DeleteDoc()
-		{
+		
+    	function checkAndBuildSubContextList()
+    	{
+    		//upload files 没有全部加入到SubContextList
     		//Delete files 没有全部加入到SubContextList
     		if(Content.state != 2)
     		{
 				buildSubContextList(Content,SubContextList,1000);
-    		}
+    		}    		
+    	}
+        		      		
+		//DeleteDoc接口，该接口是个递归调用
+		function DeleteDoc(SubContext)
+		{
+			console.log("DeleteDoc()  SubContext:",SubContext);
+		    
+			checkAndBuildSubContextList();
     		
-    		console.log("DeleteDoc() index:" + index + " totalNum:" + totalNum);
-    		var SubContext = SubContextList[index];
+    		//判断是否取消上传
+    		if(stopFlag == true || SubContext.stopFlag == true)
+    		{
+    			console.log("[" + SubContext.index + "] DeleteDoc() delete was stoped "+ SubContext.name);
+    			return;
+    		}
+    					
+			IncreaseThreadCount(SubContext);
+
+			//启动超时定式器
+			var timeOut = 3600000; //超时时间1小时（删除操作无法预估时间）
+		    console.log("[" + SubContext.index + "] DeleteDoc()  start timeout monitor with " + timeOut + " ms");
+		    SubContext.timerForDelete = setTimeout(function () {
+				 console.log("[" + SubContext.index + "] uploadDoc() timerForDelete triggered!");
+				 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
+				 {
+			         deleteErrorHandler(SubContext, "文件上传超时");
+			         DeleteNextDoc();
+				 }
+		    },timeOut);	//check it 50ms later	
+		    
 			var vid = SubContext.vid;
     		var docId = SubContext.docId;
     		var pid = SubContext.pid;
@@ -236,10 +280,13 @@
 	                shareId: gShareId,
                 },
 	            success : function (ret) {
-	                if( "ok" == ret.status ) //后台删除成功
-	                {
-	                	console.log(ret.data);
-	                 	//Delete zTree Node
+                	console.log("[" + SubContext.index + "] DeleteDoc() ret:", ret);
+	            	if( "ok" == ret.status ) //后台删除成功
+	                {				     	
+				     	//删除成功处理
+				     	deleteSuccessHandler(SubContext, ret.msgInfo);
+
+	            		//Delete zTree Node
 	                    var treeNode = getNodeByNodeId(docId);
 	                    if(treeNode != null)
 	                    {
@@ -256,21 +303,94 @@
 	                }
 	                else
 	                {
-	                	console.log("Error:" + ret.msgInfo);
+	                	console.log("[" + SubContext.index + "] DeleteDoc() Error:" + ret.msgInfo);
+	                	deleteErrorHandler(SubContext, ret.msgInfo)
 	                	DeleteErrorConfirm(name,ret.msgInfo);
 	            		return;
 	                }
 	            },
 	            error : function () {
-	             	console.log("服务器异常：Delete failed");
-	             	DeleteErrorConfirm(name,"服务器异常");
+	             	console.log("[" + SubContext.index + "] DeleteDoc() 服务器异常：Delete failed");
+	             	deleteErrorHandler(SubContext, "服务器异常")
+                	DeleteErrorConfirm(SubContext, "服务器异常");
 	            	return;
 	            }
 	    	});
+			
+			//try to start next delete thread
+			DeleteNextDoc();
 		}
 		
-      	function DeleteErrorConfirm(FileName,errMsg)
+      	function clearTimerForDelete(SubContext)
       	{
+      		if(SubContext.timerForDelete)
+      		{
+      			console.log("[" + SubContext.index + "] clearTimerForDelete() clear timerForDelete");
+      			clearTimeout(SubContext.timerForDelete);
+      			SubContext.timerForDelete = undefined;
+      		}
+      	}
+      	
+    	function IncreaseThreadCount(SubContext)
+        {    		
+    		if(SubContext.threadState == 0)
+        	{
+    			SubContext.threadState = 1;
+        		threadCount++;
+        	}
+        }
+    	
+    	function DecreaseThreadCount(SubContext)
+        {
+    		if(SubContext.threadState == 1)
+    		{
+    			SubContext.threadState = 2;
+        		threadCount--;    			
+    		}
+        }
+      	
+      	//deleteErrorHandler
+      	function deleteErrorHandler(SubContext,errMsg)
+      	{
+      		//Whatever do stop first
+      		SubContext.stopFlag = true;
+      		
+      		console.log("[" + SubContext.index + "] deleteErrorHandler() clear timerForDelete");
+      		clearTimerForDelete(SubContext);
+      		
+      		console.log("[" + SubContext.index + "] deleteErrorHandler() "+ SubContext.name + " " + errMsg);
+      		
+      		failNum++;
+      		DecreaseThreadCount(SubContext);
+
+      		//设置状态
+			SubContext.state = 5;	//失败
+      		SubContext.status = "fail";
+			SubContext.msgInfo = errMsg;
+      	}
+      	
+      	//deleteSuccessHandler
+      	function deleteSuccessHandler(SubContext,msgInfo)
+      	{	
+      		//Whatever do stop it first
+      		SubContext.stopFlag = true;
+      		
+      		console.log("[" + SubContext.index + "] deleteSuccessHandler() clear timerForDelete");
+      		clearTimerForDelete(SubContext);
+      		
+      		console.log("[" + SubContext.index + "] deleteSuccessHandler() "+ SubContext.name + " " + msgInfo);
+      		      		
+      		successNum++;
+      		DecreaseThreadCount(SubContext);      		
+      		
+	      	SubContext.state = 4;	//删除成功
+      		SubContext.status = "success";
+      		SubContext.msgInfo = msgInfo;
+      	}
+		
+      	function DeleteErrorConfirm(SubContext, errMsg)
+      	{
+      		FileName = SubContext.name;
       		var msg = FileName + "删除失败,是否继续删除其他文件？";
       		if(errMsg)
       		{
@@ -289,7 +409,7 @@
     	    	DeleteNextDoc();
     	    	return true;
 			},function(){
-				//
+				stopFlag = true;
 				DeleteEndHandler();
     	    	return true;
       		});
@@ -298,13 +418,23 @@
       	//DeleteEndHandler
       	function DeleteEndHandler()
       	{
+      		console.log("DeleteEndHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
+      		if(stopFlag == false)
+      		{
+	      		if(totalNum > (successNum + failNum))
+	      		{
+	      			console.log("DeleteEndHandler() 删除未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			return;
+	      		}
+      		}
+      		
       		console.log("DeleteEndHandler() 删除结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			
-      		//清除标记
-      		isDeleteing = false;
-  			
       		//显示移动完成 
       		showDeleteEndInfo();
+
+      		//清除标记
+      		isDeleteing = false;
       	}
       	
   		function showDeleteEndInfo()
@@ -331,24 +461,76 @@
 		
       	function DeleteNextDoc()
       	{
-           	//确定是否还有需要删除的文件
-           	index++;
-           	if(index < totalNum)	//callback没传入，表示单个删除
-           	{
-           		DeleteDoc();	//do Delete Next Doc	                   	
-	      	}
-           	else	//更新显示数据
-           	{	
-           		isDeleteing = false;
-    	            	            
-    	        bootstrapQ.msg({
-						msg : '删除完成！',
-						type : 'success',
-						time : 2000,
-				});
-            }
+			//检测当前运行中的线程
+        	console.log("DeleteNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
+			if(threadCount >= maxThreadCount)
+			{
+	        	console.log("DeleteNextDoc 线程池已满，等待线程结束");				
+				return;
+			}
+			
+     
+	        //console.log("DeleteNextDoc index:" + index + " totalNum:" + totalNum);
+	        if(index < (totalNum-1)) //还有文件删除线程未启动
+	        {
+		        index++;
+	        	console.log("DeleteNextDoc start delete");
+        		console.log("DeleteNextDoc() index:" + index + " totalNum:" + totalNum);
+        		var SubContext = SubContextList[index];
+           		DeleteDoc(SubContext);
+	        }
+	        else	//删除线程已全部启动，检测是否全部删除都已结束
+	        {
+	        	deleteEndHandler();
+	        }
       	}
       	
+      	
+      	function deleteEndHandler()
+      	{
+      		console.log("deleteEndHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
+      		if(stopFlag == false)
+      		{
+	      		if(totalNum > (successNum + failNum))
+	      		{
+	      			console.log("deleteEndHandler() 删除未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			return;
+	      		}
+      		}
+	      	
+      		console.log("deleteEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+			
+      		//显示删除完成信息
+      		showDeleteEndInfo();      		
+
+            
+  			//清除标记
+       		isDeleteing = false;
+      	}  
+      	
+  		function showDeleteEndInfo()
+  		{
+  			var deleteEndInfo = "删除完成(共" + totalNum +"个)";
+      		if(successNum != totalNum)
+      		{
+      			deleteEndInfo = "删除完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			// 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : deleteEndInfo,
+    					type : 'warning',
+    					time : 2000,
+    				    }); 
+      		}
+      		else
+      		{
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : deleteEndInfo,
+    					type : 'success',
+    					time : 2000,
+    				    }); 
+      		}
+  		}
 		
 		//开放给外部的调用接口
         return {
