@@ -735,7 +735,8 @@
     	    	//alert("点击了取消");
     	    	clearTimeout(uploadErrorTimer);
       			SubContext.uploadErrorConfirmSet = 2; //结束所有上传
-          		uploadErrorConfirmSet = 2; //全局取消上传    	 		
+          		uploadErrorConfirmSet = 2; //全局取消上传
+          		stopFlag = true; //取消所有上传
 		 		uploadEndHandler(SubContext,errMsg);
       		});
       	}
@@ -1001,11 +1002,15 @@
       	function uploadEndHandler()
       	{
       		//console.log("uploadEndHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
-      		if(totalNum > (successNum + failNum))
+      		if(stopFlag == false)
       		{
-      			//console.log("uploadEndHandler() 上传未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
-      			return;
+	      		if(totalNum > (successNum + failNum))
+	      		{
+	      			//console.log("uploadEndHandler() 上传未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			return;
+	      		}
       		}
+	      	
       		console.log("uploadEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			printUploadedTime();
 			
