@@ -1,13 +1,18 @@
 	//DocMove类	
     var DocMove = (function () {
         /*全局变量*/
-        var reposId;
-        var isMoving = false;	//文件移动中标记
-        var stopFlag = false;	//结束移动
-        var movedNum = 0; //已移动个数
-        var successNum = 0;	//成功移动个数
-		var failNum = 0; //移动失败个数
-		
+        var isMoving = false;	//任务进行中标记
+        var stopFlag = false;	//任务全部停止标记
+        
+        var threadCount = 0; //线程计数器
+ 		var maxThreadCount = 10; //最大线程数
+ 		
+        var index = 0; //当前任务索引
+        var totalNum = 0; //总任务数
+        var successNum = 0;	//成功任务数
+		var failNum = 0; //移动失败任务数		
+        var SubContextList = []; //任务上下文列表，用于记录任务的执行情况，在开始移动的时候初始化
+
         /*Content 用于保存文件移动的初始信息*/
         var Content = {};
         Content.BatchList = [];
@@ -15,12 +20,7 @@
         Content.batchIndex = 0;	//curBatchIndex
         Content.state = 0;	//0: all Batch not inited 1: Batch Init is on going 2: Batch Init completed
         Content.initedFileNum = 0;
-        Content.totalFileNum = 0; 
-        
-        /*moveDoc conditions 用于指示当前的移动文件及移动状态*/
-        var index = 0; //当前操作的索引
-        var totalNum = 0; 
- 		var SubContextList = []; //文件移动上下文List，用于记录单个文件的移动情况，在开始移动的时候初始化
+        Content.totalFileNum = 0;         
  		
 		//提供给外部的多文件move接口
 		function moveDocs(treeNodes, dstParentNode, vid)	//多文件移动函数
@@ -52,11 +52,15 @@
 			if(isMoving == true)
 			{
 				DocMoveAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid);
+				moveNextDoc();
 			}
 			else
 			{
 				DocMoveInit(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid);
-				moveDoc();
+				//move first doc
+	    		console.log("moveDoc() index:" + index + " totalNum:" + totalNum);
+	    		var SubContext = SubContextList[index];
+				moveDoc(SubContext);
 			}			
 		}
 		
@@ -64,12 +68,32 @@
       	function DocMoveInit(treeNodes,dstParentNode,dstPath,dstPid,dstLevel,vid)	//多文件移动函数
 		{
 			console.log("DocMoveInit()");
+			if(!treeNodes)
+			{
+				console.log("DocMoveInit() treeNodes is null");
+				showErrorMessage("请选择文件！");
+				return;
+			}
+			
 			var fileNum = treeNodes.length;
 			console.log("DocMoveInit() fileNum:" + fileNum);				
-
-	        movedNum = 0; //已移动个数
-	        successNum = 0;	//成功移动个数
-			failNum = 0; //移动失败个数
+			if(fileNum <= 0)
+			{
+				console.log("DocMoveInit() fileNum <= 0");
+				showErrorMessage("请选择文件！");
+				return;
+			}
+			
+	        /*重置全局变量*/
+			isMoving = false;	//任务进行中标记
+	        stopFlag = false;	//任务全部停止标记
+	        threadCount = 0; //线程计数器
+	 		maxThreadCount = 10; //最大线程数
+	 		index = 0; //当前任务索引
+	        totalNum = 0; //总任务数
+	        successNum = 0;	//成功任务数
+			failNum = 0; //移动失败任务数		
+	        SubContextList = []; //任务上下文列表，用于记录任务的执行情况，在开始移动的时候初始化
 			
 			//Build Batch
 			var Batch = {};
@@ -95,15 +119,8 @@
 			Content.batchIndex = 0;
 			Content.state = 1;
 			console.log("DocMoveInit Content:", Content);
-	        
-			
+	        			
 			isMoving = true;
-			
-			//清空上下文列表
-			SubContextList = [];
-			
-			//Set the Index
-			index = 0;
 			
 			//Build SubContextList(totalFileNum will also be caculated)
 			buildSubContextList(Content, SubContextList, 1000);
@@ -218,7 +235,12 @@
 		    		SubContext.index = i;
 		    	   	SubContext.state = 0;	//未开始移动
 		    	   	SubContext.status = "待移动";	//未开始移动
-		    	   			      								    	   	
+		    	   	
+		    	   	//thread Status
+		    	   	SubContext.threadState = 0; //0:线程未启动, 1:线程已启动, 2:线程已终止
+		    	   	
+		    	    SubContext.stopFlag = false;
+		    	   	
 		    	   	//Push the SubContext
 		    	   	SubContextList.push(SubContext);
     	   		}
@@ -237,32 +259,77 @@
     			console.log("buildSubContextList() there is more Batch need to be Inited");
     		}
 	   	}
-      	
-		//moveDoc接口，该接口是个递归调用
-    	function moveDoc()
-    	{    		
-    		//files 没有全部加入到SubContextList
+    	
+		function checkAndBuildSubContextList()
+    	{
+    		//move files 没有全部加入到SubContextList
     		if(Content.state != 2)
     		{
 				buildSubContextList(Content,SubContextList,1000);
     		}
+    	}
+		
+      	function moveNextDoc()
+      	{
+			//检测当前运行中的线程
+        	console.log("moveNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
+			if(threadCount >= maxThreadCount)
+			{
+	        	console.log("moveNextDoc 线程池已满，等待线程结束");				
+				return;
+			}
+			
+     
+	        //console.log("moveNextDoc index:" + index + " totalNum:" + totalNum);
+	        if(index < (totalNum-1)) //还有线程未启动
+	        {
+		        index++;
+	        	console.log("moveNextDoc start move");
+        		console.log("moveNextDoc() index:" + index + " totalNum:" + totalNum);
+        		var SubContext = SubContextList[index];
+           		moveDoc(SubContext);
+	        }
+	        else	//线程已全部启动，检测是否全部都已结束
+	        {
+	        	moveEndHandler();
+	        }
+      	}
+    	
+    	function moveDoc(SubContext)
+    	{    		
+    		//console.log("moveDoc()  SubContext:",SubContext);
     		
-			//判断是否取消移动
-    		if(stopFlag == true)
+    		checkAndBuildSubContextList();
+    		
+    		//判断任务是否已停止
+			if(stopFlag == true || SubContext.stopFlag == true)
     		{
-    			console.log("moveDoc(): 结束移动");
-    			moveEndHandler();
+    			console.log("[" + SubContext.index + "] moveDoc() task was stoped "+ SubContext.name);
     			return;
     		}
     		
-    		console.log("moveDoc() index:" + index + " totalNum:" + totalNum);
-    		var SubContext = SubContextList[index];
+    		IncreaseThreadCount(SubContext);
     		
   	    	if(SubContext.pid == SubContext.dstPid)
   			{
+				console.log("[" + SubContext.index + "] moveDoc() 无法在同一个目录下移动");
+				moveErrorHandler(SubContext, "无法在同一个目录下移动");
+				moveErrorConfirm(SubContext, "无法在同一个目录下移动");
   	    		moveNextDoc();
   	    		return; 
   			}
+  	    	
+			//启动超时定式器
+			var timeOut = 3600000; //超时时间1小时（复制操作无法预估时间）
+		    console.log("[" + SubContext.index + "] moveDoc()  start timeout monitor with " + timeOut + " ms");
+		    SubContext.timerForMove = setTimeout(function () {
+				 console.log("[" + SubContext.index + "] moveDoc() timerForMove triggered!");
+				 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
+				 {
+			         moveErrorHandler(SubContext, "文件复制超时");
+			         moveNextDoc();
+				 }
+		    },timeOut);			
   	    	
 			//执行后台moveDoc操作
     		$.ajax({
@@ -284,49 +351,104 @@
 		            shareId: gShareId,
                 },
                 success : function (ret) {
+                   console.log("[" + SubContext.index + "] moveDoc() ret:",ret);
                    if( "ok" == ret.status )
                    {
-                	    var doc = ret.data;
-                	    
-                	    //Add or Delete from zTree
-                  	    addTreeNode(doc);
+                	    moveSuccessHandler(SubContext, ret.msgInfo);
+               	   	
+               	        //Add or Delete from treeNode
+                 	    var doc = ret.data;
+                	    addTreeNode(doc);
                   	    deleteTreeNodeById(SubContext.docId);
-                	    
-                	   	//Add or Delete from DocList
                 	    DocList.addNode(doc);
                 	    DocList.deleteNode(SubContext.docId);
                 	    
-                	    moveSuccessHandler(SubContext, ret.msgInfo);
-                	   	return;
+                	    moveNextDoc();
+                	    return;
                    }
                    else	//后台报错，结束移动
                    {
-                	   console.log("moveDoc Error:" + ret.msgInfo);
-                       moveErrorConfirm(SubContext,ret.msgInfo);
+                	   console.log("[" + SubContext.index + "] moveDoc() Error:" + ret.msgInfo);
+                	   moveErrorHandler(SubContext, ret.msgInfo);
+                	   moveErrorConfirm(SubContext,ret.msgInfo);
                        return;
                    }
                 },
                 error : function () {	//后台异常
- 	               console.log("服务器异常：文件[" + index + "]移动异常！");
-            	   moveErrorConfirm(SubContext,"服务器异常");
+            	   console.log("[" + SubContext.index + "] moveDoc() 服务器异常：move failed");
+            	   moveErrorHandler(SubContext, "服务器异常");
+            	   moveErrorConfirm(SubContext,"服务器异常");            	   
             	   return;
                 }
         	});
     	}
+    	
+      	function clearTimerForMove(SubContext)
+      	{
+      		if(SubContext.timerForMove)
+      		{
+      			console.log("[" + SubContext.index + "] clearTimerForMove() clear timerForMove");
+      			clearTimeout(SubContext.timerForMove);
+      			SubContext.timerForMove = undefined;
+      		}
+      	}
+      	
+      	
+    	function IncreaseThreadCount(SubContext)
+        {    		
+    		if(SubContext.threadState == 0)
+        	{
+    			SubContext.threadState = 1;
+        		threadCount++;
+        	}
+        }
+    	
+    	function DecreaseThreadCount(SubContext)
+        {
+    		if(SubContext.threadState == 1)
+    		{
+    			SubContext.threadState = 2;
+        		threadCount--;    			
+    		}
+        }
+    	
+      	function moveErrorHandler(SubContext,errMsg)
+      	{
+      		//Whatever do stop first
+      		SubContext.stopFlag = true;
+      		
+      		console.log("[" + SubContext.index + "] moveErrorHandler() clear timerForMove");
+      		clearTimerForMove(SubContext);
+      		
+      		console.log("[" + SubContext.index + "] moveErrorHandler() "+ SubContext.name + " " + errMsg);
+      		
+      		failNum++;
+      		DecreaseThreadCount(SubContext);
 
-		function moveNextDoc()
-		{
-	        index++;	//move成功，则调用回调函
-	        if(index < totalNum) //移动没结束，且回调函数存在则回调，否则表示结束
-	        {
-	        	console.log("moveDoc Next");
-	        	moveDoc();
-	        }
-	        else	//移动结束，保存目录结构到后台
-	        {
-	        	moveEndHandler();
-	        }
-		}
+      		//设置状态
+			SubContext.state = 5;	//失败
+      		SubContext.status = "fail";
+			SubContext.msgInfo = errMsg;
+      	}
+      	
+      	//moveSuccessHandler
+      	function moveSuccessHandler(SubContext,msgInfo)
+      	{	
+      		//Whatever do stop it first
+      		SubContext.stopFlag = true;
+      		
+      		console.log("[" + SubContext.index + "] moveSuccessHandler() clear timerForMove");
+      		clearTimerForMove(SubContext);
+      		
+      		console.log("[" + SubContext.index + "] moveSuccessHandler() "+ SubContext.name + " " + msgInfo);
+      		      		
+      		successNum++;
+      		DecreaseThreadCount(SubContext);      		
+      		
+	      	SubContext.state = 4;	//复制成功
+      		SubContext.status = "success";
+      		SubContext.msgInfo = msgInfo;
+      	}  	
 		
       	function moveErrorConfirm(SubContext,errMsg)
       	{
@@ -338,72 +460,42 @@
       		}
       		//弹出用户确认窗口
       		qiao.bs.confirm({
-    	    	id: "moveErrorConfirm",
+    	    	id: "moveErrorConfirm"  +  SubContext.index,
     	        msg: msg,
     	        close: false,		
     	        okbtn: "继续",
     	        qubtn: "结束",
     	    },function () {
-    	    	moveErrorHandler(SubContext, errMsg);
+    	    	moveNextDoc();
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-				moveErrorAbortHandler(SubContext, errMsg);
+				stopFlag = true;
+				moveEndHandler();
     	    	return true;
       		});
       	}
       	
-      	//moveErrorHandler
-      	function moveErrorHandler(SubContext,errMsg)
-      	{
-      		console.log("moveErrorHandler() "+ SubContext.name + " " + errMsg);
-      		
-      		failNum++;
-      		
-      		//设置移动状态
-			SubContext.state = 3;	//移动结束
-      		SubContext.status = "fail";
-			SubContext.msgInfo = errMsg;
-			moveNextDoc();		 	
-      	}
       	
-      	//moveErrorAbortHandler
-      	function moveErrorAbortHandler(SubContext,errMsg)
-      	{
-      		console.log("moveErrorAbortHandler() "+ SubContext.name + " " + errMsg);
-      	
-      		failNum++;
-      		
-    		//设置移动状态
-			SubContext.state = 3;	//移动结束
-      		SubContext.status = "fail";
-      		SubContext.msgInfo = errMsg;
-      		moveEndHandler();
-      	}
-      	
-      	//moveSuccessHandler
-      	function moveSuccessHandler(SubContext,msgInfo)
-      	{	
-      		console.log("moveSuccessHandler() "+ SubContext.name + " " + msgInfo);
-      		
-      		successNum++;
-	      	
-	      	SubContext.state = 2;	//移动结束
-      		SubContext.status = "success";
-      		SubContext.msgInfo = msgInfo;
-			moveNextDoc();
-      	}
       	
       	//moveEndHandler
       	function moveEndHandler()
       	{
-      		console.log("moveEndHandler() 移动结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      		console.log("moveEndHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
+      		if(stopFlag == false)
+      		{
+	      		if(totalNum > (successNum + failNum))
+	      		{
+	      			console.log("moveEndHandler() 复制未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			return;
+	      		}
+      		}
+      		
+      		console.log("moveEndHandler() 复制结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			
-      		//清除标记
-  			isMoving = false;
-  			
-      		//显示移动完成 
       		showMoveEndInfo();
+
+      		isMoving = false;
       	}
       	
   		function showMoveEndInfo()
