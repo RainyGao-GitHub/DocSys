@@ -471,17 +471,16 @@
 		function CopyConflictConfirm(SubContext)
 		{
 			console.log("[" + SubContext.index + "] CopyConflictConfirm()");
-			if(copyConflictConfirmState == 0)
-			{
-				copyConflictConfirmState = 1;
-				showCopyConflictConfirmPanel(SubContext);
-			}
-			else
+			if(copyConflictConfirmState == 1)
 			{
 				//add it to penddingList
 				console.log("[" + SubContext.index + "] CopyConflictConfirm() add to penndingList");
 				penddingListForCopyConflictConfirm.push(SubContext);
+				return;
 			}
+			
+			copyConflictConfirmState = 1;
+			showCopyConflictConfirmPanel(SubContext);
 		}
 		
 		function showCopyConflictConfirmPanel(SubContext)
@@ -502,6 +501,7 @@
 		            	$("#" + dialogId + " input[name='newDocName']").val("Copy of " + copiedNodeName);
 		            }
 		        },function(){
+		        	copyConflictConfirmState = 0;
 		        	console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 修改名字:", SubContext);	
 		        	//用户修改了目标名字，重入复制操作
 		        	var newDstName =  $("#" + dialogId + " input[name='newDocName']").val();
@@ -509,14 +509,13 @@
 			    	SubContext.dstName = newDstName;
 			    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
             		closeBootstrapDialog("copyConflictConfirm"  + SubContext.index);
-            		copyConflictConfirmState = 0;
             		copyDoc(SubContext);			    	
             		resumePenddingCopyConflictConfirm();
             		return true;
 		        }, function(){ //取消
-					console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 取消复制:", SubContext);					
-		        	copyErrorHandler(SubContext, "文件已存在，用户放弃修改名字并取消了复制！");
 		        	copyConflictConfirmState = 0;
+		        	console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 取消复制:", SubContext);					
+		        	copyErrorHandler(SubContext, "文件已存在，用户放弃修改名字并取消了复制！");
 		        	resumePenddingCopyConflictConfirm();
 		        	copyNextDoc();
 	    	    	return true;
@@ -536,41 +535,40 @@
       	var copyErrorConfirmState = 0;
       	function copyErrorConfirm(SubContext,errMsg)
       	{
-      		if(copyErrorConfirmState == 0)
+      		if(copyErrorConfirmState == 1)
       		{
-      			copyErrorConfirmState = 1;
-	      		var FileName = SubContext.name;
-	      		var msg = FileName + "复制失败,是否继续复制其他文件？";
-	      		if(errMsg != undefined)
-	      		{
-	      			msg = FileName + "复制失败(" + errMsg + "),是否继续复制其他文件？";
-	      		}
-	      		//弹出用户确认窗口
-	      		qiao.bs.confirm({
-	    	    	id: "copyErrorConfirm" +  SubContext.index,
-	    	        msg: msg,
-	    	        close: false,		
-	    	        okbtn: "继续",
-	    	        qubtn: "结束",
-	    	    },function () {
-	    	    	//继续后续的复制
-	    	    	copyErrorConfirmState = 0;
-	    	    	resumePenddingCopyErrorConfirm();
-	    	    	copyNextDoc();
-	    	    	return true;
-				},function(){
-					//结束后续的复制
-					copyErrorConfirmState = 0;
-					stopFlag = true;
-					copyEndHandler();
-	    	    	return true;
-	      		});
+      			console.log("[" + SubContext.index + "] copyErrorConfirm() add to penndingList");
+      			penddingListForCopyErrorConfirm.push(SubContext);
+      			return;
       		}
-      		else
+      		copyErrorConfirmState = 1;
+	      	
+  			var FileName = SubContext.name;
+      		var msg = FileName + "复制失败,是否继续复制其他文件？";
+      		if(errMsg != undefined)
       		{
-				console.log("[" + SubContext.index + "] copyErrorConfirm() add to penndingList");
-				penddingListForCopyErrorConfirm.push(SubContext);
+      			msg = FileName + "复制失败(" + errMsg + "),是否继续复制其他文件？";
       		}
+      		//弹出用户确认窗口
+      		qiao.bs.confirm({
+    	    	id: "copyErrorConfirm" +  SubContext.index,
+    	        msg: msg,
+    	        close: false,		
+    	        okbtn: "继续",
+    	        qubtn: "结束",
+    	    },function () {
+    	    	//继续后续的复制
+    	    	copyErrorConfirmState = 0;
+    	    	resumePenddingCopyErrorConfirm();
+    	    	copyNextDoc();
+    	    	return true;
+			},function(){
+				//结束后续的复制
+				copyErrorConfirmState = 0;
+				stopFlag = true;
+				copyEndHandler();
+    	    	return true;
+      		});
       	}
       	
     	function resumePenddingCopyErrorConfirm()

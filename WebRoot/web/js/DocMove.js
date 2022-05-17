@@ -454,42 +454,40 @@
       	var moveErrorConfirmState = 0;
       	function moveErrorConfirm(SubContext,errMsg)
       	{
-      		if(moveErrorConfirmState == 0)
-      		{
-      			moveErrorConfirmState = 1;
-
-	      		var FileName = SubContext.name;
-	      		var msg = FileName + "移动失败,是否继续移动其他文件？";
-	      		if(errMsg != undefined)
-	      		{
-	      			msg = FileName + "移动失败(" + errMsg + "),是否继续移动其他文件？";
-	      		}
-	      		//弹出用户确认窗口
-	      		qiao.bs.confirm({
-	    	    	id: "moveErrorConfirm"  +  SubContext.index,
-	    	        msg: msg,
-	    	        close: false,		
-	    	        okbtn: "继续",
-	    	        qubtn: "结束",
-	    	    },function () {
-	    	    	//继续后续的移动
-	    	    	moveErrorConfirmState = 0;
-	    	    	resumePenddingMoveErrorConfirm();
-	    	    	moveNextDoc();
-	    	    	return true;
-				},function(){
-	    	    	//结束后续的移动操作
-					moveErrorConfirmState = 0;
-					stopFlag = true;
-					moveEndHandler();
-	    	    	return true;
-	      		});
-      		}
-      		else
-      		{
+      		if(moveErrorConfirmState == 1)
+          	{
 				console.log("[" + SubContext.index + "] moveErrorConfirm() add to penndingList");
 				penddingListForMoveErrorConfirm.push(SubContext);
+				return;
       		}
+      		moveErrorConfirmState = 1;
+
+      		var FileName = SubContext.name;
+      		var msg = FileName + "移动失败,是否继续移动其他文件？";
+      		if(errMsg != undefined)
+      		{
+      			msg = FileName + "移动失败(" + errMsg + "),是否继续移动其他文件？";
+      		}
+      		//弹出用户确认窗口
+      		qiao.bs.confirm({
+    	    	id: "moveErrorConfirm"  +  SubContext.index,
+    	        msg: msg,
+    	        close: false,		
+    	        okbtn: "继续",
+    	        qubtn: "结束",
+    	    },function () {
+    	    	//继续后续的移动
+    	    	moveErrorConfirmState = 0;
+    	    	resumePenddingMoveErrorConfirm();
+    	    	moveNextDoc();
+    	    	return true;
+			},function(){
+    	    	//结束后续的移动操作
+				moveErrorConfirmState = 0;
+				stopFlag = true;
+				moveEndHandler();
+    	    	return true;
+      		});
       	}
       	
     	function resumePenddingMoveErrorConfirm()
