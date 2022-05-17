@@ -450,33 +450,56 @@
       		SubContext.msgInfo = msgInfo;
       	}  	
 		
+    	var penddingListForMoveErrorConfirm = [];
+      	var moveErrorConfirmState = 0;
       	function moveErrorConfirm(SubContext,errMsg)
       	{
-      		var FileName = SubContext.name;
-      		var msg = FileName + "移动失败,是否继续移动其他文件？";
-      		if(errMsg != undefined)
+      		if(moveErrorConfirmState == 0)
       		{
-      			msg = FileName + "移动失败(" + errMsg + "),是否继续移动其他文件？";
+      			moveErrorConfirmState = 1;
+
+	      		var FileName = SubContext.name;
+	      		var msg = FileName + "移动失败,是否继续移动其他文件？";
+	      		if(errMsg != undefined)
+	      		{
+	      			msg = FileName + "移动失败(" + errMsg + "),是否继续移动其他文件？";
+	      		}
+	      		//弹出用户确认窗口
+	      		qiao.bs.confirm({
+	    	    	id: "moveErrorConfirm"  +  SubContext.index,
+	    	        msg: msg,
+	    	        close: false,		
+	    	        okbtn: "继续",
+	    	        qubtn: "结束",
+	    	    },function () {
+	    	    	//继续后续的移动
+	    	    	moveErrorConfirmState = 0;
+	    	    	resumePenddingMoveErrorConfirm();
+	    	    	moveNextDoc();
+	    	    	return true;
+				},function(){
+	    	    	//结束后续的移动操作
+					moveErrorConfirmState = 0;
+					stopFlag = true;
+					moveEndHandler();
+	    	    	return true;
+	      		});
       		}
-      		//弹出用户确认窗口
-      		qiao.bs.confirm({
-    	    	id: "moveErrorConfirm"  +  SubContext.index,
-    	        msg: msg,
-    	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束",
-    	    },function () {
-    	    	moveNextDoc();
-    	    	return true;
-			},function(){
-    	    	//alert("点击了取消");
-				stopFlag = true;
-				moveEndHandler();
-    	    	return true;
-      		});
+      		else
+      		{
+				console.log("[" + SubContext.index + "] moveErrorConfirm() add to penndingList");
+				penddingListForMoveErrorConfirm.push(SubContext);
+      		}
       	}
       	
-      	
+    	function resumePenddingMoveErrorConfirm()
+    	{
+    		if(penddingListForMoveErrorConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForMoveErrorConfirm.pop();
+    			moveErrorConfirm(SubContext);
+    		}
+    	}      	
       	
       	//moveEndHandler
       	function moveEndHandler()
