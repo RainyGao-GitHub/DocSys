@@ -269,73 +269,87 @@
     					
 			IncreaseThreadCount(SubContext);
 
-			//启动超时定式器
-			var timeOut = 3600000; //超时时间1小时（删除操作无法预估时间）
-		    console.log("[" + SubContext.index + "] deleteDoc()  start timeout monitor with " + timeOut + " ms");
-		    SubContext.timerForDelete = setTimeout(function () {
-				 console.log("[" + SubContext.index + "] deleteDoc() timerForDelete triggered!");
-				 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
-				 {
-			         deleteErrorHandler(SubContext, "文件删除超时");
-			         deleteNextDoc();
-				 }
-		    },timeOut);
-		    
-			var vid = SubContext.vid;
-    		var docId = SubContext.docId;
-    		var pid = SubContext.pid;
-    		var path = SubContext.path;
-    		var name = SubContext.name;				
-    		
-			$.ajax({
-                url : "/DocSystem/Doc/deleteDoc.do",
-                type : "post",
-                dataType : "json",
-                data : {
-                	reposId: vid,
-                    docId : docId,
-                    pid: pid,
-                    path: path,
-                    name: name,
-	                shareId: gShareId,
-                },
-	            success : function (ret) {
-                	console.log("[" + SubContext.index + "] deleteDoc() ret:", ret);
-	            	if( "ok" == ret.status ) //后台删除成功
-	                {				     	
-				     	//删除成功处理
-				     	deleteSuccessHandler(SubContext, ret.msgInfo);
-
-	            		//Delete zTree Node
-	                    var treeNode = getNodeByNodeId(docId);
-	                    if(treeNode != null)
-	                    {
-	                    	var treeObj = $.fn.zTree.getZTreeObj("doctree");
-	                    	treeObj.removeNode(treeNode);
-	                    }
-	                    
-				     	//Delete docList Node
-				     	DocList.deleteNode(docId);
-				     	
-				     	//start to Delete nextDoc
-				     	deleteNextDoc();
-				     	return;
-	                }
-	                else
-	                {
-	                	console.log("[" + SubContext.index + "] deleteDoc() Error:" + ret.msgInfo);
-	                	deleteErrorHandler(SubContext, ret.msgInfo);
-	                	DeleteErrorConfirm(name,ret.msgInfo);
-	            		return;
-	                }
-	            },
-	            error : function () {
-	             	console.log("[" + SubContext.index + "] deleteDoc() 服务器异常：Delete failed");
-	             	deleteErrorHandler(SubContext, "服务器异常");
-                	DeleteErrorConfirm(SubContext, "服务器异常");
-	            	return;
-	            }
-	    	});
+			switch(SubContext.state)
+			{
+			case 0:
+				//启动超时定式器
+				var timeOut = 3600000; //超时时间1小时（删除操作无法预估时间）
+			    console.log("[" + SubContext.index + "] deleteDoc()  start timeout monitor with " + timeOut + " ms");
+			    SubContext.timerForDelete = setTimeout(function () {
+					 console.log("[" + SubContext.index + "] deleteDoc() timerForDelete triggered!");
+					 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
+					 {
+				         deleteErrorHandler(SubContext, "文件删除超时");
+				         deleteNextDoc();
+					 }
+			    },timeOut);
+				
+				var vid = SubContext.vid;
+	    		var docId = SubContext.docId;
+	    		var pid = SubContext.pid;
+	    		var path = SubContext.path;
+	    		var name = SubContext.name;				
+	    		
+				$.ajax({
+	                url : "/DocSystem/Doc/deleteDoc.do",
+	                type : "post",
+	                dataType : "json",
+	                data : {
+	                	reposId: vid,
+	                    docId : docId,
+	                    pid: pid,
+	                    path: path,
+	                    name: name,
+		                shareId: gShareId,
+	                },
+		            success : function (ret) {
+	                	console.log("[" + SubContext.index + "] deleteDoc() ret:", ret);
+		            	if( "ok" == ret.status ) //后台删除成功
+		                {				     	
+					     	//删除成功处理
+					     	deleteSuccessHandler(SubContext, ret.msgInfo);
+	
+		            		//Delete zTree Node
+		                    var treeNode = getNodeByNodeId(docId);
+		                    if(treeNode != null)
+		                    {
+		                    	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		                    	treeObj.removeNode(treeNode);
+		                    }
+		                    
+					     	//Delete docList Node
+					     	DocList.deleteNode(docId);
+					     	
+					     	//start to Delete nextDoc
+					     	deleteNextDoc();
+					     	return;
+		                }
+		                else
+		                {
+		                	console.log("[" + SubContext.index + "] deleteDoc() Error:" + ret.msgInfo);
+		                	deleteErrorHandler(SubContext, ret.msgInfo);
+		                	deleteErrorConfirm(SubContext, ret.msgInfo);
+		            		return;
+		                }
+		            },
+		            error : function () {
+		             	console.log("[" + SubContext.index + "] deleteDoc() 服务器异常：Delete failed");
+		             	deleteErrorHandler(SubContext, "服务器异常");
+	                	deleteErrorConfirm(SubContext, "服务器异常");
+		            	return;
+		            }
+		    	});
+				
+			    SubContext.state = 1; //delete started
+			    break;
+			case 1:	//等待文件删除结果
+				console.log("[" + SubContext.index + "] deleteDoc() delete already started, 理论上不应该出现在这里");
+				break;
+			case 4: //文件已删除成功
+				break;
+			case 5:	//文件已删除失败				
+				break;
+			}
 			
 			//try to start next delete thread
 			deleteNextDoc();
@@ -410,7 +424,7 @@
 		
       	var penddingListForDeleteErrorConfirm = [];
       	var deleteErrorConfirmState = 0;
-      	function DeleteErrorConfirm(SubContext, errMsg)
+      	function deleteErrorConfirm(SubContext, errMsg)
       	{
       		if(deleteErrorConfirmState == 1)
           	{
@@ -429,7 +443,7 @@
       		
       		//弹出用户确认窗口
       		qiao.bs.confirm({
-    	    	id: "DeleteErrorConfirm",
+    	    	id: "deleteErrorConfirm",
     	        msg: msg,
     	        close: false,		
     	        okbtn: "继续",
@@ -437,12 +451,17 @@
     	    },function () {
     	    	//继续后续的删除
     	    	deleteErrorConfirmState = 0;
+    	    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
+        		closeBootstrapDialog("deleteErrorConfirm");
     	    	resumePenddingDeleteErrorConfirm();
     	    	deleteNextDoc();
     	    	return true;
 			},function(){
 				//结束后续的删除
     	    	deleteErrorConfirmState = 0;
+    	    	penddingListForDeleteErrorConfirm = [];
+    	    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
+        		closeBootstrapDialog("deleteErrorConfirm");
 				stopFlag = true;
 				DeleteEndHandler();
     	    	return true;
@@ -451,10 +470,13 @@
       	
     	function resumePenddingDeleteErrorConfirm()
     	{
-    		if(penddingListForDeleteErrorConfirm.length > 0)
+    		console.log("resumePenddingDeleteErrorConfirm()");
+      		if(penddingListForDeleteErrorConfirm.length > 0)
     		{
     			var SubContext = penddingListForDeleteErrorConfirm.pop();
-    			deleteDoc(SubContext);
+        		console.log("resumePenddingDeleteErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+    			//for delete error, task already be stopped, so just show the confirm dialog
+    			deleteErrorConfirm(SubContext, SubContext.msgInfo);
     		}
     	}
       	
