@@ -119,7 +119,15 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 复制商业版本中的 DocSystem\web\static\office-editor 和 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录到开源版本对应的目录
 
-### 二、使用自定义mysql数据库无法登录
+### 二、商业版如何转成个人版
+
+#### 1、将 DocSystem/defaultDocSysType 的内容改为3
+
+### 三、商业版如何转成社区版
+
+#### 1、删除 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录
+
+### 四、使用自定义mysql数据库无法登录
 
 #### 1、手动创建数据库
 
@@ -127,7 +135,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 删除docSys.ini/version文件，重启MxsDoc
 
-### 三、Linux系统war包直接部署Office无法预览和编辑
+### 五、Linux系统war包直接部署Office无法预览和编辑
 
 #### 1、手动创建DocSystem目录
 
@@ -139,13 +147,13 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 #### 3、重启MxsDoc
 
-### 四、Windows系统Office无法预览和编辑
+### 六、Windows系统Office无法预览和编辑
 
 #### 1、检查系统缺少的动态库并修复
 
 双击运行 DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat ，根据报错提示确定需要修复的动态库
 
-### 五、Linux系统Excel在线编辑退出后，修改内容丢失
+### 七、Linux系统Excel在线编辑退出后，修改内容丢失
 
 #### 1、安装字体库
 
@@ -167,7 +175,7 @@ fc-cache
 
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 
-### 六、Linux系统中文乱码
+### 八、Linux系统中文乱码
 
 #### 1、查看当前使用的系统语言
 
@@ -189,7 +197,7 @@ vi  /etc/sysconfig/i18n
 
 修改为 LANG="zh_CN.UTF-8" 并重启系统
 
-### 七、什么是分布式远程存储
+### 九、什么是分布式远程存储
 
 1、仓库文件可以存储在远程文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）
 
@@ -201,13 +209,13 @@ vi  /etc/sysconfig/i18n
 
 5、仓库可以独立于远程文件服务器进行文件操作和版本管理
 
-### 八、什么是文件服务器前置
+### 十、什么是文件服务器前置
 
 1. 设置为文件服务器前置的仓库，可以作为的文件服务器的客户端使用，
 
 2. 在该仓库页面上，能够查看和操作文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）上的文件和目录
 
-### 九、如何使用MxsDoc作为自动备份工具
+### 十一、如何使用MxsDoc作为自动备份工具
 
 1. 新建仓库
 
@@ -221,13 +229,13 @@ vi  /etc/sysconfig/i18n
 
 （3）根据自己需求勾选备份时间
 
-### 十、Windows的共享文件夹无法远程访问
+### 十二、Windows的共享文件夹无法远程访问
 
 1. 打开控制面板-->程序和功能-->启用或关闭windows功能-->勾选SMB 1.0/CIFS文件共享支持
 
 2. 重启系统
 
-### 十一、日志获取
+### 十三、日志获取
 
 1. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
 
