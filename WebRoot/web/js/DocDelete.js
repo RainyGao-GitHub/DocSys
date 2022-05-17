@@ -412,43 +412,41 @@
       	var deleteErrorConfirmState = 0;
       	function DeleteErrorConfirm(SubContext, errMsg)
       	{
-      		if(deleteErrorConfirmState == 0)
-      		{
-      			deleteErrorConfirmState = 1;
+      		if(deleteErrorConfirmState == 1)
+          	{
+    			console.log("[" + SubContext.index + "] deleteErrorConfirm() add to penndingList");
+    			penddingListForDeleteErrorConfirm.push(SubContext);
+    			return;
+          	}
+      		deleteErrorConfirmState = 1;
       			
-	      		FileName = SubContext.name;
-	      		var msg = FileName + "删除失败,是否继续删除其他文件？";
-	      		if(errMsg)
-	      		{
-	      			msg = FileName + "删除失败(" + errMsg + "),是否继续删除其他文件？";
-	      		}
-	      		
-	      		//弹出用户确认窗口
-	      		qiao.bs.confirm({
-	    	    	id: "DeleteErrorConfirm",
-	    	        msg: msg,
-	    	        close: false,		
-	    	        okbtn: "继续",
-	    	        qubtn: "结束",
-	    	    },function () {
-	    	    	//继续后续的删除
-	    	    	deleteErrorConfirmState = 0;
-	    	    	resumePenddingDeleteErrorConfirm();
-	    	    	deleteNextDoc();
-	    	    	return true;
-				},function(){
-					//结束后续的删除
-	    	    	deleteErrorConfirmState = 0;
-					stopFlag = true;
-					DeleteEndHandler();
-	    	    	return true;
-	      		});
-      		}
-      		else
+      		FileName = SubContext.name;
+      		var msg = FileName + "删除失败,是否继续删除其他文件？";
+      		if(errMsg)
       		{
-				console.log("[" + SubContext.index + "] deleteErrorConfirm() add to penndingList");
-				penddingListForDeleteErrorConfirm.push(SubContext);
+      			msg = FileName + "删除失败(" + errMsg + "),是否继续删除其他文件？";
       		}
+      		
+      		//弹出用户确认窗口
+      		qiao.bs.confirm({
+    	    	id: "DeleteErrorConfirm",
+    	        msg: msg,
+    	        close: false,		
+    	        okbtn: "继续",
+    	        qubtn: "结束",
+    	    },function () {
+    	    	//继续后续的删除
+    	    	deleteErrorConfirmState = 0;
+    	    	resumePenddingDeleteErrorConfirm();
+    	    	deleteNextDoc();
+    	    	return true;
+			},function(){
+				//结束后续的删除
+    	    	deleteErrorConfirmState = 0;
+				stopFlag = true;
+				DeleteEndHandler();
+    	    	return true;
+      		});
       	}
       	
     	function resumePenddingDeleteErrorConfirm()

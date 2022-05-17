@@ -674,13 +674,25 @@
       	}
       	
       	//upload Error Confirm
+      	var penddingListForUploadErrorConfirm = [];
+      	var uploadErrorConfirmState = 0;
       	function uploadErrorConfirm(SubContext,errMsg)
       	{
+      		if(uploadErrorConfirmState == 1)
+      		{
+				console.log("[" + SubContext.index + "] uploadErrorConfirm() add to penndingList");
+				penddingListForUploadErrorConfirm.push(SubContext);
+      			return;
+      		}
+      		uploadErrorConfirmState = 1;
+      		
       		var uploadErrorTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
             	console.log("用户确认超时,继续上传后续文件");
             	SubContext.uploadErrorConfirmSet = 1; //继续上传
             	uploadErrorConfirmSet = 1; //全局继续上传
             	closeBootstrapDialog("uploadErrorConfirm");
+            	uploadErrorConfirmState = 0;
+            	penddingListForUploadErrorConfirm = [];
             	uploadNextDoc();
             },5*60*1000);	//5分鐘用戶不確認則關閉對話框
       		
@@ -694,14 +706,16 @@
     	        okbtn: "继续",
     	        qubtn: "结束上传",
     	    },function () {
-    	    	//alert("点击了确定");
+    	    	//继续后续的上传
+    	    	uploadErrorConfirmState = 0;
 				clearTimeout(uploadErrorTimer);			
       			SubContext.uploadErrorConfirmSet = 1; //继续上传
     	 		if(index < (totalNum-1))	//后续还有文件
                 {
     	      		var uploadErrorTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-    	            	console.log("用户确认超时,后续错误都继续上传");
-    	            	uploadErrorConfirmSet = 1; //全局继续上传
+  	 	    	    	penddingListForUploadErrorConfirm = [];
+    	      			console.log("用户确认超时,后续错误都继续上传");
+    	            	uploadErrorConfirmSet = 1; //全局不再进行错误确认
     	            	closeBootstrapDialog("takeSameActionConfirm3");
     	            	uploadNextDoc();
     	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
@@ -714,32 +728,44 @@
   	 	    	        qubtn: "否",
   	 	    	    },function () {
   	 	    	    	//后续错误将不再弹出窗口
+  	 	    	    	penddingListForUploadErrorConfirm = [];
   	 	    	    	clearTimeout(uploadErrorTimer1);
-  	 	    	    	uploadErrorConfirmSet = 1;	//全局覆盖
+  	 	    	    	uploadErrorConfirmSet = 1;	//全局不再进行错误确认
   	 	    	    	uploadNextDoc();
   	  	 				return true;
   	 				},function(){
   	 					//后续错误将继续弹出错误确认窗口
   	 					clearTimeout(uploadErrorTimer1);
-  	 	    	    	uploadNextDoc();
+    	            	resumePenddingUploadErrorConfirm();
+  	 					uploadNextDoc();
   	  	 				return true;
   	 				});	
                 }
     	 		else
     	 		{
-    	 			uploadErrorHandler(SubContext, errMsg);
-             		uploadErrorConfirmHandler(SubContext, errMsg);
+    	 			resumePenddingUploadErrorConfirm();
+    	 			uploadNextDoc();
              		return;
     	 		}
     		},function(){
-    	    	//alert("点击了取消");
-    	    	clearTimeout(uploadErrorTimer);
+    			uploadErrorConfirmState = 0;
+    	    	//结束后续的上传
+    			stopFlag = true; //停止所有上传
+    			clearTimeout(uploadErrorTimer);
       			SubContext.uploadErrorConfirmSet = 2; //结束所有上传
           		uploadErrorConfirmSet = 2; //全局取消上传
-          		stopFlag = true; //取消所有上传
-		 		uploadEndHandler(SubContext,errMsg);
+          		uploadEndHandler(SubContext,errMsg);
       		});
       	}
+      	
+    	function resumePenddingUploadErrorConfirm()
+    	{
+    		if(penddingListForUploadErrorConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForUploadErrorConfirm.pop();
+    			uploadErrorConfirm(SubContext);
+    		}
+    	}
       	
       	//获取当上传的文件警告确认设置
       	function getUploadWarningConfirmSetting()
