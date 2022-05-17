@@ -408,32 +408,57 @@
       		SubContext.msgInfo = msgInfo;
       	}
 		
+      	var penddingListForDeleteErrorConfirm = [];
+      	var deleteErrorConfirmState = 0;
       	function DeleteErrorConfirm(SubContext, errMsg)
       	{
-      		FileName = SubContext.name;
-      		var msg = FileName + "删除失败,是否继续删除其他文件？";
-      		if(errMsg)
+      		if(deleteErrorConfirmState == 0)
       		{
-      			msg = FileName + "删除失败(" + errMsg + "),是否继续删除其他文件？";
+      			deleteErrorConfirmState = 1;
+      			
+	      		FileName = SubContext.name;
+	      		var msg = FileName + "删除失败,是否继续删除其他文件？";
+	      		if(errMsg)
+	      		{
+	      			msg = FileName + "删除失败(" + errMsg + "),是否继续删除其他文件？";
+	      		}
+	      		
+	      		//弹出用户确认窗口
+	      		qiao.bs.confirm({
+	    	    	id: "DeleteErrorConfirm",
+	    	        msg: msg,
+	    	        close: false,		
+	    	        okbtn: "继续",
+	    	        qubtn: "结束",
+	    	    },function () {
+	    	    	//继续后续的删除
+	    	    	deleteErrorConfirmState = 0;
+	    	    	resumePenddingDeleteErrorConfirm();
+	    	    	deleteNextDoc();
+	    	    	return true;
+				},function(){
+					//结束后续的删除
+	    	    	deleteErrorConfirmState = 0;
+					stopFlag = true;
+					DeleteEndHandler();
+	    	    	return true;
+	      		});
       		}
-      		
-      		//弹出用户确认窗口
-      		qiao.bs.confirm({
-    	    	id: "DeleteErrorConfirm",
-    	        msg: msg,
-    	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束",
-    	    },function () {
-    	    	//alert("点击了确定");
-    	    	deleteNextDoc();
-    	    	return true;
-			},function(){
-				stopFlag = true;
-				DeleteEndHandler();
-    	    	return true;
-      		});
+      		else
+      		{
+				console.log("[" + SubContext.index + "] deleteErrorConfirm() add to penndingList");
+				penddingListForDeleteErrorConfirm.push(SubContext);
+      		}
       	}
+      	
+    	function resumePenddingDeleteErrorConfirm()
+    	{
+    		if(penddingListForDeleteErrorConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForDeleteErrorConfirm.pop();
+    			deleteErrorConfirm(SubContext);
+    		}
+    	}
       	
       	//DeleteEndHandler
       	function DeleteEndHandler()
