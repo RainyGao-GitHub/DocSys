@@ -553,11 +553,13 @@
 	    	        okbtn: "继续",
 	    	        qubtn: "结束",
 	    	    },function () {
+	    	    	//继续后续的复制
 	    	    	copyErrorConfirmState = 0;
 	    	    	resumePenddingCopyErrorConfirm();
 	    	    	copyNextDoc();
 	    	    	return true;
 				},function(){
+					//结束后续的复制
 					copyErrorConfirmState = 0;
 					stopFlag = true;
 					copyEndHandler();
