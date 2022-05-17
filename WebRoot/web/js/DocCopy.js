@@ -325,76 +325,91 @@
 				copyErrorConfirm(SubContext, "禁止将上级目录复制到子目录");
 				copyNextDoc();
 				return;
-			}			
-			
-			if(isNodeExist(SubContext.dstName, SubContext.dstParentNode) == true)
-			{
-			  	//Node Name conflict confirm
-				CopyConflictConfirm(SubContext);
-				copyNextDoc();
-				return;
 			}
 			
-			//启动超时定式器
-			var timeOut = 3600000; //超时时间1小时（复制操作无法预估时间）
-		    console.log("[" + SubContext.index + "] copyDoc()  start timeout monitor with " + timeOut + " ms");
-		    SubContext.timerForCopy = setTimeout(function () {
-				 console.log("[" + SubContext.index + "] copyDoc() timerForCopy triggered!");
-				 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
-				 {
-			         copyErrorHandler(SubContext, "文件复制超时");
-			         copyNextDoc();
-				 }
-		    },timeOut);			    
-			
-			$.ajax({
-	            url : "/DocSystem/Doc/copyDoc.do",
-	            type : "post",
-	            dataType : "json",
-	            data : {
-	                reposId: SubContext.vid,			//仓库id
-	            	docId : SubContext.docId,	//待复制的docid
-	                type: SubContext.type,
-	                srcLevel: SubContext.level,
-	                srcPid: SubContext.pid,
-	                srcPath: SubContext.path,
-	                srcName: SubContext.name,
-	                dstLevel: SubContext.dstLevel,
-	                dstPid: SubContext.dstPid,	//目标doc dstPid
-	                dstPath: SubContext.dstPath,
-	                dstName: SubContext.dstName, //目标docName
-	                shareId: gShareId,
-	            },
-	            success : function (ret) {
-	            	console.log("[" + SubContext.index + "] copyDoc() ret:",ret);
-	            	if( "ok" == ret.status ){
-	                	copySuccessHandler(SubContext, ret.msgInfo);
-
-	                	//add tree node
-	            		var doc = ret.data;                	    
-                  	    addTreeNode(doc);                  	    
-                 		addDocListNode(doc);
-                 		
-                 		//try to start another thread
-	                	copyNextDoc();
+			switch(SubContext.state)
+			{
+			case 0:	//check node exist
+				if(isNodeExist(SubContext.dstName, SubContext.dstParentNode) == true)
+				{
+				  	//Node Name conflict confirm
+					CopyConflictConfirm(SubContext);
+					copyNextDoc();
+					return;
+				}
+				SubContext.state = 1;
+				break;
+			case 1:	//start copy doc
+				//启动超时定式器
+				var timeOut = 3600000; //超时时间1小时（复制操作无法预估时间）
+			    console.log("[" + SubContext.index + "] copyDoc()  start timeout monitor with " + timeOut + " ms");
+			    SubContext.timerForCopy = setTimeout(function () {
+					 console.log("[" + SubContext.index + "] copyDoc() timerForCopy triggered!");
+					 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
+					 {
+				         copyErrorHandler(SubContext, "文件复制超时");
+				         copyNextDoc();
+					 }
+			    },timeOut);			    
+				
+				$.ajax({
+		            url : "/DocSystem/Doc/copyDoc.do",
+		            type : "post",
+		            dataType : "json",
+		            data : {
+		                reposId: SubContext.vid,			//仓库id
+		            	docId : SubContext.docId,	//待复制的docid
+		                type: SubContext.type,
+		                srcLevel: SubContext.level,
+		                srcPid: SubContext.pid,
+		                srcPath: SubContext.path,
+		                srcName: SubContext.name,
+		                dstLevel: SubContext.dstLevel,
+		                dstPid: SubContext.dstPid,	//目标doc dstPid
+		                dstPath: SubContext.dstPath,
+		                dstName: SubContext.dstName, //目标docName
+		                shareId: gShareId,
+		            },
+		            success : function (ret) {
+		            	console.log("[" + SubContext.index + "] copyDoc() ret:",ret);
+		            	if( "ok" == ret.status ){
+		                	copySuccessHandler(SubContext, ret.msgInfo);
+	
+		                	//add tree node
+		            		var doc = ret.data;                	    
+	                  	    addTreeNode(doc);                  	    
+	                 		addDocListNode(doc);
+	                 		
+	                 		//try to start another thread
+		                	copyNextDoc();
+		                	return;
+		                }
+		                else
+		                {
+		                	console.log("[" + SubContext.index + "] copyDoc() Error:" + ret.msgInfo);
+		                	copyErrorHandler(SubContext, ret.msgInfo);
+		                	copyErrorConfirm(SubContext,ret.msgInfo);
+		                	return;
+		                }
+		            },
+		            error : function () {
+		            	console.log("[" + SubContext.index + "] copyDoc() 服务器异常：copy failed");
+		             	copyErrorHandler(SubContext, "服务器异常");
+	                	copyErrorConfirm(SubContext,"服务器异常");
 	                	return;
-	                }
-	                else
-	                {
-	                	console.log("[" + SubContext.index + "] copyDoc() Error:" + ret.msgInfo);
-	                	copyErrorHandler(SubContext, ret.msgInfo);
-	                	copyErrorConfirm(SubContext,ret.msgInfo);
-	                	return;
-	                }
-	            },
-	            error : function () {
-	            	console.log("[" + SubContext.index + "] copyDoc() 服务器异常：copy failed");
-	             	copyErrorHandler(SubContext, "服务器异常");
-                	copyErrorConfirm(SubContext,"服务器异常");
-                	return;
-	            }
-	    	});
-			
+		            }
+		    	});
+				
+				SubContext.state = 2; //wait for copy result
+				break;
+			case 2:	//等待文件复制结果
+				console.log("[" + SubContext.index + "] copyDoc() copy already started, 理论上不应该出现在这里");
+				break;
+			case 4: //文件已复制成功
+				break;
+			case 5:	//文件已复制失败				
+				break;				
+			}
 			//try to start next copy thread
 			copyNextDoc();
 		}
@@ -516,6 +531,8 @@
 		        	copyConflictConfirmState = 0;
 		        	console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 取消复制:", SubContext);					
 		        	copyErrorHandler(SubContext, "文件已存在，用户放弃修改名字并取消了复制！");
+		        	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
+            		closeBootstrapDialog("copyConflictConfirm"  + SubContext.index);
 		        	resumePenddingCopyConflictConfirm();
 		        	copyNextDoc();
 	    	    	return true;
@@ -524,9 +541,11 @@
 		
     	function resumePenddingCopyConflictConfirm()
     	{
-    		if(penddingListForCopyConflictConfirm.length > 0)
+    		console.log("resumePenddingCopyConflictConfirm()");
+			if(penddingListForCopyConflictConfirm.length > 0)
     		{
     			var SubContext = penddingListForCopyConflictConfirm.pop();
+        		console.log("resumePenddingCopyConflictConfirm() index:" + SubContext.index + " name:" + SubContext.name);
     			copyDoc(SubContext);
     		}
     	}
@@ -559,12 +578,17 @@
     	    },function () {
     	    	//继续后续的复制
     	    	copyErrorConfirmState = 0;
+    	    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
+        		closeBootstrapDialog("copyErrorConfirm"  + SubContext.index);
     	    	resumePenddingCopyErrorConfirm();
     	    	copyNextDoc();
     	    	return true;
 			},function(){
 				//结束后续的复制
 				copyErrorConfirmState = 0;
+				penddingListForCopyErrorConfirm = [];
+    	    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
+        		closeBootstrapDialog("copyErrorConfirm"  + SubContext.index);
 				stopFlag = true;
 				copyEndHandler();
     	    	return true;
@@ -573,10 +597,13 @@
       	
     	function resumePenddingCopyErrorConfirm()
     	{
+			console.log("resumePenddingCopyErrorConfirm()");
     		if(penddingListForCopyErrorConfirm.length > 0)
     		{
     			var SubContext = penddingListForCopyErrorConfirm.pop();
-    			copyErrorConfirm(SubContext);
+    			console.log("resumePenddingCopyErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+    			//For copy error which already stopped, so just show the confirm dialog
+    			copyErrorConfirm(SubContext, SubContext.msgInfo);
     		}
     	}
       	

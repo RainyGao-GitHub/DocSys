@@ -683,9 +683,11 @@
       	
     	function resumePenddingUploadCoverConfirm()
     	{
+    		console.log("resumePenddingUploadCoverConfirm()");
     		if(penddingListForUploadCoverConfirm.length > 0)
     		{
     			var SubContext = penddingListForUploadCoverConfirm.pop();
+        		console.log("resumePenddingUploadCoverConfirm() index:" + SubContext.index + " name:" + SubContext.name);
     			uploadDoc(SubContext);
     		}
     	}  
@@ -794,10 +796,13 @@
       	
     	function resumePenddingUploadErrorConfirm()
     	{
+    		console.log("resumePenddingUploadErrorConfirm()");
+
     		if(penddingListForUploadErrorConfirm.length > 0)
     		{
     			var SubContext = penddingListForUploadErrorConfirm.pop();
-    			uploadDoc(SubContext);
+        		console.log("resumePenddingUploadErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+        		uploadErrorConfirmHandler(SubContext, SubContext.msgInfo);    			
     		}
     	}
       	
