@@ -465,9 +465,23 @@
       		SubContext.msgInfo = msgInfo;
       	}
       	
+      	
+      	var penddingListForCopyConflictConfirm = [];
+      	var copyConflictConfirmState = 0;
 		function CopyConflictConfirm(SubContext)
 		{
-			showCopyConflictConfirmPanel(SubContext);
+			console.log("[" + SubContext.index + "] CopyConflictConfirm()");
+			if(copyConflictConfirmState == 0)
+			{
+				copyConflictConfirmState = 1;
+				showCopyConflictConfirmPanel(SubContext);
+			}
+			else
+			{
+				//add it to penddingList
+				console.log("[" + SubContext.index + "] CopyConflictConfirm() add to penndingList");
+				penddingListForCopyConflictConfirm.push(SubContext);
+			}
 		}
 		
 		function showCopyConflictConfirmPanel(SubContext)
@@ -495,40 +509,76 @@
 			    	SubContext.dstName = newDstName;
 			    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
             		closeBootstrapDialog("copyConflictConfirm"  + SubContext.index);
-					copyDoc(SubContext);
-			    	return true;
+            		copyConflictConfirmState = 0;
+            		copyDoc(SubContext);			    	
+            		resumePenddingCopyConflictConfirm();
+            		return true;
 		        }, function(){ //取消
 					console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 取消复制:", SubContext);					
 		        	copyErrorHandler(SubContext, "文件已存在，用户放弃修改名字并取消了复制！");
-					copyNextDoc();
+		        	copyConflictConfirmState = 0;
+		        	resumePenddingCopyConflictConfirm();
+		        	copyNextDoc();
 	    	    	return true;
 	      		});	
 		}
 		
+    	function resumePenddingCopyConflictConfirm()
+    	{
+    		if(penddingListForCopyConflictConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForCopyConflictConfirm.pop();
+    			CopyConflictConfirm(SubContext);
+    		}
+    	}
+
+    	var penddingListForCopyErrorConfirm = [];
+      	var copyErrorConfirmState = 0;
       	function copyErrorConfirm(SubContext,errMsg)
       	{
-      		var FileName = SubContext.name;
-      		var msg = FileName + "复制失败,是否继续复制其他文件？";
-      		if(errMsg != undefined)
+      		if(copyErrorConfirmState == 0)
       		{
-      			msg = FileName + "复制失败(" + errMsg + "),是否继续复制其他文件？";
+      			copyErrorConfirmState = 1;
+	      		var FileName = SubContext.name;
+	      		var msg = FileName + "复制失败,是否继续复制其他文件？";
+	      		if(errMsg != undefined)
+	      		{
+	      			msg = FileName + "复制失败(" + errMsg + "),是否继续复制其他文件？";
+	      		}
+	      		//弹出用户确认窗口
+	      		qiao.bs.confirm({
+	    	    	id: "copyErrorConfirm" +  SubContext.index,
+	    	        msg: msg,
+	    	        close: false,		
+	    	        okbtn: "继续",
+	    	        qubtn: "结束",
+	    	    },function () {
+	    	    	copyErrorConfirmState = 0;
+	    	    	resumePenddingCopyErrorConfirm();
+	    	    	copyNextDoc();
+	    	    	return true;
+				},function(){
+					copyErrorConfirmState = 0;
+					stopFlag = true;
+					copyEndHandler();
+	    	    	return true;
+	      		});
       		}
-      		//弹出用户确认窗口
-      		qiao.bs.confirm({
-    	    	id: "copyErrorConfirm" +  SubContext.index,
-    	        msg: msg,
-    	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束",
-    	    },function () {
-    	    	copyNextDoc();
-    	    	return true;
-			},function(){
-				stopFlag = true;
-				copyEndHandler();
-    	    	return true;
-      		});
+      		else
+      		{
+				console.log("[" + SubContext.index + "] copyErrorConfirm() add to penndingList");
+				penddingListForCopyErrorConfirm.push(SubContext);
+      		}
       	}
+      	
+    	function resumePenddingCopyErrorConfirm()
+    	{
+    		if(penddingListForCopyErrorConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForCopyErrorConfirm.pop();
+    			copyErrorConfirm(SubContext);
+    		}
+    	}
       	
       	
       	//copyEndHandler
