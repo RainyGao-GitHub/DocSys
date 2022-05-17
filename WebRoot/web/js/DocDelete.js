@@ -454,7 +454,7 @@
     		if(penddingListForDeleteErrorConfirm.length > 0)
     		{
     			var SubContext = penddingListForDeleteErrorConfirm.pop();
-    			deleteErrorConfirm(SubContext);
+    			deleteDoc(SubContext);
     		}
     	}
       	
