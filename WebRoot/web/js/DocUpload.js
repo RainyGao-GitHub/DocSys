@@ -525,8 +525,18 @@
       	}
       	
       	//文件覆盖处理接口
+      	var penddingListForUploadCoverConfirm = [];
+      	var uploadCoverConfirmState = 0;
       	function fileCoverConfirm(SubContext, msgInfo)
       	{
+      		if(uploadCoverConfirmState == 1)
+      		{
+				console.log("[" + SubContext.index + "] fileCoverConfirm() add to penndingList");
+				penddingListForUploadCoverConfirm.push(SubContext);
+				return;
+      		}
+      		uploadCoverConfirmState = 1;
+      			
 			var docName = SubContext.name;
       		console.log("fileCoverConfirm");
       		//It is checkIn behavior do cover
@@ -538,124 +548,147 @@
   	 		var confirm = getFileCoverConfirmSetting(SubContext);
 	  	 	if(confirm == 1)
 	  	 	{
+	  	 		uploadCoverConfirmState = 0;
 	  	 		//用户已确认直接覆盖
 	  	 		SubContext.state = 3; //开始上传
 	  	 		uploadDoc(SubContext);
+	  	 		resumePenddingUploadCoverConfirm();
 	  	 		return;
 	  	 	}
-	  	 	else if(confirm == 2)
+	  	 	
+	  	 	if(confirm == 2)
 	  	 	{
+	  	 		uploadCoverConfirmState = 0;
 	  	 		uploadErrorHandler(SubContext, "文件" + docName + " 已存在，自动跳过");
+	  	 		resumePenddingUploadCoverConfirm();
 	  	 		uploadNextDoc();
 	  	 		return;
 	  	 	}
-	  	 	else
-	  	 	{
-		        var fileCoverTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-		            	console.log("fileCoverConfirm() 是否覆盖 " + docName + ",用户确认超时,采用覆盖且后续自动覆盖");
-		            	SubContext.fileCoverConfirmSet = 1; //覆盖
-		            	fileCoverConfirmSet = 1;
-		            	closeBootstrapDialog("fileCoverConfirm");
 
-		            	SubContext.state = 3; //开始上传
-		            	uploadDoc(SubContext); //reEnter uploadDoc
-		            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+	  	 	var fileCoverTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
+	  	 			uploadCoverConfirmState = 0;	  	 			
+	  	 			console.log("fileCoverConfirm() 是否覆盖 " + docName + ",用户确认超时,采用覆盖且后续自动覆盖");
+	            	SubContext.fileCoverConfirmSet = 1; //覆盖
+	            	fileCoverConfirmSet = 1;
+	            	closeBootstrapDialog("fileCoverConfirm");
+	            	SubContext.state = 3; //开始上传	            	
+	            	uploadDoc(SubContext); //reEnter uploadDoc
+		  	 		resumePenddingUploadCoverConfirm();
+	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
 		        
-	    	    qiao.bs.confirm({
-	    	    	id: 'fileCoverConfirm',
-	    	        msg: docName + "已存在,是否覆盖?",
-	    	        close: false,		
-	    	        okbtn: "替换",
-	    	        qubtn: "跳过",
-	    	    },function () {
-	               	console.log("fileCoverConfirm() 用户选择覆盖 " + docName);
-	       		 	clearTimeout(fileCoverTimer);
-	 	 			SubContext.fileCoverConfirmSet = 1; //覆盖
-	  	 			if(index < (totalNum-1)) //后续还有才提示
-	  	 			{
-		  	 			var fileCoverTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-		 	            	console.log("fileCoverConfirm() 后续已存在文件是否自动覆盖，用户确认超时,后续自动覆盖");
-		 	            	fileCoverConfirmSet = 1;
-		 	            	closeBootstrapDialog("takeSameActionConfirm1");
+    	    qiao.bs.confirm({
+    	    	id: 'fileCoverConfirm',
+    	        msg: docName + "已存在,是否覆盖?",
+    	        close: false,		
+    	        okbtn: "替换",
+    	        qubtn: "跳过",
+    	    },function () {
+    	    	uploadCoverConfirmState = 0;
+               	console.log("fileCoverConfirm() 用户选择覆盖 " + docName);
+       		 	clearTimeout(fileCoverTimer);
+ 	 			SubContext.fileCoverConfirmSet = 1; //覆盖
+  	 			if(index < (totalNum-1)) //后续还有才提示
+  	 			{
+	  	 			var fileCoverTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
+	 	            	console.log("fileCoverConfirm() 后续已存在文件是否自动覆盖，用户确认超时,后续自动覆盖");
+	 	            	fileCoverConfirmSet = 1;
+	 	            	closeBootstrapDialog("takeSameActionConfirm1");
+	 	            	SubContext.state = 3; //开始上传
+	 	            	uploadDoc(SubContext); //reEnter uploadDoc
+	 		  	 		resumePenddingUploadCoverConfirm();
+	 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+	 	            
+  	 	    	    qiao.bs.confirm({
+  	 	    	    	id: 'takeSameActionConfirm1',
+  	 	    	        msg: "后续已存在文件是否自动覆盖？",
+  	 	    	        close: false,		
+  	 	    	        okbtn: "是",
+  	 	    	        qubtn: "否",
+  	 	    	    },function () {
+  	 	           		console.log("fileCoverConfirm() 后续已存在文件将自动覆盖");
+  			 	    	clearTimeout(fileCoverTimer1);
+  	 	    	    	fileCoverConfirmSet = 1;	//全局覆盖  	 	    	    	
+  	 		  	 		SubContext.state = 3; //开始上传
+  	  	 				uploadDoc(SubContext); //reEnter uploadDoc
+  	  	 				resumePenddingUploadCoverConfirm();
+  	  	 				return true;
+  	 				},function(){
+  	 		       		console.log("fileCoverConfirm() 后续已存在文件不自动覆盖");
+  	 					clearTimeout(fileCoverTimer1);
+  	 					
+  	 		  	 		SubContext.state = 3; //开始上传
+  	 					uploadDoc(SubContext); //reEnter uploadDoc
+  	 		  	 		resumePenddingUploadCoverConfirm();
+  	  	 				return true;
+  	 				});
+  	 			}
+  	 			else
+  	 			{
+  	 				uploadCoverConfirmState = 0;
+  		  	 		SubContext.state = 3; //开始上传
+  	 				uploadDoc(SubContext); //reEnter uploadDoc
+  		  	 		resumePenddingUploadCoverConfirm();
+  	 			}
+    	    	return true;   
+    	    },function(){
+    	    	uploadCoverConfirmState = 0;
+    	    	console.log("fileCoverConfirm() 用户选择跳过上传 " + docName);
+    	    	clearTimeout(fileCoverTimer);
 
-		 	            	SubContext.state = 3; //开始上传
-		 	            	uploadDoc(SubContext); //reEnter uploadDoc
-		 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
-		 	            
-	  	 	    	    qiao.bs.confirm({
-	  	 	    	    	id: 'takeSameActionConfirm1',
-	  	 	    	        msg: "后续已存在文件是否自动覆盖？",
-	  	 	    	        close: false,		
-	  	 	    	        okbtn: "是",
-	  	 	    	        qubtn: "否",
-	  	 	    	    },function () {
-	  	 	           		console.log("fileCoverConfirm() 后续已存在文件将自动覆盖");
-	  			 	    	clearTimeout(fileCoverTimer1);
-	  	 	    	    	fileCoverConfirmSet = 1;	//全局覆盖
-	  	 	    	    	
-	  	 		  	 		SubContext.state = 3; //开始上传
-	  	  	 				uploadDoc(SubContext); //reEnter uploadDoc
-	  	  	 				return true;
-	  	 				},function(){
-	  	 		       		console.log("fileCoverConfirm() 后续已存在文件不自动覆盖");
-	  	 					clearTimeout(fileCoverTimer1);
-	  	 					
-	  	 		  	 		SubContext.state = 3; //开始上传
-	  	 					uploadDoc(SubContext); //reEnter uploadDoc
-	  	  	 				return true;
-	  	 				});
-	  	 			}
-	  	 			else
-	  	 			{
-	  		  	 		SubContext.state = 3; //开始上传
-	  	 				uploadDoc(SubContext); //reEnter uploadDoc
-	  	 			}
-	    	    	return true;   
-	    	    },function(){
-	    	    	console.log("fileCoverConfirm() 用户选择跳过上传 " + docName);
-	    	    	clearTimeout(fileCoverTimer);
-	
-	  	 			SubContext.fileCoverConfirmSet = 2; //不覆盖
-	  	 			if(index < (totalNum-1)) //后续还有才提示 
-	  	 			{
-		  	 			var fileCoverTimer2 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-		 	            	console.log("fileCoverConfirm() 后续已存在文件是否自动跳过，用户确认超时，后续自动跳过！");
-		 	            	fileCoverConfirmSet = 2;
-		 	            	closeBootstrapDialog("takeSameActionConfirm2");	 	            	
-		 	            	uploadErrorHandler(SubContext, "后续已存在文件是否自动跳过，用户确认超时，跳过且后续自动跳过！");
-		 	            	uploadNextDoc();
-		 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
-	  	 				
-	  	 	    	    qiao.bs.confirm({
-	  	 	    	    	id: 'takeSameActionConfirm2',
-	  	 	    	        msg: "后续已存在文件是否自动跳过？",
-	  	 	    	        close: false,		
-	  	 	    	        okbtn: "是",
-	  	 	    	        qubtn: "否",
-	  	 	    	    },function () {
-	  	 	    	    	console.log("fileCoverConfirm() 后续已存在文件自动跳过！");
-	  	 	    	    	clearTimeout(fileCoverTimer2);
-	  	 					fileCoverConfirmSet = 2;	//全局覆盖
-	  	 					uploadErrorHandler(SubContext, "文件已存在，跳过且后续自动跳过");
-	  	 					uploadNextDoc();
-	  	  	 				return true;
-	  	 				},function(){
-	  	 					console.log("fileCoverConfirm() 后续已存在文件不自动跳过！");
-	  	 	    	    	clearTimeout(fileCoverTimer2);
-	  						uploadErrorHandler(SubContext, "文件已存在，跳过但后续不自动跳过");
-	  						uploadNextDoc();
-	  	  	 				return true;
-	  	 				});			
-	  	 			}
-	  	 			else
-	  	 			{
-	  	 				uploadErrorHandler(SubContext, "文件已存在，跳过");
-	  	 				uploadNextDoc();
-	  	 			}
-	    	    	return true;
-	    	    });      		
-      	 	}
+  	 			SubContext.fileCoverConfirmSet = 2; //不覆盖
+  	 			if(index < (totalNum-1)) //后续还有才提示 
+  	 			{
+	  	 			var fileCoverTimer2 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
+	 	            	console.log("fileCoverConfirm() 后续已存在文件是否自动跳过，用户确认超时，后续自动跳过！");
+	 	            	fileCoverConfirmSet = 2;
+	 	            	closeBootstrapDialog("takeSameActionConfirm2");	 	            	
+	 	            	uploadErrorHandler(SubContext, "后续已存在文件是否自动跳过，用户确认超时，跳过且后续自动跳过！");
+	 		  	 		resumePenddingUploadCoverConfirm();
+	 	            	uploadNextDoc();
+	 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+  	 				
+  	 	    	    qiao.bs.confirm({
+  	 	    	    	id: 'takeSameActionConfirm2',
+  	 	    	        msg: "后续已存在文件是否自动跳过？",
+  	 	    	        close: false,		
+  	 	    	        okbtn: "是",
+  	 	    	        qubtn: "否",
+  	 	    	    },function () {
+  	 	    	    	console.log("fileCoverConfirm() 后续已存在文件自动跳过！");
+  	 	    	    	clearTimeout(fileCoverTimer2);
+  	 					fileCoverConfirmSet = 2;	//全局覆盖
+  	 					uploadErrorHandler(SubContext, "文件已存在，跳过且后续自动跳过");
+  	 		  	 		resumePenddingUploadCoverConfirm();
+  	 					uploadNextDoc();
+  	  	 				return true;
+  	 				},function(){
+  	 					console.log("fileCoverConfirm() 后续已存在文件不自动跳过！");
+  	 	    	    	clearTimeout(fileCoverTimer2);
+  						uploadErrorHandler(SubContext, "文件已存在，跳过但后续不自动跳过");
+  			  	 		resumePenddingUploadCoverConfirm();
+  						uploadNextDoc();
+  	  	 				return true;
+  	 				});			
+  	 			}
+  	 			else
+  	 			{
+  	 				uploadCoverConfirmState = 0;
+  	 				uploadErrorHandler(SubContext, "文件已存在，跳过");
+  		  	 		resumePenddingUploadCoverConfirm();
+  	 				uploadNextDoc();
+  	 			}
+    	    	return true;
+    	    });      		
       	}
+      	
+    	function resumePenddingUploadCoverConfirm()
+    	{
+    		if(penddingListForUploadCoverConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForUploadCoverConfirm.pop();
+    			uploadDoc(SubContext);
+    		}
+    	}  
       	
       	//获取当上传的文件覆盖设置
       	function getUploadErrorConfirmSetting(SubContext)
@@ -688,11 +721,11 @@
       		
       		var uploadErrorTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
             	console.log("用户确认超时,继续上传后续文件");
+            	uploadErrorConfirmState = 0;
             	SubContext.uploadErrorConfirmSet = 1; //继续上传
             	uploadErrorConfirmSet = 1; //全局继续上传
             	closeBootstrapDialog("uploadErrorConfirm");
-            	uploadErrorConfirmState = 0;
-            	penddingListForUploadErrorConfirm = [];
+            	resumePenddingUploadErrorConfirm();
             	uploadNextDoc();
             },5*60*1000);	//5分鐘用戶不確認則關閉對話框
       		
@@ -713,10 +746,10 @@
     	 		if(index < (totalNum-1))	//后续还有文件
                 {
     	      		var uploadErrorTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-  	 	    	    	penddingListForUploadErrorConfirm = [];
-    	      			console.log("用户确认超时,后续错误都继续上传");
+  	 	    	    	console.log("用户确认超时,后续错误都继续上传");
     	            	uploadErrorConfirmSet = 1; //全局不再进行错误确认
     	            	closeBootstrapDialog("takeSameActionConfirm3");
+    	            	resumePenddingUploadErrorConfirm();
     	            	uploadNextDoc();
     	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
     	 			
@@ -728,9 +761,9 @@
   	 	    	        qubtn: "否",
   	 	    	    },function () {
   	 	    	    	//后续错误将不再弹出窗口
-  	 	    	    	penddingListForUploadErrorConfirm = [];
   	 	    	    	clearTimeout(uploadErrorTimer1);
   	 	    	    	uploadErrorConfirmSet = 1;	//全局不再进行错误确认
+  	 	    	    	resumePenddingUploadErrorConfirm();
   	 	    	    	uploadNextDoc();
   	  	 				return true;
   	 				},function(){
@@ -748,9 +781,10 @@
              		return;
     	 		}
     		},function(){
+    			//结束后续的上传
     			uploadErrorConfirmState = 0;
-    	    	//结束后续的上传
-    			stopFlag = true; //停止所有上传
+    			penddingListForUploadErrorConfirm = [];
+    	    	stopFlag = true; //停止所有上传
     			clearTimeout(uploadErrorTimer);
       			SubContext.uploadErrorConfirmSet = 2; //结束所有上传
           		uploadErrorConfirmSet = 2; //全局取消上传
@@ -763,7 +797,7 @@
     		if(penddingListForUploadErrorConfirm.length > 0)
     		{
     			var SubContext = penddingListForUploadErrorConfirm.pop();
-    			uploadErrorConfirm(SubContext);
+    			uploadDoc(SubContext);
     		}
     	}
       	
