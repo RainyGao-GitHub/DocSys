@@ -527,7 +527,7 @@
     		if(penddingListForCopyConflictConfirm.length > 0)
     		{
     			var SubContext = penddingListForCopyConflictConfirm.pop();
-    			CopyConflictConfirm(SubContext);
+    			copyDoc(SubContext);
     		}
     	}
 
