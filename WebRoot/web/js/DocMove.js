@@ -319,68 +319,84 @@
   	    		return; 
   			}
   	    	
-			//启动超时定式器
-			var timeOut = 3600000; //超时时间1小时（复制操作无法预估时间）
-		    console.log("[" + SubContext.index + "] moveDoc()  start timeout monitor with " + timeOut + " ms");
-		    SubContext.timerForMove = setTimeout(function () {
-				 console.log("[" + SubContext.index + "] moveDoc() timerForMove triggered!");
-				 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
-				 {
-			         moveErrorHandler(SubContext, "文件复制超时");
-			         moveNextDoc();
-				 }
-		    },timeOut);			
-  	    	
-			//执行后台moveDoc操作
-    		$.ajax({
-                url : "/DocSystem/Doc/moveDoc.do",
-                type : "post",
-                dataType : "json",
-                data : {
-                    reposId: SubContext.vid,
-                	docId : SubContext.docId,
-                	type: SubContext.type,
-                	srcLevel: SubContext.level,
-                	dstLevel: SubContext.dstLevel,
-                    srcPid: SubContext.pid,
-                    dstPid: SubContext.dstPid,
-                    srcPath: SubContext.path,
-                    srcName: SubContext.name,
-                    dstPath: SubContext.dstPath,
-                    dstName: SubContext.name,
-		            shareId: gShareId,
-                },
-                success : function (ret) {
-                   console.log("[" + SubContext.index + "] moveDoc() ret:",ret);
-                   if( "ok" == ret.status )
-                   {
-                	    moveSuccessHandler(SubContext, ret.msgInfo);
-               	   	
-               	        //Add or Delete from treeNode
-                 	    var doc = ret.data;
-                	    addTreeNode(doc);
-                  	    deleteTreeNodeById(SubContext.docId);
-                	    DocList.addNode(doc);
-                	    DocList.deleteNode(SubContext.docId);
-                	    
-                	    moveNextDoc();
-                	    return;
-                   }
-                   else	//后台报错，结束移动
-                   {
-                	   console.log("[" + SubContext.index + "] moveDoc() Error:" + ret.msgInfo);
-                	   moveErrorHandler(SubContext, ret.msgInfo);
-                	   moveErrorConfirm(SubContext,ret.msgInfo);
-                       return;
-                   }
-                },
-                error : function () {	//后台异常
-            	   console.log("[" + SubContext.index + "] moveDoc() 服务器异常：move failed");
-            	   moveErrorHandler(SubContext, "服务器异常");
-            	   moveErrorConfirm(SubContext,"服务器异常");            	   
-            	   return;
-                }
-        	});
+			switch(SubContext.state)
+			{
+			case 0:	//start move
+				//启动超时定式器
+				var timeOut = 3600000; //超时时间1小时（复制操作无法预估时间）
+			    console.log("[" + SubContext.index + "] moveDoc()  start timeout monitor with " + timeOut + " ms");
+			    SubContext.timerForMove = setTimeout(function () {
+					 console.log("[" + SubContext.index + "] moveDoc() timerForMove triggered!");
+					 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
+					 {
+				         moveErrorHandler(SubContext, "文件复制超时");
+				         moveNextDoc();
+					 }
+			    },timeOut);			
+	  	    	
+				//执行后台moveDoc操作
+	    		$.ajax({
+	                url : "/DocSystem/Doc/moveDoc.do",
+	                type : "post",
+	                dataType : "json",
+	                data : {
+	                    reposId: SubContext.vid,
+	                	docId : SubContext.docId,
+	                	type: SubContext.type,
+	                	srcLevel: SubContext.level,
+	                	dstLevel: SubContext.dstLevel,
+	                    srcPid: SubContext.pid,
+	                    dstPid: SubContext.dstPid,
+	                    srcPath: SubContext.path,
+	                    srcName: SubContext.name,
+	                    dstPath: SubContext.dstPath,
+	                    dstName: SubContext.name,
+			            shareId: gShareId,
+	                },
+	                success : function (ret) {
+	                   console.log("[" + SubContext.index + "] moveDoc() ret:",ret);
+	                   if( "ok" == ret.status )
+	                   {
+	                	    moveSuccessHandler(SubContext, ret.msgInfo);
+	               	   	
+	               	        //Add or Delete from treeNode
+	                 	    var doc = ret.data;
+	                	    addTreeNode(doc);
+	                  	    deleteTreeNodeById(SubContext.docId);
+	                	    DocList.addNode(doc);
+	                	    DocList.deleteNode(SubContext.docId);
+	                	    
+	                	    moveNextDoc();
+	                	    return;
+	                   }
+	                   else	//后台报错，结束移动
+	                   {
+	                	   console.log("[" + SubContext.index + "] moveDoc() Error:" + ret.msgInfo);
+	                	   moveErrorHandler(SubContext, ret.msgInfo);
+	                	   moveErrorConfirm(SubContext,ret.msgInfo);
+	                       return;
+	                   }
+	                },
+	                error : function () {	//后台异常
+	            	   console.log("[" + SubContext.index + "] moveDoc() 服务器异常：move failed");
+	            	   moveErrorHandler(SubContext, "服务器异常");
+	            	   moveErrorConfirm(SubContext,"服务器异常");            	   
+	            	   return;
+	                }
+	        	});
+
+	    		SubContext.state = 1; //wait for move result
+				break;
+			case 1:	//等待文件移动结果
+				console.log("[" + SubContext.index + "] moveDoc() move already started, 理论上不应该出现在这里");
+				break;
+			case 4: //文件已移动成功
+				break;
+			case 5:	//文件已移动失败				
+				break;				
+			}
+			//try to start next copy thread
+			copyNextDoc();		
     	}
     	
       	function clearTimerForMove(SubContext)
@@ -484,6 +500,7 @@
 			},function(){
     	    	//结束后续的移动操作
 				moveErrorConfirmState = 0;
+				penddingListForMoveErrorConfirm = [];
 				stopFlag = true;
 				moveEndHandler();
     	    	return true;
@@ -492,10 +509,13 @@
       	
     	function resumePenddingMoveErrorConfirm()
     	{
+    		console.log("resumePenddingMoveErrorConfirm()");
+			
     		if(penddingListForMoveErrorConfirm.length > 0)
     		{
     			var SubContext = penddingListForMoveErrorConfirm.pop();
-    			moveErrorConfirm(SubContext);
+    			console.log("resumePenddingMoveErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+    			moveErrorConfirm(SubContext, SubContext.msgInfo);
     		}
     	}      	
       	
