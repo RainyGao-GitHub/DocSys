@@ -468,12 +468,6 @@
 
       	var confirmDialogState = 0;
     	var penddingListForMoveErrorConfirm = [];    
-      	function resumePenddingConfirm()
-    	{
-    		console.log("resumePenddingConfirm()");
-    		resumePenddingMoveErrorConfirm();    		
-    	}
-      	
       	function clearPenddingConfirm()
       	{
       		console.log("clearPenddingConfirm()");
@@ -481,6 +475,12 @@
           	penddingListForMoveErrorConfirm = [];
       	}
     	
+    	function resumePenddingConfirm()
+    	{
+    		console.log("resumePenddingConfirm()");
+    		resumePenddingMoveErrorConfirm();    		
+    	}
+
     	function resumePenddingMoveErrorConfirm()
     	{
     		console.log("resumePenddingMoveErrorConfirm()");
