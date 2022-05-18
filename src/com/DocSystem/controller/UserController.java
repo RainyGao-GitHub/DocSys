@@ -5,7 +5,9 @@ import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -148,8 +150,33 @@ public class UserController extends BaseController {
 		//删除cookie即将cookie的maxAge设置为0
 		addCookie(response, "dsuser", null, 0);
 		addCookie(response, "dstoken", null, 0);
-		//清除session
+		
+		//清除session中的登录信息
 		session.removeAttribute("login_user");
+		
+		//清除session中文件密码信息  
+		List<String> docPwdList = new ArrayList<String>();
+		Enumeration<String> attrs = session.getAttributeNames();
+		if(attrs != null)
+		{
+			while(attrs.hasMoreElements())
+			{
+				// 获取session键值  
+				String name = attrs.nextElement().toString();
+				if(name.startsWith("docPwd_"))
+				{
+					docPwdList.add(name);
+					// 根据键值取session中的值  
+					//Object vakue = session.getAttribute(name);
+					//Log.debug("------" + name + ":" + vakue +"--------\n");
+				}	
+			}
+			for(int i=0; i<docPwdList.size(); i++)
+			{
+				session.removeAttribute(docPwdList.get(i));
+			}
+		}
+		
 		rt.setMsgInfo("您已成功退出登陆。");
 
 		addSystemLog(request, loginUser, "logout", "logout", "退出登录","成功", null, null, null, "");
