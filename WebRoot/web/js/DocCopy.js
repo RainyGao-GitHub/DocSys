@@ -486,13 +486,62 @@
       		SubContext.msgInfo = msgInfo;
       	}
       	
-      	
+      	var confirmDialogState = 0;
       	var penddingListForCopyConflictConfirm = [];
-      	var copyConflictConfirmState = 0;
+    	var penddingListForCopyErrorConfirm = [];
+      	function resumePenddingConfirm()
+    	{
+    		console.log("resumePenddingConfirm()");
+    		resumePenddingCopyConflictConfirm();
+    		resumePenddingCopyErrorConfirm();    		
+    	}
+      	
+      	function clearPenddingConfirm()
+      	{
+      		console.log("clearPenddingConfirm()");
+          	confirmDialogState = 0;
+          	penddingListForCopyConflictConfirm = [];
+        	penddingListForCopyErrorConfirm = [];
+      	}
+      	
+      	function resumePenddingCopyConflictConfirm()
+    	{
+    		console.log("resumePenddingCopyConflictConfirm()");
+			if(confirmDialogState == 1)
+			{
+				return;
+			}
+			
+    		if(penddingListForCopyConflictConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForCopyConflictConfirm.pop();
+        		console.log("resumePenddingCopyConflictConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+    			copyDoc(SubContext);
+    		}
+    	}
+      	
+    	function resumePenddingCopyErrorConfirm()
+    	{
+			console.log("resumePenddingCopyErrorConfirm()");
+			if(confirmDialogState == 1)
+			{
+				return;
+			}
+			
+    		if(penddingListForCopyErrorConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForCopyErrorConfirm.pop();
+    			console.log("resumePenddingCopyErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+    			//For copy error which already stopped, so just show the confirm dialog
+    			copyErrorConfirm(SubContext, SubContext.msgInfo);
+    		}
+    	}
+      	
+      	
 		function CopyConflictConfirm(SubContext)
 		{
 			console.log("[" + SubContext.index + "] CopyConflictConfirm()");
-			if(copyConflictConfirmState == 1)
+			if(confirmDialogState == 1)
 			{
 				//add it to penddingList
 				console.log("[" + SubContext.index + "] CopyConflictConfirm() add to penndingList");
@@ -500,7 +549,7 @@
 				return;
 			}
 			
-			copyConflictConfirmState = 1;
+			confirmDialogState = 1;
 			showCopyConflictConfirmPanel(SubContext);
 		}
 		
@@ -522,7 +571,7 @@
 		            	$("#" + dialogId + " input[name='newDocName']").val("Copy of " + copiedNodeName);
 		            }
 		        },function(){
-		        	copyConflictConfirmState = 0;
+		        	confirmDialogState = 0;
 		        	console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 修改名字:", SubContext);	
 		        	//用户修改了目标名字，重入复制操作
 		        	var newDstName =  $("#" + dialogId + " input[name='newDocName']").val();
@@ -531,42 +580,29 @@
 			    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
             		closeBootstrapDialog("copyConflictConfirm"  + SubContext.index);
             		copyDoc(SubContext);			    	
-            		resumePenddingCopyConflictConfirm();
+            		resumePenddingConfirm();
             		return true;
 		        }, function(){ //取消
-		        	copyConflictConfirmState = 0;
+		        	confirmDialogState = 0;
 		        	console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 取消复制:", SubContext);					
 		        	copyErrorHandler(SubContext, "文件已存在，用户放弃修改名字并取消了复制！");
 		        	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
             		closeBootstrapDialog("copyConflictConfirm"  + SubContext.index);
-		        	resumePenddingCopyConflictConfirm();
+		        	resumePenddingConfirm();
 		        	copyNextDoc();
 	    	    	return true;
 	      		});	
 		}
 		
-    	function resumePenddingCopyConflictConfirm()
-    	{
-    		console.log("resumePenddingCopyConflictConfirm()");
-			if(penddingListForCopyConflictConfirm.length > 0)
-    		{
-    			var SubContext = penddingListForCopyConflictConfirm.pop();
-        		console.log("resumePenddingCopyConflictConfirm() index:" + SubContext.index + " name:" + SubContext.name);
-    			copyDoc(SubContext);
-    		}
-    	}
-
-    	var penddingListForCopyErrorConfirm = [];
-      	var copyErrorConfirmState = 0;
       	function copyErrorConfirm(SubContext,errMsg)
       	{
-      		if(copyErrorConfirmState == 1)
+      		if(confirmDialogState == 1)
       		{
       			console.log("[" + SubContext.index + "] copyErrorConfirm() add to penndingList");
       			penddingListForCopyErrorConfirm.push(SubContext);
       			return;
       		}
-      		copyErrorConfirmState = 1;
+      		confirmDialogState = 1;
 	      	
   			var FileName = SubContext.name;
       		var msg = FileName + "复制失败,是否继续复制其他文件？";
@@ -583,16 +619,15 @@
     	        qubtn: "结束",
     	    },function () {
     	    	//继续后续的复制
-    	    	copyErrorConfirmState = 0;
+    	    	confirmDialogState = 0;
     	    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
         		closeBootstrapDialog("copyErrorConfirm"  + SubContext.index);
-    	    	resumePenddingCopyErrorConfirm();
+    	    	resumePenddingConfirm();
     	    	copyNextDoc();
     	    	return true;
 			},function(){
 				//结束后续的复制
-				copyErrorConfirmState = 0;
-				penddingListForCopyErrorConfirm = [];
+				clearPenddingConfirm();
     	    	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
         		closeBootstrapDialog("copyErrorConfirm"  + SubContext.index);
 				stopFlag = true;
@@ -600,19 +635,6 @@
     	    	return true;
       		});
       	}
-      	
-    	function resumePenddingCopyErrorConfirm()
-    	{
-			console.log("resumePenddingCopyErrorConfirm()");
-    		if(penddingListForCopyErrorConfirm.length > 0)
-    		{
-    			var SubContext = penddingListForCopyErrorConfirm.pop();
-    			console.log("resumePenddingCopyErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
-    			//For copy error which already stopped, so just show the confirm dialog
-    			copyErrorConfirm(SubContext, SubContext.msgInfo);
-    		}
-    	}
-      	
       	
       	//copyEndHandler
       	function copyEndHandler()
