@@ -326,10 +326,12 @@
 				copyNextDoc();
 				return;
 			}
-			
+
+			console.log("[" + SubContext.index + "] copyDoc() state:" + SubContext.state);
 			switch(SubContext.state)
 			{
 			case 0:	//check node exist
+				console.log("[" + SubContext.index + "] copyDoc() check if node exist");
 				if(isNodeExist(SubContext.dstName, SubContext.dstParentNode) == true)
 				{
 				  	//Node Name conflict confirm
@@ -338,8 +340,10 @@
 					return;
 				}
 				SubContext.state = 1;
+				copyDoc(SubContext);
 				break;
 			case 1:	//start copy doc
+				console.log("[" + SubContext.index + "] copyDoc() start copy");
 				//启动超时定式器
 				var timeOut = 3600000; //超时时间1小时（复制操作无法预估时间）
 			    console.log("[" + SubContext.index + "] copyDoc()  start timeout monitor with " + timeOut + " ms");
@@ -406,8 +410,10 @@
 				console.log("[" + SubContext.index + "] copyDoc() copy already started, 理论上不应该出现在这里");
 				break;
 			case 4: //文件已复制成功
+				console.log("[" + SubContext.index + "] copyDoc() copy already success, 理论上不应该出现在这里");
 				break;
 			case 5:	//文件已复制失败				
+				console.log("[" + SubContext.index + "] copyDoc() copy already stopped, 理论上不应该出现在这里");
 				break;				
 			}
 			//try to start next copy thread
