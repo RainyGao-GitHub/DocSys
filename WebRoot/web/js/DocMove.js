@@ -395,8 +395,8 @@
 			case 5:	//文件已移动失败				
 				break;				
 			}
-			//try to start next copy thread
-			copyNextDoc();		
+			//try to start next move thread
+			moveNextDoc();		
     	}
     	
       	function clearTimerForMove(SubContext)
@@ -465,18 +465,47 @@
       		SubContext.status = "success";
       		SubContext.msgInfo = msgInfo;
       	}  	
-		
-    	var penddingListForMoveErrorConfirm = [];
-      	var moveErrorConfirmState = 0;
+
+      	var confirmDialogState = 0;
+    	var penddingListForMoveErrorConfirm = [];    
+      	function resumePenddingConfirm()
+    	{
+    		console.log("resumePenddingConfirm()");
+    		resumePenddingMoveErrorConfirm();    		
+    	}
+      	
+      	function clearPenddingConfirm()
+      	{
+      		console.log("clearPenddingConfirm()");
+          	confirmDialogState = 0;
+          	penddingListForMoveErrorConfirm = [];
+      	}
+    	
+    	function resumePenddingMoveErrorConfirm()
+    	{
+    		console.log("resumePenddingMoveErrorConfirm()");
+			if(confirmDialogState == 1)
+			{
+				return;
+			}	
+			
+    		if(penddingListForMoveErrorConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForMoveErrorConfirm.pop();
+    			console.log("resumePenddingMoveErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+    			moveErrorConfirm(SubContext, SubContext.msgInfo);
+    		}
+    	}
+    	
       	function moveErrorConfirm(SubContext,errMsg)
       	{
-      		if(moveErrorConfirmState == 1)
+      		if(confirmDialogState == 1)
           	{
 				console.log("[" + SubContext.index + "] moveErrorConfirm() add to penndingList");
 				penddingListForMoveErrorConfirm.push(SubContext);
 				return;
       		}
-      		moveErrorConfirmState = 1;
+      		confirmDialogState = 1;
 
       		var FileName = SubContext.name;
       		var msg = FileName + "移动失败,是否继续移动其他文件？";
@@ -493,31 +522,21 @@
     	        qubtn: "结束",
     	    },function () {
     	    	//继续后续的移动
-    	    	moveErrorConfirmState = 0;
-    	    	resumePenddingMoveErrorConfirm();
+    	    	confirmDialogState = 0;
+    	    	closeBootstrapDialog("moveErrorConfirm"  + SubContext.index);
+    	    	resumePenddingConfirm();
     	    	moveNextDoc();
     	    	return true;
 			},function(){
     	    	//结束后续的移动操作
-				moveErrorConfirmState = 0;
-				penddingListForMoveErrorConfirm = [];
 				stopFlag = true;
+				clearPenddingConfirm();
+				
+				closeBootstrapDialog("moveErrorConfirm"  + SubContext.index);
 				moveEndHandler();
     	    	return true;
       		});
-      	}
-      	
-    	function resumePenddingMoveErrorConfirm()
-    	{
-    		console.log("resumePenddingMoveErrorConfirm()");
-			
-    		if(penddingListForMoveErrorConfirm.length > 0)
-    		{
-    			var SubContext = penddingListForMoveErrorConfirm.pop();
-    			console.log("resumePenddingMoveErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
-    			moveErrorConfirm(SubContext, SubContext.msgInfo);
-    		}
-    	}      	
+      	}  	
       	
       	//moveEndHandler
       	function moveEndHandler()
