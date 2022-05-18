@@ -516,7 +516,7 @@
     		{
     			var SubContext = penddingListForCopyConflictConfirm.pop();
         		console.log("resumePenddingCopyConflictConfirm() index:" + SubContext.index + " name:" + SubContext.name);
-    			copyDoc(SubContext);
+        		CopyConflictConfirm(SubContext);
     		}
     	}
       	
@@ -548,8 +548,8 @@
 				penddingListForCopyConflictConfirm.push(SubContext);
 				return;
 			}
-			
 			confirmDialogState = 1;
+			
 			showCopyConflictConfirmPanel(SubContext);
 		}
 		
