@@ -524,56 +524,100 @@
 	 		return fileCoverConfirmSet;
       	}
       	
-      	//文件覆盖处理接口
+      	
+      	var confirmDialogState = 0;
       	var penddingListForUploadCoverConfirm = [];
-      	var uploadCoverConfirmState = 0;
-      	function fileCoverConfirm(SubContext, msgInfo)
+      	var penddingListForUploadErrorConfirm = [];
+      	function clearPenddingConfirm()
       	{
-      		if(uploadCoverConfirmState == 1)
+      		console.log("clearPenddingConfirm()");
+          	confirmDialogState = 0;
+          	penddingListForUploadCoverConfirm = [];
+          	penddingListForUploadErrorConfirm = [];
+      	}
+    	
+    	function resumePenddingConfirm()
+    	{
+    		console.log("resumePenddingConfirm()");
+    		confirmDialogState = 0;
+    		resumePenddingUploadCoverConfirm();    	
+    		resumePenddingUploadErrorConfirm();
+    	}
+
+      	
+    	function resumePenddingUploadCoverConfirm()
+    	{
+    		console.log("resumePenddingUploadCoverConfirm()");
+    		if(confirmDialogState == 1)
+    		{
+    			return;
+    		}
+    		
+    		if(penddingListForUploadCoverConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForUploadCoverConfirm.pop();
+        		console.log("resumePenddingUploadCoverConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+        		fileCoverConfirm(SubContext);
+    		}
+    	}  
+    	
+    	function resumePenddingUploadErrorConfirm()
+    	{
+    		console.log("resumePenddingUploadErrorConfirm()");
+    		if(confirmDialogState == 1)
+    		{
+    			return;
+    		}
+
+    		if(penddingListForUploadErrorConfirm.length > 0)
+    		{
+    			var SubContext = penddingListForUploadErrorConfirm.pop();
+        		console.log("resumePenddingUploadErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
+        		uploadErrorConfirmHandler(SubContext, SubContext.msgInfo);    			
+    		}
+    	}
+      	
+      	//文件覆盖处理接口
+      	function fileCoverConfirm(SubContext)
+      	{
+      		var msgInfo = "文件 " + SubContext.name + "已存在";
+      		if(confirmDialogState == 1)
       		{
 				console.log("[" + SubContext.index + "] fileCoverConfirm() add to penndingList");
 				penddingListForUploadCoverConfirm.push(SubContext);
 				return;
       		}
-      		uploadCoverConfirmState = 1;
+      		confirmDialogState = 1;
       			
 			var docName = SubContext.name;
-      		console.log("fileCoverConfirm");
-      		//It is checkIn behavior do cover
-     		if(curCheckInDoc.id && curCheckInDoc.id > -1)
-     		{
-     			fileCoverConfirmSet = 1;
-     		}
+      		console.log("[" + SubContext.index + "] fileCoverConfirm()");
       		
   	 		var confirm = getFileCoverConfirmSetting(SubContext);
 	  	 	if(confirm == 1)
 	  	 	{
-	  	 		uploadCoverConfirmState = 0;
 	  	 		//用户已确认直接覆盖
 	  	 		SubContext.state = 3; //开始上传
 	  	 		uploadDoc(SubContext);
-	  	 		resumePenddingUploadCoverConfirm();
+	  	 		resumePenddingConfirm();
 	  	 		return;
 	  	 	}
 	  	 	
 	  	 	if(confirm == 2)
 	  	 	{
-	  	 		uploadCoverConfirmState = 0;
 	  	 		uploadErrorHandler(SubContext, "文件" + docName + " 已存在，自动跳过");
-	  	 		resumePenddingUploadCoverConfirm();
+	  	 		resumePenddingConfirm();
 	  	 		uploadNextDoc();
 	  	 		return;
 	  	 	}
 
 	  	 	var fileCoverTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-	  	 			uploadCoverConfirmState = 0;	  	 			
 	  	 			console.log("fileCoverConfirm() 是否覆盖 " + docName + ",用户确认超时,采用覆盖且后续自动覆盖");
 	            	SubContext.fileCoverConfirmSet = 1; //覆盖
 	            	fileCoverConfirmSet = 1;
 	            	closeBootstrapDialog("fileCoverConfirm");
 	            	SubContext.state = 3; //开始上传	            	
 	            	uploadDoc(SubContext); //reEnter uploadDoc
-		  	 		resumePenddingUploadCoverConfirm();
+		  	 		resumePenddingConfirm();
 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
 		        
     	    qiao.bs.confirm({
@@ -583,10 +627,10 @@
     	        okbtn: "替换",
     	        qubtn: "跳过",
     	    },function () {
-    	    	uploadCoverConfirmState = 0;
                	console.log("fileCoverConfirm() 用户选择覆盖 " + docName);
        		 	clearTimeout(fileCoverTimer);
  	 			SubContext.fileCoverConfirmSet = 1; //覆盖
+ 	 			closeBootstrapDialog("fileCoverConfirm");
   	 			if(index < (totalNum-1)) //后续还有才提示
   	 			{
 	  	 			var fileCoverTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
@@ -595,7 +639,7 @@
 	 	            	closeBootstrapDialog("takeSameActionConfirm1");
 	 	            	SubContext.state = 3; //开始上传
 	 	            	uploadDoc(SubContext); //reEnter uploadDoc
-	 		  	 		resumePenddingUploadCoverConfirm();
+	 		  	 		resumePenddingConfirm();
 	 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
 	 	            
   	 	    	    qiao.bs.confirm({
@@ -610,32 +654,32 @@
   	 	    	    	fileCoverConfirmSet = 1;	//全局覆盖  	 	    	    	
   	 		  	 		SubContext.state = 3; //开始上传
   	  	 				uploadDoc(SubContext); //reEnter uploadDoc
-  	  	 				resumePenddingUploadCoverConfirm();
+  	  	 				closeBootstrapDialog("takeSameActionConfirm1");
+  	  	 				resumePenddingConfirm();
   	  	 				return true;
   	 				},function(){
   	 		       		console.log("fileCoverConfirm() 后续已存在文件不自动覆盖");
-  	 					clearTimeout(fileCoverTimer1);
-  	 					
-  	 		  	 		SubContext.state = 3; //开始上传
+  	 					clearTimeout(fileCoverTimer1);  	 					
+  	 					SubContext.state = 3; //开始上传
   	 					uploadDoc(SubContext); //reEnter uploadDoc
-  	 		  	 		resumePenddingUploadCoverConfirm();
+  	 					closeBootstrapDialog("takeSameActionConfirm1");
+  	 					resumePenddingConfirm();
   	  	 				return true;
   	 				});
   	 			}
   	 			else
   	 			{
-  	 				uploadCoverConfirmState = 0;
   		  	 		SubContext.state = 3; //开始上传
   	 				uploadDoc(SubContext); //reEnter uploadDoc
-  		  	 		resumePenddingUploadCoverConfirm();
+  		  	 		resumePenddingConfirm();
   	 			}
     	    	return true;   
     	    },function(){
-    	    	uploadCoverConfirmState = 0;
     	    	console.log("fileCoverConfirm() 用户选择跳过上传 " + docName);
     	    	clearTimeout(fileCoverTimer);
-
   	 			SubContext.fileCoverConfirmSet = 2; //不覆盖
+  	 			closeBootstrapDialog("fileCoverConfirm");
+  	 			
   	 			if(index < (totalNum-1)) //后续还有才提示 
   	 			{
 	  	 			var fileCoverTimer2 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
@@ -643,7 +687,7 @@
 	 	            	fileCoverConfirmSet = 2;
 	 	            	closeBootstrapDialog("takeSameActionConfirm2");	 	            	
 	 	            	uploadErrorHandler(SubContext, "后续已存在文件是否自动跳过，用户确认超时，跳过且后续自动跳过！");
-	 		  	 		resumePenddingUploadCoverConfirm();
+	 		  	 		resumePenddingConfirm();
 	 	            	uploadNextDoc();
 	 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
   	 				
@@ -658,39 +702,29 @@
   	 	    	    	clearTimeout(fileCoverTimer2);
   	 					fileCoverConfirmSet = 2;	//全局覆盖
   	 					uploadErrorHandler(SubContext, "文件已存在，跳过且后续自动跳过");
-  	 		  	 		resumePenddingUploadCoverConfirm();
+  	 					closeBootstrapDialog("takeSameActionConfirm2");	
+  	 					resumePenddingConfirm();
   	 					uploadNextDoc();
   	  	 				return true;
   	 				},function(){
   	 					console.log("fileCoverConfirm() 后续已存在文件不自动跳过！");
   	 	    	    	clearTimeout(fileCoverTimer2);
   						uploadErrorHandler(SubContext, "文件已存在，跳过但后续不自动跳过");
-  			  	 		resumePenddingUploadCoverConfirm();
+  						closeBootstrapDialog("takeSameActionConfirm2");	
+  						resumePenddingConfirm();
   						uploadNextDoc();
   	  	 				return true;
   	 				});			
   	 			}
   	 			else
   	 			{
-  	 				uploadCoverConfirmState = 0;
   	 				uploadErrorHandler(SubContext, "文件已存在，跳过");
-  		  	 		resumePenddingUploadCoverConfirm();
+  		  	 		resumePenddingConfirm();
   	 				uploadNextDoc();
   	 			}
     	    	return true;
     	    });      		
       	}
-      	
-    	function resumePenddingUploadCoverConfirm()
-    	{
-    		console.log("resumePenddingUploadCoverConfirm()");
-    		if(penddingListForUploadCoverConfirm.length > 0)
-    		{
-    			var SubContext = penddingListForUploadCoverConfirm.pop();
-        		console.log("resumePenddingUploadCoverConfirm() index:" + SubContext.index + " name:" + SubContext.name);
-    			uploadDoc(SubContext);
-    		}
-    	}  
       	
       	//获取当上传的文件覆盖设置
       	function getUploadErrorConfirmSetting(SubContext)
@@ -709,25 +743,22 @@
       	}
       	
       	//upload Error Confirm
-      	var penddingListForUploadErrorConfirm = [];
-      	var uploadErrorConfirmState = 0;
       	function uploadErrorConfirm(SubContext,errMsg)
       	{
-      		if(uploadErrorConfirmState == 1)
+      		if(confirmDialogState == 1)
       		{
 				console.log("[" + SubContext.index + "] uploadErrorConfirm() add to penndingList");
 				penddingListForUploadErrorConfirm.push(SubContext);
       			return;
       		}
-      		uploadErrorConfirmState = 1;
+      		confirmDialogState = 1;
       		
       		var uploadErrorTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
             	console.log("用户确认超时,继续上传后续文件");
-            	uploadErrorConfirmState = 0;
             	SubContext.uploadErrorConfirmSet = 1; //继续上传
             	uploadErrorConfirmSet = 1; //全局继续上传
             	closeBootstrapDialog("uploadErrorConfirm");
-            	resumePenddingUploadErrorConfirm();
+            	resumePenddingConfirm();
             	uploadNextDoc();
             },5*60*1000);	//5分鐘用戶不確認則關閉對話框
       		
@@ -742,16 +773,17 @@
     	        qubtn: "结束上传",
     	    },function () {
     	    	//继续后续的上传
-    	    	uploadErrorConfirmState = 0;
 				clearTimeout(uploadErrorTimer);			
       			SubContext.uploadErrorConfirmSet = 1; //继续上传
+      			closeBootstrapDialog("uploadErrorConfirm");
+      			
     	 		if(index < (totalNum-1))	//后续还有文件
                 {
     	      		var uploadErrorTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
   	 	    	    	console.log("用户确认超时,后续错误都继续上传");
     	            	uploadErrorConfirmSet = 1; //全局不再进行错误确认
     	            	closeBootstrapDialog("takeSameActionConfirm3");
-    	            	resumePenddingUploadErrorConfirm();
+    	            	resumePenddingConfirm();
     	            	uploadNextDoc();
     	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
     	 			
@@ -765,46 +797,36 @@
   	 	    	    	//后续错误将不再弹出窗口
   	 	    	    	clearTimeout(uploadErrorTimer1);
   	 	    	    	uploadErrorConfirmSet = 1;	//全局不再进行错误确认
-  	 	    	    	resumePenddingUploadErrorConfirm();
+  	 	    	    	closeBootstrapDialog("takeSameActionConfirm3");
+  	 	    	    	resumePenddingConfirm();
   	 	    	    	uploadNextDoc();
   	  	 				return true;
   	 				},function(){
   	 					//后续错误将继续弹出错误确认窗口
   	 					clearTimeout(uploadErrorTimer1);
-    	            	resumePenddingUploadErrorConfirm();
+  	 					closeBootstrapDialog("takeSameActionConfirm3");
+    	            	resumePenddingConfirm();
   	 					uploadNextDoc();
   	  	 				return true;
   	 				});	
                 }
     	 		else
     	 		{
-    	 			resumePenddingUploadErrorConfirm();
+    	 			resumePenddingConfirm();
     	 			uploadNextDoc();
              		return;
     	 		}
     		},function(){
     			//结束后续的上传
-    			uploadErrorConfirmState = 0;
-    			penddingListForUploadErrorConfirm = [];
     	    	stopFlag = true; //停止所有上传
+    			clearPenddingConfirm();
     			clearTimeout(uploadErrorTimer);
       			SubContext.uploadErrorConfirmSet = 2; //结束所有上传
           		uploadErrorConfirmSet = 2; //全局取消上传
+          		closeBootstrapDialog("uploadErrorConfirm");
           		uploadEndHandler(SubContext,errMsg);
       		});
       	}
-      	
-    	function resumePenddingUploadErrorConfirm()
-    	{
-    		console.log("resumePenddingUploadErrorConfirm()");
-
-    		if(penddingListForUploadErrorConfirm.length > 0)
-    		{
-    			var SubContext = penddingListForUploadErrorConfirm.pop();
-        		console.log("resumePenddingUploadErrorConfirm() index:" + SubContext.index + " name:" + SubContext.name);
-        		uploadErrorConfirmHandler(SubContext, SubContext.msgInfo);    			
-    		}
-    	}
       	
       	//获取当上传的文件警告确认设置
       	function getUploadWarningConfirmSetting()
