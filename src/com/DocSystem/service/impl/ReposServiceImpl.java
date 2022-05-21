@@ -47,188 +47,406 @@ public class ReposServiceImpl implements ReposService {
     
     //add a Repos
     public int addRepos(Repos repos) {  
-        return reposDao.add(repos);
+       	int ret = 0;
+    	try {
+    	   	ret = reposDao.add(repos);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     //delete a Repos
     public int deleteRepos(Integer id) {  
-        return reposDao.deleteByPrimaryKey(id);  
+       	int ret = 0;
+    	try {
+    	   	ret = reposDao.deleteByPrimaryKey(id); 
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     //Get the all ReposList
     public List<Repos> getAllReposList() {  
-        List<Repos> list = reposDao.selectAll();  
-        return list;
+    	List<Repos>  ret = null;
+    	try {
+    	   	ret =  reposDao.selectAll();
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     //Get the ReposList by Repos Info
     public List<Repos> getReposList(Repos repos) {  
-        List<Repos> list = reposDao.selectSelective(repos);  
-        return list;
+    	List<Repos>  ret = null;
+    	try {
+    	   	ret =  reposDao.selectSelective(repos);  
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     
     //Get the authed ReposList
     public List<Repos> getAuthedReposList(Integer UserId) {  
-        List<Repos> list = reposDao.selectAuthedReposList(UserId);  
-        return list;
+    	List<Repos>  ret = null;
+    	try {
+    	   	ret =  reposDao.selectAuthedReposList(UserId);   
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     //Get Repos
 	public Repos getRepos(Integer id) {
-		return reposDao.selectByPrimaryKey(id);
+    	Repos  ret = null;
+    	try {
+    	   	ret =  reposDao.selectByPrimaryKey(id);  
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
 	}
         
     //update Repos
     public int updateRepos(Repos repos) {  
-        return reposDao.updateByPrimaryKeySelective(repos);  
+    	int  ret = 0;
+    	try {
+    	   	ret =  reposDao.updateByPrimaryKeySelective(repos);  
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     //add a Document
     public int addDoc(Doc doc)
     {
-    	return docDao.insertSelective(doc);
+    	int ret = 0;
+    	try {
+    		ret = docDao.insertSelective(doc);
+    	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     //get a Document
     public Doc getDoc(Integer id)
     {
-    	return docDao.selectByPrimaryKey(id);
+    	Doc ret = null;
+    	try {
+    		ret = docDao.selectByPrimaryKey(id);
+    	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
     //update a Document
     public int updateDoc(Doc doc)
     {
-    	return docDao.updateByPrimaryKeySelective(doc);
+       	int ret = 0;
+    	try {
+    	   	ret = docDao.updateByPrimaryKeySelective(doc);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
 
     public int updateDocByPrimaryKey(Doc doc)
     {
-    	return docDao.updateByPrimaryKey(doc);
+       	int ret = 0;
+    	try {
+    	   	ret = docDao.updateByPrimaryKey(doc);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
 
     //delete a Document
     public int deleteDoc(Integer id)
     {
-    	return docDao.deleteByPrimaryKey(id);
+       	int ret = 0;
+    	try {
+    	   	ret = docDao.deleteByPrimaryKey(id);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
     
 	public int deleteDoc(Doc doc) {
-		return docDao.deleteSelective(doc);	
+       	int ret = 0;
+    	try {
+    	   	ret = docDao.deleteSelective(doc);	
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;		
 	}
     
     //Get the docList by doc
     public List<Doc> getDocList(Doc doc) {  
-        List<Doc> list = docDao.selectSelective(doc);  
-        return list;
+    	List<Doc> ret = null;
+    	try {
+    		ret = docDao.selectSelective(doc);	
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;		
     }
     
 	//Doc List 查询
 	public List<Doc> queryDocList(HashMap<String, Object> params)
 	{
-		return docDao.queryDocList(params);
+    	List<Doc> ret = null;
+    	try {
+    		ret = 	docDao.queryDocList(params);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}    
     
 	public int addDocLock(DocLock docLock) {
-    	return docLockDao.insertSelective(docLock);
+    	int ret = 0;
+    	try {
+    		ret = docLockDao.insertSelective(docLock);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
     }
 
 	public int deleteDocLock(DocLock docLock) {
-    	return docLockDao.deleteByPrimaryKey(docLock.getId());
-	}
+    	int ret = 0;
+    	try {
+    		ret = docLockDao.deleteByPrimaryKey(docLock.getId());
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;
+ 	}
 	
 	public int updateDocLock(DocLock docLock) {
-    	return docLockDao.updateByPrimaryKeySelective(docLock);
+    	int ret = 0;
+    	try {
+    		ret = docLockDao.updateByPrimaryKeySelective(docLock);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;		
 	}
 	
     //Get the docLockList by doc
-    public List<DocLock> getDocLockList(DocLock docLock) {  
-        List<DocLock> list = docLockDao.selectSelective(docLock);  
-        return list;
+    public List<DocLock> getDocLockList(DocLock docLock) { 
+    	List<DocLock> ret = null;
+    	try {
+    		ret = docLockDao.selectSelective(docLock); 
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
     }
 
 	public int addReposAuth(ReposAuth reposAuth) {
-		return reposAuthDao.insertSelective(reposAuth);
+    	int ret = 0;
+    	try {
+    		ret = reposAuthDao.insertSelective(reposAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 	
     //get ReposAuth
     public ReposAuth getReposAuth(ReposAuth reposAuth)
     {
-    	return reposAuthDao.getReposAuth(reposAuth);
+    	ReposAuth ret = null;
+    	try {
+    		ret =  reposAuthDao.getReposAuth(reposAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
     }
     
     //get DocAuth
     public DocAuth getDocAuth(DocAuth docAuth)
     {
-    	return docAuthDao.selectSelective(docAuth);
+    	DocAuth ret = null;
+    	try {
+    		ret =  docAuthDao.selectSelective(docAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
     }
 
 	public List<ReposAuth> getReposAuthList(Integer reposId) {
 		ReposAuth reposAuth = new ReposAuth();
 		reposAuth.setReposId(reposId);
-		return reposAuthDao.selectSelective(reposAuth);
+		List<ReposAuth> ret = null;
+    	try {
+    		ret =  reposAuthDao.selectSelective(reposAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;			
 	}
 	
 	//取出任意用户和用户所在组以及用户的权限
 	public List<DocAuth> getDocAuthForUser(DocAuth docAuth) {
-		return docAuthDao.getDocAuthForUser(docAuth);
+		List<DocAuth> ret = null;
+    	try {
+    		ret = docAuthDao.getDocAuthForUser(docAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 	
 	//取出任意用户和用户组的权限
 	public List<DocAuth> getDocAuthForGroup(DocAuth docAuth) {
-		return docAuthDao.getDocAuthForGroup(docAuth);
+		List<DocAuth> ret = null;
+    	try {
+    		ret = docAuthDao.getDocAuthForGroup(docAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;			
 	}
 	
 	//取出任意用户的权限
 	public List<DocAuth> getDocAuthForAnyUser(DocAuth docAuth) {
-		return docAuthDao.getDocAuthForAnyUser(docAuth);
+		List<DocAuth> ret = null;
+    	try {
+    		ret = docAuthDao.getDocAuthForAnyUser(docAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 	
 	public int setReposAuth(ReposAuth reposAuth) {
-		return reposAuthDao.updateByPrimaryKeySelective(reposAuth);
+		int ret = 0;
+    	try {
+    		ret = reposAuthDao.updateByPrimaryKeySelective(reposAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;		
 	}
 
 	public int addDocAuth(DocAuth docAuth) {
-		return docAuthDao.insertSelective(docAuth);
+		int ret = 0;
+    	try {
+    		ret = docAuthDao.insertSelective(docAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 	public int updateDocAuth(DocAuth docAuth) {
-		return docAuthDao.updateByPrimaryKeySelective(docAuth);
+		int ret = 0;
+    	try {
+    		ret = docAuthDao.updateByPrimaryKeySelective(docAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 	//仓库的所有用户（包括有授权和没授权的）
 	public List<ReposAuth> getReposAllUsers(Integer reposId) {
-		return reposAuthDao.getReposAllUsers(reposId);		
+		List<ReposAuth> ret = null;
+    	try {
+    		ret = reposAuthDao.getReposAllUsers(reposId);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 	
 	public List<ReposAuth> queryReposMemberWithParamLike(HashMap<String, String> param) {
-		return reposAuthDao.queryReposMemberWithParamLike(param);	
+		List<ReposAuth> ret = null;
+    	try {
+    		ret = reposAuthDao.queryReposMemberWithParamLike(param);	
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}	
 	
 	//仓库的所有用户组（包括有授权和没授权的）
 	public List<ReposAuth> getReposAllGroups(Integer reposId) {
-		return reposAuthDao.getReposAllGroups(reposId);	
+		List<ReposAuth> ret = null;
+    	try {
+    		ret = reposAuthDao.getReposAllGroups(reposId);		
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 	public int deleteReposAuth(Integer id) {
-		return reposAuthDao.deleteByPrimaryKey(id);
+		int ret = 0;
+    	try {
+    		ret = reposAuthDao.deleteByPrimaryKey(id);	
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 	public int updateReposAuth(ReposAuth qReposAuth) {
-		return reposAuthDao.updateByPrimaryKeySelective(qReposAuth);
+		int ret = 0;
+    	try {
+    		ret = reposAuthDao.updateByPrimaryKeySelective(qReposAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 	public int deleteDocAuth(Integer id) {
-		return docAuthDao.deleteByPrimaryKey(id);
+		int ret = 0;
+    	try {
+    		ret = docAuthDao.deleteByPrimaryKey(id);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 
-	public void deleteReposAuthSelective(ReposAuth reposAuth) {
-		reposAuthDao.deleteSelective(reposAuth);
+	public int deleteReposAuthSelective(ReposAuth reposAuth) {
+		int ret = 0;
+    	try {
+    		ret = reposAuthDao.deleteSelective(reposAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 	
-	public void deleteDocAuthSelective(DocAuth docAuth) {
-		docAuthDao.deleteSelective(docAuth);
+	public int deleteDocAuthSelective(DocAuth docAuth) {
+		int ret = 0;
+    	try {
+    		ret = docAuthDao.deleteSelective(docAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
+		
 	}
 
 	//Please use the getDocAuthList, This Interface can not be used again
@@ -240,54 +458,119 @@ public class ReposServiceImpl implements ReposService {
         //params.put("pDocId", pDocId);
         params.put("reposId", reposId);
         //params.put("userId", userId);
-		return docAuthDao.getAllDocAuthList(params);
+        List<DocAuth> ret = null;
+    	try {
+    		ret = docAuthDao.getAllDocAuthList(params);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 	public List<ReposAuth> getReposAuthListForUser(ReposAuth reposAuth) {
 		//To get the reposAuth with userId=userId and groupId in (groups) and userId=0
-		return reposAuthDao.getReposAuthForUser(reposAuth);
+        List<ReposAuth> ret = null;
+    	try {
+    		ret = reposAuthDao.getReposAuthForUser(reposAuth);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;			
 	}
 
 	public User getUserInfo(Integer userId) {
-		return userDao.selectByPrimaryKey(userId);	
+		User ret = null;
+    	try {
+    		ret = userDao.selectByPrimaryKey(userId);	
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 
 	public UserGroup getGroupInfo(Integer groupId) {
-		return userGroupDao.selectByPrimaryKey(groupId);
+		UserGroup ret = null;
+    	try {
+    		ret = userGroupDao.selectByPrimaryKey(groupId);	
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
 	}
 	
     public int addDocShare(DocShare docShare)
     {
-    	return docShareDao.insertSelective(docShare);
+		int ret = 0;
+    	try {
+    		ret = docShareDao.insertSelective(docShare);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
     }
     
     public DocShare getDocShare(Integer id)
     {
-    	return docShareDao.selectByPrimaryKey(id);
+    	DocShare ret = null;
+    	try {
+    		ret = docShareDao.selectByPrimaryKey(id);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	
     }
     
     public int updateDocShare(DocShare docShare)
     {
-    	return docShareDao.updateByPrimaryKeySelective(docShare);
+    	int ret = 0;
+    	try {
+    		ret = docShareDao.updateByPrimaryKeySelective(docShare);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	    	
     }
 
     public int updateDocShareByPrimaryKey(DocShare docShare)
     {
-    	return docShareDao.updateByPrimaryKey(docShare);
+    	int ret = 0;
+    	try {
+    		ret = docShareDao.updateByPrimaryKey(docShare);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	    
     }
     
     public int deleteDocShare(Integer id)
     {
-    	return docShareDao.deleteByPrimaryKey(id);
+    	int ret = 0;
+    	try {
+    		ret = docShareDao.deleteByPrimaryKey(id);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	   
     }
     
     public int deleteDocShare(DocShare docShare)
     {
-    	return docShareDao.deleteSelective(docShare);
+    	int ret = 0;
+    	try {
+    		ret = docShareDao.deleteSelective(docShare);
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	   
     }
     
     public List<DocShare> getDocShareList(DocShare docShare) {  
-        List<DocShare> list = docShareDao.selectSelective(docShare);  
-        return list;
+    	List<DocShare> ret = null;
+    	try {
+    		ret = docShareDao.selectSelective(docShare);  
+      	} catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return ret;	  
     }
 }  
