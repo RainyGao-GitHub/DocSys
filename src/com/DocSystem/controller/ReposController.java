@@ -1809,6 +1809,20 @@ public class ReposController extends BaseController{
 		}
 		Integer priority = getPriorityByAuthType(authType);
 		
+		//如果不是根目录，则需要先检查是否拥有上一级目录的访问权限
+		if(name != null && name.isEmpty() == false)
+		{
+			Doc parentDoc = buildBasicDoc(reposId, null, null, reposPath, path, "", null, type, true,localRootPath,localVRootPath, 0L, "");
+			DocAuth parentDocAuth = getRealDocAuth(repos, userId, groupId, parentDoc);
+			if(parentDocAuth == null || parentDocAuth.getAccess() == null || parentDocAuth.getAccess() == 0)
+			{
+				Log.debug("configDocAuth check parent docauth failed, parentDoc path:" + path);
+				rt.setError("未设置上级目录的访问权限");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
 		//获取用户的权限设置，如果不存在则增加，否则修改
 		DocAuth qDocAuth = new DocAuth();
 		if(authType == 2)
