@@ -10595,7 +10595,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected String docSysInit(boolean force) 
 	{	
-		Log.info("\n*************** docSysInit force:" + force + " *****************");
+		Log.info("*************** docSysInit force:" + force + " *****************");
 		Log.info("docSysInit() docSysIniPath:" + docSysIniPath);
 
 		if(officeEditorApi == null)
