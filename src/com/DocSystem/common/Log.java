@@ -4,10 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
+import java.util.Date;
 
 import com.alibaba.fastjson.JSON;
 
-import util.ReturnAjax;
+import util.DateFormat;
 
 public class Log {
 	//logLevel
@@ -105,13 +106,14 @@ public class Log {
 	public static void info(String content) {
 		if(isLogEnable(info, allowGeneral))
 		{
+			String timeStamp = DateFormat.dateTimeFormat(new Date());
 			if(logFile == null)
 			{
-				System.out.println(content);
+				System.out.println(timeStamp + " " + content);
 			}
 			else
 			{
-				toFile(content + "\n", logFile);
+				toFile(timeStamp + " " + content + "\n", logFile);
 			}
 		}
 	}
