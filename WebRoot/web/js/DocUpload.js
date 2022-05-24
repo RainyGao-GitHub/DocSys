@@ -35,7 +35,7 @@
         //文件上传线程计数器
  		var threadCount = 0;
  		//最大文件上传线程数(10个线程是普通电脑的极限，过大容易导致浏览器过度卡顿)
- 		var maxThreadCount = 10;
+ 		var maxThreadCount = null;
  		
  		//分片上传线程总数（所有文件的分片线程）
  		var totalChunkThreadCount = 0;
@@ -1144,12 +1144,60 @@
     		}
         }
     	
+    	function getMaxThreadCount()
+    	{
+    		if(maxThreadCount != null)
+    		{
+    			return maxThreadCount;
+    		}
+    		
+			$.ajax({
+	             url : "/DocSystem/Manage/getMaxThreadCount.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {},
+	             success : function (ret) {
+          			 maxThreadCount = 1; //只获取一次，无论成功失败
+	            	 if( "ok" == ret.status){
+	             		console.log("getMaxThreadCount() ret:", ret);
+             			if(ret.data)
+	             		{
+	             			maxThreadCount = ret.data;
+	             			if(maxThreadCount > 10)
+	             			{
+	             				maxThreadCount = 10;
+	             			}
+	             			else if(maxThreadCount < 1)
+	             			{
+	                 			maxThreadCount = 1;	             				
+	             			}
+	             		}
+	            		return;
+		            }
+	                else
+	                {
+	          			maxThreadCount = 1; //只获取一次，无论成功失败
+	                	console.log("获取maxThreadCount失败:" + ret.msgInfo);
+	            		return false;
+	                }
+	            },
+	            error : function () {
+         			maxThreadCount = 1; //只获取一次，无论成功失败
+	            	console.log("获取maxThreadCount失败：服务器异常");
+		            return false;
+	            }
+	        });
+
+	        return 1;
+    	}
+    	
       	//uploadNextDoc，如果后续有未上传文件则上传下一个文件 
 		function uploadNextDoc()
 		{
+			var tmpMaxThreadCount = getMaxThreadCount();
 			//检测当前运行中的上传线程
-        	console.log("uploadNextDoc threadCount:" + threadCount + " maxThreadCount:" + maxThreadCount);				
-			if(threadCount >= maxThreadCount)
+        	console.log("uploadNextDoc threadCount:" + threadCount + " tmpMaxThreadCount:" + tmpMaxThreadCount);				
+			if(threadCount >= tmpMaxThreadCount)
 			{
 	        	console.log("uploadNextDoc 上传线程池已满，等待上传线程结束");				
 				return;
