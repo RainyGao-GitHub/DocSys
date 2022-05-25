@@ -4330,6 +4330,7 @@
 				},
 				]
 			},
+			{divider: true},
 			{text: '推送', subMenu: [
 				{text: '至仓库',  action: function(e){
 						e.preventDefault();
@@ -4341,8 +4342,21 @@
 						showDocPushPanel(gRootDoc, 2);
 					}
 				},
+				{text: '至远程存储',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePushPanel(gRootDoc);
+					}
+				},
 				]
 			},
+			{text: '拉取', subMenu: [
+				{text: '从远程存储拉取',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePullPanel(gRootDoc);
+					}
+				},
+				]
+			},			
 			{divider: true},
 			{text: '下载', action: function(e){
 						e.preventDefault();
@@ -4365,10 +4379,10 @@
 					}
 			},
 			{divider: true},
-			{text: '刷新', action: function(e){
-						e.preventDefault();
-						refreshDoc(null, 0);
-					}
+			{text: '设置密码', action: function(e){
+					e.preventDefault();
+	        		showDocPwdSetPanel(gRootDoc);
+				}
 			},
 			{divider: true},
 			{text: '全选', action: function(e){
@@ -4390,20 +4404,6 @@
 		        			showDocHistory(gRootDoc, 1);
 		        			}
 						},
-			   			{divider: true},
-						{text: '远程存储', subMenu: [
-							{text: '推送',  action: function(e){
-									e.preventDefault();
-									showRemoteStoragePushPanel(gRootDoc);
-								}
-							},
-							{text: '拉取',  action: function(e){
-									e.preventDefault();
-									showRemoteStoragePullPanel(gRootDoc);
-								}
-							},
-							]
-						},
 						{divider: true},
 						{text: '锁定', action: function(e){
 								e.preventDefault();
@@ -4416,24 +4416,13 @@
 							}
 						},
 						{divider: true},
-						{text: '设置密码', action: function(e){
-								e.preventDefault();
-				        		showDocPwdSetPanel(gRootDoc);
-							}
+						{text: '刷新', action: function(e){
+									e.preventDefault();
+									refreshDoc(null, 0);
+								}
 						},
-						//{text: '强制锁定', action: function(e){
-						//		e.preventDefault();
-						//		lockDoc(gRootDoc, 2);
-						//	}
-						//},
-						//{divider: true},
-						//{text: '强制刷新', action: function(e){
-						//	e.preventDefault();
-						//	refreshDoc(null, 1);
-						//	}
-						//},
-				]
-   			},
+					]
+   				},
 			]
 		);
 		//zTree上的右键菜单
@@ -4468,6 +4457,7 @@
 				},
 				]
 			},
+			{divider: true},
 			{text: '推送', subMenu: [
 				{text: '至仓库',  action: function(e){
 						e.preventDefault();
@@ -4477,6 +4467,19 @@
 				{text: '至目录',  action: function(e){
 						e.preventDefault();
 						showDocPushPanel(curRightClickedTreeNode, 2);
+					}
+				},
+				{text: '至远程存储',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePushPanel(curRightClickedTreeNode);
+					}
+				},
+				]
+			},
+			{text: '拉取', subMenu: [
+				{text: '从远程存储拉取',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePullPanel(curRightClickedTreeNode);
 					}
 				},
 				]
@@ -4550,25 +4553,10 @@
 					}
 			},
 			{divider: true},
-			{text: '详细信息', action: function(e){
+			{text: '设置密码', action: function(e){
 					e.preventDefault();
-					if(curRightClickedTreeNode == null)
-					{
-						showErrorMessage("请选择需要文件或目录");
-						return false;
-					}
-					showDocDetail(curRightClickedTreeNode);
+	        		showDocPwdSetPanel(curRightClickedTreeNode);
 				}
-			},
-			{divider: true},
-			{text: '刷新', action: function(e){
-						e.preventDefault();
-						if(curRightClickedTreeNode !== null)
-						{
-							refreshDoc(curRightClickedTreeNode, 0);
-							curRightClickedTreeNode = null;
-		    			}
-					}
 			},
 			{divider: true},
 			{text: '全选', action: function(e){
@@ -4632,65 +4620,35 @@
 							}
 						},
 						{divider: true},
-						{text: '设置密码', action: function(e){
-								e.preventDefault();
-				        		showDocPwdSetPanel(curRightClickedTreeNode);
-							}
-						},
-			   			{divider: true},
-						{text: '远程存储', subMenu: [
-							{text: '推送',  action: function(e){
-									e.preventDefault();
-									showRemoteStoragePushPanel(curRightClickedTreeNode);
-								}
-							},
-							{text: '拉取',  action: function(e){
-									e.preventDefault();
-									showRemoteStoragePullPanel(curRightClickedTreeNode);
-								}
-							},
-							]
-						},
-						{divider: true},
 						{text: '下载备注', action: function(e){
 									e.preventDefault();
 									var treeNodes = getSelectedNodes();
 									downloadDoc(treeNodes,true,2);
 								}
 						},
-						//{text: '强制锁定', action: function(e){
-						//		e.preventDefault();
-						//		lockDoc(curRightClickedTreeNode, 2);
-						//	}
-						//},
-						//{divider: true},
-			           	//{text: '执行', action: function(e){
-			           	//运行需要进行远程登录后实现
-						//		e.preventDefault();
-			        	//		executeDoc(curRightClickedTreeNode);
-						//	}
-						//},
-						//{divider: true},
-						//{text: '本地打开', action: function(e){
-						//		e.preventDefault();
-						//		var localPath = getDocLocalPath(gReposInfo, curRightClickedTreeNode);
-						//		console.log("本地打开 localPath:" + localPath);
-						//		var href="file:///" + localPath;
-						//		window.location.href = href;
-						//	}
-						//},
-						//{divider: true},
-						//{text: '强制刷新', action: function(e){
-						//			e.preventDefault();
-						//			if(curRightClickedTreeNode !== null)
-						//			{
-						//				refreshDoc(curRightClickedTreeNode, 1);
-						//				curRightClickedTreeNode = null;
-					    //			}
-						//		}
-						//},
-   				]
+						{divider: true},
+						{text: '刷新', action: function(e){
+									e.preventDefault();
+									if(curRightClickedTreeNode !== null)
+									{
+										refreshDoc(curRightClickedTreeNode, 0);
+										curRightClickedTreeNode = null;
+					    			}
+								}
+						},
+   				  ]
    			},
+			{divider: true},
+			{text: '属性', action: function(e){
+					e.preventDefault();
+					if(curRightClickedTreeNode == null)
+					{
+						showErrorMessage("请选择需要文件或目录");
+						return false;
+					}
+					showDocDetail(curRightClickedTreeNode);
+				}
+			},
 		]);
 
 
@@ -4723,6 +4681,7 @@
 				},
 				]
 			},
+			{divider: true},
 			{text: '推送', subMenu: [
 				{text: '至仓库',  action: function(e){
 						e.preventDefault();
@@ -4734,6 +4693,22 @@
 						e.preventDefault();
 						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 						showDocPushPanel(parentNode, 2);
+					}
+				},
+				{text: '至远程存储',  action: function(e){
+						e.preventDefault();
+						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+						showRemoteStoragePushPanel(parentNode);
+					}
+				},
+				]
+			},
+			{text: '拉取', subMenu: [
+
+				{text: '从远程存储拉取',  action: function(e){
+						e.preventDefault();
+						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+						showRemoteStoragePullPanel(parentNode);
 					}
 				},
 				]
@@ -4753,11 +4728,11 @@
 					}
 			},
 			{divider: true},
-			{text: '刷新', action: function(e){
-						e.preventDefault();
-						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-						refreshDoc(parentNode, 0);
-					}
+			{text: '设置密码', action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+	        		showDocPwdSetPanel(parentNode);
+				}
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
@@ -4773,22 +4748,6 @@
 			        			showDocHistory(parentNode, 1);
 		        			}
 						},
-			   			{divider: true},
-						{text: '远程存储', subMenu: [
-							{text: '推送',  action: function(e){
-									e.preventDefault();
-									var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-									showRemoteStoragePushPanel(parentNode);
-								}
-							},
-							{text: '拉取',  action: function(e){
-									e.preventDefault();
-									var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-									showRemoteStoragePullPanel(parentNode);
-								}
-							},
-							]
-						},
 						{divider: true},
 						{text: '锁定', action: function(e){
 								e.preventDefault();
@@ -4803,27 +4762,14 @@
 							}
 						},
 						{divider: true},
-						{text: '设置密码', action: function(e){
-								e.preventDefault();
-								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-				        		showDocPwdSetPanel(parentNode);
-							}
+						{text: '刷新', action: function(e){
+									e.preventDefault();
+									var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+									refreshDoc(parentNode, 0);
+								}
 						},
-						//{text: '强制锁定', action: function(e){
-						//		e.preventDefault();
-						//		var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-						//		lockDoc(parentNode, 2);
-						//	}
-						//},
-						//{divider: true},
-						//{text: '强制刷新', action: function(e){
-						//		e.preventDefault();
-						//		var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-						//		refreshDoc(parentNode, 1);
-						//	}
-						//},
-				]
-   			},
+				  	]
+   				},
 			]
 		);
 		//secondList上的右键菜单
@@ -4854,6 +4800,7 @@
 						downloadDoc(treeNodes,true,1);
 					}
 				},
+				{divider: true},
 				{text: '推送', subMenu: [
 					{text: '至仓库',  action: function(e){
 							e.preventDefault();
@@ -4865,8 +4812,23 @@
 							showDocPushPanel(curRightClickedDocListNode, 2);
 						}
 					},
+					{text: '至远程存储',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePushPanel(curRightClickedDocListNode);
+						}
+					},
 					]
 				},
+				{text: '拉取', subMenu: [
+
+					{text: '从远程存储拉取',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePullPanel(curRightClickedDocListNode);
+						}
+					},
+					]
+				},	
+				{divider: true},
 				{text: '分享', action: function(e){
 							e.preventDefault();
 							shareDoc(curRightClickedDocListNode);
@@ -4910,7 +4872,7 @@
 							var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 							DoPaste(gCopiedNodes, parentNode, gIsCopy);
 						}
-				},
+				},							
 				{divider: true},
 				{text: '删除', action: function(e){
 							e.preventDefault();
@@ -4921,9 +4883,9 @@
 						}
 				},
 				{divider: true},
-				{text: '详细信息', action: function(e){
+				{text: '设置密码', action: function(e){
 						e.preventDefault();
-						showDocDetail(curRightClickedDocListNode);
+		        		showDocPwdSetPanel(curRightClickedDocListNode);
 					}
 				},
 				{divider: true},
@@ -4936,20 +4898,12 @@
 						e.preventDefault();
 					    showDocHistory(curRightClickedDocListNode,1);
 					}
-				},
+				},					
 				{divider: true},
-				{text: '远程存储', subMenu: [
-					{text: '推送',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePushPanel(curRightClickedDocListNode);
-						}
-					},
-					{text: '拉取',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePullPanel(curRightClickedDocListNode);
-						}
-					},
-					]
+				{text: '属性', action: function(e){
+						e.preventDefault();
+						showDocDetail(curRightClickedDocListNode);
+					}
 				},
 			]);
 		}
@@ -4988,6 +4942,7 @@
 					},
 					]
 				},
+				{divider: true},
 				{text: '推送', subMenu: [
 					{text: '至仓库',  action: function(e){
 							e.preventDefault();
@@ -4997,6 +4952,20 @@
 					{text: '至目录',  action: function(e){
 							e.preventDefault();
 							showDocPushPanel(curRightClickedDocListNode, 2);
+						}
+					},
+					{text: '至远程存储',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePushPanel(curRightClickedDocListNode);
+						}
+					},
+					]
+				},
+				{text: '拉取', subMenu: [
+
+					{text: '从远程存储拉取',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePullPanel(curRightClickedDocListNode);
 						}
 					},
 					]
@@ -5080,20 +5049,10 @@
 						}
 				},
 				{divider: true},
-				{text: '详细信息', action: function(e){
+				{text: '设置密码', action: function(e){
 						e.preventDefault();
-						showDocDetail(curRightClickedDocListNode);
+		        		showDocPwdSetPanel(curRightClickedDocListNode);
 					}
-				},
-				{divider: true},
-				{text: '刷新', action: function(e){
-							e.preventDefault();
-							if(curRightClickedDocListNode !== null)
-							{
-								refreshDoc(curRightClickedDocListNode, 0);
-								curRightClickedDocListNode = null;
-			    			}
-						}
 				},
 				{divider: true},
 				{text: '更多...', subMenu: [
@@ -5151,26 +5110,6 @@
 								}
 							},
 							{divider: true},
-							{text: '设置密码', action: function(e){
-									e.preventDefault();
-					        		showDocPwdSetPanel(curRightClickedDocListNode);
-								}
-							},
-							{divider: true},
-							{text: '远程存储', subMenu: [
-								{text: '推送',  action: function(e){
-										e.preventDefault();
-										showRemoteStoragePushPanel(curRightClickedDocListNode);
-									}
-								},
-								{text: '拉取',  action: function(e){
-										e.preventDefault();
-										showRemoteStoragePullPanel(curRightClickedDocListNode);
-									}
-								},
-								]
-							},
-							{divider: true},
 							{text: '下载备注', action: function(e){
 									e.preventDefault();
 									var treeNodes = [];
@@ -5178,39 +5117,24 @@
 									downloadDoc(treeNodes,true,2);
 								}
 							},
-							//{text: '强制锁定', action: function(e){
-							//		e.preventDefault();
-							//		lockDoc(curRightClickedDocListNode, 2);
-							//	}
-							//},
-							//{divider: true},
-				           	//{text: '运行', action: function(e){
-				           	//运行需要进行远程登录后实现
-							//		e.preventDefault();
-				        	//		executeDoc(curRightClickedDocListNode);
-							//	}
-							//},
-							//{divider: true},
-							//{text: '本地打开', action: function(e){
-							//		e.preventDefault();
-							//		var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
-							//		console.log("本地打开 localPath:" + localPath);
-							//		var href="file:///" + localPath;
-							//		window.location.href = href;
-							//	}
-							//},
-							//{divider: true},
-							//{text: '强制刷新', action: function(e){
-							//			e.preventDefault();
-							//			if(curRightClickedDocListNode !== null)
-							//			{
-							//				refreshDoc(curRightClickedDocListNode, 1);
-							//				curRightClickedDocListNode = null;
-						    //			}
-							//		}
-							//},
+							{divider: true},
+							{text: '刷新', action: function(e){
+										e.preventDefault();
+										if(curRightClickedDocListNode !== null)
+										{
+											refreshDoc(curRightClickedDocListNode, 0);
+											curRightClickedDocListNode = null;
+						    			}
+									}
+							},
 	   				]
 	   			},
+				{divider: true},
+				{text: '属性', action: function(e){
+						e.preventDefault();
+						showDocDetail(curRightClickedDocListNode);
+					}
+				},
 			]);
 		}
 
@@ -5242,6 +5166,7 @@
 						downloadDoc(treeNodes,true,1);
 					}
 				},
+				{divider: true},
 				{text: '推送', subMenu: [
 					{text: '至仓库',  action: function(e){
 							e.preventDefault();
@@ -5253,8 +5178,22 @@
 							showDocPushPanel(gDocInfo, 2);
 						}
 					},
+					{text: '至远程存储',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePushPanel(gDocInfo);
+						}
+					},
 					]
 				},
+				{text: '拉取', subMenu: [
+					{text: '从远程存储拉取',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePullPanel(gDocInfo);
+						}
+					},
+					]
+				},
+				{divider: true},
 				{text: '分享', action: function(e){
 							e.preventDefault();
 							shareDoc(gDocInfo);
@@ -5270,9 +5209,9 @@
 						}
 				},
 				{divider: true},
-				{text: '详细信息', action: function(e){
+				{text: '设置密码', action: function(e){
 						e.preventDefault();
-						showDocDetail(gDocInfo);
+		        		showDocPwdSetPanel(gDocInfo);
 					}
 				},
 				{divider: true},
@@ -5287,18 +5226,10 @@
 					}
 				},
 				{divider: true},
-				{text: '远程存储', subMenu: [
-					{text: '推送',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePushPanel(gDocInfo);
-						}
-					},
-					{text: '拉取',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePullPanel(gDocInfo);
-						}
-					},
-					]
+				{text: '属性', action: function(e){
+						e.preventDefault();
+						showDocDetail(gDocInfo);
+					}
 				},
 			]);
 		}
