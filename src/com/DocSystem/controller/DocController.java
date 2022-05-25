@@ -3769,6 +3769,9 @@ public class DocController extends BaseController{
 			return;
 		}
 		doc.setType(dbDoc.getType());
+		doc.setSize(dbDoc.getSize());
+		doc.setCreateTime(dbDoc.getCreateTime());
+		doc.setLatestEditTime(dbDoc.getLatestEditTime());
 			
 		//图片、视频、音频文件需要返回文件的访问信息，如果是文本文件或Office文件需要根据前端需求返回docText
 		if(doc.getType() == 1)
