@@ -9462,7 +9462,12 @@ public class BaseController  extends BaseFunction{
     		return null;			
     	}	
         
-        doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, rt);
+        if(doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, rt) == false)
+        {
+        	Log.debug("remoteServerDocCommit() 文件推送失败！");
+    		rt.setError("文件推送失败！");
+        	return null;
+        }
         doRemoteStorageLogout(session);            
 		
         DocPushResult pushResult = (DocPushResult) rt.getDataEx();
