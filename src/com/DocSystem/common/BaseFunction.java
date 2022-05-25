@@ -2871,7 +2871,7 @@ public class BaseFunction{
 		{
 			rt.setWarningMsg(logStr);
 		}
-		Log.warn(logStr);
+		Log.info(logStr);
 	}
 	
 	public static void docSysErrorLog(String logStr, ReturnAjax rt) {
@@ -2879,6 +2879,6 @@ public class BaseFunction{
 		{
 			rt.setError(logStr);
 		}
-		Log.error(logStr, defaultLogFilePath);
+		Log.info(logStr, defaultLogFilePath);
 	}
 }
