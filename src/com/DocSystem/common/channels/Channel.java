@@ -20,9 +20,9 @@ public interface Channel {
 	void initBussinessChannel();	
     
 	//accessUser is for lockDoc
-	void remoteStoragePull(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, boolean force, ReturnAjax rt);
+	boolean remoteStoragePull(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, boolean force, ReturnAjax rt);
 
-	void remoteStoragePush(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean pushLocalChangeOnly, ReturnAjax rt);
+	boolean remoteStoragePush(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean pushLocalChangeOnly, ReturnAjax rt);
 	
 	//AutoBackUp
 	void reposBackUp(BackupConfig backupConfig, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
