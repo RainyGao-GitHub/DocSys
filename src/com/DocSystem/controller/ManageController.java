@@ -763,6 +763,7 @@ public class ManageController extends BaseController{
 		String javaHome = getJavaHome();
 		String officeEditorApi = Path.getOfficeEditorApi();
 		String ldapConfig = getLdapConfig();
+		Integer maxThreadCount = getMaxThreadCount();
 
 		JSONObject config = getSystemInfo();
 		config.put("docSysType", docSysType);
@@ -774,6 +775,7 @@ public class ManageController extends BaseController{
 		config.put("ldapConfig", ldapConfig);
 		config.put("logLevel", Log.logLevel);
 		config.put("logFile", Log.logFileConfig);
+		config.put("maxThreadCount", maxThreadCount);		
 		
 		if(docSysType < 1)
 		{
@@ -835,6 +837,7 @@ public class ManageController extends BaseController{
 			String ldapConfig,
 			Integer logLevel,
 			String logFile,
+			Integer maxThreadCount,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("****************** setSystemInfo.do ***********************");
@@ -845,6 +848,7 @@ public class ManageController extends BaseController{
 				+ " systemLogStorePath:" + systemLogStorePath 
 				+ " indexDBStorePath:" + indexDBStorePath 
 				+ " salesDataStorePath:" + salesDataStorePath 
+				+ " maxThreadCount:" + maxThreadCount 
 				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel + " logFile:" + logFile);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -948,6 +952,11 @@ public class ManageController extends BaseController{
 				return;
 			}
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
+		}
+		
+		if(maxThreadCount != null)
+		{			
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "maxThreadCount", maxThreadCount+"");
 		}
 		
 		if(logLevel != null)

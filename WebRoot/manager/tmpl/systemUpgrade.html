@@ -126,6 +126,23 @@
 	                  </tr>
 	                  {{/if}}
 	                  <tr>
+	                    <td>最大上传线程数</td>
+	                    <td>
+			            	<select class="form-control" id="maxThreadCount" style="width: 100%" disabled="disabled">   
+			            		<option value="1" {{if value.maxThreadCount == 1}} selected="selected" {{/if}}>1</option>
+			            		<option value="2" {{if value.maxThreadCount == 2}} selected="selected" {{/if}}>2</option>   
+			            		<option value="3" {{if value.maxThreadCount == 3}} selected="selected" {{/if}}>3</option>   
+			            		<option value="4" {{if value.maxThreadCount == 4}} selected="selected" {{/if}}>4</option> 
+			            		<option value="5" {{if value.maxThreadCount == 5}} selected="selected" {{/if}}>5</option> 
+			            		<option value="6" {{if value.maxThreadCount == 6}} selected="selected" {{/if}}>6</option> 
+			            		<option value="7" {{if value.maxThreadCount == 7}} selected="selected" {{/if}}>7</option> 
+			            		<option value="8" {{if value.maxThreadCount == 8}} selected="selected" {{/if}}>8</option> 
+			            		<option value="9" {{if value.maxThreadCount == 9}} selected="selected" {{/if}}>9</option> 
+			            		<option value="10" {{if value.maxThreadCount == 10}} selected="selected" {{/if}}>10</option> 
+			            	</select>
+			            </td>
+	                  </tr>
+	                  <tr>
 	                    <td>调试日志</td>
 	                    <td>
 			            	<select class="form-control" id="logLevel" style="width: 100%" disabled="disabled">   
