@@ -10321,15 +10321,23 @@ public class BaseController  extends BaseFunction{
 			Log.debug("addIndexForRDoc() isDirectory");
 			return false; //LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
 		}
-		
+				
 		if(file.length() == 0)
 		{
 			Log.debug("addIndexForRDoc() fileSize is 0, do delete index");
 			return LuceneUtil2.deleteIndex(doc,indexLib);
 		}
 		
+		//缓存文件不对内容索引
+		String fileName = doc.getName();
+		if(fileName.startsWith("~") == true) //~开头的文件是缓存文件
+		{
+			Log.debug("addIndexForRDoc() " + fileName + " 是缓存文件，不做索引");
+			return false;
+		}
+		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
-		String fileSuffix = FileUtil.getFileSuffix(doc.getName());
+		String fileSuffix = FileUtil.getFileSuffix(fileName);
 		if(fileSuffix == null)
 		{
 			Log.debug("addIndexForRDoc() 未知文件类型不支持索引");
