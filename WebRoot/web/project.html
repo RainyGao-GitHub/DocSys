@@ -4159,24 +4159,39 @@
 	function treeBodyZoneInit()
 	{
 		console.log("treeBodyZoneInit()");
-      	//拖拽上传:目录树区域
     	var treeBodyZone = document.getElementById("treeBody");
-    	treeBodyZone.onclick = function(e){
-    		console.log("treeBodyZone.onclick() e.target.tagName:", e.target.tagName);
+		
+    	//注意：onclick的初衷是为了实现点击空白区域来取消文件的选中，但该事件也会被文件拖放事件触发，因此使用rootDocSelected标记来进行判断
+		var rootDocSelected = null;
+		treeBodyZone.onclick = function(e){
             e.preventDefault();
-            //判断现在所在的zTree Node
+            
+    		console.log("treeBodyZone.onclick() e.target.tagName:", e.target.tagName);
+            //判断是否在zTree上
             if(e.target.tagName != "SPAN" && e.target.tagName != "A")
             {
-            	var treeObj = $.fn.zTree.getZTreeObj("doctree");
-            	treeObj.cancelSelectedNode();
-				showDocList(gRootDoc);
-				getAndShowDoc(gRootDoc, 1, false);
+            	if(rootDocSelected == null || rootDocSelected == false)
+            	{
+            		rootDocSelected = true;
+            		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+            		treeObj.cancelSelectedNode();
+					showDocList(gRootDoc);
+					getAndShowDoc(gRootDoc, 1, false);
+            	}
             }
+            else
+            {
+            	if(rootDocSelected == true)
+            	{
+            		rootDocSelected = false;
+            	}
+            }            
         };
 	}
 
 	function dragDropUploadZoneInit()
 	{
+		var selectedTarget = null;
       	//拖拽上传:目录树区域
     	var uuz = document.getElementById("uuz");
     	uuz.ondragenter = function(e){
@@ -4186,7 +4201,12 @@
             e.preventDefault();
             //判断现在所在的zTree Node并选中它
             if(e.target.tagName=="SPAN"){
-            	e.target.parentNode.click();
+            	if(selectedTarget == null || selectedTarget != e.target)
+            	{
+            		console.log("uuz.ondragover() target:",e.target);
+            		selectedTarget = e.target;
+            		e.target.parentNode.click();
+            	}
             }
         };
         uuz.ondrop = function(e){
