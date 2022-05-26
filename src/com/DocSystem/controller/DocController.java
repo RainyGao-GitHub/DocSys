@@ -1706,6 +1706,18 @@ public class DocController extends BaseController{
 		
 	}
 	
+	@RequestMapping("/getMaxThreadCount.do")
+	public void getMaxThreadCount(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** getMaxThreadCount.do ***********************");
+
+		Log.debug("getMaxThreadCount()");
+		ReturnAjax rt = new ReturnAjax();
+		Integer maxThreadCount = getMaxThreadCount();
+		rt.setData(maxThreadCount);
+		writeJson(rt, response);
+	}
+	
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
