@@ -1152,7 +1152,7 @@
     		}
     		
 			$.ajax({
-	             url : "/DocSystem/Manage/getMaxThreadCount.do",
+	             url : "/DocSystem/Doc/getMaxThreadCount.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {},

@@ -1837,6 +1837,32 @@ public class BaseFunction{
 
 		return null;
 	}
+
+	protected Integer getMaxThreadCount() {
+    	String maxThreadCountStr = null;
+    	maxThreadCountStr = ReadProperties.read("docSysConfig.properties", "maxThreadCount");
+        Log.debug("getMaxThreadCount() maxThreadCountStr:" + maxThreadCountStr);
+    	if(maxThreadCountStr == null || maxThreadCountStr.isEmpty())
+        {
+        	return 1;
+        }
+        
+        Integer maxThreadCount = null;
+        try {
+        	maxThreadCount = Integer.parseInt(maxThreadCountStr);
+        } catch (Exception e) {
+        	errorLog("getMaxThreadCount() 异常");
+        	errorLog(e);
+        }
+        
+        Log.debug("getMaxThreadCount() maxThreadCount:" + maxThreadCount);    	
+        if(maxThreadCount == null)
+        {
+        	maxThreadCount = 1;
+        }
+		return maxThreadCount;
+	}
+	
 	
 	//获取OpenOffice的安装路径
     public String getOpenOfficePath() {
