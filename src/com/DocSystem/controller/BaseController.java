@@ -1943,29 +1943,30 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//迁移版本仓库目录
-				String oldVerReposPath = oldPath + "/DocSysVerReposes/" + reposName + "_GIT_RRepos";
-				String newVerReposPath = path + "/DocSysVerReposes/" + reposName + "_GIT_RRepos";				
+				FileUtil.createDir(path + "DocSysVerReposes");
+				String oldVerReposPath = oldPath + "DocSysVerReposes/" + reposName + "_GIT_RRepos";
+				String newVerReposPath = path + "DocSysVerReposes/" + reposName + "_GIT_RRepos";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);
 					rt.setDebugLog("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);					
 				}
-				oldVerReposPath = oldPath + "/DocSysVerReposes/" + reposName + "_GIT_VRepos";
-				newVerReposPath = path + "/DocSysVerReposes/" + reposName + "_GIT_VRepos";				
+				oldVerReposPath = oldPath + "DocSysVerReposes/" + reposName + "_GIT_VRepos";
+				newVerReposPath = path + "DocSysVerReposes/" + reposName + "_GIT_VRepos";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);
 					rt.setDebugLog("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);					
 				}
-				oldVerReposPath = oldPath + "/DocSysVerReposes/" + reposName + "_SVN_RRepos";
-				newVerReposPath = path + "/DocSysVerReposes/" + reposName + "_SVN_RRepos";				
+				oldVerReposPath = oldPath + "DocSysVerReposes/" + reposName + "_SVN_RRepos";
+				newVerReposPath = path + "DocSysVerReposes/" + reposName + "_SVN_RRepos";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);
 					rt.setDebugLog("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);					
 				}
-				oldVerReposPath = oldPath + "/DocSysVerReposes/" + reposName + "_SVN_VRepos";
-				newVerReposPath = path + "/DocSysVerReposes/" + reposName + "_SVN_VRepos";				
+				oldVerReposPath = oldPath + "DocSysVerReposes/" + reposName + "_SVN_VRepos";
+				newVerReposPath = path + "DocSysVerReposes/" + reposName + "_SVN_VRepos";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);
@@ -1973,8 +1974,8 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//迁移远程存储GIT目录
-				oldVerReposPath = oldPath + "/DocSysVerReposes/" + reposName + "_GIT_RemoteStorage";
-				newVerReposPath = path + "/DocSysVerReposes/" + reposName + "_GIT_RemoteStorage";				
+				oldVerReposPath = oldPath + "DocSysVerReposes/" + reposName + "_GIT_RemoteStorage";
+				newVerReposPath = path + "DocSysVerReposes/" + reposName + "_GIT_RemoteStorage";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);
@@ -1982,8 +1983,8 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//迁移远程备份GIT目录
-				oldVerReposPath = oldPath + "/DocSysVerReposes/" + reposName + "_GIT_RemoteBackup";
-				newVerReposPath = path + "/DocSysVerReposes/" + reposName + "_GIT_RemoteBackup";				
+				oldVerReposPath = oldPath + "DocSysVerReposes/" + reposName + "_GIT_RemoteBackup";
+				newVerReposPath = path + "DocSysVerReposes/" + reposName + "_GIT_RemoteBackup";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库版本目录迁移失败: oldVerReposPath:" + oldVerReposPath + " newVerReposPath:" + newVerReposPath);
@@ -1991,22 +1992,23 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//迁移索引仓库
-				String oldIndexLibPath = oldPath + "/DocSysLucene/" + "repos_" + reposName + "_DocName";
-				String newIndexLibPath = path + "/DocSysLucene/"  + "repos_" + reposName + "_DocName";				
+				FileUtil.createDir(path + "DocSysLucene");
+				String oldIndexLibPath = oldPath + "DocSysLucene/" + "repos_" + reposName + "_DocName";
+				String newIndexLibPath = path + "DocSysLucene/"  + "repos_" + reposName + "_DocName";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库索引目录迁移失败: oldIndexLibPath:" + oldIndexLibPath + " newIndexLibPath:" + newIndexLibPath);
 					rt.setDebugLog("仓库索引目录迁移失败: oldIndexLibPath:" + oldIndexLibPath + " newIndexLibPath:" + newIndexLibPath);					
 				}
-				oldIndexLibPath = oldPath + "/DocSysLucene/" + "repos_" + reposName + "_RDoc";
-				newIndexLibPath = path + "/DocSysLucene/"  + "repos_" + reposName + "_RDoc";				
+				oldIndexLibPath = oldPath + "DocSysLucene/" + "repos_" + reposName + "_RDoc";
+				newIndexLibPath = path + "DocSysLucene/"  + "repos_" + reposName + "_RDoc";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库索引目录迁移失败: oldIndexLibPath:" + oldIndexLibPath + " newIndexLibPath:" + newIndexLibPath);
 					rt.setDebugLog("仓库索引目录迁移失败: oldIndexLibPath:" + oldIndexLibPath + " newIndexLibPath:" + newIndexLibPath);					
 				}
-				oldIndexLibPath = oldPath + "/DocSysLucene/" + "repos_" + reposName + "_VDoc";
-				newIndexLibPath = path + "/DocSysLucene/"  + "repos_" + reposName + "_VDoc";				
+				oldIndexLibPath = oldPath + "DocSysLucene/" + "repos_" + reposName + "_VDoc";
+				newIndexLibPath = path + "DocSysLucene/"  + "repos_" + reposName + "_VDoc";				
 				if(FileUtil.copyFileOrDir(oldVerReposPath, newVerReposPath, false) == false)
 				{
 					Log.info("仓库索引目录迁移失败: oldIndexLibPath:" + oldIndexLibPath + " newIndexLibPath:" + newIndexLibPath);
