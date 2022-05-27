@@ -4166,13 +4166,14 @@
 		treeBodyZone.onclick = function(e){
             e.preventDefault();
             
-    		console.log("treeBodyZone.onclick() e.target.tagName:", e.target.tagName);
+    		//console.log("treeBodyZone.onclick() e.target.tagName:", e.target.tagName);
             //判断是否在zTree上
             if(e.target.tagName != "SPAN" && e.target.tagName != "A")
             {
             	if(rootDocSelected == null || rootDocSelected == false)
             	{
-            		rootDocSelected = true;
+            		console.log("treeBodyZone.onclick() gRootDoc selected");
+                    rootDocSelected = true;
             		var treeObj = $.fn.zTree.getZTreeObj("doctree");
             		treeObj.cancelSelectedNode();
 					showDocList(gRootDoc);
@@ -4183,6 +4184,7 @@
             {
             	if(rootDocSelected == true)
             	{
+            		console.log("treeBodyZone.onclick() gRootDoc unselected");
             		rootDocSelected = false;
             	}
             }            
@@ -4203,7 +4205,7 @@
             if(e.target.tagName=="SPAN"){
             	if(selectedTarget == null || selectedTarget != e.target)
             	{
-            		console.log("uuz.ondragover() target:",e.target);
+            		console.log("uuz.ondragover() trigger zTree node click");
             		selectedTarget = e.target;
             		e.target.parentNode.click();
             	}
@@ -4214,8 +4216,9 @@
         	e.preventDefault();
 
         	//If File drop on the zTree Item, trigger the click event on it
-    	  	console.log("uuz.ondrop() e.target:",e.target);
+    	  	//console.log("uuz.ondrop() e.target:",e.target);
             if(e.target.tagName=="SPAN"){
+            	console.log("uuz.ondrop() trigger zTree node click");
             	e.target.parentNode.click();
             }
 
