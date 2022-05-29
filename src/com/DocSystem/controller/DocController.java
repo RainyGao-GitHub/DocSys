@@ -2392,7 +2392,7 @@ public class DocController extends BaseController{
 
 			if(ret)
 			{
-				deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
+				deleteTmpRealDocContent(repos, doc, reposAccess.getAccessUser());
 				executeCommonActionList(actionList, rt);
 			}			
 		}
