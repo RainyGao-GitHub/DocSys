@@ -137,13 +137,14 @@ public class Log {
 	public static void warn(String content) {
 		if(isLogEnable(warn, allowAll))
 		{
+			String timeStamp = DateFormat.dateTimeFormat(new Date());
 			if(logFile == null)
 			{
-				System.out.println("[warn] " + content);
+				System.out.println(timeStamp + " [warn] " + content);
 			}
 			else
 			{
-				toFile("[warn] " + content  + "\n", logFile);
+				toFile(timeStamp + " [warn] " + content  + "\n", logFile);
 			}
 		}
 	}
@@ -167,13 +168,14 @@ public class Log {
 	public static void error(String content) {
 		if(isLogEnable(error, allowAll))
 		{
+			String timeStamp = DateFormat.dateTimeFormat(new Date());
 			if(logFile == null)
 			{
-				System.out.println("[error] " +content);
+				System.out.println(timeStamp + " [error] " +content);
 			}
 			else
 			{
-				toFile("[error] " + content  + "\n", logFile);
+				toFile(timeStamp + " [error] " + content  + "\n", logFile);
 			}
 		}
 	}
@@ -197,7 +199,8 @@ public class Log {
 	public static void error(String content, String defaultLogFile) {
 		if(isLogEnable(error, allowAll))
 		{
-			System.out.println("[error] " +content);
+			String timeStamp = DateFormat.dateTimeFormat(new Date());
+			System.out.println(timeStamp + " [error] " +content);
 			
 			String logFilePath = logFile;
 			if(logFilePath == null)
@@ -207,7 +210,7 @@ public class Log {
 			
 			if(logFilePath != null)
 			{
-				toFile("[error] " + content  + "\n", logFilePath);
+				toFile(timeStamp + " [error] " + content  + "\n", logFilePath);
 			}
 		}
 	}
