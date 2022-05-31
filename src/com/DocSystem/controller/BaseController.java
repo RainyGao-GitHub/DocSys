@@ -6910,7 +6910,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
 				{
-					Log.debug("updateRealDocContent_FSM() remoteServerDocCommit Failed");
+					Log.info("updateRealDocContent_FSM() remoteServerDocCommit Failed");
 					rt.setError("远程推送失败");
 					return false;
 				}
@@ -9459,14 +9459,15 @@ public class BaseController  extends BaseFunction{
         
         if(session == null)
         {
-        	Log.debug("remoteServerDocCommit() 文件服务器登录失败！");
+        	Log.info("remoteServerDocCommit() 文件服务器登录失败！");
     		rt.setError("文件服务器登录失败！");
     		return null;			
     	}	
         
         if(doPushToRemoteStorage(session, remote, repos, doc, accessUser, commitMsg, subDocCommitFlag == 2, modifyEnable, false, rt) == false)
         {
-        	Log.debug("remoteServerDocCommit() 文件推送失败！");
+            doRemoteStorageLogout(session);            
+        	Log.info("remoteServerDocCommit() 文件推送失败！");
     		rt.setError("文件推送失败！");
         	return null;
         }
@@ -9475,7 +9476,7 @@ public class BaseController  extends BaseFunction{
         DocPushResult pushResult = (DocPushResult) rt.getDataEx();
         if(pushResult == null || pushResult.revision == null)
         {
-        	Log.debug("remoteServerDocCommit() 文件推送失败！");
+        	Log.info("remoteServerDocCommit() pushResult or pushResult.revision is null");
     		rt.setError("文件远程推送失败！");
     		return null;			        	
         }
@@ -16105,7 +16106,7 @@ public class BaseController  extends BaseFunction{
 					doPushSubEntriesToRemoteStorage(session, remote, repos, localDoc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);						
 				}
 			}
-			return true;
+			return ret;
 		}
 		
 		//远程改动（只有强制推送时才推送）
