@@ -204,11 +204,21 @@
 									time : 1000,
 						});
 					}else {
-	                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
+	                    //bootstrapQ.alert("保存失败:"+ret.msgInfo);
+	                    bootstrapQ.msg({
+	    					msg : "保存失败 : " + ret.msgInfo,
+	    					type : 'warning',
+	    					time : 1000,
+	            		});
 	                }
 	            },
 	            error : function () {
-	                bootstrapQ.alert("保存失败:服务器异常");
+	                //bootstrapQ.alert("保存失败:服务器异常");
+	                bootstrapQ.msg({
+	    				msg : "保存失败: 服务器异常",
+	    				type : 'warning',
+	    				time : 1000,
+	        		});
 	            }
 	        });
 	    }

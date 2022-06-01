@@ -3397,7 +3397,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlockDoc(doc, lockType, login_user);
 				Log.debug("addDoc_FSM() remoteServerDocCommit Failed");
-				rt.setError("远程推送失败");
+				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 				return false;
 			}
 		}
@@ -3511,7 +3511,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlockDoc(doc, lockType, login_user);
 				docSysWarningLog("addDocEx_FSM remoteServerDocCommit Failed", rt);
-				rt.setError("远程推送失败");
+				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 				return false;
 			}			
 		}
@@ -3705,7 +3705,7 @@ public class BaseController  extends BaseFunction{
 			if(revision == null)
 			{
 				Log.debug("deleteDoc_FSM() remoteServerDocCommit Failed");
-				rt.setError("远程推送失败");
+				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 			}
 		}
 		
@@ -6537,7 +6537,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlockDoc(doc, lockType, login_user);
 				Log.info("updateDoc_FSM() remoteServerDocCommit Failed");
-				rt.setError("远程推送失败");
+				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 				return false;
 			}
 		}
@@ -6626,7 +6626,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlockDoc(doc, lockType, login_user);
 				Log.info("updateDocEx_FSM() remoteServerDocCommit Failed");
-				rt.setError("远程推送失败");
+				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 				return false;
 			}
 		}
@@ -6911,7 +6911,7 @@ public class BaseController  extends BaseFunction{
 				if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
 				{
 					Log.info("updateRealDocContent_FSM() remoteServerDocCommit Failed");
-					rt.setError("远程推送失败");
+					//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 					return false;
 				}
 			}
