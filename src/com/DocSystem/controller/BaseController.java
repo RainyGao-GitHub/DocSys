@@ -2622,6 +2622,19 @@ public class BaseController  extends BaseFunction{
 		return uList.get(0);
 	}
 	
+	
+    //ldapLoginCheck是分两步进行的
+	//第一步：建立连接获取ctx：getLDAPConnection
+	//1. userName为空，使用basedn作为SECURITY_PRINCIPAL，不使用密码（通常用于查询根目录的条目，目前并没有使用）
+	//2. userName非空
+	//2.1 userAccount非空表示使用userAccount作为SECURITY_PRINCIPAL（这种主要针对使用指定账号查询的情况）
+	//2.2 userAccount为空则表示loginMode=userName+basedn作为SECURITY_PRINCIPAL（每个账号都需要输入自己的密码）
+	//2.3 authMode=0表示不需要密码，authMode=1表示使用明文密码，authMode=2表示使用MD5加密的密码
+	//第二步：根据loginMode=userName+filter作为过滤条件在ctx中进行查找对应的条目 
+	//参考资料：
+	//1. JAVA中使用LDAP登录的三种方式: https://www.cnblogs.com/huanghongbo/p/12053272.html
+	//2. LDAP常见错误码：https://blog.csdn.net/xiaoreqing/article/details/48026167
+	//3. LDAP数据结构图 https://blog.csdn.net/chenyongtu110/article/details/52214707?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-52214707-blog-115688158.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-52214707-blog-115688158.pc_relevant_default&utm_relevant_index=1
 	public User ldapLoginCheck(String userName, String pwd)
 	{
 		LdapContext ctx = getLDAPConnection(userName, pwd);
