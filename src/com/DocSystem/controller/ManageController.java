@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.naming.ldap.LdapContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -34,7 +35,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
+import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.controller.BaseController;
 
@@ -996,6 +999,74 @@ public class ManageController extends BaseController{
 		{
 			applySystemLdapConfig(ldapConfig);			
 		}
+	}
+	
+	@RequestMapping("/ldapTest.do")
+	public void testLDAP(String ldapConfig, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** ldapTest.do ***********************");
+
+		Log.debug("ldapTest() ldapConfig:" + ldapConfig);
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		LDAPConfig config = convertLdapConfig(ldapConfig);
+		if(config == null)
+		{
+			rt.setError("LDAP设置错误！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		LdapContext ctx = getLDAPConnection("test", "test", config);
+		if(ctx == null)
+		{
+			Log.debug("ldapTest() getLDAPConnection 失败"); 
+			rt.setError("getLDAPConnection失败");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
+	
+	protected LDAPConfig convertLdapConfig(String ldapConfig) {
+		if(ldapConfig == null || ldapConfig.isEmpty())
+		{
+			Log.debug("convertLdapConfig() ldapConfig is empty");
+			return null;
+		}
+		
+		LDAPConfig config = new LDAPConfig();
+		String [] configs = ldapConfig.split(";");
+		config.settings = getLDAPSettings(configs);		
+
+		//获取url和basedn
+		String ldapConfigUrl = configs[0].trim();
+		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
+		if(urlInfo == null)
+		{
+			Log.debug("convertLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
+			return null;
+		}
+		
+		config.url = urlInfo.prefix + urlInfo.params[0] + "/";
+		config.basedn = "";
+		if(urlInfo.params.length > 1)
+		{
+			config.basedn = urlInfo.params[1];	//0保存的是host+port			
+		}
+		
+		config.authMode = getLdapAuthMode(systemLdapConfig.settings);
+		config.loginMode = getLdapLoginMode(systemLdapConfig.settings);	
+		config.userAccount = getLdapUserAccount(systemLdapConfig.settings);				
+		config.userPassword = getLdapUserPassword(systemLdapConfig.settings);				
+		config.filter = getLdapBaseFilter(systemLdapConfig.settings);
+		return config;
 	}
 
 	@RequestMapping("/upgradeSystem.do")

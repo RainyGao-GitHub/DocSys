@@ -197,7 +197,7 @@ public class BaseFunction{
 	}
 
 
-	private static Integer getLdapAuthMode(JSONObject ldapSettings) {
+	protected static Integer getLdapAuthMode(JSONObject ldapSettings) {
 		if(ldapSettings == null)
 		{
 			return 0;	//默认不进行密码验证
@@ -226,7 +226,7 @@ public class BaseFunction{
 		return 1;
 	}
 	
-	private static String getLdapLoginMode(JSONObject ldapSettings) {
+	protected static String getLdapLoginMode(JSONObject ldapSettings) {
 		if(ldapSettings == null)
 		{
 			return "uid";	//默认使用uid
@@ -241,7 +241,7 @@ public class BaseFunction{
 		return loginMode;
 	}
 	
-	private static String getLdapUserAccount(JSONObject ldapSettings) {
+	protected static String getLdapUserAccount(JSONObject ldapSettings) {
 		if(ldapSettings == null)
 		{
 			return null;
@@ -256,7 +256,7 @@ public class BaseFunction{
 		return userAccount;
 	}
 	
-	private static String getLdapUserPassword(JSONObject ldapSettings) {
+	protected static String getLdapUserPassword(JSONObject ldapSettings) {
 		if(ldapSettings == null)
 		{
 			return null;
@@ -271,7 +271,7 @@ public class BaseFunction{
 		return userPassword;
 	}
 	
-	private static String getLdapBaseFilter(JSONObject ldapSettings) {
+	protected static String getLdapBaseFilter(JSONObject ldapSettings) {
 		if(ldapSettings == null)
 		{
 			return "(objectClass=*)";
@@ -286,7 +286,7 @@ public class BaseFunction{
 		return baseFilter;
 	}
 
-	private static JSONObject getLDAPSettings(String[] configs) {
+	public static JSONObject getLDAPSettings(String[] configs) {
 		if(configs.length < 2)
 		{
 			return null;

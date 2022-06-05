@@ -118,6 +118,7 @@ import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.common.entity.EncryptConfig;
+import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -2637,7 +2638,7 @@ public class BaseController  extends BaseFunction{
 	//3. LDAP数据结构图 https://blog.csdn.net/chenyongtu110/article/details/52214707?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-52214707-blog-115688158.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-52214707-blog-115688158.pc_relevant_default&utm_relevant_index=1
 	public User ldapLoginCheck(String userName, String pwd)
 	{
-		LdapContext ctx = getLDAPConnection(userName, pwd);
+		LdapContext ctx = getLDAPConnection(userName, pwd, systemLdapConfig);
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() getLDAPConnection 失败"); 
@@ -2645,6 +2646,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String filter = systemLdapConfig.filter;
+		Log.info("getLDAPConnection() filter:" + filter);       		
+		
 		List<User> list = readLdap(ctx, "", filter, systemLdapConfig.loginMode, userName);
 		Log.printObject("ldapLoginCheck", list);
 		if(list == null || list.size() != 1)
@@ -2660,66 +2663,70 @@ public class BaseController  extends BaseFunction{
      * 获取默认LDAP连接     * Exception 则登录失败，ctx不为空则登录成功
      * @return void
      */
-    public LdapContext getLDAPConnection(String userName, String pwd) 
+    public LdapContext getLDAPConnection(String userName, String pwd, LDAPConfig ldapConfig) 
     {
         LdapContext ctx = null;
     	try {
             //String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/";
     		//String basedn = "o=NSN";
-    		if(systemLdapConfig.enabled == null || systemLdapConfig.enabled == false)
+    		if(ldapConfig.enabled == null || ldapConfig.enabled == false)
     		{
-    			errorLog("getLDAPConnection() systemLdapConfig.enable is " + systemLdapConfig.enabled);
+    			errorLog("getLDAPConnection() ldapConfig.enable is " + ldapConfig.enabled);
     			return null;
     		}
     				
-    		String LDAP_URL = systemLdapConfig.url;
+    		String LDAP_URL = ldapConfig.url;
     		if(LDAP_URL == null || LDAP_URL.isEmpty())
     		{
     			Log.debug("getLDAPConnection LDAP_URL is null or empty, LDAP_URL:" + LDAP_URL);
     			return null;
     		}
     			
-    		String basedn = systemLdapConfig.basedn;
-    		Log.info("getLDAPConnection() basedn:" + basedn);    		
-            
-    		String loginMode = systemLdapConfig.loginMode;
-    		Log.info("getLDAPConnection() loginMode:" + loginMode);   
-    		
-    		String filter = systemLdapConfig.filter;
-    		Log.info("getLDAPConnection() filter:" + filter);       		
-    		
-            Hashtable<String,String> HashEnv = new Hashtable<String,String>();
+            //设置用户鉴权信息：userAccount非空表示使用管理员账号进行鉴权，否则表示使用登录用户账号进行鉴权
+    		Hashtable<String,String> HashEnv = new Hashtable<String,String>();
             HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
-            
-            //userName为空则只获取LDAP basedn的ctx，不进行用户校验
-            if(userName == null || userName.isEmpty())
-    		{
-    			HashEnv.put(Context.SECURITY_PRINCIPAL, basedn);
-    		}
+            if(ldapConfig.userAccount != null && ldapConfig.userAccount.isEmpty() == false)
+            {
+            	HashEnv.put(Context.SECURITY_PRINCIPAL, ldapConfig.userAccount);
+            	if(ldapConfig.userPassword != null && ldapConfig.userPassword.isEmpty() == false)
+            	{
+            		HashEnv.put(Context.SECURITY_CREDENTIALS, ldapConfig.userPassword);
+            	}
+            }
             else
             {
-            	String userAccount =  systemLdapConfig.userAccount;
-            	if(userAccount == null)
-            	{
-            		userAccount = loginMode + "=" + userName + "," + basedn;     
-            	}
-            	Log.debug("getLDAPConnection() userAccount:" + userAccount);    			
-            	
-    			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
-            	Log.debug("getLDAPConnection() authMode:" + systemLdapConfig.authMode); 
-    			if(systemLdapConfig.authMode != null)
-    			{
-    				switch(systemLdapConfig.authMode)
-    				{
-    				case 1:	//Plain Text 验证
-        				HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
-        				break;
-    				case 2:	//MD5 加密后验证
-    					HashEnv.put(Context.SECURITY_CREDENTIALS, MD5.md5(pwd));
-        				break;
-    				}
-    			}
-    		}	
+            	String basedn = ldapConfig.basedn;
+        		Log.info("getLDAPConnection() basedn:" + basedn);    		
+                
+        		String loginMode = ldapConfig.loginMode;
+        		Log.info("getLDAPConnection() loginMode:" + loginMode);   
+        		
+        		//userName为空则只获取LDAP basedn的ctx，不进行用户校验
+	            if(userName == null || userName.isEmpty())
+	    		{
+	    			HashEnv.put(Context.SECURITY_PRINCIPAL, basedn);
+	    		}
+	            else
+	            {
+	            	String userAccount = loginMode + "=" + userName + "," + basedn;     
+	            	Log.debug("getLDAPConnection() userAccount:" + userAccount);    			
+	            	
+	    			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
+	            	Log.debug("getLDAPConnection() authMode:" + ldapConfig.authMode); 
+	    			if(ldapConfig.authMode != null)
+	    			{
+	    				switch(ldapConfig.authMode)
+	    				{
+	    				case 1:	//Plain Text 验证
+	        				HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+	        				break;
+	    				case 2:	//MD5 加密后验证
+	    					HashEnv.put(Context.SECURITY_CREDENTIALS, MD5.md5(pwd));
+	        				break;
+	    				}
+	    			}
+	    		}	
+            }
             
             HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
             HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
