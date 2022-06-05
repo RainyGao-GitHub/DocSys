@@ -2683,6 +2683,7 @@ public class BaseController  extends BaseFunction{
     		}
     			
             //设置用户鉴权信息：userAccount非空表示使用管理员账号进行鉴权，否则表示使用登录用户账号进行鉴权
+    		Log.debug("getLDAPConnection ldapConfig.userAccount:" + ldapConfig.userAccount);
     		Hashtable<String,String> HashEnv = new Hashtable<String,String>();
             HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
             if(ldapConfig.userAccount != null && ldapConfig.userAccount.isEmpty() == false)
@@ -2690,6 +2691,7 @@ public class BaseController  extends BaseFunction{
             	HashEnv.put(Context.SECURITY_PRINCIPAL, ldapConfig.userAccount);
             	if(ldapConfig.userPassword != null && ldapConfig.userPassword.isEmpty() == false)
             	{
+                	Log.debug("getLDAPConnection ldapConfig.userPassword:" + ldapConfig.userPassword);
             		HashEnv.put(Context.SECURITY_CREDENTIALS, ldapConfig.userPassword);
             	}
             }
@@ -2704,6 +2706,7 @@ public class BaseController  extends BaseFunction{
         		//userName为空则只获取LDAP basedn的ctx，不进行用户校验
 	            if(userName == null || userName.isEmpty())
 	    		{
+                	Log.debug("getLDAPConnection userName is empty");
 	    			HashEnv.put(Context.SECURITY_PRINCIPAL, basedn);
 	    		}
 	            else

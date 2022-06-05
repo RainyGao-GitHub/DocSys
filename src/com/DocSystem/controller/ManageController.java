@@ -1061,11 +1061,13 @@ public class ManageController extends BaseController{
 			config.basedn = urlInfo.params[1];	//0保存的是host+port			
 		}
 		
-		config.authMode = getLdapAuthMode(systemLdapConfig.settings);
-		config.loginMode = getLdapLoginMode(systemLdapConfig.settings);	
-		config.userAccount = getLdapUserAccount(systemLdapConfig.settings);				
-		config.userPassword = getLdapUserPassword(systemLdapConfig.settings);				
-		config.filter = getLdapBaseFilter(systemLdapConfig.settings);
+		config.authMode = getLdapAuthMode(config.settings);
+		config.loginMode = getLdapLoginMode(config.settings);	
+		config.userAccount = getLdapUserAccount(config.settings);				
+		config.userPassword = getLdapUserPassword(config.settings);				
+		config.filter = getLdapBaseFilter(config.settings);
+
+		config.enabled = true;
 		return config;
 	}
 
