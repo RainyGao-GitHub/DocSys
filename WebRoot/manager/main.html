@@ -1646,6 +1646,35 @@
 	    });
 	}
 	
+	function ldapTest()
+	{
+		var ldapConfig = $("#ldapConfig").val();
+		console.log("ldapTest() ldapConfig:" + ldapConfig);
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/ldapTest.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	ldap: ldapConfig,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("测试成功!");
+	        	}
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("测试失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("测试失败:服务器异常");
+	        }
+	    });
+	}
+	
 	function generateRootKey()
 	{
         $.ajax({

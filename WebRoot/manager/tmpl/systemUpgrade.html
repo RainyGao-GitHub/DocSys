@@ -95,6 +95,7 @@
 							<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">
 	                    </td>
 	                    <td class="edit">
+	                      	<button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
 	                    </td>
 	                  </tr>
 	                  {{if value.isSalesServer == 1}}
