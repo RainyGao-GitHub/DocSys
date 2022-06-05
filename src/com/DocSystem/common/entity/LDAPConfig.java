@@ -10,5 +10,6 @@ public class LDAPConfig {
 	public Integer authMode;
 	public String loginMode;	//用户名字段属性
 	public String userAccount;	//直接指定LDAPConnect使用的account
+	public String userPassword;
 	public String filter;
 }
