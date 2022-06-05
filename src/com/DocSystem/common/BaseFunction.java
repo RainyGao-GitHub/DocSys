@@ -192,6 +192,7 @@ public class BaseFunction{
 		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings);
 		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings);	
 		systemLdapConfig.userAccount = getLdapUserAccount(systemLdapConfig.settings);				
+		systemLdapConfig.userPassword = getLdapUserPassword(systemLdapConfig.settings);				
 		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings);
 	}
 
@@ -253,6 +254,21 @@ public class BaseFunction{
 		}
 				
 		return userAccount;
+	}
+	
+	private static String getLdapUserPassword(JSONObject ldapSettings) {
+		if(ldapSettings == null)
+		{
+			return null;
+		}
+		
+		String userPassword = ldapSettings.getString("userPassword");
+		if(userPassword == null || userPassword.isEmpty())
+		{
+			return null;
+		}
+				
+		return userPassword;
 	}
 	
 	private static String getLdapBaseFilter(JSONObject ldapSettings) {
