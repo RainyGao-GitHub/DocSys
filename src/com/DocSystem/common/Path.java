@@ -466,7 +466,7 @@ public class Path {
 		String logLevelString = ReadProperties.read("docSysConfig.properties", "logLevel");
 		if(logLevelString != null && !logLevelString.isEmpty())
 		{
-			return Integer.getInteger(logLevelString);
+			return Integer.parseInt(logLevelString);
 		}
 		return null;
 	}
