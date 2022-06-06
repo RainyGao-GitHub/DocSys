@@ -1061,6 +1061,7 @@ public class ManageController extends BaseController{
 			config.basedn = urlInfo.params[1];	//0保存的是host+port			
 		}
 		
+		config.authentication = getLdapAuthentication(config.settings);
 		config.authMode = getLdapAuthMode(config.settings);
 		config.loginMode = getLdapLoginMode(config.settings);	
 		config.userAccount = getLdapUserAccount(config.settings);				

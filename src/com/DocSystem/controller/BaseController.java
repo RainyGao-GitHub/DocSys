@@ -2685,7 +2685,10 @@ public class BaseController  extends BaseFunction{
             //设置用户鉴权信息：userAccount非空表示使用管理员账号进行鉴权，否则表示使用登录用户账号进行鉴权
     		Log.debug("getLDAPConnection ldapConfig.userAccount:" + ldapConfig.userAccount);
     		Hashtable<String,String> HashEnv = new Hashtable<String,String>();
-            HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
+            //HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
+            //HashEnv.put(Context.SECURITY_AUTHENTICATION, "GSSAPI"); // LDAP访问安全级别(none,simple,strong)
+    		HashEnv.put(Context.SECURITY_AUTHENTICATION, ldapConfig.authentication); // LDAP访问安全级别(none,simple,strong)
+
             if(ldapConfig.userAccount != null && ldapConfig.userAccount.isEmpty() == false)
             {
             	HashEnv.put(Context.SECURITY_PRINCIPAL, ldapConfig.userAccount);

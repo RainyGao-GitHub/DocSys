@@ -188,14 +188,29 @@ public class BaseFunction{
 		{
 			systemLdapConfig.basedn = urlInfo.params[1];	//0保存的是host+port			
 		}
-		
-		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings);
-		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings);	
-		systemLdapConfig.userAccount = getLdapUserAccount(systemLdapConfig.settings);				
-		systemLdapConfig.userPassword = getLdapUserPassword(systemLdapConfig.settings);				
-		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings);
+
+		systemLdapConfig.authentication = getLdapAuthentication(systemLdapConfig.settings); //鉴权方式
+		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings); //密码格式
+		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings); //用户属性标识，默认是uid	
+		systemLdapConfig.userAccount = getLdapUserAccount(systemLdapConfig.settings); //LDAP鉴权用户（不设置则使用登录用户鉴权）				
+		systemLdapConfig.userPassword = getLdapUserPassword(systemLdapConfig.settings);	//LDAP鉴权用户的密码			
+		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings); //过滤条件
 	}
 
+	protected static String getLdapAuthentication(JSONObject ldapSettings) {
+		if(ldapSettings == null)
+		{
+			return "simple";
+		}
+		
+		String authModeStr = ldapSettings.getString("authentication");
+		if(authModeStr == null || authModeStr.isEmpty())
+		{
+			return "simple";
+		}
+		
+		return authModeStr;
+	}
 
 	protected static Integer getLdapAuthMode(JSONObject ldapSettings) {
 		if(ldapSettings == null)
