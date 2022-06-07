@@ -337,6 +337,11 @@
 		    	   	SubContext.state = 0;	//未开始上传
 		    	   	SubContext.status = "待上传";	//未开始上传
 		    	   	
+		    	   	//上传速度信息
+					SubContext.speed = "";
+					SubContext.preUploadTime = new Date().getTime();
+					SubContext.preUploadSize = 0;
+		    	   	
 		    	   	//checkSum Init
 		    	   	SubContext.checkSumState = 0;
 		    	   	SubContext.checkSum = "";
@@ -1614,8 +1619,13 @@
 			console.log("[" + SubContext.index + "] reuploadHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);
 			console.log("[" + SubContext.index + "] reuploadHandler() reuploadTotalNum:" + reuploadTotalNum +" reuploadSuccessNum:"+reuploadSuccessNum+" reuploadFailNum:"+reuploadFailNum);
 			
-			//Reset all basick SubContext 
+			//Reset SubContext infos
 			SubContext.state = 0;
+			
+			SubContext.speed = "";
+			SubContext.preUploadTime = new Date().getTime();
+			SubContext.preUploadSize = 0;
+			
 			if(SubContext.checkSumState != 2) //checkSum is not ready, need to recaculate the checkSum
 			{
 				SubContext.checkSumState = 0; 
@@ -2261,10 +2271,11 @@
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
 				
 				//计算实际文件的分片上传进度
+				var realUploaedSize = loaded;
 				if(SubContext.chunked)
 				{
 					var uploadedChunkSize = (per * chunk.chunkSize)/100;
-					var realUploaedSize = SubContext.uploadedSize +  uploadedChunkSize;
+					realUploaedSize = SubContext.uploadedSize +  uploadedChunkSize;
 					per =  Math.floor(100 * realUploaedSize / SubContext.size);
 					console.log("[" + SubContext.index + "] [" + chunk.index + "] startUpload() xhr onprogress uploadedChunkSize:" + uploadedChunkSize + " uploadedSize:" + realUploaedSize + " fileSize:" +   SubContext.size + " per:" + per + "%");
 				}
@@ -2273,9 +2284,11 @@
 					console.log("[" + SubContext.index + "] startUpload() xhr onprogress 上传中："+per+"%！");
 				}
 				
+				updateUploadSpeed(SubContext, realUploaedSize, false);
+
 				//计算当前文件上传百分比
-				$('.file'+SubContextIndex+' .el-progress__text').text(per+"%");
-				$('.file'+SubContextIndex+' .el-progress-bar__inner')[0].style.width=per+'%';
+				$('.file'+SubContextIndex+' .el-progress__text').text(SubContext.speed + " " + per+"%");
+				$('.file'+SubContextIndex+' .el-progress-bar__inner')[0].style.width = per+"%"; //进度条
 				
 				//printUploadedTime();
 			};
@@ -2284,6 +2297,43 @@
 			xhr.open("post", "/DocSystem/Doc/uploadDoc.do");
 			xhr.send(form);
 			uploadTime = new Date().getTime();	//上传时间初始化
+    	}
+    	
+    	//每隔一段时间更新一下速度
+    	function updateUploadSpeed(SubContext, realUploaedSize, force)
+    	{
+    		var currentTime = new Date().getTime();	//当前时间
+    		var preUploadTime = SubContext.preUploadTime; //之前的上传时间
+    		
+    		var perTime = currentTime - preUploadTime;	//时间间隔
+    		
+    		if(force == false)
+    		{
+	    		//时间间隔小于1秒则不更新
+	    		if(perTime < 3000)
+	    		{
+	    			return;
+	    		}
+    		}
+    		
+    		//乘1000是换成秒
+    		var bspeed = (realUploaedSize - SubContext.preUploadSize)*1000/perTime; //上传速度(b/s)
+        	var speed = bspeed;
+			var units = "b/s";	//速度单位
+			if((speed/1024)>1)
+			{
+				speed = speed/1024;
+				units = "k/s";
+				if((speed/1024)>1)
+				{
+					speed = speed/1024;
+					units = "M/s";
+				}
+			}
+			SubContext.speed = Math.round(speed) + units;
+			SubContext.preUploadTime = currentTime;
+			SubContext.preUploadSize = realUploaedSize;
+       		console.log("[" + SubContext.index + "] 上传速度："+ SubContext.speed);
     	}
     	
 		function chunkUploadSuccessHandler(SubContext, chunk)
@@ -2295,9 +2345,11 @@
  			//Show current doc upload progress
  			SubContext.uploadedSize += chunk.chunkSize;
  			
+ 			updateUploadSpeed(SubContext, SubContext.uploadedSize, false);
+ 			
 			var per =  Math.floor(100 * SubContext.uploadedSize / SubContext.size);
- 			$('.file'+SubContext.index+' .el-progress__text').text(per+"%");
-			$('.file'+SubContext.index+' .el-progress-bar__inner')[0].style.width=per+'%';			
+ 			$('.file'+SubContext.index+' .el-progress__text').text(SubContext.speed + " " + per+"%");
+			$('.file'+SubContext.index+' .el-progress-bar__inner')[0].style.width = per+'%'; //进度条			
 			
 			console.log("[" + SubContext.index + "] [" + chunk.index + "] chunkUploadSuccessHandler() uploadedSize:" + SubContext.uploadedSize + " fileSize:" +   SubContext.size + " per:" + per + "%");
 
