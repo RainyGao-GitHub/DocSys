@@ -247,6 +247,7 @@ vi  /etc/sysconfig/i18n
 
 ### 十四、调试日志获取（系统无法登录时）
 1. 调试日志等级设置为debug
+
 将 docsys\tomcat\webapps\docSys.ini\debugLogLevel 文件里的内容改为 0
 
 2. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
