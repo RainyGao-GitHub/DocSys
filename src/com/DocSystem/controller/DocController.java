@@ -201,229 +201,6 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功",  repos, doc, null, "");
 		executeCommonActionList(actionList, rt);
 	}
-	
-	private boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("********* realTimeRemoteStoragPush() ***********");
-		
-		boolean ret = false;
-		
-		RemoteStorageConfig remote = repos.remoteStorageConfig;
-		if(remote == null || remote.autoPush == null || remote.autoPush != 1)
-		{
-			Log.debug("realTimeRemoteStoragPush() remoteStorageConfig autoPush not configured");			
-			return false;
-		}
-		
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
-		if(channel == null)
-	    {
-			Log.debug("realTimeRemoteStoragPush 非商业版本不支持远程存储");
-			return false;
-	    }
-		
-		//push Options
-		boolean recurcive = true;
-		boolean force = remote.autoPushForce == 1;
-		boolean pushLocalChangeOnly = false;
-		
-		switch(action)
-		{
-		case "copyDoc":
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			break;
-		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			}
-			break;
-		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			}
-			break;
-		//case "addDoc":
-		//case "deleteDoc":
-		//case "updateDocContent":
-		//case "uploadDoc":
-		//case "uploadDocRS":
-		//case "revertDocHistory":
-		default:
-			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			break;
-		}			
-		return ret;
-	}
-
-	private boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
-	{
-		Log.debug("************ realTimeBackup() **************");
-		
-		ReposBackupConfig backupConfig = repos.backupConfig;
-		if(backupConfig == null)
-		{
-			Log.debug("realTimeBackup() backupConfig not configured");			
-			return false;
-		}
-				
-		realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
-		realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
-		return true;
-	}
-
-	private boolean realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("************* realTimeRemoteBackup() ***************");
-
-		boolean ret = false;
-		
-		BackupConfig remoteBackupConfig = repos.backupConfig.remoteBackupConfig;
-		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackup == null || remoteBackupConfig.realTimeBackup == 0)
-		{
-			Log.debug("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured");			
-			return false;
-		}
-		
-		RemoteStorageConfig remote = remoteBackupConfig.remoteStorageConfig;
-		if(remote == null)
-		{
-			Log.debug("realTimeRemoteBackup() remoteStorageConfig not configured");			
-			return false;
-		}
-		
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
-		if(channel == null)
-	    {
-			Log.debug("realTimeRemoteBackup 非商业版本不支持远程备份");
-			return false;
-	    }
-		
-		//实时备份是不备份备注文件的
-		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(remoteBackupConfig, remote);		
-		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());
-		doc.offsetPath = offsetPath;
-		if(dstDoc != null)
-		{
-			dstDoc.offsetPath = offsetPath;
-		}
-		Log.debug("realTimeRemoteBackup() offsetPath [" + offsetPath + "]");			
-		
-		//push Options
-		boolean recurcive = true;
-		boolean force = true;
-		boolean pushLocalChangeOnly = true;
-		if(remote.isVerRepos)
-		{
-			pushLocalChangeOnly = false;
-		}
-
-		
-		switch(action)
-		{
-		case "copyDoc":
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			break;
-		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt);
-			}
-			break;
-		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt);
-			}
-			break;
-		//case "addDoc":
-		//case "deleteDoc":
-		//case "updateDocContent":
-		//case "uploadDoc":
-		//case "uploadDocRS":
-		//case "revertDocHistory":
-		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
-		//	break;
-		default:
-			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			break;
-		}	
-		return ret;
-	}
-
-	private boolean realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("********** realTimeLocalBackup() ****************");
-
-		boolean ret = false;
-		
-		BackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
-		if(localBackupConfig == null || localBackupConfig.realTimeBackup == null || localBackupConfig.realTimeBackup == 0)
-		{
-			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			
-			return false;
-		}
-		
-		RemoteStorageConfig remote = localBackupConfig.remoteStorageConfig;
-		if(remote == null)
-		{
-			Log.debug("realTimeLocalBackup() remoteStorageConfig not configured");			
-			return false;
-		}
-		
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
-		if(channel == null)
-	    {
-			Log.debug("realTimeLocalBackup 非商业版本不支持本地备份");
-			return false;
-	    }
-		
-		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(localBackupConfig, remote);		
-		//set offsetPath 
-		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());		
-		doc.offsetPath = offsetPath;		
-		if(dstDoc != null)
-		{
-			dstDoc.offsetPath = offsetPath;
-		}
-		Log.debug("realTimeLocalBackup() offsetPath [" + offsetPath + "]");			
-			
-		//push options
-		boolean recurcive = true;
-		boolean force = true;
-		boolean pushLocalChangeOnly = true;
-		if(remote.isVerRepos)
-		{
-			pushLocalChangeOnly = false;
-		}
-		
-		switch(action)
-		{
-		case "copyDoc":
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			break;
-		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			}
-			break;
-		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			}
-			break;
-		//case "addDoc":
-		//case "deleteDoc":
-		//case "updateDocContent":
-		//case "uploadDoc":
-		//case "uploadDocRS":
-		//case "revertDocHistory":
-		default:
-			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
-			break;
-		}			
-		return ret;
-	}
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
 	public void addDocRS(Integer reposId, String remoteDirectory, String path, String name,  Integer type,
@@ -1592,9 +1369,10 @@ public class DocController extends BaseController{
 				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 				
 				Doc dbDoc = docSysGetDoc(repos, doc, false);
+				boolean ret = false;
 				if(dbDoc == null || dbDoc.getType() == 0)
 				{
-					boolean ret = addDoc(repos, doc,
+					ret = addDoc(repos, doc,
 								null,
 								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 					writeJson(rt, response);
@@ -1606,7 +1384,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					boolean ret = updateDoc(repos, doc, 
+					ret = updateDoc(repos, doc, 
 							null,   
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);				
 				
@@ -1618,6 +1396,12 @@ public class DocController extends BaseController{
 						deletePreviewFile(doc);
 					}
 				}
+				
+				if(ret == true)
+				{
+					realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "checkChunkUploaded");
+					realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "checkChunkUploaded");
+				}	
 				return;
 			}
 		}
@@ -1702,6 +1486,10 @@ public class DocController extends BaseController{
 			executeCommonActionList(actionList, rt);
 			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 			deletePreviewFile(doc);
+			
+			//实时远程推送与实时备份
+			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
+			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
 		}
 		
 	}

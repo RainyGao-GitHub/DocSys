@@ -10873,6 +10873,229 @@ public class BaseController  extends BaseFunction{
 		}	
 	}
 	
+	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+		Log.debug("********* realTimeRemoteStoragPush() ***********");
+		
+		boolean ret = false;
+		
+		RemoteStorageConfig remote = repos.remoteStorageConfig;
+		if(remote == null || remote.autoPush == null || remote.autoPush != 1)
+		{
+			Log.debug("realTimeRemoteStoragPush() remoteStorageConfig autoPush not configured");			
+			return false;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("realTimeRemoteStoragPush 非商业版本不支持远程存储");
+			return false;
+	    }
+		
+		//push Options
+		boolean recurcive = true;
+		boolean force = remote.autoPushForce == 1;
+		boolean pushLocalChangeOnly = false;
+		
+		switch(action)
+		{
+		case "copyDoc":
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			break;
+		case "moveDoc":
+			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
+			{
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			}
+			break;
+		case "renameDoc":
+			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
+			{
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			}
+			break;
+		//case "addDoc":
+		//case "deleteDoc":
+		//case "updateDocContent":
+		//case "uploadDoc":
+		//case "uploadDocRS":
+		//case "revertDocHistory":
+		default:
+			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			break;
+		}			
+		return ret;
+	}
+
+	protected boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
+	{
+		Log.debug("************ realTimeBackup() **************");
+		
+		ReposBackupConfig backupConfig = repos.backupConfig;
+		if(backupConfig == null)
+		{
+			Log.debug("realTimeBackup() backupConfig not configured");			
+			return false;
+		}
+				
+		realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		return true;
+	}
+
+	private boolean realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+		Log.debug("************* realTimeRemoteBackup() ***************");
+
+		boolean ret = false;
+		
+		BackupConfig remoteBackupConfig = repos.backupConfig.remoteBackupConfig;
+		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackup == null || remoteBackupConfig.realTimeBackup == 0)
+		{
+			Log.debug("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured");			
+			return false;
+		}
+		
+		RemoteStorageConfig remote = remoteBackupConfig.remoteStorageConfig;
+		if(remote == null)
+		{
+			Log.debug("realTimeRemoteBackup() remoteStorageConfig not configured");			
+			return false;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("realTimeRemoteBackup 非商业版本不支持远程备份");
+			return false;
+	    }
+		
+		//实时备份是不备份备注文件的
+		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(remoteBackupConfig, remote);		
+		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());
+		doc.offsetPath = offsetPath;
+		if(dstDoc != null)
+		{
+			dstDoc.offsetPath = offsetPath;
+		}
+		Log.debug("realTimeRemoteBackup() offsetPath [" + offsetPath + "]");			
+		
+		//push Options
+		boolean recurcive = true;
+		boolean force = true;
+		boolean pushLocalChangeOnly = true;
+		if(remote.isVerRepos)
+		{
+			pushLocalChangeOnly = false;
+		}
+
+		
+		switch(action)
+		{
+		case "copyDoc":
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			break;
+		case "moveDoc":
+			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt) == true)
+			{
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt);
+			}
+			break;
+		case "renameDoc":
+			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt) == true)
+			{
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly,  rt);
+			}
+			break;
+		//case "addDoc":
+		//case "deleteDoc":
+		//case "updateDocContent":
+		//case "uploadDoc":
+		//case "uploadDocRS":
+		//case "revertDocHistory":
+		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+		//	break;
+		default:
+			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			break;
+		}	
+		return ret;
+	}
+
+	private boolean realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+		Log.debug("********** realTimeLocalBackup() ****************");
+
+		boolean ret = false;
+		
+		BackupConfig localBackupConfig = repos.backupConfig.localBackupConfig;
+		if(localBackupConfig == null || localBackupConfig.realTimeBackup == null || localBackupConfig.realTimeBackup == 0)
+		{
+			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			
+			return false;
+		}
+		
+		RemoteStorageConfig remote = localBackupConfig.remoteStorageConfig;
+		if(remote == null)
+		{
+			Log.debug("realTimeLocalBackup() remoteStorageConfig not configured");			
+			return false;
+		}
+		
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("realTimeLocalBackup 非商业版本不支持本地备份");
+			return false;
+	    }
+		
+		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(localBackupConfig, remote);		
+		//set offsetPath 
+		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());		
+		doc.offsetPath = offsetPath;		
+		if(dstDoc != null)
+		{
+			dstDoc.offsetPath = offsetPath;
+		}
+		Log.debug("realTimeLocalBackup() offsetPath [" + offsetPath + "]");			
+			
+		//push options
+		boolean recurcive = true;
+		boolean force = true;
+		boolean pushLocalChangeOnly = true;
+		if(remote.isVerRepos)
+		{
+			pushLocalChangeOnly = false;
+		}
+		
+		switch(action)
+		{
+		case "copyDoc":
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			break;
+		case "moveDoc":
+			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
+			{
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			}
+			break;
+		case "renameDoc":
+			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt) == true)
+			{
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			}
+			break;
+		//case "addDoc":
+		//case "deleteDoc":
+		//case "updateDocContent":
+		//case "uploadDoc":
+		//case "uploadDocRS":
+		//case "revertDocHistory":
+		default:
+			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushLocalChangeOnly, rt);
+			break;
+		}			
+		return ret;
+	}
+	
 	public void addDelayTaskForDBBackup(int offsetMinute, Long forceStartDelay) {
 		Long delayTime = getDelayTimeForNextDBBackupTask(offsetMinute);
 		if(delayTime == null)
