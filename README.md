@@ -235,10 +235,20 @@ vi  /etc/sysconfig/i18n
 
 2. 重启系统
 
-### 十三、日志获取
+### 十三、调试日志获取
 
-1. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
+1. 进入系统设置页面（管理后台 -> 系统设置）
 
-2. Linux系统： start.sh > docSys.log
+2. 调试日志等级设置为debug
 
-3. 设置日志等级：管理后台 -> 系统设置 -> 日志等级 -> debug
+3. 勾选输出到文件
+
+4. 测试完成后，点击下载
+
+### 十四、调试日志获取（系统无法登录时）
+1. 调试日志等级设置为debug
+将 docsys\tomcat\webapps\docSys.ini\debugLogLevel 文件里的内容改为 0
+
+2. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
+
+3. Linux系统： start.sh > docSys.log
