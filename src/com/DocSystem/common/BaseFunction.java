@@ -203,13 +203,13 @@ public class BaseFunction{
 			return "simple";
 		}
 		
-		String authModeStr = ldapSettings.getString("authentication");
-		if(authModeStr == null || authModeStr.isEmpty())
+		String authenticationStr = ldapSettings.getString("authentication");
+		if(authenticationStr == null || authenticationStr.isEmpty())
 		{
 			return "simple";
 		}
 		
-		return authModeStr;
+		return authenticationStr;
 	}
 
 	protected static Integer getLdapAuthMode(JSONObject ldapSettings) {
