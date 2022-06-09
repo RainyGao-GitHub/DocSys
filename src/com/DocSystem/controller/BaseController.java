@@ -47,11 +47,16 @@ import javax.naming.AuthenticationException;
 import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -143,6 +148,9 @@ import com.DocSystem.entity.Role;
 import com.DocSystem.entity.SysConfig;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
+import com.DocSystem.sales.JndiAction;
+import com.DocSystem.sales.LDAPTest;
+import com.DocSystem.sales.SampleCallbackHandler;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
@@ -2623,19 +2631,6 @@ public class BaseController  extends BaseFunction{
 		return uList.get(0);
 	}
 	
-	
-    //ldapLoginCheck是分两步进行的
-	//第一步：建立连接获取ctx：getLDAPConnection
-	//1. userName为空，使用basedn作为SECURITY_PRINCIPAL，不使用密码（通常用于查询根目录的条目，目前并没有使用）
-	//2. userName非空
-	//2.1 userAccount非空表示使用userAccount作为SECURITY_PRINCIPAL（这种主要针对使用指定账号查询的情况）
-	//2.2 userAccount为空则表示loginMode=userName+basedn作为SECURITY_PRINCIPAL（每个账号都需要输入自己的密码）
-	//2.3 authMode=0表示不需要密码，authMode=1表示使用明文密码，authMode=2表示使用MD5加密的密码
-	//第二步：根据loginMode=userName+filter作为过滤条件在ctx中进行查找对应的条目 
-	//参考资料：
-	//1. JAVA中使用LDAP登录的三种方式: https://www.cnblogs.com/huanghongbo/p/12053272.html
-	//2. LDAP常见错误码：https://blog.csdn.net/xiaoreqing/article/details/48026167
-	//3. LDAP数据结构图 https://blog.csdn.net/chenyongtu110/article/details/52214707?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-52214707-blog-115688158.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-52214707-blog-115688158.pc_relevant_default&utm_relevant_index=1
 	public User ldapLoginCheck(String userName, String pwd)
 	{
 		LdapContext ctx = getLDAPConnection(userName, pwd, systemLdapConfig);
@@ -2649,6 +2644,13 @@ public class BaseController  extends BaseFunction{
 		Log.info("getLDAPConnection() filter:" + filter);       		
 		
 		List<User> list = readLdap(ctx, "", filter, systemLdapConfig.loginMode, userName);
+		
+		try {
+			ctx.close();
+		} catch (NamingException e) {
+			Log.info(e);
+		}
+		
 		Log.printObject("ldapLoginCheck", list);
 		if(list == null || list.size() != 1)
 		{
@@ -2665,78 +2667,116 @@ public class BaseController  extends BaseFunction{
      */
     public LdapContext getLDAPConnection(String userName, String pwd, LDAPConfig ldapConfig) 
     {
-        LdapContext ctx = null;
-    	try {
-            //String LDAP_URL = "ldap://ed-p-gl.emea.nsn-net.net:389/";
-    		//String basedn = "o=NSN";
-    		if(ldapConfig.enabled == null || ldapConfig.enabled == false)
+        if(ldapConfig.enabled == null || ldapConfig.enabled == false)
+		{
+			errorLog("getLDAPConnection() ldapConfig.enable is " + ldapConfig.enabled);
+			return null;
+		}
+				
+		String LDAP_URL = ldapConfig.url;
+		if(LDAP_URL == null || LDAP_URL.isEmpty())
+		{
+			Log.debug("getLDAPConnection LDAP_URL is null or empty, LDAP_URL:" + LDAP_URL);
+			return null;
+		}
+		
+		String authentication = ldapConfig.authentication;
+		if(authentication == null || authentication.isEmpty())
+		{
+			authentication = "simple";
+		}
+		
+		String PRINCIPAL = null;
+		String CREDENTIALS = null;
+        if(ldapConfig.userAccount != null && ldapConfig.userAccount.isEmpty() == false)
+        {
+        	PRINCIPAL = ldapConfig.userAccount;
+        	if(ldapConfig.userPassword != null && ldapConfig.userPassword.isEmpty() == false)
+        	{
+        		CREDENTIALS = ldapConfig.userPassword;
+        	}
+        }
+        else
+        {
+        	String basedn = ldapConfig.basedn;
+    		Log.info("getLDAPConnection() basedn:" + basedn);    		
+            
+    		String loginMode = ldapConfig.loginMode;
+    		Log.info("getLDAPConnection() loginMode:" + loginMode);   
+    		
+    		//userName为空则只获取LDAP basedn的ctx，不进行用户校验
+            if(userName == null || userName.isEmpty())
     		{
-    			errorLog("getLDAPConnection() ldapConfig.enable is " + ldapConfig.enabled);
-    			return null;
+            	PRINCIPAL = basedn;
     		}
-    				
-    		String LDAP_URL = ldapConfig.url;
-    		if(LDAP_URL == null || LDAP_URL.isEmpty())
-    		{
-    			Log.debug("getLDAPConnection LDAP_URL is null or empty, LDAP_URL:" + LDAP_URL);
-    			return null;
-    		}
-    			
-            //设置用户鉴权信息：userAccount非空表示使用管理员账号进行鉴权，否则表示使用登录用户账号进行鉴权
-    		Log.debug("getLDAPConnection ldapConfig.userAccount:" + ldapConfig.userAccount);
-    		Hashtable<String,String> HashEnv = new Hashtable<String,String>();
-            //HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
-            //HashEnv.put(Context.SECURITY_AUTHENTICATION, "GSSAPI"); // LDAP访问安全级别(none,simple,strong)
-    		HashEnv.put(Context.SECURITY_AUTHENTICATION, ldapConfig.authentication); // LDAP访问安全级别(none,simple,strong)
-
-            if(ldapConfig.userAccount != null && ldapConfig.userAccount.isEmpty() == false)
-            {
-            	HashEnv.put(Context.SECURITY_PRINCIPAL, ldapConfig.userAccount);
-            	if(ldapConfig.userPassword != null && ldapConfig.userPassword.isEmpty() == false)
-            	{
-                	Log.debug("getLDAPConnection ldapConfig.userPassword:" + ldapConfig.userPassword);
-            		HashEnv.put(Context.SECURITY_CREDENTIALS, ldapConfig.userPassword);
-            	}
-            }
             else
             {
-            	String basedn = ldapConfig.basedn;
-        		Log.info("getLDAPConnection() basedn:" + basedn);    		
-                
-        		String loginMode = ldapConfig.loginMode;
-        		Log.info("getLDAPConnection() loginMode:" + loginMode);   
-        		
-        		//userName为空则只获取LDAP basedn的ctx，不进行用户校验
-	            if(userName == null || userName.isEmpty())
-	    		{
-                	Log.debug("getLDAPConnection userName is empty");
-	    			HashEnv.put(Context.SECURITY_PRINCIPAL, basedn);
-	    		}
-	            else
-	            {
-	            	String userAccount = loginMode + "=" + userName + "," + basedn;     
-	            	Log.debug("getLDAPConnection() userAccount:" + userAccount);    			
-	            	
-	    			HashEnv.put(Context.SECURITY_PRINCIPAL, userAccount);
-	            	Log.debug("getLDAPConnection() authMode:" + ldapConfig.authMode); 
-	    			if(ldapConfig.authMode != null)
-	    			{
-	    				switch(ldapConfig.authMode)
-	    				{
-	    				case 1:	//Plain Text 验证
-	        				HashEnv.put(Context.SECURITY_CREDENTIALS, pwd);
-	        				break;
-	    				case 2:	//MD5 加密后验证
-	    					HashEnv.put(Context.SECURITY_CREDENTIALS, MD5.md5(pwd));
-	        				break;
-	    				}
-	    			}
-	    		}	
-            }
-            
+            	PRINCIPAL = loginMode + "=" + userName + "," + basedn;     
+            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
+            	
+            	Log.debug("getLDAPConnection() authMode:" + ldapConfig.authMode); 
+    			if(ldapConfig.authMode != null && ldapConfig.authMode != 0)
+    			{
+    				CREDENTIALS = pwd;
+    			}
+    		}	
+        }
+		
+		switch(authentication)
+		{
+		case "none":
+			return getLDAPConnection_Anonymous(ldapConfig);
+		case "simple":
+			return getLDAPConnection_Simple(PRINCIPAL, CREDENTIALS, ldapConfig);
+		case "DIGEST-MD5":
+			return getLDAPConnection_DigestMD5(PRINCIPAL, CREDENTIALS, ldapConfig);
+		case "EXTERNAL":	
+			return getLDAPConnection_External(ldapConfig);
+		case "CRAM-MD5":
+			return getLDAPConnection_CramMD5(PRINCIPAL, CREDENTIALS, ldapConfig);
+		case "GSSAPI":
+			return getLDAPConnection_Gssapi(ldapConfig);
+		default:
+			return getLDAPConnection_Simple(PRINCIPAL, CREDENTIALS, ldapConfig);
+		}
+    }
+    
+    private LdapContext getLDAPConnection_Gssapi(LDAPConfig ldapConfig) {
+    	// 1. Log in (to Kerberos)
+    	LoginContext lc = null;
+    	try {
+    	    LdapCallbackHandler callbackHandler = new LdapCallbackHandler();
+    	    callbackHandler.userName = ldapConfig.userAccount;
+    	    callbackHandler.userPwd = ldapConfig.userPassword;	     	    
+			lc = new LoginContext("MxsDoc", (CallbackHandler)callbackHandler);
+    	    lc.login();
+    	} catch (LoginException le) {
+    	    System.err.println("Authentication attempt failed" + le);
+    	    return null;
+    	}
+    
+    	LdapJndiAction jndiAction = new LdapJndiAction(ldapConfig);
+    	Subject.doAs(lc.getSubject(), jndiAction);
+    	return jndiAction.ctx;
+	}
+
+	private LdapContext getLDAPConnection_CramMD5(String PRINCIPAL, String CREDENTIALS, LDAPConfig ldapConfig) {
+        LdapContext ctx = null;
+    	try {
+    		Hashtable<String, Object> HashEnv = new Hashtable<String,Object>();
             HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
+            
             HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
-            HashEnv.put(Context.PROVIDER_URL, LDAP_URL);
+            
+            HashEnv.put(Context.PROVIDER_URL, ldapConfig.url);
+            
+            HashEnv.put(Context.SECURITY_AUTHENTICATION, "CRAM-MD5");
+            
+    	    LdapCallbackHandler callbackHandler = new LdapCallbackHandler();
+    	    callbackHandler.userName = PRINCIPAL;
+    	    callbackHandler.userPwd = CREDENTIALS;	    
+    	    HashEnv.put("java.naming.security.sasl.callback", callbackHandler);
+
             ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
 		} catch (AuthenticationException e) {
 			Log.info(e);
@@ -2747,9 +2787,120 @@ public class BaseController  extends BaseFunction{
 		}
     	
         return ctx;
-    }
+	}
+
+	private LdapContext getLDAPConnection_External(LDAPConfig ldapConfig) {
+        LdapContext ctx = null;
+    	try {
+    		Hashtable<String, Object> HashEnv = new Hashtable<String,Object>();
+            HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
+            
+            HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
+            
+            HashEnv.put(Context.PROVIDER_URL, ldapConfig.url);
+
+            HashEnv.put(Context.SECURITY_AUTHENTICATION, "EXTERNAL");
+
+            HashEnv.put(Context.SECURITY_PROTOCOL, "ssl");
+            
+            ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
+		} catch (AuthenticationException e) {
+			Log.info(e);
+		} catch (CommunicationException e) {
+			Log.info(e);
+		} catch (Exception e) {
+			Log.info(e);
+		}
+    	
+        return ctx;
+	}
+
+	private LdapContext getLDAPConnection_DigestMD5(String PRINCIPAL, String CREDENTIALS, LDAPConfig ldapConfig) {
+        LdapContext ctx = null;
+    	try {
+    		Hashtable<String, Object> HashEnv = new Hashtable<String,Object>();
+            HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
+            
+            HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
+            
+            HashEnv.put(Context.PROVIDER_URL, ldapConfig.url);
+
+    		HashEnv.put(Context.SECURITY_AUTHENTICATION,  "DIGEST-MD5"); // LDAP访问安全级别(none,simple,strong)
+
+            HashEnv.put(Context.SECURITY_PRINCIPAL, PRINCIPAL);
+            if(CREDENTIALS != null)
+            {
+            	HashEnv.put(Context.SECURITY_CREDENTIALS, CREDENTIALS);
+            }
+            
+            ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
+		} catch (AuthenticationException e) {
+			Log.info(e);
+		} catch (CommunicationException e) {
+			Log.info(e);
+		} catch (Exception e) {
+			Log.info(e);
+		}
+    	
+        return ctx;
+	}
+
+	private LdapContext getLDAPConnection_Simple(String PRINCIPAL, String CREDENTIALS, LDAPConfig ldapConfig) {
+        LdapContext ctx = null;
+    	try {
+    		Hashtable<String, Object> HashEnv = new Hashtable<String,Object>();
+            HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
+            
+            HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
+            
+            HashEnv.put(Context.PROVIDER_URL, ldapConfig.url);
+
+    		HashEnv.put(Context.SECURITY_AUTHENTICATION, "simple"); // LDAP访问安全级别(none,simple,strong)
+
+            HashEnv.put(Context.SECURITY_PRINCIPAL, PRINCIPAL);
+            if(CREDENTIALS != null)
+            {
+            	HashEnv.put(Context.SECURITY_CREDENTIALS, CREDENTIALS);
+            }
+            
+            ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
+		} catch (AuthenticationException e) {
+			Log.info(e);
+		} catch (CommunicationException e) {
+			Log.info(e);
+		} catch (Exception e) {
+			Log.info(e);
+		}
+    	
+        return ctx;
+	}
+
     
-    public List<User> readLdap(LdapContext ctx, String basedn, String filter, String loginMode, String userName){
+    private LdapContext getLDAPConnection_Anonymous(LDAPConfig ldapConfig) {
+        LdapContext ctx = null;
+    	try {
+    		Hashtable<String, Object> HashEnv = new Hashtable<String,Object>();
+            HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
+            
+            HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
+            
+            HashEnv.put(Context.PROVIDER_URL, ldapConfig.url);
+
+    		HashEnv.put(Context.SECURITY_AUTHENTICATION, "none"); // LDAP访问安全级别(none,simple,strong)
+            
+            ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
+		} catch (AuthenticationException e) {
+			Log.info(e);
+		} catch (CommunicationException e) {
+			Log.info(e);
+		} catch (Exception e) {
+			Log.info(e);
+		}
+    	
+        return ctx;
+	}
+    
+	public List<User> readLdap(LdapContext ctx, String basedn, String filter, String loginMode, String userName){
 		
 		List<User> lm=new ArrayList<User>();
 		try {
