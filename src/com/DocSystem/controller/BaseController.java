@@ -49,6 +49,9 @@ import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
@@ -2637,6 +2640,7 @@ public class BaseController  extends BaseFunction{
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() getLDAPConnection 失败"); 
+			getListOfSASLMechanisms(systemLdapConfig);
 			return null;
 		}
 		
@@ -2661,6 +2665,24 @@ public class BaseController  extends BaseFunction{
 		return list.get(0);
 	}
 	
+	//获取LDAP Server支持的SASL鉴权机制列表
+    public static void getListOfSASLMechanisms(LDAPConfig ldapConfig)
+    {
+    	Log.info("getListOfSASLMechanisms()");
+    	try {
+	    	// Create initial context
+	    	DirContext ctx = new InitialDirContext();
+	
+	    	// Read supportedSASLMechanisms from root DSE
+			Attributes attrs = ctx.getAttributes(ldapConfig.url, new String[]{"supportedSASLMechanisms"});	
+			
+			Log.info("getListOfSASLMechanisms() supportedSASLMechanisms:" + attrs.get("supportedSASLMechanisms"));
+		} catch (NamingException e) {
+			Log.info("getListOfSASLMechanisms() get supportedSASLMechanisms failed");
+			Log.debug(e);
+		}
+    }
+	
 	/**
      * 获取默认LDAP连接     * Exception 则登录失败，ctx不为空则登录成功
      * @return void
@@ -2679,12 +2701,14 @@ public class BaseController  extends BaseFunction{
 			Log.debug("getLDAPConnection LDAP_URL is null or empty, LDAP_URL:" + LDAP_URL);
 			return null;
 		}
+		Log.debug("getLDAPConnection LDAP_URL:" + LDAP_URL);
 		
 		String authentication = ldapConfig.authentication;
 		if(authentication == null || authentication.isEmpty())
 		{
 			authentication = "simple";
 		}
+		Log.debug("getLDAPConnection authentication:" + authentication);
 		
 		String PRINCIPAL = null;
 		String CREDENTIALS = null;
