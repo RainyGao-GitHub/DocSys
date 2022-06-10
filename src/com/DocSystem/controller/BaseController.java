@@ -2737,24 +2737,49 @@ public class BaseController  extends BaseFunction{
 		case "GSSAPI":
 			return getLDAPConnection_Gssapi(ldapConfig);
 		default:
-			return getLDAPConnection_Simple(PRINCIPAL, CREDENTIALS, ldapConfig);
+			return getLDAPConnection_General(PRINCIPAL, CREDENTIALS, ldapConfig);
 		}
     }
     
-    private LdapContext getLDAPConnection_Gssapi(LDAPConfig ldapConfig) {
-    	// 1. Log in (to Kerberos)
-    	LoginContext lc = null;
+    private LdapContext getLDAPConnection_General(String PRINCIPAL, String CREDENTIALS, LDAPConfig ldapConfig) {
+        LdapContext ctx = null;
     	try {
-    	    LdapCallbackHandler callbackHandler = new LdapCallbackHandler();
-    	    callbackHandler.userName = ldapConfig.userAccount;
-    	    callbackHandler.userPwd = ldapConfig.userPassword;	     	    
-			lc = new LoginContext("MxsDoc", (CallbackHandler)callbackHandler);
-    	    lc.login();
-    	} catch (LoginException le) {
-    	    System.err.println("Authentication attempt failed" + le);
-    	    return null;
+    		Hashtable<String, Object> HashEnv = new Hashtable<String,Object>();
+            HashEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory"); // LDAP工厂类
+            
+            HashEnv.put("com.sun.jndi.ldap.connect.timeout", "3000");//连接超时设置为3秒
+            
+            HashEnv.put(Context.PROVIDER_URL, ldapConfig.url);
+
+    		HashEnv.put(Context.SECURITY_AUTHENTICATION, ldapConfig.authentication); // LDAP访问安全级别(none,simple,strong)
+
+            HashEnv.put(Context.SECURITY_PRINCIPAL, PRINCIPAL);
+            if(CREDENTIALS != null)
+            {
+            	HashEnv.put(Context.SECURITY_CREDENTIALS, CREDENTIALS);
+            }
+            
+            ctx =  new InitialLdapContext(HashEnv, null);//new InitialDirContext(HashEnv);// 初始化上下文	
+		} catch (AuthenticationException e) {
+			Log.info(e);
+		} catch (CommunicationException e) {
+			Log.info(e);
+		} catch (Exception e) {
+			Log.info(e);
+		}
+    	
+        return ctx;
+	}
+
+	private LdapContext getLDAPConnection_Gssapi(LDAPConfig ldapConfig) {
+    	//Log in (to Kerberos)
+    	LoginContext lc = LdapGssAuth.login(ldapConfig);
+    	if(lc == null)
+    	{
+    		Log.info("getLDAPConnection_Gssapi() LdapGssAuth.login failed");
+    		return null;
     	}
-    
+    	//Get ldap ctx
     	LdapJndiAction jndiAction = new LdapJndiAction(ldapConfig);
     	Subject.doAs(lc.getSubject(), jndiAction);
     	return jndiAction.ctx;
