@@ -2655,7 +2655,7 @@ public class BaseController  extends BaseFunction{
 			Log.info(e);
 		}
 		
-		Log.printObject("ldapLoginCheck", list);
+		Log.printObject("ldapLoginCheck() list:", list);
 		if(list == null || list.size() != 1)
 		{
 			Log.debug("ldapLoginCheck() readLdap 失败"); 			
