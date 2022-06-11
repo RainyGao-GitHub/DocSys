@@ -1032,6 +1032,8 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
+		readLdap(ctx, config.basedn, config.filter, systemLdapConfig.loginMode, null);
 				
 		writeJson(rt, response);
 	}

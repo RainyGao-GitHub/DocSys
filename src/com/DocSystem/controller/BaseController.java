@@ -2646,7 +2646,7 @@ public class BaseController  extends BaseFunction{
 		String filter = systemLdapConfig.filter;
 		Log.info("getLDAPConnection() filter:" + filter);       		
 		
-		List<User> list = readLdap(ctx, "", filter, systemLdapConfig.loginMode, userName);
+		List<User> list = readLdap(ctx, systemLdapConfig.basedn, filter, systemLdapConfig.loginMode, userName);
 		
 		try {
 			ctx.close();
@@ -2949,56 +2949,68 @@ public class BaseController  extends BaseFunction{
 	}
     
 	public List<User> readLdap(LdapContext ctx, String basedn, String filter, String loginMode, String userName){
+		Log.debug("readLdap() basedn:" + basedn);
+		if(ctx == null)
+		{
+			Log.info("readLdap() ctx is null");
+			return null;
+		}
 		
 		List<User> lm=new ArrayList<User>();
 		try {
-			 if(ctx!=null){
-	            String[] attrPersonArray = { loginMode, "userPassword", "displayName", "cn", "sn", "mail", "description"};
-	            SearchControls searchControls = new SearchControls();//搜索控件
-	            searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);//搜索范围
-	            searchControls.setReturningAttributes(attrPersonArray);
-	            //1.要搜索的上下文或对象的名称；2.过滤条件，可为null，默认搜索所有信息；3.搜索控件，可为null，使用默认的搜索控件
-	            filter = "(&" + filter + "("+ loginMode + "=" + userName + ")" + ")";
-	            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter, searchControls);
-	            while (answer.hasMore()) {
-	                SearchResult result = (SearchResult) answer.next();
-	                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
-	                
-	                Log.info("readLdap() userInfo:");
-	                User lu=new User();
-	                while (attrs.hasMore()) {
-	                    Attribute attr = (Attribute) attrs.next();
-	                    Log.info("readLdap() " + attr.getID() + " = " + attr.get().toString());
-	                    if(loginMode.equals(attr.getID())){
-	                    	lu.setName(attr.get().toString());
-	                    } 
-	                    else if("userPassword".equals(attr.getID()))
-	                    {
-	                    	Object value = attr.get();
-	                    	lu.setPwd(new String((byte [])value));
-	                    }
-	                    //else if("displayName".equals(attr.getID())){
-	                    	//lu.setRealName(attr.get().toString());
-	                    //}
-	                    else if("cn".equals(attr.getID())){
-	                    	lu.setRealName(attr.get().toString());
-	                    }
-	                	//else if("sn".equals(attr.getID())){
-	                	//	//	lu.sn = attr.get().toString();
-	                	//}
-	                    else if("mail".equals(attr.getID())){
-	                    	lu.setEmail(attr.get().toString());
-	                    }
-	                    else if("description".equals(attr.getID())){
-	                    	lu.setIntro(attr.get().toString());
-	                    }
-	                }
-	                if(lu.getName() != null)
-	                {
-	                	lm.add(lu);
-	                }
-	            }
-			 }
+	        String[] attrPersonArray = { loginMode, "userPassword", "displayName", "cn", "sn", "mail", "description"};
+            SearchControls searchControls = new SearchControls();//搜索控件
+            searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);//搜索范围
+            searchControls.setReturningAttributes(attrPersonArray);
+            //1.要搜索的上下文或对象的名称；2.过滤条件，可为null，默认搜索所有信息；3.搜索控件，可为null，使用默认的搜索控件
+            if(userName != null && userName.isEmpty() == false)
+            {
+            	filter = "(&" + filter + "("+ loginMode + "=" + userName + ")" + ")";
+            }
+            Log.debug("readLdap() filter:" + filter);
+            
+            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter, searchControls);
+            while (answer.hasMore()) {
+                SearchResult result = (SearchResult) answer.next();
+                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
+                
+                Log.debug("readLdap() userInfo:");
+                User lu=new User();
+                while (attrs.hasMore()) 
+                {
+                    Attribute attr = (Attribute) attrs.next();
+                    Log.debug("readLdap() " + attr.getID() + " = " + attr.get().toString());
+                    
+                    if(loginMode.equals(attr.getID())){
+                    	lu.setName(attr.get().toString());
+                    } 
+                    else if("userPassword".equals(attr.getID()))
+                    {
+                    	Object value = attr.get();
+                    	lu.setPwd(new String((byte [])value));
+                    }
+                    //else if("displayName".equals(attr.getID())){
+                    	//lu.setRealName(attr.get().toString());
+                    //}
+                    else if("cn".equals(attr.getID())){
+                    	lu.setRealName(attr.get().toString());
+                    }
+                	//else if("sn".equals(attr.getID())){
+                	//	//	lu.sn = attr.get().toString();
+                	//}
+                    else if("mail".equals(attr.getID())){
+                    	lu.setEmail(attr.get().toString());
+                    }
+                    else if("description".equals(attr.getID())){
+                    	lu.setIntro(attr.get().toString());
+                    }
+                }
+                
+                if(lu.getName() != null)
+                {
+                	lm.add(lu);
+                }
+            }
 		}catch (Exception e) {
 			Log.debug("获取用户信息异常:");
 			Log.info(e);
