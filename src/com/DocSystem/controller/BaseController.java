@@ -2640,7 +2640,6 @@ public class BaseController  extends BaseFunction{
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() getLDAPConnection 失败"); 
-			getListOfSASLMechanisms(systemLdapConfig);
 			return null;
 		}
 		
@@ -2677,7 +2676,7 @@ public class BaseController  extends BaseFunction{
 			Attributes attrs = ctx.getAttributes(ldapConfig.url, new String[]{"supportedSASLMechanisms"});	
 			
 			Log.info("getListOfSASLMechanisms() supportedSASLMechanisms:" + attrs.get("supportedSASLMechanisms"));
-		} catch (NamingException e) {
+		} catch (Exception e) {
 			Log.info("getListOfSASLMechanisms() get supportedSASLMechanisms failed");
 			Log.debug(e);
 		}
