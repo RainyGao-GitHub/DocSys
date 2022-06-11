@@ -17,15 +17,17 @@ public class LdapGssAuth {
 		}
 		
     	try {
+    		LoginContext lc = null;
     	    LdapCallbackHandler callbackHandler = new LdapCallbackHandler();
     	    callbackHandler.userName = ldapConfig.userAccount;
     	    callbackHandler.userPwd = ldapConfig.userPassword;	     	    
-    	    loginContex = new LoginContext(LdapGssAuth.class.getName(), (CallbackHandler)callbackHandler);
-    	    loginContex.login();
-    	} catch (LoginException le) {
+    	    lc = new LoginContext(LdapGssAuth.class.getName(), (CallbackHandler)callbackHandler);
+    	    lc.login();
+    	    loginContex = lc;
+    	} catch (Exception e) {
 			Log.error("LdapGssAuth login failed");
-			Log.error(le);
-    	    loginContex = null;
+			Log.error(e);
+			loginContex = null;
     	}		
 		return loginContex;
 	}
