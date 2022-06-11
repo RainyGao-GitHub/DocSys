@@ -1022,6 +1022,8 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		getListOfSASLMechanisms(config);
+
 		LdapContext ctx = getLDAPConnection("test", "test", config);
 		if(ctx == null)
 		{
@@ -1030,7 +1032,7 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
+				
 		writeJson(rt, response);
 	}
 	
