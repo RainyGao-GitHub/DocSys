@@ -556,7 +556,7 @@ public class BaseFunction{
 	}
 
 	//实时备份没有全量备份
-	private String getRealTimeBackupIndexLibForVirtualDoc(BackupConfig backupConfig, RemoteStorageConfig remote) {
+	protected String getRealTimeBackupIndexLibForVirtualDoc(BackupConfig backupConfig, RemoteStorageConfig remote) {
 		if(remote.isVerRepos)
 		{
 			return backupConfig.indexLibBase + "VDoc";
