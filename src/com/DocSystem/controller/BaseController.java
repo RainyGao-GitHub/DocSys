@@ -57,9 +57,7 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.security.auth.Subject;
-import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -151,9 +149,6 @@ import com.DocSystem.entity.Role;
 import com.DocSystem.entity.SysConfig;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
-import com.DocSystem.sales.JndiAction;
-import com.DocSystem.sales.LDAPTest;
-import com.DocSystem.sales.SampleCallbackHandler;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
@@ -13150,7 +13145,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private static void resetDBTableWithSqlFile(String dbTabName, String type, String url, String user, String pwd) {
+	public static void resetDBTableWithSqlFile(String dbTabName, String type, String url, String user, String pwd) {
 		//更新数据库表结构
 		//check if init script exists
 		String dbTabInitSqlScriptName = "docsystem_" + dbTabName.toUpperCase() + ".sql";
