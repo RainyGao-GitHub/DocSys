@@ -77,12 +77,10 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
-import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
-import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.commonService.ProxyThread;
 
@@ -134,7 +132,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** addDoc ****************");
+		Log.info("************** addDoc [" + path + name + "] ****************");
 		Log.debug("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
 		Log.debug("addDoc default charset:" + Charset.defaultCharset());
 		
@@ -208,7 +206,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** addDocRS ****************");
+		Log.info("************** addDocRS [" + path + name + "] ****************");
 		Log.debug("addDocRS reposId:" + reposId + " remoteDirectory:[" + remoteDirectory + "] path:[" + path + "] name:" + name  + " type:" + type + " content:" + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -319,7 +317,7 @@ public class DocController extends BaseController{
 			String content, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** feeback ****************");
+		Log.info("************** feeback [" + path + name + "] ****************");
 		Log.debug("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -401,7 +399,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** refreshDoc ****************");
+		Log.info("************** refreshDoc [" + path + name + "] ****************");
 		Log.debug("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -459,7 +457,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** deleteDoc ****************");
+		Log.info("************** deleteDoc [" + path + name + "] ****************");
 		Log.debug("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -521,7 +519,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** deleteDocRS ****************");
+		Log.info("************** deleteDocRS [" + path + name + "] ****************");
 		Log.debug("deleteDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -601,7 +599,7 @@ public class DocController extends BaseController{
 							Integer shareId,
 							HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** renameDoc ****************");
+		Log.info("************** renameDoc [" + path + name + "] ****************");
 		Log.debug("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName+ " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -695,7 +693,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** moveDoc ****************");
+		Log.info("************** moveDoc [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
 		Log.debug("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 
 		if(srcPath == null)
@@ -790,7 +788,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** copyDoc ****************");
+		Log.info("************** copyDoc [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
 		Log.debug("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -875,7 +873,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** copyDocRS ****************");
+		Log.info("************** copyDocRS [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
 		Log.debug("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " srcName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -997,7 +995,7 @@ public class DocController extends BaseController{
 			String cmdLine,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** executeDoc ****************");
+		Log.info("************** executeDoc [" + path + name + "] ****************");
 		Log.debug("executeDoc reposId:" + reposId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1070,7 +1068,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** checkDocInfo ****************");
+		Log.info("************** checkDocInfo [" + path + name + "] ****************");
 		Log.debug("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1293,7 +1291,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
-		Log.info("************** checkChunkUploaded ****************");
+		Log.info("************** checkChunkUploaded [" + path + name + "] ****************");
 		Log.debug("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 			
@@ -1417,7 +1415,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
-		Log.info("************** combineChunks ****************");
+		Log.info("************** combineChunks [" + path + name + "] ****************");
 		Log.debug("combineChunks  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 			
@@ -1515,7 +1513,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.info("************** uploadDoc ****************");
+		Log.info("************** uploadDoc [" + path + name + "] ****************");
 		Log.debug("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
 							+ " shareId:" + shareId + " commitMsg:" + commitMsg);
@@ -1743,7 +1741,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.info("************** uploadDocRS ****************");
+		Log.info("************** uploadDocRS [" + path + name + "] ****************");
 		Log.debug("uploadDocRS  reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " name:" + name  + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " authCode:" + authCode + " commitMsg:" + commitMsg);
 		ReturnAjax rt = new ReturnAjax();
@@ -2003,7 +2001,7 @@ public class DocController extends BaseController{
 			@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception
 	{
-		Log.info("************** uploadMarkdownPic ****************");
+		Log.info("************** uploadMarkdownPic [" + path + name + "] ****************");
 		Log.debug("uploadMarkdownPic reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name + " imgName:" + imgName);
 		
 		JSONObject res = new JSONObject();
@@ -2103,7 +2101,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** updateDocContent ****************");
+		Log.info("************** updateDocContent [" + path + name + "] ****************");
 		Log.debug("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 		//Log.debug("updateDocContent content:[" + content + "]");
 		//Log.debug("content size: " + content.length());
@@ -2210,7 +2208,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** tmpSaveDocContent ****************");
+		Log.info("************** tmpSaveDocContent [" + path + name + "] ****************");
 		Log.debug("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		//Log.debug("tmpSaveVirtualDocContent content:[" + content + "]");
 		
@@ -2260,7 +2258,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
-		Log.info("************** downloadDocPrepare ****************");
+		Log.info("************** downloadDocPrepare [" + path + name + "] ****************");
 		Log.debug("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -2700,7 +2698,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
+		Log.info("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
 		
 		if(encryptEn == null || encryptEn == 0 || vid == null)	//此时表明，targetPath肯定是临时目录
 		{
@@ -2755,7 +2753,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.debug("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);
+		Log.info("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);
 		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
@@ -2833,7 +2831,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		Log.info("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
 			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
@@ -2857,8 +2855,8 @@ public class DocController extends BaseController{
 			String disposition,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.info("************** downloadDoc ****************");
-		Log.debug("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
+		Log.info("************** downloadDocEx ****************");
+		Log.debug("downloadDocEx reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2916,7 +2914,7 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		Log.debug("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		Log.info("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
 			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
@@ -3002,7 +3000,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 		
-		Log.info("************** getZipDocContent ****************");
+		Log.info("************** getZipDocContent [" + path + name + "] ****************");
 		Log.debug("getZipDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " rootPath:" + rootPath + " rootName:" + rootName + " shareId:" + shareId);
 
 		if(path == null)
@@ -3079,7 +3077,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 
-		Log.info("************** getDocContent ************");
+		Log.info("************** getDocContent [" + path + name + "] ************");
 		Log.debug("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId);
 
 		//注意该接口支持name是空的的情况
@@ -3313,7 +3311,7 @@ public class DocController extends BaseController{
 	public void getTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		Log.info("*************** getTmpSavedDocContent ********************");
+		Log.info("*************** getTmpSavedDocContent [" + path + name + "] ********************");
 		Log.debug("getTmpSavedDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 
 		if(path == null)
@@ -3373,7 +3371,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("*************** deleteTmpSavedDocContent ********************");
+		Log.info("*************** deleteTmpSavedDocContent [" + path + name + "] ********************");
 		Log.debug("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -3496,7 +3494,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("*************** getDoc ********************");
+		Log.info("*************** getDoc [" + path + name + "] ********************");
 		Log.debug("getDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType + " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -3629,7 +3627,7 @@ public class DocController extends BaseController{
 	public void getDocRS(Integer reposId, String remoteDirectory, String path, String name,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)	{
-		Log.info("*************** getDocRS ********************");
+		Log.info("*************** getDocRS [" + path + name + "] ********************");
 		Log.debug("getDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -3708,7 +3706,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)	throws Exception
 	{
-		Log.info("*************** downloadDocRS ********************");
+		Log.info("*************** downloadDocRS [" + path + name + "] ********************");
 		Log.debug("downloadDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -3848,7 +3846,7 @@ public class DocController extends BaseController{
 			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("*************** getZipDocFileLink ********************");		
+		Log.info("*************** getZipDocFileLink [" + path + name + "] ********************");		
 		Log.debug("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " rootPath:" + rootPath + " rootName:" + rootName + " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -3904,7 +3902,7 @@ public class DocController extends BaseController{
 			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("*************** getDocFileLink ********************");		
+		Log.info("*************** getDocFileLink [" + path + name + "] ********************");		
 		Log.debug("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId);
 
 		//注意该接口支持name是空的的情况
@@ -4035,7 +4033,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** lockDoc ****************");
+		Log.info("************** lockDoc [" + path + name + "] ****************");
 		Log.debug("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -4133,7 +4131,7 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** unlockDoc ****************");
+		Log.info("************** unlockDoc [" + path + name + "] ****************");
 		Log.debug("unlockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -4219,7 +4217,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** getDocHistory ****************");
+		Log.info("************** getDocHistory [" + path + name + "] ****************");
 		Log.debug("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -4284,7 +4282,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** getHistoryDetail ****************");
+		Log.info("************** getHistoryDetail [" + path + name + "] ****************");
 		Log.debug("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -4352,7 +4350,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.info("************** downloadHistoryDocPrepare ****************");
+		Log.info("************** downloadHistoryDocPrepare [" + path + name + "] ****************");
 		Log.debug("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -4543,7 +4541,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** revertDocHistory ****************");
+		Log.info("************** revertDocHistory [" + path + name + "] ****************");
 		Log.debug("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
 
 		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
@@ -4892,7 +4890,7 @@ public class DocController extends BaseController{
 			String pwd,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** setDocPwd ****************");
+		Log.info("************** setDocPwd [" + path + name + "] ****************");
 		Log.debug("setDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -4981,7 +4979,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** verifyDocPwd ****************");
+		Log.info("************** verifyDocPwd [" + path + name + "] ****************");
 		Log.debug("verifyDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -5055,7 +5053,7 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** addRemoteDocShare ****************");
+		Log.info("************** addRemoteDocShare [" + path + name + "] ****************");
 		Log.debug("addRemoteDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -5189,7 +5187,7 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** addDocShare ****************");		
+		Log.info("************** addDocShare [" + path + name + "] ****************");		
 		Log.debug("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -5565,7 +5563,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
-		Log.info("************** searchDoc ****************");				
+		Log.info("************** searchDoc [" + path + "] ****************");				
 		Log.debug("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort+ " shareId:" + shareId + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -5963,7 +5961,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
-		Log.debug("\n ******* getZipSubDocList ******");
+		Log.info(" ******* getZipSubDocList [" + path + name + "] ******");
 		Log.debug("getZipSubDocList reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
