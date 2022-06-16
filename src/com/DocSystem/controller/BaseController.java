@@ -16168,13 +16168,7 @@ public class BaseController  extends BaseFunction{
 		
 		Log.printObject("getRemoteStorageEntryType() tmpDoc:", tmpDoc);
 		
-		Doc remoteDoc =  getRemoteStorageEntry(session, remote, repos, tmpDoc, commitId);
-		if(remoteDoc == null)
-		{
-			return 0;
-		}
-		
-		return remoteDoc.getType();
+		return getRemoteStorageEntryType(session, remote, tmpDoc.getPath(), tmpDoc.getName(), commitId);
 	}
 	
 	private static void updateRemoteStorageDbEntry( RemoteStorageConfig remote, Repos repos, DocPushResult pushResult, List<CommitAction> actionList, String revision) {
@@ -17396,10 +17390,47 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private static boolean addDirToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name, String commitMsg, String commitUser)
+	{
+		boolean ret = false;
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			ret = addDirToLocalDisk(session, remote, remotePath, name);
+			break;
+		case "sftp":
+			ret = addDirToSftpServer(session, remote, remotePath, name);
+			break;
+		case "ftp":
+			ret = addDirToFtpServer(session, remote, remotePath, name);
+			break;
+		case "smb":
+			ret = addDirToSmbServer(session, remote, remotePath, name);
+			break;
+		case "mxsdoc":
+			ret = addDirToMxsDocServer(session, remote, remotePath, name);
+			break;
+		case "svn":
+			ret = addDirToSvnServer(session, remote, remotePath, name, commitMsg, commitUser);
+			break;
+		//git会不跟踪目录节点，因此不需要处理
+		case "git":
+			ret = addDirToGitServer(session, remote, remotePath, name, commitMsg, commitUser);
+			break;
+		default:
+			Log.debug("addDirsToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return ret;
+	}
+	
+	
 	//这个函数只是添加远程目录
 	protected static boolean addDirsToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, String basePath, String offsetPath, String commitMsg, String commitUser) {
 		String remotePath = basePath;
 		String path[] = offsetPath.split("/");
+		
 		for(int i=0; i<path.length; i++)
 		{			
 			if(path[i].equals(""))
@@ -17408,38 +17439,55 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			Log.debug("addDirsToRemoteStorage() path[" + i+ "]:" + path[i]);
-			switch(remote.protocol)
+			Integer type = getRemoteStorageEntryType(session, remote, remotePath, path[i], null);
+			if(type == null)
 			{
-			case "file":
-				addDirToLocalDisk(session, remote, remotePath, path[i]);
-				break;
-			case "sftp":
-				addDirToSftpServer(session, remote, remotePath, path[i]);
-				break;
-			case "ftp":
-				addDirToFtpServer(session, remote, remotePath, path[i]);
-				break;
-			case "smb":
-				addDirToSmbServer(session, remote, remotePath, path[i]);
-				break;
-			case "mxsdoc":
-				addDirToMxsDocServer(session, remote, remotePath, path[i]);
-				break;
-			case "svn":
-				addDirToSvnServer(session, remote, remotePath, path[i], commitMsg, commitUser);
-				break;
-			//git会不跟踪目录节点，因此不需要处理
-			case "git":
-			//	return addDirsToGitServer(session, remote, remotePath, path[i]);
-				return true;
-			default:
-				Log.debug("addDirsToRemoteStorage unknown remoteStorage protocol:" + remote.protocol);
+				Log.info("addDirsToRemoteStorage() getRemoteStorageEntryType for " + remotePath + path[i] + " 异常");
 				return false;
+			}
+			
+			if(type == 0)
+			{
+				Log.debug("addDirsToRemoteStorage() try to add dir:" + remotePath + path[i]);
+				boolean ret = addDirToRemoteStorage(session, remote, remotePath, path[i], commitMsg, commitUser);
+				if(ret == false)
+				{
+					Log.debug("addDirsToRemoteStorage() failed to add dir:" + remotePath + path[i]);
+					return false;
+				}
 			}
 			
 			remotePath = remotePath + path[i] + "/";
 		}
-		return false;
+		
+		return true;
+	}
+
+	private static Integer getRemoteStorageEntryType(RemoteStorageSession session, RemoteStorageConfig remote,
+			String remotePath, String name, String commitId) 
+	{
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			return getRemoteStorageEntryTypeForLocal( session, remote, remotePath, name);
+		case "sftp":
+			return getRemoteStorageEntryTypeForSftp( session, remote, remotePath, name);
+		case "ftp":
+			return getRemoteStorageEntryTypeForFtp(session, remote, remotePath, name);
+		case "smb":
+			return getRemoteStorageEntryTypeForSmb(session, remote, remotePath, name);
+		case "mxsdoc":
+			return getRemoteStorageEntryTypeForMxsDoc(session, remote, remotePath, name);
+		case "svn":
+			return getRemoteStorageEntryTypeForSvn(session, remote, remotePath, name, commitId);
+		case "git":
+			return getRemoteStorageEntryTypeForGit(session, remote, remotePath, name, commitId);
+		default:
+			Log.debug("getRemoteStorageEntry unknown remoteStorage protocol:" + remote.protocol);
+			break;
+		}
+		return null;
 	}
 
 	private static boolean deleteEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
@@ -17660,6 +17708,11 @@ public class BaseController  extends BaseFunction{
 			Log.info(e);
 		}
         return ret;
+	}
+	
+	private static boolean addDirToGitServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name, String commitMsg, String commitUser) {
+		//GIT 仓库不会跟踪目录，因此直接成功即可
+		return true;
 	}
 
 	private static boolean addFileToSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, Doc doc, DocPushResult pushResult, List<CommitAction> commitActionList, boolean isSubAction) {
@@ -18269,6 +18322,30 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
+
+	private static Integer getRemoteStorageEntryTypeForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name) 
+	{
+        if(name.isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForMxsDoc name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForMxsDoc for:" + remotePath + name);
+        
+		try {
+        	String remoteParentPath = remote.rootPath + remotePath;
+        	JSONObject entry = session.mxsdoc.getEntry(remoteParentPath, name);
+        	if(entry != null)
+        	{
+				return entry.getInteger("type");
+			}
+		} catch (Exception e) {
+			Log.info(e);
+		}
+        return 0;	
+	}
+	
 	private static Doc getRemoteStorageEntryForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
         Doc remoteDoc = null;
         
@@ -18730,6 +18807,53 @@ public class BaseController  extends BaseFunction{
 		remoteDoc.setRevision(subEntryRevision);			    	
 		return remoteDoc;
 	}
+	
+	private static Integer getRemoteStorageEntryTypeForLocal(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name)	
+	{
+        if(name.isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryTypeForLocal() name 不能为空");
+			return null;
+		}
+        
+        Log.debug("getRemoteStorageEntryTypeForLocal for:" + remotePath + name);
+        
+        File entry = new File(remote.FILE.localRootPath + remote.rootPath + remotePath, name);
+        return getEntryType(entry);        
+	}
+
+	
+	private static Integer getRemoteStorageEntryTypeForSftp(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name) 
+	{
+        if(name.isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForSftp name 不能为空");
+			return null;
+		}
+        
+        Log.debug("getRemoteStorageEntryForSftp for:" + remotePath + name);
+        
+		try {
+        	String remoteParentPath = remote.rootPath + remotePath;
+        	Vector<?> list = session.sftp.listFiles(remoteParentPath);
+			//Log.printObject("list:", list);
+			if(list != null)
+			{
+	        	for(int i=0; i<list.size(); i++)
+				{
+					LsEntry entry = (LsEntry) list.get(i);
+					String entryName = entry.getFilename();
+					if(entryName.equals(name))
+					{
+						return getEntryType(entry);
+					}
+				}
+			}
+		} catch (Exception e) {
+			Log.info(e);
+		}
+        return 0;
+	}
 
 	private static Doc getRemoteStorageEntryForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
 	{
@@ -18786,6 +18910,37 @@ public class BaseController  extends BaseFunction{
         return remoteDoc;
 	}
 
+
+	private static Integer getRemoteStorageEntryTypeForFtp(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name) 
+	{
+        if(name.isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForFtp name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForFtp for:" + remotePath + name);
+        
+		try {
+        	String remoteParentPath = remote.rootPath + remotePath;
+
+        	FTPFile[] list = session.ftp.listFiles(remoteParentPath);
+			//Log.printObject("list:", list);
+			for(int i=0; i<list.length; i++)
+			{
+				FTPFile entry = list[i];
+				String entryName = entry.getName();
+				if(entryName.equals(name))
+				{
+					return getEntryType(entry);
+				}
+			}
+		} catch (Exception e) {
+			Log.info(e);
+		}
+        return 0;
+	}
+	
 	private static Doc getRemoteStorageEntryForFtp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
 	{
         Doc remoteDoc = null;
@@ -18839,6 +18994,31 @@ public class BaseController  extends BaseFunction{
         return remoteDoc;
 	}
 	
+
+	private static Integer getRemoteStorageEntryTypeForSmb(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name) 
+	{
+        if(name.isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForSmb name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForSmb for:" + remotePath + name);
+        
+		try {
+        	String remoteParentPath = remote.rootPath + remotePath;
+
+        	SmbFile entry = session.smb.getEntry(remoteParentPath, name);
+        	if(entry != null)
+        	{
+				return getEntryType(entry);
+			}
+		} catch (Exception e) {
+			Log.info(e);
+		}
+        return 0;
+	}
+
 	private static Doc getRemoteStorageEntryForSmb(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) 
 	{
         Doc remoteDoc = null;
@@ -18885,6 +19065,45 @@ public class BaseController  extends BaseFunction{
         return remoteDoc;
 	}
 	
+	private static Integer getRemoteStorageEntryTypeForSvn(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name, String commitId) 
+	{
+        if(name.isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForSvn name 不能为空");
+			return null;
+		}
+		
+        Log.debug("getRemoteStorageEntryForSvn for:" + remotePath + name);
+        
+		try {
+        	String remoteParentPath = remote.rootPath + remotePath;
+
+        	Collection<SVNDirEntry> list = session.svn.listFiles(remoteParentPath, commitId);
+			if(list != null)
+			{
+				Iterator<SVNDirEntry> iterator = list.iterator();
+    	        while (iterator.hasNext()) 
+	    	    {
+	    	    	SVNDirEntry subEntry = iterator.next();
+	    	    	int subEntryType = getEntryType(subEntry.getKind());
+	    	    	if(subEntryType <= 0)
+	    	    	{
+	    	    		continue;
+	    	    	}
+	    	    	
+	    	    	String subEntryName = subEntry.getName();
+	    	    	if(subEntryName.equals(name))
+	    	    	{
+	    	    		return subEntryType;
+	    	    	}
+	    	    }
+    	    }
+		} catch (Exception e) {
+			Log.info(e);
+		}
+        return 0;
+	}
+
 	private static Doc getRemoteStorageEntryForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) 
 	{
         Doc remoteDoc = null;
@@ -18944,6 +19163,26 @@ public class BaseController  extends BaseFunction{
 			Log.info(e);
 		}
         return remoteDoc;
+	}
+
+	private static Integer getRemoteStorageEntryTypeForGit(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name, String commitId) 
+	{
+        if(name.isEmpty())
+		{
+			Log.debug("getRemoteStorageEntryForGit name 不能为空");
+			return null;
+		}
+        
+        Log.debug("getRemoteStorageEntryForGit for:" + remotePath + name);
+        
+		try {
+			
+        	String remoteEntryPath = remote.rootPath + remotePath + name;        	        	
+        	return session.git.checkPath(remoteEntryPath, commitId);
+		} catch (Exception e) {
+			Log.info(e);
+		}
+        return 0;
 	}
 
 	private static Doc getRemoteStorageEntryForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) 
