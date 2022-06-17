@@ -17702,8 +17702,7 @@ public class BaseController  extends BaseFunction{
 	private static boolean addDirToSvnServer(RemoteStorageSession session, RemoteStorageConfig remote, String remotePath, String name, String commitMsg, String commitUser) {
 		boolean ret = false;
 		try {
-			session.svn.mkdir(remotePath, name, commitMsg, commitUser);
-			ret = true;
+			ret = session.svn.mkdir(remotePath, name, commitMsg, commitUser);
 		} catch (Exception e) {
 			Log.info(e);
 		}
