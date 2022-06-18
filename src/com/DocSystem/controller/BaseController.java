@@ -11080,7 +11080,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("********* realTimeRemoteStoragPush() ***********");
+		Log.info("********* realTimeRemoteStoragPush() ***********");
 		
 		boolean ret = false;
 		
@@ -11135,7 +11135,7 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
 	{
-		Log.debug("************ realTimeBackup() **************");
+		Log.info("************ realTimeBackup() **************");
 		
 		ReposBackupConfig backupConfig = repos.backupConfig;
 		if(backupConfig == null)
@@ -11150,7 +11150,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("************* realTimeRemoteBackup() ***************");
+		Log.info("************* realTimeRemoteBackup() ***************");
 
 		boolean ret = false;
 		
@@ -11183,7 +11183,7 @@ public class BaseController  extends BaseFunction{
 		{
 			dstDoc.offsetPath = offsetPath;
 		}
-		Log.debug("realTimeRemoteBackup() offsetPath [" + offsetPath + "]");			
+		Log.info("realTimeRemoteBackup() offsetPath [" + offsetPath + "]");			
 		
 		//push Options
 		boolean recurcive = true;
@@ -11228,7 +11228,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("********** realTimeLocalBackup() ****************");
+		Log.info("********** realTimeLocalBackup() ****************");
 
 		boolean ret = false;
 		
@@ -11261,7 +11261,7 @@ public class BaseController  extends BaseFunction{
 		{
 			dstDoc.offsetPath = offsetPath;
 		}
-		Log.debug("realTimeLocalBackup() offsetPath [" + offsetPath + "]");			
+		Log.info("realTimeLocalBackup() offsetPath [" + offsetPath + "]");			
 			
 		//push options
 		boolean recurcive = true;
