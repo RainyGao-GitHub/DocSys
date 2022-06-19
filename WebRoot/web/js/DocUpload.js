@@ -49,6 +49,9 @@
  		
  		var SubContextHashMap = {};
         
+ 		//上传成功但显示仍然还在的列表
+ 		var displayDeleteList = [];
+ 		
         //状态机变量，用于实现异步对话框的实现
         var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
         var uploadErrorConfirmSet = 0; //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传		
@@ -476,6 +479,9 @@
       				return;
       			}
       			
+      			//Delete the uploadItems which in displayDeleteList
+      			deleteItemsInDisplayDeleteList();
+      			
       			//Prepare to drawed
       			var startIndex = drawedNum;
       			var endIndex = totalNum;
@@ -510,6 +516,20 @@
 		    		drawedNum++;	    		
 				}
 				$('#uploadedFileList').append(str);		
+      	}
+      	
+      	function deleteItemsInDisplayDeleteList()
+      	{
+      		for(var i = 0; i < displayDeleteList.length; i++)
+      		{
+      			deleteDisplayItem(displayDeleteList[i]);
+      		}
+      		displayDeleteList = [];
+      	}
+      	
+      	function deleteDisplayItem(index)
+      	{
+      		$('.file' + index).remove();      		
       	}
  		
 		//文件覆盖确认不能像文件错误确认一样封装成函数的原因在于，文件复制会存在两种种情况：继续、异步等待用户确认，文件错误确认只有一种情况：异步等待用户确认
@@ -1035,7 +1055,10 @@
 			$('.file'+SubContext.index).addClass('is-success');
 			
 			//hide the reupload btn
-			$(".reupload"+SubContext.index).hide();			
+			$(".reupload"+SubContext.index).hide();
+			
+			//add index to displayDeleteList
+			displayDeleteList.push(SubContext.index);
       	}
 
   		function showUploadEndInfo()
