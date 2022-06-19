@@ -604,7 +604,9 @@
 	      	SubContext.state = 2;	//下载结束
       		SubContext.status = "success";
       		SubContext.msgInfo = msgInfo;
-			downloadNextDoc();
+      		$('.downloadFile'+SubContext.index+' .el-progress-bar__inner')[0].style.width = '100%'; //进度条
+      		
+      		downloadNextDoc();
       	}
       	
       	//downloadEndHandler
