@@ -1168,9 +1168,9 @@
              			if(ret.data)
 	             		{
 	             			maxThreadCount = ret.data;
-	             			if(maxThreadCount > 10)
+	             			if(maxThreadCount > 100)
 	             			{
-	             				maxThreadCount = 10;
+	             				maxThreadCount = 100;
 	             			}
 	             			else if(maxThreadCount < 1)
 	             			{
@@ -2399,13 +2399,13 @@
 	  			isUploading = false;
 	  			reuploadFlag = false;
 
+	  			//显示全部重传标记
+  				$(".reuploadAllBtn").show();
+
 	  			//通过回调来处理每个文件的停止，否则会导致出现对话框卡顿现象
 	  			setTimeout(function () {
-	  				stopAllUploadHanlder();
-	  	  			
-	  				//显示全部重传标记
-	  				$(".reuploadAllBtn").show();
-	  			}, 100);
+	  				stopAllUploadHanlder();	  	  			
+	  			}, 1000);
 			}
 		}
 				
