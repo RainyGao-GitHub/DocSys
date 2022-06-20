@@ -197,29 +197,7 @@ fc-cache
 
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 
-### 六、Linux系统中文乱码
-
-#### 1、查看当前使用的系统语言
-
-echo $LANG
-
-#### 2、查看是否已安装有中文语言包
-
-locale
-
-如有 zh cn 表示已经安装了中文语言
-
-#### 3、安装中文语言包
-
-yum groupinstall chinese-support
-
-#### 4、修改系统默认语言
-
-vi  /etc/sysconfig/i18n
-
-修改为 LANG="zh_CN.UTF-8" 并重启系统
-
-### 七、什么是分布式远程存储
+### 六、什么是分布式远程存储
 
 1、仓库文件可以存储在远程文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）
 
@@ -231,13 +209,13 @@ vi  /etc/sysconfig/i18n
 
 5、仓库可以独立于远程文件服务器进行文件操作和版本管理
 
-### 八、什么是文件服务器前置
+### 七、什么是文件服务器前置
 
 1. 设置为文件服务器前置的仓库，可以作为的文件服务器的客户端使用，
 
 2. 在该仓库页面上，能够查看和操作文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）上的文件和目录
 
-### 九、如何使用MxsDoc作为自动备份工具
+### 八、如何使用MxsDoc作为自动备份工具
 
 1. 新建仓库
 
@@ -251,13 +229,38 @@ vi  /etc/sysconfig/i18n
 
 （3）根据自己需求勾选备份时间
 
-### 十、Windows的共享文件夹无法远程访问
+### 九、其他常见问题
+#### 1、Linux系统中文乱码
+
+##### 1.1、查看当前使用的系统语言
+
+echo $LANG
+
+##### 1.2、查看是否已安装有中文语言包
+
+locale
+
+如有 zh cn 表示已经安装了中文语言
+
+##### 1.3、安装中文语言包
+
+yum groupinstall chinese-support
+
+##### 1.4、修改系统默认语言
+
+vi  /etc/sysconfig/i18n
+
+修改为 LANG="zh_CN.UTF-8" 并重启系统
+
+#### 2、Windows的共享文件夹无法远程访问
 
 1. 打开控制面板-->程序和功能-->启用或关闭windows功能-->勾选SMB 1.0/CIFS文件共享支持
 
 2. 重启系统
 
-### 十一、调试日志获取
+### 十、调试日志获取
+
+#### 1、调试日志获取（系统可登录）
 
 1. 进入系统设置页面（管理后台 -> 系统设置）
 
@@ -267,7 +270,7 @@ vi  /etc/sysconfig/i18n
 
 4. 测试完成后，点击下载
 
-### 十二、调试日志获取（系统无法登录时）
+#### 2、调试日志获取（系统无法登录时）
 
 1. 调试日志等级设置为debug
 
