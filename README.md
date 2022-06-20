@@ -129,7 +129,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### 四、数据库常见问题
 
-#### 1. 使用自定义mysql数据库无法登录
+#### 1、 使用自定义mysql数据库无法登录
 
 ##### 1.1、手动创建数据库
 
@@ -137,11 +137,23 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 删除docSys.ini/version文件，重启MxsDoc
 
-#### 2. Linux系统mysql数据库无法启动
+#### 2、 mysql无法向文件写入数据
 
-##### 2.1、更换mxsdoc的存放目录
+通常发生在linux系统，Linux系统的一些特殊目录（例如：根目录和root目录）通常不允许写入文件
 
-mysql在Linux系统某些特殊目录下没有运行权限
+建议更换mxsdoc在Linux系统的安装目录
+
+#### 3、 mysql不支持带空格的路径
+
+通常发生在windows系统，建议将mxsdoc安装在不带空格的目录下
+
+#### 4、mysql启动时缺少libiao库
+
+通常发生在linux系统，有些Linux系统没有默认安装libiao库，手动安装即可
+
+#### 5、mysql Crash导致无法再次启动
+
+删除tc.log文件，重新启动mysql即可
 
 ### 五、Office编辑常见问题
 
