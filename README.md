@@ -127,55 +127,65 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 #### 1、删除 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录
 
-### 四、使用自定义mysql数据库无法登录
+### 四、数据库常见问题
 
-#### 1、手动创建数据库
+#### 1. 使用自定义mysql数据库无法登录
 
-#### 2、触发数据库初始化
+##### 1.1、手动创建数据库
+
+##### 1.2、触发数据库初始化
 
 删除docSys.ini/version文件，重启MxsDoc
 
-### 五、Linux系统war包直接部署Office无法预览和编辑
+#### 2. Linux系统mysql数据库无法启动
 
-#### 1、手动创建DocSystem目录
+##### 2.1、更换mxsdoc的存放目录
+
+mysql在Linux系统某些特殊目录下没有运行权限
+
+### 五、Office编辑常见问题
+
+#### 1、Linux系统war包直接部署Office无法预览和编辑
+
+##### 1.1、手动创建DocSystem目录
 
 解压 DocSystem.war 到 tomcat\webapps\DocSystem 目录
 
-#### 2、手动安装动态库
+##### 1.2、手动安装动态库
 
 复制 DocSystem\web\static\office-editor\libs\Linux 目录下的所有动态库到 /usr/lib64 目录
 
-#### 3、重启MxsDoc
+##### 1.3、重启MxsDoc
 
-### 六、Windows系统Office无法预览和编辑
+#### 2、Windows系统Office无法预览和编辑
 
-#### 1、检查系统缺少的动态库并修复
+##### 2.1、检查系统缺少的动态库并修复
 
 双击运行 DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat ，根据报错提示确定需要修复的动态库
 
-### 七、Linux系统Excel在线编辑退出后，修改内容丢失
+#### 3、Linux系统Excel在线编辑退出后，修改内容丢失
 
-#### 1、安装字体库
+##### 3.1、安装字体库
 
 yum -y install fontconfig
 
-#### 2、添加中文字体
+##### 3.2、添加中文字体
 
 将 C:/Windows/Fonts 字体文件复制到 /usr/share/fonts 目录
 
-#### 3、生成 fonts.scale 文件
+##### 3.3、生成 fonts.scale 文件
 
 yum -y install ttmkfdir 
 
-#### 4、刷新字体缓存
+##### 3.4、刷新字体缓存
 
 fc-cache
 
-#### 5、重新生成office字体库
+##### 3.5、重新生成office字体库
 
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 
-### 八、Linux系统中文乱码
+### 六、Linux系统中文乱码
 
 #### 1、查看当前使用的系统语言
 
@@ -197,7 +207,7 @@ vi  /etc/sysconfig/i18n
 
 修改为 LANG="zh_CN.UTF-8" 并重启系统
 
-### 九、什么是分布式远程存储
+### 七、什么是分布式远程存储
 
 1、仓库文件可以存储在远程文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）
 
@@ -209,13 +219,13 @@ vi  /etc/sysconfig/i18n
 
 5、仓库可以独立于远程文件服务器进行文件操作和版本管理
 
-### 十、什么是文件服务器前置
+### 八、什么是文件服务器前置
 
 1. 设置为文件服务器前置的仓库，可以作为的文件服务器的客户端使用，
 
 2. 在该仓库页面上，能够查看和操作文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）上的文件和目录
 
-### 十一、如何使用MxsDoc作为自动备份工具
+### 九、如何使用MxsDoc作为自动备份工具
 
 1. 新建仓库
 
@@ -229,13 +239,13 @@ vi  /etc/sysconfig/i18n
 
 （3）根据自己需求勾选备份时间
 
-### 十二、Windows的共享文件夹无法远程访问
+### 十、Windows的共享文件夹无法远程访问
 
 1. 打开控制面板-->程序和功能-->启用或关闭windows功能-->勾选SMB 1.0/CIFS文件共享支持
 
 2. 重启系统
 
-### 十三、调试日志获取
+### 十一、调试日志获取
 
 1. 进入系统设置页面（管理后台 -> 系统设置）
 
@@ -245,7 +255,7 @@ vi  /etc/sysconfig/i18n
 
 4. 测试完成后，点击下载
 
-### 十四、调试日志获取（系统无法登录时）
+### 十二、调试日志获取（系统无法登录时）
 
 1. 调试日志等级设置为debug
 
