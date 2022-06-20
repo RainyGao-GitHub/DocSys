@@ -2563,10 +2563,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//LDAP模式
-		Log.debug("loginCheck() LDAP Mode"); 
+		Log.info("loginCheck() LDAP Mode"); 
 		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd);
 		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
 		{
+			Log.info("loginCheck() ldapLoginCheck login failed, try traditional mode");
 			List<User> uLists = getUserList(userName,md5Pwd);
 			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
 			if(ret == false)
