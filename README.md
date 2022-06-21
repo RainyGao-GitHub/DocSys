@@ -13,7 +13,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105551_20a8ac4f_1558129.png "docsys_首页2.png")
 
 ### 多仓库支持
-支持自定义独立的存储规则、版本管理、权限设置
+支持定义各自的文件存储、版本管理、权限管理、全文搜索、文件加密等规则
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105615_5aa90a26_1558129.png "docsys_仓库列表1.png")
 
 ### 存储安全
