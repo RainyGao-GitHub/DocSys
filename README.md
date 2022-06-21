@@ -12,22 +12,28 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ### 开源协议: 采用GPL 2.0协议;
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105551_20a8ac4f_1558129.png "docsys_首页2.png")
 
-### 仓库列表
+### 多仓库支持
+支持自定义独立的存储规则、版本管理、权限设置
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105615_5aa90a26_1558129.png "docsys_仓库列表1.png")
 
-### 仓库主页
+### 仓库存储安全
+仓库的文件存储独立于系统，系统意外损坏对仓库的文件存储无影响，重新部署新系统即可重新访问
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105650_d4a010aa_1558129.png "docsys_仓库主页1.png")
 
-### 历史版本
+### 历史版本管理
+采用目前最流行的SVN和GIT增量版本历史管理
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105708_0888bd30_1558129.png "docsys_仓库主页3.png")
 
 ### 在线编辑
+支持各种文本文件在线编辑，支持Office文件协同编辑，无任何外部依赖（无需安装和部署其他Office编辑软件或系统）
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105732_88ed0a73_1558129.png "docsys_仓库主页2.png")
 
 ### 文件分享
+支持文件和目录分享，支持密码控制
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105757_67ca6763_1558129.png "docsys_仓库主页4.png")
 
 ### 全文搜索
+支持文件名、文件备注、文件内容搜索，让文件查找更加快捷方便
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105917_2ee5c143_1558129.png "docsys_仓库列表2.png")
 
 ### 后台管理
