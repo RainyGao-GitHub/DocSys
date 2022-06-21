@@ -21,7 +21,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105650_d4a010aa_1558129.png "docsys_仓库主页1.png")
 
 ### 历史版本
-采用目前最流行的SVN和GIT增量版本历史管理
+采用目前最流行的SVN和GIT版本仓库，用户可以使用SVN和GIT客户端工具访问版本仓库
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105708_0888bd30_1558129.png "docsys_仓库主页3.png")
 
 ### 在线编辑
