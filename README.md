@@ -13,11 +13,11 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105551_20a8ac4f_1558129.png "docsys_首页2.png")
 
 ### 多仓库支持
-支持定义各自的文件存储、版本管理、权限管理、全文搜索、文件加密等规则
+支持定义各自的文件存储、版本管理、权限管理、全文搜索和文件加密规则
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105615_5aa90a26_1558129.png "docsys_仓库列表1.png")
 
 ### 存储安全
-本地化文件存储方案，系统意外损坏不会对仓库的文件造成影响
+本地化文件存储方案，有效避免系统意外损坏对仓库的文件造成影响
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105650_d4a010aa_1558129.png "docsys_仓库主页1.png")
 
 ### 历史版本
@@ -29,7 +29,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105732_88ed0a73_1558129.png "docsys_仓库主页2.png")
 
 ### 文件分享
-支持文件和目录分享，支持密码控制
+支持文件和目录分享，支持密码控制和权限控制
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105757_67ca6763_1558129.png "docsys_仓库主页4.png")
 
 ### 全文搜索
@@ -37,6 +37,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105917_2ee5c143_1558129.png "docsys_仓库列表2.png")
 
 ### 后台管理
+支持用户管理、用户组管理、仓库管理、系统管理
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105813_e858feb3_1558129.png "docsys_管理后台1.png")
 
 # 系统安装与升级
