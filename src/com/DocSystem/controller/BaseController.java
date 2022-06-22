@@ -11081,7 +11081,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.info("********* realTimeRemoteStoragPush() ***********");
+		Log.debug("********* realTimeRemoteStoragPush() ***********");
 		
 		boolean ret = false;
 		
@@ -11099,6 +11099,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 	    }
 		
+		Log.info("********* realTimeRemoteStoragPush() [" + doc.getPath() + doc.getName() + "] ***********");
 		//push Options
 		boolean recurcive = true;
 		boolean force = remote.autoPushForce == 1;
@@ -11136,8 +11137,8 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
 	{
-		Log.info("************ realTimeBackup() **************");
-		
+		Log.debug("********* realTimeBackup() ***********");
+
 		ReposBackupConfig backupConfig = repos.backupConfig;
 		if(backupConfig == null)
 		{
@@ -11151,7 +11152,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.info("************* realTimeRemoteBackup() ***************");
+		Log.debug("********* realTimeRemoteBackup()");
 
 		boolean ret = false;
 		
@@ -11176,6 +11177,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 	    }
 		
+		Log.info("********* realTimeRemoteBackup() [" + doc.getPath() + doc.getName() + "] ***********");
 		//实时备份是不备份备注文件的
 		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(remoteBackupConfig, remote);		
 		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());
@@ -11229,7 +11231,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.info("********** realTimeLocalBackup() ****************");
+		Log.debug("********* realTimeLocalBackup() ****************");
 
 		boolean ret = false;
 		
@@ -11254,6 +11256,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 	    }
 		
+		Log.info("********* realTimeLocalBackup() [" + doc.getPath() + doc.getName() + "] ***********");
 		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(localBackupConfig, remote);		
 		//set offsetPath 
 		String offsetPath = getRealTimeBackupOffsetPathForRealDoc(repos, remote, new Date());		
