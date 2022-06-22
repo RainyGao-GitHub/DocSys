@@ -2507,12 +2507,15 @@
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode)
       {
+    	  console.log("zTreeOnClick() treeId:" + treeId);
+    	  
     	  DocListState = 0;
 
     	  if(!gDocInfo.docId || gDocInfo.docId == 0)
     	  {
     	  		//没有处于打开状态的文件，直接打开文件，摘要模式
 	      		getAndShowDoc(treeNode, 1, false);
+	      		showDocList(treeNode);
     	  		return;
     	  }
 
