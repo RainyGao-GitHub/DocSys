@@ -16,12 +16,12 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 支持定义各自的文件存储、版本管理、权限管理、全文搜索和文件加密规则
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105615_5aa90a26_1558129.png "docsys_仓库列表1.png")
 
-### 存储安全
-本地化文件存储方案，有效避免系统意外损坏对仓库的文件造成影响
+### 存储更安全
+本地化文件存储方案，避免系统意外损坏对仓库文件造成影响
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105650_d4a010aa_1558129.png "docsys_仓库主页1.png")
 
 ### 历史版本
-采用目前最流行的SVN和GIT版本仓库实现增量历史版本管理
+采用目前最流行的SVN和GIT版本仓库，支持增量历史版本管理，支持脱离MxsDoc系统进行访问
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105708_0888bd30_1558129.png "docsys_仓库主页3.png")
 
 ### 在线编辑
@@ -29,7 +29,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105732_88ed0a73_1558129.png "docsys_仓库主页2.png")
 
 ### 文件分享
-支持文件和目录分享，支持密码控制和权限控制
+支持文件和目录分享，支持访问权限设置和密码访问控制
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105757_67ca6763_1558129.png "docsys_仓库主页4.png")
 
 ### 全文搜索
