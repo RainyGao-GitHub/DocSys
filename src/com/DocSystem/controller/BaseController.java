@@ -16,6 +16,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.sql.Connection;
@@ -2503,10 +2504,10 @@ public class BaseController  extends BaseFunction{
 			//尝试自动登录
 			Cookie c1 = getCookieByName(request, "dsuser");
 			Cookie c2 = getCookieByName(request, "dstoken");
-			if(c1!=null&&c2!=null&&c1.getValue()!=null&&c2.getValue()!=null&&!"".equals(c1.getValue())&&!"".equals(c2.getValue()))
+			if(c1 != null && c2 !=null && c1.getValue()!= null && c2.getValue() != null && !c1.getValue().isEmpty() && !c2.getValue().isEmpty())
 			{
 				Log.debug("自动登录");
-				String userName = c1.getValue();
+				String userName = URLDecode(c1.getValue());
 				String pwd = c2.getValue();
 
 				User loginUser = loginCheck(userName, pwd, request, session, response, rt);
@@ -2522,7 +2523,8 @@ public class BaseController  extends BaseFunction{
 				//Set session
 				session.setAttribute("login_user", loginUser);
 				//延长cookie的有效期
-				addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
+				String encUserName = URLEncode(userName);
+				addCookie(response, "dsuser", encUserName, 7*24*60*60);//一周内免登录
 				addCookie(response, "dstoken", pwd, 7*24*60*60);
 				Log.debug("用户cookie保存成功");
 				Log.debug("SESSION ID:" + session.getId());
@@ -2541,6 +2543,38 @@ public class BaseController  extends BaseFunction{
 		return user;
 	}
 	
+	protected String URLEncode(String str) 
+	{
+		if(str == null || str.isEmpty())
+		{
+			return str;
+		}
+		
+		String encStr = null;
+		try {
+			encStr = URLEncoder.encode(str, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return encStr;
+	}
+	
+	protected String URLDecode(String encStr) 
+	{
+		if(encStr == null || encStr.isEmpty())
+		{
+			return encStr;
+		}
+		
+		String str = null;
+		try {
+			str = URLDecoder.decode(encStr, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return str;
+	}
 	
 	protected User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) {
 		User tmp_user = new User();
