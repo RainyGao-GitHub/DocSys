@@ -85,7 +85,8 @@ public class UserController extends BaseController {
 
 		//如果用户点击了保存密码则保存cookies
 		if(rememberMe!=null&&rememberMe.equals("1")){
-			addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
+			String encUserName = URLEncode(userName);
+			addCookie(response, "dsuser", encUserName, 7*24*60*60);//一周内免登录
 			addCookie(response, "dstoken", pwd, 7*24*60*60);
 			Log.debug("用户cookie保存成功");
 		}
