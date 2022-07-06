@@ -204,6 +204,18 @@ fc-cache
 
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 
+#### 4、Linux系统 Office 编辑握手延时过大，导致文件打开失败
+
+与DNS解析的配置有关,解决方法如下：
+
+（1）通过 hostnamectl 获取机器名
+
+（2）在 /etc/hosts 文件中添加对应IP的反解析
+    添加以下内容：
+    内网IP 机器名全称 机器名（去掉.后缀）
+    实例：
+    192.168.0.11 AP-SHA-VM-P85.internal.sungard.corp AP-SHA-VM-P85
+
 ### 六、什么是分布式远程存储
 
 1、仓库文件可以存储在远程文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）
