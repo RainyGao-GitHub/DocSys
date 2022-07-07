@@ -1497,9 +1497,17 @@ public class DocController extends BaseController{
 	{
 		Log.info("****************** getMaxThreadCount.do ***********************");
 
-		Log.debug("getMaxThreadCount()");
 		ReturnAjax rt = new ReturnAjax();
-		Integer maxThreadCount = getMaxThreadCount();
+		Integer maxThreadCount = 1;
+		
+		Log.info("getMaxThreadCount() DB_TYPE:" + DB_TYPE);
+		if(false == DB_TYPE.equals("sqlite"))
+		{
+			maxThreadCount = getMaxThreadCount();
+			Log.debug("getMaxThreadCount() maxThreadCount in config:" + maxThreadCount);
+		}
+		Log.info("getMaxThreadCount() maxThreadCount:" + maxThreadCount);		
+		
 		rt.setData(maxThreadCount);
 		writeJson(rt, response);
 	}
