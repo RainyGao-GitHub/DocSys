@@ -2481,7 +2481,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		//开始压缩
-		if(FileUtil.compressWith7z(srcParentPath + dirName,dstParentPath + zipFileName) == true)
+		if(FileUtil.compressWithZip(srcParentPath + dirName,dstParentPath + zipFileName) == true)
 		{
 			Log.debug("压缩完成！");	
 		}

@@ -26,6 +26,9 @@ import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.Zip;
+import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
@@ -2397,7 +2400,7 @@ public class DocController extends BaseController{
 			//提前压缩有权限的文件(因为这里涉及加密仓库的文件解密问题，对于加密的仓库每次下载都需要先解密再加密，会增加大量的硬盘使用空间)
 			targetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 			targetName = targetName + ".zip";
-			compressAuthedFiles(targetPath, targetName, repos, doc, reposAccess);
+			compressAuthedFilesWithZip(targetPath, targetName, repos, doc, reposAccess);
 			downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 0);
 			rt.setData(downloadDoc);
 			rt.setMsgData(1);	//下载完成后删除已下载的文件
@@ -2467,8 +2470,105 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-    //递归压缩
-    public boolean compressAuthedFiles(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
+	//压缩授权的文件
+    public boolean compressAuthedFilesWithZip(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
+    {
+    	File zipFile = new File(targetPath + targetName);	//finalFile
+    	
+        File input = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName()); //srcFile or Dir
+        if (!input.exists()){
+        	Log.debug(doc.getLocalRootPath() + doc.getPath() + doc.getName() + "不存在！");
+        	return false;
+        }   
+            
+        Project prj = new Project();
+        Zip zip = new Zip();
+        zip.setEncoding("gbk"); //文件名的编码格式，默认是运行平台使用的编码格式，会导致压缩后的文件在其他平台上打开乱码
+        zip.setProject(prj);    
+        zip.setDestFile(zipFile);    
+        FileSet fileSet = new FileSet();    
+        fileSet.setProject(prj);    
+        fileSet.setDir(input);    
+        //fileSet.setIncludes("**/*.java"); //包括哪些文件或文件夹 eg:zip.setIncludes("*.java");    
+        //fileSet.setExcludes("10张必做计算.pdf"); //排除哪些文件或文件夹    
+                
+    	DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
+        configCompressExcludes(fileSet, input, repos, doc, curDocAuth, docAuthHashMap, null);
+        
+        zip.addFileset(fileSet);    
+        zip.execute();  
+		
+        if(zipFile.exists())
+        {
+        	return true;
+        }
+        return false;
+    }
+	
+    private void configCompressExcludes(FileSet fileSet, File input, Repos repos, Doc doc, DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, String relativePath) 
+    {
+		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
+		{
+			Log.debug("configCompressExcludes() have no right to download for [" + doc.getPath() + doc.getName() + "]");
+			
+			if(relativePath == null)	//doc is root path
+			{
+				fileSet.setExcludes("**/*");
+				return;
+			}
+			
+			if (input.isDirectory())
+			{
+				Log.debug("configCompressExcludes() ignore folder:" + relativePath + doc.getName() + "/");
+				fileSet.setExcludes(relativePath + doc.getName() + "/");
+			}
+			else
+			{
+				Log.debug("configCompressExcludes() ignore file:" + relativePath + doc.getName());
+				fileSet.setExcludes(relativePath + doc.getName());				
+			}
+			return;
+		}
+
+	    //如果路径为目录（文件夹）
+        if (input.isDirectory()) {
+        	//取出文件夹中的文件（或子文件夹）
+            File[] flist = input.listFiles();
+            
+            if (flist.length > 0)
+            {
+    			Log.debug("configCompressExcludes() [" + doc.getPath() + doc.getName() + "] is folder");
+            	String subDocParentPath = doc.getPath() + doc.getName() + "/";
+            	String localRootPath = doc.getLocalRootPath();
+            	String localVRootPath = doc.getLocalVRootPath();
+            	String subRelativePath = "";
+            	if(relativePath != null)
+            	{
+            		subRelativePath = relativePath + doc.getName() + "/";
+            	}
+            	Log.debug("configCompressExcludes() subRelativePath:" + subRelativePath);
+            	
+            	for (int i = 0; i < flist.length; i++) {    
+            		File subFile = flist[i];
+            		String subDocName = subFile.getName();
+            		Integer subDocLevel = getSubDocLevel(doc);
+    	    		int type = 1;
+    	    		if(subFile.isDirectory())
+    	    		{
+    	    			type = 2;
+    	    		}
+    	    		long size = subFile.length();
+    	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc.offsetPath);
+            		DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
+            		configCompressExcludes(fileSet, flist[i], repos, subDoc, subDocAuth, docAuthHashMap, subRelativePath);
+                }
+            }
+        }
+	}
+
+	//递归压缩
+    public boolean compressAuthedFilesWith7Z(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
     {
     	DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
@@ -2484,7 +2584,7 @@ public class DocController extends BaseController{
 	        }
 	        
 	        out = new SevenZOutputFile(new File(targetPath, targetName));
-	        compressAuthedFiles(out, input, repos, doc, curDocAuth, docAuthHashMap);
+	        compressAuthedFilesWith7Z(out, input, repos, doc, curDocAuth, docAuthHashMap);
 	        ret = true;
     	} catch(Exception e) {
     		errorLog(e);
@@ -2500,7 +2600,7 @@ public class DocController extends BaseController{
     	}
     	return ret;
     }
-	public void compressAuthedFiles(SevenZOutputFile out, File input, Repos repos, Doc doc, DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap) throws Exception 
+	public void compressAuthedFilesWith7Z(SevenZOutputFile out, File input, Repos repos, Doc doc, DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap) throws Exception 
     {		
 		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
 		{
@@ -2539,7 +2639,7 @@ public class DocController extends BaseController{
     	    		long size = subFile.length();
             		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc.offsetPath);
             		DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
-            		compressAuthedFiles(out, flist[i], repos, subDoc, subDocAuth, docAuthHashMap);
+            		compressAuthedFilesWith7Z(out, flist[i], repos, subDoc, subDocAuth, docAuthHashMap);
                 }
             }
         } 

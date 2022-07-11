@@ -1160,8 +1160,8 @@ public class FileUtil {
 		return false;
 	}
 
-	
-    public static boolean compressExe(String srcPathName,String finalFile) {
+	/***** compress with Zip *****/
+    public static boolean compressWithZip(String srcPathName,String finalFile) {
     	File zipFile = new File(finalFile);	//finalFile
     	
         File srcdir = new File(srcPathName); //srcFile or Dir
@@ -1172,6 +1172,7 @@ public class FileUtil {
             
         Project prj = new Project();    
         Zip zip = new Zip();    
+        zip.setEncoding("gbk");	//文件名的编码格式，默认是运行平台使用的编码格式，会导致压缩后的文件在其他平台上打开
         zip.setProject(prj);    
         zip.setDestFile(zipFile);    
         FileSet fileSet = new FileSet();    
