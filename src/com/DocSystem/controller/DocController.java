@@ -2518,15 +2518,18 @@ public class DocController extends BaseController{
 				return;
 			}
 			
+			String excludeStr = relativePath + doc.getName();
+			excludeStr = excludeStr.replace(",", "?").replace(" ", "?");
+			Log.debug("configCompressExcludes() excludeStr:" + excludeStr);
 			if (input.isDirectory())
 			{
 				Log.debug("configCompressExcludes() ignore folder:" + relativePath + doc.getName() + "/");
-				fileSet.setExcludes(relativePath + doc.getName() + "/");
+				fileSet.setExcludes(excludeStr + "/");
 			}
 			else
 			{
 				Log.debug("configCompressExcludes() ignore file:" + relativePath + doc.getName());
-				fileSet.setExcludes(relativePath + doc.getName());				
+				fileSet.setExcludes(excludeStr);				
 			}
 			return;
 		}
