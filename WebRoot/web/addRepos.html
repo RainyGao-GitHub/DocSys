@@ -349,6 +349,12 @@
 		{
 			localSvnPath1 =   path + "DocSysVerReposes/";        		
 		}
+	    //default to set VirtualDoc VersionControl as GIT
+	    if(verCtrl1 == 0)
+	    {
+	    	verCtrl1 = 2;
+	    }
+	    
 	    
 		//前置服务器
 	    var remoteServer = "";
