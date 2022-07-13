@@ -468,7 +468,12 @@
 		newReposSetting.svnPwd1 = $("#svnPwd1").val();
 		newReposSetting.isTextSearchEnabled =  $("#isTextSearchEnabled").is(':checked')? 1: 0;
 		newReposSetting.encryptType =  $("#isEncryptEnabled").is(':checked')? 1: 0;
-		
+	    //default to set VirtualDoc VersionControl as GIT
+	    if(newReposSetting.verCtrl1 == 0)
+	    {
+	    	newReposSetting.verCtrl1 = 2;
+	    }
+			
 		if(newReposSetting.isRemote == 0)
 		{
 			newReposSetting.localSvnPath = newReposSetting.path + "DocSysVerReposes/";
