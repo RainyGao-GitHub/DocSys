@@ -44,6 +44,27 @@
 			});		
 		}
 		
+		//view VDocHistory
+		function viewVDocHistory(index)
+		{			
+			var commitId = $("#commitId" + index).attr("value");
+			var entryPath = "0_/content.md";
+			if(docId)
+			{
+				entryPath = docId + "_" + docName + "/content.md";	//需要指定VDOC在vdata目录的相对路径（例如:0_/content.md）
+			}
+			
+			console.log("viewHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
+		    var docInfo = buildBasicDoc(entryPath, "");
+		    docInfo.vid = reposId;
+		    docInfo.type = 1;
+		    docInfo.isHistory = 1;
+		    docInfo.commitId = commitId;
+		    docInfo.docType = historyType == 0? 1:2;
+		    ////openDoc(docInfo, false, "openInArtDialog", "office", gShareId);
+		    openDoc(docInfo, false, "openInDialog", "office", gShareId);
+		}
+		
 		function showDownloadConfirm(index)
 		{
 			var commitId = $("#commitId" + index).attr("value");
@@ -272,7 +293,15 @@
 					var commitMsg = d.commitMsg;
 					var commitTime = formatTime(d.commitTime);
 					
-					var opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
+					var opBtn = "";
+					if(historyType == 1) //VDOC
+					{
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.viewVDocHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>查看</a>";	
+					}
+					else
+					{
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
+					}
 					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
 					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
 					var se = "<li>"
@@ -317,7 +346,11 @@
 	        showHistoryDetail: function(index){
 	        	showHistoryDetail(index);
 	        },
-
+	        
+	        viewVDocHistory: function(index){
+	        	viewVDocHistory(index);
+	        },
+	        
 	        showDownloadConfirm: function(index){
 	        	showDownloadConfirm(index);
 	        },
