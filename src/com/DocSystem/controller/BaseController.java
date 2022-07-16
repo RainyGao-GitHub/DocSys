@@ -9882,7 +9882,7 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 
-			revision = verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 			SyncLock.unlock(reposData.syncLockForSvnCommit, lockInfo); //线程锁
 		}
 		return revision;
@@ -9914,7 +9914,7 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 		
-			revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 			SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
 		}
 		return revision;
