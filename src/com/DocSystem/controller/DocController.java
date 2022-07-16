@@ -1573,22 +1573,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
-		if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
-		{
-			rt.setError("您没有该文件的编辑权限，请联系管理员");
-			writeJson(rt, response);
-			return;				
-		}
-		
-		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
-		{
-			Log.info("uploadDoc size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
-			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
-			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
-			writeJson(rt, response);
-			return;							
-		}
 
 		//Check Add Right
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
@@ -1624,6 +1608,24 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;							
 			}
+		}
+		else
+		{
+			if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
+			{
+				rt.setError("您没有该文件的编辑权限，请联系管理员");
+				writeJson(rt, response);
+				return;				
+			}
+		}
+		
+		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
+		{
+			Log.info("uploadDoc size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
+			writeJson(rt, response);
+			return;							
 		}
 		
 		//如果是分片文件，则保存分片文件
@@ -1874,22 +1876,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
-		if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
-		{
-			rt.setError("您没有该文件的编辑权限，请联系管理员");
-			writeJson(rt, response);
-			return;				
-		}
-		
-		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
-		{
-			Log.info("uploadDocRS size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
-			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
-			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
-			writeJson(rt, response);
-			return;							
-		}
 
 		//Check Add Right
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
@@ -1925,6 +1911,24 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;							
 			}
+		}
+		else
+		{
+			if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
+			{
+				rt.setError("您没有该文件的编辑权限，请联系管理员");
+				writeJson(rt, response);
+				return;				
+			}
+		}
+		
+		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
+		{
+			Log.info("uploadDocRS size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
+			writeJson(rt, response);
+			return;							
 		}
 		
 		//如果是分片文件，则保存分片文件
