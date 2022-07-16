@@ -592,7 +592,7 @@ public class SVNUtil  extends BaseController{
 	//modifyEnable: 表示是否commit已经存在的文件
 	//localRefRootPath是存放参考文件的根目录，如果对应文件存在且modifyEnable=true的话，则增量commit
 	//subDocCommitFalg: 0:不Commit 1:Commit但不继承 2:Commit所有文件
-	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList){
+	public String doAutoCommit(Repos repos, Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList){
 		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
@@ -652,7 +652,7 @@ public class SVNUtil  extends BaseController{
 			{
 				if(!doc.getPath().isEmpty())
 				{
-					return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable, commitActionList);
+					return doAutoCommitParent(repos, doc, commitMsg, commitUser, modifyEnable, commitActionList);
 				}
 			}	
 						
@@ -706,7 +706,7 @@ public class SVNUtil  extends BaseController{
 			{
 				//LocalEntry is Directory
 				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
-				scheduleForCommit(commitActionList, doc, modifyEnable, false, localChanges, subDocCommitFlag);
+				scheduleForCommit(commitActionList, repos, doc, modifyEnable, false, localChanges, subDocCommitFlag);
 			}
 		}
 		
@@ -749,7 +749,7 @@ public class SVNUtil  extends BaseController{
 		}	
 	}
 
-	private String doAutoCommitParent(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, List<CommitAction> commitActionList)
+	private String doAutoCommitParent(Repos repos, Doc doc, String commitMsg,String commitUser, boolean modifyEnable, List<CommitAction> commitActionList)
     {
     	String parentPath = doc.getPath();
         Log.debug("doAutoCommitParent() parentPath:" + parentPath);
@@ -780,7 +780,7 @@ public class SVNUtil  extends BaseController{
 	    		if(type == 0)
 	    		{
 	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null,  doc.getReposPath(), path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2, commitActionList);
+	    			return doAutoCommit(repos, tempDoc, commitMsg, commitUser, modifyEnable,null, 2, commitActionList);
 	    		}
 	    		path = path + name + "/";  		
 	    	}
@@ -991,21 +991,21 @@ public class SVNUtil  extends BaseController{
     	}
 	}
 
-	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
+	public void scheduleForCommit(List<CommitAction> actionList, Repos repos, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
 	{	
 		String localRootPath = doc.getLocalRootPath(); 
 		//Log.debug("scheduleForCommit() localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
 		
     	if(doc.getName().isEmpty())
     	{
-    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, repos, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
     		return;
     	}
     	
-    	if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
+    	if(isIgnoreNeed(repos, doc) == true)
     	{
     		Log.debug("scheduleForCommit() " + doc.getName() + " was ignored");
-    		return;
+    		return;    		
     	}
  	
     	String entryPath = doc.getPath() + doc.getName();
@@ -1094,13 +1094,23 @@ public class SVNUtil  extends BaseController{
 	            return;
     		}
     		
-    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, repos, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
     		break;
     	}
     	return;   	
 	}
 
-	private void scanForSubDocCommit(List<CommitAction> actionList, Doc doc,
+	private boolean isIgnoreNeed(Repos repos, Doc doc) {
+    	
+    	if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
+    	{
+    		return true;
+    	}
+
+		return false;
+	}
+
+	private void scanForSubDocCommit(List<CommitAction> actionList, Repos repos, Doc doc,
 			boolean modifyEnable, boolean isSubAction,
 			HashMap<Long, DocChange> localChanges, int subDocCommitFlag) {
 
@@ -1140,7 +1150,7 @@ public class SVNUtil  extends BaseController{
 	            //Log.debug("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
 	            
 	            docHashMap.put(subDoc.getName(), subDoc);
-	            scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
+	            scheduleForCommit(actionList, repos, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
 	        }
         }
         
