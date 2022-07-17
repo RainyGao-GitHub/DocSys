@@ -567,6 +567,7 @@
 	/********************** zTree设置与接口**********************************/
     var gReposId = null;
 	var curDoc = 0;	
+	var docVersionIgnore = {};
 	
 	//zTree初始化接口:根据data和setting生成zTree
 	function zTreeInit(data) {
@@ -639,6 +640,7 @@
         if ( curDoc != treeNode.id ){
         	curDoc = treeNode.id;
         	showAuthList();
+        	getCurDocVersionIgnore();
         }
         //alert(curDoc);
     };
@@ -782,6 +784,13 @@
 				}
 			},
 			{divider: true},
+			{text: '版本管理', action: function(e){
+					e.preventDefault();
+					//显示版本管理
+					setDocVersionIgnoreConfirm(curRightClickedTreeNode);
+				}
+			},
+			{divider: true},
 			{text: '清除缓存', action: function(e){
 					e.preventDefault();
 					//显示清除缓存确认
@@ -825,6 +834,70 @@
 </SCRIPT>
 
 <script>
+function setDocVersionIgnoreConfirm(node)
+{
+   	console.log("setDocVersionIgnoreConfirm()");
+   	
+   	var msg = "是否忽略版本管理?";
+   	var okbtn = "忽略";
+   	var ignore = 1;
+   	if(docVersionIgnore[node.docId] && docVersionIgnore[node.docId] == 1)
+   	{
+   		msg = "是否开启版本管理？"
+   		okbtn = "开启";
+   		ignore = 0;
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'setDocVersionIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: okbtn,
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setVersionIgnore(node, ignore);
+ 	    	return true;   
+ 	    },function(){
+ 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function setVersionIgnore(node, ignore)
+{
+	console.log("setVersionIgnore()");
+    $.ajax({
+        url : "/DocSystem/Doc/setVersionIgnore.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId : gReposId,
+        	path: node.path,
+        	name: node.name,
+        	ignore: ignore,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	// 普通消息提示条
+            	docVersionIgnore[node.docId] = ignore;
+            	bootstrapQ.msg({
+						msg : '设置成功！',
+						type : 'success',
+						time : 2000,
+					    });
+            }
+            else
+            {
+            	showErrorMessage("设置失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+           	showErrorMessage('设置失败:服务器异常！');
+        }
+	});
+}
+
+
 function clearReposCacheConfirm(node)
 {
    	console.log("clearReposCacheConfirm()");
@@ -875,6 +948,49 @@ function clearReposCache(node)
            	showErrorMessage('清除失败:服务器异常！');
         }
 });
+}
+
+//显示curDoc对应的用户权限列表
+function getCurDocVersionIgnore()
+{
+	console.log("getCurDocVersionIgnore()");
+	var docId = curDoc;
+   	console.log("docId:" + docId);
+   	
+   	var parentPath = "";
+   	var docName = "";
+	var node = getNodeByNodeId(docId);
+	if(node && node != null)
+	{
+		parentPath = node.path;
+		docName = node.name;
+	}
+   	console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
+   	var vid = getQueryString("vid");
+	
+    $.ajax({
+                url : "/DocSystem/Doc/getVersionIgnore.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    reposId : vid,
+                	docId: docId,
+                	path: parentPath,
+                	name: docName,
+                },
+                success : function (ret) {
+                    if( "ok" == ret.status ){
+                    	docVersionIgnore[docId] = ret.data;
+                    }
+                    else
+                    {
+                       	showErrorMessage('获取文件版本管理设置失败:' + ret.msgInfo);
+                    }
+                },
+                error : function () {
+                    showErrorMessage('获取文件版本管理设置失败: 服务器异常');
+                }
+    });
 }
 
 //显示curDoc对应的用户权限列表
@@ -1261,11 +1377,11 @@ function deleteDocAuth(docAuthId)
                 }
                 else
                 {
-                	showErrorMessage("Error:" + ret.msgInfo);
+                	showErrorMessage("删除用户的目录权限设置失败: " + ret.msgInfo);
                 }
             },
             error : function () {
-               showErrorMessage('服务器异常：删除用户的目录权限设置失败！');
+               showErrorMessage('删除用户的目录权限设置失败: 服务器异常！');
             }
     });
 }
@@ -1292,7 +1408,7 @@ function getDocSysConfig()
             }
         },
         error : function () {
-        	console.log('服务器异常:获取DocSysConfig失败');
+        	console.log('获取DocSysConfig失败: 服务器异常');
         }
     });
 }

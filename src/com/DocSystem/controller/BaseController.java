@@ -110,6 +110,7 @@ import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
+import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
@@ -11104,6 +11105,7 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				initReposTextSearchConfig(repos);
+				initReposVersionIgnoreConfig(repos);
 				initReposEncryptConfig(repos);
 				initReposData(repos);
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
@@ -11895,11 +11897,11 @@ public class BaseController  extends BaseFunction{
 		EncryptConfig config = getReposEncryptConfig(repos);
 		if(config == null)
 		{
-			reposEncryptHashMap.remove(repos.getId());
+			reposEncryptConfigHashMap.remove(repos.getId());
 		}
 		else
 		{
-			reposEncryptHashMap.put(repos.getId(), config);
+			reposEncryptConfigHashMap.put(repos.getId(), config);
 		}
 	}
 
@@ -12029,12 +12031,69 @@ public class BaseController  extends BaseFunction{
 		reposDataHashMap.put(repos.getId(), reposData);
 	}
 	
+	
+	protected void initReposVersionIgnoreConfig(Repos repos) {
+		//add TextSearchConfig For repos
+		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
+		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
+		reposVersionIgnoreConfigHashMap.put(repos.getId(), versionIgnoreConfig);
+		
+		//set to repos 
+		repos.versionIgnoreConfig = versionIgnoreConfig;
+		
+		initReposVersionIgnoreHashMap(repos);
+	}
+	
+	private void initReposVersionIgnoreHashMap(Repos repos) {
+		String reposTextSearchConfigPath = Path.getReposVersionIgnoreConfigPath(repos);
+		
+		//注意：根目录不支持忽略版本控制
+		File dir = new File(reposTextSearchConfigPath);
+		File[] list = dir.listFiles();
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File file = list[i];
+				checkAndSetVersionIgnored(file.getName(), file, repos);			
+			}
+		}	
+	}
+	
+	private void checkAndSetVersionIgnored(String entryPath, File file, Repos repos) {
+		//文件忽略
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetVersionIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			repos.versionIgnoreConfig.versionIgnoreHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetVersionIgnored(entryPath + "/" + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+
 	protected void initReposTextSearchConfig(Repos repos) {
 		//add TextSearchConfig For repos
 		TextSearchConfig textSearchConfig = new TextSearchConfig();
 		textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, String>(); 
 		textSearchConfig.virtualDocTextSearchDisablehHashMap = new ConcurrentHashMap<String, String>(); 
-		reposTextSearchHashMap.put(repos.getId(), textSearchConfig);
+		reposTextSearchConfigHashMap.put(repos.getId(), textSearchConfig);
 		
 		//set to repos 
 		repos.textSearchConfig = textSearchConfig;
@@ -14610,17 +14669,19 @@ public class BaseController  extends BaseFunction{
 				repos.setVerCtrl(0);
 			}
 			
-			repos.textSearchConfig = reposTextSearchHashMap.get(repos.getId());
+			repos.textSearchConfig = reposTextSearchConfigHashMap.get(repos.getId());
 			repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 			repos.isBussiness = systemLicenseInfo.hasLicense;
 			repos.officeType = officeType;
 			//get encrypt Config
 			repos.encryptType = 0;
-			EncryptConfig encryptConfig = reposEncryptHashMap.get(repos.getId());
+			EncryptConfig encryptConfig = reposEncryptConfigHashMap.get(repos.getId());
 			if(encryptConfig != null && encryptConfig.type != null)
 			{
 				repos.encryptType = encryptConfig.type;
 			}			
+			
+			repos.versionIgnoreConfig = reposVersionIgnoreConfigHashMap.get(repos.getId());
 		}
 		return repos;
 	}
