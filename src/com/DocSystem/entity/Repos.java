@@ -1,6 +1,7 @@
 package com.DocSystem.entity;
 
 import com.DocSystem.common.TextSearchConfig;
+import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposBackupConfig;
@@ -80,6 +81,7 @@ public class Repos {
 	public RemoteStorageConfig remoteServerConfig;
 	public RemoteStorageConfig remoteStorageConfig;
 	public TextSearchConfig textSearchConfig;
+	public VersionIgnoreConfig versionIgnoreConfig;
 		
 	public Integer encryptType;
 	public EncryptConfig encryptConfig;
