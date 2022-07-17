@@ -1258,6 +1258,12 @@ public class GITUtil  extends BaseController{
 			commitActionList = new ArrayList<CommitAction>();
 		}
 		
+		if(isVersionIgnored(repos, doc))
+	    {
+	    	Log.debug("doAutoCommmit() version was ignored for:" + doc.getPath() + doc.getName());
+	        return getLatestReposRevision();
+	    }
+		
 		String entryPath = doc.getPath() + doc.getName();			
 		File localEntry = new File(localRootPath + entryPath);
 		
@@ -1401,6 +1407,37 @@ public class GITUtil  extends BaseController{
 	    
 	    git.close();
 	    return newRevision;
+	}
+	
+	private boolean isVersionIgnored(Repos repos, Doc doc) {
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(doc.getPath() + doc.getName()) != null)
+		{
+			Log.debug("isVersionIgnored() version was ignored:" + doc.getPath() + doc.getName());
+			return true;
+		}
+		
+		//check if parent was version ignored 
+		if(doc.getPath() != null)
+		{
+			String [] paths = doc.getPath().split("/");
+			String path = paths[0];
+			if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(path) != null)
+			{
+				Log.debug("isVersionIgnored() version was ignored:" + path);
+				return true;
+			}
+			
+			for(int i = 1; i < paths.length; i++)
+			{
+				path = path + "/" + paths[i];
+				if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(path) != null)
+				{
+					Log.debug("isVersionIgnored() version was ignored:" + path);
+					return true;
+				}
+			}			
+		}
+		return false;
 	}
 	
 	//move or copy Doc
@@ -2315,6 +2352,12 @@ public class GITUtil  extends BaseController{
     	{
     		return true;
     	}
+    	
+    	if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(doc.getPath() + doc.getName()) != null)
+    	{
+    		Log.debug("isIgnoreNeed() " + doc.getPath() + doc.getName() + " version was ignored");
+    		return true;
+    	}	
     	return false;
 	}
 

@@ -345,6 +345,9 @@ public class ReposController extends BaseController{
 		initReposTextSearchConfig(repos);
 		setReposTextSearch(repos, isTextSearchEnabled);			
 		
+		//初始化仓库的版本管理忽略配置
+		initReposVersionIgnoreConfig(repos);
+		
 		setReposEncrypt(repos, encryptType);			
 
 		InitReposAuthInfo(repos,login_user,rt);		
@@ -380,14 +383,14 @@ public class ReposController extends BaseController{
 			
 			if(config != null)
 			{
-				reposEncryptHashMap.put(repos.getId(), config);
+				reposEncryptConfigHashMap.put(repos.getId(), config);
 			}
 		}
 		else
 		{
 			if(removeReposEncryptConfig(repos) == true)
 			{
-				reposEncryptHashMap.remove(repos.getId());				
+				reposEncryptConfigHashMap.remove(repos.getId());				
 			}
 		}		
 	}

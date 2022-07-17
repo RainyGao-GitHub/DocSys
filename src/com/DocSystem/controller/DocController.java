@@ -4999,6 +4999,122 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/****************   set  Doc Version Ignore ******************/
+	@RequestMapping("/setVersionIgnore.do")
+	public void setVersionIgnore(Integer reposId, String path, String name,
+			Integer ignore,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** setVersionIgnore [" + path + name + "] ****************");
+		Log.info("setVersionIgnore reposId:" + reposId + " path:" + path + " name:" + name  + " ignore:" + ignore);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//获取并检查用户权限
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//设置文件密码
+		if(setVersionIgnore(repos, doc, ignore) == false)
+		{
+			rt.setError("版本管理设置失败");			
+			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "失败", repos, doc, null, "");				
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "成功", repos, doc, null, "");	
+		}
+		writeJson(rt, response);
+	}
+	
+	private boolean setVersionIgnore(Repos repos, Doc doc, Integer ignore) {
+		String reposVersionIgnorePath = Path.getReposVersionIgnoreConfigPath(repos);
+		String ignoreFilePath = reposVersionIgnorePath + doc.getPath() + doc.getName();
+		String ignoreFileName = ".ignore";
+		if(ignore != null && ignore == 1)
+		{
+			//将ignore路径加入到repos的ignore HashMap中			
+			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
+			{
+				repos.versionIgnoreConfig.versionIgnoreHashMap.put(doc.getPath() + doc.getName(), 1);
+				return true;
+			}
+			return false;
+		}
+		
+		//将ignore从repos的ignore HashMap中删除
+		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
+		{
+			repos.versionIgnoreConfig.versionIgnoreHashMap.remove(doc.getPath() + doc.getName());
+			return true;			
+		}
+		return false;
+	}
+	
+	@RequestMapping("/getVersionIgnore.do")
+	public void getVersionIgnore(Integer reposId, String path, String name,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getVersionIgnore [" + path + name + "] ****************");
+		Log.info("getVersionIgnore reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		rt.setData(getVersionIgnore(repos, doc));			
+		writeJson(rt, response);
+	}
+	
+	private Integer getVersionIgnore(Repos repos, Doc doc) {
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(doc.getPath() + doc.getName()) != null)
+		{
+			return 1;
+		}
+		return 0;
+	}
+
 	/****************   set  Doc Access PWD ******************/
 	@RequestMapping("/setDocPwd.do")
 	public void setDocPwd(Integer reposId, String path, String name,

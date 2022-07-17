@@ -662,7 +662,12 @@ public class Path {
 	public static String getReposEncryptConfigFileName() {
 		return "encryptConfig.txt";
 	}
-
+	
+	public static String getReposVersionIgnoreConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/versionIgnoreSetting/";
+		return path;
+	}
+	
 	public static String getReposTextSearchConfigPath(Repos repos) {
 		String path = getReposPath(repos) + "data/textSearchSetting/";
 		return path;
