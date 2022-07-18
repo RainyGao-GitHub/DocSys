@@ -124,7 +124,9 @@
 	var docText = "";
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
+	var isReadOnly = false;
 	var editState = false;
+	
 
 	//页面加载完成处理函数
 	$(document).ready(function() {
@@ -132,8 +134,27 @@
 		docInfoInit();
 		// 加载文档窗口，传入文档加载成功回调函数和加载失败函数
 		console.log("stackeditEditorForArt");
+		
+		//history file or file in zip is readonly
+		checkAndSetIsReadOnly(docInfo);
+		
 		getDocText(docInfo, showText, showErrorMessage);
 	});
+	
+	function checkAndSetIsReadOnly(docInfo)
+	{
+		if(docInfo.isZip && docInfo.isZip == 1)
+		{
+			isReadOnly = true;
+			return;
+		}
+		if(docInfo.isHistory && docInfo.isHistory == 1)
+		{
+			isReadOnly = true;
+			return;
+		}
+	}
+	
 	/**
 	 * 文档信息初始化方法
 	 */
@@ -178,10 +199,13 @@
 				setStaticEditReaOnly(false);
 				break;
 			case 'fileChange':
-				//收到iframe文件改动消息
-				var file = event.data.payload;
-				docText = file.content.text;
-				isContentChanged = true;
+				if(isReadOnly == false)
+				{
+					//收到iframe文件改动消息
+					var file = event.data.payload;
+					docText = file.content.text;
+					isContentChanged = true;
+				}
 				break;
 			case 'close':
 				//收到iframe的关闭消息
