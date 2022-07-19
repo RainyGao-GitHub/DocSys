@@ -564,6 +564,8 @@
 					url: 'copyConflictConfirm.html',
 					title: copiedNodeName + '已存在',
 					msg: '页面正在加载，请稍等...',
+					close: false, //hide close btn
+					btn: true, //show cancel btn
 			        okbtn: "确定",
 	    	        qubtn: "取消",
 		            callback: function () {

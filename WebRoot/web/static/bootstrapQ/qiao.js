@@ -370,7 +370,7 @@ qiao.bs.confirm = function(options, ok, cancel){
 	// show
 	$modal.modal('show');
 };
-qiao.bs.dialog = function(options, func){
+qiao.bs.dialog = function(options, func, cancel){
 	// options
 	var opt = $.extend({}, qiao.bs.modaloptions, options);
 	opt.big = false;
@@ -424,7 +424,16 @@ qiao.bs.dialog = function(options, func){
 		}
 	});
 	qiao.on('button.bscancel', 'click', function(){
-		$modal.modal('hide');
+		var flag = true;
+		if(cancel)
+		{
+			flag = cancel();
+		}
+		
+		if(flag)
+		{
+			$modal.modal('hide');
+		}
 	});
 	qiao.on('#' + opt.id, 'hidden.bs.modal', function(){
 		$modal.remove();

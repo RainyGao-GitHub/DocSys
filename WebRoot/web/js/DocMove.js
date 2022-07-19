@@ -522,6 +522,7 @@
     	        qubtn: "结束",
     	    },function () {
     	    	//继续后续的移动
+    	    	//alert("点击了确认");
     	    	confirmDialogState = 0;
     	    	closeBootstrapDialog("moveErrorConfirm"  + SubContext.index);
     	    	resumePenddingConfirm();
@@ -529,6 +530,7 @@
     	    	return true;
 			},function(){
     	    	//结束后续的移动操作
+    	    	//alert("点击了取消");
 				stopFlag = true;
 				clearPenddingConfirm();
 				
