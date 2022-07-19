@@ -6,7 +6,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### [一键安装](https://gitee.com/RainyGao/DocSys/blob/master/README.md#%E4%B8%80%E7%B3%BB%E7%BB%9F%E5%AE%89%E8%A3%85) [一键安装，立即使用] 
 
-### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
+### [立即体验](http://dw.gofreeteam.com) [账号/密码: guest/guest]
 
 ### 全平台支持:Linux，Windows，Mac.
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0614/223719_03bd18e1_1558129.png "docsys_首页1.png")
