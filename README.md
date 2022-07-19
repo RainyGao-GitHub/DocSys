@@ -4,7 +4,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 主要应用场景：文件管理系统、文档安全管理系统、分布式文档管理系统、协同办公系统、电子书、软件接口管理系统、自动备份软件、网页版SVN仓库、网页版GIT仓库、FTP客户端、SFTP客户端、SMB客户端、Linux系统远程文件访问。
 
-### [一键安装](http://dw.gofreeteam.com) 
+### [一键安装](https://gitee.com/RainyGao/DocSys/blob/master/README.md#%E4%B8%80%E7%B3%BB%E7%BB%9F%E5%AE%89%E8%A3%85) [方便快捷] 
 
 ### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
