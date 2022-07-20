@@ -12019,7 +12019,7 @@ public class BaseController  extends BaseFunction{
 		return config;
 	}
 	
-	protected void initReposData(Repos repos) {
+	protected ReposData initReposData(Repos repos) {
 		ReposData reposData = new ReposData();
 		reposData.reposId = repos.getId();
 		reposData.syncLockForSvnCommit = new Object();
@@ -12029,6 +12029,7 @@ public class BaseController  extends BaseFunction{
 		reposData.syncLockForVDocIndex = new Object();
 		
 		reposDataHashMap.put(repos.getId(), reposData);
+		return reposData;
 	}
 	
 	
@@ -12047,20 +12048,13 @@ public class BaseController  extends BaseFunction{
 	private void initReposVersionIgnoreHashMap(Repos repos) {
 		String reposTextSearchConfigPath = Path.getReposVersionIgnoreConfigPath(repos);
 		
-		//注意：根目录不支持忽略版本控制
+		//root doc
 		File dir = new File(reposTextSearchConfigPath);
-		File[] list = dir.listFiles();
-		if(list != null)
-		{
-			for(int i=0; i<list.length; i++)
-			{
-				File file = list[i];
-				checkAndSetVersionIgnored(file.getName(), file, repos);			
-			}
-		}	
+		checkAndSetVersionIgnored("/", dir, repos);
 	}
 	
 	private void checkAndSetVersionIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetVersionIgnored() entryPath:" + entryPath);
 		//文件忽略
 		if(file.isFile() == true)
 		{
@@ -12073,17 +12067,24 @@ public class BaseController  extends BaseFunction{
 		File ignoreFile = new File(ignoreFilePath);
 		if(ignoreFile.exists() == true)
 		{
+			Log.debug("checkAndSetVersionIgnored() version was ignored for [" + entryPath +"]");
 			repos.versionIgnoreConfig.versionIgnoreHashMap.put(entryPath, 1);
 			return;
 		}
 		
 		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
 		if(list != null)
 		{
 			for(int i=0; i<list.length; i++)
 			{
 				File subFile = list[i];
-				checkAndSetVersionIgnored(entryPath + "/" + subFile.getName(), subFile, repos);			
+				checkAndSetVersionIgnored(parentPath + subFile.getName(), subFile, repos);			
 			}
 		}	
 	}
@@ -14654,6 +14655,24 @@ public class BaseController  extends BaseFunction{
 		Repos repos = reposService.getRepos(reposId);
 		return getReposEx(repos);
 	}
+	
+	protected boolean reposCheck(Repos repos, ReturnAjax rt, HttpServletResponse response) {
+		if(repos == null)
+		{
+			docSysErrorLog("仓库不存在！", rt);
+			writeJson(rt, response);			
+			return false;
+		}
+		
+		if(repos.isBusy)
+		{
+			Log.info("仓库 " + repos.getName() + " is busy");
+			rt.setError("仓库当前不支持访问，请联系系统管理员！");
+			writeJson(rt, response);			
+			return false;
+		}
+		return true;
+	}
 
 	public Repos getReposEx(Repos repos) {
 		if(repos != null)
@@ -14682,6 +14701,7 @@ public class BaseController  extends BaseFunction{
 			}			
 			
 			repos.versionIgnoreConfig = reposVersionIgnoreConfigHashMap.get(repos.getId());
+			repos.isBusy = reposDataHashMap.get(repos.getId()).isBusy;
 		}
 		return repos;
 	}

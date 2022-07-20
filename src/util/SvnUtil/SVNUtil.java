@@ -747,9 +747,16 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean isVersionIgnored(Repos repos, Doc doc) {
-		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(doc.getPath() + doc.getName()) != null)
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
-			Log.debug("isVersionIgnored() version was ignored:" + doc.getPath() + doc.getName());
+			Log.debug("isVersionIgnored() version was ignored for [/" + doc.getPath() + doc.getName() + "]");
+			return true;
+		}
+		
+		//check if version ignore for root doc
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/") != null)
+		{
+			Log.debug("isVersionIgnored() version was ignored for [/]");
 			return true;
 		}
 		
@@ -757,7 +764,7 @@ public class SVNUtil  extends BaseController{
 		if(doc.getPath() != null)
 		{
 			String [] paths = doc.getPath().split("/");
-			String path = paths[0];
+			String path = "/" + paths[0];
 			Log.debug("isVersionIgnored() path:" + path);
 			if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(path) != null)
 			{
@@ -1145,9 +1152,9 @@ public class SVNUtil  extends BaseController{
     		return true;
     	}
     	
-    	if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(doc.getPath() + doc.getName()) != null)
+    	if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
     	{
-    		Log.debug("isIgnoreNeed() " + doc.getPath() + doc.getName() + " version was ignored");
+    		Log.debug("isIgnoreNeed() [/" + doc.getPath() + doc.getName() + "] version was ignored");
     		return true;
     	}	
 		return false;
