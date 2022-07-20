@@ -1972,6 +1972,10 @@
 				
 				//启动超时定式器
 				var timeOut = SubContext.size + 60000; //基础超时时间1分钟，文件越大超时时间越长
+				if(timeOut > 144000000) //40小时
+				{
+					timeOut = 144000000;
+				}
 			    console.log("[" + SubContext.index + "] uploadDoc()  start timeout monitor with " + timeOut + " ms");
 			    SubContext.timerForUpload = setTimeout(function () {
 					 console.log("[" + SubContext.index + "] uploadDoc() timerForUpload triggered!");
