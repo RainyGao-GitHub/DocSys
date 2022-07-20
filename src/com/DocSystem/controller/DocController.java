@@ -148,10 +148,8 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -263,11 +261,8 @@ public class DocController extends BaseController{
 		
 		//Add Doc On Repos
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			Log.debug("addDocRS 仓库 " + reposId + " 不存在！");
-			rt.setError("仓库不存在！");
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -414,10 +409,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -472,10 +465,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -557,10 +548,8 @@ public class DocController extends BaseController{
 		
 		//delete file from repos
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -629,10 +618,8 @@ public class DocController extends BaseController{
 		}
 	
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -717,10 +704,8 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -805,10 +790,8 @@ public class DocController extends BaseController{
 
 		Log.debug("copyDoc getReposEx");
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 				
@@ -925,10 +908,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -1315,13 +1296,10 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
-		
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		String fileChunkName = name + "_" + chunkIndex;
@@ -1432,10 +1410,8 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -1538,10 +1514,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -1840,10 +1814,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -2130,10 +2102,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -2286,10 +2256,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -3132,10 +3100,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -3214,10 +3180,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -3622,10 +3586,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -3767,10 +3729,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -3880,10 +3840,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -3974,10 +3932,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -4676,10 +4632,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);
 			return;
 		}
 		
@@ -4893,10 +4847,8 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 
@@ -4956,10 +4908,8 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 
@@ -5060,7 +5010,7 @@ public class DocController extends BaseController{
 			//将ignore路径加入到repos的ignore HashMap中			
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
-				repos.versionIgnoreConfig.versionIgnoreHashMap.put(doc.getPath() + doc.getName(), 1);
+				repos.versionIgnoreConfig.versionIgnoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
 				return true;
 			}
 			return false;
@@ -5069,7 +5019,7 @@ public class DocController extends BaseController{
 		//将ignore从repos的ignore HashMap中删除
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
-			repos.versionIgnoreConfig.versionIgnoreHashMap.remove(doc.getPath() + doc.getName());
+			repos.versionIgnoreConfig.versionIgnoreHashMap.remove("/" + doc.getPath() + doc.getName());
 			return true;			
 		}
 		return false;
@@ -5108,7 +5058,7 @@ public class DocController extends BaseController{
 	}
 	
 	private Integer getVersionIgnore(Repos repos, Doc doc) {
-		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(doc.getPath() + doc.getName()) != null)
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			return 1;
 		}
@@ -5133,10 +5083,8 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = getRepos(reposId);
-		if(repos == null)
+		if(reposCheck(repos, rt, response) == false)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 
@@ -5191,7 +5139,7 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-	
+
 	private boolean setDocPwd(Repos repos, Doc doc, String pwd) {
 		
 		String reposPwdPath = Path.getReposPwdPath(repos);
@@ -6137,10 +6085,8 @@ public class DocController extends BaseController{
 		
 		//Get Repos
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
 			return;
 		}
 		//Log.printObject("getReposInitMenu() repos:", repos);
@@ -6206,10 +6152,8 @@ public class DocController extends BaseController{
 		
 		//Get Repos
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
 			return;
 		}
 		

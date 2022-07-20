@@ -69,6 +69,8 @@ public class Repos {
     private Long lockTime;
     
 	public boolean  isBussiness;
+
+	public Boolean  isBusy;
 	
 	public Integer officeType;	//0:内置   1:外置
 	
