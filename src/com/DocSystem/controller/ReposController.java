@@ -26,6 +26,7 @@ import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.ReposData;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -133,6 +134,10 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(vid);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
 				
 		//获取磁盘空间
 		String localRootPath = Path.getReposRealPath(repos);
@@ -289,10 +294,15 @@ public class ReposController extends BaseController{
 			return;				
 		}
 		
+		//初始化仓库数据
+		initReposData(repos);
+		setReposIsBusy(repos.getId(), true);
+		
 		if(createReposLocalDir(repos,rt) == false)
 		{
 			deleteRepos(repos);			
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			setReposIsBusy(repos.getId(), false);
 			return;
 		}
 		
@@ -301,6 +311,7 @@ public class ReposController extends BaseController{
 		{
 			deleteRepos(repos);
 			writeJson(rt, response);	
+			setReposIsBusy(repos.getId(), false);
 			return;			
 		}
 
@@ -309,6 +320,7 @@ public class ReposController extends BaseController{
 		{
 			deleteRepos(repos);
 			writeJson(rt, response);	
+			setReposIsBusy(repos.getId(), false);
 			return;			
 		}
 
@@ -338,9 +350,6 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//初始化仓库数据
-		initReposData(repos);
-		
 		//初始化倉庫的全文搜索
 		initReposTextSearchConfig(repos);
 		setReposTextSearch(repos, isTextSearchEnabled);			
@@ -354,6 +363,9 @@ public class ReposController extends BaseController{
 		unlockRepos(repos, lockType, login_user); 
 		
 		writeJson(rt, response);	
+
+		setReposIsBusy(repos.getId(), false);
+
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
 	}
 
@@ -426,11 +438,13 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = getRepos(vid);
+		setReposIsBusy(repos.getId(), true);
 		
 		if(reposService.deleteRepos(vid) == 0)
 		{
 			rt.setError("仓库删除失败！");
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			setReposIsBusy(repos.getId(), false);			
 			return;
 		}
 		else
@@ -461,7 +475,8 @@ public class ReposController extends BaseController{
 		deleteRemoteStorageConfig(repos);
 
 		writeJson(rt, response);	
-		
+		setReposIsBusy(repos.getId(), false);			
+
 		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","成功", repos, null, null, "");
 	}
 	
@@ -538,6 +553,13 @@ public class ReposController extends BaseController{
 		
 		//Get reposInfo (It will be used to revert the reposInfo)
 		Repos reposInfo = getReposEx(reposId);
+		if(!reposCheck(reposInfo, rt, response))
+		{
+			return;
+		}
+		
+		setReposIsBusy(reposId, true);
+		
 		formatReposInfo(reposInfo);
 
 		if(type != null && type != reposInfo.getType())
@@ -559,12 +581,14 @@ public class ReposController extends BaseController{
 					{
 						rt.setError("设置全文搜索失败");
 						writeJson(rt, response);
+						setReposIsBusy(reposId, false);
 						return;
 					}
 				}
 			}
 			
 			writeJson(rt, response);	
+			setReposIsBusy(reposId, false);
 			return;
 		}
 		
@@ -612,7 +636,8 @@ public class ReposController extends BaseController{
 		{
 			Log.debug("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
 			rt.setError("仓库信息更新失败！");
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			setReposIsBusy(reposId, false);
 			return;
 		}
 		
@@ -621,6 +646,7 @@ public class ReposController extends BaseController{
 			reposService.updateRepos(reposInfo);	//Revert reposInfo
 			Log.debug("仓库目录修改失败");
 			writeJson(rt, response);	
+			setReposIsBusy(reposId, false);
 			return;
 		}
 		
@@ -629,6 +655,7 @@ public class ReposController extends BaseController{
 			reposService.updateRepos(reposInfo);	//Revert reposInfo
 			Log.debug("仓库RealDoc目录修改失败");
 			writeJson(rt, response);	
+			setReposIsBusy(reposId, false);
 			return;
 		}
 		
@@ -637,7 +664,8 @@ public class ReposController extends BaseController{
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
+			writeJson(rt, response);	
+			setReposIsBusy(reposId, false);
 			return;
 		}
 		
@@ -649,6 +677,7 @@ public class ReposController extends BaseController{
 				Log.debug("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
 				rt.setError("版本仓库初始化失败！");
 				writeJson(rt, response);	
+				setReposIsBusy(reposId, false);
 				return;
 			}
 		}
@@ -661,6 +690,7 @@ public class ReposController extends BaseController{
 				Log.debug("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
 				rt.setError("版本仓库初始化失败！");
 				writeJson(rt, response);	
+				setReposIsBusy(reposId, false);
 				return;
 			}
 		}
@@ -688,6 +718,11 @@ public class ReposController extends BaseController{
 				Log.debug("updateReposInfo() dbDeleteAllDocs failed");
 			}
 		}
+		setReposIsBusy(reposId, false);
+	}
+
+	private void setReposIsBusy(Integer reposId, boolean isBusy) {
+		reposDataHashMap.get(reposId).isBusy = isBusy;
 	}
 
 	private boolean isReposVerCtrlChanged(Repos newReposInfo, Repos reposInfo) {
@@ -784,10 +819,8 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -889,12 +922,11 @@ public class ReposController extends BaseController{
 		
 		//Get Repos
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
 			return;
 		}
+		
 		//Log.printObject("getReposInitMenu() repos:", repos);
 		
 		String reposPath = Path.getReposPath(repos);
@@ -1040,10 +1072,8 @@ public class ReposController extends BaseController{
 		
 		//Get Repos
 		Repos repos = getReposEx(vid);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			rt.setError("仓库 " + vid + " 不存在！");
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -1203,10 +1233,8 @@ public class ReposController extends BaseController{
 		
 		//get SubDocList From Repos
 		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		if(!reposCheck(repos, rt, response))
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -1312,6 +1340,10 @@ public class ReposController extends BaseController{
 		//获取整个仓库的目录结构，包括仓库本身（作为ID=0的存在）
 		//获取仓库信息，并转换成rootDoc
 		Repos repos = getReposEx(vid);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
 		
 		//Build rootDoc
 		String reposPath = Path.getReposPath(repos);
