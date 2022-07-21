@@ -4231,10 +4231,10 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean executeUniqueCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
-		Log.debug("********** executeUniqueCommonActionList ***********");
+		Log.info("********** executeUniqueCommonActionList ***********");
 		if(actionList.size() <= 0)
 		{
-			Log.debug("********** executeUniqueCommonActionList actionList is empty ***********");			
+			Log.info("********** executeUniqueCommonActionList actionList is empty ***********");			
 			return false;
 		}
 		
@@ -4246,18 +4246,18 @@ public class BaseController  extends BaseFunction{
 		
 		//注意：ActionList中的doc必须都是同一个仓库下的，否则下面的逻辑会有问题
 		Integer reposId = actionList.get(0).getDoc().getVid(); //get the reposId from the first doc in action list
-		Log.debug("executeUniqueCommonActionList reposId:" + reposId);
+		Log.info("executeUniqueCommonActionList reposId:" + reposId);
 		
 		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
 		if(uniqueAction == null)
 		{
-			Log.debug("executeUniqueCommonActionList uniqueAction for " + reposId+ " is null");
+			Log.info("executeUniqueCommonActionList uniqueAction for " + reposId+ " is null");
 			return false;
 		}
 		
 		if(uniqueAction.getIsRunning())
 		{
-			Log.debug("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " is Running");
+			Log.info("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " is Running");
 			Long expireTime = uniqueAction.getExpireTimeStamp();
 			if(expireTime == null)
 			{
@@ -4271,7 +4271,7 @@ public class BaseController  extends BaseFunction{
 				return true;
 			}
 			
-			Log.debug("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " Running timeout, clear uniqueAction");
+			Log.info("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " Running timeout, clear uniqueAction");
 			
 			//清空uniqueAction
 			uniqueAction.setIsRunning(false);
@@ -4294,13 +4294,15 @@ public class BaseController  extends BaseFunction{
 				{
 					CommonAction action = list.get(0);
 					long docId = action.getDoc().getDocId();
+					Log.info("executeUniqueCommonActionList() execute uniqueCommonAction reposId:" + reposId+ " doc:[" + action.getDoc().getPath() + action.getDoc().getName() + "] Start");
 					executeCommonAction(action, rt);
+					Log.info("executeUniqueCommonActionList() execute uniqueCommonAction reposId:" + reposId+ " doc:[" + action.getDoc().getPath() + action.getDoc().getName() + "] End");
 					list.remove(0);
 					hashMap.remove(docId);
 				}
 				else
 				{
-					Log.debug("executeUniqueCommonActionList() hashMap 和 list不同步，强制清除 actionHashMap");
+					Log.info("executeUniqueCommonActionList() hashMap 和 list不同步，强制清除 actionHashMap");
 				}
 			}
 			//清空uniqueAction
@@ -4308,7 +4310,7 @@ public class BaseController  extends BaseFunction{
 			uniqueAction.setExpireTimeStamp(null);
 			uniqueAction.getUniqueCommonActionHashMap().clear();
 			uniqueAction.getUniqueCommonActionList().clear();	
-			Log.debug("executeUniqueCommonActionList completed for repos: " + reposId);			
+			Log.info("executeUniqueCommonActionList completed for repos: " + reposId);			
 			ret = true;
 		} catch (Exception e) {
 			Log.info(e);
@@ -11457,10 +11459,10 @@ public class BaseController  extends BaseFunction{
 		
 		if(forceStartDelay != null)
 		{
-			Log.info("addDelayTaskForReposSyncUp forceStartDelay:" + forceStartDelay + " 秒后强制开始备份！" );											
+			Log.info("addDelayTaskForReposSyncUp forceStartDelay:" + forceStartDelay + " 秒后强制开始同步！" );											
 			delayTime = forceStartDelay; //1分钟后执行第一次备份
 		}
-		Log.info("addDelayTaskForReposSyncUp delayTime:" + delayTime + " 秒后开始备份！" );		
+		Log.info("addDelayTaskForReposSyncUp delayTime:" + delayTime + " 秒后开始同步！" );		
 		
 		ConcurrentHashMap<Long, SyncupTask> syncupTaskHashMap = reposSyncupTaskHashMap.get(repos.getId());
 		if(syncupTaskHashMap == null)
@@ -11470,12 +11472,12 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		long curTime = new Date().getTime();
-        Log.info("addDelayTaskForReposSyncUp() curTime:" + curTime);        
+        Log.debug("addDelayTaskForReposSyncUp() curTime:" + curTime);        
 		
 		//stopReposSyncupTasks
 		//go through all syncupTask and close all task
 		for (SyncupTask value : syncupTaskHashMap.values()) {
-			Log.debug("addDelayTaskForReposSyncUp() stop syncupTask:" + value.createTime);			
+			Log.info("addDelayTaskForReposSyncUp() stop syncupTask:" + value.createTime);			
 			value.stopFlag = true;
 		}
 		
