@@ -4255,6 +4255,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		//unqiueAction是保证每个仓库只有一个任务在执行
 		if(uniqueAction.getIsRunning())
 		{
 			Log.info("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " is Running");
@@ -4286,19 +4287,19 @@ public class BaseController  extends BaseFunction{
 			long curTime = new Date().getTime();
 			uniqueAction.setExpireTimeStamp(curTime + 43200000); //12 Hours 12*60*60*1000 = 43200,000
 			uniqueAction.setIsRunning(true);
-			ConcurrentHashMap<Long, CommonAction> hashMap = uniqueAction.getUniqueCommonActionHashMap();
+			ConcurrentHashMap<String, CommonAction> hashMap = uniqueAction.getUniqueCommonActionHashMap();
 			List<CommonAction> list = uniqueAction.getUniqueCommonActionList();
 			while(hashMap.size() > 0)
 			{
 				if(actionList.size() > 0)
 				{
 					CommonAction action = list.get(0);
-					long docId = action.getDoc().getDocId();
-					Log.info("executeUniqueCommonActionList() execute uniqueCommonAction reposId:" + reposId+ " doc:[" + action.getDoc().getPath() + action.getDoc().getName() + "] Start");
+					String unqueActionId = getUniqueActionId(action);
+					Log.info("executeUniqueCommonActionList() execute uniqueCommonAction unqueActionId:" + unqueActionId + " reposId:" + reposId+ " doc:[" + action.getDoc().getPath() + action.getDoc().getName() + "] Start");
 					executeCommonAction(action, rt);
-					Log.info("executeUniqueCommonActionList() execute uniqueCommonAction reposId:" + reposId+ " doc:[" + action.getDoc().getPath() + action.getDoc().getName() + "] End");
+					Log.info("executeUniqueCommonActionList() execute uniqueCommonAction unqueActionId:" + unqueActionId + " reposId:" + reposId+ " doc:[" + action.getDoc().getPath() + action.getDoc().getName() + "] End");
 					list.remove(0);
-					hashMap.remove(docId);
+					hashMap.remove(unqueActionId);
 				}
 				else
 				{
