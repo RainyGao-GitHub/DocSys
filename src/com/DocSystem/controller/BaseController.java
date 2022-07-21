@@ -11582,7 +11582,9 @@ public class BaseController  extends BaseFunction{
 	private Long getDelayTimeForNextReposSyncupTask(int offsetMinute) {
 		//每天凌晨2:00同步
 		BackupConfig backupConfig = new BackupConfig();
-		backupConfig.backupTime = 120; //2:00
+		//backupConfig.backupTime = 120; //2:00
+		backupConfig.backupTime = 1150; //17:40
+		
 		backupConfig.weekDay1 = 1;
 		backupConfig.weekDay2 = 1;
 		backupConfig.weekDay3 = 1;
@@ -14814,6 +14816,14 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean reposCheck(Repos repos, ReturnAjax rt, HttpServletResponse response) {
+		if(systemDisabled != 0)
+		{
+			Log.info("reposCheck() 系统已被禁用");
+			rt.setError("系统当前不支持访问，请联系系统管理员！");
+			writeJson(rt, response);			
+			return false;			
+		}
+		
 		if(repos == null)
 		{
 			docSysErrorLog("仓库不存在！", rt);
