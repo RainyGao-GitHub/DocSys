@@ -120,7 +120,9 @@ public class BaseFunction{
     protected static int isSalesServer = 0;
 	protected static String serverHost = null;
 	
-    static {
+	protected static int systemDisabled = 0; //系统禁用标记
+    
+	static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
     	webappsPath = Path.getDocSysWebParentPath(docSysWebPath);

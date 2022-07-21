@@ -1309,6 +1309,7 @@
 			logLevel: 1,	//default info
 			logFile : "", //defualt not set
 			maxThreadCount: 1, //default 1
+			systemDisabled: 0, //default 0
 	}
 	
 	function enableSystemInfoSet(){
@@ -2033,6 +2034,106 @@
 		systemLicenseInfo.usersCount = licenseInfo.usersCount;
 		systemLicenseInfo.expireTime = licenseInfo.expireTime;
 		systemLicenseInfo.createTime = licenseInfo.createTime;
+	}
+	
+	function disableSystem(){
+		console.log("disableSystem()");
+		disableSystemConfirm();
+	}
+	
+	function enableSystem(){
+		console.log("enableSystem()");
+		enableSystemConfirm();
+	}
+	
+	function disableSystemConfirm()
+	{
+		console.log("disableSystemConfirm()");
+	    qiao.bs.confirm({
+	    		id: "disableSystemConfirmDialog",
+		        title: "禁用系统",
+		        msg: "是否禁用系统？",
+		        okbtn: "禁用",
+		        qubtn: "取消",
+	    	},function () {
+				doDisableSystem();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function enableSystemConfirm()
+	{
+		console.log("enableSystemConfirm()");
+	    qiao.bs.confirm({
+	    		id: "enableSystemConfirmConfirmDialog",
+		        title: "启用系统",
+		        msg: "是否启用系统？",
+		        okbtn: "启用",
+		        qubtn: "取消",
+	    	},function () {
+				doEnableSystem();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function doDisableSystem(){
+		$.ajax({
+	        url : "/DocSystem/Manage/disableSystem.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	        	console.log("disableSystem ret:",ret);
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.systemDisabled = 1;
+	        		$("#btnEnableSystem").show();
+	        		$("#btnDisableSystem").hide();
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("禁用系统失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("禁用系统失败::服务器异常");
+	        }
+	    });
+	}
+	
+	function doEnableSystem(){
+		$.ajax({
+	        url : "/DocSystem/Manage/enableSystem.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	        	console.log("enableSystem ret:",ret);
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.systemDisabled = 0;
+	        		$("#btnEnableSystem").hide();
+	        		$("#btnDisableSystem").show();
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("启用系统失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("启用系统失败::服务器异常");
+	        }
+	    });
 	}
 	
 	function upgradeSystem(){

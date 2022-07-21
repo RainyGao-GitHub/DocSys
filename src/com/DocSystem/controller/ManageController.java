@@ -778,7 +778,8 @@ public class ManageController extends BaseController{
 		config.put("ldapConfig", ldapConfig);
 		config.put("logLevel", Log.logLevel);
 		config.put("logFile", Log.logFileConfig);
-		config.put("maxThreadCount", maxThreadCount);		
+		config.put("maxThreadCount", maxThreadCount);	
+		config.put("systemDisabled", systemDisabled);
 		
 		if(docSysType < 1)
 		{
@@ -823,6 +824,44 @@ public class ManageController extends BaseController{
 		licenses.put("systemLicense", systemLicense);
 		licenses.put("officeLicense", officeLicense);
 		rt.setData(licenses);
+		writeJson(rt, response);
+	}
+	
+	/********** 禁用系统 ***************/
+	@RequestMapping("/disableSystem.do")
+	public void setSystemInfo(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** disableSystem.do ***********************");
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		systemDisabled = 1;
+					
+		writeJson(rt, response);
+	}
+	
+	/********** 启用系统 ***************/
+	@RequestMapping("/enableSystem.do")
+	public void enableSystem(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** disableSystem.do ***********************");
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		systemDisabled = 0;
+					
 		writeJson(rt, response);
 	}
 	
