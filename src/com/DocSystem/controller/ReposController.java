@@ -26,13 +26,13 @@ import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.ReposData;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.ReposAccess;
+import com.DocSystem.common.entity.SyncupTask;
 import com.DocSystem.controller.BaseController;
 
 /*
@@ -360,6 +360,14 @@ public class ReposController extends BaseController{
 		setReposEncrypt(repos, encryptType);			
 
 		InitReposAuthInfo(repos,login_user,rt);		
+		
+		//如果有版本管理，则需要启动定时扫描提交任务
+		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
+		if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+		{
+			addDelayTaskForReposSyncUp(repos, 0, 600L); //10分钟后自动同步
+		}
+		
 		unlockRepos(repos, lockType, login_user); 
 		
 		writeJson(rt, response);	
@@ -717,6 +725,9 @@ public class ReposController extends BaseController{
 			{
 				Log.debug("updateReposInfo() dbDeleteAllDocs failed");
 			}
+
+			//启动仓库的定时同步任务
+			addDelayTaskForReposSyncUp(repos, 0, 600L); //10分钟后自动同步
 		}
 		setReposIsBusy(reposId, false);
 	}
