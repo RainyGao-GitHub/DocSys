@@ -1281,23 +1281,32 @@ public class BaseFunction{
 			uniqueAction = newUniqueAction;
 		}
 		
-		ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
+		ConcurrentHashMap<String, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
 		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();		
 
 		//Log.debug("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
-		CommonAction tempAction = uniqueCommonActionHashMap.get(srcDoc.getDocId());
-		if(tempAction != null && tempAction.getType() == action.getType() && tempAction.getAction() == action.getAction() && tempAction.getDocType() == action.getDocType())
+		String uniqueActionId = getUniqueActionId(action);
+		CommonAction tempAction = uniqueCommonActionHashMap.get(uniqueActionId);
+		//if(tempAction != null && tempAction.getType() == action.getType() && tempAction.getAction() == action.getAction() && tempAction.getDocType() == action.getDocType())
+		if(tempAction != null)
 		{
-			Log.info("insertUniqueCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
+			Log.info("insertUniqueCommonAction action uniqueActionId:" + uniqueActionId + " doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
 			return false;
 		}
 		
-		uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
+		uniqueCommonActionHashMap.put(uniqueActionId, action);
 		uniqueCommonActionList.add(action);
-		Log.info("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		Log.info("insertUniqueCommonAction action uniqueActionId:" + uniqueActionId + " doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "]");
 		return true;
 	}
 	
+	protected String getUniqueActionId(CommonAction action) {
+		Doc srcDoc = action.getDoc();
+		String uniqueActionId = srcDoc.getDocId() + "-" + action.getType() + "-" + action.getAction() + "-" + action.getDocType();
+		Log.debug("getUniqueActionId uniqueActionId:" + uniqueActionId);
+		return uniqueActionId;
+	}
+
 	//注意：该接口和DocUtil中的buildBasicDoc是一样的，在这里定义是因为自动备份线程调用DocUtil类时
 	public static Doc buildBasicDocBase(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, 
 			Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum,
