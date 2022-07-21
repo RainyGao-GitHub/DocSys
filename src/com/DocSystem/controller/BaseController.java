@@ -513,6 +513,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("docSysGetDocListWithChangeType remoteList is null");
 			return localList;
 		}
+		Log.printObject("docSysGetDocListWithChangeType remoteList:", remoteList);
 		return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
 	}
 
@@ -811,9 +812,10 @@ public class BaseController  extends BaseFunction{
 		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote, null);
 		if(remoteList == null)
 		{
-			Log.debug("docSysGetDocListWithChangeType remoteList is null");
+			Log.debug("getRemoteServerEntryList remoteList is null");
 			return null;
 		}
+		Log.printObject("getRemoteServerEntryList remoteList:", remoteList);
 		return remoteList;
 	}
 
