@@ -131,6 +131,7 @@ import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.SyncupTask;
 import com.DocSystem.common.remoteStorage.FtpUtil;
 import com.DocSystem.common.remoteStorage.GitUtil;
 import com.DocSystem.common.remoteStorage.MxsDocUtil;
@@ -11092,22 +11093,32 @@ public class BaseController  extends BaseFunction{
 				repos.remoteServer = remoteServer;
 				initReposRemoteServerConfig(repos, remoteServer);
 				
-				//init autoBackupConfig
+				//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
 				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());
-				reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());		
+				reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());	
+				reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
+				
 				String autoBackup = getReposAutoBackup(repos);
 				repos.setAutoBackup(autoBackup);
 				initReposAutoBackupConfig(repos, autoBackup);
+				initReposTextSearchConfig(repos);
+				initReposVersionIgnoreConfig(repos);
+				initReposEncryptConfig(repos);
+				initReposData(repos);
+				
+				//启动定时同步任务
+				if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+				{
+					addDelayTaskForReposSyncUp(repos, 10, null);
+				}
+				
+				//启动定时备份任务
 				if(repos.backupConfig != null)
 				{
 					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null);
 					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, null);
 				}
 				
-				initReposTextSearchConfig(repos);
-				initReposVersionIgnoreConfig(repos);
-				initReposEncryptConfig(repos);
-				initReposData(repos);
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
 			}
 	    } catch (Exception e) {
@@ -11370,7 +11381,7 @@ public class BaseController  extends BaseFunction{
 		//stopReposBackUpTasks
 		//go through all backupTask and close all task
 		for (BackupTask value : dbBackupTaskHashMap.values()) {
-			Log.debug("stopReposBackUpTasks() stop backupTask:" + value.createTime);			
+			Log.debug("addDelayTaskForDBBackup() stop backupTask:" + value.createTime);			
 			value.stopFlag = true;
 		}
 		
@@ -11434,6 +11445,149 @@ public class BaseController  extends BaseFunction{
                 },
                 delayTime,
                 TimeUnit.SECONDS);
+	}
+	
+	protected void addDelayTaskForReposSyncUp(Repos repos, int offsetMinute, Long forceStartDelay) {
+		Long delayTime = getDelayTimeForNextReposSyncupTask(offsetMinute);
+		if(delayTime == null)
+		{
+			Log.info("addDelayTaskForReposSyncUp delayTime is null");			
+			return;
+		}
+		
+		if(forceStartDelay != null)
+		{
+			Log.info("addDelayTaskForReposSyncUp forceStartDelay:" + forceStartDelay + " 秒后强制开始备份！" );											
+			delayTime = forceStartDelay; //1分钟后执行第一次备份
+		}
+		Log.info("addDelayTaskForReposSyncUp delayTime:" + delayTime + " 秒后开始备份！" );		
+		
+		ConcurrentHashMap<Long, SyncupTask> syncupTaskHashMap = reposSyncupTaskHashMap.get(repos.getId());
+		if(syncupTaskHashMap == null)
+		{
+			Log.info("addDelayTaskForReposSyncUp syncupTaskHashMap 未初始化");
+			return;
+		}
+		
+		long curTime = new Date().getTime();
+        Log.info("addDelayTaskForReposSyncUp() curTime:" + curTime);        
+		
+		//stopReposSyncupTasks
+		//go through all syncupTask and close all task
+		for (SyncupTask value : syncupTaskHashMap.values()) {
+			Log.debug("addDelayTaskForReposSyncUp() stop syncupTask:" + value.createTime);			
+			value.stopFlag = true;
+		}
+		
+		//startReposSyncupTask
+		SyncupTask syncupTask = new SyncupTask();
+		syncupTask.createTime = curTime;
+		syncupTaskHashMap.put(curTime, syncupTask);
+
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);		
+		executor.schedule(
+        		new Runnable() {
+        			long createTime = curTime;
+        			int reposId = repos.getId();
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("******** ReposSyncupDelayTask [" + createTime + "] for repos:" + reposId);
+	                        
+	                        //读取最新的仓库配置信息
+	                		Repos latestReposInfo = getReposEx(reposId);
+
+	                        ConcurrentHashMap<Long, SyncupTask> latestSyncupTask = reposSyncupTaskHashMap.get(reposId);
+	                        if(latestSyncupTask == null)
+	                        {
+		                        Log.info("ReposSyncupDelayTask latestSyncupTask is null");	                        	
+	                        	return;
+	                        }
+	
+	                        if(isSyncupTaskNeedToStop(latestReposInfo, latestSyncupTask, createTime))
+	                        {
+	                			//移除备份任务	                        	
+	                        	latestSyncupTask.remove(createTime);
+		                        Log.info("ReposSyncupDelayTask [" + createTime + "] for repos:" + reposId + " 任务已取消");	                        	
+	                			return;
+	                        }
+	                        	                        
+	                        ReturnAjax rt = new ReturnAjax();
+	                        
+	        				//启动自动同步
+	        				List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
+	        				String localRootPath = Path.getReposRealPath(latestReposInfo);
+	        				String localVRootPath = Path.getReposVirtualPath(latestReposInfo);		
+	        				Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
+	        				addDocToSyncUpList(actionList, repos, rootDoc, Action.FORCESYNC, null, "定时自动同步", true);
+	        				executeUniqueCommonActionList(actionList, rt);
+	                    	
+	                        //将自己从任务备份任务表中删除
+	                        latestSyncupTask.remove(createTime);
+	                        
+	                        //当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        addDelayTaskForReposSyncUp(latestReposInfo, 5, null);         
+                        	
+                        	Log.info("******** ReposSyncupDelayTask [" + createTime + "] for repos:" + reposId + " 执行结束\n");		                        
+                        } catch(Exception e) {
+                        	Log.info("******** ReposSyncupDelayTask [" + createTime + "] for repos:" + reposId + " 执行异常\n");
+                        	Log.info(e);
+                        	
+                        }
+                        
+                    }
+                },
+                delayTime,
+                TimeUnit.SECONDS);
+	}
+	
+	protected boolean isSyncupTaskNeedToStop(Repos latestReposInfo, ConcurrentHashMap<Long, SyncupTask> latestSyncupTask, long createTime) {
+		if(latestReposInfo == null)
+		{
+			Log.debug("isSyncupTaskNeedToStop() latestReposInfo is null");			
+			return true;
+		}
+		
+		if(latestReposInfo.getVerCtrl() == null || latestReposInfo.getVerCtrl() == 0)
+		{
+			Log.debug("isSyncupTaskNeedToStop() VerCtrl is disabled for repos:" + latestReposInfo.getName());			
+			return true;
+		}
+				
+		if(latestSyncupTask == null)
+		{
+			Log.debug("isSyncupTaskNeedToStop() latestSyncupTask is null");			
+			return true;			
+		}
+		
+		SyncupTask syncupTask = latestSyncupTask.get(createTime);
+		if(syncupTask == null)
+		{
+			Log.debug("isSyncupTaskNeedToStop() there is no running backup task for [" + createTime + "]");						
+			return true;
+		}
+		
+		if(syncupTask.stopFlag == true)
+		{
+			Log.debug("isSyncupTaskNeedToStop() stop DelayTask:[" + createTime + "]");
+			return true;
+		}	
+		
+		return false;
+	}
+
+	private Long getDelayTimeForNextReposSyncupTask(int offsetMinute) {
+		//每天凌晨2:00同步
+		BackupConfig backupConfig = new BackupConfig();
+		backupConfig.backupTime = 120; //2:00
+		backupConfig.weekDay1 = 1;
+		backupConfig.weekDay2 = 1;
+		backupConfig.weekDay3 = 1;
+		backupConfig.weekDay4 = 1;
+		backupConfig.weekDay5 = 1;
+		backupConfig.weekDay6 = 1;
+		backupConfig.weekDay7 = 1;
+		return getDelayTimeForNextBackupTask(backupConfig, offsetMinute);
 	}
 
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
@@ -11513,7 +11667,7 @@ public class BaseController  extends BaseFunction{
                         try {
 	                        Log.info("******** LocalBackupDelayTask [" + createTime + "] for repos:" + reposId);
 	                        
-	                		//线程中读取从数据库读取有些时候会报错，因此直接只更新更新掉的部分
+	                		//线程中读取数据库有些时候会报错，因此直接只更新配置相关部分的内容
 	                		Repos latestReposInfo = getReposEx(reposInfo);
 	                        ReposBackupConfig latestBackupConfig = latestReposInfo.backupConfig;
 	                        if(latestBackupConfig == null)

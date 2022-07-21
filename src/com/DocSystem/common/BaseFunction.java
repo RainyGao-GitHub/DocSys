@@ -71,6 +71,7 @@ import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
+import com.DocSystem.common.entity.SyncupTask;
 import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.commonService.ProxyThread;
@@ -429,6 +430,8 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();	
+	//版本仓库同步
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
 
 	//数据库备份
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();	
@@ -1285,7 +1288,7 @@ public class BaseFunction{
 		CommonAction tempAction = uniqueCommonActionHashMap.get(srcDoc.getDocId());
 		if(tempAction != null && tempAction.getType() == action.getType() && tempAction.getAction() == action.getAction() && tempAction.getDocType() == action.getDocType())
 		{
-			//Log.debug("insertUniqueCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
+			Log.debug("insertUniqueCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
 			return false;
 		}
 		
