@@ -5093,40 +5093,38 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
 
-		//获取并检查用户权限
+		//获取并检查用户权限（只有可编辑权限的用户才可以设置密码）
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
-		if(docAuth == null)
+		if(docAuth == null || docAuth.getEditEn() == null || docAuth.getEditEn() == 0)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}
-		else
+		
+		//仓库管理员可以直接修改，非仓库管理员必须提供旧的密码
+		Integer access = docAuth.getAccess();
+		Integer isAdmin = docAuth.getIsAdmin();
+		if(access == null || isAdmin == null || isAdmin.equals(0) || access.equals(0))
 		{
-			Integer access = docAuth.getAccess();
-			Integer isAdmin = docAuth.getIsAdmin();
-			//仓库管理员可以直接修改，非仓库管理员必须提供旧的密码
-			if(access == null || isAdmin == null || isAdmin.equals(0) || access.equals(0))
+			String oldPwd = getDocPwd(repos, doc);
+			if(oldPwd != null && !oldPwd.isEmpty())
 			{
-				String oldPwd = getDocPwd(repos, doc);
-				if(oldPwd != null && !oldPwd.isEmpty())
+				//Do check the sharePwd
+				String docPwdInSession = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
+				if(docPwdInSession == null || docPwdInSession.isEmpty() || !docPwdInSession.equals(oldPwd))
 				{
-					//Do check the sharePwd
-					String docPwdInSession = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-					if(docPwdInSession == null || docPwdInSession.isEmpty() || !docPwdInSession.equals(oldPwd))
-					{
-						docSysErrorLog("设置失败：请先提供旧的访问密码！", rt);
-						rt.setMsgData("1"); //访问密码错误或未提供
-						rt.setData(doc);
-						writeJson(rt, response);
-						return;
-					}
-				}				
-				//rt.setError("您无权访问该文件，请联系管理员");
-				//writeJson(rt, response);
-				//return;
-			}			
-		}
+					docSysErrorLog("设置失败：请先提供旧的访问密码！", rt);
+					rt.setMsgData("1"); //访问密码错误或未提供
+					rt.setData(doc);
+					writeJson(rt, response);
+					return;
+				}
+			}				
+			//rt.setError("您无权访问该文件，请联系管理员");
+			//writeJson(rt, response);
+			//return;
+		}			
 		
 		//设置文件密码
 		if(setDocPwd(repos, doc, pwd) == false)
