@@ -10988,7 +10988,7 @@ public class BaseController  extends BaseFunction{
 				initReposExtentionConfig();
 				
 				//start DataBase auto backup thread
-				addDelayTaskForDBBackup(10, null);
+				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
 				
 				return "ok";
 			}
@@ -11002,7 +11002,7 @@ public class BaseController  extends BaseFunction{
 			initReposExtentionConfig();
 			
 			//start DataBase auto backup thread
-			addDelayTaskForDBBackup(10, null);
+			addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
 		}
 		
 		return ret;
@@ -11114,14 +11114,14 @@ public class BaseController  extends BaseFunction{
 				//启动定时同步任务
 				if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
 				{
-					addDelayTaskForReposSyncUp(repos, 10, null);
+					addDelayTaskForReposSyncUp(repos, 10, 600L);	//10分钟后强制开始
 				}
 				
 				//启动定时备份任务
 				if(repos.backupConfig != null)
 				{
-					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null);
-					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, null);
+					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 3600L);	//1小时后开始
+					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, 3600L); //1小时后开始
 				}
 				
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
@@ -11465,6 +11465,8 @@ public class BaseController  extends BaseFunction{
 			Log.info("addDelayTaskForReposSyncUp forceStartDelay:" + forceStartDelay + " 秒后强制开始同步！" );											
 			delayTime = forceStartDelay; //1分钟后执行第一次备份
 		}
+		
+		delayTime = delayTime + repos.getId() * 10; //根据仓库ID增加偏移时间，避免同时开始
 		Log.info("addDelayTaskForReposSyncUp delayTime:" + delayTime + " 秒后开始同步！" );		
 		
 		ConcurrentHashMap<Long, SyncupTask> syncupTaskHashMap = reposSyncupTaskHashMap.get(repos.getId());
@@ -11584,8 +11586,7 @@ public class BaseController  extends BaseFunction{
 	private Long getDelayTimeForNextReposSyncupTask(int offsetMinute) {
 		//每天凌晨2:00同步
 		BackupConfig backupConfig = new BackupConfig();
-		//backupConfig.backupTime = 120; //2:00
-		backupConfig.backupTime = 1150; //17:40
+		backupConfig.backupTime = 120; //2:00
 		
 		backupConfig.weekDay1 = 1;
 		backupConfig.weekDay2 = 1;
