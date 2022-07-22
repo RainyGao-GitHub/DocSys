@@ -345,8 +345,8 @@ public class ReposController extends BaseController{
 			initReposAutoBackupConfig(repos, autoBackup);
 			if(repos.backupConfig != null)
 			{
-				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 0, 60L);
-				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 0, 60L);
+				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 3600L); //1小时后开始备份
+				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, 3600L); //1小时后开始备份
 			}
 		}
 		
@@ -365,7 +365,7 @@ public class ReposController extends BaseController{
 		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
 		if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
 		{
-			addDelayTaskForReposSyncUp(repos, 0, 600L); //10分钟后自动同步
+			addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步
 		}
 		
 		unlockRepos(repos, lockType, login_user); 
@@ -617,8 +617,8 @@ public class ReposController extends BaseController{
 			initReposAutoBackupConfig(reposInfo, autoBackup);
 			if(reposInfo.backupConfig != null)
 			{
-				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 0, 60L);
-				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 0, 60L);
+				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 10, 3600L); //1小时后开始自动备份
+				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 10, 3600L);
 			}
 		}
 		
@@ -727,7 +727,7 @@ public class ReposController extends BaseController{
 			}
 
 			//启动仓库的定时同步任务
-			addDelayTaskForReposSyncUp(repos, 0, 600L); //10分钟后自动同步
+			addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步
 		}
 		setReposIsBusy(reposId, false);
 	}
