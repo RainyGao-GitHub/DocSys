@@ -4363,7 +4363,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Integer subDocSyncupFlag = 1;
-		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
+		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNCVerRepos)
 		{
 			subDocSyncupFlag = 2;
 		}
@@ -4459,8 +4459,16 @@ public class BaseController  extends BaseFunction{
 
 	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
 		//用户手动刷新：总是会触发索引刷新操作
-		if(action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNC)
+		if(action.getAction() == null)
 		{
+			Log.info("**************************** checkAndUpdateIndex() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			return;
+		}	
+		
+		switch(action.getAction())
+		{
+		case SYNC:
+		case FORCESYNC:
 			Log.info("**************************** checkAndUpdateIndex() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
@@ -4486,9 +4494,8 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-		}
-		else	//页面刷新：只在检测到文件有改动的时候才刷新索引
-		{
+			break;
+		case UNDEFINED:	//只同步有改动的文件
 			if(localChanges.size() > 0 || remoteChanges.size() > 0)
 			{
 				Log.info("**************************** checkAndUpdateIndex() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
@@ -4500,6 +4507,11 @@ public class BaseController  extends BaseFunction{
 				}
 				Log.info("**************************** checkAndUpdateIndex() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			}
+			break;
+		case SYNCVerRepos:	//只同步版本仓库
+			break;
+		default:	//未知同步类型
+			break;
 		}
 	}
 
@@ -10574,7 +10586,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}*/
 		
-		if(repos.isTextSearchEnabled == 0)
+		if(repos.isTextSearchEnabled == null || repos.isTextSearchEnabled == 0)
 		{
 			Log.debug("addIndexForRDoc() RealDocTextSearchDisabled");
 			return false;
@@ -11526,7 +11538,7 @@ public class BaseController  extends BaseFunction{
 	        				String localRootPath = Path.getReposRealPath(latestReposInfo);
 	        				String localVRootPath = Path.getReposVirtualPath(latestReposInfo);		
 	        				Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	        				addDocToSyncUpList(actionList, repos, rootDoc, Action.FORCESYNC, null, "定时自动同步", true);
+	        				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
 	        				executeUniqueCommonActionList(actionList, rt);
 	                    	
 	                        //将自己从任务备份任务表中删除
