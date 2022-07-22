@@ -14834,7 +14834,7 @@ public class BaseController  extends BaseFunction{
 		if(systemDisabled != 0)
 		{
 			Log.info("reposCheck() 系统已被禁用");
-			rt.setError("系统当前不支持访问，请联系系统管理员！");
+			rt.setError("系统维护中，请稍后重试！");
 			writeJson(rt, response);			
 			return false;			
 		}
@@ -14849,7 +14849,7 @@ public class BaseController  extends BaseFunction{
 		if(repos.isBusy)
 		{
 			Log.info("仓库 " + repos.getName() + " is busy");
-			rt.setError("仓库当前不支持访问，请联系系统管理员！");
+			rt.setError("仓库维护中，请稍后重试！");
 			writeJson(rt, response);			
 			return false;
 		}
