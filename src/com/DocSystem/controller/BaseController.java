@@ -18389,7 +18389,7 @@ public class BaseController  extends BaseFunction{
 						continue;
 					}
 					
-					//Log.println(fileRemotePath + subEntryName);
+					Log.debug("getRemoteStorageEntryListForSftp subEntryName:" + subEntryName);
 					
 					int subEntryType = getEntryType(subEntry);
 					String subEntryRevision = subEntry.getAttrs().getMTime() + "";
@@ -18443,7 +18443,7 @@ public class BaseController  extends BaseFunction{
 						continue;
 					}
 					
-					//Log.println(fileRemotePath + subEntryName);
+					Log.debug("getRemoteStorageEntryListForFtp subEntryName:" + subEntryName);
 					
 					int subEntryType = getEntryType(subEntry);
 					String subEntryRevision = subEntry.getTimestamp().getTimeInMillis() + "";
@@ -18552,6 +18552,8 @@ public class BaseController  extends BaseFunction{
 				{
 					JSONObject subEntry = list.getJSONObject(i);
 					String subEntryName = subEntry.getString("name");
+					Log.debug("getRemoteStorageEntryListForMxsDoc subEntryName:" + subEntryName);
+
 					int subEntryType = subEntry.getInteger("type");
 					long subEntrySize = subEntry.getLong("size");
 			    	long lastChangeTime = subEntry.getLong("latestEditTime");
@@ -18696,14 +18698,14 @@ public class BaseController  extends BaseFunction{
 		}
 		int subDocLevel = doc.getLevel() + 1;
 		
-        Log.debug("getRemoteStorageEntryHashMapForGit doc:[" + doc.getPath() + doc.getName() + "]");
+        Log.debug("getRemoteStorageEntryListForGit doc:[" + doc.getPath() + doc.getName() + "]");
 		try {       	        	
         	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
         	{
         		fileRemotePath += doc.getName() + "/";
         	}
-        	Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
+        	Log.debug("getRemoteStorageEntryListForGit fileRemotePath:" + fileRemotePath);
             
 			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
 			//Log.printObject("list:", list);
@@ -18718,13 +18720,15 @@ public class BaseController  extends BaseFunction{
 						continue;
 					}
 		    	
-					String name = treeWalk.getNameString();            			
+					String subEntryName = treeWalk.getNameString(); 
+					Log.debug("getRemoteStorageEntryListForGit subEntryName:" + subEntryName);
+					
 					Doc subDoc = new Doc();
 					subDoc.setVid(repos.getId());
-		    		subDoc.setDocId(Path.buildDocIdByName(subDocLevel,subDocParentPath,name));
+		    		subDoc.setDocId(Path.buildDocIdByName(subDocLevel,subDocParentPath,subEntryName));
 		    		subDoc.setPid(doc.getDocId());
 		    		subDoc.setPath(subDocParentPath);
-		    		subDoc.setName(name);
+		    		subDoc.setName(subEntryName);
 		    		subDoc.setLevel(subDocLevel);
 		    		subDoc.setType(type);
 		    		subDoc.setLocalRootPath(doc.getLocalRootPath());
@@ -18749,14 +18753,14 @@ public class BaseController  extends BaseFunction{
 		}
 		int subDocLevel = doc.getLevel() + 1;
 		
-        Log.debug("getRemoteStorageEntryHashMapForSvn doc:[" + doc.getPath() + doc.getName() + "]");
+        Log.debug("getRemoteStorageEntryListForSvn doc:[" + doc.getPath() + doc.getName() + "]");
 		try {       	        	
         	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
         	{
         		fileRemotePath += doc.getName() + "/";
         	}
-        	Log.debug("getRemoteStorageEntryHashMapForSvn fileRemotePath:" + fileRemotePath);
+        	Log.debug("getRemoteStorageEntryListForSvn fileRemotePath:" + fileRemotePath);
             
 			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath, commitId);
 			if(list != null)
@@ -18769,11 +18773,13 @@ public class BaseController  extends BaseFunction{
 			    	int subEntryType = getEntryType(subEntry.getKind());
 			    	if(subEntryType <= 0)
 			    	{
-			    		Log.debug("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
+			    		Log.debug("getRemoteStorageEntryListForSvn() invalid subEntry subEntryType:" + subEntryType);
 			    		continue;
 			    	}
 					
 			    	String subEntryName = subEntry.getName();
+					Log.debug("getRemoteStorageEntryListForSvn subEntryName:" + subEntryName);
+
 			    	Long lastChangeTime = subEntry.getDate().getTime();
 			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "", doc.offsetPath);
 			    	subDoc.setSize(subEntry.getSize());
