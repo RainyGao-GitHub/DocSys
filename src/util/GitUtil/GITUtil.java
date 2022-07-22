@@ -1746,7 +1746,20 @@ public class GITUtil  extends BaseController{
 	}
 	
 	private boolean doCleanBranch(Git git, Repository repo, org.eclipse.jgit.api.Status status) {
+		if(deleteIndexLock() == false)
+		{
+			Log.error("doCleanBranch() delete index.lock Failed!");
+		}
 		return doResetBranch(git, "HEAD");
+	}
+
+	private boolean deleteIndexLock() {
+		//C:\DocSysReposes\DocSysVerReposes\126_GIT_RRepos\.git\index.lock
+		if(FileUtil.isFileExist(gitDir + "index.lock"))
+		{
+			return FileUtil.delFile(gitDir + "index.lock");			
+		}
+		return true;
 	}
 
 	private boolean doPull(Git git, Repository repo)
