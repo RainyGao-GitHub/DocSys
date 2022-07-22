@@ -11538,7 +11538,7 @@ public class BaseController  extends BaseFunction{
 	        				String localRootPath = Path.getReposRealPath(latestReposInfo);
 	        				String localVRootPath = Path.getReposVirtualPath(latestReposInfo);		
 	        				Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	        				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
+	        				addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
 	        				executeUniqueCommonActionList(actionList, rt);
 	                    	
 	                        //将自己从任务备份任务表中删除
