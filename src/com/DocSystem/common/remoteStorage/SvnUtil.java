@@ -1007,7 +1007,11 @@ public class SvnUtil {
             String commitId = "" + revision;
             String commitUser = logEntry.getAuthor(); //提交者
             String commitMessage= logEntry.getMessage();
-            long commitTime = logEntry.getDate().getTime();            
+            long commitTime = 0;
+            if(logEntry.getDate() != null)
+            {
+            	commitTime = logEntry.getDate().getTime();  
+            }
             
 //            Log.debug("revision:"+revision);
 //            Log.debug("commitId:"+commitId);
