@@ -67,7 +67,7 @@ public class FtpUtil {
     			Log.debug("connect failed...ftp服务器:"+this.host+":"+this.port);
     			return false;
     		} 
-    		Log.debug("connect successfu...ftp服务器:"+this.host+":"+this.port);  
+    		Log.debug("connect successful...ftp服务器:"+this.host+":"+this.port);  
     	}catch (MalformedURLException e) {  
     		e.printStackTrace();
     		return false;
