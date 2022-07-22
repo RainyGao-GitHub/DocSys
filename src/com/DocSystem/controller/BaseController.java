@@ -18392,7 +18392,7 @@ public class BaseController  extends BaseFunction{
 					//Log.println(fileRemotePath + subEntryName);
 					
 					int subEntryType = getEntryType(subEntry);
-					String subEntryRevision = subEntry.getAttrs().getMtimeString();
+					String subEntryRevision = subEntry.getAttrs().getMTime() + "";
 			    	long subEntrySize = subEntry.getAttrs().getSize();
 			    	long lastChangeTime = subEntry.getAttrs().getMTime();
 			    	long createTime = subEntry.getAttrs().getATime();
@@ -18446,7 +18446,7 @@ public class BaseController  extends BaseFunction{
 					//Log.println(fileRemotePath + subEntryName);
 					
 					int subEntryType = getEntryType(subEntry);
-					String subEntryRevision = subEntry.getTimestamp() + "";
+					String subEntryRevision = subEntry.getTimestamp().getTimeInMillis() + "";
 			    	long subEntrySize = subEntry.getSize();
 			    	long lastChangeTime = subEntry.getTimestamp().getTimeInMillis();
 			    	long createTime = lastChangeTime;
