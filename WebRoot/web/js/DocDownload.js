@@ -388,11 +388,21 @@
                    }
                    console.log("downloadDoc SubContextIndex:" + SubContextIndex, SubContext);
                    
-                   DecThreadCount(SubContext);
                    if( "ok" == ret.status )
-                   {          
+                   {    
                 	    console.log("downloadDocPrepare Ok:",ret);        
-                	    var vid =  SubContext.vid;
+               	        if(ret.msgData == 5)
+                	    {
+               	        	//下载目录压缩中
+               	        	$(".downloadInfo"+SubContextIndex).text(ret.data.info);
+               	        	startDownloadPrepareQueryTask(SubContext, ret.data.id);
+               	        	return;
+                	    }
+               	        
+               	        //下载任务准备完成
+               	        DecThreadCount(SubContext);
+               	        
+               	        var vid =  SubContext.vid;
             	   		var path = ret.data.path;
             	   		var name = ret.data.name;
             	   		var targetName = ret.data.targetName;
@@ -438,6 +448,8 @@
                    else	//后台报错，结束下载
                    {
                 	   console.log("downloadDocPrepare Error:" + ret.msgInfo);
+                	   DecThreadCount(SubContext);
+                	   
                 	   $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
    					   $('.downloadFile'+SubContextIndex).addClass('is-fail');
    					   $(".downloadInfo"+SubContextIndex).text("下载失败");
@@ -473,6 +485,141 @@
     		//启动下一个下载线程
         	downloadNextDoc();
     	}
+    	
+    	function startDownloadPrepareQueryTask(SubContext, downloadPrepareTaskId)
+    	{
+    		console.log("startDownloadPrepareQueryTask() downloadPrepareTaskId:" + downloadPrepareTaskId);
+    		var timeOut = 10000; //10秒钟后查询
+		    setTimeout(function () {
+				console.log("[" + SubContext.index + "] timerForQueryDownloadPrepareTask triggered!");
+				doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId);
+			},timeOut);	//check it 50ms later	
+    	}
+    	
+    	function doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId)
+    	{
+    		console.log("doQueryDownloadPrepareTask() downloadPrepareTaskId:" + downloadPrepareTaskId);
+			//执行后台downloadDoc操作
+    		$.ajax({
+                url : "/DocSystem/Doc/queryDownloadCompressTask.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    taskId: downloadPrepareTaskId,
+                },
+                success : function (ret) {
+                   if(SubContext.stopFlag == true)
+                   {
+                	   console.log("doQueryDownloadPrepareTask download task 已取消", SubContext);
+                	   return;
+                   }
+                   
+                   var SubContextIndex = SubContextHashMap[SubContext.docId + "-" + SubContext.startTime];
+                   if(SubContextIndex == undefined)
+                   {
+                	   console.log("doQueryDownloadPrepareTask 未找到对应的索引", SubContext);
+                	   return;                	   
+                   }
+                   console.log("doQueryDownloadPrepareTask SubContextIndex:" + SubContextIndex, SubContext);
+                   
+                   if( "ok" == ret.status )
+                   {    
+                	    console.log("doQueryDownloadPrepareTask Ok:",ret);        
+               	        if(ret.msgData == 5)
+                	    {
+               	        	//下载目录压缩中
+               	        	$(".downloadInfo"+SubContextIndex).text(ret.msgInfo);
+               	        	startDownloadPrepareQueryTask(SubContext, ret.data);
+               	        	return;
+                	    }
+               	        
+               	        //下载任务准备完成
+               	        DecThreadCount(SubContext);              	        
+
+               	        var vid =  SubContext.vid;
+            	   		var path = ret.data.path;
+            	   		var name = ret.data.name;
+            	   		var targetName = ret.data.targetName;
+                	    var targetPath = ret.data.targetPath;
+                	    var deleteFlag = ret.msgData;
+            	   		
+                	    path = encodeURI(path);
+                	    name = encodeURI(name);
+                	    targetName = encodeURI(targetName);
+            		   	targetPath = encodeURI(targetPath);
+            		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&encryptEn=1";
+            		   	if(gShareId)
+            		   	{
+            		   		url += "&shareId=" + gShareId;
+            		   	}
+            		   	
+            		   	var delayTime = getDownloadDelayTime();
+            		   	if(delayTime > 0)
+            		   	{
+            		   		console.log("doQueryDownloadPrepareTask 延时启动文件下载: " + SubContext.name);
+            		   		//延时启动下载
+	            		   	setTimeout(function(){
+	            		   		console.log("doQueryDownloadPrepareTask download start for " + SubContext.name);
+	            		   		window.location.href = url;
+	            		   		
+	    						$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
+	    						$('.downloadFile'+SubContextIndex).addClass('is-success');
+	    						$(".downloadInfo"+SubContextIndex).hide();
+	            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+	                	   	}, delayTime);
+            		   	}
+            		   	else
+            		   	{
+            		   		console.log("doQueryDownloadPrepareTask download start for " + SubContext.name);
+            		   		window.location.href = url;
+            		   		$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
+    						$('.downloadFile'+SubContextIndex).addClass('is-success');
+    						$(".downloadInfo"+SubContextIndex).hide();
+            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+            		   	}
+                	   	return;
+                   }
+                   else	//后台报错，结束下载
+                   {
+                	   console.log("doQueryDownloadPrepareTask Error:" + ret.msgInfo);
+                	   DecThreadCount(SubContext);
+                	   
+                	   $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
+   					   $('.downloadFile'+SubContextIndex).addClass('is-fail');
+   					   $(".downloadInfo"+SubContextIndex).text("下载失败");
+                       downloadErrorConfirm(SubContext,ret.msgInfo);
+                       return;
+                   }
+                },
+                error : function () {	//后台异常
+                   if(SubContext.stopFlag == true)
+                   {
+                 	   console.log("doQueryDownloadPrepareTask download task 已取消", SubContext);
+                 	   return;
+                   }
+                    
+                   var SubContextIndex = SubContextHashMap[SubContext.docId + "-" + SubContext.startTime];
+                   if(SubContextIndex == undefined)
+                   {
+                 	   console.log("doQueryDownloadPrepareTask 未找到对应的索引", SubContext);
+                 	   return;                	   
+                   }
+                   console.log("doQueryDownloadPrepareTask SubContextIndex:" + SubContextIndex, SubContext);
+                   DecThreadCount(SubContext);
+
+                   console.log("doQueryDownloadPrepareTask 服务器异常：文件[" + SubContext.name + "]下载异常！");
+ 	               $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
+				   $('.downloadFile'+SubContextIndex).addClass('is-fail');
+				   $(".downloadInfo"+SubContextIndex).text("下载失败");
+				   downloadErrorConfirm(SubContext,"服务器异常");
+            	   return;
+                }
+        	});
+    		
+    		//启动下一个下载线程
+        	downloadNextDoc();    		
+    	}
+    	
     	
     	function getDownloadDelayTime()
     	{
