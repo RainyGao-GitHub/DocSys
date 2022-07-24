@@ -1,7 +1,5 @@
 package com.DocSystem.common.entity;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
@@ -21,13 +19,11 @@ public class DownloadCompressTask {
 	//需要直接压缩的目录
 	public String inputPath;
 	public String inputName;
+	public boolean deleteInput = false;
 	
 	//压缩文件存放路径
 	public String targetPath;
 	public String targetName;
 	
 	public int status;  //1:压缩中 2:压缩成功 3:压缩失败
-	public int type;	//0:仓库原始目录（不允许删除目录）1:非原始目录（允许删除目录）
-
-	public HttpServletRequest request;
 }
