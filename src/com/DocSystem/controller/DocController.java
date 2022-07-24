@@ -14,6 +14,9 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.tukaani.xz.XZInputStream;
 
+import util.DateFormat;
 import util.ReturnAjax;
 import util.FileUtil.FileUtils2;
 import util.LuceneUtil.LuceneUtil2;
@@ -80,7 +84,9 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
+import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
+import com.DocSystem.common.entity.DownloadCompressTask;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -2285,6 +2291,14 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
+		//目标目录压缩中...
+		if((Integer) rt.getMsgData() == 2)
+		{
+			executeDownloadCompressTask((DownloadCompressTask)rt.getData());
+			return;
+		}
+		
+		//下载的是文件或者需要在downloadDoc阶段下载的目录
 		if(rt.getStatus().equals("ok"))
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  repos, doc, null, "");	
@@ -2295,6 +2309,72 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	private void executeDownloadCompressTask(DownloadCompressTask task) {		
+		String targetPath = task.targetPath;
+		String targetName = task.targetName;
+		Long deleteDelayTime = null;
+
+		if(compressAuthedFilesWithZip(targetPath, targetName, task.repos, task.doc, task.reposAccess) == false)
+		{
+			task.status = 3; //Failed
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(task.request, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");				
+		}
+		else
+		{
+			task.status = 2; //Success
+			deleteDelayTime = 72000L; //20小时后			
+			addSystemLog(task.request, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
+		}
+		
+		//启动压缩任务和压缩文件延时删除任务
+		addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
+	}
+	
+	public void addDelayTaskForDownloadCompressTaskDelete(DownloadCompressTask task, Long deleteDelayTime) {
+		if(deleteDelayTime == null)
+		{
+			Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime is null");			
+			return;
+		}
+		Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
+		
+		long curTime = new Date().getTime();
+        Log.info("addDelayTaskForDownloadCompressTaskDelete() curTime:" + curTime);        
+		
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+        			String taskId = task.id;
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("******** DownloadCompressTaskDeleteDelayTask *****");
+	                        
+	                        //检查备份任务是否已被停止
+	                		DownloadCompressTask latestTask = downloadCompressTaskHashMap.get(taskId);
+	                		if(latestTask == null)
+	                		{
+	                			Log.info("DownloadCompressTaskDeleteDelayTask() 压缩任务 [" + taskId + "] 不存在");						
+	                			return;
+	                		}
+	                		
+	                		FileUtil.delFile(latestTask.targetPath + latestTask.targetName);
+	                		
+	                		downloadCompressTaskHashMap.remove(taskId);
+	                		
+	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除完成\n");		                        
+                        } catch(Exception e) {
+	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除异常\n");		                        
+                        	Log.info(e);                        	
+                        }
+                        
+                    }
+                },
+                deleteDelayTime,
+                TimeUnit.SECONDS);
+	}
+
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
 		if(isFSM(repos) == false)
@@ -2369,14 +2449,16 @@ public class DocController extends BaseController{
 				return;						
 			}
 			
-			//提前压缩有权限的文件(因为这里涉及加密仓库的文件解密问题，对于加密的仓库每次下载都需要先解密再加密，会增加大量的硬盘使用空间)
-			targetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
-			targetName = targetName + ".zip";
-			compressAuthedFilesWithZip(targetPath, targetName, repos, doc, reposAccess);
-			downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 0);
-			rt.setData(downloadDoc);
-			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			docSysDebugLog("本地目录: 非原始路径下载", rt);
+			//增加目录压缩任务
+			DownloadCompressTask compressTask = createDownloadCompressTask(
+					repos,
+					doc,
+					reposAccess,
+					Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser()), 
+					targetName + ".zip",
+					1);
+			rt.setData(compressTask);
+			rt.setMsgData(2);	//目录压缩中...
 			return;
 		}
 		
@@ -2442,6 +2524,23 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
+	private DownloadCompressTask createDownloadCompressTask(Repos repos, Doc doc, ReposAccess reposAccess,
+			String targetPath, String targetName, int type) 
+	{
+		DownloadCompressTask compressTask =	new DownloadCompressTask();
+		compressTask.repos = repos;
+		compressTask.doc = doc;
+		compressTask.reposAccess = reposAccess;
+		
+		compressTask.targetPath = targetPath;
+		compressTask.targetName = targetName;
+		
+		compressTask.status = 1; //压缩中..
+		compressTask.type = 1; //非原始路径压缩（下载结束后可删除目录）
+	
+		return compressTask;
+	}
+
 	//压缩授权的文件
     public boolean compressAuthedFilesWithZip(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
     {
@@ -2720,6 +2819,53 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
+	/**************** downloadDocPrepare ******************/
+	@RequestMapping("/queryDownloadCompressTask.do")
+	public void downloadDocPrepare(String taskId, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.info("************** queryDownloadCompressTask.do ****************");
+		Log.info("queryDownloadCompressTask taskId:" + taskId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		DownloadCompressTask task = getDownloadCompressTaskById(taskId);
+		if(task == null)
+		{
+			//可能任务已被取消或者超时删除
+			rt.setError("压缩任务 " + taskId + " 不存在");
+			writeJson(rt, response);			
+			return;
+		}
+
+		switch(task.status)
+		{
+		case 0:
+			//下载压缩未结束
+			rt.setData(task.id); //任务Id
+			rt.setMsgInfo(task.info);			
+			rt.setMsgData(2);
+			break;
+		case 2:
+			Doc doc = task.doc;
+			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), task.targetPath, task.targetName, 0);
+			rt.setData(downloadDoc);
+			rt.setMsgData(1);	//下载后（删除目标文件）			
+			break;
+		case 3:	
+			//下载压缩失败
+			rt.setError("目录压缩失败");
+			break;
+		default:	//未知压缩状态
+			rt.setError("未知目录压缩状态");
+			break;
+		}
+
+		writeJson(rt, response);			
+	}
+	
+	private DownloadCompressTask getDownloadCompressTaskById(String taskId) {
+		return downloadCompressTaskHashMap.get(taskId);
+	}
+
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc.do")
 	public void downloadDoc(Integer vid, String reposPath, String targetPath, String targetName, 
