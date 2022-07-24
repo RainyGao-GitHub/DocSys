@@ -1989,14 +1989,23 @@
 
 	function showDocHistory(node, historyType)
 	{
-		console.log("showDocHistory()");
-
+		console.log("showDocHistory() historyType:" + historyType);
+		
 		var parentPath ="";
 		var docName = "";
 		var docId = 0;
 		var pid = 0;
 		var docType = 2;
 
+		if(historyType == 0)
+		{
+			if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+			{
+				showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+				return;
+			}
+		}
+		
 		var treeNode = node;
 		if(treeNode != null)
 		{
