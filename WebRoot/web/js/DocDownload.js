@@ -489,11 +489,11 @@
     	function startDownloadPrepareQueryTask(SubContext, downloadPrepareTaskId)
     	{
     		console.log("startDownloadPrepareQueryTask() downloadPrepareTaskId:" + downloadPrepareTaskId);
-    		var timeOut = 10000; //10秒钟后查询
+    		var timeOut = 2000; //2秒钟后查询
 		    setTimeout(function () {
 				console.log("[" + SubContext.index + "] timerForQueryDownloadPrepareTask triggered!");
 				doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId);
-			},timeOut);	//check it 50ms later	
+			},timeOut);	//check it 2s later	
     	}
     	
     	function doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId)
@@ -528,8 +528,15 @@
                	        if(ret.msgData == 5)
                 	    {
                	        	//下载目录压缩中
-               	        	$(".downloadInfo"+SubContextIndex).text(ret.msgInfo);
-               	        	startDownloadPrepareQueryTask(SubContext, ret.data);
+               	        	var compressTask = ret.data;
+               	        	var info = compressTask.info;
+               	        	if(compressTask.targetSize)
+               	        	{
+               	        		info = "目录压缩中(" + getFileDisplaySize(compressTask.targetSize) + ")...";
+               	        	}
+               	        	$(".downloadInfo"+SubContextIndex).text(info);
+               	        	
+               	        	startDownloadPrepareQueryTask(SubContext, compressTask.id);
                	        	return;
                 	    }
                	        
@@ -620,6 +627,23 @@
         	downloadNextDoc();    		
     	}
     	
+    	function getFileDisplaySize(size)
+    	{
+    		var showSize = size;
+	    	var units = "B";	//单位
+			if((showSize/1024)>1)
+			{
+				showSize = showSize/1024;
+				units = "KB";
+				if((showSize/1024)>1)
+				{
+					showSize = showSize/1024;
+					units = "MB";
+				}
+			}
+			showSize = Math.round(showSize) + units;
+			return showSize;
+    	}
     	
     	function getDownloadDelayTime()
     	{

@@ -24,6 +24,7 @@ public class DownloadCompressTask {
 	//压缩文件存放路径
 	public String targetPath;
 	public String targetName;
+	public Long targetSize;
 	
 	public int status;  //1:压缩中 2:压缩成功 3:压缩失败
 }
