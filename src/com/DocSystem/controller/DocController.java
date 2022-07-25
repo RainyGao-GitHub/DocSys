@@ -2294,7 +2294,14 @@ public class DocController extends BaseController{
 		//目录压缩中...
 		if((Integer) rt.getMsgData() == 5)
 		{
-			executeDownloadCompressTask((DownloadCompressTask)rt.getData(), request);
+			new Thread(new Runnable() {
+				DownloadCompressTask task = (DownloadCompressTask)rt.getData();
+				String requestIP = getRequestIpAddress(request);
+				public void run() {
+					Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
+					executeDownloadCompressTask(task, requestIP);
+				}
+			}).start();
 			return;
 		}
 		
@@ -2309,7 +2316,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private void executeDownloadCompressTask(DownloadCompressTask task, HttpServletRequest request) {		
+	private void executeDownloadCompressTask(DownloadCompressTask task, String requestIP) {		
 		String targetPath = task.targetPath;
 		String targetName = task.targetName;
 		Long deleteDelayTime = null;
@@ -2321,14 +2328,14 @@ public class DocController extends BaseController{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(request, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");				
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");				
 			}
 			else
 			{
 				task.status = 2; //Success
 				task.info = "目录压缩成功";
 				deleteDelayTime = 72000L; //20小时后			
-				addSystemLog(request, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
 			}
 		}
 		else
@@ -2338,14 +2345,14 @@ public class DocController extends BaseController{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(request, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
 			}
 			else
 			{
 				task.status = 2; //Success
 				task.info = "目录压缩成功";
 				deleteDelayTime = 72000L; //20小时后			
-				addSystemLog(request, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
 			}
 			if(task.deleteInput)
 			{
@@ -2571,7 +2578,7 @@ public class DocController extends BaseController{
 			String inputPath, String inputName, boolean deleteInput,
 			String targetPath, String targetName, ReturnAjax rt) 
 	{
-		String taskId = repos.getId() + "-" + doc.getDocId() + "-" + (targetPath + targetName).hashCode();
+		String taskId = reposAccess.getAccessUserId() + "-" + repos.getId() + "-" + doc.getDocId() + "-" + (targetPath + targetName).hashCode();
 		if(downloadCompressTaskHashMap.get(taskId) != null)
 		{
 			Log.info("createDownloadCompressTask() 压缩任务 " + taskId + "已存在");
