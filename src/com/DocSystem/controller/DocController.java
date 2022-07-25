@@ -2476,6 +2476,12 @@ public class DocController extends BaseController{
 			}
 			
 			//创建目录压缩任务
+			String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+			String compressTargetName = targetName + ".zip";
+			if(targetName.isEmpty())
+			{
+				compressTargetName = repos.getName() + ".zip";
+			}
 			DownloadCompressTask compressTask = createDownloadCompressTask(
 					repos,
 					doc,
@@ -2483,8 +2489,8 @@ public class DocController extends BaseController{
 					null,
 					null,
 					false,
-					Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser()), 
-					targetName + ".zip",
+					compressTargetPath,
+					compressTargetName,
 					rt);
 			
 			if(compressTask != null)
@@ -2893,8 +2899,15 @@ public class DocController extends BaseController{
 		case 0:
 		case 1:
 			//下载压缩未结束
-			rt.setData(task.id); //任务Id
-			rt.setMsgInfo(task.info);			
+			rt.setData(task); //任务Id
+
+			//更新task的targetSize
+			File compressFile = new File(task.targetPath, task.targetName);
+			if(compressFile.exists())
+			{
+				task.targetSize = compressFile.length();
+			}
+			
 			rt.setMsgData(5);
 			break;
 		case 2:

@@ -2479,6 +2479,14 @@ public class BaseFunction{
 		doc.setPath(encPath);
 		doc.setName(encName);
 		doc.encryptEn = encryptEn;
+		
+		//指定目标文件的size
+		File targetFile = new File(targetPath, targetName);
+		if(targetFile.exists())
+		{
+			doc.setSize(targetFile.length());
+		}
+		
 		if(vid != null)
 		{
 			doc.setVid(vid);
