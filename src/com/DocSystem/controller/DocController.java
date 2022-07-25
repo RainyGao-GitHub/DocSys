@@ -2319,8 +2319,8 @@ public class DocController extends BaseController{
 	private void executeDownloadCompressTask(DownloadCompressTask task, String requestIP) {		
 		String targetPath = task.targetPath;
 		String targetName = task.targetName;
-		Long deleteDelayTime = null;
-
+		Long deleteDelayTime = null;		
+		
 		//检查并创建压缩目录
 		File dir = new File(targetPath);
 		if(!dir.exists())
@@ -2328,25 +2328,10 @@ public class DocController extends BaseController{
 			dir.mkdirs();
 		}
 		
+		//直接压缩指定目录
 		if(task.inputName == null)
 		{
-			if(compressAuthedFilesWithZip(targetPath, targetName, task.repos, task.doc, task.reposAccess) == false)
-			{
-				task.status = 3; //Failed
-				task.info = "目录压缩失败";
-				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");				
-			}
-			else
-			{
-				task.status = 2; //Success
-				task.info = "目录压缩成功";
-				deleteDelayTime = 72000L; //20小时后			
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
-			}
-		}
-		else
-		{
+			Log.info("executeDownloadCompressTask() y");
 			if(doCompressDir(task.inputPath, task.inputName, targetName, targetName, null) == false)
 			{
 				task.status = 3; //Failed
@@ -2365,8 +2350,72 @@ public class DocController extends BaseController{
 			{
 				FileUtil.delDir(task.inputPath + task.inputName);
 			}
+			
+			//延时延时删除压缩任务和压缩文件
+			addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
+			return;
 		}
 		
+		
+		//加密的仓库，需要先解密再压缩
+		Repos repos = task.repos;
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			String tmpEncryptPath = Path.getReposTmpPathForDecrypt(repos);
+			String tmpEncryptName = targetName;
+			if(tmpEncryptName == null || tmpEncryptName.isEmpty())
+			{
+				tmpEncryptName = repos.getName(); //用仓库名作为解密存储目录
+			}
+
+			//只拷贝有权限的文件
+			task.info = "文件拷贝中...";
+			copyAuthedFilesForDownload(tmpEncryptPath, tmpEncryptName, repos, task.doc, task.reposAccess);
+
+			//解密指定目录的文件
+			task.info = "文件解密中...";
+			decryptFileOrDir(repos, tmpEncryptPath, tmpEncryptName);
+			
+			task.info = "目录压缩中...";
+			if(doCompressDir(task.inputPath, task.inputName, targetName, targetName, null) == false)
+			{
+				task.status = 3; //Failed
+				task.info = "目录压缩失败";
+				deleteDelayTime = 300L; //5分钟后删除
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			}
+			else
+			{
+				task.status = 2; //Success
+				task.info = "目录压缩成功";
+				deleteDelayTime = 72000L; //20小时后			
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+			}
+			
+			//删除临时解密目录
+			FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
+
+			//延时延时删除压缩任务和压缩文件
+			addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
+			return;
+		}
+			
+		//非加密仓库则直接压缩有权限的文件
+		if(compressAuthedFilesWithZip(targetPath, targetName, task.repos, task.doc, task.reposAccess) == false)
+		{
+			task.status = 3; //Failed
+			task.info = "目录压缩失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");				
+		}
+		else
+		{
+			task.status = 2; //Success
+			task.info = "目录压缩成功";
+			deleteDelayTime = 72000L; //20小时后			
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
+		}
+			
 		//延时延时删除压缩任务和压缩文件
 		addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
 	}
@@ -2523,17 +2572,6 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			Doc downloadDoc = null;
-			if(repos.encryptType != null && repos.encryptType != 0)
-			{
-				//对于加密的仓库，使用直接下载目录的方式
-				downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
-				rt.setData(downloadDoc);
-				rt.setMsgData(0);	//下载完成后不删除已下载的文件
-				docSysDebugLog("本地目录: 原始路径下载", rt);
-				return;						
-			}
-			
 			//创建目录压缩任务
 			String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 			String compressTargetName = targetName + ".zip";
@@ -2660,6 +2698,69 @@ public class DocController extends BaseController{
 		downloadCompressTaskHashMap.put(taskId, task);
 		
 		return task;
+	}
+	
+    public boolean copyAuthedFilesForDownload(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
+    {
+    	boolean ret = false;
+    	try {	                
+	    	File rootFile = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+    		DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
+			HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
+			copyAuthedFilesForDownload(rootFile, repos, doc, curDocAuth, docAuthHashMap, doc.getLocalRootPath() + doc.getPath() + doc.getName(), targetPath + targetName);	        
+    	} catch(Exception e) {
+    		Log.error("copyAuthedFilesForDownload() 拷贝异常");
+    		Log.error(e);
+    	}
+    	return ret;
+    }
+    
+    private void copyAuthedFilesForDownload(File input, Repos repos, Doc doc, DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, String srcFilePath, String dstFilePath)
+    {
+		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
+		{
+			Log.debug("copyAuthedFilesForDownload() have no right to download [" + doc.getPath() + doc.getName() + "]");
+			return;
+		}
+			
+		if (input.isDirectory())
+		{
+			FileUtil.createDir(dstFilePath);
+		}
+		else
+		{
+			FileUtil.copyFile(srcFilePath, dstFilePath, true);
+		}
+
+        if (input.isDirectory()) {
+        	//取出文件夹中的文件（或子文件夹）
+            File[] flist = input.listFiles();
+            
+            if (flist.length > 0)
+            {
+    			Log.debug("copyAuthedFilesForDownload() [" + doc.getPath() + doc.getName() + "] is folder");
+            	String subDocParentPath = doc.getPath() + doc.getName() + "/";
+            	String localRootPath = doc.getLocalRootPath();
+            	String localVRootPath = doc.getLocalVRootPath();
+            	
+            	for (int i = 0; i < flist.length; i++) {    
+            		File subFile = flist[i];
+            		String subDocName = subFile.getName();
+            		Integer subDocLevel = getSubDocLevel(doc);
+    	    		int type = 1;
+    	    		if(subFile.isDirectory())
+    	    		{
+    	    			type = 2;
+    	    		}
+    	    		long size = subFile.length();
+    	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc.offsetPath);
+            		DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
+            		String subSrcFilePath = srcFilePath + "/" + subDocName;
+            		String subDstFilePath = dstFilePath + "/" + subDocName;
+            		copyAuthedFilesForDownload(flist[i], repos, subDoc, subDocAuth, docAuthHashMap, subSrcFilePath, subDstFilePath);
+                }
+            }
+        }
 	}
 
 	//压缩授权的文件
