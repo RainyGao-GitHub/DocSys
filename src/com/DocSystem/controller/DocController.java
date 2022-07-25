@@ -2626,7 +2626,7 @@ public class DocController extends BaseController{
 			}
 				
 			//Do checkout to local
-			if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
+			if(verReposCheckOutForDownload(repos, doc, reposAccess, targetPath, doc.getName(), null, true, true, null) == null)
 			{
 				docSysErrorLog("远程下载失败", rt);
 				docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
@@ -2647,12 +2647,30 @@ public class DocController extends BaseController{
 				docSysErrorLog("空目录无法下载！", rt);
 				return;				
 			}
-				
-			//TODO: 从历史版本里取出来的文件放到了临时目录里，目前没有进行权限控制
-			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
-			rt.setData(downloadDoc);
-			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			docSysDebugLog("远程目录: 已下载并存储在用户临时目录", rt);
+			
+			//创建目录压缩任务
+			String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+			String compressTargetName = targetName + ".zip";
+			if(targetName.isEmpty())
+			{
+				compressTargetName = repos.getName() + ".zip";
+			}
+			DownloadCompressTask compressTask = createDownloadCompressTask(
+					repos,
+					doc,
+					reposAccess,
+					targetPath,
+					doc.getName(),
+					true,
+					compressTargetPath,
+					compressTargetName,
+					rt);
+			
+			if(compressTask != null)
+			{
+				rt.setData(compressTask);
+				rt.setMsgData(5);	//目录压缩中...
+			}
 			return;
 		}
 		
