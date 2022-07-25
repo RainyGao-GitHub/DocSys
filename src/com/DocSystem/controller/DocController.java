@@ -2415,6 +2415,51 @@ public class DocController extends BaseController{
                 TimeUnit.SECONDS);
 	}
 	
+	public void addDelayTaskForCompressFileDelete(String targetPath, String targetName, Long deleteDelayTime) {
+		if(deleteDelayTime == null)
+		{
+			Log.info("addDelayTaskForCompressFileDelete delayTime is null");			
+			return;
+		}
+		Log.info("addDelayTaskForCompressFileDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
+		
+		long curTime = new Date().getTime();
+        Log.info("addDelayTaskForCompressFileDelete() curTime:" + curTime);        
+		
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("******** DownloadCompressFileDeleteDelayTask *****");
+	                        
+	                        File compressFile = new File(targetPath, targetName);
+	                		if(compressFile.exists())
+	                		{
+	                			if(FileUtil.delFile(targetPath + targetName))
+		                		{
+		                			Log.info("******** DownloadCompressFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除成功\n");		                        
+		                		}
+		                		else
+		                		{
+		                			Log.info("******** DownloadCompressFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除失败\n");		                        		                			
+		                		}
+	                		}
+	                		else
+	                		{
+	                			Log.info("******** DownloadCompressFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 不存在\n");		                        		                				                			
+	                		}
+                        } catch(Exception e) {
+	                		Log.info("******** DownloadCompressFileDeleteDelayTask 压缩任务 [" + targetPath + targetName + "] 删除异常\n");		                        
+                        	Log.info(e);                        	
+                        }                        
+                    }
+                },
+                deleteDelayTime,
+                TimeUnit.SECONDS);
+	}
+	
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
 		if(isFSM(repos) == false)
@@ -2938,7 +2983,12 @@ public class DocController extends BaseController{
 			Doc doc = task.doc;
 			Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), task.targetPath, task.targetName, 0);
 			rt.setData(downloadDoc);
-			rt.setMsgData(1);	//下载后（删除目标文件）			
+			rt.setMsgData(1);	//下载后（删除目标文件）
+			
+			//删除下载压缩任务
+			downloadCompressTaskHashMap.remove(task.id);
+			//用户必须在20小时内完成下载
+			addDelayTaskForCompressFileDelete(task.targetPath, task.targetName, 72000L); //20小时后删除压缩文件
 			break;
 		case 3:	
 			//下载压缩失败
