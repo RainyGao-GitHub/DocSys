@@ -59,6 +59,7 @@ import com.DocSystem.common.Path;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
@@ -1079,6 +1080,210 @@ public class GITUtil  extends BaseController{
 		
 		return null;
 	}
+	
+	
+	public List<Doc> getAuthedEntryForDownload(Doc doc, String localParentPath, String targetName,String revision, boolean force, 
+			DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, 
+			HashMap<String, String> downloadList) 	
+	{
+		Log.debug("getAuthedEntryForDownload() revision:" + revision + " 注意递归过程中，该值必须不变");
+		
+		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
+		{
+			Log.debug("getAuthedEntryForDownload() have no right to download [" + doc.getPath() + doc.getName() + "]");
+			return null;
+		}
+		
+		String parentPath = doc.getPath();
+		String entryName = doc.getName();
+		
+		
+		//Log.debug("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+		List<Doc> successDocList = new ArrayList<Doc>();
+		
+		//check targetName and set
+		if(targetName == null)
+		{
+			targetName = entryName;
+		}
+		
+		String remoteEntryPath = parentPath + entryName;
+		Doc remoteDoc = getDoc(doc, revision);
+		if(remoteDoc == null)
+		{
+			//entryName是空，表示当前访问的远程的根目录，必须存在
+			if(remoteEntryPath.isEmpty())
+			{
+				Log.debug("getAuthedEntryForDownload() remote root Entry not exists");
+				return null;
+			}
+			
+			Log.debug("getAuthedEntryForDownload() remote Entry " + remoteEntryPath  +" not exists");
+			return null;
+		}
+		
+		//远程节点是文件，本地节点不存在则checkOut，否则只有在force==true时才会checkOut
+		if(remoteDoc.getType() == 1) 
+		{	
+			if(downloadList != null)
+			{
+				Object downloadItem = downloadList.get(remoteEntryPath);
+				if(downloadItem == null)
+				{
+					//Log.debug("getAuthedEntryForDownload() " + remoteEntryPath + " 不在下载列表,不下载！"); 
+					return null;
+				}
+				else
+				{
+					//Log.debug("getAuthedEntryForDownload() [" + remoteEntryPath + "] 在下载列表,需要下载！"); 
+					downloadList.remove(downloadItem);
+				}
+			}
+
+			//Log.debug("getAuthedEntryForDownload() getRemoteFile [" + remoteEntryPath + "]"); 
+			if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force) == false)
+			{
+				Log.debug("getAuthedEntryForDownload() getRemoteFile Failed:" + remoteEntryPath); 
+				return null;
+			}
+			
+			File localEntry = new File(localParentPath, targetName);
+			if(!localEntry.exists())
+			{
+				Log.debug("getAuthedEntryForDownload() Checkout Ok, but localEntry not exists"); 
+				return null;
+			}
+				
+			doc.setSize(localEntry.length());
+			doc.setLatestEditTime(localEntry.lastModified());
+			doc.setCheckSum("");
+			doc.setType(1);
+		    doc.setRevision(remoteDoc.getRevision());
+		    successDocList.add(doc);
+		    return successDocList;
+		}
+		
+		//远程节点存在，如果是目录的话（且不是根目录），则先新建本地目录，然后在CheckOut子目录，如果是根目录则直接CheckOut子目录，因为本地根目录必须存在
+		if(remoteDoc.getType() == 2) 
+		{
+			//CheckOut Directory
+			File localEntry = new File(localParentPath + targetName);
+			if(force == false)
+			{
+				if(localEntry.exists())
+				{
+					if(localEntry.isFile())
+					{
+						Log.debug("getAuthedEntryForDownload() " + localParentPath + targetName + " 是文件，已存在"); 					
+						return null;
+					}
+				}
+				else
+				{
+					if(localEntry.mkdir() == false)
+					{
+						Log.debug("getAuthedEntryForDownload() mkdir failed:" + localParentPath + targetName); 					
+						return null;
+					}
+					
+			        //Add to success Doc to Checkout list	
+			        doc.setType(2);
+					doc.setRevision(remoteDoc.getRevision());
+					successDocList.add(doc);
+				}
+			}
+			else
+			{
+				if(localEntry.exists() == false)
+				{
+					if(localEntry.mkdir() == false)
+					{
+						return null;
+					}
+					//Add to success Checkout list	
+					doc.setType(2);
+					doc.setRevision(remoteDoc.getRevision());
+					successDocList.add(doc);
+				}
+				else
+				{
+					if(localEntry.isFile())
+					{	
+						if(FileUtil.delFileOrDir(localParentPath+targetName) == false)
+						{
+							return null;
+						}
+						if(localEntry.mkdir() == false)
+						{
+							return null;
+						}
+						//Add to success Checkout list	
+						doc.setType(2);
+						doc.setRevision(remoteDoc.getRevision());
+						successDocList.add(doc);
+					}
+				}		
+			}
+        	
+			//To Get SubDocs
+			if(downloadList != null && downloadList.size() == 0)
+			{
+				Log.debug("getAuthedEntryForDownload() downloadList is empty"); 
+				return successDocList;
+			}
+			
+			int subDocLevel = doc.getLevel() + 1;
+			String subDocParentPath = doc.getPath() + doc.getName() + "/";
+			if(doc.getName().isEmpty())
+			{
+				subDocParentPath = doc.getPath();
+			}
+			
+			String subEntryLocalParentPath = null;
+			if(targetName.isEmpty())
+			{
+				subEntryLocalParentPath = localParentPath;
+			}
+			else
+			{
+				subEntryLocalParentPath = localParentPath + targetName + "/";
+			}
+			
+			TreeWalk treeWalk = getSubEntries(remoteEntryPath,revision);
+			if(treeWalk == null)
+			{
+				return successDocList;
+			}
+			
+		    try {
+				while (treeWalk.next()) 
+				{
+					String subEntryName = treeWalk.getNameString();
+					Integer subEntryType = getEntryType(treeWalk.getFileMode());
+					
+					//注意: checkOut时必须使用相同的revision，successList中的可以是实际的，在获取子文件时绝对不能修改revision，那样就引起的时间切面不一致
+					//这个问题导致了，自动同步出现问题（远程同步用的就是getEntry接口），导致远程同步后的dbDoc与实际的revision不一致
+					//String subEntryRevision = revision;	//绝对不能用这个，只要保证revision不被修改就会一直是同一个值
+					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+					DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
+					List<Doc> subSuccessList = getAuthedEntryForDownload(subDoc, subEntryLocalParentPath,subEntryName,revision, force, subDocAuth, docAuthHashMap, downloadList);
+					if(subSuccessList != null && subSuccessList.size() > 0)
+					{
+						successDocList.addAll(subSuccessList);
+					}					
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				Log.info(e);
+			}
+		  
+		    return successDocList;
+        }
+		
+		return null;
+	}
+	
 	
 	public String getReposPreviousCommmitId(String commitId) 
 	{
