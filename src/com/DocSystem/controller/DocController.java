@@ -2321,6 +2321,13 @@ public class DocController extends BaseController{
 		String targetName = task.targetName;
 		Long deleteDelayTime = null;
 
+		//检查并创建压缩目录
+		File dir = new File(targetPath);
+		if(!dir.exists())
+		{
+			dir.mkdirs();
+		}
+		
 		if(task.inputName == null)
 		{
 			if(compressAuthedFilesWithZip(targetPath, targetName, task.repos, task.doc, task.reposAccess) == false)
@@ -2360,58 +2367,54 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//删除压缩任务
-		downloadCompressTaskHashMap.remove(task.id);
-		
-		//延时延时删除压缩文件
-		addDelayTaskForCompressFileDelete(task.targetPath, task.targetName, deleteDelayTime);
+		//延时延时删除压缩任务和压缩文件
+		addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
 	}
 	
-	public void addDelayTaskForCompressFileDelete(String targetPath, String targetName, Long deleteDelayTime) {
+	public void addDelayTaskForDownloadCompressTaskDelete(DownloadCompressTask task, Long deleteDelayTime) {
 		if(deleteDelayTime == null)
 		{
-			Log.info("addDelayTaskForCompressFileDelete delayTime is null");			
+			Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime is null");			
 			return;
 		}
-		Log.info("addDelayTaskForCompressFileDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
+		Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
 		
 		long curTime = new Date().getTime();
-        Log.info("addDelayTaskForCompressFileDelete() curTime:" + curTime);        
+        Log.info("addDelayTaskForDownloadCompressTaskDelete() curTime:" + curTime);        
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.schedule(
         		new Runnable() {
+        			String taskId = task.id;
                     @Override
                     public void run() {
                         try {
 	                        Log.info("******** DownloadCompressTaskDeleteDelayTask *****");
 	                        
-	                        File compressFile = new File(targetPath, targetName);
-	                		if(compressFile.exists())
+	                        //检查备份任务是否已被停止
+	                		DownloadCompressTask latestTask = downloadCompressTaskHashMap.get(taskId);
+	                		if(latestTask == null)
 	                		{
-	                			if(FileUtil.delFile(targetPath + targetName))
-		                		{
-		                			Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除成功\n");		                        
-		                		}
-		                		else
-		                		{
-		                			Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除失败\n");		                        		                			
-		                		}
+	                			Log.info("DownloadCompressTaskDeleteDelayTask() 压缩任务 [" + taskId + "] 不存在");						
+	                			return;
 	                		}
-	                		else
-	                		{
-	                			Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 不存在\n");		                        		                				                			
-	                		}
+	                		
+	                		FileUtil.delFile(latestTask.targetPath + latestTask.targetName);
+	                		
+	                		downloadCompressTaskHashMap.remove(taskId);
+	                		
+	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除完成\n");		                        
                         } catch(Exception e) {
-	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + targetPath + targetName + "] 删除异常\n");		                        
+	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除异常\n");		                        
                         	Log.info(e);                        	
-                        }                        
+                        }
+                        
                     }
                 },
                 deleteDelayTime,
                 TimeUnit.SECONDS);
 	}
-
+	
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
 		if(isFSM(repos) == false)
@@ -2578,7 +2581,10 @@ public class DocController extends BaseController{
 			String inputPath, String inputName, boolean deleteInput,
 			String targetPath, String targetName, ReturnAjax rt) 
 	{
-		String taskId = reposAccess.getAccessUserId() + "-" + repos.getId() + "-" + doc.getDocId() + "-" + (targetPath + targetName).hashCode();
+		long curTime = new Date().getTime();
+        Log.info("createDownloadCompressTask() curTime:" + curTime);
+        
+		String taskId = reposAccess.getAccessUserId() + "-" + repos.getId() + "-" + doc.getDocId() + "-" + curTime;
 		if(downloadCompressTaskHashMap.get(taskId) != null)
 		{
 			Log.info("createDownloadCompressTask() 压缩任务 " + taskId + "已存在");
@@ -2588,7 +2594,8 @@ public class DocController extends BaseController{
 		
 		DownloadCompressTask task =	new DownloadCompressTask();
 		task.id = taskId;
-		
+		task.createTime = curTime;
+				
 		task.repos = repos;
 		task.doc = doc;
 		task.reposAccess = reposAccess;
@@ -2599,7 +2606,7 @@ public class DocController extends BaseController{
 		task.deleteInput = deleteInput;
 		
 		//压缩文件
-		task.targetPath = targetPath;
+		task.targetPath = targetPath + taskId + "/";
 		task.targetName = targetName;
 		
 		task.status = 1; //压缩中..
@@ -2613,37 +2620,43 @@ public class DocController extends BaseController{
 	//压缩授权的文件
     public boolean compressAuthedFilesWithZip(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
     {
-    	File zipFile = new File(targetPath + targetName);	//finalFile
-    	
-        File input = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName()); //srcFile or Dir
-        if (!input.exists()){
-        	Log.debug(doc.getLocalRootPath() + doc.getPath() + doc.getName() + "不存在！");
-        	return false;
-        }   
-            
-        Project prj = new Project();
-        Zip zip = new Zip();
-        zip.setEncoding("gbk"); //文件名的编码格式，默认是运行平台使用的编码格式，会导致压缩后的文件在其他平台上打开乱码
-        zip.setProject(prj);    
-        zip.setDestFile(zipFile);    
-        FileSet fileSet = new FileSet();    
-        fileSet.setProject(prj);    
-        fileSet.setDir(input);    
-        //fileSet.setIncludes("**/*.java"); //包括哪些文件或文件夹 eg:zip.setIncludes("*.java");    
-        //fileSet.setExcludes("10张必做计算.pdf"); //排除哪些文件或文件夹    
-                
-    	DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
-		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
-        configCompressExcludes(fileSet, input, repos, doc, curDocAuth, docAuthHashMap, null);
-        
-        zip.addFileset(fileSet);    
-        zip.execute();  
-		
-        if(zipFile.exists())
-        {
-        	return true;
-        }
-        return false;
+    	boolean ret = false;
+    	try {
+	    	File zipFile = new File(targetPath + targetName);	//finalFile
+	    	
+	        File input = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName()); //srcFile or Dir
+	        if (!input.exists()){
+	        	Log.info(doc.getLocalRootPath() + doc.getPath() + doc.getName() + "不存在！");
+	        	return ret;
+	        }   
+	            
+	        Project prj = new Project();
+	        Zip zip = new Zip();
+	        zip.setEncoding("gbk"); //文件名的编码格式，默认是运行平台使用的编码格式，会导致压缩后的文件在其他平台上打开乱码
+	        zip.setProject(prj);    
+	        zip.setDestFile(zipFile);    
+	        FileSet fileSet = new FileSet();    
+	        fileSet.setProject(prj);    
+	        fileSet.setDir(input);    
+	        //fileSet.setIncludes("**/*.java"); //包括哪些文件或文件夹 eg:zip.setIncludes("*.java");    
+	        //fileSet.setExcludes("10张必做计算.pdf"); //排除哪些文件或文件夹    
+	                
+	    	DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
+			HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
+	        configCompressExcludes(fileSet, input, repos, doc, curDocAuth, docAuthHashMap, null);
+	        
+	        zip.addFileset(fileSet);    
+	        zip.execute();  
+			
+	        if(zipFile.exists())
+	        {
+	        	ret = true;
+	        }
+    	} catch(Exception e) {
+    		Log.error("compressAuthedFilesWithZip() 压缩异常");
+    		Log.error(e);
+    	}
+    	return ret;
     }
 	
     private void configCompressExcludes(FileSet fileSet, File input, Repos repos, Doc doc, DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, String relativePath) 
