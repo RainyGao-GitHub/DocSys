@@ -2353,48 +2353,52 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//启动压缩任务和压缩文件延时删除任务
-		addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
+		//删除压缩任务
+		downloadCompressTaskHashMap.remove(task.id);
+		
+		//延时延时删除压缩文件
+		addDelayTaskForCompressFileDelete(task.targetPath, task.targetName, deleteDelayTime);
 	}
 	
-	public void addDelayTaskForDownloadCompressTaskDelete(DownloadCompressTask task, Long deleteDelayTime) {
+	public void addDelayTaskForCompressFileDelete(String targetPath, String targetName, Long deleteDelayTime) {
 		if(deleteDelayTime == null)
 		{
-			Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime is null");			
+			Log.info("addDelayTaskForCompressFileDelete delayTime is null");			
 			return;
 		}
-		Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
+		Log.info("addDelayTaskForCompressFileDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
 		
 		long curTime = new Date().getTime();
-        Log.info("addDelayTaskForDownloadCompressTaskDelete() curTime:" + curTime);        
+        Log.info("addDelayTaskForCompressFileDelete() curTime:" + curTime);        
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.schedule(
         		new Runnable() {
-        			String taskId = task.id;
                     @Override
                     public void run() {
                         try {
 	                        Log.info("******** DownloadCompressTaskDeleteDelayTask *****");
 	                        
-	                        //检查备份任务是否已被停止
-	                		DownloadCompressTask latestTask = downloadCompressTaskHashMap.get(taskId);
-	                		if(latestTask == null)
+	                        File compressFile = new File(targetPath, targetName);
+	                		if(compressFile.exists())
 	                		{
-	                			Log.info("DownloadCompressTaskDeleteDelayTask() 压缩任务 [" + taskId + "] 不存在");						
-	                			return;
+	                			if(FileUtil.delFile(targetPath + targetName))
+		                		{
+		                			Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除成功\n");		                        
+		                		}
+		                		else
+		                		{
+		                			Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除失败\n");		                        		                			
+		                		}
 	                		}
-	                		
-	                		FileUtil.delFile(latestTask.targetPath + latestTask.targetName);
-	                		
-	                		downloadCompressTaskHashMap.remove(taskId);
-	                		
-	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除完成\n");		                        
+	                		else
+	                		{
+	                			Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 不存在\n");		                        		                				                			
+	                		}
                         } catch(Exception e) {
-	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除异常\n");		                        
+	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + targetPath + targetName + "] 删除异常\n");		                        
                         	Log.info(e);                        	
-                        }
-                        
+                        }                        
                     }
                 },
                 deleteDelayTime,
