@@ -1943,18 +1943,21 @@ public class BaseFunction{
 	//日志管理	
 	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
     {
+		String requestIP = "未知";
+		if(request != null)
+		{
+			requestIP = getRequestIpAddress(request);
+		}
+		
+		return addSystemLog(requestIP, user, event, subEvent, action, result, repos, doc, newDoc, content);
+    }
+	
+	protected static boolean addSystemLog(String requestIP, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
+    {
 		SystemLog log = new SystemLog();
 		log.time = new Date().getTime();
 		
-		if(request == null)
-		{
-			log.ip = "未知";			
-		}
-		else
-		{
-			log.ip = getRequestIpAddress(request);
-		}
-		
+		log.ip = requestIP;			
 		
 		if(user == null)
 		{
