@@ -3,8 +3,10 @@ package com.DocSystem.common.entity;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
-public class DownloadCompressTask {
+public class DownloadPrepareTask {
 	public String id;
+	
+	public Integer type = 0; //0: compress dedicated folder 1: download repos's folder 2:download verRepos's folder or file
 
 	public String info = "压缩中...";
 
