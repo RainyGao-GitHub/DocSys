@@ -2298,7 +2298,7 @@ public class DocController extends BaseController{
 				DownloadPrepareTask task = (DownloadPrepareTask)rt.getData();
 				String requestIP = getRequestIpAddress(request);
 				public void run() {
-					Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
+					Log.debug("downloadDocPrepare() executeDownloadPrepareTask in new thread");
 					executeDownloadPrepareTask(task, requestIP);
 				}
 			}).start();
@@ -2316,7 +2316,182 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private void executeDownloadPrepareTask(DownloadPrepareTask task, String requestIP) {		
+	private void executeDownloadPrepareTask(DownloadPrepareTask task, String requestIP) 
+	{	
+		switch(task.type)
+		{
+		case 0:
+			executeDownloadPrepareTaskForLocalFolder(task, requestIP);
+			break;
+		case 1:
+			executeDownloadPrepareTaskForReposFolder(task, requestIP);
+			break;
+		case 2:
+			executeDownloadPrepareTaskForVerReposEntry(task, requestIP);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	private void executeDownloadPrepareTaskForVerReposEntry(DownloadPrepareTask task, String requestIP) {
+		Repos repos = task.repos;
+		Doc doc = task.doc;
+		ReposAccess reposAccess = task.reposAccess;		
+
+		Long deleteDelayTime = null;		
+		
+		//Do checkout to local
+		String tmpCheckoutPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+		String tmpCheckoutName = doc.getName();
+		if(tmpCheckoutName.isEmpty())
+		{
+			tmpCheckoutName = repos.getName();
+		}
+		
+		task.info = "版本检出中...";
+		if(verReposCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, tmpCheckoutName, null, true, true, null) == null)
+		{
+			task.status = 3; //Failed
+			task.info = "版本检出失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+		
+		File entry = new File(tmpCheckoutPath, tmpCheckoutName);
+		if(entry.exists() == false)
+		{
+			task.status = 3; //Failed
+			task.info = "版本检出失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+		
+		if(entry.isFile())
+		{	
+			if(repos.encryptType != null && repos.encryptType != 0)
+			{
+				//解密指定目录的文件
+				task.info = "文件解密中...";
+				decryptFileOrDir(repos, tmpCheckoutPath, tmpCheckoutName);
+			}
+			
+			task.status = 2; //Success
+			task.info = "版本检出成功";
+			
+			//更新targetPath和targetName
+			task.targetPath = tmpCheckoutPath;
+			task.targetName = tmpCheckoutName;
+			
+			deleteDelayTime = 72000L; //20小时后			
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");		
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+	
+		if(FileUtil.isEmptyDir(tmpCheckoutPath + tmpCheckoutName, true))
+		{
+			task.status = 3; //Failed
+			task.info = "空目录无法下载";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;		
+		}
+		
+		String targetPath = task.targetPath;
+		String targetName = task.targetName;
+		
+		//检查并创建压缩目录
+		File dir = new File(targetPath);
+		if(!dir.exists())
+		{
+			dir.mkdirs();
+		}
+		
+		//加密的仓库，需要先解密再压缩
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			//解密指定目录的文件
+			task.info = "文件解密中...";
+			decryptFileOrDir(repos, tmpCheckoutPath, tmpCheckoutName);
+			
+			task.info = "目录压缩中...";
+			if(doCompressDir(tmpCheckoutPath, tmpCheckoutName, targetPath, targetName, null) == false)
+			{
+				task.status = 3; //Failed
+				task.info = "目录压缩失败";
+				deleteDelayTime = 300L; //5分钟后删除
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+
+				//删除临时目录
+				FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
+				
+				//延时删除任务和压缩文件
+				addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+				return;
+			}
+
+			task.status = 2; //Success
+			task.info = "目录压缩成功";
+			deleteDelayTime = 72000L; //20小时后			
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+			
+			//删除临时目录
+			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
+
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+		
+		//压缩目录
+		task.info = "目录压缩中...";
+		if(doCompressDir(tmpCheckoutPath, tmpCheckoutName, task.targetPath, task.targetName, null) == false)
+		{
+			task.status = 3; //Failed
+			task.info = "目录压缩失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			
+			//删除临时目录
+			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);		
+			
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;		
+		}
+		
+		task.status = 2; //Success
+		task.info = "目录压缩成功";
+		deleteDelayTime = 72000L; //20小时后			
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+
+		//删除临时目录
+		FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);	
+		
+		//延时删除任务和压缩文件
+		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+		return;		
+
+	}
+
+	private void executeDownloadPrepareTaskForLocalFolder(DownloadPrepareTask task, String requestIP) 
+	{		
+		if(task.inputName != null)
+		{
+			Log.info("executeDownloadPrepareTask() inputName is null");
+			return;
+		}
+
 		String targetPath = task.targetPath;
 		String targetName = task.targetName;
 		Long deleteDelayTime = null;		
@@ -2328,35 +2503,49 @@ public class DocController extends BaseController{
 			dir.mkdirs();
 		}
 		
-		//直接压缩指定目录
-		if(task.inputName != null)
+		task.info = "目录压缩中...";
+		if(doCompressDir(task.inputPath, task.inputName, targetPath, targetName, null) == false)
 		{
-			Log.info("executeDownloadPrepareTask() ");
-			if(doCompressDir(task.inputPath, task.inputName, targetName, targetName, null) == false)
-			{
-				task.status = 3; //Failed
-				task.info = "目录压缩失败";
-				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
-			}
-			else
-			{
-				task.status = 2; //Success
-				task.info = "目录压缩成功";
-				deleteDelayTime = 72000L; //20小时后			
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
-			}
+			task.status = 3; //Failed
+			task.info = "目录压缩失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			
 			if(task.deleteInput)
 			{
 				FileUtil.delDir(task.inputPath + task.inputName);
 			}
-			
-			//延时延时删除压缩任务和压缩文件
+
+			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
 		}
 		
+		task.status = 2; //Success
+		task.info = "目录压缩成功";
+		deleteDelayTime = 72000L; //20小时后			
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+		if(task.deleteInput)
+		{
+			FileUtil.delDir(task.inputPath + task.inputName);
+		}
 		
+		//延时删除任务和压缩文件
+		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+	}
+	
+	private void executeDownloadPrepareTaskForReposFolder(DownloadPrepareTask task, String requestIP) {		
+		String targetPath = task.targetPath;
+		String targetName = task.targetName;
+		Long deleteDelayTime = null;		
+		
+		//检查并创建压缩目录
+		File dir = new File(targetPath);
+		if(!dir.exists())
+		{
+			dir.mkdirs();
+		}
+				
 		//加密的仓库，需要先解密再压缩
 		Repos repos = task.repos;
 		if(repos.encryptType != null && repos.encryptType != 0)
@@ -2377,47 +2566,49 @@ public class DocController extends BaseController{
 			decryptFileOrDir(repos, tmpEncryptPath, tmpEncryptName);
 			
 			task.info = "目录压缩中...";
-			if(doCompressDir(tmpEncryptPath, tmpEncryptName, targetName, targetName, null) == false)
+			if(doCompressDir(tmpEncryptPath, tmpEncryptName, targetPath, targetName, null) == false)
 			{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
 				deleteDelayTime = 300L; //5分钟后删除
 				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+				//删除临时解密目录
+				FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
+				//延时删除任务和压缩文件
+				addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+				return;
 			}
-			else
-			{
-				task.status = 2; //Success
-				task.info = "目录压缩成功";
-				deleteDelayTime = 72000L; //20小时后			
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
-			}
-			
+
+			task.status = 2; //Success
+			task.info = "目录压缩成功";
+			deleteDelayTime = 72000L; //20小时后			
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
 			//删除临时解密目录
 			FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
-
-			//延时延时删除压缩任务和压缩文件
+			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
 		}
 			
 		//非加密仓库则直接压缩有权限的文件
+		task.info = "目录压缩中...";
 		if(compressAuthedFilesWithZip(targetPath, targetName, task.repos, task.doc, task.reposAccess) == false)
 		{
 			task.status = 3; //Failed
 			task.info = "目录压缩失败";
 			deleteDelayTime = 300L; //5分钟后删除
 			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");				
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
 		}
-		else
-		{
-			task.status = 2; //Success
-			task.info = "目录压缩成功";
-			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
-		}
-			
-		//延时延时删除压缩任务和压缩文件
-		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+		
+		task.status = 2; //Success
+		task.info = "目录压缩成功";
+		deleteDelayTime = 72000L; //20小时后			
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
+		//延时删除任务和压缩文件
+		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);			
 	}
 	
 	public void addDelayTaskForDownloadPrepareTaskDelete(DownloadPrepareTask task, Long deleteDelayTime) {
@@ -2588,6 +2779,7 @@ public class DocController extends BaseController{
 					false,
 					compressTargetPath,
 					compressTargetName,
+					1, //download repos's folder
 					rt);
 			
 			if(compressTask != null)
@@ -2609,7 +2801,6 @@ public class DocController extends BaseController{
 			}
 			
 			//本地文件不存在（尝试从版本仓库中下载）
-			targetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
@@ -2623,29 +2814,6 @@ public class DocController extends BaseController{
 				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 				docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
 				return;	
-			}
-				
-			//Do checkout to local
-			if(verReposCheckOutForDownload(repos, doc, reposAccess, targetPath, doc.getName(), null, true, true, null) == null)
-			{
-				docSysErrorLog("远程下载失败", rt);
-				docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
-				return;
-			}
-				
-			if(remoteEntry.getType() == 1)
-			{
-				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), targetPath, targetName, 1);
-				rt.setData(downloadDoc);
-				rt.setMsgData(1);	//下载完成后删除已下载的文件
-				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
-				return;
-			}
-
-			if(FileUtil.isEmptyDir(targetPath + doc.getName(), true))
-			{
-				docSysErrorLog("空目录无法下载！", rt);
-				return;				
 			}
 			
 			//创建目录压缩任务
@@ -2664,6 +2832,7 @@ public class DocController extends BaseController{
 					true,
 					compressTargetPath,
 					compressTargetName,
+					2,	//download verRepos's folder or file
 					rt);
 			
 			if(compressTask != null)
@@ -2680,7 +2849,9 @@ public class DocController extends BaseController{
 	
 	private DownloadPrepareTask createDownloadPrepareTask(Repos repos, Doc doc, ReposAccess reposAccess,
 			String inputPath, String inputName, boolean deleteInput,
-			String targetPath, String targetName, ReturnAjax rt) 
+			String targetPath, String targetName, 
+			Integer type,
+			ReturnAjax rt) 
 	{
 		long curTime = new Date().getTime();
         Log.info("createDownloadCompressTask() curTime:" + curTime);
@@ -2695,6 +2866,8 @@ public class DocController extends BaseController{
 		
 		DownloadPrepareTask task =	new DownloadPrepareTask();
 		task.id = taskId;
+		task.type = type;
+		
 		task.createTime = curTime;
 				
 		task.repos = repos;
