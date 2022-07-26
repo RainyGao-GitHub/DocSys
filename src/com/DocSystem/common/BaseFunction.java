@@ -1438,7 +1438,14 @@ public class BaseFunction{
 		Log.debug("buildVDoc() doc already is VDoc");
 		return doc;
 	}
-		
+	
+	protected String getSubDocParentPath(Doc doc) {
+		if(doc.getName().isEmpty())
+		{
+			return doc.getPath();
+		}
+		return doc.getPath() + doc.getName() + "/";
+	}		
 	/***************************** json相关接口 ***************************/
 	/**
 	 * 向页面返回json信息

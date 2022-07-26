@@ -81,7 +81,7 @@ class JGitTest extends ReposController{
     	doc.setPath("");
     	doc.setName("");
     	doc.setLocalRootPath(repos.getRealDocPath());
-		if(null == originGitUtil.doAutoCommit(doc, "远程仓库的修改3333333333333333", "OriginRainyGao",true,null,2, null))
+		if(null == originGitUtil.doAutoCommit(repos, doc, "远程仓库的修改3333333333333333", "OriginRainyGao",true,null,2, null))
 		{
     		System.out.println("gitAutoCommit Failed!");
     		return;
@@ -92,7 +92,7 @@ class JGitTest extends ReposController{
     	System.out.println("*********** 自动提交至本地GIT仓库 ****************");
     	//Auto Commit to Local Git Repos at root dir
     	doc.setLocalRootPath(localRepos.getRealDocPath());
-		if(null == localGitUtil.doAutoCommit(doc, "本地仓库的修改33333333333333", "LocalRainyGao",true,null,2, null))
+		if(null == localGitUtil.doAutoCommit(localRepos, doc, "本地仓库的修改33333333333333", "LocalRainyGao",true,null,2, null))
 		{
     		System.out.println("gitAutoCommit Failed!");
     		return;
