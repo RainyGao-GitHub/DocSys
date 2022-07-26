@@ -395,7 +395,7 @@
                 	    {
                	        	//下载目录压缩中
                	        	$(".downloadInfo"+SubContextIndex).text(ret.data.info);
-               	        	startDownloadPrepareQueryTask(SubContext, ret.data.id);
+               	        	startDownloadPrepareQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
                	        	return;
                 	    }
                	        
@@ -486,17 +486,22 @@
         	downloadNextDoc();
     	}
     	
-    	function startDownloadPrepareQueryTask(SubContext, downloadPrepareTaskId)
+    	function startDownloadPrepareQueryTask(SubContext, downloadPrepareTaskId, delayTime)
     	{
-    		console.log("startDownloadPrepareQueryTask() downloadPrepareTaskId:" + downloadPrepareTaskId);
-    		var timeOut = 2000; //2秒钟后查询
-		    setTimeout(function () {
+    		console.log("startDownloadPrepareQueryTask() downloadPrepareTaskId:" + downloadPrepareTaskId + " delayTime:" + delayTime);
+    		var nextDelayTime = delayTime; //每次增加5s
+    		if(nextDelayTime < 60000) //最长1分钟
+    		{
+    			nextDelayTime += 5000;
+    		}
+    		
+    		setTimeout(function () {
 				console.log("[" + SubContext.index + "] timerForQueryDownloadPrepareTask triggered!");
-				doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId);
-			},timeOut);	//check it 2s later	
+				doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId, nextDelayTime);
+			},delayTime);	//check it 2s later	
     	}
     	
-    	function doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId)
+    	function doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId, nextDelayTime)
     	{
     		console.log("doQueryDownloadPrepareTask() downloadPrepareTaskId:" + downloadPrepareTaskId);
 			//执行后台downloadDoc操作
@@ -536,7 +541,7 @@
                	        	}
                	        	$(".downloadInfo"+SubContextIndex).text(info);
                	        	
-               	        	startDownloadPrepareQueryTask(SubContext, compressTask.id);
+               	        	startDownloadPrepareQueryTask(SubContext, compressTask.id, nextDelayTime);
                	        	return;
                 	    }
                	        
