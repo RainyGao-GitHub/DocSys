@@ -2351,7 +2351,7 @@ public class DocController extends BaseController{
 		}
 		
 		task.info = "版本检出中...";
-		if(verReposCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, tmpCheckoutName, null, true, true, null) == null)
+		if(verReposCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, tmpCheckoutName, null, true, false, null) == null)
 		{
 			task.status = 3; //Failed
 			task.info = "版本检出失败";
@@ -2788,9 +2788,19 @@ public class DocController extends BaseController{
 			}
 			
 			Log.debug("downloadDocPrepare_FSM() Doc [" +doc.getPath() + doc.getName() + "] 是空目录");
+			docSysErrorLog("空目录无法下载！", rt);
+			return;		
 		}
 		
-		if(localEntry.getType() == 0 || localEntry.getType() == 2) //不存在或者空目录
+		if(localEntry.getType() == 0)
+		{
+			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+			return;		
+		}
+		
+		//TODO: 不存在或空目录从版本仓库下载意义何在（只会给用户带来困扰）
+		/*if(localEntry.getType() == 0 || localEntry.getType() == 2) //不存在或者空目录
 		{
 			//文件服务器前置仓库不支持版本仓库
 			if(isFSM(repos) == false)
@@ -2841,7 +2851,7 @@ public class DocController extends BaseController{
 				rt.setMsgData(5);	//目录压缩中...
 			}
 			return;
-		}
+		}*/
 		
 		docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
 		return;		
@@ -2854,12 +2864,12 @@ public class DocController extends BaseController{
 			ReturnAjax rt) 
 	{
 		long curTime = new Date().getTime();
-        Log.info("createDownloadCompressTask() curTime:" + curTime);
+        Log.info("createDownloadPrepareTask() curTime:" + curTime);
         
 		String taskId = reposAccess.getAccessUserId() + "-" + repos.getId() + "-" + doc.getDocId() + "-" + curTime;
 		if(downloadPrepareTaskHashMap.get(taskId) != null)
 		{
-			Log.info("createDownloadCompressTask() 压缩任务 " + taskId + "已存在");
+			Log.info("createDownloadPrepareTask() 压缩任务 " + taskId + "已存在");
 			rt.setError("目录压缩任务 " + taskId + " 已存在");
 			return null;
 		}

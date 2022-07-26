@@ -2109,7 +2109,7 @@ public class SVNUtil  extends BaseController{
 			return null;
 		}
 		
-		return revision -1;
+		return (revision - 1);
 	}
 
 	private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, Long revision, boolean force) {
