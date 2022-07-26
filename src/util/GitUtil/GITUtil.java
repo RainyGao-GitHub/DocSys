@@ -732,12 +732,7 @@ public class GITUtil  extends BaseController{
         	return null;
         }    
 
-        String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		
+        String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = doc.getLevel() + 1;            
 		try {
 			while(treeWalk.next())
@@ -1032,11 +1027,7 @@ public class GITUtil  extends BaseController{
 			}
 			
 			int subDocLevel = doc.getLevel() + 1;
-			String subDocParentPath = doc.getPath() + doc.getName() + "/";
-			if(doc.getName().isEmpty())
-			{
-				subDocParentPath = doc.getPath();
-			}
+			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;
 			if(targetName.isEmpty())
@@ -1234,11 +1225,7 @@ public class GITUtil  extends BaseController{
 			}
 			
 			int subDocLevel = doc.getLevel() + 1;
-			String subDocParentPath = doc.getPath() + doc.getName() + "/";
-			if(doc.getName().isEmpty())
-			{
-				subDocParentPath = doc.getPath();
-			}
+			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;
 			if(targetName.isEmpty())
@@ -2604,11 +2591,7 @@ public class GITUtil  extends BaseController{
 		//注意这个docHashMap只能在本函数下使用
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();
 
-    	String subDocParentPath = doc.getPath() + doc.getName() + "/";
-		if(doc.getName() == null || doc.getName().isEmpty())
-		{
-			 subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
