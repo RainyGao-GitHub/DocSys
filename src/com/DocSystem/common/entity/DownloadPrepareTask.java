@@ -8,7 +8,7 @@ public class DownloadPrepareTask {
 	
 	public Integer type = 0; //0: compress dedicated folder 1: download repos's folder 2:download verRepos's folder or file
 
-	public String info = "压缩中...";
+	public String info = "下载准备中...";
 
 	public Long createTime;
 	
