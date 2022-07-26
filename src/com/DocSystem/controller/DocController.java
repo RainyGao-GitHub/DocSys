@@ -86,7 +86,7 @@ import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
-import com.DocSystem.common.entity.DownloadCompressTask;
+import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -2295,11 +2295,11 @@ public class DocController extends BaseController{
 		if((Integer) rt.getMsgData() == 5)
 		{
 			new Thread(new Runnable() {
-				DownloadCompressTask task = (DownloadCompressTask)rt.getData();
+				DownloadPrepareTask task = (DownloadPrepareTask)rt.getData();
 				String requestIP = getRequestIpAddress(request);
 				public void run() {
 					Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
-					executeDownloadCompressTask(task, requestIP);
+					executeDownloadPrepareTask(task, requestIP);
 				}
 			}).start();
 			return;
@@ -2316,7 +2316,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private void executeDownloadCompressTask(DownloadCompressTask task, String requestIP) {		
+	private void executeDownloadPrepareTask(DownloadPrepareTask task, String requestIP) {		
 		String targetPath = task.targetPath;
 		String targetName = task.targetName;
 		Long deleteDelayTime = null;		
@@ -2331,7 +2331,7 @@ public class DocController extends BaseController{
 		//直接压缩指定目录
 		if(task.inputName != null)
 		{
-			Log.info("executeDownloadCompressTask() y");
+			Log.info("executeDownloadPrepareTask() ");
 			if(doCompressDir(task.inputPath, task.inputName, targetName, targetName, null) == false)
 			{
 				task.status = 3; //Failed
@@ -2352,7 +2352,7 @@ public class DocController extends BaseController{
 			}
 			
 			//延时延时删除压缩任务和压缩文件
-			addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
 		}
 		
@@ -2396,7 +2396,7 @@ public class DocController extends BaseController{
 			FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
 
 			//延时延时删除压缩任务和压缩文件
-			addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
 		}
 			
@@ -2417,19 +2417,19 @@ public class DocController extends BaseController{
 		}
 			
 		//延时延时删除压缩任务和压缩文件
-		addDelayTaskForDownloadCompressTaskDelete(task, deleteDelayTime);
+		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 	}
 	
-	public void addDelayTaskForDownloadCompressTaskDelete(DownloadCompressTask task, Long deleteDelayTime) {
+	public void addDelayTaskForDownloadPrepareTaskDelete(DownloadPrepareTask task, Long deleteDelayTime) {
 		if(deleteDelayTime == null)
 		{
-			Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime is null");			
+			Log.info("addDelayTaskForDownloadPrepareTaskDelete delayTime is null");			
 			return;
 		}
-		Log.info("addDelayTaskForDownloadCompressTaskDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
+		Log.info("addDelayTaskForDownloadPrepareTaskDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
 		
 		long curTime = new Date().getTime();
-        Log.info("addDelayTaskForDownloadCompressTaskDelete() curTime:" + curTime);        
+        Log.info("addDelayTaskForDownloadPrepareTaskDelete() curTime:" + curTime);        
 		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.schedule(
@@ -2438,23 +2438,23 @@ public class DocController extends BaseController{
                     @Override
                     public void run() {
                         try {
-	                        Log.info("******** DownloadCompressTaskDeleteDelayTask *****");
+	                        Log.info("******** DownloadPrepareTaskDeleteDelayTask *****");
 	                        
 	                        //检查备份任务是否已被停止
-	                		DownloadCompressTask latestTask = downloadCompressTaskHashMap.get(taskId);
+	                		DownloadPrepareTask latestTask = downloadPrepareTaskHashMap.get(taskId);
 	                		if(latestTask == null)
 	                		{
-	                			Log.info("DownloadCompressTaskDeleteDelayTask() 压缩任务 [" + taskId + "] 不存在");						
+	                			Log.info("DownloadPrepareTaskDeleteDelayTask() 压缩任务 [" + taskId + "] 不存在");						
 	                			return;
 	                		}
 	                		
 	                		FileUtil.delFile(latestTask.targetPath + latestTask.targetName);
 	                		
-	                		downloadCompressTaskHashMap.remove(taskId);
+	                		downloadPrepareTaskHashMap.remove(taskId);
 	                		
-	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除完成\n");		                        
+	                		Log.info("******** DownloadPrepareTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除完成\n");		                        
                         } catch(Exception e) {
-	                		Log.info("******** DownloadCompressTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除异常\n");		                        
+	                		Log.info("******** DownloadPrepareTaskDeleteDelayTask 压缩任务 [" + taskId + "] 删除异常\n");		                        
                         	Log.info(e);                        	
                         }
                         
@@ -2481,26 +2481,26 @@ public class DocController extends BaseController{
                     @Override
                     public void run() {
                         try {
-	                        Log.info("******** DownloadCompressFileDeleteDelayTask *****");
+	                        Log.info("******** DownloadPrepareFileDeleteDelayTask *****");
 	                        
 	                        File compressFile = new File(targetPath, targetName);
 	                		if(compressFile.exists())
 	                		{
 	                			if(FileUtil.delFile(targetPath + targetName))
 		                		{
-		                			Log.info("******** DownloadCompressFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除成功\n");		                        
+		                			Log.info("******** DownloadPrepareFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除成功\n");		                        
 		                		}
 		                		else
 		                		{
-		                			Log.info("******** DownloadCompressFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除失败\n");		                        		                			
+		                			Log.info("******** DownloadPrepareFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 删除失败\n");		                        		                			
 		                		}
 	                		}
 	                		else
 	                		{
-	                			Log.info("******** DownloadCompressFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 不存在\n");		                        		                				                			
+	                			Log.info("******** DownloadPrepareFileDeleteDelayTask 压缩文件 [" + targetPath + targetName + "] 不存在\n");		                        		                				                			
 	                		}
                         } catch(Exception e) {
-	                		Log.info("******** DownloadCompressFileDeleteDelayTask 压缩任务 [" + targetPath + targetName + "] 删除异常\n");		                        
+	                		Log.info("******** DownloadPrepareFileDeleteDelayTask 压缩任务 [" + targetPath + targetName + "] 删除异常\n");		                        
                         	Log.info(e);                        	
                         }                        
                     }
@@ -2579,7 +2579,7 @@ public class DocController extends BaseController{
 			{
 				compressTargetName = repos.getName() + ".zip";
 			}
-			DownloadCompressTask compressTask = createDownloadCompressTask(
+			DownloadPrepareTask compressTask = createDownloadPrepareTask(
 					repos,
 					doc,
 					reposAccess,
@@ -2655,7 +2655,7 @@ public class DocController extends BaseController{
 			{
 				compressTargetName = repos.getName() + ".zip";
 			}
-			DownloadCompressTask compressTask = createDownloadCompressTask(
+			DownloadPrepareTask compressTask = createDownloadPrepareTask(
 					repos,
 					doc,
 					reposAccess,
@@ -2678,7 +2678,7 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	private DownloadCompressTask createDownloadCompressTask(Repos repos, Doc doc, ReposAccess reposAccess,
+	private DownloadPrepareTask createDownloadPrepareTask(Repos repos, Doc doc, ReposAccess reposAccess,
 			String inputPath, String inputName, boolean deleteInput,
 			String targetPath, String targetName, ReturnAjax rt) 
 	{
@@ -2686,14 +2686,14 @@ public class DocController extends BaseController{
         Log.info("createDownloadCompressTask() curTime:" + curTime);
         
 		String taskId = reposAccess.getAccessUserId() + "-" + repos.getId() + "-" + doc.getDocId() + "-" + curTime;
-		if(downloadCompressTaskHashMap.get(taskId) != null)
+		if(downloadPrepareTaskHashMap.get(taskId) != null)
 		{
 			Log.info("createDownloadCompressTask() 压缩任务 " + taskId + "已存在");
 			rt.setError("目录压缩任务 " + taskId + " 已存在");
 			return null;
 		}
 		
-		DownloadCompressTask task =	new DownloadCompressTask();
+		DownloadPrepareTask task =	new DownloadPrepareTask();
 		task.id = taskId;
 		task.createTime = curTime;
 				
@@ -2713,7 +2713,7 @@ public class DocController extends BaseController{
 		task.status = 1; //压缩中..
 		
 		task.info = "目录压缩中...";
-		downloadCompressTaskHashMap.put(taskId, task);
+		downloadPrepareTaskHashMap.put(taskId, task);
 		
 		return task;
 	}
@@ -3066,14 +3066,14 @@ public class DocController extends BaseController{
 	}
 	
 	/**************** downloadDocPrepare ******************/
-	@RequestMapping("/queryDownloadCompressTask.do")
-	public void queryDownloadCompressTask(String taskId, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	@RequestMapping("/queryDownloadPrepareTask.do")
+	public void queryDownloadPrepareTask(String taskId, HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
-		Log.info("************** queryDownloadCompressTask.do ****************");
-		Log.info("queryDownloadCompressTask taskId:" + taskId);
+		Log.info("************** queryDownloadPrepareTask.do ****************");
+		Log.info("queryDownloadPrepareTask taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		DownloadCompressTask task = getDownloadCompressTaskById(taskId);
+		DownloadPrepareTask task = getDownloadCompressTaskById(taskId);
 		if(task == null)
 		{
 			//可能任务已被取消或者超时删除
@@ -3105,7 +3105,7 @@ public class DocController extends BaseController{
 			rt.setMsgData(1);	//下载后（删除目标文件）
 			
 			//删除下载压缩任务
-			downloadCompressTaskHashMap.remove(task.id);
+			downloadPrepareTaskHashMap.remove(task.id);
 			//用户必须在20小时内完成下载
 			addDelayTaskForCompressFileDelete(task.targetPath, task.targetName, 72000L); //20小时后删除压缩文件
 			break;
@@ -3121,8 +3121,8 @@ public class DocController extends BaseController{
 		writeJson(rt, response);			
 	}
 	
-	private DownloadCompressTask getDownloadCompressTaskById(String taskId) {
-		return downloadCompressTaskHashMap.get(taskId);
+	private DownloadPrepareTask getDownloadCompressTaskById(String taskId) {
+		return downloadPrepareTaskHashMap.get(taskId);
 	}
 
 	/**************** download Doc ******************/
