@@ -2731,7 +2731,12 @@ public class DocController extends BaseController{
 				}
 			}
 			
-			//注意：这里不再次检查localEntry是否存在，是因为后面还可能需要从版本仓库中下载文件
+			if(localEntry.getType() == 0)
+			{
+				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+				docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+				return;		
+			}
 		}
 		
 		//原始路径下载，禁止删除原始文件
@@ -2758,74 +2763,12 @@ public class DocController extends BaseController{
 		
 		if(localEntry.getType() == 2)
 		{	
-			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true) == false)
-			{			
-				//创建目录压缩任务
-				String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
-				String compressTargetName = targetName + ".zip";
-				if(targetName.isEmpty())
-				{
-					compressTargetName = repos.getName() + ".zip";
-				}
-				DownloadPrepareTask compressTask = createDownloadPrepareTask(
-						repos,
-						doc,
-						reposAccess,
-						null,
-						null,
-						false,
-						compressTargetPath,
-						compressTargetName,
-						1, //download repos's folder
-						rt);
-				
-				if(compressTask != null)
-				{
-					rt.setData(compressTask);
-					rt.setMsgData(5);	//目录压缩中...
-				}
+			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
+			{
+				Log.debug("downloadDocPrepare_FSM() Doc [" +doc.getPath() + doc.getName() + "] 是空目录");
+				docSysErrorLog("空目录无法下载！", rt);
 				return;
 			}
-			
-			Log.debug("downloadDocPrepare_FSM() Doc [" +doc.getPath() + doc.getName() + "] 是空目录");
-			docSysErrorLog("空目录无法下载！", rt);
-			return;		
-		}
-		
-		if(localEntry.getType() == 0)
-		{
-			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-			return;		
-		}
-		
-		//TODO: 不存在或空目录从版本仓库下载意义何在（只会给用户带来困扰）
-		/*if(localEntry.getType() == 0 || localEntry.getType() == 2) //不存在或者空目录
-		{
-			//文件服务器前置仓库不支持版本仓库
-			if(isFSM(repos) == false)
-			{
-				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-				docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-				return;					
-			}
-			
-			//本地文件不存在（尝试从版本仓库中下载）
-			Doc remoteEntry = verReposGetDoc(repos, doc, null);
-			if(remoteEntry == null)
-			{
-				docSysDebugLog("downloadDocPrepare_FSM() remoteDoc " +doc.getPath() + doc.getName() + " 获取异常", rt);
-				docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
-				return;
-			}
-				
-			if(remoteEntry.getType() == null || remoteEntry.getType() == 0)
-			{
-				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-				docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-				return;	
-			}
-			
 			//创建目录压缩任务
 			String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 			String compressTargetName = targetName + ".zip";
@@ -2837,12 +2780,12 @@ public class DocController extends BaseController{
 					repos,
 					doc,
 					reposAccess,
-					targetPath,
-					doc.getName(),
-					true,
+					null,
+					null,
+					false,
 					compressTargetPath,
 					compressTargetName,
-					2,	//download verRepos's folder or file
+					1, //download repos's folder
 					rt);
 			
 			if(compressTask != null)
@@ -2851,7 +2794,7 @@ public class DocController extends BaseController{
 				rt.setMsgData(5);	//目录压缩中...
 			}
 			return;
-		}*/
+		}
 		
 		docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
 		return;		
@@ -4462,8 +4405,34 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		downloadDocPrepare_FSM(repos, doc, reposAccess, false, rt);							
+		downloadDocPrepare_FSM(repos, doc, reposAccess, false, rt);
 		
+		//目录下载准备中...
+		Integer downloadPrepareStatus = (Integer) rt.getMsgData();
+		if(downloadPrepareStatus != null && downloadPrepareStatus == 5)
+		{
+			DownloadPrepareTask task = (DownloadPrepareTask)rt.getData();
+			String requestIP = getRequestIpAddress(request);
+			executeDownloadPrepareTask(task, requestIP);
+			switch(task.status)
+			{
+			case 2:
+				Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), task.targetPath, task.targetName, 0);
+				rt.setData(downloadDoc);
+				rt.setMsgData(1);	//下载后（删除目标文件）
+				//删除下载压缩任务
+				downloadPrepareTaskHashMap.remove(task.id);
+				//用户必须在20小时内完成下载
+				addDelayTaskForCompressFileDelete(task.targetPath, task.targetName, 72000L); //20小时后删除压缩文件
+				break;
+			default:
+				//删除下载压缩任务
+				downloadPrepareTaskHashMap.remove(task.id);
+				rt.setError("目录压缩失败(ErrorCode:" + task.status + ")");
+				break;
+			}
+		}
+			
 		//rt里保存了下载文件的信息
 		String status = rt.getStatus();
 		if(status.equals("ok") == false)
