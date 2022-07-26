@@ -2329,7 +2329,7 @@ public class DocController extends BaseController{
 		}
 		
 		//直接压缩指定目录
-		if(task.inputName == null)
+		if(task.inputName != null)
 		{
 			Log.info("executeDownloadCompressTask() y");
 			if(doCompressDir(task.inputPath, task.inputName, targetName, targetName, null) == false)
@@ -2362,7 +2362,7 @@ public class DocController extends BaseController{
 		if(repos.encryptType != null && repos.encryptType != 0)
 		{
 			String tmpEncryptPath = Path.getReposTmpPathForDecrypt(repos);
-			String tmpEncryptName = targetName;
+			String tmpEncryptName = task.doc.getName();
 			if(tmpEncryptName == null || tmpEncryptName.isEmpty())
 			{
 				tmpEncryptName = repos.getName(); //用仓库名作为解密存储目录
@@ -2377,7 +2377,7 @@ public class DocController extends BaseController{
 			decryptFileOrDir(repos, tmpEncryptPath, tmpEncryptName);
 			
 			task.info = "目录压缩中...";
-			if(doCompressDir(task.inputPath, task.inputName, targetName, targetName, null) == false)
+			if(doCompressDir(tmpEncryptPath, tmpEncryptName, targetName, targetName, null) == false)
 			{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
