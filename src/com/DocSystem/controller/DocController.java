@@ -2292,7 +2292,8 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 		
 		//目录压缩中...
-		if((Integer) rt.getMsgData() == 5)
+		Integer downloadPrepareStatus = (Integer) rt.getMsgData();
+		if(downloadPrepareStatus != null && downloadPrepareStatus == 5)
 		{
 			new Thread(new Runnable() {
 				DownloadPrepareTask task = (DownloadPrepareTask)rt.getData();
@@ -2757,40 +2758,39 @@ public class DocController extends BaseController{
 		
 		if(localEntry.getType() == 2)
 		{	
-			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
-			{
-				docSysErrorLog("空目录无法下载！", rt);
-				return;				
+			if(FileUtil.isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true) == false)
+			{			
+				//创建目录压缩任务
+				String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+				String compressTargetName = targetName + ".zip";
+				if(targetName.isEmpty())
+				{
+					compressTargetName = repos.getName() + ".zip";
+				}
+				DownloadPrepareTask compressTask = createDownloadPrepareTask(
+						repos,
+						doc,
+						reposAccess,
+						null,
+						null,
+						false,
+						compressTargetPath,
+						compressTargetName,
+						1, //download repos's folder
+						rt);
+				
+				if(compressTask != null)
+				{
+					rt.setData(compressTask);
+					rt.setMsgData(5);	//目录压缩中...
+				}
+				return;
 			}
 			
-			//创建目录压缩任务
-			String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
-			String compressTargetName = targetName + ".zip";
-			if(targetName.isEmpty())
-			{
-				compressTargetName = repos.getName() + ".zip";
-			}
-			DownloadPrepareTask compressTask = createDownloadPrepareTask(
-					repos,
-					doc,
-					reposAccess,
-					null,
-					null,
-					false,
-					compressTargetPath,
-					compressTargetName,
-					1, //download repos's folder
-					rt);
-			
-			if(compressTask != null)
-			{
-				rt.setData(compressTask);
-				rt.setMsgData(5);	//目录压缩中...
-			}
-			return;
+			Log.debug("downloadDocPrepare_FSM() Doc [" +doc.getPath() + doc.getName() + "] 是空目录");
 		}
 		
-		if(localEntry.getType() == 0)
+		if(localEntry.getType() == 0 || localEntry.getType() == 2) //不存在或者空目录
 		{
 			//文件服务器前置仓库不支持版本仓库
 			if(isFSM(repos) == false)
