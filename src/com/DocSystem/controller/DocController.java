@@ -2930,7 +2930,7 @@ public class DocController extends BaseController{
             if (flist.length > 0)
             {
     			Log.debug("copyAuthedFilesForDownload() [" + doc.getPath() + doc.getName() + "] is folder");
-            	String subDocParentPath = doc.getPath() + doc.getName() + "/";
+            	String subDocParentPath = getSubDocParentPath(doc);
             	String localRootPath = doc.getLocalRootPath();
             	String localVRootPath = doc.getLocalVRootPath();
             	
@@ -3032,7 +3032,7 @@ public class DocController extends BaseController{
             if (flist.length > 0)
             {
     			Log.debug("configCompressExcludes() [" + doc.getPath() + doc.getName() + "] is folder");
-            	String subDocParentPath = doc.getPath() + doc.getName() + "/";
+            	String subDocParentPath = getSubDocParentPath(doc);
             	String localRootPath = doc.getLocalRootPath();
             	String localVRootPath = doc.getLocalVRootPath();
             	String subRelativePath = "";
@@ -3116,7 +3116,7 @@ public class DocController extends BaseController{
             else//如果文件夹不为空，则递归调用compress，文件夹中的每一个文件（或文件夹）进行压缩
             {
     			Log.debug("compressAuthedFiles() [" + doc.getPath() + doc.getName() + "] is folder");
-            	String subDocParentPath = doc.getPath() + doc.getName() + "/";
+            	String subDocParentPath = getSubDocParentPath(doc);
             	String localRootPath = doc.getLocalRootPath();
             	String localVRootPath = doc.getLocalVRootPath();
             	

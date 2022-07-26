@@ -1180,11 +1180,7 @@ public class SVNUtil  extends BaseController{
 		//注意这个docHashMap只能在本函数下使用
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();
 		
-		String subDocParentPath = doc.getPath() + doc.getName() + "/";
-		if(doc.getName().isEmpty())
-		{
-			 subDocParentPath = doc.getPath();
-		}
+    	String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
@@ -1633,11 +1629,7 @@ public class SVNUtil  extends BaseController{
 			return null;
 		}
 		
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = doc.getLevel() + 1;
 		
 	    Iterator<SVNDirEntry> iterator = entries.iterator();
@@ -1849,11 +1841,7 @@ public class SVNUtil  extends BaseController{
 			}
 			
 			int subDocLevel = doc.getLevel() + 1;
-			String subDocParentPath = doc.getPath() + doc.getName() + "/";
-			if(doc.getName().isEmpty())
-			{
-				subDocParentPath = doc.getPath();
-			}
+			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;
 			if(targetName.isEmpty())
@@ -2048,11 +2036,7 @@ public class SVNUtil  extends BaseController{
 			}
 			
 			int subDocLevel = doc.getLevel() + 1;
-			String subDocParentPath = doc.getPath() + doc.getName() + "/";
-			if(doc.getName().isEmpty())
-			{
-				subDocParentPath = doc.getPath();
-			}
+			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;
 			if(targetName.isEmpty())
