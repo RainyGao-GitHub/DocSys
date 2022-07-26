@@ -501,7 +501,7 @@
     		console.log("doQueryDownloadPrepareTask() downloadPrepareTaskId:" + downloadPrepareTaskId);
 			//执行后台downloadDoc操作
     		$.ajax({
-                url : "/DocSystem/Doc/queryDownloadCompressTask.do",
+                url : "/DocSystem/Doc/queryDownloadPrepareTask.do",
                 type : "post",
                 dataType : "json",
                 data : {

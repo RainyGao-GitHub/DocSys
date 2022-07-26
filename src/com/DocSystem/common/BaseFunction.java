@@ -55,7 +55,7 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
-import com.DocSystem.common.entity.DownloadCompressTask;
+import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
@@ -443,7 +443,7 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
 
 	//目录下载压缩任务
-	protected static ConcurrentHashMap<String, DownloadCompressTask> downloadCompressTaskHashMap = new ConcurrentHashMap<String, DownloadCompressTask>();
+	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
 
 	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
