@@ -4230,25 +4230,37 @@ public class BaseController  extends BaseFunction{
 		ReturnAjax rt = new ReturnAjax();
 		executeCommonActionList(actionList, rt);
 	}
-
-	protected boolean executeUniqueCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	
+	protected boolean insertActionListToUniqueActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
-		Log.info("********** executeUniqueCommonActionList ***********");
+		Log.info("********** insertActionListToUniqueActionList ***********");
 		if(actionList.size() <= 0)
 		{
-			Log.info("********** executeUniqueCommonActionList actionList is empty ***********");			
+			Log.info("********** insertActionListToUniqueActionList actionList is empty ***********");			
 			return false;
 		}
 		
 		//Inset ActionList to uniqueCommonAction
+		int successCount = 0;
 		for(int i=0; i<actionList.size(); i++)
 		{
-			insertUniqueCommonAction(actionList.get(i));
+			if(insertUniqueCommonAction(actionList.get(i)) == true)
+			{
+				successCount++;
+			}
 		}
 		
+		if(successCount > 0)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	protected boolean executeUniqueActionList(Integer reposId, ReturnAjax rt) 
+	{
 		//注意：ActionList中的doc必须都是同一个仓库下的，否则下面的逻辑会有问题
-		Integer reposId = actionList.get(0).getDoc().getVid(); //get the reposId from the first doc in action list
-		Log.info("executeUniqueCommonActionList reposId:" + reposId);
+		Log.info("executeUniqueActionList reposId:" + reposId);
 		
 		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
 		if(uniqueAction == null)
@@ -4291,9 +4303,10 @@ public class BaseController  extends BaseFunction{
 			uniqueAction.setIsRunning(true);
 			ConcurrentHashMap<String, CommonAction> hashMap = uniqueAction.getUniqueCommonActionHashMap();
 			List<CommonAction> list = uniqueAction.getUniqueCommonActionList();
+			Log.info("executeUniqueCommonActionList() reposId:" + reposId+ " UniqueCommonActionHashMap Size:" + hashMap.size() + " UniqueCommonActionList size:" + list.size());
 			while(hashMap.size() > 0)
 			{
-				if(actionList.size() > 0)
+				if(list.size() > 0)
 				{
 					CommonAction action = list.get(0);
 					String unqueActionId = getUniqueActionId(action);
@@ -4328,6 +4341,24 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		return ret;
+	}	
+	
+	protected boolean executeUniqueCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	{
+		Log.info("********** executeUniqueCommonActionList ***********");
+		if(actionList.size() <= 0)
+		{
+			Log.info("********** executeUniqueCommonActionList actionList is empty ***********");			
+			return false;
+		}
+		
+		//Inset ActionList to uniqueCommonAction
+		insertActionListToUniqueActionList(actionList, rt);
+		
+		//注意：ActionList中的doc必须都是同一个仓库下的，否则下面的逻辑会有问题
+		Integer reposId = actionList.get(0).getDoc().getVid(); //get the reposId from the first doc in action list
+		Log.info("executeUniqueCommonActionList reposId:" + reposId);
+		return executeUniqueActionList(reposId, rt);
 	}	
 	
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {

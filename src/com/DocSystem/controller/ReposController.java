@@ -1203,25 +1203,27 @@ public class ReposController extends BaseController{
 		//Add doc for AutoSync
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null, true);
-		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);		
-		executor.schedule(
-        		new Runnable() {
-        			List<CommonAction> syncupActionList = actionList;
-        			int reposId = repos.getId();
-                    @Override
-                    public void run() {
-                        try {
-	                        Log.debug("getSubDocList() syncupDelayTask for repos:" + reposId);
-	                        executeUniqueCommonActionList(syncupActionList, rt);                        	
-                        	Log.debug("getSubDocList() syncupDelayTask for repos:" + reposId + " 执行结束\n");		                        
-                        } catch(Exception e) {
-                        	Log.info("getSubDocList() syncupDelayTask for repos:" + reposId + " 执行异常\n");
-                        	Log.info(e);
-                        }                        
-                    }
-                },
-                120,	//2分钟后执行
-                TimeUnit.SECONDS);
+		if(insertActionListToUniqueActionList(actionList, rt) == true)
+		{
+			ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);		
+			executor.schedule(
+	        		new Runnable() {
+	        			int reposId = repos.getId();
+	                    @Override
+	                    public void run() {
+	                        try {
+		                        Log.debug("getSubDocList() syncupDelayTask for repos:" + reposId);
+		                        executeUniqueActionList(reposId, rt);                        	
+	                        	Log.debug("getSubDocList() syncupDelayTask for repos:" + reposId + " 执行结束\n");		                        
+	                        } catch(Exception e) {
+	                        	Log.info("getSubDocList() syncupDelayTask for repos:" + reposId + " 执行异常\n");
+	                        	Log.info(e);
+	                        }                        
+	                    }
+	                },
+	                120,	//2分钟后执行
+	                TimeUnit.SECONDS);
+		}
 	}
 	
 	/* 
