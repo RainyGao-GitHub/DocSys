@@ -223,7 +223,7 @@
                	        		info = "目录压缩中(" + getFileDisplaySize(prepareTask.targetSize) + ")...";
                	        	}
                	        	console.log("doQueryDownloadPrepareTask info:" + info);
-               	        	startDownloadPrepareQueryTask(SubContext, targetSize.id, nextDelayTime);
+               	        	startDownloadPrepareQueryTask(SubContext, prepareTask.id, nextDelayTime);
                	        	return;
                 	    }
                	        
