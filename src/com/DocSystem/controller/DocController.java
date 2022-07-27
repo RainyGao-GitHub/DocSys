@@ -5455,12 +5455,40 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//Check Edit Right
-		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		//User Right Check
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
+		if(docUserAuth == null)
 		{
+			rt.setError("您无此操作权限，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
+		
+		if(docUserAuth.getAccess() == null || docUserAuth.getAccess() != 1)
+		{
+			rt.setError("您无权访问该文件，请联系管理员");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
+		{
+			rt.setError("您没有该文件的编辑权限，请联系管理员");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		//Check repos revert Right
+		if(doc.getDocId() == 0)
+		{
+			if(docUserAuth.getIsAdmin() == null || docUserAuth.getIsAdmin() != 1)
+			{
+				rt.setError("非仓库管理员，禁止对整个仓库执行恢复操作");
+				writeJson(rt, response);	
+				return;
+			}
+		}
+
 		//Check Add Right
 		Doc curDoc = docSysGetDoc(repos, doc, false);
 		if(curDoc == null || curDoc.getType() == 0)
@@ -5469,6 +5497,17 @@ public class DocController extends BaseController{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 			if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 			{
+				writeJson(rt, response);	
+				return;
+			}
+		}
+		
+		
+		if(curDoc.getIsRealDoc() == true && curDoc.getType() == 2)
+		{
+			if(docUserAuth.getIsAdmin() == null || docUserAuth.getIsAdmin() != 1)
+			{
+				rt.setError("非仓库管理员，禁止对整个目录执行恢复操作");
 				writeJson(rt, response);	
 				return;
 			}
