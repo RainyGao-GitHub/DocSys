@@ -84,7 +84,6 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
-import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
@@ -2291,7 +2290,7 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		//目录压缩中...
+		//下载准备中...
 		Integer downloadPrepareStatus = (Integer) rt.getMsgData();
 		if(downloadPrepareStatus != null && downloadPrepareStatus == 5)
 		{
@@ -2319,6 +2318,7 @@ public class DocController extends BaseController{
 	
 	private void executeDownloadPrepareTask(DownloadPrepareTask task, String requestIP) 
 	{	
+		Log.debug("executeDownloadPrepareTask() taskType:" + task.type);
 		switch(task.type)
 		{
 		case 0:
@@ -2330,12 +2330,15 @@ public class DocController extends BaseController{
 		case 2:
 			executeDownloadPrepareTaskForVerReposEntry(task, requestIP);
 			break;
+		case 3:
+			executeDownloadPrepareTaskForRemoteServerEntry(task, requestIP);
+			break;
 		default:
 			break;
 		}
 	}
 	
-	private void executeDownloadPrepareTaskForVerReposEntry(DownloadPrepareTask task, String requestIP) {
+	private void executeDownloadPrepareTaskForRemoteServerEntry(DownloadPrepareTask task, String requestIP) {
 		Repos repos = task.repos;
 		Doc doc = task.doc;
 		ReposAccess reposAccess = task.reposAccess;		
@@ -2350,8 +2353,12 @@ public class DocController extends BaseController{
 			tmpCheckoutName = repos.getName();
 		}
 		
+		//downloadAll != 1 表示只下载在这次提交的文件
+		String commitId = task.commitId;
+		
 		task.info = "版本检出中...";
-		if(verReposCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, tmpCheckoutName, null, true, false, null) == null)
+		//将历史版本CheckOut到临时目录
+		if(remoteServerCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, null, tmpCheckoutName, commitId, true, false, null) == null)
 		{
 			task.status = 3; //Failed
 			task.info = "版本检出失败";
@@ -2473,6 +2480,186 @@ public class DocController extends BaseController{
 		
 		task.status = 2; //Success
 		task.info = "目录压缩成功";
+		deleteDelayTime = 72000L; //20小时后			
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+
+		//删除临时目录
+		FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);	
+		
+		//延时删除任务和压缩文件
+		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+		return;		
+
+	}
+
+	private void executeDownloadPrepareTaskForVerReposEntry(DownloadPrepareTask task, String requestIP) {
+		Repos repos = task.repos;
+		Doc doc = task.doc;
+		ReposAccess reposAccess = task.reposAccess;		
+
+		Long deleteDelayTime = null;		
+		
+		//Do checkout to local
+		String tmpCheckoutPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+		String tmpCheckoutName = doc.getName();
+		if(tmpCheckoutName.isEmpty())
+		{
+			tmpCheckoutName = repos.getName();
+		}
+		
+		//downloadAll != 1 表示只下载在这次提交的文件
+		Integer downloadAll = task.downloadAll;
+		String commitId = task.commitId;
+		HashMap<String, String> downloadList = null;
+		if(downloadAll == null || downloadAll == 0)
+		{
+			downloadList  = new HashMap<String,String>();
+			buildDownloadList(repos, true, doc, commitId, downloadList);
+			if(downloadList != null && downloadList.size() == 0)
+			{
+				Log.debug("executeDownloadPrepareTaskForVerReposEntry() there is no changed file for commit:" + commitId);
+				task.status = 3; //Failed
+				task.info = "版本检出失败(当前版本没有改动的文件)";
+				return;
+			}
+		}
+		
+		task.info = "版本检出中...";
+		if(verReposCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, tmpCheckoutName, commitId, true, false, downloadList) == null)
+		{
+			Log.debug("executeDownloadPrepareTaskForVerReposEntry() verReposCheckOutForDownload result is null for commit:" + commitId);
+
+			task.status = 3; //Failed
+			task.info = "版本检出失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+		
+		File entry = new File(tmpCheckoutPath, tmpCheckoutName);
+		if(entry.exists() == false)
+		{
+			Log.debug("executeDownloadPrepareTaskForVerReposEntry() checkouted entry [" + tmpCheckoutPath + tmpCheckoutName + "] not exists for commit:" + commitId);
+			task.status = 3; //Failed
+			task.info = "版本检出失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+		
+		if(entry.isFile())
+		{	
+			Log.debug("executeDownloadPrepareTaskForVerReposEntry() checkouted entry [" + tmpCheckoutPath + tmpCheckoutName + "] is File for commit:" + commitId);
+
+			if(repos.encryptType != null && repos.encryptType != 0)
+			{
+				//解密指定目录的文件
+				task.info = "文件解密中...";
+				Log.debug("executeDownloadPrepareTaskForVerReposEntry() 文件解密中...");
+				decryptFileOrDir(repos, tmpCheckoutPath, tmpCheckoutName);
+			}
+			
+			task.status = 2; //Success
+			task.info = "版本检出成功";
+			
+			//更新targetPath和targetName
+			task.targetPath = tmpCheckoutPath;
+			task.targetName = tmpCheckoutName;
+			
+			deleteDelayTime = 72000L; //20小时后			
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");		
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+	
+		if(FileUtil.isEmptyDir(tmpCheckoutPath + tmpCheckoutName, true))
+		{
+			task.status = 3; //Failed
+			task.info = "空目录无法下载";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;		
+		}
+		
+		String targetPath = task.targetPath;
+		String targetName = task.targetName;
+		
+		//检查并创建压缩目录
+		File dir = new File(targetPath);
+		if(!dir.exists())
+		{
+			dir.mkdirs();
+		}
+		
+		//加密的仓库，需要先解密再压缩
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			//解密指定目录的文件
+			task.info = "文件解密中...";
+			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录解密中...");
+			decryptFileOrDir(repos, tmpCheckoutPath, tmpCheckoutName);
+			
+			task.info = "目录压缩中...";
+			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩中...");
+			if(doCompressDir(tmpCheckoutPath, tmpCheckoutName, targetPath, targetName, null) == false)
+			{
+				task.status = 3; //Failed
+				task.info = "目录压缩失败";
+				Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩失败");
+				deleteDelayTime = 300L; //5分钟后删除
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+
+				//删除临时目录
+				FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
+				
+				//延时删除任务和压缩文件
+				addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+				return;
+			}
+
+			task.status = 2; //Success
+			task.info = "目录压缩成功";
+			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩成功");
+			deleteDelayTime = 72000L; //20小时后			
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+			
+			//删除临时目录
+			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
+
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+		
+		//压缩目录
+		task.info = "目录压缩中...";
+		Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩中...");
+		if(doCompressDir(tmpCheckoutPath, tmpCheckoutName, task.targetPath, task.targetName, null) == false)
+		{
+			task.status = 3; //Failed
+			task.info = "目录压缩失败";
+			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩失败");
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			
+			//删除临时目录
+			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);		
+			
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;		
+		}
+		
+		task.status = 2; //Success
+		task.info = "目录压缩成功";
+		Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩成功");
 		deleteDelayTime = 72000L; //20小时后			
 		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
 
@@ -2776,7 +2963,7 @@ public class DocController extends BaseController{
 			{
 				compressTargetName = repos.getName() + ".zip";
 			}
-			DownloadPrepareTask compressTask = createDownloadPrepareTask(
+			DownloadPrepareTask downloadPrepareTask = createDownloadPrepareTask(
 					repos,
 					doc,
 					reposAccess,
@@ -2788,9 +2975,9 @@ public class DocController extends BaseController{
 					1, //download repos's folder
 					rt);
 			
-			if(compressTask != null)
+			if(downloadPrepareTask != null)
 			{
-				rt.setData(compressTask);
+				rt.setData(downloadPrepareTask);
 				rt.setMsgData(5);	//目录压缩中...
 			}
 			return;
@@ -3199,7 +3386,7 @@ public class DocController extends BaseController{
 		Log.info("queryDownloadPrepareTask taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		DownloadPrepareTask task = getDownloadCompressTaskById(taskId);
+		DownloadPrepareTask task = getDownloadPrepareTaskById(taskId);
 		if(task == null)
 		{
 			//可能任务已被取消或者超时删除
@@ -3247,7 +3434,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);			
 	}
 	
-	private DownloadPrepareTask getDownloadCompressTaskById(String taskId) {
+	private DownloadPrepareTask getDownloadPrepareTaskById(String taskId) {
 		return downloadPrepareTaskHashMap.get(taskId);
 	}
 
@@ -4980,7 +5167,7 @@ public class DocController extends BaseController{
 	{
 		Log.info("************** downloadHistoryDocPrepare [" + path + name + "] ****************");
 		Log.info("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
-
+		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
@@ -5020,13 +5207,13 @@ public class DocController extends BaseController{
 		
 		Doc doc = null;
 		Doc vDoc = null;
-		String targetName = name + "_" + commitId;
-		HashMap<String, String> downloadList = null;
+		String targetName =  commitId + "_" + name;
 		List <Doc> successDocList = null;
 		
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
 		
+		//Real Doc history download
 		if(isRealDoc)
 		{
 			if(entryPath == null)
@@ -5040,90 +5227,116 @@ public class DocController extends BaseController{
 
 			if(doc.getName().isEmpty())
 			{
-				targetName = repos.getName() + "_" + commitId;	
+				targetName =  commitId + "_" + repos.getName();	
 			}
 			else
 			{
-				targetName = doc.getName() + "_" + commitId;							
+				targetName = commitId + "_" + doc.getName();							
 			}
 			
-			if(downloadAll == null || downloadAll == 0)
+			//创建下载准备任务
+			Integer prepareTaskType = 2; //download verRepos's folder or file
+			if(isFSM(repos) == false)
 			{
-				downloadList = new HashMap<String,String>();
-				buildDownloadList(repos, true, doc, commitId, downloadList);
-				if(downloadList != null && downloadList.size() == 0)
-				{
-					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 未改动",rt);
-					writeJson(rt, response);	
-					return;
-				}
+				prepareTaskType = 3; //download remoteServer's folder or file
+				//successDocList = remoteServerCheckOut(repos, doc, userTmpDir, userTmpDir, targetName, commitId, true, true, downloadList);					
+			}
+			else
+			{
+				prepareTaskType = 2; //download verRepos's folder or file
+				//successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
 			}
 			
-			if(isRealDoc)
+			String compressTargetPath = userTmpDir;
+			String compressTargetName = targetName + ".zip";
+			if(targetName.isEmpty())
 			{
-				if(isFSM(repos))
-				{
-					successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
-				}
-				else
-				{
-					successDocList = remoteServerCheckOut(repos, doc, userTmpDir, userTmpDir, targetName, commitId, true, true, downloadList) ;					
-				}
-				if(successDocList == null)
-				{
-					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
-					docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
-					writeJson(rt, response);	
-					return;
-				}
+				compressTargetName = repos.getName() + ".zip";
 			}
+			DownloadPrepareTask downloadPrepareTask = createDownloadPrepareTask(
+					repos,
+					doc,
+					reposAccess,
+					null,
+					null,
+					false,
+					compressTargetPath,
+					compressTargetName,
+					prepareTaskType, 
+					rt);
+			
+			if(downloadPrepareTask == null)
+			{
+				//下载准备任务创建失败
+				Log.info("downloadHistoryDocPrepare() 下载准备任务创建失败");
+				writeJson(rt, response);	
+				return;
+			}
+				
+			//通知前端下载准备中...
+			downloadPrepareTask.downloadAll = downloadAll;
+			downloadPrepareTask.commitId = commitId;
+			rt.setData(downloadPrepareTask);
+			rt.setMsgData(5);
+			writeJson(rt, response);
+				
+			//执行下载准备任务...
+			new Thread(new Runnable() {
+				DownloadPrepareTask task = (DownloadPrepareTask)rt.getData();
+				String requestIP = getRequestIpAddress(request);
+				public void run() {
+						Log.debug("downloadDocPrepare() executeDownloadPrepareTask in new thread");
+						executeDownloadPrepareTask(task, requestIP);
+					}
+				}).start();
+			return;
+		}
+		
+		
+		//Virtual History Doc download
+		doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
+			
+		if(entryPath == null)
+		{
+			vDoc = docConvert(doc, true);
 		}
 		else
 		{
-			doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
+			vDoc = buildBasicDoc(reposId, docId, pid, reposPath, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+		}
 			
-			if(entryPath == null)
-			{
-				vDoc = docConvert(doc, true);
-			}
-			else
-			{
-				vDoc = buildBasicDoc(reposId, docId, pid, reposPath, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
-			}
+		if(vDoc.getName().isEmpty())
+		{
+			targetName =  commitId + "_" + repos.getName() + "_备注";					
+		}
+		else
+		{
+			targetName = commitId + "_" + vDoc.getName();
+		}
 			
-			if(vDoc.getName().isEmpty())
+		HashMap<String, String> downloadList = null;
+		if(downloadAll == null || downloadAll == 0)
+		{
+			downloadList  = new HashMap<String,String>();
+			buildDownloadList(repos, false, vDoc, commitId, downloadList);
+			if(downloadList != null && downloadList.size() == 0)
 			{
-				targetName = repos.getName() + "_备注_" + commitId;					
-			}
-			else
-			{
-				targetName = vDoc.getName() + "_" + commitId;
-			}
-			
-			if(downloadAll == null || downloadAll == 0)
-			{
-				downloadList = new HashMap<String,String>();
-				buildDownloadList(repos, false, vDoc, commitId, downloadList);
-				if(downloadList != null && downloadList.size() == 0)
-				{
-					docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
-					writeJson(rt, response);	
-					return;
-				}
-			}
-			
-			successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, true, true, downloadList);
-			if(successDocList == null)
-			{
-				docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
-				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+				docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
 				writeJson(rt, response);	
 				return;
 			}
 		}
+			
+		successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, true, true, downloadList);
+		if(successDocList == null)
+		{
+			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
+			docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+			writeJson(rt, response);	
+			return;
+		}
 		
 		Log.printObject("downloadHistoryDocPrepare checkOut successDocList:", successDocList);
-				
 		Log.debug("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), userTmpDir, targetName, isRealDoc?1:0);	
 		rt.setData(downloadDoc);

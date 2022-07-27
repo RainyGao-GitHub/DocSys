@@ -18,6 +18,10 @@ public class DownloadPrepareTask {
 	public Doc doc;
 	public ReposAccess reposAccess;
 
+	//历史版本下载
+	public String commitId = null;
+	public Integer downloadAll = null;
+	
 	//需要直接压缩的目录
 	public String inputPath;
 	public String inputName;
