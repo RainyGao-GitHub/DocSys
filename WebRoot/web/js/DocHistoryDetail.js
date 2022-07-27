@@ -22,6 +22,10 @@
 			docPath = Input_path + Input_name;
 			historyType = Input_historyType;
 			
+			if(docId == undefined)
+			{
+				docId = 0;
+			}
 			showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType);	
 		}
 		
@@ -212,7 +216,7 @@
 			showSize = Math.round(showSize) + units;
 			return showSize;
     	}
-		
+
 		function showRevertConfirm(index)
 		{
 			var changeItem = changeItems[index];
@@ -223,26 +227,33 @@
 
 		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId + " entryPath:"+ entryPath + " historyType:" + historyType);
 
-			var title = "恢复确认";
-			//Show dialog
-		    qiao.bs.dialog({
-		        id: "dialog-downloadConfirmDialog",
-		        url: '#downloadConfirmDialog',
-		        title: title,
-		        okbtn: "确定",
-		        callback: function () {
-		            setTimeout(function () {
-		            	console.log("showRevertConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
-		                $("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+entryPath);	                 
-		            },100);
-		        }
-		    },function () {
-				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
-				console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
-				revertHistory(index);
-		    	return true;   
+		   	var msg = "";	
+		   	var docPath = "/" + parentPath + docName;
+		   	if(historyType == 0)
+            {
+		   		msg = "是否将 " + entryPath + " 恢复到版本:" + commitId;
+            }
+            else
+            {
+            	if(docId == 0)
+            	{
+    		   		msg = "是否将仓库的备注恢复到版本:" + commitId;
+            	}
+            	else
+            	{
+		   			msg = "是否将 " + docPath + " 的备注恢复到版本:" + commitId;
+            	}
+            }	
+            
+		   	qiao.bs.confirm({
+		        id: 'revertHistoryConfirm',
+		        msg: msg,
+		    },function(){
+		    	console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+		    	revertHistory(index);
+		    },function(){
+		        //alert('点击了取消！');
 		    });
-			return true;
 		}
 		
 		function revertHistory(index)
