@@ -28,7 +28,16 @@ public class Path {
 		}
 		
 		String [] paths = path.split("/");
-		return paths.length;
+		int level = 0;
+		for(int i=0; i>=paths.length; i++)
+		{
+			if(paths[i].isEmpty())
+			{
+				continue;
+			}
+			level++;
+		}
+		return level;
 	}
 
 	public static int seperatePathAndName(String entryPath, String [] result) {
@@ -41,7 +50,7 @@ public class Path {
 		String [] paths = entryPath.split("/");
 		
 		int deepth = paths.length;
-		//Log.debug("seperatePathAndName() deepth:" + deepth); 
+		Log.debug("seperatePathAndName() deepth:" + deepth); 
 		
 		String  path = "";
 		String name = "";
@@ -60,21 +69,21 @@ public class Path {
 		}
 		
 		//Get Path
+		int level = 0;
 		for(int i=0; i<pathEndPos; i++)
 		{
 			String tempName = paths[i];
 			if(tempName.isEmpty())
 			{
 				continue;
-			}	
-			
+			}
+			level++;
 			path = path + tempName + "/";
 		}
 		
 		result[0] = path;
 		result[1] = name;
 
-		int level = paths.length -1;
 		return level;
 	}
 	
