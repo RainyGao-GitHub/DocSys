@@ -5224,6 +5224,8 @@ public class DocController extends BaseController{
 			{
 				doc = buildBasicDoc(reposId, null, null, reposPath, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
+			
+			Log.printObject("downloadHistoryDocPrepare() doc:",doc);
 
 			if(doc.getName().isEmpty())
 			{

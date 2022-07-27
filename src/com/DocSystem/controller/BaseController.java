@@ -616,7 +616,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//注意：该接口调用前doc的localRootPath和LocalVRootPath必须正确设置
-	protected static List<Doc> getLocalEntryList(Repos repos, Doc doc) 
+	protected List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
 		//Log.debug("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
@@ -644,12 +644,7 @@ public class BaseController  extends BaseFunction{
 	    		return null;
 	    	}
 	
-			String subDocParentPath = doc.getPath() + docName + "/";
-			if(docName.isEmpty())
-			{
-				subDocParentPath = doc.getPath();
-			}
-			
+			String subDocParentPath = getSubDocParentPath(doc);
 			Integer subDocLevel = getSubDocLevel(doc);
 	    	
 	        //Go through the subEntries
@@ -686,7 +681,7 @@ public class BaseController  extends BaseFunction{
     	}
 	}
 	
-	protected static HashMap<String, Doc> getLocalEntryHashMap(Repos repos, Doc doc) 
+	protected HashMap<String, Doc> getLocalEntryHashMap(Repos repos, Doc doc) 
 	{
     	try {
     		String reposPath = Path.getReposPath(repos);
@@ -712,11 +707,7 @@ public class BaseController  extends BaseFunction{
 	    		return null;
 	    	}
 	
-			String subDocParentPath = doc.getPath() + docName + "/";
-			if(docName.isEmpty())
-			{
-				subDocParentPath = doc.getPath();
-			}
+			String subDocParentPath = getSubDocParentPath(doc);
 			
 			Integer subDocLevel = getSubDocLevel(doc);
 	    	
@@ -759,7 +750,7 @@ public class BaseController  extends BaseFunction{
 		{
 			doc.setLevel(Path.getLevelByParentPath(doc.getPath()));
 		}
-		
+		Log.debug("getSubDocLevel() ["+ doc.getPath() + doc.getName() + "] level:" + doc.getLevel());
 		return doc.getLevel() + 1;
 	}
 
@@ -4202,8 +4193,8 @@ public class BaseController  extends BaseFunction{
 		if(dstLocalEntry.isDirectory())
 		{			
 			//遍历本地目录，构建CommonAction
-			String dstSubDocParentPath = dstDoc.getPath() + dstDoc.getName() +"/";
-			String srcSubDocParentPath = srcDoc.getPath() + srcDoc.getName() +"/";
+			String dstSubDocParentPath = getSubDocParentPath(dstDoc);
+			String srcSubDocParentPath = getSubDocParentPath(srcDoc);
 			int dstSubDocLevel = getSubDocLevel(dstDoc);
 			int srcSubDocLevel = getSubDocLevel(srcDoc);
 			String localRootPath = dstDoc.getLocalRootPath();
@@ -6139,11 +6130,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(deleteSubDocs)
 		{
-			String subDocParentPath = doc.getPath() + doc.getName() + "/";
-			if(doc.getName().isEmpty())
-			{
-				subDocParentPath = doc.getPath();
-			}
+			String subDocParentPath = getSubDocParentPath(doc);
 			Doc qSubDoc = new Doc();
 			qSubDoc.setVid(doc.getVid());
 			qSubDoc.setPath(subDocParentPath);
@@ -8704,7 +8691,7 @@ public class BaseController  extends BaseFunction{
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
 	protected DocAuth getDocAuthFromHashMap(Long docId, DocAuth parentDocAuth,HashMap<Long,DocAuth> docAuthHashMap)
 	{
-		//Log.debug("getDocAuthFromHashMap() docId:" + docId);
+		Log.debug("getDocAuthFromHashMap() docId:" + docId);
 		if(docAuthHashMap == null)
 		{
 			return null;
@@ -16627,7 +16614,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Remote Storage remoteEntry Interfaces
-	protected static List<Doc> getRemoteStorageEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
+	protected List<Doc> getRemoteStorageEntryList(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		if(doc.getType() != null && doc.getType() != 2)
 		{
 			Log.debug("getRemoteStorageEntryList() doc:[" + doc.getPath() + doc.getName() + "] is not a directory");
@@ -16657,7 +16644,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMap(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
+	private HashMap<String, Doc> getRemoteStorageEntryHashMap(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		if(remote == null)
 		{
 			Log.debug("getRemoteStorageEntryHashMap remoteStorage for repos " + repos.getId() + " " + repos.getName() + " not configured");
@@ -17028,7 +17015,7 @@ public class BaseController  extends BaseFunction{
 		return ret;		
 	}
 	
-	protected static boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, Integer subEntryPullFlag, boolean force, DocPullResult pullResult) {
+	protected boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, Integer subEntryPullFlag, boolean force, DocPullResult pullResult) {
 		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
@@ -17151,7 +17138,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	protected static boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, 
+	protected boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, boolean force, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {
 		
 		Log.printObject("doPushEntryToRemoteStorage() doc:", doc);		
@@ -17323,7 +17310,7 @@ public class BaseController  extends BaseFunction{
 		return ret;		
 	}
 	
-	private static boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, Integer subEntryPullFlag, boolean force, DocPullResult pullResult) {
+	private boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, Integer subEntryPullFlag, boolean force, DocPullResult pullResult) {
 		//子目录不递归
 		if(subEntryPullFlag == 0)
 		{
@@ -17414,7 +17401,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//actionList and isSubAction is for Gvn/Git RemoteStorage
-	private static boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, 
+	private boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {		
 		Log.debug("doPushSubEntriesToRemoteStorage() doc:[" + doc.getPath() + doc.getName() + "]");
 
@@ -18696,15 +18683,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private static List<Doc> getRemoteStorageEntryListForLocal(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private List<Doc> getRemoteStorageEntryListForLocal(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		List <Doc> subEntryList =  null;
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		
         Log.debug("getRemoteStorageEntryListForLocal doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
@@ -18744,15 +18726,10 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForLocal(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private HashMap<String, Doc> getRemoteStorageEntryHashMapForLocal(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		
         Log.debug("getRemoteStorageEntryHashMapForLocal doc:" + doc.getPath() + doc.getName());
 		try {
@@ -18791,15 +18768,10 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 
-	private static List<Doc> getRemoteStorageEntryListForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private List<Doc> getRemoteStorageEntryListForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		List <Doc> subEntryList =  null;
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		
         Log.debug("getRemoteStorageEntryListForSftp doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
@@ -18845,15 +18817,10 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static List<Doc> getRemoteStorageEntryListForFtp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private List<Doc> getRemoteStorageEntryListForFtp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		List <Doc> subEntryList =  null;
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		
         Log.debug("getRemoteStorageEntryListForFtp doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
@@ -18900,15 +18867,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private static List<Doc> getRemoteStorageEntryListForSmb(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private List<Doc> getRemoteStorageEntryListForSmb(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		List <Doc> subEntryList =  null;
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		
         Log.debug("getRemoteStorageEntryListForSmb doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
@@ -18959,15 +18921,10 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 
-	private static List<Doc> getRemoteStorageEntryListForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private List<Doc> getRemoteStorageEntryListForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		List <Doc> subEntryList =  null;
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		
         Log.debug("getRemoteStorageEntryListForMxsDoc doc:[" + doc.getPath() + doc.getName() + "]");
 		try {
@@ -19008,16 +18965,11 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc)
+	private HashMap<String, Doc> getRemoteStorageEntryHashMapForMxsDoc(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc)
 	{
-		String entryPath = doc.getPath() + doc.getName();
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
+		String subDocParentPath = getSubDocParentPath(doc);
 		
         Log.debug("getRemoteStorageEntryHashMapForMxsDoc doc:" + doc.getPath() + doc.getName());
 		try {
@@ -19122,16 +19074,11 @@ public class BaseController  extends BaseFunction{
         return remoteDoc;	
     }
 	
-	private static List<Doc> getRemoteStorageEntryListForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
-		String entryPath = doc.getPath() + doc.getName();
+	private List<Doc> getRemoteStorageEntryListForGit(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		List <Doc> subEntryList =  null;
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		int subDocLevel = doc.getLevel() + 1;
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);
 		
         Log.debug("getRemoteStorageEntryListForGit doc:[" + doc.getPath() + doc.getName() + "]");
 		try {       	        	
@@ -19177,16 +19124,11 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 
-	private static List<Doc> getRemoteStorageEntryListForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
-		String entryPath = doc.getPath() + doc.getName();
+	private List<Doc> getRemoteStorageEntryListForSvn(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
 		List <Doc> subEntryList =  null;
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		int subDocLevel = doc.getLevel() + 1;
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);;
 		
         Log.debug("getRemoteStorageEntryListForSvn doc:[" + doc.getPath() + doc.getName() + "]");
 		try {       	        	
@@ -19234,16 +19176,11 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private HashMap<String, Doc> getRemoteStorageEntryHashMapForSftp(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc) {
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		int subDocLevel = doc.getLevel() + 1;
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);;
 		
         Log.debug("getRemoteStorageEntryHashMapForSftp doc:" + doc.getPath() + doc.getName());
 		try {       	        	
@@ -19285,16 +19222,11 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForFtp(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private HashMap<String, Doc> getRemoteStorageEntryHashMapForFtp(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) {
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		int subDocLevel = doc.getLevel() + 1;
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);
 		
         Log.debug("getRemoteStorageEntryHashMapForFtp doc:" + doc.getPath() + doc.getName());
 		try {       	        	
@@ -19338,16 +19270,11 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSmb(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) {
-		String entryPath = doc.getPath() + doc.getName();
+	private HashMap<String, Doc> getRemoteStorageEntryHashMapForSmb(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc) {
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		int subDocLevel = doc.getLevel() + 1;
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);
 		
         Log.debug("getRemoteStorageEntryHashMapForSmb doc:" + doc.getPath() + doc.getName());
 		try {       	        	
@@ -19391,17 +19318,12 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 	
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForGit(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc, String commitId)
+	private HashMap<String, Doc> getRemoteStorageEntryHashMapForGit(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc, String commitId)
 	{
-		String entryPath = doc.getPath() + doc.getName();
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		int subDocLevel = doc.getLevel() + 1;
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);
 		
         Log.debug("getRemoteStorageEntryHashMapForGit doc:" + doc.getPath() + doc.getName());
 		try {       	        	
@@ -19444,17 +19366,12 @@ public class BaseController  extends BaseFunction{
         return subEntryList;
 	}
 
-	private static HashMap<String, Doc> getRemoteStorageEntryHashMapForSvn(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc, String commitId) 
+	private HashMap<String, Doc> getRemoteStorageEntryHashMapForSvn(RemoteStorageSession session, RemoteStorageConfig remote,Repos repos, Doc doc, String commitId) 
 	{
-		String entryPath = doc.getPath() + doc.getName();
 		HashMap<String, Doc> subEntryList =  new HashMap<String, Doc>();
 
-		String subDocParentPath = entryPath + "/";
-		if(doc.getName().isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		int subDocLevel = doc.getLevel() + 1;
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);
 		
         Log.debug("getRemoteStorageEntryHashMapForSvn doc:" + doc.getPath() + doc.getName());
 		try {       	        	
@@ -20104,7 +20021,7 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
-	protected static boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, ReturnAjax rt) {
+	protected boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, ReturnAjax rt) {
 		Log.debug(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "]");
 		
 		boolean ret = false;
@@ -20162,7 +20079,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	protected static boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean pushLocalChangeOnly, ReturnAjax rt) {
+	protected boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean pushLocalChangeOnly, ReturnAjax rt) {
 		Log.debug("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "]");
 
 		boolean ret = false;
