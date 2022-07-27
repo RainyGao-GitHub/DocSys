@@ -131,9 +131,9 @@
 		             shareId: gShareId,
                 },
                 success : function (ret) {
-                   if( "ok" == ret.status )
-                   {          
-                	    console.log("downloadHistoryDocPrepare Ok:",ret);   
+            	    console.log("downloadHistoryDocPrepare ret:",ret);   
+                	if( "ok" == ret.status )
+                    {          
                	        if(ret.msgData == 5)
                 	    {
                	        	//下载目录压缩中

@@ -69,9 +69,30 @@
 		             shareId: gShareId,
                 },
                 success : function (ret) {
+                   console.log("downloadHistoryDocPrepare ret:",ret);  
                    if( "ok" == ret.status )
-                   {          
-                	    console.log("downloadHistoryDocPrepare Ok:",ret);            	   		            	   		
+                   {   
+              	        if(ret.msgData == 5)
+                	    {
+               	        	//下载目录压缩中
+               	        	console.log("downloadHistoryDocPrepare 下载准备中:", ret.data.info);   
+               	        	var SubContext = {};
+               	        	SubContext.index = 0;
+               	        	SubContext.commitId = commitId;
+               	        	SubContext.reposId = reposId;
+               	        	SubContext.pid = pid;
+               	        	SubContext.docId = docId;
+               	        	SubContext.path = parentPath;
+               	        	SubContext.name = docName;
+               	        	SubContext.historyType = historyType;
+               	        	SubContext.entryPath = entryPath;
+               	        	SubContext.downloadAll = 1;	
+               	        	SubContext.shareId = gShareId;	
+               	        	
+               	        	startDownloadPrepareQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
+               	        	return;
+                	    }
+              	        
                 	    var docDownloadInfo = ret.data;
                 	    docDownloadInfo.deleteFlag = ret.msgData;
 
@@ -100,6 +121,97 @@
                 }
         	});		   	
 		}
+		
+    	function startDownloadPrepareQueryTask(SubContext, downloadPrepareTaskId, delayTime)
+    	{
+    		console.log("startDownloadPrepareQueryTask() downloadPrepareTaskId:" + downloadPrepareTaskId + " delayTime:" + delayTime);
+    		var nextDelayTime = delayTime; //每次增加5s
+    		if(nextDelayTime < 60000) //最长1分钟
+    		{
+    			nextDelayTime += 5000;
+    		}
+    		
+    		setTimeout(function () {
+				console.log("[" + SubContext.index + "] timerForQueryDownloadPrepareTask triggered!");
+				doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId, nextDelayTime);
+			},delayTime);	//check it 2s later	
+    	}
+    	
+    	function doQueryDownloadPrepareTask(SubContext, downloadPrepareTaskId, nextDelayTime)
+    	{
+    		console.log("doQueryDownloadPrepareTask() downloadPrepareTaskId:" + downloadPrepareTaskId);
+			//执行后台downloadDoc操作
+    		$.ajax({
+                url : "/DocSystem/Doc/queryDownloadPrepareTask.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    taskId: downloadPrepareTaskId,
+                },
+                success : function (ret) {
+            	   console.log("doQueryDownloadPrepareTask ret:",ret);        
+                   if( "ok" == ret.status )
+                   {    
+               	        if(ret.msgData == 5)
+                	    {
+               	        	var prepareTask = ret.data;
+               	        	var info = prepareTask.info;
+               	        	if(prepareTask.targetSize)
+               	        	{
+               	        		info = "目录压缩中(" + getFileDisplaySize(prepareTask.targetSize) + ")...";
+               	        	}
+               	        	console.log("doQueryDownloadPrepareTask info:" + info);
+               	        	startDownloadPrepareQueryTask(SubContext, prepareTask.id, nextDelayTime);
+               	        	return;
+                	    }
+               	        
+               	        //下载任务准备完成
+                	    var docDownloadInfo = ret.data;
+                	    docDownloadInfo.deleteFlag = ret.msgData;
+
+            		   	var docLink = buildDocDownloadLink(ret.data);
+                	    console.log("doQueryDownloadPrepareTask docLink:",docLink);
+            	   		window.location.href = docLink;
+                	   	return;
+                   }
+                   else	//后台报错，结束下载
+                   {
+	               	   	console.log("doQueryDownloadPrepareTask Error:" + ret.msgInfo);
+	                   	bootstrapQ.alert({
+		      			    //id: "downloadHistoryDocPrepareError",
+							msg : "下载失败:" + ret.msgInfo,
+						    }); 
+	                	return;
+                   }
+                },
+                error : function () {	//后台异常
+                	console.log("doQueryDownloadPrepareTask 下载失败：服务器异常！");
+	               	bootstrapQ.alert({
+	      			    //id: "downloadHistoryDocPrepareError",
+						msg : "下载失败:服务器异常",
+					    }); 
+	            	return;
+                }
+        	});		
+    	}
+    	
+    	function getFileDisplaySize(size)
+    	{
+    		var showSize = size;
+	    	var units = "B";	//单位
+			if((showSize/1024)>1)
+			{
+				showSize = showSize/1024;
+				units = "KB";
+				if((showSize/1024)>1)
+				{
+					showSize = showSize/1024;
+					units = "MB";
+				}
+			}
+			showSize = Math.round(showSize) + units;
+			return showSize;
+    	}
 		
 		function showRevertConfirm(index)
 		{
