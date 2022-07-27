@@ -2361,7 +2361,7 @@ public class DocController extends BaseController{
 		if(remoteServerCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, null, tmpCheckoutName, commitId, true, false, null) == null)
 		{
 			task.status = 3; //Failed
-			task.info = "版本检出失败";
+			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
 			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
 			//延时删除任务和压缩文件
@@ -2373,7 +2373,7 @@ public class DocController extends BaseController{
 		if(entry.exists() == false)
 		{
 			task.status = 3; //Failed
-			task.info = "版本检出失败";
+			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
 			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
 			//延时删除任务和压缩文件
@@ -2530,7 +2530,7 @@ public class DocController extends BaseController{
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() verReposCheckOutForDownload result is null for commit:" + commitId);
 
 			task.status = 3; //Failed
-			task.info = "版本检出失败(当前版本没有文件)";
+			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
 			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
 			//延时删除任务和压缩文件
@@ -2543,7 +2543,7 @@ public class DocController extends BaseController{
 		{
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() checkouted entry [" + tmpCheckoutPath + tmpCheckoutName + "] not exists for commit:" + commitId);
 			task.status = 3; //Failed
-			task.info = "版本检出失败(当前版本没有文件)";
+			task.info = "版本检出失败(当前版本没有文件或者授权)";
 			deleteDelayTime = 300L; //5分钟后删除
 			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
 			//延时删除任务和压缩文件
