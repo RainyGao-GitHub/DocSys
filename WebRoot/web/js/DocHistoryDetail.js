@@ -231,17 +231,17 @@
 		   	var docPath = "/" + parentPath + docName;
 		   	if(historyType == 0)
             {
-		   		msg = "是否将 " + entryPath + " 恢复到版本:" + commitId;
+		   		msg = "恢复 " + entryPath + " 到版本:" + commitId + "?";
             }
             else
             {
             	if(docId == 0)
             	{
-    		   		msg = "是否将仓库的备注恢复到版本:" + commitId;
+    		   		msg = "恢复仓库备注到版本:" + commitId + "?";
             	}
             	else
             	{
-		   			msg = "是否将 " + docPath + " 的备注恢复到版本:" + commitId;
+		   			msg = "恢复 " + docPath + " 的备注到版本:" + commitId + "?";
             	}
             }	
             

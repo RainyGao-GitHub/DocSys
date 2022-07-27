@@ -72,47 +72,7 @@
 		function showDownloadConfirm(index)
 		{
 			var commitId = $("#commitId" + index).attr("value");
-		   	console.log("showDownloadConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
-
-			var title = "下载确认";
-			//Show dialog
-		    qiao.bs.dialog({
-		        id: "dialog-downloadConfirmDialog",
-		        url: '#downloadConfirmDialog',
-		        title: title,
-		        okbtn: "确定",
-		        callback: function () {
-		            setTimeout(function () {
-		            	console.log("showDownloadConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			         	
-		                if(historyType == 0)
-		                {
-		                	$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
-		                }
-		                else
-		                {
-		                	if(docId == 0)
-		                	{
-		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/");	             
-		                	}
-		                	else
-		                	{
-		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
-		                	}
-		                }
-		            },100);
-		        }
-		    },function () {
-				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
-				console.log("showDownloadConfirm() download commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
-                downloadHistory(index, entryPath);
-		    	return true;   
-		    });
-			return true;
-		}
-		
-		function showDownloadConfirm(index)
-		{
-			var commitId = $("#commitId" + index).attr("value");
+			var version = $("#commitId" + index).text();
 		   	console.log("showDownloadConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
 		   	var entryPath = "";
@@ -123,11 +83,11 @@
 		   		entryPath = docPath;
 		   		if(docId == 0)
 		   		{
-		   			msg = "是否下载仓库的历史版本:" + commitId;
+		   			msg = "下载仓库的历史版本:" + version + "?";
 		   		}
 		   		else
 		   		{
-		   			msg = "是否下载 " + entryPath + " 的历史版本:" + commitId;
+		   			msg = "下载 " + entryPath + " 的历史版本:" + version + "?";
 		   		}
             }
             else
@@ -135,12 +95,12 @@
             	if(docId == 0)
             	{
             		entryPath = "/";
-    		   		msg = "是否下载仓库备注的历史版本:" + commitId;
+    		   		msg = "下载仓库备注的历史版本:" + version + "?";
             	}
             	else
             	{
             		entryPath = "/"+docId + "_" + docName;             		                		
-		   			msg = "是否下载 " + docPath + " 备注的历史版本:" + commitId;
+		   			msg = "下载 " + docPath + " 备注的历史版本:" + version + "?";
             	}
             }	
             
@@ -327,6 +287,7 @@
 		function showRevertConfirm(index)
 		{
 			var commitId = $("#commitId" + index).attr("value");
+			var version = $("#commitId" + index).text();
 		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
 		   	var entryPath = "";
@@ -337,11 +298,11 @@
 		   		entryPath = docPath;
 		   		if(docId == 0)
 		   		{
-		   			msg = "是否将仓库恢复到版本:" + commitId;
+		   			msg = "恢复仓库到版本:" + version + "?";
 		   		}
 		   		else
 		   		{
-		   			msg = "是否将 " + entryPath + " 恢复到版本:" + commitId;
+		   			msg = "恢复 " + entryPath + " 到版本:" + version + "?";
 		   		}
             }
             else
@@ -349,12 +310,12 @@
             	if(docId == 0)
             	{
             		entryPath = "/";
-    		   		msg = "是否将仓库的备注恢复到版本:" + commitId;
+    		   		msg = "恢复仓库备注到版本:" + version + "?";
             	}
             	else
             	{
             		entryPath = "/"+docId + "_" + docName;             		                		
-		   			msg = "是否将 " + docPath + " 的备注恢复到版本:" + commitId;
+		   			msg = "恢复 " + docPath + " 的备注到版本:" + version + "?";
             	}
             }	
             
