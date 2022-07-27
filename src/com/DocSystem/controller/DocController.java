@@ -2530,7 +2530,7 @@ public class DocController extends BaseController{
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() verReposCheckOutForDownload result is null for commit:" + commitId);
 
 			task.status = 3; //Failed
-			task.info = "版本检出失败";
+			task.info = "版本检出失败(当前版本没有文件)";
 			deleteDelayTime = 300L; //5分钟后删除
 			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
 			//延时删除任务和压缩文件
@@ -2543,7 +2543,7 @@ public class DocController extends BaseController{
 		{
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() checkouted entry [" + tmpCheckoutPath + tmpCheckoutName + "] not exists for commit:" + commitId);
 			task.status = 3; //Failed
-			task.info = "版本检出失败";
+			task.info = "版本检出失败(当前版本没有文件)";
 			deleteDelayTime = 300L; //5分钟后删除
 			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
 			//延时删除任务和压缩文件
@@ -3424,7 +3424,7 @@ public class DocController extends BaseController{
 			break;
 		case 3:	
 			//下载压缩失败
-			rt.setError("目录压缩失败");
+			rt.setError(task.info);
 			break;
 		default:	//未知压缩状态
 			rt.setError("未知目录压缩状态");
