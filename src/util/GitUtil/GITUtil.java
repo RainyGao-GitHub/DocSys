@@ -1078,7 +1078,9 @@ public class GITUtil  extends BaseController{
 			HashMap<String, String> downloadList) 	
 	{
 		Log.debug("getAuthedEntryForDownload() doc:[" + doc.getPath() + doc.getName() + "] commitId:" + revision + " 注意递归过程中，该值必须不变");
-		
+
+		Log.printObject("getAuthedEntryForDownload() doc:[" + doc.getPath() + doc.getName() + "] curDocAuth:", curDocAuth);
+
 		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
 		{
 			Log.debug("getAuthedEntryForDownload() have no right to download [" + doc.getPath() + doc.getName() + "]");

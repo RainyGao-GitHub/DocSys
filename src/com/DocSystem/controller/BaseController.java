@@ -10230,7 +10230,9 @@ public class BaseController  extends BaseFunction{
 		Log.debug("verReposCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
 		DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
-		
+
+		Log.printObject("verReposCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] curDocAuth:", curDocAuth);
+
 		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
@@ -10385,6 +10387,7 @@ public class BaseController  extends BaseFunction{
 			HashMap<String, String> downloadList)
 	{
 		Log.debug("svnCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] commitId:" + revision);
+		Log.printObject("svnCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] curDocAuth:", curDocAuth);
 
 		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
 		{
@@ -10457,6 +10460,7 @@ public class BaseController  extends BaseFunction{
 			HashMap<String, String> downloadList) 
 	{
 		Log.debug("gitCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] commitId:" + revision);
+		Log.printObject("gitCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] curDocAuth:", curDocAuth);
 
 		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
 		{
