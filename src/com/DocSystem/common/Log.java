@@ -286,6 +286,11 @@ public class Log {
 	{
 		if(isLogEnable(debug, allowGeneral))
 		{
+			if(obj == null)
+			{
+				debug(Head + "null");
+				return;
+			}
 			String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
 			debug(Head + json);
 		}
