@@ -1077,7 +1077,7 @@ public class GITUtil  extends BaseController{
 			DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, 
 			HashMap<String, String> downloadList) 	
 	{
-		Log.debug("getAuthedEntryForDownload() revision:" + revision + " 注意递归过程中，该值必须不变");
+		Log.debug("getAuthedEntryForDownload() doc:[" + doc.getPath() + doc.getName() + "] commitId:" + revision + " 注意递归过程中，该值必须不变");
 		
 		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
 		{
