@@ -11368,17 +11368,17 @@ public class BaseController  extends BaseFunction{
 				initReposEncryptConfig(repos);
 				initReposData(repos);
 				
-				//启动定时同步任务
-				if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
-				{
-					addDelayTaskForReposSyncUp(repos, 10, 7200L);	//2小时后后强制开始
-				}
-				
 				//启动定时备份任务
 				if(repos.backupConfig != null)
 				{
-					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 9800L);	//3小时后开始
-					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, 10400L); //3小时10分钟后开始
+					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 3600L);	//1小时后开始本地备份
+					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, 7200L); //2小时后开始远程备份
+				}
+				
+				//启动定时同步任务
+				if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+				{
+					addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
 				}
 				
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
