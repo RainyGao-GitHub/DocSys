@@ -513,6 +513,8 @@
                     taskId: downloadPrepareTaskId,
                 },
                 success : function (ret) {
+            	   console.log("doQueryDownloadPrepareTask ret:",ret);        
+
                    if(SubContext.stopFlag == true)
                    {
                 	   console.log("doQueryDownloadPrepareTask download task 已取消", SubContext);
@@ -529,7 +531,6 @@
                    
                    if( "ok" == ret.status )
                    {    
-                	    console.log("doQueryDownloadPrepareTask Ok:",ret);        
                	        if(ret.msgData == 5)
                 	    {
                	        	//下载目录压缩中

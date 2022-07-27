@@ -10070,6 +10070,67 @@ public class BaseController  extends BaseFunction{
         return list;
 	}
 	
+	protected List<Doc> remoteServerCheckOutForDownload(Repos repos, Doc doc, ReposAccess reposAccess, String tempLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) {
+		
+		Log.debug("remoteServerCheckOutForDownload()");
+		
+		List<Doc> list = null;
+		Doc tmpDoc = doc;
+		if(tempLocalRootPath != null)	//如果需要将文件存放到临时目录，那么需要copyDoc到tmpDoc中
+		{
+			tmpDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), doc.getReposName(), doc.getPath(), doc.getName(), doc.getLevel(), 1, true, tempLocalRootPath, doc.getLocalVRootPath(), doc.getSize(), doc.getCheckSum(), doc.offsetPath);					
+		}
+		
+		RemoteStorageConfig remote = repos.remoteServerConfig;
+		if(remote == null)
+		{
+			Log.debug("remoteServerCheckOutForDownload() remote is null");
+			return null;
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		RemoteStorageSession session = doRemoteStorageLogin(repos, remote);
+        if(session == null)
+        {
+        	//再尝试三次
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		session = doRemoteStorageLogin(repos, remote);
+        		if(session != null)
+        		{
+        			break;
+        		}
+        	}
+        }
+        
+        if(session != null)
+        {
+    		DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
+    		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
+        	
+        	//如果checkOut到临时目录，则不能更新index
+        	if(tempLocalRootPath != null)
+        	{
+        		session.indexUpdateEn = false;
+        	}
+        	
+        	doPullFromRemoteStorageForDownload(session, remote, repos, tmpDoc, commitId, true, force, curDocAuth, docAuthHashMap, rt);
+        	doRemoteStorageLogout(session);
+        }
+        
+        DocPullResult pullResult = (DocPullResult) rt.getDataEx();
+        if(pullResult != null)
+        {
+        	list = pullResult.successDocList;
+        	if(localParentPath != null)
+        	{
+        		FileUtil.moveFileOrDir(tmpDoc.getLocalRootPath() + tmpDoc.getPath(), tmpDoc.getName(), localParentPath, targetName, true);
+        	}        	
+        }
+        return list;
+	}
+	
 	protected List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum) {
 		Log.debug("remoteServerGetHistory()");
 
@@ -16827,6 +16888,137 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
+	protected boolean doPullEntryFromRemoteStorageForDownload(RemoteStorageSession session, RemoteStorageConfig remote, 
+			Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, Integer subEntryPullFlag, boolean force, 
+			DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, 
+			DocPullResult pullResult) 
+	{
+		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
+		{
+			Log.debug("doPullEntryFromRemoteStorageForDownload() have no right to download [" + doc.getPath() + doc.getName() + "]");
+			return false;
+		}
+		
+		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
+		{
+			Log.debug("doPullEntryFromRemoteStorageForDownload() 拉取根目录");
+			return doPullSubEntriesFromRemoteStorageForDownload(session, remote, repos, doc, commitId, subEntryPullFlag, force, curDocAuth, docAuthHashMap, pullResult);					
+		}
+		
+		boolean ret = false;		
+		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+		
+		Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " localChangeType:" + localChangeType + " remoteChangeType:" + remoteChangeType);
+
+		//本地未改动（如果不是强制手动拉取，那么只能拉取新增的文件或目录）
+		if(localChangeType == DocChangeType.NOCHANGE)
+		{
+			//远程有改动
+			if(remoteChangeType != DocChangeType.NOCHANGE)
+			{
+				if(remoteChangeType == DocChangeType.REMOTEADD)
+				{
+					Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，拉取");
+					ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
+				}
+				else if(force == true)
+				{
+					if(remoteChangeType == DocChangeType.REMOTECHANGE)
+					{
+						Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，强制拉取模式，拉取");
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);						
+					}
+					else if(remoteChangeType == DocChangeType.REMOTEDELETE)
+					{
+						Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动, 远程删除, 强制拉取模式， 拉取");
+						ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
+					}
+					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
+					{
+						Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动，远程目录->文件，强制拉取模式，拉取");							
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);						
+					}
+					else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
+					{
+						Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动，远程文件->目录，强制拉取模式，拉取");
+						ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
+					}
+				}
+				else
+				{
+					Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动，远程改动，非强制拉取模式，不拉取");
+				}
+			}
+			else
+			{
+				Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 远程未改动，本地未改动");
+				ret = true;
+			}
+			
+			//pullSubEntries
+			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
+			{
+				doPullSubEntriesFromRemoteStorageForDownload(session, remote, repos, doc, commitId, subEntryPullFlag, force, curDocAuth, docAuthHashMap, pullResult);					
+			}
+			return true;
+		}
+		
+		//本地改动（强制拉取）
+		if(force == true) 
+		{
+			remoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+			if(remoteChangeType == DocChangeType.REMOTEADD)
+			{
+				Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，强制拉取模式，拉取");
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
+			}
+			else if(remoteChangeType == DocChangeType.REMOTECHANGE)
+			{
+				Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 强制拉取模式, 拉取");
+				return remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
+			}
+			else if(remoteChangeType == DocChangeType.REMOTEDELETE)
+			{
+				Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程删除, 强制拉取模式，拉取");
+				ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
+			}
+			else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
+			{
+				Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程目录->文件, 强制拉取模式，拉取");
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
+			}
+			else if(remoteChangeType == DocChangeType.REMOTEFILETODIR)
+			{
+				Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程文件->目录, 强制拉取模式，拉取");
+				ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
+			}
+			else if(remoteChangeType == DocChangeType.NOCHANGE)
+			{
+				if(remoteDoc == null)
+				{
+					Log.debug("doPullEntryFromRemoteStorageForDownload 本地删除，远程删除，直接删除DBEntry");
+					if(dbDoc != null)
+					{
+						deleteRemoteStorageDBEntry(repos, dbDoc, remote);
+					}
+					ret = true;
+				}	
+			}
+			
+			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
+			{
+				doPullSubEntriesFromRemoteStorageForDownload(session, remote, repos, doc, commitId, subEntryPullFlag, force, curDocAuth, docAuthHashMap, pullResult);
+			}
+		}		
+		else
+		{
+			Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 非强制拉取模式，不拉取");
+			return true;		
+		}
+		return ret;		
+	}
+	
 	protected static boolean doPullEntryFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, String commitId, Integer subEntryPullFlag, boolean force, DocPullResult pullResult) {
 		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
@@ -17162,6 +17354,52 @@ public class BaseController  extends BaseFunction{
 			Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
 			Doc subLocalDoc = localHashMap.get(subDbDoc.getName());
 			doPullEntryFromRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, subLocalDoc, null, commitId, subEntryPullFlag, force, pullResult);
+		}	
+		return true;
+	}
+	
+	private boolean doPullSubEntriesFromRemoteStorageForDownload(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, Integer subEntryPullFlag, boolean force,  DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, DocPullResult pullResult) {
+		//子目录不递归
+		if(subEntryPullFlag == 0)
+		{
+			return true;
+		}
+		
+		//子目录递归不继承
+		if(subEntryPullFlag == 1)
+		{
+			subEntryPullFlag = 0;
+		}
+		
+		List<Doc> remoteList = getRemoteStorageEntryList(session, remote, repos, doc, commitId);
+		if(remoteList == null)
+		{
+			return false;
+		}
+		
+		HashMap<String, Doc> dbHashMap = getRemoteStorageDBHashMap(repos, doc, remote);
+		HashMap<String, Doc>  localHashMap = getLocalEntryHashMap(repos, doc);
+		
+		for(int i=0; i<remoteList.size(); i++)
+		{
+			Doc subRemoteDoc = remoteList.get(i);
+			//Log.println("doPullSubEntriesFromRemoteStorage subDocName:" + subRemoteDoc.getName());
+			Doc subDbDoc = dbHashMap.get(subRemoteDoc.getName());
+			Doc subLocalDoc = localHashMap.get(subRemoteDoc.getName());
+			DocAuth subDocAuth = getDocAuthFromHashMap(subRemoteDoc.getDocId(), curDocAuth, docAuthHashMap);
+			doPullEntryFromRemoteStorageForDownload(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, commitId, subEntryPullFlag, force, subDocAuth, docAuthHashMap, pullResult);
+			if(subDbDoc != null)
+			{
+				dbHashMap.remove(subDbDoc.getName());
+			}
+		}
+		
+		//The entries remained in dbHashMap is the docs which have been deleted on remote server
+		for (Doc subDbDoc : dbHashMap.values()) {
+			Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
+			Doc subLocalDoc = localHashMap.get(subDbDoc.getName());
+			DocAuth subDocAuth = getDocAuthFromHashMap(subLocalDoc.getDocId(), curDocAuth, docAuthHashMap);
+			doPullEntryFromRemoteStorageForDownload(session, remote, repos, subDbDoc, subDbDoc, subLocalDoc, null, commitId, subEntryPullFlag, force, subDocAuth, docAuthHashMap, pullResult);
 		}	
 		return true;
 	}
@@ -19878,6 +20116,38 @@ public class BaseController  extends BaseFunction{
 		}
 
 		ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, subEntryPullFlag, force, pullResult);
+		
+		rt.setDataEx(pullResult);
+		return ret;
+	}
+	
+	protected boolean doPullFromRemoteStorageForDownload(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, DocAuth curDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) {
+		Log.debug(" doPullFromRemoteStorageForDownload [" + doc.getPath() + doc.getName() + "]");
+		
+		if(curDocAuth == null || curDocAuth.getDownloadEn() == null || curDocAuth.getDownloadEn() != 1)
+		{
+			Log.debug("doPullFromRemoteStorageForDownload() have no right to download [" + doc.getPath() + doc.getName() + "]");
+			return false;
+		}
+		
+		boolean ret = false;
+		DocPullResult pullResult = new DocPullResult();
+		pullResult.totalCount = 0;
+		pullResult.failCount = 0;
+		pullResult.successCount = 0;
+		pullResult.successDocList = new ArrayList<Doc>();
+	
+		Doc localDoc = fsGetDoc(repos, doc);
+		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
+		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, commitId); 
+		
+		Integer subEntryPullFlag = 1;
+		if(recurcive)
+		{
+			subEntryPullFlag = 2;
+		}
+
+		ret = doPullEntryFromRemoteStorageForDownload(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, subEntryPullFlag, force, curDocAuth, docAuthHashMap, pullResult);
 		
 		rt.setDataEx(pullResult);
 		return ret;
