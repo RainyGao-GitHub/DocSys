@@ -764,6 +764,21 @@ public class BaseFunction{
 			return null;
 		}
 		
+		String localVerReposPathForGit = getLocalVerReposPathForGit(repos, type);
+		return parseRemoteStorageConfig(remoteStorage, localVerReposPathForGit);
+	}
+	
+	protected static RemoteStorageConfig parseRemoteStorageConfig(String remoteStorage, String localVerReposPathForGit) {
+		if(remoteStorage == null)
+		{
+			return null;
+		}
+		
+		if(remoteStorage.equals("none"))
+		{
+			return null;
+		}
+		
 		//格式化远程存储配置
 		remoteStorage = remoteStorage.replace('\\','/');
 		
@@ -803,22 +818,44 @@ public class BaseFunction{
 		switch(protocol)
 		{
 		case "sftp":
-			return parseRemoteStorageConfigForSftp(repos, remoteStorage);
+			return parseRemoteStorageConfigForSftp(remoteStorage);
 		case "ftp":
-			return parseRemoteStorageConfigForFtp(repos, remoteStorage);
+			return parseRemoteStorageConfigForFtp(remoteStorage);
 		case "smb":
-			return parseRemoteStorageConfigForSmb(repos, remoteStorage);
+			return parseRemoteStorageConfigForSmb(remoteStorage);
 		case "mxsdoc":
-			return parseRemoteStorageConfigForMxsDoc(repos, remoteStorage);
+			return parseRemoteStorageConfigForMxsDoc(remoteStorage);
 		case "svn":
-			return parseRemoteStorageConfigForSvn(repos, remoteStorage);
+			return parseRemoteStorageConfigForSvn(remoteStorage);
 		case "git":
-			return parseRemoteStorageConfigForGit(repos, remoteStorage, type);
+			return parseRemoteStorageConfigForGit(remoteStorage, localVerReposPathForGit);
 		}
 		return null;
 	}
 	
-	private static RemoteStorageConfig parseRemoteStorageConfigForMxsDoc(Repos repos, String remoteStorage) {
+	private static String getLocalVerReposPathForGit(Repos repos, String type)
+	{
+		//GIT的远程仓库需要本地仓库存放路径（这个仓库放在和版本仓库相同的位置）
+		String localGitReposRootPath = repos.getLocalSvnPath(); 
+		if(localGitReposRootPath == null || localGitReposRootPath.isEmpty())
+		{
+			localGitReposRootPath = repos.getPath() + "DocSysVerReposes/";
+		}
+		localGitReposRootPath = Path.dirPathFormat(localGitReposRootPath);
+		String verReposName = null;
+		if(type == null)
+		{
+			verReposName = repos.getId() + "_GIT_RemoteStorage";
+		}
+		else
+		{
+			verReposName = repos.getId() + "_GIT_" + type;
+		}
+		String localVerReposPath = localGitReposRootPath + verReposName + "/";
+		return localVerReposPath;
+	}
+	
+	private static RemoteStorageConfig parseRemoteStorageConfigForMxsDoc(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "mxsdoc";
 		remote.MXSDOC = new MxsDocConfig();
@@ -864,7 +901,7 @@ public class BaseFunction{
 		remote.rootPath = "";
 	}
 
-	private static RemoteStorageConfig parseRemoteStorageConfigForGit(Repos repos, String remoteStorage, String type) {
+	private static RemoteStorageConfig parseRemoteStorageConfigForGit(String remoteStorage, String localVerReposPath) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "git";
 		remote.isVerRepos = true;
@@ -876,23 +913,6 @@ public class BaseFunction{
 		parseGitUrl(remote, url.trim());
 		if(remote.GIT.isRemote == 1)
 		{
-			//GIT的远程仓库需要本地仓库存放路径（这个仓库放在和版本仓库相同的位置）
-			String localGitReposRootPath = repos.getLocalSvnPath(); 
-			if(localGitReposRootPath == null || localGitReposRootPath.isEmpty())
-			{
-				localGitReposRootPath = repos.getPath() + "DocSysVerReposes/";
-			}
-			localGitReposRootPath = Path.dirPathFormat(localGitReposRootPath);
-			String verReposName = null;
-			if(type == null)
-			{
-				verReposName = repos.getId() + "_GIT_RemoteStorage";
-			}
-			else
-			{
-				verReposName = repos.getId() + "_GIT_" + type;
-			}
-			String localVerReposPath = localGitReposRootPath + verReposName + "/";
 			remote.GIT.localVerReposPath = localVerReposPath;
 		}
 
@@ -922,7 +942,7 @@ public class BaseFunction{
 		return remote;
 	}
 
-	private static RemoteStorageConfig parseRemoteStorageConfigForSvn(Repos repos, String remoteStorage) {
+	private static RemoteStorageConfig parseRemoteStorageConfigForSvn(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "svn";
 		remote.isVerRepos = true;
@@ -957,7 +977,7 @@ public class BaseFunction{
 		return remote;
 	}
 
-	private static RemoteStorageConfig parseRemoteStorageConfigForSftp(Repos repos, String remoteStorage) {
+	private static RemoteStorageConfig parseRemoteStorageConfigForSftp(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "sftp";
 		remote.SFTP = new SftpConfig();
@@ -991,7 +1011,7 @@ public class BaseFunction{
 		return remote;
 	}
 	
-	private static RemoteStorageConfig parseRemoteStorageConfigForFtp(Repos repos, String remoteStorage) {
+	private static RemoteStorageConfig parseRemoteStorageConfigForFtp(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "ftp";
 		remote.FTP = new FtpConfig();
@@ -1036,7 +1056,7 @@ public class BaseFunction{
 		return remote;
 	}
 	
-	private static RemoteStorageConfig parseRemoteStorageConfigForSmb(Repos repos, String remoteStorage) {
+	private static RemoteStorageConfig parseRemoteStorageConfigForSmb(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "smb";
 		remote.SMB = new SmbConfig();
