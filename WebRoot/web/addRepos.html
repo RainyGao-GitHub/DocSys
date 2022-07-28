@@ -997,28 +997,7 @@
 		var config = getRemoteServerConfig();
 		console.log("doRemoteSeverTest() config:", config);
 		
-	    $.ajax({
-	        url : "/DocSystem/Repos/remoteStorageTest.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {
-	            config : config,
-	        	type: "RemoteServer",
-	        },
-	        success : function (ret) {
-	            if( "ok" == ret.status )
-	            {
-	            	showErrorMessage("<strong>测试成功</strong><br/><br/>" + ret.msgInfo);
-	            }
-	            else
-	            {
-	            	showErrorMessage("<strong>测试失败</strong><br/><br/>" + ret.msgInfo);
-	            }
-	        },
-	        error : function () {
-	           	showErrorMessage('测试失败:服务器异常！');
-	        }
-		});
+		remoteStorageServerTest(config, "RemoteServer");
 	}
 	
 	function doRemoteStorageTest()
@@ -1028,28 +1007,7 @@
 		var config = getRemoteStorageConfig();
 		console.log("doRemoteStorageTest() config:", config);
 		
-	    $.ajax({
-	        url : "/DocSystem/Repos/remoteStorageTest.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {
-	            config : config,
-	        	type: "RemoteServer",
-	        },
-	        success : function (ret) {
-	            if( "ok" == ret.status )
-	            {
-	            	showErrorMessage("<strong>测试成功</strong><br/><br/>" + ret.msgInfo);
-	            }
-	            else
-	            {
-	            	showErrorMessage("<strong>测试失败</strong><br/><br/>" + ret.msgInfo);
-	            }
-	        },
-	        error : function () {
-	           	showErrorMessage('测试失败:服务器异常！');
-	        }
-		});
+		remoteStorageServerTest(config, "RemoteStorage");
 	}
 	
 	function doRemoteBackupStorageTest()
@@ -1059,13 +1017,48 @@
 		var config = getRemoteBackupRemoteStorageConfig();
 		console.log("doRemoteBackupStorageTest() config:", config);
 		
+		remoteStorageServerTest(config, "RemoteBackupStorage");
+	}
+	
+	function doVerReposTest()
+	{
+		console.log("doVerReposTest()");
+		
+		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+	    var url = $("#dialog-new-repos input[name='svnPath']").val();
+	    var user = $("#dialog-new-repos input[name='svnUser']").val();
+	    var pwd = $("#dialog-new-repos input[name='svnPwd']").val();
+		console.log("doVerReposTest() verCtrl:" + verCtrl + " url:" + url + " user:" +user + " pwd:" + pwd);
+		
+		var prefix = "";
+		switch(verCtrl)
+		{
+		case "1":
+			prefix = "svn://";
+			break;
+		case "2":
+			prefix = "git://";
+			break;
+		default:
+			break;
+		}
+		
+		var config = prefix + url + ";userName=" + user + ";pwd=" + pwd;
+		console.log("doVerReposTest() config:" + config);
+
+		remoteStorageServerTest(config, "VerRepos");
+	}
+	
+	function remoteStorageServerTest(config, type)
+	{
+		console.log("remoteStorageServerTest() config:" + config);
 	    $.ajax({
 	        url : "/DocSystem/Repos/remoteStorageTest.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
 	            config : config,
-	        	type: "RemoteServer",
+	        	type: type,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
