@@ -844,7 +844,9 @@ public class ReposController extends BaseController{
 		remote = parseRemoteStorageConfig(config, localVerReposPathForGit);
 		if(remote == null)
 		{
-			testResult += "解析失败<br/>";
+			testResult += "解析失败:<br/>";
+			testResult += config + "<br/>";
+			
 			rt.setError(testResult);
 			writeJson(rt, response);		
 			return;
@@ -913,7 +915,6 @@ public class ReposController extends BaseController{
 		rt.setMsgInfo(testResult);
 		writeJson(rt, response);		
 	}
-
 	
 	/****************   clear Repository File Cache ******************/
 	@RequestMapping("/clearReposCache.do")
