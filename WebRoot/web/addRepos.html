@@ -21,14 +21,17 @@
 
 			<div name="remoteServerDiv" style="margin-top:10px"  style="display:none">
 				<label>文件服务器</label>
-				<select class="form-control" name="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:100%">   
-		        	<option value="ftp">FTP</option>   
-		            <option value="sftp">SFTP</option>   
-		            <option value="smb">SMB</option>  
-		            <option value="svn">SVN</option>  
-		            <option value="git">GIT</option>  
-		            <option value="mxsdoc">MXSDOC</option>  
-		        </select>		            
+				<div style="height: 40px">
+					<select class="form-control" name="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:87%">   
+			        	<option value="ftp">FTP</option>   
+			            <option value="sftp">SFTP</option>   
+			            <option value="smb">SMB</option>  
+			            <option value="svn">SVN</option>  
+			            <option value="git">GIT</option>  
+			            <option value="mxsdoc">MXSDOC</option>  
+			        </select>
+			        <button  type="button" class="btn btnPrimary" onclick="doRemoteSeverTest()" style="position: relative;top:-33px;left:90%">测试</button>
+				</div>
 				<input class="form-control" type="text" name="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
 			</div>  
 			
@@ -59,15 +62,18 @@
 				</label>
 				
 				<div name="remoteStorageConfigDiv" style="display:none">
-					<select class="form-control" name="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:100%">   
-			        	<option value="">无</option>
-			            <option value="ftp">FTP</option>   
-			            <option value="sftp">SFTP</option>   
-			            <option value="smb">SMB</option>  
-			            <option value="svn">SVN</option>  
-			            <option value="git">GIT</option>  
-			            <option value="mxsdoc">MXSDOC</option>  
-			        </select>		            
+					<div style="height: 40px">
+						<select class="form-control" name="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:87%">   
+				        	<option value="">无</option>
+				            <option value="ftp">FTP</option>   
+				            <option value="sftp">SFTP</option>   
+				            <option value="smb">SMB</option>  
+				            <option value="svn">SVN</option>  
+				            <option value="git">GIT</option>  
+				            <option value="mxsdoc">MXSDOC</option>  
+				        </select>
+	            		<button  type="button" class="btn btnPrimary" onclick="doRemoteStorageTest()" style="position: relative;top:-33px;left:90%">测试</button>
+				    </div>
 					<div name="remoteStorageProtocolConfig" style="margin-top:10px; display:none">
 			           	<input class="form-control" type="text" name="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
 	            		<label style="margin-left:1px">自动拉取 <span style="margin-left:3px"><input type="checkbox" name="autoPull" value="0"></span></label>
@@ -103,7 +109,10 @@
 				            </div>
 				            <div name="remoteVerRepos">
 					            <label>版本仓库链接</label>
-					            <input class="form-control" type="text" name="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+					            <div style="height:40px;">
+					            	<input class="form-control" type="text" name="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 87%"/>
+					            	<button  type="button" class="btn btnPrimary" onclick="doVerReposTest()" style="position: relative;top:-33px;left:90%">测试</button>
+					            </div>
 					            <label>用户名</label>
 					            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
 					            <label>密码</label>
@@ -128,7 +137,10 @@
 	            	</div>
 	            	<div name="remoteVerRepos1">
 			            <label>版本仓库链接</label>
-			            <input class="form-control" type="text" name="svnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+			            <div style="height:40px;">
+			            	<input class="form-control" type="text" name="svnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 87%"/>
+			        		<button  type="button" class="btn btnPrimary" onclick="doVerReposTest1()" style="position: relative;top:-33px;left:90%">测试</button>
+			            </div>
 			            <label>用户名</label>
 			            <input class="form-control" type="text" name="svnUser1"  value="" style="width: 100%"/>
 			            <label>密码</label>
@@ -212,15 +224,18 @@
 	            	</span>
 	            </label>
 	            <div name="remoteBackupConfig" style="display:none">
-		        	<select class="form-control" name="remoteBackupStorageProtocol" onchange="doSelectRemoteBackupStorageProtocol();" style="width:100%">   
-				        <option value="">无</option>
-				        <option value="ftp">FTP</option>   
-				        <option value="sftp">SFTP</option>   
-				        <option value="smb">SMB</option>  
-				        <option value="svn">SVN</option>  
-				        <option value="git">GIT</option>  
-				        <option value="mxsdoc">MXSDOC</option>  
-				    </select>
+	            	<div style="height:40px;">
+			        	<select class="form-control" name="remoteBackupStorageProtocol" onchange="doSelectRemoteBackupStorageProtocol();" style="width:87%">   
+					        <option value="">无</option>
+					        <option value="ftp">FTP</option>   
+					        <option value="sftp">SFTP</option>   
+					        <option value="smb">SMB</option>  
+					        <option value="svn">SVN</option>  
+					        <option value="git">GIT</option>  
+					        <option value="mxsdoc">MXSDOC</option>  
+					    </select>
+			        	<button  type="button" class="btn btnPrimary" onclick="doRemoteBackupStorageTest()" style="position: relative;top:-33px;left:90%">测试</button>
+				    </div>
 				    <div name="remoteBackupStorageConfig" style="margin-top:10px; display:none">
 		           		<input class="form-control" type="text" name="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
 	    				<label style="margin-top:5px">备份时间</label>
