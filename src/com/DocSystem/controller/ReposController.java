@@ -899,6 +899,16 @@ public class ReposController extends BaseController{
 		}
     	
 		testResult += "文件列表获取成功<br/>";
+		for(int i=0; i<list.size(); i++)
+		{
+			Doc entry = list.get(i);
+			testResult += "[" + entry.getPath() + entry.getName() + "]<br/>";
+			if(i > 6)
+			{
+				testResult += "...<br/>"; 
+				break;
+			}
+		}
 		rt.setData(list);
 		rt.setMsgInfo(testResult);
 		writeJson(rt, response);		
