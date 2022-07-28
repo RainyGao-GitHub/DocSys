@@ -24,6 +24,7 @@ import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
@@ -34,8 +35,10 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.EncryptConfig;
+import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.SyncupTask;
+import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.controller.BaseController;
 
 /*
@@ -799,6 +802,108 @@ public class ReposController extends BaseController{
 		repos.setLocalSvnPath(localSvnPath);
 		repos.setLocalSvnPath1(localSvnPath1);
 	}
+	
+	
+	/****************   remoteStorageTest ******************/
+	@RequestMapping("/remoteStorageTest.do")
+	public void remoteStorageTest(String config, String type, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** remoteServerTest.do ***********************");
+		Log.debug("remoteServerTest config:" + config + " type:" + type);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查是否是系统管理员
+		if(login_user.getType() != 2)	//超级管理员
+		{
+			rt.setError("您无权进行该操作!");				
+			writeJson(rt, response);	
+			return;
+		}
+		
+		String testResult = "1. 配置解析<br/>";
+		RemoteStorageConfig remote = null;
+		if(config == null || config.isEmpty())
+		{
+			testResult += "配置内容为空<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;
+		}	
+		
+		String localTestPath = docSysIniPath + "RemoteStorageTest/" + type + "/";
+		
+		String localVerReposPathForGit = localTestPath + "LocalGitRepos/";
+		remote = parseRemoteStorageConfig(config, localVerReposPathForGit);
+		if(remote == null)
+		{
+			testResult += "解析失败<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;
+		}
+		testResult += "解析成功:<br/>" ;
+		testResult += JSON.toJSONString(remote).replace(",", "<br/>") + "<br/><br/>";
+				
+		//fake repos
+		Repos fakeRepos = new Repos();
+		fakeRepos.setId(1000000);
+		String localRootPath = localTestPath + "Repos/rdata"; 
+		String localVRootPath = localTestPath + "Repos/vdata";
+		Doc rootDoc = buildRootDoc(fakeRepos, localRootPath, localVRootPath);
+		
+		testResult += "2. 登录远程服务器<br/>";
+		RemoteStorageSession remoteStorageSession = doRemoteStorageLogin(fakeRepos, remote);
+        if(remoteStorageSession == null)
+        {
+			testResult += "第 1 次登录失败<br/>";
+        	//再尝试三次
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		remoteStorageSession = doRemoteStorageLogin(fakeRepos, remote);
+        		if(remoteStorageSession != null)
+        		{
+        			break;
+        		}
+        		testResult += "第 " + (i+2) + " 次登录失败<br/>";       	
+        	}
+        }
+        
+    	if(remoteStorageSession == null)
+    	{
+    		testResult += "登录远程服务器失败<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;
+    	}
+		testResult += "登录远程服务器成功<br/><br/>";
+    	
+		testResult += "3. 获取远程服务器文件列表<br/>";
+		List<Doc> list = getRemoteStorageEntryList(remoteStorageSession, remote, fakeRepos, rootDoc, null);
+		doRemoteStorageLogout(remoteStorageSession);
+
+		if(list == null)
+		{
+			testResult += "文件列表获取失败<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;	    	
+		}
+    	
+		testResult += "文件列表获取成功<br/>";
+		rt.setData(list);
+		rt.setMsgInfo(testResult);
+		writeJson(rt, response);		
+	}
+
 	
 	/****************   clear Repository File Cache ******************/
 	@RequestMapping("/clearReposCache.do")
