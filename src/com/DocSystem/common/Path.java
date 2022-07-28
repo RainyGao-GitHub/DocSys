@@ -29,7 +29,7 @@ public class Path {
 		
 		String [] paths = path.split("/");
 		int level = 0;
-		for(int i=0; i>=paths.length; i++)
+		for(int i=0; i < paths.length; i++)
 		{
 			if(paths[i].isEmpty())
 			{
