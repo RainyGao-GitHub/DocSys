@@ -988,6 +988,99 @@
 		}
 	    console.log("getRemoteBackupRemoteStorageConfig remoteStorage:" + remoteStorage);
 		return remoteStorage;
-	}	
+	}
+	
+	function doRemoteSeverTest()
+	{
+		console.log("doRemoteSeverTest()");
+
+		var config = getRemoteServerConfig();
+		console.log("doRemoteSeverTest() config:", config);
+		
+	    $.ajax({
+	        url : "/DocSystem/Repos/remoteStorageTest.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            config : config,
+	        	type: "RemoteServer",
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("测试成功:<br/>" + ret.msgInfo);
+	            }
+	            else
+	            {
+	            	showErrorMessage("测试失败:<br/>" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	           	showErrorMessage('测试失败:服务器异常！');
+	        }
+		});
+	}
+	
+	function doRemoteStorageTest()
+	{
+		console.log("doRemoteStorageTest()");
+
+		var config = getRemoteStorageConfig();
+		console.log("doRemoteStorageTest() config:", config);
+		
+	    $.ajax({
+	        url : "/DocSystem/Repos/remoteStorageTest.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            config : config,
+	        	type: "RemoteServer",
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("测试成功:<br/>" + ret.msgInfo);
+	            }
+	            else
+	            {
+	            	showErrorMessage("测试失败:<br/>" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	           	showErrorMessage('测试失败:服务器异常！');
+	        }
+		});
+	}
+	
+	function doRemoteBackupStorageTest()
+	{
+		console.log("doRemoteBackupStorageTest()");
+
+		var config = getRemoteBackupRemoteStorageConfig();
+		console.log("doRemoteBackupStorageTest() config:", config);
+		
+	    $.ajax({
+	        url : "/DocSystem/Repos/remoteStorageTest.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            config : config,
+	        	type: "RemoteServer",
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("测试成功:<br/>" + ret.msgInfo);
+	            }
+	            else
+	            {
+	            	showErrorMessage("测试失败:<br/>" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	           	showErrorMessage('测试失败:服务器异常！');
+	        }
+		});
+	}
 </script>
 
