@@ -26,7 +26,7 @@ public class Path {
 		//Log.debug("getLevelByParentPath() path:[" + path + "]");
 		if(path == null || path.isEmpty())
 		{
-			Log.debug("getLevelByParentPath() path:[" + path + "] level:" + 0);
+			//Log.debug("getLevelByParentPath() path:[" + path + "] level:" + 0);
 			return 0;
 		}
 		
