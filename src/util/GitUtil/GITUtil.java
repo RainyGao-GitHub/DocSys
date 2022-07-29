@@ -733,7 +733,7 @@ public class GITUtil  extends BaseController{
         }    
 
         String subDocParentPath = getSubDocParentPath(doc);
-		int subDocLevel = doc.getLevel() + 1;            
+		int subDocLevel = getSubDocLevel(doc);            
 		try {
 			while(treeWalk.next())
 	    	{
@@ -1026,7 +1026,7 @@ public class GITUtil  extends BaseController{
 				return successDocList;
 			}
 			
-			int subDocLevel = doc.getLevel() + 1;
+			int subDocLevel = getSubDocLevel(doc);
 			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;
@@ -1226,7 +1226,7 @@ public class GITUtil  extends BaseController{
 				return successDocList;
 			}
 			
-			int subDocLevel = doc.getLevel() + 1;
+			int subDocLevel = getSubDocLevel(doc);
 			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;
