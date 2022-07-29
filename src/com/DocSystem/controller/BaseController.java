@@ -748,9 +748,19 @@ public class BaseController  extends BaseFunction{
 	protected static Integer getSubDocLevel(Doc doc) {
 		if(doc.getLevel() == null)
 		{
-			doc.setLevel(Path.getLevelByParentPath(doc.getPath()));
+			//根目录level = -1, 否则就是doc.path的目录级数
+			if(doc.getName().isEmpty())
+			{
+				doc.setLevel(-1);
+			}
+			else
+			{
+				doc.setLevel(Path.getLevelByParentPath(doc.getPath()));
+			}
+			
+			//理论上这里的打印不应该出现（一般情况下doc的level都已经计算好的）
+			Log.debug("getSubDocLevel() ["+ doc.getPath() + doc.getName() + "] level:" + doc.getLevel());
 		}
-		Log.debug("getSubDocLevel() ["+ doc.getPath() + doc.getName() + "] level:" + doc.getLevel());
 		return doc.getLevel() + 1;
 	}
 
