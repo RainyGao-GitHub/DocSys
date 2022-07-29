@@ -5160,6 +5160,7 @@ public class BaseController  extends BaseFunction{
 		case REMOTECHANGE:	//remoteFileChanged
 		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
 		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
+			//对应的commit上如果并没有对应的文件，那么实际上并不是远程删除操作，而是本地有改动
 			if(isDocInVerRepos(repos, doc, dbDoc.getRevision()) == false)
 			{
 				//Log.debug("syncupForDocChange_FSM() " + doc.getPath()+doc.getName() + " not exists in verRepos at revision:" + dbDoc.getRevision() + " treat it as LOCALCHANGE");
@@ -5173,6 +5174,7 @@ public class BaseController  extends BaseFunction{
 				//Log.debug("syncupScanForDoc_FSM() docChangeType: " + localChange1.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 				return true;
 			}
+			//这里没有return是对的，因为需要执行下面的代码添加remoteChange
 		case REMOTEADD:	//remoteAdd
 			DocChange remoteChange = new DocChange();
 			remoteChange.setDoc(doc);
