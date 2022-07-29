@@ -1641,7 +1641,7 @@ public class SVNUtil  extends BaseController{
 		}
 		
 		String subDocParentPath = getSubDocParentPath(doc);
-		int subDocLevel = doc.getLevel() + 1;
+		int subDocLevel = getSubDocLevel(doc);
 		
 	    Iterator<SVNDirEntry> iterator = entries.iterator();
 	    while (iterator.hasNext()) 
@@ -1851,7 +1851,7 @@ public class SVNUtil  extends BaseController{
 				return successDocList;
 			}
 			
-			int subDocLevel = doc.getLevel() + 1;
+			int subDocLevel = getSubDocLevel(doc);
 			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;
@@ -2046,7 +2046,7 @@ public class SVNUtil  extends BaseController{
 				return successDocList;
 			}
 			
-			int subDocLevel = doc.getLevel() + 1;
+			int subDocLevel = getSubDocLevel(doc);
 			String subDocParentPath = getSubDocParentPath(doc);
 			
 			String subEntryLocalParentPath = null;

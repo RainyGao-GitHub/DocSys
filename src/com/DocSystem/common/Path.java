@@ -22,8 +22,11 @@ public class Path {
 	//path必须是标准格式
 	public static int getLevelByParentPath(String path) 
 	{
+		//该函数不应该被频繁调用，如果出现频繁调用，那么应该是那里逻辑出错了，会引起系统性能问题
+		//Log.debug("getLevelByParentPath() path:[" + path + "]");
 		if(path == null || path.isEmpty())
 		{
+			Log.debug("getLevelByParentPath() path:[" + path + "] level:" + 0);
 			return 0;
 		}
 		
@@ -37,6 +40,7 @@ public class Path {
 			}
 			level++;
 		}
+		Log.debug("getLevelByParentPath() path:[" + path + "] level:" + level);
 		return level;
 	}
 
