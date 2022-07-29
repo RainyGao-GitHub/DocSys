@@ -4385,9 +4385,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Integer subDocSyncupFlag = 1;
+		boolean syncLocalChangeOnly = true;
 		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNCVerRepos)
 		{
 			subDocSyncupFlag = 2;
+			syncLocalChangeOnly = false;
 		}
 		
 		if(remoteStorageEnable)
@@ -4423,7 +4425,7 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 			
-		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, true, login_user, rt);
+		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, syncLocalChangeOnly, login_user, rt);
 
 		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
 
@@ -4433,6 +4435,8 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, boolean syncLocalChangeOnly, User login_user, ReturnAjax rt) {
 		//对本地文件和版本仓库进行同步
+		Log.debug("syncUpLocalWithVerRepos() [" + doc.getDocId() + " " + doc.getPath() + doc.getName() + "]");
+
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
