@@ -605,7 +605,7 @@ public class SVNUtil  extends BaseController{
 			commitActionList = new ArrayList<CommitAction>();
 		}
 		
-		if(isVersionIgnored(repos, doc))
+		if(isVersionIgnored(repos, doc, true))
 	    {
 	    	Log.debug("doAutoCommmit() version was ignored for:" + doc.getPath() + doc.getName());
 	        return getLatestReposRevision();
@@ -747,11 +747,16 @@ public class SVNUtil  extends BaseController{
 	    return commitInfo.getNewRevision()+"";
 	}
 
-	private boolean isVersionIgnored(Repos repos, Doc doc) {
+	private boolean isVersionIgnored(Repos repos, Doc doc, boolean parentCheck) {
 		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			Log.debug("isVersionIgnored() version was ignored for [/" + doc.getPath() + doc.getName() + "]");
 			return true;
+		}
+		
+		if(parentCheck == false)
+		{
+			return false;
 		}
 		
 		//check if version ignore for root doc
@@ -1050,7 +1055,7 @@ public class SVNUtil  extends BaseController{
     	
     	if(isIgnoreNeed(repos, doc) == true)
     	{
-    		Log.debug("scheduleForCommit() " + doc.getName() + " was ignored");
+    		Log.debug("scheduleForCommit() " + doc.getPath() + doc.getName() + " was ignored");
     		return;    		
     	}
  	
@@ -1153,7 +1158,7 @@ public class SVNUtil  extends BaseController{
     		return true;
     	}
     	
-    	if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+    	if(isVersionIgnored(repos, doc, false) == true)
     	{
     		Log.debug("isIgnoreNeed() [/" + doc.getPath() + doc.getName() + "] version was ignored");
     		return true;
@@ -1184,7 +1189,7 @@ public class SVNUtil  extends BaseController{
 		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
-		//Log.debug("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
+		Log.debug("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
 		Collection<SVNDirEntry> entries = getSubEntries(subDocParentPath, -1L);
         if(entries != null)
         {
@@ -1202,7 +1207,7 @@ public class SVNUtil  extends BaseController{
         }
         
         //Go Through localSubDocs
-		//Log.debug("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
+		Log.debug("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
         File dir = new File(localRootPath + subDocParentPath);
         File[] tmp=dir.listFiles();
         for(int i=0;i<tmp.length;i++)
@@ -1210,7 +1215,13 @@ public class SVNUtil  extends BaseController{
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
         	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-        	//Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+        	Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+        	
+        	if(isIgnoreNeed(repos, subDoc) == true)
+        	{
+        		Log.debug("scanForSubDocCommit() " + subDoc.getPath() + subDoc.getName() + " was ignored");
+        		continue;  		
+        	}
         	
         	if(docHashMap.get(subDoc.getName()) == null)
         	{
