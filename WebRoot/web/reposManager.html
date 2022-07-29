@@ -284,11 +284,12 @@
                     $("#curRepos span:first-child").text(ret.data.name);
                     
                     //设置仓库信息
-                    reposType = ret.data.type;
-                    reposName = ret.data.name;
-                    $("#projectName").text(ret.data.name);
+                    gReposInfo = ret.data;
+                    reposType = gReposInfo.type;
+                    reposName = gReposInfo.name;
+                    $("#projectName").text(gReposInfo.name);
                		
-                    showDiskSpaceInfo(ret.data);
+                    showDiskSpaceInfo(gReposInfo);
                     
                     if(reposType == 0)
                     {
@@ -566,6 +567,7 @@
 <SCRIPT type="text/javascript" >
 	/********************** zTree设置与接口**********************************/
     var gReposId = null;
+	var gReposInfo = {};
 	var curDoc = 0;	
 	var docVersionIgnore = {};
 	
@@ -784,11 +786,23 @@
 				}
 			},
 			{divider: true},
-			{text: '版本管理', action: function(e){
-					e.preventDefault();
-					//显示版本管理
-					setDocVersionIgnoreConfirm(curRightClickedTreeNode);
-				}
+			{text: '版本管理', subMenu: [
+				{text: '关闭版本管理',  action: function(e){
+						e.preventDefault();
+						addDocToVersionIgnoreListConfirm(curRightClickedTreeNode);
+					}
+				},
+				{text: '开启版本管理',  action: function(e){
+						e.preventDefault();
+						removeDocFromVersionIgnoreListConfirm(curRightClickedTreeNode);
+					}
+				},
+				{text: '忽略列表管理',  action: function(e){
+						e.preventDefault();
+						showVerIgnoreListManagePanel();
+					}
+				},
+				]
 			},
 			{divider: true},
 			{text: '清除缓存', action: function(e){
@@ -834,31 +848,75 @@
 </SCRIPT>
 
 <script>
-function setDocVersionIgnoreConfirm(node)
+function showVerIgnoreListManagePanel()
 {
-   	console.log("setDocVersionIgnoreConfirm()");
+   	console.log("showVerIgnoreListManagePanel()");
    	
-   	var msg = "是否忽略版本管理?";
-   	var okbtn = "忽略";
-   	var ignore = 1;
-   	if(docVersionIgnore[node.docId] && docVersionIgnore[node.docId] == 1)
+	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	{
+		showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+		return;
+	}
+	
+	//TODO: 打开版本忽略列表页面（忽略列表在页面中加载，支持直接添加需要忽略的文件路径）	
+}
+
+function addDocToVersionIgnoreListConfirm(node)
+{
+   	console.log("addDocToVersionIgnoreListConfirm()");
+   	
+	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	{
+		showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+		return;
+	}
+	
+	var msg = "关闭 [" + node.path + node.name + "] 的历史版本管理？"
+   	if(node.docId == 0)
    	{
-   		msg = "是否开启版本管理？"
-   		okbtn = "开启";
-   		ignore = 0;
+   	   msg = "关闭仓库所有文件的历史版本管理?";
    	}
    	
    	qiao.bs.confirm({
- 	    	id: 'setDocVersionIgnoreConfirm',
+ 	    	id: 'addVersionIgnoreConfirm',
  	        msg: msg,
  	        close: false,		
- 	        okbtn: okbtn,
+ 	        okbtn: "确定",
  	        qubtn: "取消",
  	    },function () {
- 	    	setVersionIgnore(node, ignore);
+ 	    	setVersionIgnore(node, 1);
  	    	return true;   
  	    },function(){
- 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function removeDocFromVersionIgnoreListConfirm(node)
+{
+   	console.log("removeDocFromVersionIgnoreListConfirm()");
+   	
+	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	{
+		showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+		return;
+	}
+	
+	var msg = "开启 [" + node.path + node.name + "] 的历史版本管理？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "开启仓库所有文件的历史版本管理?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'removeVersionIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setVersionIgnore(node, 0);
+ 	    	return true;   
+ 	    },function(){
  	    	return true;
  	    }); 
 }
