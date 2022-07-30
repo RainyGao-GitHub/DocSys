@@ -5875,6 +5875,83 @@ public class DocController extends BaseController{
 		}
 		return 0;
 	}
+	
+	@RequestMapping("/getVersionIgnoreList.do")
+	public void getVersionIgnoreList(Integer reposId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getVersionIgnoreList ****************");
+		Log.info("getVersionIgnoreList reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		String reposVersionIgnoreSettingPath = Path.getReposVersionIgnoreConfigPath(repos);
+		List<Doc> ignoreList = getVersionIgnoreList(repos, doc, reposVersionIgnoreSettingPath, null);
+		
+		rt.setData(ignoreList);			
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getVersionIgnoreList(Repos repos, Doc doc, String reposVersionIgnoreSettingPath, List<Doc> ignoreList) {
+		Log.info("*getVersionIgnoreList() reposId:" + repos.getId() + " [" + doc.getPath() + doc.getName() + "]");
+		if(ignoreList == null)
+		{
+			ignoreList = new ArrayList<Doc>();
+		}
+		
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			ignoreList.add(doc);
+		}
+		
+		String ignoreConfigEntryPath = reposVersionIgnoreSettingPath + doc.getPath() + doc.getName();
+		File dir = new File(ignoreConfigEntryPath);
+    	if(false == dir.exists())
+    	{
+    		Log.debug("getVersionIgnoreList() " +  ignoreConfigEntryPath + " 不存在！");
+    		return ignoreList;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		Log.debug("getVersionIgnoreList() " + ignoreConfigEntryPath + " 不是目录！");
+    		return ignoreList;
+    	}
+
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+    	
+        //Go through the subEntries
+    	File[] localFileList = dir.listFiles();
+    	for(int i=0;i<localFileList.length;i++)
+    	{
+    		File subFile = localFileList[i];
+    		if(subFile.isFile())
+    		{
+    			continue;
+    		}
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		getVersionIgnoreList(repos, subDoc, reposVersionIgnoreSettingPath, ignoreList);
+    	}
+    	return ignoreList;
+	}
 
 	/****************   set  Doc Access PWD ******************/
 	@RequestMapping("/setDocPwd.do")

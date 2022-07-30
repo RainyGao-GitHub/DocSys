@@ -4,10 +4,8 @@
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li style="margin-top: 0px;">
-							<i class="cell path w30"><input type="input" class="form-control" id="ignorePath" placeholder="请输入文件或目录路径"></i>
-							<i class="cell operation w10"><button onclick="addPathToVersionIgnoreList()" class="btn btn-md btn-primary" style="margin-left: 5px;">添加</button></i>						
-							<i class="cell operation w10"><button onclick="removePathFromVersionIgnoreList()" class="btn btn-md btn-primary" style="margin-left: 5px;">删除</button></i>						
-							<i class="cell operation w10"><button onclick="cleanVersionIgnoreList()" class="btn btn-md btn-primary" style="margin-left: 5px;">清除忽略列表</button></i>												
+							<i class="cell path w30"><input type="input" class="form-control" id="ignorePath" placeholder="请输入文件或目录的路径"></i>
+							<i class="cell operation w5"><button onclick="VersionIgnoreMange.addDocToVersionIgnoreList()" class="btn btn-md btn-primary" style="margin-left: 5px;">添加</button></i>
 						</li>
 	               		<li class="eventset-tit" style="margin-top: 0px;">
 							<i class="cell select w5">选择</i>
@@ -35,17 +33,77 @@ var VersionIgnoreMange = (function () {
 		reposId = _reposId;
 		showReposVersionIngoreList();		
 	}
+	
+	function addDocToVersionIgnoreList()
+	{
+		console.log("addDocToVersionIgnoreList() ignorePath:" + ignorePath);
+		var node = {};
+		node.path =  $("#ignorePath").val();
+		node.name = "";
+		console.log("addDocToVersionIgnoreList() path:" + node.path + "name:" + node.name);
+		setVersionIgnore(node, 1);
+	}
+	
+	function removeDocFromVersionIgnoreList(index)
+	{
+		console.log("removeDocFromVersionIgnoreList() index:" + index);
+		var node = {};
+		node.path = $("#IgnoreEntrySelect" + index).val();
+		node.name = "";
+		console.log("removeDocFromVersionIgnoreList() path:" + node.path + "name:" + node.name);
+		setVersionIgnore(node, 0);
+	}
 
+	function setVersionIgnore(node, ignore)
+	{
+		console.log("setVersionIgnore()");
+	    $.ajax({
+	        url : "/DocSystem/Doc/setVersionIgnore.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            reposId : gReposId,
+	        	path: node.path,
+	        	name: node.name,
+	        	ignore: ignore,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+					//刷新列表
+					showReposVersionIngoreList();
+	            	bootstrapQ.msg({
+							msg : '设置成功！',
+							type : 'success',
+							time : 2000,
+						    });
+	            }
+	            else
+	            {
+	            	showErrorMessage("设置失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	           	showErrorMessage('设置失败:服务器异常！');
+	        }
+		});
+	}
+	
 	function showReposVersionIngoreList(){
 	   	console.log("showReposVersionIngoreList() reposId:" + reposId);
+	   	var path = "";
+	   	var name = "";
+	   	
 	    $.ajax({
-	            url : "/DocSystem/Repos/getReposVersionIgnorList.do",
+	            url : "/DocSystem/Doc/getVersionIgnoreList.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
 	                reposId : reposId,
+	                path : path,
+	                name : name,
 	            },
 	            success : function (ret) {
+	            	console.log("getVersionIgnoreList ret:", ret);
 	                if( "ok" == ret.status ){
 	                    showList(ret.data);
 	                }
@@ -70,7 +128,7 @@ var VersionIgnoreMange = (function () {
 			
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
-				var opBtn = "		<a href='javascript:void(0)' onclick='removeDocFromVersionIgnoreList("+d.path+"," +d.name+ ");' class='mybtn-primary'>移除</a>";
+				var opBtn = "		<a href='javascript:void(0)' onclick='VersionIgnoreMange.removeDocFromVersionIgnoreList(" + i + ");' class='mybtn-primary'>移除</a>";
 													
 				var se = "<li value="+ i +">"
 					+"	<i class='cell select w5'>"
@@ -78,7 +136,7 @@ var VersionIgnoreMange = (function () {
 					+"	</i> "
 					+"	<i class='cell path w15'>"
 					+"		<span class='path'>"
-					+"			<a id='IgnoreEntry"+i+"' href='javascript:void(0)'>" + d.path + d.name + "</a>"
+					+"			<a id='IgnoreEntry"+i+"' href='javascript:void(0)'>/" + d.path + d.name + "</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell status w15'>"
@@ -98,6 +156,12 @@ var VersionIgnoreMange = (function () {
     return {
         init: function(_reposId){
         	reposVersionIgnoreMangePageInit(_reposId);
+        },
+        addDocToVersionIgnoreList: function(){
+        	addDocToVersionIgnoreList();
+        },
+        removeDocFromVersionIgnoreList: function(index){
+        	removeDocFromVersionIgnoreList(index);
         },
     };
 })();
