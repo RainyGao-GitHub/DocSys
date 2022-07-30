@@ -25,24 +25,19 @@
 </div>
 
 <script type="text/javascript">
-//页面初始化代码    
-$(function(){
-	VersionIgnoreMange.init();
-});
-
 var VersionIgnoreMange = (function () {
     /*全局变量*/
     var reposId;
 	
-	function reposVersionIgnoreMangePageInit()
+	function reposVersionIgnoreMangePageInit(_reposId)
 	{
-		console.log("reposVersionIgnoreMangePageInit");
-		reposId = getQueryString("vid");
+		console.log("reposVersionIgnoreMangePageInit _reposId:" + _reposId);
+		reposId = _reposId;
 		showReposVersionIngoreList();		
 	}
 
 	function showReposVersionIngoreList(){
-	   	console.log("showReposVersionIngoreList()");
+	   	console.log("showReposVersionIngoreList() reposId:" + reposId);
 	    $.ajax({
 	            url : "/DocSystem/Repos/getReposVersionIgnorList.do",
 	            type : "post",
@@ -101,8 +96,8 @@ var VersionIgnoreMange = (function () {
 	}
 	//开放给外部的调用接口
     return {
-        init: function(){
-        	reposVersionIgnoreMangePageInit();
+        init: function(_reposId){
+        	reposVersionIgnoreMangePageInit(_reposId);
         },
     };
 })();
