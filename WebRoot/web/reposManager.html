@@ -799,7 +799,7 @@
 				},
 				{text: '忽略列表管理',  action: function(e){
 						e.preventDefault();
-						showVerIgnoreListManagePanel();
+						showReposVersionIgnoreListManagePanel();
 					}
 				},
 				]
@@ -848,9 +848,9 @@
 </SCRIPT>
 
 <script>
-function showVerIgnoreListManagePanel()
+function showReposVersionIgnoreListManagePanel()
 {
-   	console.log("showVerIgnoreListManagePanel()");
+   	console.log("showReposVersionIgnoreListManagePanel()");
    	
 	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
 	{
@@ -858,8 +858,16 @@ function showVerIgnoreListManagePanel()
 		return;
 	}
 	
-	//TODO: 打开版本忽略列表页面（忽略列表在页面中加载，支持直接添加需要忽略的文件路径）	
+	bootstrapQ.dialog({
+		id: 'reposVersionIgnoreManage',
+		title: '版本忽略列表',
+		url: 'reposVersionIgnoreManage.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+	}, null);
 }
+
 
 function addDocToVersionIgnoreListConfirm(node)
 {
