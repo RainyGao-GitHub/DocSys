@@ -1063,11 +1063,11 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	showErrorMessage("<strong>测试成功</strong><br/><br/>" + ret.msgInfo);
+	            	showErrorMessage("<font color='green'><strong>测试成功</strong></font><br/><br/>" + ret.msgInfo);
 	            }
 	            else
 	            {
-	            	showErrorMessage("<strong>测试失败</strong><br/><br/>" + ret.msgInfo);
+	            	showErrorMessage("<font color='red'><strong>测试失败</strong></font><br/><br/>" + ret.msgInfo);
 	            }
 	        },
 	        error : function () {
