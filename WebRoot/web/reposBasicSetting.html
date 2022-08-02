@@ -376,14 +376,7 @@ function getReposBasicSetting()
 	   	$("#RBSsvnPwd1").val(reposInfo.svnPwd1);
 		
 	   	//全文搜索
-	   	if(reposInfo.isTextSearchEnabled == 0)
-	   	{
-		   	$("#RBSisTextSearchEnabled").attr("checked",false);
-	   	}
-	   	else
-	   	{
-		   	$("#RBSisTextSearchEnabled").attr("checked","checked");
-	   	}	
+	    showTextSearchConfig(reposInfo);
 	   	
 	   	//文件加密
 	   	if(reposInfo.encryptType == 0)
@@ -433,7 +426,11 @@ function saveReposBasicSetting()
 	newReposSetting.svnPath1 = $("#RBSsvnPath1").val();
 	newReposSetting.svnUser1 = $("#RBSsvnUser1").val();
 	newReposSetting.svnPwd1 = $("#RBSsvnPwd1").val();
-	newReposSetting.isTextSearchEnabled =  $("#RBSisTextSearchEnabled").is(':checked')? 1: 0;
+	
+	var textSearch = getTextSearchConfig();
+	newReposSetting.textSearch = textSearch;
+	console.log("newReposSetting.textSearch:" + textSearch);
+	
 	newReposSetting.encryptType =  $("#RBSisEncryptEnabled").is(':checked')? 1: 0;
     //default to set VirtualDoc VersionControl as GIT
     if(newReposSetting.verCtrl1 == 0)
@@ -480,7 +477,7 @@ function saveReposBasicSetting()
                     svnPath1 : newReposSetting.svnPath1,
                     svnUser1 : newReposSetting.svnUser1,
                     svnPwd1 : newReposSetting.svnPwd1,
-                    isTextSearchEnabled: newReposSetting.isTextSearchEnabled,
+                    textSearch: newReposSetting.textSearch,
                     encryptType: newReposSetting.encryptType,
                     autoBackup : newReposSetting.autoBackup,                    
                 },
@@ -598,7 +595,7 @@ function saveReposBasicSetting()
        		{
        			return true;
        		} 
-       		if(oldSetting.isTextSearchEnabled != newSetting.isTextSearchEnabled)
+       		if(oldSetting.textSearch != newSetting.textSearch)
        		{
        			return true;
        		}
@@ -1013,6 +1010,27 @@ function getRemoteStorageConfig()
 	return remoteStorage;
 }
 
+/****** 全文搜索  *****/
+function showTextSearchConfig(reposInfo)
+{		
+   	console.log("showTextSearchConfig reposInfo.textSearch:" + reposInfo.textSearch);
+
+	if(reposInfo.textSearchConfig == undefined)
+   	{
+		$("#RBSisTextSearchEnabled").attr("checked",false);
+		return;
+   	}
+	
+	var enable = reposInfo.textSearchConfig.enable;
+	if(enable == undefined || enable == false)
+	{
+		$("#RBSisTextSearchEnabled").attr("checked",false);
+		return;
+	}
+
+	$("#RBSisTextSearchEnabled").attr("checked","checked");
+}	
+
 /******* 自动备份 *************/
 function showAutoBackupConfig(reposInfo)
 {
@@ -1313,6 +1331,14 @@ function doSelectRemoteBackupStorageProtocol()
 	var placeholder = getPlacehoderForRemoteStorageProtocol(protocol);
 	$("#remoteBackupStorage").attr('placeholder',placeholder);
 	$("#remoteBackupStorageConfig").show();
+}
+
+function getTextSearchConfig()
+{   
+	var isTextSearchEnabled = $("#RBSisTextSearchEnabled").is(':checked')? 1: 0;
+	console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
+	var config = "{enalbe:" + isTextSearchEnabled + "}";
+	return config;
 }
 
 function getAutoBackupConfig()

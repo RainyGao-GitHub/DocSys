@@ -349,8 +349,8 @@
 	    var info = $("#info").val();
 		var path = $("#path").val();
 	    var realDocPath = $("#realDocPath").val();	//realDocPath
-
-	    var isTextSearchEnabled = $("#isTextSearchEnabled").is(':checked')? 1: 0;
+	    
+	    var textSearch = getTextSearchConfig();
 	    var encryptType = $("#isEncryptEnabled").is(':checked')? 1: 0;
 	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
 	    console.log("autoBackupConfig = " + autoBackupConfig);
@@ -453,7 +453,7 @@
 	             svnUser1: svnUser1,
 	             svnPwd1: svnPwd1,
 	             createTime:createTime,
-	             isTextSearchEnabled: isTextSearchEnabled,       
+	             textSearch: textSearch,       
 	             encryptType: encryptType,
 	             autoBackup : autoBackupConfig,	 	             
             },
@@ -841,6 +841,13 @@
 		$("#remoteBackupStorageConfig").show();
 	}
 	
+	function getTextSearchConfig()
+	{   
+		var isTextSearchEnabled = $("#isTextSearchEnabled").is(':checked')? 1: 0;
+		console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
+		var config = "{enalbe:" + isTextSearchEnabled + "}";
+		return config;
+	}
 	
 	function getAutoBackupConfig()
 	{   
