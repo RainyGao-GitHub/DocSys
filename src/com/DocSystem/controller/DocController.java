@@ -5641,13 +5641,14 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, "历史版本:" + commitId);	
 	}
 	
-	/****************   updateReposTextSearchSetting ******************/
-	@RequestMapping("/getReposTextSearchSetting.do")
-	public void getReposTextSearchSetting(Integer reposId, String path, String name,
+	/****************   set  RealDoc TextSearch Ignore ******************/
+	@RequestMapping("/setTextSearchIgnore.do")
+	public void setTextSearchIgnore(Integer reposId, String path, String name,
+			Integer ignore,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("************** getReposTextSearchSetting ****************");
-		Log.info("getReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name);
+		Log.info("************** setTextSearchIgnore [" + path + name + "] ****************");
+		Log.info("setTextSearchIgnore reposId:" + reposId + " path:" + path + " name:" + name  + " ignore:" + ignore);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
@@ -5657,9 +5658,11 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = getReposEx(reposId);
-		if(!reposCheck(repos, rt, response))
+		Repos repos = getRepos(reposId);
+		if(repos == null)
 		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
 			return;
 		}
 
@@ -5676,88 +5679,158 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		
+		if(setTextSearchIgnore(repos, doc, ignore) == false)
+		{
+			rt.setError("全文搜索忽略设置失败");			
+			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "失败", repos, doc, null, "");				
+		}
 		else
 		{
-			Integer access = docAuth.getAccess();
-			Integer isAdmin = docAuth.getIsAdmin();
-			if(access == null || isAdmin == null || isAdmin.equals(0) || access.equals(0))
+			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "成功", repos, doc, null, "");	
+		}
+		writeJson(rt, response);
+	}
+	
+	private boolean setTextSearchIgnore(Repos repos, Doc doc, Integer ignore) {
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		String ignoreFilePath = configPath + doc.getPath() + doc.getName();
+		String ignoreFileName = ".ignore";
+		if(ignore != null && ignore == 1)
+		{
+			//将ignore路径加入到repos的ignore HashMap中			
+			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
-				rt.setError("您无权访问该文件，请联系管理员");
-				writeJson(rt, response);
-				return;
-			}			
+				repos.textSearchConfig.realDocTextSearchDisableHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				return true;
+			}
+			return false;
 		}
 		
-		JSONObject textSearchSetting = getDocTextSearch(repos, doc);
-		if(textSearchSetting == null)
+		//将ignore从repos的ignore HashMap中删除
+		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
-			rt.setError("获取全文搜索设置失败");			
+			repos.textSearchConfig.realDocTextSearchDisableHashMap.remove("/" + doc.getPath() + doc.getName());
+			return true;			
 		}
-		else
-		{
-			rt.setData(textSearchSetting);
-		}
+		return false;
+	}
+	
+	@RequestMapping("/getTextSearchIgnore.do")
+	public void getTextSearchIgnore(Integer reposId, String path, String name,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getTextSearchIgnore [" + path + name + "] ****************");
+		Log.info("getTextSearchIgnore reposId:" + reposId + " path:" + path + " name:" + name);
 		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		rt.setData(getTextSearchIgnore(repos, doc));			
+		writeJson(rt, response);
+	}
+	
+	private Integer getTextSearchIgnore(Repos repos, Doc doc) {
+		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			return 1;
+		}
+		return 0;
+	}
+	
+	@RequestMapping("/getTextSearchIgnoreList.do")
+	public void getTextSearchIgnoreList(Integer reposId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getTextSearchIgnoreList ****************");
+		Log.info("getTextSearchIgnoreList reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		List<Doc> ignoreList = getTextSearchIgnoreList(repos, doc, configPath, null);
+		
+		rt.setData(ignoreList);			
 		writeJson(rt, response);
 	}
 
-	/****************   updateReposTextSearchSetting ******************/
-	@RequestMapping("/updateReposTextSearchSetting.do")
-	public void updateReposTextSearchSetting(Integer reposId, String path, String name,
-			Integer disableRealDocTextSearch, Integer disableVirtualDocTextSearch,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		Log.info("************** updateReposTextSearchSetting ****************");
-		Log.info("updateReposTextSearchSetting reposId:" + reposId + " path:" + path + " name:" + name  + " disableRealDocTextSearch:" + disableRealDocTextSearch + " disableVirtualDocTextSearch:" + disableVirtualDocTextSearch);
-		
-		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
-		if(reposAccess == null)
+	private List<Doc> getTextSearchIgnoreList(Repos repos, Doc doc, String configPath, List<Doc> ignoreList) {
+		Log.info("*getTextSearchIgnoreList() reposId:" + repos.getId() + " [" + doc.getPath() + doc.getName() + "]");
+		if(ignoreList == null)
 		{
-			writeJson(rt, response);			
-			return;	
-		}
-
-		Repos repos = getReposEx(reposId);
-		if(!reposCheck(repos, rt, response))
-		{
-			return;
-		}
-
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
-
-		//获取并检查用户权限
-		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
-		if(docAuth == null)
-		{
-			rt.setError("您无此操作权限，请联系管理员");
-			writeJson(rt, response);
-			return;
-		}
-		else
-		{
-			Integer access = docAuth.getAccess();
-			Integer isAdmin = docAuth.getIsAdmin();
-			if(access == null || isAdmin == null || isAdmin.equals(0) || access.equals(0))
-			{
-				rt.setError("您无权访问该文件，请联系管理员");
-				writeJson(rt, response);
-				return;
-			}			
+			ignoreList = new ArrayList<Doc>();
 		}
 		
-		if(setDocTextSearch(repos, doc, disableRealDocTextSearch, disableVirtualDocTextSearch) == false)
+		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
-			rt.setError("设置全文搜索失败");			
+			ignoreList.add(doc);
 		}
-		else
-		{
-			addSystemLog(request, reposAccess.getAccessUser(), "updateReposTextSearchSetting", "updateReposTextSearchSetting", "设置全文搜索", "成功", repos, doc, null, "");	
-		}
-		writeJson(rt, response);
+		
+		String ignoreConfigEntryPath = configPath + doc.getPath() + doc.getName();
+		File dir = new File(ignoreConfigEntryPath);
+    	if(false == dir.exists())
+    	{
+    		Log.debug("getTextSearchIgnoreList() " +  ignoreConfigEntryPath + " 不存在！");
+    		return ignoreList;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		Log.debug("getTextSearchIgnoreList() " + ignoreConfigEntryPath + " 不是目录！");
+    		return ignoreList;
+    	}
+
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+    	
+        //Go through the subEntries
+    	File[] localFileList = dir.listFiles();
+    	for(int i=0;i<localFileList.length;i++)
+    	{
+    		File subFile = localFileList[i];
+    		if(subFile.isFile())
+    		{
+    			continue;
+    		}
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		getTextSearchIgnoreList(repos, subDoc, configPath, ignoreList);
+    	}
+    	return ignoreList;
 	}
 	
 	/****************   set  Doc Version Ignore ******************/
