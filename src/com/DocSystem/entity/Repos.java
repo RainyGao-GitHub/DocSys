@@ -25,6 +25,8 @@ public class Repos {
 	private String remoteStorage;
 
 	private String autoBackup;
+	
+	private String textSearch;
 
     private Integer verCtrl;
 
@@ -311,5 +313,13 @@ public class Repos {
     
 	public void setAutoBackup(String autoBackup) {
         this.autoBackup = autoBackup;		
+	}
+	
+    public String getTextSearch() {
+        return textSearch;
+    }
+    
+	public void setTextSearch(String textSearch) {
+        this.textSearch = textSearch;		
 	}
 }
