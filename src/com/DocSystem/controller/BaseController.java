@@ -11431,6 +11431,7 @@ public class BaseController  extends BaseFunction{
 				initReposAutoBackupConfig(repos, autoBackup);
 
 				String textSearch = getReposTextSearch(repos);
+				repos.setTextSearch(textSearch);
 				initReposTextSearchConfig(repos, textSearch);
 				
 				initReposVersionIgnoreConfig(repos);
@@ -12377,11 +12378,11 @@ public class BaseController  extends BaseFunction{
 			String disableRealDocTextSearchFileName = "0";
 			if(FileUtil.isFileExist(reposRealDocTextSearchConfigPath + disableRealDocTextSearchFileName) == false)
 			{
-				textSearch = "enable=1;";
+				textSearch = "{enable:1}";
 			}
 			else
 			{
-				textSearch = "enable=0;";				
+				textSearch = "{enable:0}";
 			}
 			FileUtil.saveDocContentToFile(textSearch, configPath, "textSearch.conf", "UTF-8");
 		}
@@ -12601,7 +12602,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected void initReposTextSearchConfig(Repos repos, String config) {
-		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config, "TextSearch");
+		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
 		if(textSearchConfig == null)
 		{
 			reposTextSearchConfigHashMap.remove(repos.getId());
@@ -12620,39 +12621,39 @@ public class BaseController  extends BaseFunction{
 		initVirtualDocTextSearchDisableHashMap(repos);		
 	}
 	
-	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config, String type) {
-		if(config == null || config.isEmpty())
-		{
-			return null;
-		}
-		
-		if(config.equals("none"))
-		{
-			return null;
-		}
-				
-		TextSearchConfig textSearchConfig = new TextSearchConfig();
-		textSearchConfig.enable = false;
-
-		//Parse Config
-		String[] subStrs = config.split(";");
-		JSONObject configJson = new JSONObject();
-		for(int i=0; i<subStrs.length; i++)
-		{
-			String[] param = subStrs[i].split("=");
-			if(param.length > 1)
+	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
+		try {
+			//config中不允许出现转义字符 \ ,否则会导致JSON解析错误
+			if(config == null || config.isEmpty())
 			{
-				configJson.put(param[0].trim(), param[1].trim());
+				return null;
 			}
+			
+			config = config.replace('\\', '/');	
+			
+			JSONObject jsonObj = JSON.parseObject(config);
+			if(jsonObj == null)
+			{
+				return null;
+			}
+			
+			Log.printObject("parseTextSearchConfig() ", jsonObj);
+			
+			TextSearchConfig textSearchConfig = new TextSearchConfig();
+			textSearchConfig.enable = false;
+			
+			Integer enable = jsonObj.getInteger("enable");
+			if(enable != null && enable == 1)
+			{
+				textSearchConfig.enable = true;
+			}
+			Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
+			return textSearchConfig;
 		}
-		
-		Integer enable = configJson.getInteger("enable");
-		if(enable != null && enable == 1)
-		{
-			textSearchConfig.enable = true;
+		catch(Exception e) {
+			errorLog(e);
+			return null;
 		}
-		Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
-		return textSearchConfig;
 	}
 	
 	private void initRealDocTextSearchDisableHashMap(Repos repos) {

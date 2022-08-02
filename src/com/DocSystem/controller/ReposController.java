@@ -252,6 +252,7 @@ public class ReposController extends BaseController{
 		repos.setSvnUser1(svnUser1);
 		repos.setSvnPwd1(svnPwd1);
 		repos.setAutoBackup(autoBackup);
+		repos.setTextSearch(textSearch);
 		
 		//以下这段代码是为了避免有用户同时发起addRepos(前端快速点击添加操作也会引起该行为)，导致两个仓库的文件存储路径信息相同
 		synchronized(syncLockForRepos)
@@ -574,6 +575,7 @@ public class ReposController extends BaseController{
 		newReposInfo.setSvnUser1(svnUser1);
 		newReposInfo.setSvnPwd1(svnPwd1);
 		newReposInfo.setAutoBackup(autoBackup);
+		newReposInfo.setTextSearch(textSearch);
 		formatReposInfo(newReposInfo);
 		
 		//Get reposInfo (It will be used to revert the reposInfo)

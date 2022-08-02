@@ -348,7 +348,7 @@
 	    var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
 	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
 	    
-	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
+	    var textSearch = getTextSearchConfig();
 	    var encryptType = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
 	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
 	    console.log("autoBackupConfig = " + autoBackupConfig);
@@ -449,7 +449,7 @@
 	                svnUser1: svnUser1,
 	                svnPwd1: svnPwd1,
 	                createTime:createTime,
-	                isTextSearchEnabled: isTextSearchEnabled,
+	                textSearch: textSearch,
 	                encryptType : encryptType,
 	                autoBackup : autoBackupConfig,	                
 	            },
@@ -861,7 +861,14 @@
 		$("#dialog-new-repos div[name='remoteBackupStorageConfig']").show();
 	}
 	
-	
+	function getTextSearchConfig()
+	{   
+	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
+		console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
+		var config = "{enalbe:" + isTextSearchEnabled + "}";
+		return config;
+	}
+
 	function getAutoBackupConfig()
 	{   
 		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
