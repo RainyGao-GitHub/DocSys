@@ -99,7 +99,7 @@
     		<div id="verCtrlEnablelDiv" style="margin-top:20px">
 	            <label>版本管理 
 	            	<span style="margin-left:5px">
-	            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnalbe()">
+	            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnable()">
 	            	</span>
 	            </label>
 	            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="doSelectShowVerCtrlConfig()">显示高级选项</span>
@@ -942,10 +942,10 @@
 	}
 	
 	/** 版本管理设置 **/
-	function doSelectVerCtrlEnalbe()
+	function doSelectVerCtrlEnable()
 	{
 		var verCtrlEnable = $("#verCtrlEnable").is(':checked')? 1: 0;
-		console.log("doSelectVerCtrlEnalbe verCtrlEnable:" + verCtrlEnable);
+		console.log("doSelectVerCtrlEnable verCtrlEnable:" + verCtrlEnable);
 		if(verCtrlEnable == 0)
 		{
 			$("#verCtrl").get(0).selectedIndex=0;	//关闭verCtrl
@@ -1392,7 +1392,7 @@
 	{   
 		var isTextSearchEnabled = 	$("#isTextSearchEnabled").is(':checked')? 1: 0;
 		console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
-		var config = "{enalbe:" + isTextSearchEnabled + "}";
+		var config = "{enable:" + isTextSearchEnabled + "}";
 		return config;
 	}
 	
