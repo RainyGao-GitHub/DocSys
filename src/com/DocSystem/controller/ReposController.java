@@ -164,7 +164,7 @@ public class ReposController extends BaseController{
 			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, 
 			Long createTime,
-			Integer isTextSearchEnabled,
+			String textSearch,
 			Integer encryptType,
 			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -176,7 +176,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ "isTextSearchEnabled:" + isTextSearchEnabled + " autoBackup:" + autoBackup);
+				+ "textSearch:" + textSearch + " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -357,8 +357,11 @@ public class ReposController extends BaseController{
 		}
 		
 		//初始化倉庫的全文搜索
-		initReposTextSearchConfig(repos);
-		setReposTextSearch(repos, isTextSearchEnabled);			
+		if(textSearch != null)
+		{
+			setReposTextSearch(repos, textSearch);			
+			initReposTextSearchConfig(repos, textSearch);
+		}
 		
 		//初始化仓库的版本管理忽略配置
 		initReposVersionIgnoreConfig(repos);
@@ -383,18 +386,26 @@ public class ReposController extends BaseController{
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","成功", repos, null, null, "");
 	}
 
-	private boolean setReposTextSearch(Repos repos, Integer isReposTextSearchEnabled) {
-		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+	protected boolean setReposRemoteServer(Repos repos, String remoteServer) {
+		String reposRemoteServerConfigPath = Path.getReposRemoteServerConfigPath(repos);
 		
-		String disableRealDocTextSearchFileName = "0";
-		if(isReposTextSearchEnabled != null && isReposTextSearchEnabled == 1)
+		if(remoteServer == null || remoteServer.isEmpty())
 		{
-			repos.textSearchConfig.realDocTextSearchDisableHashMap.remove("0");
-			return FileUtil.delFile(reposTextSearchConfigPath + disableRealDocTextSearchFileName);
+			return FileUtil.delFile(reposRemoteServerConfigPath + "remoteServer.conf");
 		}
 		
-		repos.textSearchConfig.realDocTextSearchDisableHashMap.put("0", "disabled");		
-		return FileUtil.saveDocContentToFile("disabled", reposTextSearchConfigPath, disableRealDocTextSearchFileName, "UTF-8");
+		return FileUtil.saveDocContentToFile(remoteServer, reposRemoteServerConfigPath, "remoteServer.conf", "UTF-8");
+	}
+	
+	private boolean setReposTextSearch(Repos repos, String config) {
+		String configPath = Path.getReposTextSearchConfigPath(repos);
+		
+		if(config == null || config.isEmpty())
+		{
+			return FileUtil.delFile(configPath + "textSearch.conf");
+		}
+		
+		return FileUtil.saveDocContentToFile(config, configPath, "textSearch.conf", "UTF-8");
 	}
 
 	private void setReposEncrypt(Repos repos, Integer encryptType) {
@@ -502,7 +513,7 @@ public class ReposController extends BaseController{
 			String remoteStorage,
 			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
-			Integer isTextSearchEnabled,
+			String textSearch,
 			Integer encryptType,
 			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -514,7 +525,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage:" + remoteStorage 
 				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ " isTextSearchEnabled:" + isTextSearchEnabled);
+				+ " textSearch:" + textSearch);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -586,21 +597,7 @@ public class ReposController extends BaseController{
 		}
 		
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
-		{	
-			if(isTextSearchEnabled != null)
-			{
-				if(isTextSearchEnabled != reposInfo.isTextSearchEnabled)
-				{
-					if(setReposTextSearch(reposInfo, isTextSearchEnabled) == false)
-					{
-						rt.setError("设置全文搜索失败");
-						writeJson(rt, response);
-						setReposIsBusy(reposId, false);
-						return;
-					}
-				}
-			}
-			
+		{				
 			writeJson(rt, response);	
 			setReposIsBusy(reposId, false);
 			return;
@@ -615,7 +612,13 @@ public class ReposController extends BaseController{
 		{
 			setReposRemoteServer(reposInfo, remoteServer);
 			initReposRemoteServerConfig(reposInfo, remoteServer);
-		}		
+		}	
+		
+		if(textSearch != null)
+		{
+			setReposTextSearch(reposInfo, textSearch);
+			initReposTextSearchConfig(reposInfo, textSearch);
+		}	
 		
 		if(autoBackup != null)
 		{
@@ -629,12 +632,10 @@ public class ReposController extends BaseController{
 		}
 		
 		//设置全文搜索
-		if(isTextSearchEnabled != null)
+		if(textSearch != null)
 		{
-			if(isTextSearchEnabled != reposInfo.isTextSearchEnabled)
-			{
-				setReposTextSearch(reposInfo, isTextSearchEnabled);				
-			}
+			setReposTextSearch(reposInfo, textSearch);
+			initReposTextSearchConfig(reposInfo, textSearch);
 		}
 		
 		if(encryptType != null)
