@@ -131,6 +131,7 @@ import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SyncupTask;
 import com.DocSystem.common.remoteStorage.FtpUtil;
 import com.DocSystem.common.remoteStorage.GitUtil;
@@ -4703,6 +4704,18 @@ public class BaseController  extends BaseFunction{
 		if(subDocSyncupFlag == 1)
 		{
 			subDocSyncupFlag = 0;
+		}
+		
+		//check if realDocTextSearchEnabled
+		if(doc.isRealDocTextSearchEnabled == null)	//未知状态
+		{
+			doc.isRealDocTextSearchEnabled = isRealDocTextSearchIgnored(repos, doc, true) == true? 0:1;			
+		}
+		
+    	if(doc.isRealDocTextSearchEnabled == 0)
+		{
+			Log.debug("addIndexForRDoc() RealDoc TextSearch was Disabled for [" + doc.getPath() + doc.getName() + "]");
+			return true;
 		}
 		
 		List<Doc> entryList = docSysGetDocList(repos, doc, false);
@@ -10826,28 +10839,18 @@ public class BaseController  extends BaseFunction{
 	{		
 		Log.debug("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		/* TODO: 如果需要對doc進行精確控制搜索使能控制，則需要使用這部分代碼
-    	if(doc.isRealDocTextSearchEnabled == null)
+		if(doc.isRealDocTextSearchEnabled == null)	//未知状态
 		{
-			doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, true);
+			doc.isRealDocTextSearchEnabled = isRealDocTextSearchIgnored(repos, doc, true) == true? 0:1;			
 		}
-    	else if(doc.isRealDocTextSearchEnabled == 1)	//表明parentDoc is already enabled
-    	{
-			doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, false);    		
-    	}
-    	
+		
     	if(doc.isRealDocTextSearchEnabled == 0)
 		{
-			Log.debug("addIndexForRDoc() RealDocTextSearchDisabled");
-			return false;
-		}*/
-		
-		if(repos.isTextSearchEnabled == null || repos.isTextSearchEnabled == 0)
-		{
-			Log.debug("addIndexForRDoc() RealDocTextSearchDisabled");
+			Log.debug("addIndexForRDoc() RealDoc TextSearch was Disabled for [" + doc.getPath() + doc.getName() + "]");
 			return false;
 		}
 		
+    	//add Index For doc
 		String indexLib = getIndexLibPath(repos, 1);
 
 		String localRootPath = Path.getReposRealPath(repos);
@@ -10959,64 +10962,116 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected static Integer isReposTextSearchEnabled(Repos repos) {
-		if(repos.textSearchConfig != null && repos.textSearchConfig.realDocTextSearchDisableHashMap.get("0") == null)
+		if(repos.textSearchConfig != null && repos.textSearchConfig.enable != null && repos.textSearchConfig.enable == true)
 		{
 			return 1;
 		}
 		return 0;
 	}
-
-	private static Integer isRealDocTextSearchEnabled(Repos repos, Doc doc, boolean force) {		
-		ConcurrentHashMap<String, String> hashMap = repos.textSearchConfig.realDocTextSearchDisableHashMap;
-		if(hashMap.get("" + doc.getDocId()) != null)
+	
+	private static boolean isRealDocTextSearchIgnored(Repos repos, Doc doc, boolean parentCheck) {
+		if(repos.textSearchConfig.enable == false)
 		{
-			Log.debug("isRealDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " realDocTextSearch disabled");
-			return 0;
+			return true;
 		}
 		
-		if(doc.getDocId() == 0)
+		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
-			return 1;
+			Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
+			return true;
 		}
 		
 		//版本倉庫和索引倉庫禁止建立索引
 		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
     	{
-    		Log.debug("isRealDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " realDocTextSearch disabled");
-    		return 0;
+			Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
+    		return true;
     	}
 		
-		if(force == false)
+		if(parentCheck == false)
 		{
-			return 1;
+			return false;
 		}
 		
-		//Log.println("isRealDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " realDocTextSearch enabled");
-		Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), doc.getReposPath(), doc.getPath(), "", null, 2, true, null, null, 0L, "");
-		return isRealDocTextSearchEnabled(repos, parentDoc, force);
+		//check if textSearch was ignored for root doc
+		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("/") != null)
+		{
+			Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored for [/]");
+			return true;
+		}
+		
+		//check if textSearch was was ignored for parent doc
+		if(doc.getPath() != null)
+		{
+			String [] paths = doc.getPath().split("/");
+			String path = "/" + paths[0];
+			Log.debug("isRealDocTextSearchIgnored() path:" + path);
+			if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get(path) != null)
+			{
+				Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored:" + path);
+				return true;
+			}
+			
+			for(int i = 1; i < paths.length; i++)
+			{
+				path = path + "/" + paths[i];
+				if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get(path) != null)
+				{
+					Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored:" + path);
+					return true;
+				}
+			}			
+		}
+		return false;
 	}
 	
-	private static Integer isVirtualDocTextSearchEnabled(Repos repos, Doc doc, boolean force) {
-		ConcurrentHashMap<String, String> hashMap = repos.textSearchConfig.virtualDocTextSearchDisablehHashMap;
-		if(hashMap.get("" + doc.getDocId()) != null)
+	private boolean isVirtualDocTextSearchIgnored(Repos repos, Doc doc, boolean parentCheck) {
+		if(repos.textSearchConfig.enable == false)
 		{
-			Log.debug("isVirtualDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " virtualDocTextSearch disabled");
-			return 0;
-		}
-
-		if(doc.getDocId() == 0)
-		{
-			return 1;
+			return true;
 		}
 		
-		if(force == false)
+		if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
-			return 1;
+			Log.debug("isVirtualDocTextSearchIgnored() VirtualDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
+			return true;
 		}
 		
-		//Log.println("isVirtualDocTextSearchEnabled() " + doc.getPath() + doc.getName() + " virtualDocTextSearch enabled");
-		Doc parentDoc = buildBasicDoc(repos.getId(), null, doc.getPid(), doc.getReposPath(), doc.getPath(), "", null, 2, true, null, null, 0L, "");
-		return isVirtualDocTextSearchEnabled(repos, parentDoc, force);
+		if(parentCheck == false)
+		{
+			return false;
+		}
+		
+		//check if textSearch was ignored for root doc
+		if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get("/") != null)
+		{
+			Log.debug("isVirtualDocTextSearchIgnored() VirtualDoc TextSearch was ignored for [/]");
+			return true;
+		}
+		
+		//check if textSearch was was ignored for parent doc
+		if(doc.getPath() != null)
+		{
+			String [] paths = doc.getPath().split("/");
+			String path = "/" + paths[0];
+			Log.debug("isVirtualDocTextSearchIgnored() path:" + path);
+			if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get(path) != null)
+			{
+				Log.debug("isVirtualDocTextSearchIgnored()  VirtualDoc TextSearch was ignored:" + path);
+				return true;
+			}
+			
+			for(int i = 1; i < paths.length; i++)
+			{
+				path = path + "/" + paths[i];
+				if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get(path) != null)
+				{
+					Log.debug("isVirtualDocTextSearchIgnored()  VirtualDoc TextSearch was ignored:" + path);
+					return true;
+				}
+			}			
+		}
+		return false;
 	}
 
 	public static boolean deleteIndexForRDoc(Repos repos, Doc doc, int deleteFlag)
@@ -11374,9 +11429,14 @@ public class BaseController  extends BaseFunction{
 				String autoBackup = getReposAutoBackup(repos);
 				repos.setAutoBackup(autoBackup);
 				initReposAutoBackupConfig(repos, autoBackup);
-				initReposTextSearchConfig(repos);
+
+				String textSearch = getReposTextSearch(repos);
+				initReposTextSearchConfig(repos, textSearch);
+				
 				initReposVersionIgnoreConfig(repos);
+				
 				initReposEncryptConfig(repos);
+				
 				initReposData(repos);
 				
 				//启动定时备份任务
@@ -11399,7 +11459,7 @@ public class BaseController  extends BaseFunction{
 	        Log.info(e);
 		}	
 	}
-	
+
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("********* realTimeRemoteStoragPush() ***********");
 		
@@ -12307,6 +12367,27 @@ public class BaseController  extends BaseFunction{
 		return FileUtil.readDocContentFromFile(configPath, "remoteServer.conf", "UTF-8");
 	}
 	
+	private String getReposTextSearch(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPath(repos);		
+		String textSearch =  FileUtil.readDocContentFromFile(configPath, "textSearch.conf", "UTF-8");
+		if(textSearch == null || textSearch.isEmpty())
+		{
+			//兼容2.02.33以前的版本（使用docId作为关闭标记）
+			String reposRealDocTextSearchConfigPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+			String disableRealDocTextSearchFileName = "0";
+			if(FileUtil.isFileExist(reposRealDocTextSearchConfigPath + disableRealDocTextSearchFileName) == false)
+			{
+				textSearch = "enable=1;";
+			}
+			else
+			{
+				textSearch = "enable=0;";				
+			}
+			FileUtil.saveDocContentToFile(textSearch, configPath, "textSearch.conf", "UTF-8");
+		}
+		return textSearch;		
+	}
+	
 	protected boolean setReposAutoBackup(Repos repos, String autoBackup) {
 		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);
 		
@@ -12519,46 +12600,145 @@ public class BaseController  extends BaseFunction{
 		}	
 	}
 
-	protected void initReposTextSearchConfig(Repos repos) {
-		//add TextSearchConfig For repos
-		TextSearchConfig textSearchConfig = new TextSearchConfig();
-		textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, String>(); 
-		textSearchConfig.virtualDocTextSearchDisablehHashMap = new ConcurrentHashMap<String, String>(); 
+	protected void initReposTextSearchConfig(Repos repos, String config) {
+		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config, "TextSearch");
+		if(textSearchConfig == null)
+		{
+			reposTextSearchConfigHashMap.remove(repos.getId());
+			return;
+		}
+		
+		//add or update text search config
 		reposTextSearchConfigHashMap.put(repos.getId(), textSearchConfig);
 		
 		//set to repos 
 		repos.textSearchConfig = textSearchConfig;
 		
 		//Init RealDocTextSearchDisableHashMap
-		initReposTextSearchDisableHashMap(repos);
+		initRealDocTextSearchDisableHashMap(repos);
 		//Init VirtualDocTextSearchDisableHashMap
-		initReposVirtualDocTextSearchDisableHashMap(repos);		
+		initVirtualDocTextSearchDisableHashMap(repos);		
 	}
+	
+	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config, String type) {
+		if(config == null || config.isEmpty())
+		{
+			return null;
+		}
+		
+		if(config.equals("none"))
+		{
+			return null;
+		}
+				
+		TextSearchConfig textSearchConfig = new TextSearchConfig();
+		textSearchConfig.enable = false;
 
-	private void initReposTextSearchDisableHashMap(Repos repos) {
-		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
-		File dir = new File(reposTextSearchConfigPath);
-		File[] list = dir.listFiles();
+		//Parse Config
+		String[] subStrs = config.split(";");
+		JSONObject configJson = new JSONObject();
+		for(int i=0; i<subStrs.length; i++)
+		{
+			String[] param = subStrs[i].split("=");
+			if(param.length > 1)
+			{
+				configJson.put(param[0].trim(), param[1].trim());
+			}
+		}
+		
+		Integer enable = configJson.getInteger("enable");
+		if(enable != null && enable == 1)
+		{
+			textSearchConfig.enable = true;
+		}
+		Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
+		return textSearchConfig;
+	}
+	
+	private void initRealDocTextSearchDisableHashMap(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetRealDocTextSearchIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetRealDocTextSearchIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetRealDocTextSearchIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetRealDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetRealDocTextSearchIgnored() RealDoc textSearch was ignored for [" + entryPath +"]");
+			repos.textSearchConfig.realDocTextSearchDisableHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
 		if(list != null)
 		{
 			for(int i=0; i<list.length; i++)
 			{
-				File file = list[i];
-				repos.textSearchConfig.realDocTextSearchDisableHashMap.put(file.getName(), "disabled");
+				File subFile = list[i];
+				checkAndSetRealDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
 			}
 		}	
 	}
 
-	private void initReposVirtualDocTextSearchDisableHashMap(Repos repos) {
-		String reposTextSearchConfigPath = Path.getReposTextSearchConfigPathForVirtualDoc(repos);
-		File dir = new File(reposTextSearchConfigPath);
-		File[] list = dir.listFiles();
+	private void initVirtualDocTextSearchDisableHashMap(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetVirtualDocTextSearchIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetVirtualDocTextSearchIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetVirtualDocTextSearchIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetVirtualDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetVirtualDocTextSearchIgnored() VirtualDoc textSearch was ignored for [" + entryPath +"]");
+			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
 		if(list != null)
 		{
 			for(int i=0; i<list.length; i++)
 			{
-				File file = list[i];
-				repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(file.getName(), "disabled");
+				File subFile = list[i];
+				checkAndSetVirtualDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
 			}
 		}	
 	}
@@ -16354,44 +16534,6 @@ public class BaseController  extends BaseFunction{
         Log.debug("getRequestBodyAsJSONObject body:" + body);        
         JSONObject jsonObj = JSON.parseObject(body);
         return jsonObj;
-	}
-	
-	protected JSONObject getDocTextSearch(Repos repos, Doc doc) {
-		JSONObject textSearchSetting = new JSONObject();
-		
-		//全文搜索
-		textSearchSetting.put("disableRealDocTextSearch", isRealDocTextSearchEnabled(repos, doc, false) == 0? 1:0);
-		
-		//备注全文搜索
-		textSearchSetting.put("disableVirtualDocTextSearch", isVirtualDocTextSearchEnabled(repos, doc, false) == 0? 1:0);			
-		return textSearchSetting;
-	}
-	
-	protected boolean setDocTextSearch(Repos repos, Doc doc, Integer disableRealDocTextSearch, Integer disableVirtualDocTextSearch) {
-		//全文搜索
-		if(disableRealDocTextSearch == null || disableRealDocTextSearch == 0)
-		{
-			repos.textSearchConfig.realDocTextSearchDisableHashMap.remove(""+doc.getDocId());
-			FileUtil.delFile(Path.getReposTextSearchConfigPathForRealDoc(repos) + doc.getDocId());
-		}
-		else
-		{
-			repos.textSearchConfig.realDocTextSearchDisableHashMap.put(""+doc.getDocId(), "disabled");
-			FileUtil.saveDocContentToFile("disabled", Path.getReposTextSearchConfigPathForRealDoc(repos), "" + doc.getDocId(), "UTF-8");
-		}
-		
-		//备注全文搜索
-		if(disableVirtualDocTextSearch == null || disableVirtualDocTextSearch == 0)
-		{
-			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.remove(""+doc.getDocId());
-			FileUtil.delFile(Path.getReposTextSearchConfigPathForVirtualDoc(repos) + doc.getDocId());
-		}
-		else
-		{
-			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(""+doc.getDocId(), "disabled");
-			FileUtil.saveDocContentToFile("disabled", Path.getReposTextSearchConfigPathForVirtualDoc(repos), "" + doc.getDocId(), "UTF-8");
-		}
-		return true;
 	}
 	
 	protected static JSONObject getRemoteAuthCodeForPushDoc(String targetServerUrl,  String userName, String pwd, Integer type, ReturnAjax rt) {

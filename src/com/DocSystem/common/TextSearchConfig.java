@@ -3,8 +3,8 @@ package com.DocSystem.common;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TextSearchConfig {
-	public Boolean isReposTextSearchDisable;
-	public ConcurrentHashMap<String, String> realDocTextSearchDisableHashMap = null;	
-	public ConcurrentHashMap<String, String> virtualDocTextSearchDisablehHashMap = null;	
-	public ConcurrentHashMap<String, String> docNameTextSearchDisableHashMap = null;	
+	public Boolean enable = false;
+	public ConcurrentHashMap<String, Integer> realDocTextSearchDisableHashMap = null;	
+	public ConcurrentHashMap<String, Integer> virtualDocTextSearchDisablehHashMap = null;	
+	public ConcurrentHashMap<String, Integer> docNameTextSearchDisableHashMap = null;	
 }
