@@ -1,5 +1,7 @@
 package com.DocSystem.common.entity;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class RemoteStorageConfig {
 
 	public String protocol;
@@ -16,5 +18,6 @@ public class RemoteStorageConfig {
 	public GitConfig GIT = null;
 	public boolean isVerRepos = false;
 	public MxsDocConfig MXSDOC;
-	public String remoteStorageIndexLib;	
+	public String remoteStorageIndexLib;
+	public ConcurrentHashMap<String, Integer> ignoreHashMap = null;
 }

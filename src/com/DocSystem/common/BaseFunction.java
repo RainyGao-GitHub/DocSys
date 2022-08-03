@@ -513,6 +513,10 @@ public class BaseFunction{
 
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr, "RemoteBackup");
 		remoteBackupConfig.remoteStorageConfig = remote;
+		if(remote != null)
+		{
+			remote.ignoreHashMap = new ConcurrentHashMap<String, Integer>(); 
+		}
 		return remoteBackupConfig;
 	}
 
@@ -541,6 +545,7 @@ public class BaseFunction{
 		remote.FILE = new LocalConfig();
 		localRootPath = Path.localDirPathFormat(localRootPath, OSType);
 		remote.FILE.localRootPath = localRootPath;
+		remote.ignoreHashMap = new ConcurrentHashMap<String, Integer>(); 
 		
 		localBackupConfig.remoteStorageConfig = remote;	
 		return localBackupConfig;
