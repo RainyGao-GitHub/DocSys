@@ -5680,6 +5680,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(repos.textSearchConfig == null)
+		{
+			rt.setError("该仓库未开启全文搜索，请联系管理员!");			
+			writeJson(rt, response);
+			return;
+		}
+		
 		if(setTextSearchIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("全文搜索忽略设置失败");			
@@ -5868,6 +5875,13 @@ public class DocController extends BaseController{
 		if(docAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(repos.versionIgnoreConfig == null)
+		{
+			rt.setError("该仓库未开启版本管理，请联系管理员!");			
 			writeJson(rt, response);
 			return;
 		}
