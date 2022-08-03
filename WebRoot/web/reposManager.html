@@ -870,7 +870,7 @@ function showReposTextSearchIgnoreListManagePanel()
 {
    	console.log("showReposTextSearchIgnoreListManagePanel()");
    	
-	if(isTextSearchEnabled(reposInfo) == false)
+	if(isTextSearchEnabled(gReposInfo) == false)
 	{
 		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
 		return;
@@ -911,11 +911,11 @@ function addDocToTextSearchIgnoreListConfirm(node)
 {
    	console.log("addDocToTextSearchIgnoreListConfirm()");
    	
-	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	if(isTextSearchEnabled(gReposInfo) == false)
 	{
 		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
 		return;
-	}
+	}	
 	
 	var msg = "关闭 [" + node.path + node.name + "] 的全文搜索？"
    	if(node.docId == 0)
@@ -941,11 +941,11 @@ function removeDocFromTextSearchIgnoreListConfirm(node)
 {
    	console.log("removeDocFromTextSearchIgnoreListConfirm()");
    	
-	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	if(isTextSearchEnabled(gReposInfo) == false)
 	{
 		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
 		return;
-	}
+	}	
 	
 	var msg = "开启 [" + node.path + node.name + "] 的全文搜索？"
    	if(node.docId == 0)
