@@ -11428,7 +11428,8 @@ public class BaseController  extends BaseFunction{
 				Repos repos = list.get(i);
 				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
-				
+				initReposData(repos);
+								
 				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
 				
 				//int remoteServerConifg
@@ -11452,8 +11453,6 @@ public class BaseController  extends BaseFunction{
 				initReposVersionIgnoreConfig(repos);
 				
 				initReposEncryptConfig(repos);
-				
-				initReposData(repos);
 				
 				//启动定时备份任务
 				if(repos.backupConfig != null)
@@ -12663,6 +12662,9 @@ public class BaseController  extends BaseFunction{
 				textSearchConfig.enable = true;
 			}
 			Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
+			
+			textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, Integer>();
+			textSearchConfig.virtualDocTextSearchDisablehHashMap = new ConcurrentHashMap<String, Integer>();			
 			return textSearchConfig;
 		}
 		catch(Exception e) {
