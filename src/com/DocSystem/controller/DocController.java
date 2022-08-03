@@ -5641,6 +5641,404 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, "历史版本:" + commitId);	
 	}
 	
+	/****************   set  LocalBackup Ignore ******************/
+	@RequestMapping("/setLocalBackupIgnore.do")
+	public void setLocalBackupIgnore(Integer reposId, String path, String name,
+			Integer ignore,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** setLocalBackupIgnore [" + path + name + "] ****************");
+		Log.info("setLocalBackupIgnore reposId:" + reposId + " path:" + path + " name:" + name  + " ignore:" + ignore);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//获取并检查用户权限
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(repos.backupConfig == null || repos.backupConfig.localBackupConfig == null)
+		{
+			rt.setError("该仓库未设置本地自动备份，请联系管理员!");			
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(setLocalBackupIgnore(repos, doc, ignore) == false)
+		{
+			rt.setError("本地自动备份忽略设置失败");			
+			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "失败", repos, doc, null, "");				
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "成功", repos, doc, null, "");	
+		}
+		writeJson(rt, response);
+	}
+	
+	private boolean setLocalBackupIgnore(Repos repos, Doc doc, Integer ignore) {
+		String configPath = Path.getReposLocalBackupConfigPath(repos);
+		String ignoreFilePath = configPath + doc.getPath() + doc.getName();
+		String ignoreFileName = ".ignore";
+		if(ignore != null && ignore == 1)
+		{
+			//将ignore路径加入到repos的ignore HashMap中			
+			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
+			{
+				repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				return true;
+			}
+			return false;
+		}
+		
+		//将ignore从repos的ignore HashMap中删除
+		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
+		{
+			repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.remove("/" + doc.getPath() + doc.getName());
+			return true;			
+		}
+		return false;
+	}
+	
+	@RequestMapping("/getLocalBackupIgnore.do")
+	public void getLocalBackupIgnore(Integer reposId, String path, String name,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getLocalBackupIgnore [" + path + name + "] ****************");
+		Log.info("getLocalBackupIgnore reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		rt.setData(getLocalBackupIgnore(repos, doc));			
+		writeJson(rt, response);
+	}
+	
+	private Integer getLocalBackupIgnore(Repos repos, Doc doc) {
+		if(repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			return 1;
+		}
+		return 0;
+	}
+	
+	@RequestMapping("/getLocalBackupIgnoreList.do")
+	public void getLocalBackupIgnoreList(Integer reposId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getLocalBackupIgnoreList ****************");
+		Log.info("getLocalBackupIgnoreList reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		String configPath = Path.getReposLocalBackupConfigPath(repos);
+		List<Doc> ignoreList = getLocalBackupIgnoreList(repos, doc, configPath, null);
+		
+		rt.setData(ignoreList);			
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getLocalBackupIgnoreList(Repos repos, Doc doc, String configPath, List<Doc> ignoreList) {
+		Log.info("*getLocalBackupIgnoreList() reposId:" + repos.getId() + " [" + doc.getPath() + doc.getName() + "]");
+		if(ignoreList == null)
+		{
+			ignoreList = new ArrayList<Doc>();
+		}
+		
+		if(repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			ignoreList.add(doc);
+		}
+		
+		String ignoreConfigEntryPath = configPath + doc.getPath() + doc.getName();
+		File dir = new File(ignoreConfigEntryPath);
+    	if(false == dir.exists())
+    	{
+    		Log.debug("getLocalBackupIgnoreList() " +  ignoreConfigEntryPath + " 不存在！");
+    		return ignoreList;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		Log.debug("getLocalBackupIgnoreList() " + ignoreConfigEntryPath + " 不是目录！");
+    		return ignoreList;
+    	}
+
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+    	
+        //Go through the subEntries
+    	File[] localFileList = dir.listFiles();
+    	for(int i=0;i<localFileList.length;i++)
+    	{
+    		File subFile = localFileList[i];
+    		if(subFile.isFile())
+    		{
+    			continue;
+    		}
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		getLocalBackupIgnoreList(repos, subDoc, configPath, ignoreList);
+    	}
+    	return ignoreList;
+	}
+	
+	/****************   set  RemoteBackup Ignore ******************/
+	@RequestMapping("/setRemoteBackupIgnore.do")
+	public void setRemoteBackupIgnore(Integer reposId, String path, String name,
+			Integer ignore,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** setRemoteBackupIgnore [" + path + name + "] ****************");
+		Log.info("setRemoteBackupIgnore reposId:" + reposId + " path:" + path + " name:" + name  + " ignore:" + ignore);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//获取并检查用户权限
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(repos.backupConfig == null || repos.backupConfig.remoteBackupConfig == null)
+		{
+			rt.setError("该仓库未设置远程自动备份，请联系管理员!");			
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(setRemoteBackupIgnore(repos, doc, ignore) == false)
+		{
+			rt.setError("远程自动备份忽略设置失败");			
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "失败", repos, doc, null, "");				
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "成功", repos, doc, null, "");	
+		}
+		writeJson(rt, response);
+	}
+	
+	private boolean setRemoteBackupIgnore(Repos repos, Doc doc, Integer ignore) {
+		String configPath = Path.getReposRemoteBackupConfigPath(repos);
+		String ignoreFilePath = configPath + doc.getPath() + doc.getName();
+		String ignoreFileName = ".ignore";
+		if(ignore != null && ignore == 1)
+		{
+			//将ignore路径加入到repos的ignore HashMap中			
+			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
+			{
+				repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				return true;
+			}
+			return false;
+		}
+		
+		//将ignore从repos的ignore HashMap中删除
+		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
+		{
+			repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.remove("/" + doc.getPath() + doc.getName());
+			return true;			
+		}
+		return false;
+	}
+	
+	@RequestMapping("/getRemoteBackupIgnore.do")
+	public void getRemoteBackupIgnore(Integer reposId, String path, String name,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getRemoteBackupIgnore [" + path + name + "] ****************");
+		Log.info("getRemoteBackupIgnore reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		rt.setData(getRemoteBackupIgnore(repos, doc));			
+		writeJson(rt, response);
+	}
+	
+	private Integer getRemoteBackupIgnore(Repos repos, Doc doc) {
+		if(repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			return 1;
+		}
+		return 0;
+	}
+	
+	@RequestMapping("/getRemoteBackupIgnoreList.do")
+	public void getRemoteBackupIgnoreList(Integer reposId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getRemoteBackupIgnoreList ****************");
+		Log.info("getRemoteBackupIgnoreList reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		String configPath = Path.getReposRemoteBackupConfigPath(repos);
+		List<Doc> ignoreList = getRemoteBackupIgnoreList(repos, doc, configPath, null);
+		
+		rt.setData(ignoreList);			
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getRemoteBackupIgnoreList(Repos repos, Doc doc, String configPath, List<Doc> ignoreList) {
+		Log.info("*getRemoteBackupIgnoreList() reposId:" + repos.getId() + " [" + doc.getPath() + doc.getName() + "]");
+		if(ignoreList == null)
+		{
+			ignoreList = new ArrayList<Doc>();
+		}
+		
+		if(repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			ignoreList.add(doc);
+		}
+		
+		String ignoreConfigEntryPath = configPath + doc.getPath() + doc.getName();
+		File dir = new File(ignoreConfigEntryPath);
+    	if(false == dir.exists())
+    	{
+    		Log.debug("getRemoteBackupIgnoreList() " +  ignoreConfigEntryPath + " 不存在！");
+    		return ignoreList;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		Log.debug("getRemoteBackupIgnoreList() " + ignoreConfigEntryPath + " 不是目录！");
+    		return ignoreList;
+    	}
+
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+    	
+        //Go through the subEntries
+    	File[] localFileList = dir.listFiles();
+    	for(int i=0;i<localFileList.length;i++)
+    	{
+    		File subFile = localFileList[i];
+    		if(subFile.isFile())
+    		{
+    			continue;
+    		}
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		getRemoteBackupIgnoreList(repos, subDoc, configPath, ignoreList);
+    	}
+    	return ignoreList;
+	}
+	
 	/****************   set  RealDoc TextSearch Ignore ******************/
 	@RequestMapping("/setTextSearchIgnore.do")
 	public void setTextSearchIgnore(Integer reposId, String path, String name,
