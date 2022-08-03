@@ -706,6 +706,16 @@ public class Path {
 		return path;
 	}
 	
+	public static String getReposLocalBackupConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/autoBackupSetting/localBackup/";
+		return path;
+	}
+	
+	public static String getReposRemoteBackupConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/autoBackupSetting/remoteBackup/";
+		return path;
+	}
+	
 	protected String getOfficeEditRootPath(Doc doc) {
 		String path = doc.getReposPath() + "tmp/OfficeEdit/";
 		return path;
