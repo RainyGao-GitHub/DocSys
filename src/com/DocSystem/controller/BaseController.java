@@ -4709,15 +4709,9 @@ public class BaseController  extends BaseFunction{
 		//check if realDocTextSearchEnabled
 		if(doc.isRealDocTextSearchEnabled == null)	//未知状态
 		{
-			doc.isRealDocTextSearchEnabled = isRealDocTextSearchIgnored(repos, doc, true) == true? 0:1;			
+			doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, null);
 		}
-		
-    	if(doc.isRealDocTextSearchEnabled == 0)
-		{
-			Log.debug("addIndexForRDoc() RealDoc TextSearch was Disabled for [" + doc.getPath() + doc.getName() + "]");
-			return true;
-		}
-		
+				
 		List<Doc> entryList = docSysGetDocList(repos, doc, false);
 		if(entryList == null)
     	{
@@ -4728,6 +4722,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0; i< entryList.size(); i++)
     	{
     		Doc subDoc = entryList.get(i);
+    		subDoc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, subDoc, doc);
     		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, force);
     	}
 		return true;
@@ -10841,7 +10836,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(doc.isRealDocTextSearchEnabled == null)	//未知状态
 		{
-			doc.isRealDocTextSearchEnabled = isRealDocTextSearchIgnored(repos, doc, true) == true? 0:1;			
+			doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, null);
 		}
 		
     	if(doc.isRealDocTextSearchEnabled == 0)
@@ -10849,7 +10844,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("addIndexForRDoc() RealDoc TextSearch was Disabled for [" + doc.getPath() + doc.getName() + "]");
 			return false;
 		}
-		
+    	
     	//add Index For doc
 		String indexLib = getIndexLibPath(repos, 1);
 
@@ -10961,6 +10956,26 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
+	private static Integer isRealDocTextSearchEnabled(Repos repos, Doc doc, Doc parentDoc) {
+		if(parentDoc == null || parentDoc.isRealDocTextSearchEnabled == null)
+		{
+			return isRealDocTextSearchIgnored(repos, doc, true) == true? 0:1;			
+		}
+		
+		if(parentDoc.isRealDocTextSearchEnabled == 0)
+		{
+			return 0;
+		}
+		
+		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			Log.debug("isRealDocTextSearchEnabled() RealDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
+			return 0;
+		}
+		
+		return 1;
+	}
+
 	protected static Integer isReposTextSearchEnabled(Repos repos) {
 		if(repos.textSearchConfig != null && repos.textSearchConfig.enable != null && repos.textSearchConfig.enable == true)
 		{
