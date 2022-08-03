@@ -10985,7 +10985,14 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private static boolean isRealDocTextSearchIgnored(Repos repos, Doc doc, boolean parentCheck) {
-		if(repos.textSearchConfig.enable == false)
+		//版本倉庫和索引倉庫禁止建立索引
+		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
+    	{
+			Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
+    		return true;
+    	}
+		
+		if(repos.textSearchConfig == null || repos.textSearchConfig.enable == false || repos.textSearchConfig.realDocTextSearchDisableHashMap == null)
 		{
 			return true;
 		}
@@ -10995,13 +11002,6 @@ public class BaseController  extends BaseFunction{
 			Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
 			return true;
 		}
-		
-		//版本倉庫和索引倉庫禁止建立索引
-		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
-    	{
-			Log.debug("isRealDocTextSearchIgnored() RealDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
-    		return true;
-    	}
 		
 		if(parentCheck == false)
 		{
