@@ -76,8 +76,6 @@ public class Repos {
 	
 	public Integer officeType;	//0:内置   1:外置
 	
-	public Integer isTextSearchEnabled;
-
 	public String remoteServer;
 	
 	public Long totalSize;

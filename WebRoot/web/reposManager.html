@@ -804,6 +804,24 @@
 				},
 				]
 			},
+			{text: '全文搜索', subMenu: [
+				{text: '关闭全文搜索',  action: function(e){
+						e.preventDefault();
+						addDocToTextSearchIgnoreListConfirm(curRightClickedTreeNode);
+					}
+				},
+				{text: '开启全文搜索',  action: function(e){
+						e.preventDefault();
+						removeDocFromTextSearchIgnoreListConfirm(curRightClickedTreeNode);
+					}
+				},
+				{text: '忽略列表管理',  action: function(e){
+						e.preventDefault();
+						showReposTextSearchIgnoreListManagePanel();
+					}
+				},
+				]
+			},			
 			{divider: true},
 			{text: '清除缓存', action: function(e){
 					e.preventDefault();
@@ -848,6 +866,139 @@
 </SCRIPT>
 
 <script>
+function showReposTextSearchIgnoreListManagePanel()
+{
+   	console.log("showReposTextSearchIgnoreListManagePanel()");
+   	
+	if(isTextSearchEnabled(reposInfo) == false)
+	{
+		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
+		return;
+	}	
+	
+	bootstrapQ.dialog({
+		id: 'reposTextSearchIgnoreManage',
+		title: '版本忽略管理',
+		url: 'reposTextSearchIgnoreManage.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		callback: function(){
+			TextSearchIgnoreMange.init(gReposId);
+		},
+	}, null);
+}
+
+function isTextSearchEnabled(reposInfo)
+{		
+	console.log("isTextSearchEnabled reposInfo:", reposInfo);
+
+	if(reposInfo.textSearchConfig == undefined)
+   	{
+		return false;
+   	}
+	
+	var enable = reposInfo.textSearchConfig.enable;
+	if(enable == undefined || enable == false)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+function addDocToTextSearchIgnoreListConfirm(node)
+{
+   	console.log("addDocToTextSearchIgnoreListConfirm()");
+   	
+	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	{
+		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
+		return;
+	}
+	
+	var msg = "关闭 [" + node.path + node.name + "] 的全文搜索？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "关闭仓库所有文件的全文搜索?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'addTextSearchIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setTextSearchIgnore(node, 1);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function removeDocFromTextSearchIgnoreListConfirm(node)
+{
+   	console.log("removeDocFromTextSearchIgnoreListConfirm()");
+   	
+	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	{
+		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
+		return;
+	}
+	
+	var msg = "开启 [" + node.path + node.name + "] 的全文搜索？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "开启仓库所有文件的全文搜索?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'removeTextSearchIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setTextSearchIgnore(node, 0);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function setTextSearchIgnore(node, ignore)
+{
+	console.log("setTextSearchIgnore()");
+    $.ajax({
+        url : "/DocSystem/Doc/setTextSearchIgnore.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId : gReposId,
+        	path: node.path,
+        	name: node.name,
+        	ignore: ignore,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	bootstrapQ.msg({
+						msg : '设置成功！',
+						type : 'success',
+						time : 2000,
+					    });
+            }
+            else
+            {
+            	showErrorMessage("设置失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+           	showErrorMessage('设置失败:服务器异常！');
+        }
+	});
+}
+
 function showReposVersionIgnoreListManagePanel()
 {
    	console.log("showReposVersionIgnoreListManagePanel()");

@@ -15323,7 +15323,6 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			repos.textSearchConfig = reposTextSearchConfigHashMap.get(repos.getId());
-			repos.isTextSearchEnabled = isReposTextSearchEnabled(repos);
 			repos.isBussiness = systemLicenseInfo.hasLicense;
 			repos.officeType = officeType;
 			//get encrypt Config
