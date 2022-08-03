@@ -11963,9 +11963,103 @@ public class BaseController  extends BaseFunction{
 		
 		//add backup config to hashmap
 		reposBackupConfigHashMap.put(repos.getId(), config);		
-		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");
+		
+		//Init LocalBackup ignoreHashMap
+		initReposLocalBackupIgnoreHashMap(repos);
+		//Init RemoteBackup ignoreHashMap
+		initReposRemoteBackupIgnoreHashMap(repos);
+		
+		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");	
 	}
 	
+	private void initReposRemoteBackupIgnoreHashMap(Repos repos) {
+		String configPath = Path.getReposRemoteBackupConfigPath(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetRemoteBackupIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetRemoteBackupIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetRemoteBackupIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetRemoteBackupIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetRemoteBackupIgnored() RemoteBackup was ignored for [" + entryPath +"]");
+			repos.backupConfig.remoteBackupConfig.ignoreHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetRemoteBackupIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+
+	private void initReposLocalBackupIgnoreHashMap(Repos repos) {
+		String configPath = Path.getReposLocalBackupConfigPath(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetLocalBackupIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetLocalBackupIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetLocalBackupIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetLocalBackupIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetLocalBackupIgnored() LocalBackup was ignored for [" + entryPath +"]");
+			repos.backupConfig.localBackupConfig.ignoreHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetLocalBackupIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+
 	public void addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute, Long forceStartDelay) {
 		if(localBackupConfig == null)
 		{
