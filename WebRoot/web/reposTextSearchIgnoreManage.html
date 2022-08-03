@@ -15,7 +15,7 @@
 						</li>
 					</div>
                		<div class="panel-body eventset-list" id="reposTextSearchIgnoreList">
-			 			<!-- 版本管理忽略列表区域-->
+			 			<!-- 忽略列表区域-->
 					</div>
 			 </div>
 			</div>
@@ -113,7 +113,7 @@ var TextSearchIgnoreMange = (function () {
 	                }
 	            },
 	            error : function () {
-	               alert('获取版本忽略列表失败:服务器异常');
+	               alert('获取全文搜索忽略列表失败:服务器异常');
 	            }
     	});
 
@@ -141,7 +141,7 @@ var TextSearchIgnoreMange = (function () {
 					+"	</i>"
 					+"	<i class='cell status w15'>"
 					+"		<span class='status'>"
-					+"			<a id='IgnoreEntryStatus"+i+"' href='javascript:void(0)'>版本已忽略</a>"
+					+"			<a id='IgnoreEntryStatus"+i+"' href='javascript:void(0)'>全文搜索已关闭</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell operation w10'>"
