@@ -10992,9 +10992,14 @@ public class BaseController  extends BaseFunction{
     		return true;
     	}
 		
-		if(repos.textSearchConfig == null || repos.textSearchConfig.enable == false || repos.textSearchConfig.realDocTextSearchDisableHashMap == null)
+		if(repos.textSearchConfig == null || repos.textSearchConfig.enable == false)
 		{
 			return true;
+		}
+		
+		if(repos.textSearchConfig.realDocTextSearchDisableHashMap == null)
+		{
+			return false;
 		}
 		
 		if(repos.textSearchConfig.realDocTextSearchDisableHashMap.get("/" + doc.getPath() + doc.getName()) != null)
@@ -11040,54 +11045,6 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean isVirtualDocTextSearchIgnored(Repos repos, Doc doc, boolean parentCheck) {
-		if(repos.textSearchConfig.enable == false)
-		{
-			return true;
-		}
-		
-		if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get("/" + doc.getPath() + doc.getName()) != null)
-		{
-			Log.debug("isVirtualDocTextSearchIgnored() VirtualDoc TextSearch was ignored for [/" + doc.getPath() + doc.getName() + "]");
-			return true;
-		}
-		
-		if(parentCheck == false)
-		{
-			return false;
-		}
-		
-		//check if textSearch was ignored for root doc
-		if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get("/") != null)
-		{
-			Log.debug("isVirtualDocTextSearchIgnored() VirtualDoc TextSearch was ignored for [/]");
-			return true;
-		}
-		
-		//check if textSearch was was ignored for parent doc
-		if(doc.getPath() != null)
-		{
-			String [] paths = doc.getPath().split("/");
-			String path = "/" + paths[0];
-			Log.debug("isVirtualDocTextSearchIgnored() path:" + path);
-			if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get(path) != null)
-			{
-				Log.debug("isVirtualDocTextSearchIgnored()  VirtualDoc TextSearch was ignored:" + path);
-				return true;
-			}
-			
-			for(int i = 1; i < paths.length; i++)
-			{
-				path = path + "/" + paths[i];
-				if(repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.get(path) != null)
-				{
-					Log.debug("isVirtualDocTextSearchIgnored()  VirtualDoc TextSearch was ignored:" + path);
-					return true;
-				}
-			}			
-		}
-		return false;
-	}
 
 	public static boolean deleteIndexForRDoc(Repos repos, Doc doc, int deleteFlag)
 	{
@@ -11995,7 +11952,7 @@ public class BaseController  extends BaseFunction{
 		if(ignoreFile.exists() == true)
 		{
 			Log.debug("checkAndSetRemoteBackupIgnored() RemoteBackup was ignored for [" + entryPath +"]");
-			repos.backupConfig.remoteBackupConfig.ignoreHashMap.put(entryPath, 1);
+			repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.put(entryPath, 1);
 			return;
 		}
 		
@@ -12039,7 +11996,7 @@ public class BaseController  extends BaseFunction{
 		if(ignoreFile.exists() == true)
 		{
 			Log.debug("checkAndSetLocalBackupIgnored() LocalBackup was ignored for [" + entryPath +"]");
-			repos.backupConfig.localBackupConfig.ignoreHashMap.put(entryPath, 1);
+			repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.put(entryPath, 1);
 			return;
 		}
 		
@@ -17410,6 +17367,17 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("doPushEntryToRemoteStorage() dbDoc:", dbDoc);
 		Log.printObject("doPushEntryToRemoteStorage() remoteDoc:", remoteDoc);
 				
+		//ignore check
+		if(doc.isRemotePushEnabled == null)
+		{
+			doc.isRemotePushEnabled = isRemotePushEnabled(remote, doc, null);
+	    }
+		if(doc.isRemotePushEnabled == 0)
+		{
+    		Log.debug("doPushEntryToRemoteStorage() " + doc.getPath() + doc.getName() + " was ignored");
+			return false;
+		}
+		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
 			Log.debug("doPushEntryToRemoteStorage() 推送根目录");
@@ -17696,6 +17664,7 @@ public class BaseController  extends BaseFunction{
 			Doc subLocalDoc  = localList.get(i);
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
 			Doc subRemoteDoc = remoteHashMap.get(subLocalDoc.getName());			
+			subLocalDoc.isRemotePushEnabled = isRemotePushEnabled(remote, subLocalDoc, doc); //set isRemotePushEnabled
 			doPushEntryToRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, subRemoteDoc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);
 			if(subDbDoc != null)
 			{
@@ -17706,7 +17675,8 @@ public class BaseController  extends BaseFunction{
 		//The entries remained in dbHashMap is the docs which have been deleted
 		for (Doc subDbDoc : dbHashMap.values()) {
 			Log.debug("doPushSubEntriesToRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());			
-			Doc subRemoteDoc = remoteHashMap.get(subDbDoc.getName());			
+			Doc subRemoteDoc = remoteHashMap.get(subDbDoc.getName());	
+			subDbDoc.isRemotePushEnabled = isRemotePushEnabled(remote, subDbDoc, doc); //set isRemotePushEnabled
 			doPushEntryToRemoteStorage(session, remote, repos, subDbDoc, subDbDoc, null, subRemoteDoc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);
 		}	
 		
@@ -20345,14 +20315,24 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean pushLocalChangeOnly, ReturnAjax rt) {
 		Log.debug("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "]");
-
+		
+		//ignore check
+		if(doc.isRemotePushEnabled == null)
+		{
+			doc.isRemotePushEnabled = isRemotePushEnabled(remote, doc, null);
+	    }
+		if(doc.isRemotePushEnabled == 0)
+		{
+			return false;
+		}
+		
 		boolean ret = false;
 		DocPushResult pushResult = new DocPushResult();
 		pushResult.totalCount = 0;
 		pushResult.failCount = 0;
 		pushResult.successCount = 0;
 		pushResult.actionList = new ArrayList<CommitAction>();
-				
+		
 		Doc localDoc = fsGetDoc(repos, doc);
 
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
@@ -20401,6 +20381,76 @@ public class BaseController  extends BaseFunction{
 		return ret;	
 	}
 	
+	private Integer isRemotePushEnabled(RemoteStorageConfig remote, Doc doc, Doc parentDoc) 
+	{
+		if(parentDoc == null || parentDoc.isRemotePushEnabled == null)
+		{
+			return isRemotePushIgnored(remote, doc, true) == true? 0:1;	
+		}
+		
+		if(parentDoc.isRemotePushEnabled == 0)
+		{
+			return 0;
+		}
+		
+		if(remote.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			Log.debug("isRemotePushEnabled() RemotePush was ignored for [/" + doc.getPath() + doc.getName() + "]");
+			return 0;
+		}
+		
+		return 1;
+	}
+	
+	private boolean isRemotePushIgnored(RemoteStorageConfig remote, Doc doc, boolean parentCheck) {
+		if(remote.ignoreHashMap == null)
+		{
+			return false;
+		}
+		
+		if(remote.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			Log.debug("isRemotePushIgnored() RemotePush was ignored for [/" + doc.getPath() + doc.getName() + "]");
+			return true;
+		}
+		
+		if(parentCheck == false)
+		{
+			return false;
+		}
+		
+		//check if textSearch was ignored for root doc
+		if(remote.ignoreHashMap.get("/") != null)
+		{
+			Log.debug("isRemotePushIgnored() RemotePush was ignored for [/]");
+			return true;
+		}
+		
+		//check if textSearch was was ignored for parent doc
+		if(doc.getPath() != null)
+		{
+			String [] paths = doc.getPath().split("/");
+			String path = "/" + paths[0];
+			Log.debug("isRemotePushIgnored() path:" + path);
+			if(remote.ignoreHashMap.get(path) != null)
+			{
+				Log.debug("isRemotePushIgnored() RemotePush was ignored:" + path);
+				return true;
+			}
+			
+			for(int i = 1; i < paths.length; i++)
+			{
+				path = path + "/" + paths[i];
+				if(remote.ignoreHashMap.get(path) != null)
+				{
+					Log.debug("isRemotePushIgnored() RemotePush was ignored:" + path);
+					return true;
+				}
+			}			
+		}
+		return false;
+	}
+
 	protected JSONObject getSystemInfo() {
 		JSONObject systemInfo = new JSONObject();
 		

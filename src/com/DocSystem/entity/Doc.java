@@ -70,8 +70,11 @@ public class Doc  implements Comparable<Doc>{
 	
 	public Integer officeType;
 	
-	public Integer isRealDocTextSearchEnabled;
-	public Integer isVirutalDocTextSearchEnabled;
+	//For remote/local backup
+	public Integer isRemotePushEnabled = null;
+	//For text search
+	public Integer isRealDocTextSearchEnabled = null;	
+	public Integer isVirutalDocTextSearchEnabled = null;
 	public DocChangeType localChangeType;
 	public DocChangeType remoteChangeType;	
 	
