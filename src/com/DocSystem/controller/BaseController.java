@@ -11940,6 +11940,12 @@ public class BaseController  extends BaseFunction{
 	private void checkAndSetRemoteBackupIgnored(String entryPath, File file, Repos repos) {
 		Log.debug("checkAndSetRemoteBackupIgnored() entryPath:" + entryPath);
 	
+		if(repos.backupConfig == null || repos.backupConfig.remoteBackupConfig == null)
+		{
+			Log.debug("checkAndSetRemoteBackupIgnored() localBackupConfig is null");	
+			return;			
+		}
+		
 		if(file.isFile() == true)
 		{
 			return;
@@ -11983,7 +11989,13 @@ public class BaseController  extends BaseFunction{
 	
 	private void checkAndSetLocalBackupIgnored(String entryPath, File file, Repos repos) {
 		Log.debug("checkAndSetLocalBackupIgnored() entryPath:" + entryPath);
-	
+
+		if(repos.backupConfig == null || repos.backupConfig.localBackupConfig == null)
+		{
+			Log.debug("checkAndSetLocalBackupIgnored() localBackupConfig is null");	
+			return;			
+		}
+		
 		if(file.isFile() == true)
 		{
 			return;
@@ -18396,7 +18408,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			Log.debug("addDirsToRemoteStorage() path[" + i+ "]:" + path[i]);
-			Integer type = getRemoteStorageEntryType(session, remote, remotePath, path[i], null);
+			Integer type = getRemoteStorageEntryTypeBasic(session, remote, remotePath, path[i], null);
 			if(type == null)
 			{
 				Log.info("addDirsToRemoteStorage() getRemoteStorageEntryType for " + remotePath + path[i] + " 异常");
@@ -18423,25 +18435,31 @@ public class BaseController  extends BaseFunction{
 	private static Integer getRemoteStorageEntryType(RemoteStorageSession session, RemoteStorageConfig remote,
 			String remotePath, String name, String commitId) 
 	{
-		
+		String realRemotePath = remote.rootPath + remotePath;
+		return getRemoteStorageEntryTypeBasic(session, remote, realRemotePath, name, commitId);
+	}
+	
+	private static Integer getRemoteStorageEntryTypeBasic(RemoteStorageSession session, RemoteStorageConfig remote,
+			String realRemotePath, String name, String commitId) 
+	{
 		switch(remote.protocol)
 		{
 		case "file":
-			return getRemoteStorageEntryTypeForLocal( session, remote, remotePath, name);
+			return getRemoteStorageEntryTypeForLocal( session, remote, realRemotePath, name);
 		case "sftp":
-			return getRemoteStorageEntryTypeForSftp( session, remote, remotePath, name);
+			return getRemoteStorageEntryTypeForSftp( session, remote, realRemotePath, name);
 		case "ftp":
-			return getRemoteStorageEntryTypeForFtp(session, remote, remotePath, name);
+			return getRemoteStorageEntryTypeForFtp(session, remote, realRemotePath, name);
 		case "smb":
-			return getRemoteStorageEntryTypeForSmb(session, remote, remotePath, name);
+			return getRemoteStorageEntryTypeForSmb(session, remote, realRemotePath, name);
 		case "mxsdoc":
-			return getRemoteStorageEntryTypeForMxsDoc(session, remote, remotePath, name);
+			return getRemoteStorageEntryTypeForMxsDoc(session, remote, realRemotePath, name);
 		case "svn":
-			return getRemoteStorageEntryTypeForSvn(session, remote, remotePath, name, commitId);
+			return getRemoteStorageEntryTypeForSvn(session, remote, realRemotePath, name, commitId);
 		case "git":
-			return getRemoteStorageEntryTypeForGit(session, remote, remotePath, name, commitId);
+			return getRemoteStorageEntryTypeForGit(session, remote, realRemotePath, name, commitId);
 		default:
-			Log.debug("getRemoteStorageEntry unknown remoteStorage protocol:" + remote.protocol);
+			Log.debug("getRemoteStorageEntryType unknown remoteStorage protocol:" + remote.protocol);
 			break;
 		}
 		return null;
@@ -19257,8 +19275,7 @@ public class BaseController  extends BaseFunction{
         Log.debug("getRemoteStorageEntryForMxsDoc for:" + remotePath + name);
         
 		try {
-        	String remoteParentPath = remote.rootPath + remotePath;
-        	JSONObject entry = session.mxsdoc.getEntry(remoteParentPath, name);
+        	JSONObject entry = session.mxsdoc.getEntry(remotePath, name);
         	if(entry != null)
         	{
 				return entry.getInteger("type");
@@ -19617,31 +19634,33 @@ public class BaseController  extends BaseFunction{
         	Log.debug("getRemoteStorageEntryHashMapForSvn fileRemotePath:" + fileRemotePath);
             
 			Collection<SVNDirEntry> list = session.svn.listFiles(fileRemotePath, commitId);
-
-		    Iterator<SVNDirEntry> iterator = list.iterator();
-		    while (iterator.hasNext()) 
-		    {
-		    	SVNDirEntry subEntry = iterator.next();
-		    	int subEntryType = getEntryType(subEntry.getKind());
-		    	if(subEntryType <= 0)
-		    	{
-		    		Log.debug("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
-		    		continue;
-		    	}
-				
-		    	String subEntryName = subEntry.getName();
-		    	Long lastChangeTime = subEntry.getDate().getTime();
-		    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "", doc.offsetPath);
-		    	subDoc.setSize(subEntry.getSize());
-		    	subDoc.setCreateTime(lastChangeTime);
-		    	subDoc.setLatestEditTime(lastChangeTime);
-		    	subDoc.setCreatorName(subEntry.getAuthor());
-		    	subDoc.setLatestEditorName(subEntry.getAuthor());
-		    	subDoc.setRevision(subEntry.getRevision()+"");
-	    		subDoc.setLocalRootPath(doc.getLocalRootPath());
-	    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
-		        subEntryList.put(subDoc.getName(), subDoc);
-		    }	
+			if(list != null)
+			{
+			    Iterator<SVNDirEntry> iterator = list.iterator();
+			    while (iterator.hasNext()) 
+			    {
+			    	SVNDirEntry subEntry = iterator.next();
+			    	int subEntryType = getEntryType(subEntry.getKind());
+			    	if(subEntryType <= 0)
+			    	{
+			    		Log.debug("getRemoteStorageEntryHashMapForSvn() invalid subEntry subEntryType:" + subEntryType);
+			    		continue;
+			    	}
+					
+			    	String subEntryName = subEntry.getName();
+			    	Long lastChangeTime = subEntry.getDate().getTime();
+			    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "", doc.offsetPath);
+			    	subDoc.setSize(subEntry.getSize());
+			    	subDoc.setCreateTime(lastChangeTime);
+			    	subDoc.setLatestEditTime(lastChangeTime);
+			    	subDoc.setCreatorName(subEntry.getAuthor());
+			    	subDoc.setLatestEditorName(subEntry.getAuthor());
+			    	subDoc.setRevision(subEntry.getRevision()+"");
+		    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+		    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+			        subEntryList.put(subDoc.getName(), subDoc);
+			    }	
+			}
 		} catch (Exception e) {
 			Log.info(e);
 		}
@@ -19710,7 +19729,7 @@ public class BaseController  extends BaseFunction{
         
         Log.debug("getRemoteStorageEntryTypeForLocal for:" + remotePath + name);
         
-        File entry = new File(remote.FILE.localRootPath + remote.rootPath + remotePath, name);
+        File entry = new File(remote.FILE.localRootPath + remotePath, name);
         return getEntryType(entry);        
 	}
 
@@ -19719,15 +19738,15 @@ public class BaseController  extends BaseFunction{
 	{
         if(name.isEmpty())
 		{
-			Log.debug("getRemoteStorageEntryForSftp name 不能为空");
+			Log.debug("getRemoteStorageEntryTypeForSftp name 不能为空");
 			return null;
 		}
         
-        Log.debug("getRemoteStorageEntryForSftp for:" + remotePath + name);
+        Log.debug("getRemoteStorageEntryTypeForSftp for:" + remotePath + name);
         
 		try {
-        	String remoteParentPath = remote.rootPath + remotePath;
-        	Vector<?> list = session.sftp.listFiles(remoteParentPath);
+        	Log.debug("getRemoteStorageEntryTypeForSftp() remoteParentPath:" + remotePath);
+        	Vector<?> list = session.sftp.listFiles(remotePath);
 			//Log.printObject("list:", list);
 			if(list != null)
 			{
@@ -19772,6 +19791,7 @@ public class BaseController  extends BaseFunction{
         Log.debug("getRemoteStorageEntryForSftp doc:" + doc.offsetPath + doc.getPath() + doc.getName());
 		try {
         	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
+        	Log.debug("getRemoteStorageEntryForSftp() remoteParentPath:" + remoteParentPath);
         	Vector<?> list = session.sftp.listFiles(remoteParentPath);
 			//Log.printObject("list:", list);
 			if(list != null)
@@ -19814,9 +19834,7 @@ public class BaseController  extends BaseFunction{
         Log.debug("getRemoteStorageEntryForFtp for:" + remotePath + name);
         
 		try {
-        	String remoteParentPath = remote.rootPath + remotePath;
-
-        	FTPFile[] list = session.ftp.listFiles(remoteParentPath);
+        	FTPFile[] list = session.ftp.listFiles(remotePath);
 			//Log.printObject("list:", list);
 			for(int i=0; i<list.length; i++)
 			{
@@ -19898,9 +19916,7 @@ public class BaseController  extends BaseFunction{
         Log.debug("getRemoteStorageEntryForSmb for:" + remotePath + name);
         
 		try {
-        	String remoteParentPath = remote.rootPath + remotePath;
-
-        	SmbFile entry = session.smb.getEntry(remoteParentPath, name);
+        	SmbFile entry = session.smb.getEntry(remotePath, name);
         	if(entry != null)
         	{
 				return getEntryType(entry);
@@ -19968,9 +19984,7 @@ public class BaseController  extends BaseFunction{
         Log.debug("getRemoteStorageEntryForSvn for:" + remotePath + name);
         
 		try {
-        	String remoteParentPath = remote.rootPath + remotePath;
-
-        	Collection<SVNDirEntry> list = session.svn.listFiles(remoteParentPath, commitId);
+        	Collection<SVNDirEntry> list = session.svn.listFiles(remotePath, commitId);
 			if(list != null)
 			{
 				Iterator<SVNDirEntry> iterator = list.iterator();
@@ -20069,7 +20083,7 @@ public class BaseController  extends BaseFunction{
         
 		try {
 			
-        	String remoteEntryPath = remote.rootPath + remotePath + name;        	        	
+        	String remoteEntryPath = remotePath + name;        	        	
         	return session.git.checkPath(remoteEntryPath, commitId);
 		} catch (Exception e) {
 			Log.info(e);
