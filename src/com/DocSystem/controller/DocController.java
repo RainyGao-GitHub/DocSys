@@ -44,7 +44,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.tukaani.xz.XZInputStream;
 
-import util.DateFormat;
 import util.ReturnAjax;
 import util.FileUtil.FileUtils2;
 import util.LuceneUtil.LuceneUtil2;
