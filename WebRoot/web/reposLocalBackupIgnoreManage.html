@@ -1,0 +1,169 @@
+<div style="height:550px;overflow-y:auto">
+        <div class="manual-right width:80%" >
+            <div class="manual-article">
+               <div class="article-body editor-content"  id="doc" style="min-height: 650px">
+               		<div class="panel-body eventset-list" >	
+	               		<li style="margin-top: 0px;">
+							<i class="cell path w30"><input type="input" class="form-control" id="ignorePath" placeholder="请输入文件或目录的路径"></i>
+							<i class="cell operation w5"><button onclick="LocalBackupIgnoreMange.addDocToLocalBackupIgnoreList()" class="btn btn-md btn-primary" style="margin-left: 5px;">添加</button></i>
+						</li>
+	               		<li class="eventset-tit" style="margin-top: 0px;">
+							<i class="cell select w5">选择</i>
+							<i class="cell path w15" >路径</i>
+							<i class="cell status w15">状态</i>
+							<i class="cell operation w10">操作</i>						
+						</li>
+					</div>
+               		<div class="panel-body eventset-list" id="reposLocalBackupIgnoreList">
+			 			<!-- 忽略列表区域-->
+					</div>
+			 </div>
+			</div>
+		</div>
+</div>
+
+<script type="text/javascript">
+var LocalBackupIgnoreMange = (function () {
+    /*全局变量*/
+    var reposId;
+	
+	function reposLocalBackupIgnoreMangePageInit(_reposId)
+	{
+		console.log("reposLocalBackupIgnoreMangePageInit _reposId:" + _reposId);
+		reposId = _reposId;
+		showReposLocalBackupIngoreList();		
+	}
+	
+	function addDocToLocalBackupIgnoreList()
+	{
+		console.log("addDocToLocalBackupIgnoreList() ignorePath:" + ignorePath);
+		var node = {};
+		node.path =  $("#ignorePath").val();
+		node.name = "";
+		console.log("addDocToLocalBackupIgnoreList() path:" + node.path + "name:" + node.name);
+		setLocalBackupIgnore(node, 1);
+	}
+	
+	function removeDocFromLocalBackupIgnoreList(index)
+	{
+		console.log("removeDocFromLocalBackupIgnoreList() index:" + index);
+		var node = {};
+		node.path = $("#IgnoreEntrySelect" + index).val();
+		node.name = "";
+		console.log("removeDocFromLocalBackupIgnoreList() path:" + node.path + "name:" + node.name);
+		setLocalBackupIgnore(node, 0);
+	}
+
+	function setLocalBackupIgnore(node, ignore)
+	{
+		console.log("setLocalBackupIgnore()");
+	    $.ajax({
+	        url : "/DocSystem/Doc/setLocalBackupIgnore.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            reposId : gReposId,
+	        	path: node.path,
+	        	name: node.name,
+	        	ignore: ignore,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+					//刷新列表
+					showReposLocalBackupIngoreList();
+	            	bootstrapQ.msg({
+							msg : '设置成功！',
+							type : 'success',
+							time : 2000,
+						    });
+	            }
+	            else
+	            {
+	            	showErrorMessage("设置失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	           	showErrorMessage('设置失败:服务器异常！');
+	        }
+		});
+	}
+	
+	function showReposLocalBackupIngoreList(){
+	   	console.log("showReposLocalBackupIngoreList() reposId:" + reposId);
+	   	var path = "";
+	   	var name = "";
+	   	
+	    $.ajax({
+	            url : "/DocSystem/Doc/getLocalBackupIgnoreList.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	                reposId : reposId,
+	                path : path,
+	                name : name,
+	            },
+	            success : function (ret) {
+	            	console.log("getLocalBackupIgnoreList ret:", ret);
+	                if( "ok" == ret.status ){
+	                    showList(ret.data);
+	                }
+	                else
+	                {
+	                	alert("Error:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	               alert('获取本地备份忽略列表失败:服务器异常');
+	            }
+    	});
+
+		//绘制列表
+		function showList(data){
+			console.log(data);
+			var c = $("#reposLocalBackupIgnoreList").children();
+			$(c).remove();
+			if(data.length==0){
+				$("#reposLocalBackupIgnoreList").append("<p>暂无数据</p>");
+			}
+			
+			for(var i=0;i<data.length;i++){
+				var d = data[i];
+				var opBtn = "		<a href='javascript:void(0)' onclick='LocalBackupIgnoreMange.removeDocFromLocalBackupIgnoreList(" + i + ");' class='mybtn-primary'>移除</a>";
+													
+				var se = "<li value="+ i +">"
+					+"	<i class='cell select w5'>"
+					+"		<input class='IgnoreEntrySelect' id='IgnoreEntrySelect"+i+"' value='" + d.path + d.name + "' type='checkbox' onclick='onSelectIgnoreItem()'/>"
+					+"	</i> "
+					+"	<i class='cell path w15'>"
+					+"		<span class='path'>"
+					+"			<a id='IgnoreEntry"+i+"' href='javascript:void(0)'>/" + d.path + d.name + "</a>"
+					+"		</span>"
+					+"	</i>"
+					+"	<i class='cell status w15'>"
+					+"		<span class='status'>"
+					+"			<a id='IgnoreEntryStatus"+i+"' href='javascript:void(0)'>本地备份已关闭</a>"
+					+"		</span>"
+					+"	</i>"
+					+"	<i class='cell operation w10'>"
+					+		opBtn
+					+"	</i>"
+					+"</li>";				
+				$("#reposLocalBackupIgnoreList").append(se);
+			}
+		}
+	}
+	//开放给外部的调用接口
+    return {
+        init: function(_reposId){
+        	reposLocalBackupIgnoreMangePageInit(_reposId);
+        },
+        addDocToLocalBackupIgnoreList: function(){
+        	addDocToLocalBackupIgnoreList();
+        },
+        removeDocFromLocalBackupIgnoreList: function(index){
+        	removeDocFromLocalBackupIgnoreList(index);
+        },
+    };
+})();
+
+</script>
