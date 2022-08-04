@@ -167,47 +167,37 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### 五、Office编辑常见问题
 
-#### 1、Linux系统war包直接部署Office无法预览和编辑
+#### 1、Linux系统Office无法预览和编辑
 
-##### 1.1、手动创建DocSystem目录
-
-解压 DocSystem.war 到 tomcat\webapps\DocSystem 目录
-
-##### 1.2、手动安装动态库
+##### 1.1、手动安装动态库
 
 复制 DocSystem\web\static\office-editor\libs\Linux 目录下的所有动态库到 /usr/lib64 目录
 
-##### 1.3、重启MxsDoc
+##### 1.2、重启MxsDoc
 
-#### 2、Windows系统Office无法预览和编辑
+#### 2、Linux系统Excel在线编辑退出后，修改内容丢失
 
-##### 2.1、检查系统缺少的动态库并修复
-
-双击运行 DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat ，根据报错提示确定需要修复的动态库
-
-#### 3、Linux系统Excel在线编辑退出后，修改内容丢失
-
-##### 3.1、安装字体库
+##### 2.1、安装字体库
 
 yum -y install fontconfig
 
-##### 3.2、添加中文字体
+##### 2.2、添加中文字体
 
 将 C:/Windows/Fonts 字体文件复制到 /usr/share/fonts 目录
 
-##### 3.3、生成 fonts.scale 文件
+##### 2.3、生成 fonts.scale 文件
 
 yum -y install ttmkfdir 
 
-##### 3.4、刷新字体缓存
+##### 2.4、刷新字体缓存
 
 fc-cache
 
-##### 3.5、重新生成office字体库
+##### 2.5、重新生成office字体库
 
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 
-#### 4、Linux系统 Office 编辑握手延时过大，导致文件打开失败
+#### 3、Linux系统 Office 编辑握手延时过大，导致文件打开失败
 
 与DNS解析的配置有关,解决方法如下：
 
@@ -218,6 +208,12 @@ fc-cache
     内网IP 机器名全称 机器名（去掉.后缀）
     实例：
     192.168.0.11 AP-SHA-VM-P85.internal.sungard.corp AP-SHA-VM-P85
+
+#### 4、Windows系统Office无法预览和编辑
+
+##### 4.1、检查系统缺少的动态库并修复
+
+双击运行 DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat ，根据报错提示确定需要修复的动态库
 
 ### 六、什么是分布式远程存储
 
