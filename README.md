@@ -287,23 +287,35 @@ vi  /etc/sysconfig/i18n
 #### 5、LDAP设置说明
 
 ##### 5.1 LDAP设置格式如下
-ldap://【域控服务器地址】:389/【基础DN】;【鉴权方式】;【鉴权账号】;【鉴权密码】;【用户账号属性】;【密码】
+ldap://【域控服务器地址】:【端口】/【基础DN】;【鉴权方式】;【鉴权账号】;【鉴权密码】;【用户账号属性】;【密码】
 
 ##### 5.2 参数说明
 
-【域控服务器地址】：域名或IP地址
+【域控服务器地址】
+ 域控服务地址，可以是域名或IP地址
 
-【基础DN】：请根据自己公司的basedn进行设置，例如：ou=test,dc=gofreeteam,dc=com
+【域控服务器端口】
+ 端口默认为389
 
-【鉴权方式】：域控服务器登录验证方式，例如：authentication=simple，鉴权方式支持simple\none\DIGEST-MD5\EXTERNAL\CRAM-MD5\GSSAPI
+【基础DN】
+域控服务器的basedn，例如：ou=test,dc=gofreeteam,dc=com，请根据自己公司的basedn进行设置
 
-【鉴权账号】：设置了该参数表示使用指定账号进行域控服务器登录验证，例如：userAccount=admin，否则使用登录账号进行域控服务器账号验证
+【鉴权方式】
+域控服务器登录验证方式，例如：authentication=simple，支持以下鉴权方式：
+simple\none\DIGEST-MD5\EXTERNAL\CRAM-MD5\GSSAPI
 
-【鉴权密码】：在设置了鉴权账号的情况下生效，例如：userPassword=admin123
+【鉴权账号】
+设置了该参数表示使用指定账号进行域控服务器登录验证，例如：userAccount=admin，否则使用登录账号进行域控服务器账号验证
 
-【用户账号属性】：默认用户登录账号uid，例如loginMode=cn,则表明使用cn属性进行配置查找用户信息
+【鉴权密码】
+仅在设置了鉴权账号的情况下生效，例如：userPassword=admin123
 
-【密码校验模式】：authMode=0表示不校验用户密码，authMode=1表示需要进行密码校验
+【用户账号属性】
+默认用户登录账号的属性为 uid，设置了该参数，表明使用指定的用户属性查询用户信息，例如：loginMode=cn
+
+【密码校验模式】
+authMode=0表示不校验用户密码
+authMode=1表示需要进行密码校验
 
 ### 十、调试日志获取
 
