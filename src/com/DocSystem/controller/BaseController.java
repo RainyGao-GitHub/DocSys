@@ -20383,6 +20383,66 @@ public class BaseController  extends BaseFunction{
 	
 	private Integer isRemotePushEnabled(RemoteStorageConfig remote, Doc doc, Doc parentDoc) 
 	{
+		//最大文件检查
+		if(remote.allowedMaxFile != null)
+		{
+			if(doc.getSize() > remote.allowedMaxFile)
+			{
+				return 0;
+			}
+		}
+		
+		//文件名检查
+		if(remote.notAllowedFileHashMap != null)
+		{
+			if(remote.notAllowedFileHashMap.get(doc.getName()) != null)
+			{
+				return 0;
+			}
+		}
+		
+		//文件类型检查(目录不检查)
+		if(doc.getType() == 1)
+		{
+			if(remote.allowedFileTypeHashMap != null) //白名单
+			{
+				String fileType = FileUtil.getFileSuffix(doc.getName());
+				if(fileType == null)
+				{
+					fileType = ".";
+				}
+				else
+				{
+					fileType = "." + fileType;
+				}
+				
+				if(remote.allowedFileTypeHashMap.get(fileType) == null)
+				{
+					return 0;
+				}
+			}
+			else
+			{
+				if(remote.notAllowedFileTypeHashMap != null) //黑名单
+				{
+					String fileType = FileUtil.getFileSuffix(doc.getName());
+					if(fileType == null)
+					{
+						fileType = ".";
+					}
+					else
+					{
+						fileType = "." + fileType;
+					}
+					
+					if(remote.notAllowedFileTypeHashMap.get(fileType) != null)
+					{
+						return 0;
+					}
+				}
+			}
+		}
+		
 		if(parentDoc == null || parentDoc.isRemotePushEnabled == null)
 		{
 			return isRemotePushIgnored(remote, doc, true) == true? 0:1;	

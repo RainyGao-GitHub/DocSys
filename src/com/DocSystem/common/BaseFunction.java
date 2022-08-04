@@ -514,10 +514,64 @@ public class BaseFunction{
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr, "RemoteBackup");
 		remoteBackupConfig.remoteStorageConfig = remote;
 		if(remote != null)
-		{
+		{			
+			remote.allowedMaxFile =  remoteBackupObj.getLong("allowedMaxFile");
+			remote.allowedFileTypeHashMap =  getFileTypeHashMapByListStr(remoteBackupObj.getString("allowedFileTypeList"));
+			remote.notAllowedFileTypeHashMap =  getFileTypeHashMapByListStr(remoteBackupObj.getString("notAllowedFileTypeList"));
+			remote.notAllowedFileHashMap =  getFileHashMapByListStr(remoteBackupObj.getString("notAllowedFileList"));
+			if(remote.protocol.equals("git"))
+			{
+				if(remote.notAllowedFileHashMap == null)
+				{
+					remote.notAllowedFileHashMap = new ConcurrentHashMap<String, Integer>();
+				}
+				remote.notAllowedFileHashMap.put(".git", 1); //Git服务器禁止推送.git文件
+			}
+			
+			//忽略列表初始化不在这里哦
 			remote.ignoreHashMap = new ConcurrentHashMap<String, Integer>(); 
 		}
 		return remoteBackupConfig;
+	}
+	
+	private static ConcurrentHashMap<String, Integer> getFileHashMapByListStr(String listStr)
+	{
+		ConcurrentHashMap<String, Integer> hashMap = null;
+		if(listStr != null && listStr.isEmpty() == false)
+		{
+			String[] subStrs = listStr.split(";");
+			if(subStrs.length > 0)
+			{
+				hashMap = new ConcurrentHashMap<String, Integer>();
+				for(int i=0; i<subStrs.length; i++)
+				{
+					String fileName = subStrs[i].trim();
+					if(fileName.isEmpty() == false)
+					{
+						hashMap.put(fileName, 1);
+					}
+				}
+			}
+		}
+		return hashMap;
+	}
+	
+	private static ConcurrentHashMap<String, Integer> getFileTypeHashMapByListStr(String listStr)
+	{
+		ConcurrentHashMap<String, Integer> hashMap = null;
+		if(listStr != null && listStr.isEmpty() == false)
+		{
+			String[] subStrs = listStr.split(";");
+			if(subStrs.length > 0)
+			{
+				hashMap = new ConcurrentHashMap<String, Integer>();
+				for(int i=0; i<subStrs.length; i++)
+				{
+					hashMap.put("." + subStrs[i].trim(), 1);
+				}
+			}
+		}
+		return hashMap;
 	}
 
 	private static BackupConfig getLocalBackupConfig(Repos repos, JSONObject localBackupObj) {
