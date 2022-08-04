@@ -822,6 +822,45 @@
 				},
 				]
 			},			
+			{text: '自动备份', subMenu: [
+				{text: '本地备份', subMenu: [
+						{text: '关闭本地备份',  action: function(e){
+								e.preventDefault();
+								addDocToLocalBackupIgnoreListConfirm(curRightClickedTreeNode);
+							}
+						},
+						{text: '开启本地备份',  action: function(e){
+								e.preventDefault();
+								removeDocFromLocalBackupIgnoreListConfirm(curRightClickedTreeNode);
+							}
+						},
+						{text: '忽略列表管理',  action: function(e){
+								e.preventDefault();
+								showReposLocalBackupIgnoreListManagePanel();
+							}
+						},
+					]
+				},
+				{text: '异地备份', subMenu: [
+						{text: '关闭异地备份',  action: function(e){
+								e.preventDefault();
+								addDocToRemoteBackupIgnoreListConfirm(curRightClickedTreeNode);
+							}
+						},
+						{text: '开启异地备份',  action: function(e){
+								e.preventDefault();
+								removeDocFromRemoteBackupIgnoreListConfirm(curRightClickedTreeNode);
+							}
+						},
+						{text: '忽略列表管理',  action: function(e){
+								e.preventDefault();
+								showReposRemoteBackupIgnoreListManagePanel();
+							}
+						},
+					]					
+				},
+				]
+			},
 			{divider: true},
 			{text: '清除缓存', action: function(e){
 					e.preventDefault();
@@ -866,6 +905,260 @@
 </SCRIPT>
 
 <script>
+function showReposRemoteBackupIgnoreListManagePanel()
+{
+   	console.log("showReposRemoteBackupIgnoreListManagePanel()");
+   	
+	if(isRemoteBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
+		return;
+	}	
+	
+	bootstrapQ.dialog({
+		id: 'reposRemoteBackupIgnoreManage',
+		title: '版本忽略管理',
+		url: 'reposRemoteBackupIgnoreManage.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		callback: function(){
+			RemoteBackupIgnoreMange.init(gReposId);
+		},
+	}, null);
+}
+
+function isRemoteBackupEnabled(reposInfo)
+{		
+	console.log("isRemoteBackupEnabled reposInfo:", reposInfo);
+
+	if(reposInfo.backupConfig == null || reposInfo.backupConfig.remoteBackupConfig == undefined)
+   	{
+		return false;
+   	}
+	
+	return true;
+}
+
+function addDocToRemoteBackupIgnoreListConfirm(node)
+{
+   	console.log("addDocToRemoteBackupIgnoreListConfirm()");
+   	
+	if(isRemoteBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+		return;
+	}	
+	
+	var msg = "关闭 [" + node.path + node.name + "] 的本地自动备份？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "关闭仓库所有文件的本地自动备份?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'addRemoteBackupIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setRemoteBackupIgnore(node, 1);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function removeDocFromRemoteBackupIgnoreListConfirm(node)
+{
+   	console.log("removeDocFromRemoteBackupIgnoreListConfirm()");
+   	
+	if(isRemoteBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+		return;
+	}	
+	
+	var msg = "开启 [" + node.path + node.name + "] 的本地自动备份？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "开启仓库所有文件的本地自动备份?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'removeRemoteBackupIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setRemoteBackupIgnore(node, 0);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function setRemoteBackupIgnore(node, ignore)
+{
+	console.log("setRemoteBackupIgnore()");
+    $.ajax({
+        url : "/DocSystem/Doc/setRemoteBackupIgnore.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId : gReposId,
+        	path: node.path,
+        	name: node.name,
+        	ignore: ignore,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	bootstrapQ.msg({
+						msg : '设置成功！',
+						type : 'success',
+						time : 2000,
+					    });
+            }
+            else
+            {
+            	showErrorMessage("设置失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+           	showErrorMessage('设置失败:服务器异常！');
+        }
+	});
+}
+
+function showReposLocalBackupIgnoreListManagePanel()
+{
+   	console.log("showReposLocalBackupIgnoreListManagePanel()");
+   	
+	if(isLocalBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage("该仓库未开启全文搜索，请联系管理员！");
+		return;
+	}	
+	
+	bootstrapQ.dialog({
+		id: 'reposLocalBackupIgnoreManage',
+		title: '版本忽略管理',
+		url: 'reposLocalBackupIgnoreManage.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		callback: function(){
+			LocalBackupIgnoreMange.init(gReposId);
+		},
+	}, null);
+}
+
+function isLocalBackupEnabled(reposInfo)
+{		
+	console.log("isLocalBackupEnabled reposInfo:", reposInfo);
+
+	if(reposInfo.backupConfig == null || reposInfo.backupConfig.localBackupConfig == undefined)
+   	{
+		return false;
+   	}
+	
+	return true;
+}
+
+function addDocToLocalBackupIgnoreListConfirm(node)
+{
+   	console.log("addDocToLocalBackupIgnoreListConfirm()");
+   	
+	if(isLocalBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+		return;
+	}	
+	
+	var msg = "关闭 [" + node.path + node.name + "] 的本地自动备份？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "关闭仓库所有文件的本地自动备份?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'addLocalBackupIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setLocalBackupIgnore(node, 1);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function removeDocFromLocalBackupIgnoreListConfirm(node)
+{
+   	console.log("removeDocFromLocalBackupIgnoreListConfirm()");
+   	
+	if(isLocalBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+		return;
+	}	
+	
+	var msg = "开启 [" + node.path + node.name + "] 的本地自动备份？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "开启仓库所有文件的本地自动备份?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'removeLocalBackupIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setLocalBackupIgnore(node, 0);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function setLocalBackupIgnore(node, ignore)
+{
+	console.log("setLocalBackupIgnore()");
+    $.ajax({
+        url : "/DocSystem/Doc/setLocalBackupIgnore.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId : gReposId,
+        	path: node.path,
+        	name: node.name,
+        	ignore: ignore,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	bootstrapQ.msg({
+						msg : '设置成功！',
+						type : 'success',
+						time : 2000,
+					    });
+            }
+            else
+            {
+            	showErrorMessage("设置失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+           	showErrorMessage('设置失败:服务器异常！');
+        }
+	});
+}
+
 function showReposTextSearchIgnoreListManagePanel()
 {
    	console.log("showReposTextSearchIgnoreListManagePanel()");
