@@ -911,13 +911,13 @@ function showReposRemoteBackupIgnoreListManagePanel()
    	
 	if(isRemoteBackupEnabled(gReposInfo) == false)
 	{
-		showErrorMessage("该仓库未设置异地自动备份，请联系管理员！");
+		showErrorMessage("该仓库未设置异地备份，请联系管理员！");
 		return;
 	}	
 	
 	bootstrapQ.dialog({
 		id: 'reposRemoteBackupIgnoreManage',
-		title: '异地自动备份忽略管理',
+		title: '异地备份忽略管理',
 		url: 'reposRemoteBackupIgnoreManage.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -946,14 +946,14 @@ function addDocToRemoteBackupIgnoreListConfirm(node)
    	
 	if(isRemoteBackupEnabled(gReposInfo) == false)
 	{
-		showErrorMessage("该仓库未设置异地自动备份，请联系管理员！");
+		showErrorMessage("该仓库未设置异地备份，请联系管理员！");
 		return;
 	}	
 	
-	var msg = "关闭 [" + node.path + node.name + "] 的异地自动备份？"
+	var msg = "关闭 [" + node.path + node.name + "] 的异地备份？"
    	if(node.docId == 0)
    	{
-   	   msg = "关闭仓库所有文件的异地自动备份?";
+   	   msg = "关闭仓库所有文件的异地备份?";
    	}
    	
    	qiao.bs.confirm({
@@ -976,14 +976,14 @@ function removeDocFromRemoteBackupIgnoreListConfirm(node)
    	
 	if(isRemoteBackupEnabled(gReposInfo) == false)
 	{
-		showErrorMessage("该仓库未设置异地自动备份，请联系管理员！");
+		showErrorMessage("该仓库未设置异地备份，请联系管理员！");
 		return;
 	}	
 	
-	var msg = "开启 [" + node.path + node.name + "] 的异地自动备份？"
+	var msg = "开启 [" + node.path + node.name + "] 的异地备份？"
    	if(node.docId == 0)
    	{
-   	   msg = "开启仓库所有文件的异地自动备份?";
+   	   msg = "开启仓库所有文件的异地备份?";
    	}
    	
    	qiao.bs.confirm({
@@ -1038,13 +1038,13 @@ function showReposLocalBackupIgnoreListManagePanel()
    	
 	if(isLocalBackupEnabled(gReposInfo) == false)
 	{
-		showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+		showErrorMessage("该仓库未设置本地备份，请联系管理员！");
 		return;
 	}	
 	
 	bootstrapQ.dialog({
 		id: 'reposLocalBackupIgnoreManage',
-		title: '本地自动备份忽略管理',
+		title: '本地备份忽略管理',
 		url: 'reposLocalBackupIgnoreManage.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -1073,14 +1073,14 @@ function addDocToLocalBackupIgnoreListConfirm(node)
    	
 	if(isLocalBackupEnabled(gReposInfo) == false)
 	{
-		showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+		showErrorMessage("该仓库未设置本地备份，请联系管理员！");
 		return;
 	}	
 	
-	var msg = "关闭 [" + node.path + node.name + "] 的本地自动备份？"
+	var msg = "关闭 [" + node.path + node.name + "] 的本地备份？"
    	if(node.docId == 0)
    	{
-   	   msg = "关闭仓库所有文件的本地自动备份?";
+   	   msg = "关闭仓库所有文件的本地备份?";
    	}
    	
    	qiao.bs.confirm({
@@ -1103,14 +1103,14 @@ function removeDocFromLocalBackupIgnoreListConfirm(node)
    	
 	if(isLocalBackupEnabled(gReposInfo) == false)
 	{
-		showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+		showErrorMessage("该仓库未设置本地备份，请联系管理员！");
 		return;
 	}	
 	
-	var msg = "开启 [" + node.path + node.name + "] 的本地自动备份？"
+	var msg = "开启 [" + node.path + node.name + "] 的本地备份？"
    	if(node.docId == 0)
    	{
-   	   msg = "开启仓库所有文件的本地自动备份?";
+   	   msg = "开启仓库所有文件的本地备份?";
    	}
    	
    	qiao.bs.confirm({
