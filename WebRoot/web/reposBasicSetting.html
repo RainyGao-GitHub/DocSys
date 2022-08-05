@@ -1313,10 +1313,15 @@ function showRemoteBackFilterConfig(remoteBackupConfig)
 	var remoteStorageConfig = remoteBackupConfig.remoteStorageConfig;
 	
 	var remoteBackupFilterEnable = 0;
-	if(remoteStorageConfig.allowedMaxFile)
+	
+	if(remoteStorageConfig.allowedMaxFile != undefined)
 	{
 		remoteBackupFilterEnable = 1;
 		$("#allowedMaxFile option[value='" + remoteStorageConfig.allowedMaxFile + "']").attr("selected","selected");	
+	}
+	else
+	{
+		$("#allowedMaxFile option[value='0']").attr("selected","selected");			
 	}
 	
 	if(remoteStorageConfig.allowedFileTypeHashMap)
@@ -1562,7 +1567,22 @@ function getRemoteBackupConfig()
     var weekDay7 = $("#remoteBackupWeekDay7").is(':checked')? 1: 0;
     var realTimeBackup = $("#remoteRealTimeBackupEnable").is(':checked')? 1: 0;
 		
-	var remoteBackupConfig = 
+    //高级选项
+    var allowedMaxFile = "";
+    var allowedFileTypeList = "";
+    var notAllowedFileTypeList = "";
+    var notAllowedFileList = "";
+	var remoteBackupFilterEnable = $("#remoteBackupFilterEnable").is(':checked')? 1: 0;
+	console.log("getRemoteBackupConfig remoteBackupFilterEnable:" + remoteBackupFilterEnable);
+	if(remoteBackupFilterEnable == 1)
+	{
+	    allowedMaxFile = $("#allowedMaxFile").val();
+	    allowedFileTypeList = $("#allowedFileTypeList").val();
+	    notAllowedFileTypeList = $("#notAllowedFileTypeList").val();
+	    notAllowedFileList = $("#notAllowedFileList").val();
+	}
+    
+    var remoteBackupConfig = 
 	"{" +
 		"backupTime:" + backupTime + ","  + 
 		"weekDay1:" + weekDay1 +"," + 
@@ -1573,8 +1593,13 @@ function getRemoteBackupConfig()
 		"weekDay6:" + weekDay6 +"," + 
 		"weekDay7:" + weekDay7 +"," + 
 		"realTimeBackup:" + realTimeBackup + "," +
+		"allowedMaxFile:\"" + allowedMaxFile + "\"," +
+		"allowedFileTypeList:\"" + allowedFileTypeList + "\"," +
+		"notAllowedFileTypeList:\"" + notAllowedFileTypeList + "\"," +
+		"notAllowedFileList:\"" + notAllowedFileList + "\"," +
 		"remoteStorage:\"" + remoteStorage + "\"" +
 	"}";
+	
 	return remoteBackupConfig;
 }
 

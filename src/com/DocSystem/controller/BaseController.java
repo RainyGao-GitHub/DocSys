@@ -19954,9 +19954,9 @@ public class BaseController  extends BaseFunction{
         Log.debug("getRemoteStorageEntryForSmb doc:" + doc.offsetPath + doc.getPath() + doc.getName());
 		try {
         	String remoteParentPath = remote.rootPath + doc.offsetPath + doc.getPath();
-
-        	SmbFile entry = session.smb.getEntry(remoteParentPath, doc.getName());
-        	if(entry != null)
+        	Log.debug("getRemoteStorageEntryForSmb remoteParentPath:" + remoteParentPath + " docName:" + doc.getName());
+    		SmbFile entry = session.smb.getEntry(remoteParentPath, doc.getName());
+        	if(entry != null && entry.exists())
         	{
 				int subEntryType = getEntryType(entry);
 				String subEntryRevision = entry.lastModified() + "";
