@@ -271,7 +271,7 @@
 							        <option value="1073741824">1G</option>  
 							        <option value="2147483648">2G</option>  
 							        <option value="4294967296">4G</option>  
-							        <option value="NoLimit">不限</option>  
+							        <option value="0">不限</option>  
 							    </select>
 							</div>      
 							<div style="height:60px;">
@@ -1297,7 +1297,93 @@ function showRemoteBackupConfig(remoteBackupConfig)
 	{
 		$("#remoteBackupWeekDay7").attr("checked", "checked");		
 	}
+	
+	//显示高级选项
+	showRemoteBackFilterConfig(remoteBackupConfig);
 }
+
+function showRemoteBackFilterConfig(remoteBackupConfig)
+{
+	console.log("showRemoteBackFilterConfig remoteBackupConfig:", remoteBackupConfig);
+	if(remoteBackupConfig.remoteStorageConfig == undefined)
+	{
+		return;
+	}
+	
+	var remoteStorageConfig = remoteBackupConfig.remoteStorageConfig;
+	
+	var remoteBackupFilterEnable = 0;
+	if(remoteStorageConfig.allowedMaxFile)
+	{
+		remoteBackupFilterEnable = 1;
+		$("#allowedMaxFile option[value='" + remoteStorageConfig.allowedMaxFile + "']").attr("selected","selected");	
+	}
+	
+	if(remoteStorageConfig.allowedFileTypeHashMap)
+	{
+		remoteBackupFilterEnable = 1;	
+		var allowedFileTypeList = getAllowedFileTypeList(remoteStorageConfig.allowedFileTypeHashMap);
+		$("#allowedFileTypeList").val(allowedFileTypeList);
+	}
+	
+	if(remoteStorageConfig.notAllowedFileTypeHashMap)
+	{
+		remoteBackupFilterEnable = 1;
+		var notAllowedFileTypeList = getNotAllowedFileTypeList(remoteStorageConfig.notAllowedFileTypeHashMap);
+		$("#notAllowedFileTypeList").val(notAllowedFileTypeList);
+	}
+	
+	if(remoteStorageConfig.notAllowedFileHashMap)
+	{
+		remoteBackupFilterEnable = 1;
+		var notAllowedFileList = getNotAllowedFileList(remoteStorageConfig.notAllowedFileHashMap);
+		$("#notAllowedFileList").val(notAllowedFileList);
+	}
+	
+	if(remoteBackupFilterEnable == 0)
+	{
+		//隐藏高级选项
+		$("#remoteBackupFilterConfig").hide();
+   		$("#remoteBackupFilterEnable").attr("checked",false);
+	}
+	else
+	{
+		//显示高级选项
+		$("#remoteBackupFilterConfig").show();
+   		$("#remoteBackupFilterEnable").attr("checked","checked");		
+	}
+}
+
+function getAllowedFileTypeList(allowedFileTypeHashMap)
+{
+	var listStr = "";
+	for(var key in allowedFileTypeHashMap)
+	{
+		listStr += key + ";"
+	}
+	return listStr;
+}
+
+function getNotAllowedFileTypeList(notAllowedFileTypeHashMap)
+{
+	var listStr = "";
+	for(var key in notAllowedFileTypeHashMap)
+	{
+		listStr += key + ";"
+	}
+	return listStr;
+}
+
+function getNotAllowedFileList(notAllowedFileHashMap)
+{
+	var listStr = "";
+	for(var key in notAllowedFileHashMap)
+	{
+		listStr += key + ";"
+	}
+	return listStr;
+}
+
 
 function showRemoteBackupRemoteStorageConfig(remoteStorageConfig)
 {

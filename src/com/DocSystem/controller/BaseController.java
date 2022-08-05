@@ -20427,13 +20427,9 @@ public class BaseController  extends BaseFunction{
 			if(remote.allowedFileTypeHashMap != null) //白名单
 			{
 				fileType = FileUtil.getFileSuffix(doc.getName());
-				if(fileType == null)
+				if(fileType == null || fileType.isEmpty())
 				{
-					fileType = ".";
-				}
-				else
-				{
-					fileType = "." + fileType;
+					fileType = "";
 				}
 				
 				if(remote.allowedFileTypeHashMap.get(fileType) == null)
@@ -20450,11 +20446,7 @@ public class BaseController  extends BaseFunction{
 					fileType = FileUtil.getFileSuffix(doc.getName());
 					if(fileType == null)
 					{
-						fileType = ".";
-					}
-					else
-					{
-						fileType = "." + fileType;
+						fileType = "";
 					}
 				}
 				
