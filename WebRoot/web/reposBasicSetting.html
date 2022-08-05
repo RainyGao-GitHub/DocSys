@@ -189,7 +189,7 @@
 						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay6" value="0">周六</span>
 						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay7" value="0">周日</span>
 					</div>				    
-		            <label style="margin-top:5px">本地实时备份		            	
+		            <label style="margin-top:5px">开启实时备份		            	
 		            	<span style="margin-left:5px">
 	            			<input type="checkbox" id="localRealTimeBackupEnable" value="0">
 	            		</span>
@@ -252,8 +252,44 @@
 							<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay6" value="0">周六</span>
 							<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay7" value="0">周日</span>
 						</div>
+
+		            	<label style="margin-top:10px">高级选项
+		            		<span style="margin-left:5px">
+		            			<input type="checkbox" id="remoteBackupFilterEnable" value="0" onclick="doSelectRemoteBackupFilterEnable()">
+		            		</span>
+		            	</label>
+						<div id="remoteBackupFilterConfig" style="margin-top:5px; display:none">
+							<div style="height:60px;">
+								<span style="margin-top:5px">允许的最大文件</span>
+								<select class="form-control" id="allowedMaxFile" style="position: relative;top:-33px;left:25%; width:75%">  
+							        <option value="10485760">10M</option>   
+							        <option value="20971520">20M</option>   
+							        <option value="52428800">50M</option>   
+							        <option value="104857600">100M</option>  
+							        <option value="209715200">200M</option>  
+							        <option value="524288000">500M</option>  
+							        <option value="1073741824">1G</option>  
+							        <option value="2147483648">2G</option>  
+							        <option value="4294967296">4G</option>  
+							        <option value="NoLimit">不限</option>  
+							    </select>
+							</div>      
+							<div style="height:60px;">
+								<span style="margin-top:5px">允许的文件类型</span>
+								<textarea class="form-control" type="text" id="allowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"/>
+							</div>  
+							<div style="height:60px;">
+								<span style="margin-top:5px">不允许的文件类型</span>
+								<textarea class="form-control" type="text" id="notAllowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"/>
+							</div>  
+							<div style="height:60px;">
+								<span style="margin-top:5px">不允许的文件</span>
+								<textarea class="form-control" type="text" id="notAllowedFileList" style="position: relative;top:-33px;left:25%; width:75%"/>
+							</div>  
+						</div>
+						<div></div>
 	
-			            <label style="margin-top:5px">异地实时备份
+			            <label style="margin-top:5px">开启实时备份
 			            	<span style="margin-left:5px">
 		            			<input type="checkbox" id="remoteRealTimeBackupEnable" value="0">
 		            		</span>
@@ -1335,6 +1371,21 @@ function doSelectRemoteBackupStorageProtocol()
 	var placeholder = getPlacehoderForRemoteStorageProtocol(protocol);
 	$("#remoteBackupStorage").attr('placeholder',placeholder);
 	$("#remoteBackupStorageConfig").show();
+}
+
+/** 异地备份高级选项 **/
+function doSelectRemoteBackupFilterEnable()
+{
+	var enable = $("#remoteBackupFilterEnable").is(':checked')? 1: 0;
+	console.log("doSelectRemoteBackupFilterEnable enable:" + enable);
+	if(enable == 0)
+	{
+		$("#remoteBackupFilterConfig").hide();
+	}
+	else
+	{	
+		$("#remoteBackupFilterConfig").show();
+	}
 }
 
 function getTextSearchConfig()
