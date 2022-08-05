@@ -999,8 +999,23 @@
 	    var weekDay6 = $("#dialog-new-repos input[name='remoteBackupWeekDay6']").is(':checked')? 1: 0;
 	    var weekDay7 = $("#dialog-new-repos input[name='remoteBackupWeekDay7']").is(':checked')? 1: 0;
 	    var realTimeBackup = $("#dialog-new-repos input[name='remoteRealTimeBackupEnable']").is(':checked')? 1: 0;
-			
-		var remoteBackupConfig = 
+
+	    //高级选项
+	    var allowedMaxFile = "";
+	    var allowedFileTypeList = "";
+	    var notAllowedFileTypeList = "";
+	    var notAllowedFileList = "";
+		var remoteBackupFilterEnable = $("#dialog-new-repos input[name='remoteBackupFilterEnable']").is(':checked')? 1: 0;
+		console.log("getRemoteBackupConfig remoteBackupFilterEnable:" + remoteBackupFilterEnable);
+		if(remoteBackupFilterEnable == 1)
+		{
+		    allowedMaxFile = $("#dialog-new-repos select[name='allowedMaxFile']").val();
+		    allowedFileTypeList = $("#dialog-new-repos textarea[name='allowedFileTypeList']").val();
+		    notAllowedFileTypeList = $("#dialog-new-repos textarea[name='notAllowedFileTypeList']").val();
+		    notAllowedFileList = $("#dialog-new-repos textarea[name='notAllowedFileList']").val();
+		}
+	    
+	    var remoteBackupConfig = 
 		"{" +
 			"backupTime:" + backupTime + ","  + 
 			"weekDay1:" + weekDay1 +"," + 
@@ -1010,9 +1025,13 @@
 			"weekDay5:" + weekDay5 +"," + 
 			"weekDay6:" + weekDay6 +"," + 
 			"weekDay7:" + weekDay7 +"," + 
+			"allowedMaxFile:\"" + allowedMaxFile + "\"" +
+			"allowedFileTypeList:\"" + allowedFileTypeList + "\"" +
+			"notAllowedFileTypeList:\"" + notAllowedFileTypeList + "\"" +
+			"notAllowedFileList:\"" + notAllowedFileList + "\"" +
 			"realTimeBackup:" + realTimeBackup + "," +
-			"remoteStorage:\"" + remoteStorage + "\"" +
 		"}";
+		
 		return remoteBackupConfig;
 	}
 	
