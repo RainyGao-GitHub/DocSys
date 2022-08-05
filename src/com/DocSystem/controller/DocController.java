@@ -300,7 +300,12 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, actionList); 
-				
+		if(ret == true && isFSM(repos))
+		{
+			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "addDocRS");
+			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "addDocRS");
+		}
+		
 		writeJson(rt, response);
 		
 		if(ret == false)
@@ -1453,6 +1458,10 @@ public class DocController extends BaseController{
 			{
 				executeCommonActionList(actionList, rt);
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				
+				//实时远程推送与实时备份
+				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
+				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
 			}	
 			return;
 		}
