@@ -1662,13 +1662,12 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	showErrorMessage("测试成功!");
-	        	}
-	            else 
+	            	showErrorMessage("<font color='green'><strong>测试成功</strong></font><br/><br/>" + ret.msgInfo);
+	            }
+	            else
 	            {
-	                console.log(ret.msgInfo);
-	                showErrorMessage("测试失败:" + ret.msgInfo);
-		        }
+	            	showErrorMessage("<font color='red'><strong>测试失败</strong></font><br/><br/>" + ret.msgInfo);
+	            }
 	        },
 	        error : function () {
 	        	showErrorMessage("测试失败:服务器异常");
