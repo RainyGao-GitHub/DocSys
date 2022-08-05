@@ -20401,7 +20401,7 @@ public class BaseController  extends BaseFunction{
 	private Integer isRemotePushEnabled(RemoteStorageConfig remote, Doc doc, Doc parentDoc) 
 	{
 		//最大文件检查
-		if(remote.allowedMaxFile != null)
+		if(remote.allowedMaxFile != null && remote.allowedMaxFile > 0)
 		{
 			if(doc.getSize() > remote.allowedMaxFile)
 			{

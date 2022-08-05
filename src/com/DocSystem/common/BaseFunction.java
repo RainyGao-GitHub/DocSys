@@ -541,6 +541,10 @@ public class BaseFunction{
 			return null;
 		}
 		
+		if(maxFileSizeStr.equals("NoLimit"))
+		{
+			return 0L;
+		}
 		return Long.parseLong(maxFileSizeStr);
 	}
 
