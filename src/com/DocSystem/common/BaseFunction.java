@@ -516,9 +516,9 @@ public class BaseFunction{
 		if(remote != null)
 		{			
 			remote.allowedMaxFile =  getAllowedMaxFile(remoteBackupObj.getString("allowedMaxFile"));
-			remote.allowedFileTypeHashMap =  getFileTypeHashMapByListStr(remoteBackupObj.getString("allowedFileTypeList"));
-			remote.notAllowedFileTypeHashMap =  getFileTypeHashMapByListStr(remoteBackupObj.getString("notAllowedFileTypeList"));
-			remote.notAllowedFileHashMap =  getFileHashMapByListStr(remoteBackupObj.getString("notAllowedFileList"));
+			remote.allowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("allowedFileTypeList"));
+			remote.notAllowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileTypeList"));
+			remote.notAllowedFileHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileList"));
 			if(remote.protocol.equals("git"))
 			{
 				if(remote.notAllowedFileHashMap == null)
@@ -535,7 +535,8 @@ public class BaseFunction{
 	}
 	
 	private static Long getAllowedMaxFile(String maxFileSizeStr) {
-		if(maxFileSizeStr == null || maxFileSizeStr.isEmpty() || maxFileSizeStr.equals("NoLimit"))
+		Log.debug("getAllowedMaxFile() maxFileSizeStr:" + maxFileSizeStr);
+		if(maxFileSizeStr == null || maxFileSizeStr.isEmpty())
 		{
 			return null;
 		}
@@ -543,8 +544,9 @@ public class BaseFunction{
 		return Long.parseLong(maxFileSizeStr);
 	}
 
-	private static ConcurrentHashMap<String, Integer> getFileHashMapByListStr(String listStr)
+	private static ConcurrentHashMap<String, Integer> getHashMapByListStr(String listStr)
 	{
+		Log.debug("getHashMapByListStr() listStr:" + listStr);
 		ConcurrentHashMap<String, Integer> hashMap = null;
 		if(listStr != null && listStr.isEmpty() == false)
 		{
@@ -559,24 +561,6 @@ public class BaseFunction{
 					{
 						hashMap.put(fileName, 1);
 					}
-				}
-			}
-		}
-		return hashMap;
-	}
-	
-	private static ConcurrentHashMap<String, Integer> getFileTypeHashMapByListStr(String listStr)
-	{
-		ConcurrentHashMap<String, Integer> hashMap = null;
-		if(listStr != null && listStr.isEmpty() == false)
-		{
-			String[] subStrs = listStr.split(";");
-			if(subStrs.length > 0)
-			{
-				hashMap = new ConcurrentHashMap<String, Integer>();
-				for(int i=0; i<subStrs.length; i++)
-				{
-					hashMap.put("." + subStrs[i].trim(), 1);
 				}
 			}
 		}
