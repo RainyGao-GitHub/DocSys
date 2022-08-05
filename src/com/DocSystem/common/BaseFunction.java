@@ -515,7 +515,7 @@ public class BaseFunction{
 		remoteBackupConfig.remoteStorageConfig = remote;
 		if(remote != null)
 		{			
-			remote.allowedMaxFile =  remoteBackupObj.getLong("allowedMaxFile");
+			remote.allowedMaxFile =  getAllowedMaxFile(remoteBackupObj.getString("allowedMaxFile"));
 			remote.allowedFileTypeHashMap =  getFileTypeHashMapByListStr(remoteBackupObj.getString("allowedFileTypeList"));
 			remote.notAllowedFileTypeHashMap =  getFileTypeHashMapByListStr(remoteBackupObj.getString("notAllowedFileTypeList"));
 			remote.notAllowedFileHashMap =  getFileHashMapByListStr(remoteBackupObj.getString("notAllowedFileList"));
@@ -534,6 +534,15 @@ public class BaseFunction{
 		return remoteBackupConfig;
 	}
 	
+	private static Long getAllowedMaxFile(String maxFileSizeStr) {
+		if(maxFileSizeStr == null || maxFileSizeStr.isEmpty() || maxFileSizeStr.equals("NoLimit"))
+		{
+			return null;
+		}
+		
+		return Long.parseLong(maxFileSizeStr);
+	}
+
 	private static ConcurrentHashMap<String, Integer> getFileHashMapByListStr(String listStr)
 	{
 		ConcurrentHashMap<String, Integer> hashMap = null;

@@ -17388,7 +17388,7 @@ public class BaseController  extends BaseFunction{
 	    }
 		if(doc.isRemotePushEnabled == 0)
 		{
-    		Log.debug("doPushEntryToRemoteStorage() " + doc.getPath() + doc.getName() + " was ignored");
+    		Log.debug("doPushEntryToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored  for RemotePush");
 			return false;
 		}
 		
@@ -20339,6 +20339,7 @@ public class BaseController  extends BaseFunction{
 	    }
 		if(doc.isRemotePushEnabled == 0)
 		{
+    		Log.debug("doPushToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored for RemotePush");
 			return false;
 		}
 		
@@ -20404,6 +20405,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(doc.getSize() > remote.allowedMaxFile)
 			{
+				Log.debug("isRemotePushEnabled() doc size:" + doc.getSize() + " > allowedMaxFile:" + remote.allowedMaxFile);				
 				return 0;
 			}
 		}
@@ -20413,6 +20415,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remote.notAllowedFileHashMap.get(doc.getName()) != null)
 			{
+				Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is notAllowedFile");				
 				return 0;
 			}
 		}
@@ -20420,9 +20423,10 @@ public class BaseController  extends BaseFunction{
 		//文件类型检查(目录不检查)
 		if(doc.getType() == 1)
 		{
+			String fileType = null;
 			if(remote.allowedFileTypeHashMap != null) //白名单
 			{
-				String fileType = FileUtil.getFileSuffix(doc.getName());
+				fileType = FileUtil.getFileSuffix(doc.getName());
 				if(fileType == null)
 				{
 					fileType = ".";
@@ -20434,14 +20438,16 @@ public class BaseController  extends BaseFunction{
 				
 				if(remote.allowedFileTypeHashMap.get(fileType) == null)
 				{
+					Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is not in allowedFileTypeList");				
 					return 0;
 				}
 			}
-			else
+			
+			if(remote.notAllowedFileTypeHashMap != null) //黑名单
 			{
-				if(remote.notAllowedFileTypeHashMap != null) //黑名单
+				if(fileType == null)
 				{
-					String fileType = FileUtil.getFileSuffix(doc.getName());
+					fileType = FileUtil.getFileSuffix(doc.getName());
 					if(fileType == null)
 					{
 						fileType = ".";
@@ -20450,11 +20456,12 @@ public class BaseController  extends BaseFunction{
 					{
 						fileType = "." + fileType;
 					}
-					
-					if(remote.notAllowedFileTypeHashMap.get(fileType) != null)
-					{
-						return 0;
-					}
+				}
+				
+				if(remote.notAllowedFileTypeHashMap.get(fileType) != null)
+				{
+					Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is in notAllowedFileTypeList");				
+					return 0;
 				}
 			}
 		}
