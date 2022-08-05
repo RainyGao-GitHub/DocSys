@@ -1578,7 +1578,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			if(parentDocUserAuth.getUploadSize() != null && parentDocUserAuth.getUploadSize() < size)
+			if(isUploadSizeExceeded(size, parentDocUserAuth.getUploadSize()))
 			{
 				Log.info("uploadDoc size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize());
 				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
@@ -1879,7 +1879,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			if(parentDocUserAuth.getUploadSize() != null && parentDocUserAuth.getUploadSize() < size)
+			if(isUploadSizeExceeded(size, parentDocUserAuth.getUploadSize()))
 			{
 				Log.info("uploadDocRS size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize());
 				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
