@@ -19919,7 +19919,7 @@ public class BaseController  extends BaseFunction{
         
 		try {
         	SmbFile entry = session.smb.getEntry(remotePath, name);
-        	if(entry != null)
+        	if(entry != null && entry.exists())
         	{
 				return getEntryType(entry);
 			}
