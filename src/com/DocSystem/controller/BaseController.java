@@ -2711,7 +2711,9 @@ public class BaseController  extends BaseFunction{
 	
 	/**
      * 获取默认LDAP连接     * Exception 则登录失败，ctx不为空则登录成功
-     * @return void
+     * ldapConfig中同时设置了userAccount以及userPassword，则使用userAccount和userPassword进行密码校验并获取ctx，只设置了userAccount则不进行密码校验直接获取ctx，userAccount是DN表达式
+     * ldapConfig没有指定userAccount，则根据userName来进行校验和登录，userName为空则使用basedn的ctx，userName非空则使用loginMode=userName,basedn进行登录校验并获取ctx（authMode=1才校验密码，密码为pwd）
+     * @return LdapContext
      */
     public LdapContext getLDAPConnection(String userName, String pwd, LDAPConfig ldapConfig) 
     {
