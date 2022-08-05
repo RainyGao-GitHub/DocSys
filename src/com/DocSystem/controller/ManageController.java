@@ -39,6 +39,7 @@ import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
+import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -1053,27 +1054,67 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		String testResult = "1. 配置解析<br/>";
+		if(ldapConfig == null || ldapConfig.isEmpty())
+		{
+			testResult += "配置内容为空<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;
+		}	
+		
 		LDAPConfig config = convertLdapConfig(ldapConfig);
 		if(config == null)
 		{
-			rt.setError("LDAP设置错误！");
+			testResult += "解析失败:<br/>";
+			testResult += ldapConfig + "<br/>";
+			
+			rt.setError(testResult);
 			writeJson(rt, response);			
 			return;
 		}
+		testResult += "解析成功:<br/>" ;
+		testResult += JSON.toJSONString(config).replace(",", "<br/>") + "<br/><br/>";
 		
 		getListOfSASLMechanisms(config);
 
-		LdapContext ctx = getLDAPConnection("test", "test", config);
+		testResult += "2. 登录LDAP服务器<br/>";
+		LdapContext ctx = getLDAPConnection(null, null, config);
 		if(ctx == null)
 		{
 			Log.debug("ldapTest() getLDAPConnection 失败"); 
-			rt.setError("getLDAPConnection失败");
+			
+			testResult += "登录失败<br/>";
+			rt.setError(testResult);
 			writeJson(rt, response);			
 			return;
 		}
 		
-		readLdap(ctx, config.basedn, config.filter, systemLdapConfig.loginMode, null);
-				
+		testResult += "登录LDAP服务器成功<br/><br/>";
+		
+		testResult += "3. 获取用户信息列表<br/>";
+		List<User> list = readLdap(ctx, config.basedn, config.filter, systemLdapConfig.loginMode, null);
+		if(list == null)
+		{
+			testResult += "用户信息列表获取失败<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;	    	
+		}
+		
+		testResult += "用户信息列表获取成功<br/>";
+		for(int i=0; i<list.size(); i++)
+		{
+			User entry = list.get(i);
+			testResult += "[name:" + entry.getName() + " realName:"+ entry.getRealName() + "]<br/>";
+			if(i > 6)
+			{
+				testResult += "...<br/>"; 
+				break;
+			}
+		}
+		rt.setData(list);
+		rt.setMsgInfo(testResult);				
 		writeJson(rt, response);
 	}
 	
