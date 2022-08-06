@@ -1513,6 +1513,21 @@
     	$("#remoteBackupStorageConfig").show();
     }
     
+    /** 异地备份高级选项 **/
+    function doSelectRemoteBackupFilterEnable()
+    {
+    	var enable = $("#remoteBackupFilterEnable").is(':checked')? 1: 0;
+    	console.log("doSelectRemoteBackupFilterEnable enable:" + enable);
+    	if(enable == 0)
+    	{
+    		$("#remoteBackupFilterConfig").hide();
+    	}
+    	else
+    	{	
+    		$("#remoteBackupFilterConfig").show();
+    	}
+    }
+    
 	function getTextSearchConfig()
 	{   
 		var isTextSearchEnabled = 	$("#isTextSearchEnabled").is(':checked')? 1: 0;
