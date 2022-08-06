@@ -442,6 +442,9 @@ public class BaseFunction{
 	//仓库额外数据（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
 	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
 
+	//远程存储服务器 同步锁
+	protected static ConcurrentHashMap<String, Object> remoteStorageSyncLockHashMap = new ConcurrentHashMap<String, Object>();	
+
 	//目录下载压缩任务
 	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
 

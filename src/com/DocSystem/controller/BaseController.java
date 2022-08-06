@@ -131,7 +131,6 @@ import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
-import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SyncupTask;
 import com.DocSystem.common.remoteStorage.FtpUtil;
 import com.DocSystem.common.remoteStorage.GitUtil;
@@ -20361,43 +20360,65 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
 		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);
 		
-		if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
-		{
-			if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
-			{
-				Log.debug("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
-				addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath(), commitMsg,  accessUser.getName());
-			}
-		}
+		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
 		
-		Integer subEntryPushFlag = 1;
-		if(recurcive)
-		{
-			subEntryPushFlag = 2;
-		}
-		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
-		if(ret == true)
-		{
-			if(remote.isVerRepos == true)
+    	synchronized(synclock)
+    	{
+    		String lockInfo = "doPushToRemoteStorage() synclock:" + remote.remoteStorageIndexLib;
+			SyncLock.lock(lockInfo);
+			
+			if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
 			{
-				if(pushResult.actionList.size() > 0)
+				if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
 				{
-					if(remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult) == null)
-					{
-						pushResult.successCount = 0;
-						pushResult.failCount = pushResult.totalCount;
-					}
+					Log.debug("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
+					addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath(), commitMsg,  accessUser.getName());
 				}
 			}
-			else
+			
+			Integer subEntryPushFlag = 1;
+			if(recurcive)
 			{
-				pushResult.revision = "";
+				subEntryPushFlag = 2;
 			}
-		}
+			ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
+			if(ret == true)
+			{
+				if(remote.isVerRepos == true)
+				{
+					if(pushResult.actionList.size() > 0)
+					{
+						if(remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult) == null)
+						{
+							pushResult.successCount = 0;
+							pushResult.failCount = pushResult.totalCount;
+						}
+					}
+				}
+				else
+				{
+					pushResult.revision = "";
+				}
+			}
+			
+			SyncLock.unlock(synclock, lockInfo);
+    	}
+    	
 		rt.setDataEx(pushResult);
 		return ret;	
 	}
 	
+	private Object getRemoteStorageSyncLock(String remoteStorage) {
+		Object synclock = remoteStorageSyncLockHashMap.get(remoteStorage);
+    	if(synclock == null)
+    	{
+    		Log.debug("getRemoteStorageSyncLock() synclock for " + remoteStorage + " is null, do create");
+    		synclock = new Object();
+    		remoteStorageSyncLockHashMap.put(remoteStorage, synclock);
+    	}
+    	return synclock;
+	}
+
 	private Integer isRemotePushEnabled(RemoteStorageConfig remote, Doc doc, Doc parentDoc) 
 	{
 		//最大文件检查
