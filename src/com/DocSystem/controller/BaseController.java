@@ -20360,13 +20360,54 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
 		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);
 		
-		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
-		
-    	synchronized(synclock)
-    	{
-    		String lockInfo = "doPushToRemoteStorage() synclock:" + remote.remoteStorageIndexLib;
-			SyncLock.lock(lockInfo);
-			
+		//注意: 以下代码除了使用同步锁以外，其他是一模一样的
+		if(remote.isVerRepos)	//版本仓库需要使用同步锁
+		{
+			Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
+	    	synchronized(synclock)
+	    	{
+	    		String lockInfo = "doPushToRemoteStorage() synclock:" + remote.remoteStorageIndexLib;
+				SyncLock.lock(lockInfo);
+				
+				if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
+				{
+					if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
+					{
+						Log.debug("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
+						addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath(), commitMsg,  accessUser.getName());
+					}
+				}
+				
+				Integer subEntryPushFlag = 1;
+				if(recurcive)
+				{
+					subEntryPushFlag = 2;
+				}
+				ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
+				if(ret == true)
+				{
+					if(remote.isVerRepos == true)
+					{
+						if(pushResult.actionList.size() > 0)
+						{
+							if(remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult) == null)
+							{
+								pushResult.successCount = 0;
+								pushResult.failCount = pushResult.totalCount;
+							}
+						}
+					}
+					else
+					{
+						pushResult.revision = "";
+					}
+				}
+				
+				SyncLock.unlock(synclock, lockInfo);
+	    	}
+		}
+		else
+		{
 			if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
 			{
 				if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
@@ -20400,10 +20441,8 @@ public class BaseController  extends BaseFunction{
 					pushResult.revision = "";
 				}
 			}
-			
-			SyncLock.unlock(synclock, lockInfo);
-    	}
-    	
+		}
+		
 		rt.setDataEx(pushResult);
 		return ret;	
 	}
