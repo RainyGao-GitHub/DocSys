@@ -519,6 +519,7 @@ public class BaseFunction{
 		if(remote != null)
 		{			
 			remote.allowedMaxFile =  getAllowedMaxFile(remoteBackupObj.getString("allowedMaxFile"));
+			remote.isUnkownFileAllowed =  remoteBackupObj.getInteger("isUnkownFileAllowed");
 			remote.allowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("allowedFileTypeList"));
 			remote.notAllowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileTypeList"));
 			remote.notAllowedFileHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileList"));

@@ -24,6 +24,7 @@ public class RemoteStorageConfig {
 	public ConcurrentHashMap<String, Integer> notAllowedFileHashMap = null;
 	public ConcurrentHashMap<String, Integer> allowedFileTypeHashMap = null;
 	public ConcurrentHashMap<String, Integer> notAllowedFileTypeHashMap = null;
+	public Integer isUnkownFileAllowed = null;
 	
 	public ConcurrentHashMap<String, Integer> ignoreHashMap = null;
 	

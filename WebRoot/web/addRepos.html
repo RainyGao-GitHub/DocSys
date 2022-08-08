@@ -283,6 +283,21 @@
 		            	</label>
 						<div name="remoteBackupFilterConfig" style="margin-top:5px; display:none">
 							<div style="height:60px;">
+								<span>允许未知文件类型<input type="checkbox" name="isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
+							</div> 
+							<div style="height:60px;">
+								<span style="margin-top:5px">允许的文件类型</span>
+								<textarea class="form-control" type="text" name="allowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"/>
+							</div>  
+							<div style="height:60px;">
+								<span style="margin-top:5px">不允许的文件类型</span>
+								<textarea class="form-control" type="text" name="notAllowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"/>
+							</div>  
+							<div style="height:60px;">
+								<span style="margin-top:5px">不允许的文件</span>
+								<textarea class="form-control" type="text" name="notAllowedFileList" style="position: relative;top:-33px;left:25%; width:75%"/>
+							</div>  
+							<div style="height:60px;">
 								<span style="margin-top:5px">允许的最大文件</span>
 								<select class="form-control" name="allowedMaxFile" style="position: relative;top:-33px;left:25%; width:75%">  
 							        <option value="10485760">10M</option>   
@@ -296,19 +311,7 @@
 							        <option value="4294967296">4G</option>  
 							        <option value="0" selected>不限</option>  
 							    </select>
-							</div>      
-							<div style="height:60px;">
-								<span style="margin-top:5px">允许的文件类型</span>
-								<textarea class="form-control" type="text" name="allowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"/>
-							</div>  
-							<div style="height:60px;">
-								<span style="margin-top:5px">不允许的文件类型</span>
-								<textarea class="form-control" type="text" name="notAllowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"/>
-							</div>  
-							<div style="height:60px;">
-								<span style="margin-top:5px">不允许的文件</span>
-								<textarea class="form-control" type="text" name="notAllowedFileList" style="position: relative;top:-33px;left:25%; width:75%"/>
-							</div>  
+							</div> 
 						</div>
 						<div></div>
 						
@@ -1001,6 +1004,7 @@
 	    var realTimeBackup = $("#dialog-new-repos input[name='remoteRealTimeBackupEnable']").is(':checked')? 1: 0;
 
 	    //高级选项
+	    var isUnkownFileAllowed = "";
 	    var allowedMaxFile = "";
 	    var allowedFileTypeList = "";
 	    var notAllowedFileTypeList = "";
@@ -1009,6 +1013,7 @@
 		console.log("getRemoteBackupConfig remoteBackupFilterEnable:" + remoteBackupFilterEnable);
 		if(remoteBackupFilterEnable == 1)
 		{
+			isUnkownFileAllowed = $("#dialog-new-repos select[name='isUnkownFileAllowed']").is(':checked')? 1: 0;
 		    allowedMaxFile = $("#dialog-new-repos select[name='allowedMaxFile']").val();
 		    allowedFileTypeList = $("#dialog-new-repos textarea[name='allowedFileTypeList']").val();
 		    notAllowedFileTypeList = $("#dialog-new-repos textarea[name='notAllowedFileTypeList']").val();
@@ -1026,6 +1031,7 @@
 			"weekDay6:" + weekDay6 +"," + 
 			"weekDay7:" + weekDay7 +"," + 
 			"realTimeBackup:" + realTimeBackup + "," +
+			"isUnkownFileAllowed:" + isUnkownFileAllowed + "," +
 			"allowedMaxFile:\"" + allowedMaxFile + "\"," +
 			"allowedFileTypeList:\"" + allowedFileTypeList + "\"," +
 			"notAllowedFileTypeList:\"" + notAllowedFileTypeList + "\"," +

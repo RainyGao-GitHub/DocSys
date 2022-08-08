@@ -20484,18 +20484,35 @@ public class BaseController  extends BaseFunction{
 		if(doc.getType() == 1)
 		{
 			String fileType = null;
-			if(remote.allowedFileTypeHashMap != null) //白名单
+			if(remote.isUnkownFileAllowed != null && remote.isUnkownFileAllowed == 0)	//不允许未知类型文件
 			{
+				//未知文件类型不允许
 				fileType = FileUtil.getFileSuffix(doc.getName());
 				if(fileType == null || fileType.isEmpty())
 				{
-					fileType = "";
+					Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is unknown file type");				
+					return 0;
+				}				
+			}
+			
+			if(remote.allowedFileTypeHashMap != null) //白名单
+			{
+				if(fileType == null)
+				{
+					fileType = FileUtil.getFileSuffix(doc.getName());
 				}
 				
-				if(remote.allowedFileTypeHashMap.get(fileType) == null)
+				if(fileType == null || fileType.isEmpty())
 				{
-					Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is not in allowedFileTypeList");				
-					return 0;
+					fileType = "";	//避免后续再次获取文件类型
+				}
+				else
+				{
+					if(remote.allowedFileTypeHashMap.get(fileType) == null)
+					{
+						Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is not in allowedFileTypeList");				
+						return 0;
+					}
 				}
 			}
 			
@@ -20504,16 +20521,15 @@ public class BaseController  extends BaseFunction{
 				if(fileType == null)
 				{
 					fileType = FileUtil.getFileSuffix(doc.getName());
-					if(fileType == null)
-					{
-						fileType = "";
-					}
 				}
 				
-				if(remote.notAllowedFileTypeHashMap.get(fileType) != null)
+				if(fileType != null && !fileType.isEmpty())
 				{
-					Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is in notAllowedFileTypeList");				
-					return 0;
+					if(remote.notAllowedFileTypeHashMap.get(fileType) != null)
+					{
+						Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is in notAllowedFileTypeList");				
+						return 0;
+					}
 				}
 			}
 		}
