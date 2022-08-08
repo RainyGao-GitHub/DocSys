@@ -20484,10 +20484,11 @@ public class BaseController  extends BaseFunction{
 		if(doc.getType() == 1)
 		{
 			String fileType = null;
-			if(remote.isUnkownFileAllowed != null && remote.isUnkownFileAllowed == 0)	//不允许未知类型文件
+			if(remote.isUnkownFileAllowed != null && remote.isUnkownFileAllowed == 0)	//不允许未知文件类型
 			{
-				//未知文件类型不允许
+				//不允许未知文件类型
 				fileType = FileUtil.getFileSuffix(doc.getName());
+				Log.debug("isRemotePushEnabled() fileType is " + fileType + "[" + doc.getName() + "]");				
 				if(fileType == null || fileType.isEmpty())
 				{
 					Log.debug("isRemotePushEnabled() [" + doc.getName() + "] is unknown file type");				

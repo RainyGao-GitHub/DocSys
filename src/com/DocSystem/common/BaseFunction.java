@@ -523,14 +523,6 @@ public class BaseFunction{
 			remote.allowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("allowedFileTypeList"));
 			remote.notAllowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileTypeList"));
 			remote.notAllowedFileHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileList"));
-			if(remote.protocol.equals("git"))
-			{
-				if(remote.notAllowedFileHashMap == null)
-				{
-					remote.notAllowedFileHashMap = new ConcurrentHashMap<String, Integer>();
-				}
-				remote.notAllowedFileHashMap.put(".git", 1); //Git服务器禁止推送.git文件
-			}
 			
 			//忽略列表初始化不在这里哦
 			remote.ignoreHashMap = new ConcurrentHashMap<String, Integer>(); 
@@ -559,7 +551,9 @@ public class BaseFunction{
 			return null;
 		}
 
-		return Integer.parseInt(settingStr);
+		int value = Integer.parseInt(settingStr);
+		Log.debug("getIsUnkownFileAllowed() value:" + value);
+		return value;
 	}
 
 	private static ConcurrentHashMap<String, Integer> getHashMapByListStr(String listStr)

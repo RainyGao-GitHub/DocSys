@@ -827,14 +827,24 @@ public class FileUtil {
     
     public static String getFileSuffix(String filePath)
     {
-    	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
+    	int index = filePath.lastIndexOf(".");
+    	if(index == -1)
+    	{
+    		return ""; //未知类型
+    	}
+    	String suffix = filePath.substring(index + 1);
     	//Log.debug("getFileSuffix() " + suffix);
     	return suffix.toLowerCase();
     }
     
     public static String getOrgFileSuffix(String filePath)
     {
-    	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
+    	int index = filePath.lastIndexOf(".");
+    	if(index == -1)
+    	{
+    		return ""; //未知类型
+    	}
+    	String suffix = filePath.substring(index + 1);
     	return suffix;
     }
     
