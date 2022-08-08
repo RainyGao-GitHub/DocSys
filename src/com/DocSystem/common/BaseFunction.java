@@ -519,7 +519,7 @@ public class BaseFunction{
 		if(remote != null)
 		{			
 			remote.allowedMaxFile =  getAllowedMaxFile(remoteBackupObj.getString("allowedMaxFile"));
-			remote.isUnkownFileAllowed =  remoteBackupObj.getInteger("isUnkownFileAllowed");
+			remote.isUnkownFileAllowed =  getIsUnkownFileAllowed(remoteBackupObj.getString("isUnkownFileAllowed"));
 			remote.allowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("allowedFileTypeList"));
 			remote.notAllowedFileTypeHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileTypeList"));
 			remote.notAllowedFileHashMap =  getHashMapByListStr(remoteBackupObj.getString("notAllowedFileList"));
@@ -550,6 +550,16 @@ public class BaseFunction{
 			return 0L;
 		}
 		return Long.parseLong(maxFileSizeStr);
+	}
+	
+	private static Integer getIsUnkownFileAllowed(String settingStr) {
+		Log.debug("getIsUnkownFileAllowed() settingStr:" + settingStr);
+		if(settingStr == null || settingStr.isEmpty())
+		{
+			return null;
+		}
+
+		return Integer.parseInt(settingStr);
 	}
 
 	private static ConcurrentHashMap<String, Integer> getHashMapByListStr(String listStr)
