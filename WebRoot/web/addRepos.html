@@ -342,7 +342,7 @@
 	function addReposPageInit(_type, _parentNode)
 	{
 			console.log("addReposPageInit()");
-            $("#dialog-new-repos input[name='name']").focus();
+			ReposConfig.focusByName("input", "name");
 
             //alert(login_user.type);
             var defaultReposStorePath =  gDocSysConfig.defaultReposStorePath;
@@ -533,30 +533,28 @@
 	/** 版本管理设置 **/
 	function doSelectVerCtrlEnable()
 	{
-		var verCtrlEnable = $("#dialog-new-repos input[name='verCtrlEnable']").is(':checked')? 1: 0;
+		var verCtrlEnable = ReposConfig.isCheckedByName("input", "verCtrlEnable");
 		console.log("doSelectVerCtrlEnable verCtrlEnable:" + verCtrlEnable);
 		if(verCtrlEnable == 0)
 		{
-			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;	//关闭verCtrl
-
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();		//隐藏 高级选项
+			ReposConfig.selectByName("select", "verCtrl", 0); //关闭verCtrl
+			ReposConfig.hideByName("div", "verCtrlConfigDiv"); //隐藏 高级选项
 			
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").hide();	//隐藏 高级选项提示
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(0);
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("显示高级选项");
+			ReposConfig.hideByName("span", "showVerCtrlConfig"); //hide 显示高级选项 提示
+			ReposConfig.setValueByName("span", "showVerCtrlConfig", 0);
+			ReposConfig.setTextByName("span", "showVerCtrlConfig", "显示高级选项");
 		}
 		else
 		{	
-			if($("#dialog-new-repos select[name='verCtrl']").val() == 0)	//设置版本控制为GIT
+			if(ReposConfig.getValueByName("select", "verCtrl") == 0)	//设置版本控制为GIT
 			{
-				$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+				ReposConfig.selectByName("select", "verCtrl", 2);
 			}
 			
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();			//隐藏 高级选项
-			
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").show();		//显示 高级选项提示
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(0);
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("显示高级选项");						
+			ReposConfig.hideByName("div", "verCtrlConfigDiv"); //隐藏 高级选项
+			ReposConfig.showByName("span", "showVerCtrlConfig");	//show  显示高级选项 提示
+			ReposConfig.setValueByName("span", "showVerCtrlConfig", 0);
+			ReposConfig.setTextByName("span", "showVerCtrlConfig", "显示高级选项");
 		}
 		
 		doSelectVerCtrl();
@@ -564,27 +562,27 @@
 
 	function doSelectShowVerCtrlConfig()
 	{
-		var showVerCtrlConfig = $("#dialog-new-repos span[name='showVerCtrlConfig']").val();
+		var showVerCtrlConfig = ReposConfig.getValueByName("span", "showVerCtrlConfig");
 		console.log("doSelectShowVerCtrlConfig showVerCtrlConfig:" + showVerCtrlConfig);
 		if(showVerCtrlConfig == 0)
 		{
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(1);
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("隐藏高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").show();			
+			ReposConfig.setValueByName("span", "showVerCtrlConfig", 1);
+			ReposConfig.setTextByName("span", "showVerCtrlConfig", "隐藏高级选项");
+			ReposConfig.showByName("div", "verCtrlConfigDiv");			
 		}
 		else
 		{
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").val(0);
-			$("#dialog-new-repos span[name='showVerCtrlConfig']").text("显示高级选项");
-			$("#dialog-new-repos div[name='verCtrlConfigDiv']").hide();						
+			ReposConfig.setValueByName("span", "showVerCtrlConfig", 0);
+			ReposConfig.setTextByName("span", "showVerCtrlConfig", "显示高级选项");
+			ReposConfig.hideByName("div", "verCtrlConfigDiv");
 		}
 	}
 	
 	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
 	{
-		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
-		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
+		var verCtrl = ReposConfig.getValueByName("select", "verCtrl");
+		var isRemote = ReposConfig.isCheckedByName("input", "isRemote");
 		console.log("doSelectVerCtrl verCtrl:" + verCtrl + " isRemote:" + isRemote);
 		
 		//alert(verCtrl);
@@ -592,115 +590,115 @@
 		{
 			if(isRemote == 0)
 			{
-				$("#dialog-new-repos div[name='localVerRepos']").hide();
-				$("#dialog-new-repos div[name='remoteVerRepos']").hide();
+				ReposConfig.hideByName("div", "localVerRepos");
+				ReposConfig.hideByName("div", "remoteVerRepos");
 			}
 			else
 			{
 				if(verCtrl == 1)
 				{
-					$("#dialog-new-repos div[name='localVerRepos']").hide();
+					ReposConfig.hideByName("div", "localVerRepos");
 				}
 				else
 				{
-					$("#dialog-new-repos div[name='localVerRepos']").show();					
+					ReposConfig.showByName("div", "localVerRepos");
 				}
-				$("#dialog-new-repos div[name='remoteVerRepos']").show();				
+				ReposConfig.showByName("div", "remoteVerRepos");				
 			}
-			$("#dialog-new-repos span[name='isRemoteSetting']").show();
-			$("#dialog-new-repos div[name='verReposSetting']").show();				
+			ReposConfig.showByName("span", "isRemoteSetting");
+			ReposConfig.showByName("div", "verReposSetting");
 		}
 		else	//hide verRepos info
 		{
-			$("#dialog-new-repos span[name='isRemoteSetting']").hide();
-			$("#dialog-new-repos div[name='verReposSetting']").hide();				
+			ReposConfig.hideByName("div", "isRemoteSetting");
+			ReposConfig.hideByName("div", "verReposSetting");		
 		}   
 	}
 	
 	//According verCtrl1 value to disale the svnPath1 or not
 	function doSelectVerCtrl1()
 	{
-		var verCtrl = $("#dialog-new-repos select[name='verCtrl1']").val();
-		var isRemote = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 1: 0;
+		var verCtrl = ReposConfig.showByName("select", "verCtrl1");
+		var isRemote = ReposConfig.isCheckedByName("input", "isRemote1");
 		console.log("doSelectVerCtrl1 verCtrl:" + verCtrl + " isRemote:" + isRemote);
 
 		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
-				$("#dialog-new-repos div[name='localVerRepos1']").show();
-				$("#dialog-new-repos div[name='remoteVerRepos1']").hide();
+				ReposConfig.showByName("div", "localVerRepos1");
+				ReposConfig.hideByName("div", "remoteVerRepos1");
 			}
 			else
 			{
 				if(verCtrl == 1)
 				{
-					$("#dialog-new-repos div[name='localVerRepos1']").hide();
+					ReposConfig.hideByName("div", "localVerRepos1");
 				}
 				else
 				{
-					$("#dialog-new-repos div[name='localVerRepos1']").show();
+					ReposConfig.showByName("div", "localVerRepos1");
 				}
-				$("#dialog-new-repos div[name='remoteVerRepos1']").show();				
+				ReposConfig.showByName("div", "remoteVerRepos1");
 			}
-			$("#dialog-new-repos span[name='isRemoteSetting1']").show();
-			$("#dialog-new-repos div[name='verReposSetting1']").show();				
+			ReposConfig.showByName("span", "isRemoteSetting1");
+			ReposConfig.showByName("div", "verReposSetting1");		
 		}
 		else	//hide verRepos info
 		{
-			$("#dialog-new-repos span[name='isRemoteSetting1']").hide();
-			$("#dialog-new-repos div[name='verReposSetting1']").hide();				
+			ReposConfig.hideByName("span", "isRemoteSetting1");
+			ReposConfig.hideByName("div", "verReposSetting1");				
 		}     
 	}
 
 	function doSelectReposStorageConfigEnable()
 	{
-		var reposStorageConfigEnable = $("#dialog-new-repos input[name='reposStorageConfigEnable']").is(':checked')? 1: 0;
+		var reposStorageConfigEnable = ReposConfig.isCheckedByName("input", "reposStorageConfigEnable");
 		console.log("doSelectReposStorageConfigEnable reposStorageConfigEnable:" + reposStorageConfigEnable);
 		if(reposStorageConfigEnable == 0)
 		{
-			$("#dialog-new-repos div[name='reposStorageConfig']").hide();
+			ReposConfig.hideByName("div", "reposStorageConfig");	
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='reposStorageConfig']").show();
+			ReposConfig.showByName("div", "reposStorageConfig");	
 		}
 	}
 	
 	/** 仓库路径设置 **/
 	function doSelectReposStoragePathEnable()
 	{
-		var reposStoragePathEnable = $("#dialog-new-repos input[name='reposStoragePathEnable']").is(':checked')? 1: 0;
+		var reposStoragePathEnable = ReposConfig.isCheckedByName("input", "reposStoragePathEnable");
 		console.log("doSelectReposStoragePathEnable reposStoragePathEnable:" + reposStoragePathEnable);
 		if(reposStoragePathEnable == 0)
 		{
-			$("#dialog-new-repos div[name='reposStoragePathConfig']").hide();
+			ReposConfig.hideByName("div", "reposStoragePathConfig");
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='reposStoragePathConfig']").show();
+			ReposConfig.showByName("div", "reposStoragePathConfig");
 		}
 	}
 	
 	/** 文件存储路径设置 **/
 	function doSelectReposStorageRealDocPathEnable()
 	{
-		var reposStorageRealDocPathEnable = $("#dialog-new-repos input[name='reposStorageRealDocPathEnable']").is(':checked')? 1: 0;
+		var reposStorageRealDocPathEnable = ReposConfig.isCheckedByName("input", "reposStorageRealDocPathEnable");
 		console.log("doSelectReposStorageRealDocPathEnable reposStorageRealDocPathEnable:" + reposStorageRealDocPathEnable);
 		if(reposStorageRealDocPathEnable == 0)
 		{
-			$("#dialog-new-repos div[name='reposStorageRealDocPathConfig']").hide();
+			ReposConfig.hideByName("div", "reposStorageRealDocPathConfig");
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='reposStorageRealDocPathConfig']").show();
+			ReposConfig.showByName("div", "reposStorageRealDocPathConfig");
 		}
 	}
 	
 	/** 文件加密设置  **/
 	function doSetEncryptConfirm()
 	{
-		var en = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+		var en = ReposConfig.isCheckedByName("input", "isEncryptEnabled");
 		if(en == 1)
 		{
 			qiao.bs.confirm({
@@ -719,22 +717,22 @@
 	/**** 文件服务器前置设置 ***/
 	function doSelectRemoteServerProtocol()
 	{
-		var protocol = $("#dialog-new-repos select[name='remoteServerProtocol']").val();
+		var protocol = ReposConfig.getValueByName("select", "remoteServerProtocol");
 		console.log("doSelectRemoteServerProtocol protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
-			$("#dialog-new-repos div[name='remoteServerConfig']").hide();
+			ReposConfig.hideByName("div", "remoteServerConfig");
 			return;
 		}
 		
 		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
 		$("#dialog-new-repos input[name='remoteServer']").attr('placeholder', placehoder);
-		$("#dialog-new-repos div[name='remoteServerConfig']").show();		
+		ReposConfig.showByName("div", "remoteServerConfig");
 	}
 	
 	function getRemoteServerConfig()
 	{   
-		var protocol = $("#dialog-new-repos select[name='remoteServerProtocol']").val();
+		var protocol = ReposConfig.getValueByName("select", "remoteServerProtocol");
 		console.log("getRemoteServerConfig protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
@@ -755,7 +753,7 @@
 			break;
 		}
 		
-	    var remoteServer = $("#dialog-new-repos input[name='remoteServer']").val();	//remoteServer
+	    var remoteServer = ReposConfig.getValueByName("input", "remoteServer");	//remoteServer
 	    if(remoteServer != undefined && remoteServer != "")
 		{
 	    	remoteServer = prefix + remoteServer;
@@ -767,44 +765,44 @@
 	/**** 远程存储设置 ***/
 	function doSelectRemoteStorageConfigEnable()
 	{
-		var remoteStorageConfigEnable = $("#dialog-new-repos input[name='remoteStorageConfigEnable']").is(':checked')? 1: 0;
+		var remoteStorageConfigEnable = ReposConfig.isCheckedByName("input", "remoteStorageConfigEnable");
 		console.log("doSelectRemoteStorageConfigEnable remoteStorageConfigEnable:" + remoteStorageConfigEnable);
 		if(remoteStorageConfigEnable == 0)
 		{
-			$("#dialog-new-repos div[name='remoteStorageConfigDiv']").hide();
+			ReposConfig.hideByName("div", "remoteStorageConfigDiv");
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='remoteStorageConfigDiv']").show();
+			ReposConfig.showByName("div", "remoteStorageConfigDiv");
 		}
 		
 	}
 	
 	function doSelectRemoteStorageProtocol()
 	{
-		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
+		var protocol = ReposConfig.getValueByName("select", "remoteStorageProtocol");
 		console.log("doSelectRemoteStorageProtocol protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
-			$("#dialog-new-repos div[name='remoteStorageProtocolConfig']").hide();
+			ReposConfig.hideByName("div", "remoteStorageProtocolConfig");
 			return;
 		}
 
 		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
 		$("#dialog-new-repos input[name='remoteStorage']").attr('placeholder', placehoder);
-		$("#dialog-new-repos div[name='remoteStorageProtocolConfig']").show();		
+		ReposConfig.showByName("div", "remoteStorageProtocolConfig");
 	}
 	
 	function getRemoteStorageConfig()
 	{   
-		var remoteStorageConfigEnable = $("#dialog-new-repos input[name='remoteStorageConfigEnable']").is(':checked')? 1: 0;
+		var remoteStorageConfigEnable = ReposConfig.isCheckedByName("input", "remoteStorageConfigEnable");
 		console.log("getRemoteStorageConfig remoteStorageConfigEnable:" + remoteStorageConfigEnable);
 		if(remoteStorageConfigEnable == 0)
 		{
 			return "";
 		}
 		
-		var protocol = $("#dialog-new-repos select[name='remoteStorageProtocol']").val();
+		var protocol = ReposConfig.getValueByName("select", "remoteStorageProtocol");
 		console.log("getRemoteStorageConfig protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
@@ -825,11 +823,11 @@
 			break;
 		}
 		
-	    var remoteStorage = $("#dialog-new-repos input[name='remoteStorage']").val();	//remoteStorage
-		var autoPull = $("#dialog-new-repos input[name='autoPull']").is(':checked')? 1: 0;
-		var autoPullForce = $("#dialog-new-repos input[name='autoPullForce']").is(':checked')? 1: 0;
-		var autoPush = $("#dialog-new-repos input[name='autoPush']").is(':checked')? 1: 0;
-		var autoPushForce = $("#dialog-new-repos input[name='autoPushForce']").is(':checked')? 1: 0;
+	    var remoteStorage = ReposConfig.getValueByName("input", "remoteStorage"); //remoteStorage
+		var autoPull = ReposConfig.isCheckedByName("input", "autoPull");
+		var autoPullForce = ReposConfig.isCheckedByName("input", "autoPullForce");
+		var autoPush = ReposConfig.isCheckedByName("input", "autoPush");
+		var autoPushForce = ReposConfig.isCheckedByName("input", "autoPushForce");
 	    if(remoteStorage != undefined && remoteStorage != "")
 		{
 	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
@@ -842,73 +840,73 @@
 	/********* 自动备份设置 *****************/
 	function doSelectAutoBackupConfigEanble()
 	{
-		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
+		var autoBackupEnable = ReposConfig.isCheckedByName("input", "autoBackupEnable");
 		console.log("doSelectAutoBackupConfigEanble autoBackupEnable:" + autoBackupEnable);
 		if(autoBackupEnable == 0)
 		{
-			$("#dialog-new-repos div[name='autoBackupConfigDiv']").hide();
+			ReposConfig.hideByName("div", "autoBackupConfigDiv");
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='autoBackupConfigDiv']").show();
+			ReposConfig.showByName("div", "autoBackupConfigDiv");
 		}		
 	}
 	
 	function doSelectLocalBackupEnable()
 	{
-		var localBackupEnable = $("#dialog-new-repos input[name='localBackupEnable']").is(':checked')? 1: 0;
+		var localBackupEnable = ReposConfig.isCheckedByName("input", "localBackupEnable");
 		console.log("doSelectLocalBackupEnable localBackupEnable:" + localBackupEnable);
 		if(localBackupEnable == 0)
 		{
-			$("#dialog-new-repos div[name='localBackupConfig']").hide();
+			ReposConfig.hideByName("div", "localBackupConfig");
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='localBackupConfig']").show();
+			ReposConfig.showByName("div", "localBackupConfig");
 		}		
 	}
 	
 	function doSelectRemoteBackupEnable()
 	{
-		var remoteBackupEnable = $("#dialog-new-repos input[name='remoteBackupEnable']").is(':checked')? 1: 0;
+		var remoteBackupEnable = ReposConfig.isCheckedByName("input", "remoteBackupEnable");
 		console.log("doSelectRemoteBackupEnable remoteBackupEnable:" + remoteBackupEnable);
 		if(remoteBackupEnable == 0)
 		{
-			$("#dialog-new-repos div[name='remoteBackupConfig']").hide();
+			ReposConfig.hideByName("div", "remoteBackupConfig");
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='remoteBackupConfig']").show();
+			ReposConfig.showByName("div", "remoteBackupConfig");
 		}		
 	}
 	
 	function doSelectRemoteBackupStorageProtocol()
 	{
-		var protocol = $("#dialog-new-repos select[name='remoteBackupStorageProtocol']").val();
+		var protocol = ReposConfig.getValueByName("select", "remoteBackupStorageProtocol");
 		console.log("doSelectRemoteBackupStorageProtocol protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
-			$("#dialog-new-repos div[name='remoteBackupStorageConfig']").hide();
+			ReposConfig.hideByName("div", "remoteBackupStorageConfig");
 			return;
 		}
 		
 		var placehoder = getPlacehoderForRemoteStorageProtocol(protocol);
 		$("#dialog-new-repos input[name='remoteBackupStorage']").attr('placeholder', placehoder);
-		$("#dialog-new-repos div[name='remoteBackupStorageConfig']").show();
+		ReposConfig.showByName("div", "remoteBackupStorageConfig");
 	}
 	
 	/** 异地备份高级选项 **/
 	function doSelectRemoteBackupFilterEnable()
 	{
-		var enable = $("#dialog-new-repos input[name='remoteBackupFilterEnable']").is(':checked')? 1: 0;
+		var enable = ReposConfig.isCheckedByName("input", "remoteBackupFilterEnable");
 		console.log("doSelectRemoteBackupFilterEnable enable:" + enable);
 		if(enable == 0)
 		{
-			$("#dialog-new-repos div[name='remoteBackupFilterConfig']").hide();
+			ReposConfig.hideByName("div", "remoteBackupFilterConfig");
 		}
 		else
 		{	
-			$("#dialog-new-repos div[name='remoteBackupFilterConfig']").show();
+			ReposConfig.showByName("div", "remoteBackupFilterConfig");
 		}
 	}
 	
@@ -922,7 +920,7 @@
 
 	function getAutoBackupConfig()
 	{   
-		var autoBackupEnable = $("#dialog-new-repos input[name='autoBackupEnable']").is(':checked')? 1: 0;
+		var autoBackupEnable = ReposConfig.isCheckedByName("input", "autoBackupEnable");
 		console.log("getAutoBackupConfig autoBackupEnable:" + autoBackupEnable);
 		if(autoBackupEnable == 0)
 		{
@@ -936,7 +934,7 @@
 		
 	function getLocalBackupConfig()
 	{
-		var localBackupEnable = $("#dialog-new-repos input[name='localBackupEnable']").is(':checked')? 1: 0;
+		var localBackupEnable = ReposConfig.isCheckedByName("input", "localBackupEnable");
 		console.log("getLocalBackupConfig localBackupEnable:" + localBackupEnable);
 		if(localBackupEnable == 0)
 		{
@@ -949,16 +947,15 @@
 			return "{}";
 		}
 
-		var backupTime = $("#dialog-new-repos select[name='localBackupTime']").val();;
-	    var weekDay1 = $("#dialog-new-repos input[name='localBackupWeekDay1']").is(':checked')? 1: 0;
-	    var weekDay2 = $("#dialog-new-repos input[name='localBackupWeekDay2']").is(':checked')? 1: 0;
-	    var weekDay3 = $("#dialog-new-repos input[name='localBackupWeekDay3']").is(':checked')? 1: 0;
-	    var weekDay4 = $("#dialog-new-repos input[name='localBackupWeekDay4']").is(':checked')? 1: 0;
-	    var weekDay5 = $("#dialog-new-repos input[name='localBackupWeekDay5']").is(':checked')? 1: 0;
-	    var weekDay6 = $("#dialog-new-repos input[name='localBackupWeekDay6']").is(':checked')? 1: 0;
-	    var weekDay7 = $("#dialog-new-repos input[name='localBackupWeekDay7']").is(':checked')? 1: 0;
-	    var realTimeBackup = $("#dialog-new-repos input[name='localRealTimeBackupEnable']").is(':checked')? 1: 0;
-
+		var backupTime = ReposConfig.getValueByName("select", "localBackupTime");
+	    var weekDay1 = ReposConfig.isCheckedByName("input", "localBackupWeekDay1");
+	    var weekDay2 = ReposConfig.isCheckedByName("input", "localBackupWeekDay2");
+	    var weekDay3 = ReposConfig.isCheckedByName("input", "localBackupWeekDay3");
+	    var weekDay4 = ReposConfig.isCheckedByName("input", "localBackupWeekDay4");
+	    var weekDay5 = ReposConfig.isCheckedByName("input", "localBackupWeekDay5");
+	    var weekDay6 = ReposConfig.isCheckedByName("input", "localBackupWeekDay6");
+	    var weekDay7 = ReposConfig.isCheckedByName("input", "localBackupWeekDay7");
+	    var realTimeBackup = ReposConfig.isCheckedByName("input", "localRealTimeBackupEnable");
 		var localBackupConfig = 
 		"{" +
 			"backupTime:" + backupTime + "," +
@@ -977,7 +974,7 @@
 	
 	function getRemoteBackupConfig()
 	{
-		var remoteBackupEnable = $("#dialog-new-repos input[name='remoteBackupEnable']").is(':checked')? 1: 0;
+		var remoteBackupEnable = ReposConfig.isCheckedByName("input", "remoteBackupEnable");
 		console.log("getRemoteBackupConfig remoteBackupEnable:" + remoteBackupEnable);
 		if(remoteBackupEnable == 0)
 		{
@@ -990,31 +987,30 @@
 			return "{}";
 		}
 		
-		var backupTime = $("#dialog-new-repos select[name='remoteBackupTime']").val();
-	    var weekDay1 = $("#dialog-new-repos input[name='remoteBackupWeekDay1']").is(':checked')? 1: 0;
-	    var weekDay2 = $("#dialog-new-repos input[name='remoteBackupWeekDay2']").is(':checked')? 1: 0;
-	    var weekDay3 = $("#dialog-new-repos input[name='remoteBackupWeekDay3']").is(':checked')? 1: 0;
-	    var weekDay4 = $("#dialog-new-repos input[name='remoteBackupWeekDay4']").is(':checked')? 1: 0;
-	    var weekDay5 = $("#dialog-new-repos input[name='remoteBackupWeekDay5']").is(':checked')? 1: 0;
-	    var weekDay6 = $("#dialog-new-repos input[name='remoteBackupWeekDay6']").is(':checked')? 1: 0;
-	    var weekDay7 = $("#dialog-new-repos input[name='remoteBackupWeekDay7']").is(':checked')? 1: 0;
-	    var realTimeBackup = $("#dialog-new-repos input[name='remoteRealTimeBackupEnable']").is(':checked')? 1: 0;
-
+		var backupTime = ReposConfig.getValueByName("select", "remoteBackupTime");
+	    var weekDay1 = ReposConfig.isCheckedByName("input", "remoteBackupWeekDay1");
+	    var weekDay2 = ReposConfig.isCheckedByName("input", "remoteBackupWeekDay2");
+	    var weekDay3 = ReposConfig.isCheckedByName("input", "remoteBackupWeekDay3");
+	    var weekDay4 = ReposConfig.isCheckedByName("input", "remoteBackupWeekDay4");
+	    var weekDay5 = ReposConfig.isCheckedByName("input", "remoteBackupWeekDay5");
+	    var weekDay6 = ReposConfig.isCheckedByName("input", "remoteBackupWeekDay6");
+	    var weekDay7 = ReposConfig.isCheckedByName("input", "remoteBackupWeekDay7");
+	    var realTimeBackup = ReposConfig.isCheckedByName("input", "remoteRealTimeBackupEnable");
 	    //高级选项
 	    var isUnkownFileAllowed = "";
 	    var allowedMaxFile = "";
 	    var allowedFileTypeList = "";
 	    var notAllowedFileTypeList = "";
 	    var notAllowedFileList = "";
-		var remoteBackupFilterEnable = $("#dialog-new-repos input[name='remoteBackupFilterEnable']").is(':checked')? 1: 0;
+		var remoteBackupFilterEnable = ReposConfig.isCheckedByName("input", "remoteBackupFilterEnable");
 		console.log("getRemoteBackupConfig remoteBackupFilterEnable:" + remoteBackupFilterEnable);
 		if(remoteBackupFilterEnable == 1)
 		{
-			isUnkownFileAllowed = $("#dialog-new-repos select[name='isUnkownFileAllowed']").is(':checked')? 1: 0;
-		    allowedMaxFile = $("#dialog-new-repos select[name='allowedMaxFile']").val();
-		    allowedFileTypeList = $("#dialog-new-repos textarea[name='allowedFileTypeList']").val();
-		    notAllowedFileTypeList = $("#dialog-new-repos textarea[name='notAllowedFileTypeList']").val();
-		    notAllowedFileList = $("#dialog-new-repos textarea[name='notAllowedFileList']").val();
+			isUnkownFileAllowed = ReposConfig.isCheckedByName("input", "isUnkownFileAllowed");
+		    allowedMaxFile = ReposConfig.getValueByName("select", "allowedMaxFile");
+		    allowedFileTypeList = ReposConfig.getValueByName("textarea", "allowedFileTypeList");
+		    notAllowedFileTypeList = ReposConfig.getValueByName("textarea", "notAllowedFileTypeList");
+		    notAllowedFileList = ReposConfig.getValueByName("textarea", "notAllowedFileList");
 		}
 	    
 	    var remoteBackupConfig = 
@@ -1105,10 +1101,10 @@
 	{
 		console.log("doVerReposTest()");
 		
-		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
-	    var url = $("#dialog-new-repos input[name='svnPath']").val();
-	    var user = $("#dialog-new-repos input[name='svnUser']").val();
-	    var pwd = $("#dialog-new-repos input[name='svnPwd']").val();
+		var verCtrl = ReposConfig.getValueByName("select", "verCtrl");
+	    var url = ReposConfig.getValueByName("input", "svnPath");
+	    var user = ReposConfig.getValueByName("input", "svnUser");
+	    var pwd = ReposConfig.getValueByName("input", "svnPwd");
 		console.log("doVerReposTest() verCtrl:" + verCtrl + " url:" + url + " user:" +user + " pwd:" + pwd);
 		
 		var prefix = "";
