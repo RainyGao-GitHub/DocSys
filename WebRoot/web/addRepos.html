@@ -336,6 +336,7 @@
 	</div>
 </div>
 
+<script type="text/javascript" src="js/ReposConfig.js"></script>
 <script type="text/javascript" src="js/remoteStorageCommon.js"></script>
 <script type="text/javascript">
 	function addReposPageInit(_type, _parentNode)
@@ -347,23 +348,19 @@
             var defaultReposStorePath =  gDocSysConfig.defaultReposStorePath;
             var defaultLocalVerReposStorePath =  defaultReposStorePath + "DocSysVerReposes/";
 
-            $("#dialog-new-repos input[name='path']").val(gDocSysConfig.defaultReposStorePath);
-            //if(login_user.type == 2) //超级管理员，可以设置仓库路径
-            //{
-            	$("#dialog-new-repos input[name='path']").attr("disabled",false);
-            //}
+            ReposConfig.setValueByName("input", "path", gDocSysConfig.defaultReposStorePath);
+            ReposConfig.enableByName("input", "path");
            
             doSelectFS(); 
             
-            
-            $("#dialog-new-repos input[name='localSvnPath']").val(defaultLocalVerReposStorePath);	//local VersionRepos Path
-            $("#dialog-new-repos input[name='svnPath']").val("");	//置空
-            $("#dialog-new-repos input[name='svnUser']").val("");
-    		$("#dialog-new-repos input[name='svnPwd']").val("");
-            $("#dialog-new-repos input[name='localSvnPath1']").val(defaultLocalVerReposStorePath);	//local VersionRepos Path
-            $("#dialog-new-repos input[name='svnPath1']").val("");	//置空
-            $("#dialog-new-repos input[name='svnUser1']").val("");
-    		$("#dialog-new-repos input[name='svnPwd1']").val("");
+            ReposConfig.setValueByName("input", "localSvnPath", defaultLocalVerReposStorePath);
+            ReposConfig.setValueByName("input", "svnPath", "");
+            ReposConfig.setValueByName("input", "svnUser", "");
+            ReposConfig.setValueByName("input", "svnPwd", "");
+            ReposConfig.setValueByName("input", "localSvnPath1", defaultLocalVerReposStorePath);
+            ReposConfig.setValueByName("input", "svnPath1", "");
+            ReposConfig.setValueByName("input", "svnUser1", "");
+            ReposConfig.setValueByName("input", "svnPwd1", "");
 	}
 	
 	function cancelAddRepos()
@@ -382,23 +379,23 @@
 	
 	function doAddRepos()
 	{
-	    var name = $("#dialog-new-repos input[name='name']").val();
-	    var info = $("#dialog-new-repos textarea[name='info']").val();
-	    var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
-	    var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
+	    var name = ReposConfig.getValueByName("input", "name");
+	    var info = ReposConfig.getValueByName("textarea", "info");
+	    var path = ReposConfig.getValueByName("input", "path");
+	    var realDocPath = ReposConfig.getValueByName("input", "realDocPath");
 	    
 	    var textSearch = getTextSearchConfig();
-	    var encryptType = $("#dialog-new-repos input[name='isEncryptEnabled']").is(':checked')? 1: 0;
+	    var encryptType = ReposConfig.isCheckedByName("input", "isEncryptEnabled");
 	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
 	    console.log("autoBackupConfig = " + autoBackupConfig);
 	    
 	    //Virtual Doc Version Control
-	    var verCtrl1 = $("#dialog-new-repos select[name='verCtrl1']").val();
-	    var isRemote1 = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 1: 0;
-	    var localSvnPath1 = $("#dialog-new-repos input[name='localSvnPath1']").val();
-	    var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
-	    var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
-	    var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
+	    var verCtrl1 = ReposConfig.getValueByName("select", "verCtrl1");
+	    var isRemote1 = ReposConfig.isCheckedByName("input", "isRemote1");
+	    var localSvnPath1 = ReposConfig.getValueByName("input", "localSvnPath1");
+	    var svnPath1 = ReposConfig.getValueByName("input", "svnPath1");
+	    var svnUser1 = ReposConfig.getValueByName("input", "svnUser1");
+	    var svnPwd1 = ReposConfig.getValueByName("input", "svnPwd1");
 	    if(isRemote1 == 0)
 		{
 			localSvnPath1 =   path + "DocSysVerReposes/";        		
@@ -408,8 +405,7 @@
 	    {
 	    	verCtrl1 = 2;
 	    }
-	    
-	    
+	    	    
 		//前置服务器
 	    var remoteServer = "";
 	    //远程存储
@@ -422,18 +418,19 @@
 	    var svnUser = "";
 	    var svnPwd = "";
 		
-	    var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统  5:文件服务器前置
+	    var type = ReposConfig.getValueByName("select", "type"); //1:文件管理系统  5:文件服务器前置
 	    if(type == 1)
 	    {
 	    	//远程存储
 		    remoteStorage = getRemoteStorageConfig();	//remoteStorage
 		    //版本管理
-		    verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
-		    isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
-		    localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
-		    svnPath = $("#dialog-new-repos input[name='svnPath']").val();
-		    svnUser = $("#dialog-new-repos input[name='svnUser']").val();
-		    svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
+		    verCtrl = ReposConfig.getValueByName("select", "verCtrl");
+		    isRemote = ReposConfig.isCheckedByName("input", "isRemote");
+		    localSvnPath = ReposConfig.getValueByName("input", "localSvnPath");
+		    svnPath = ReposConfig.getValueByName("input", "svnPath");
+		    svnUser = ReposConfig.getValueByName("input", "svnUser");
+		    svnPwd = ReposConfig.getValueByName("input", "svnPwd");
+
 			if(isRemote == 0)
 			{
 				localSvnPath =   path + "DocSysVerReposes/";
@@ -517,19 +514,19 @@
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
 	function doSelectFS()
 	{
-		var type = $("#dialog-new-repos select[name='type']").val();
+		var type = ReposConfig.getValueByName("select", "type");
 		console.log("doSelectFS type:" + type);
 		if(type == 1 || type == 2)
 		{
-			$("#dialog-new-repos div[name='remoteServerDiv']").hide();
-			$("#dialog-new-repos div[name='remoteStorageDiv']").show();
-			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			ReposConfig.hideByName("div", "remoteServerDiv");
+			ReposConfig.showByName("div", "remoteStorageDiv");
+			ReposConfig.showByName("div", "verCtrlDiv");
 		}
 		else
 		{
-			$("#dialog-new-repos div[name='remoteServerDiv']").show();
-			$("#dialog-new-repos div[name='remoteStorageDiv']").hide();
-			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
+			ReposConfig.showByName("div", "remoteServerDiv");
+			ReposConfig.hideByName("div", "remoteStorageDiv");
+			ReposConfig.hideByName("div", "verCtrlDiv");
 		}
 	}
 	
