@@ -20,6 +20,26 @@ var ReposConfig = (function () {
   		$("#" + id).val(value);
 	}
   	
+  	function getTextByName(type, name)
+	{
+  		return $("#dialog-new-repos " + type + "[name='" + name +"']").text();
+	}
+  	
+  	function getTextById(id)
+	{
+  		return $("#" + id).text();
+	}
+  	
+  	function setTextByName(type, name, text)
+	{
+  		$("#dialog-new-repos " + type + "[name='" + name +"']").text(text);
+	}
+  	
+  	function setTextById(id, text)
+	{
+  		$("#" + id).text(text);
+	}
+  	
   	function disableByName(type, name)
 	{
   		$("#dialog-new-repos " + type + "[name='" + name +"']").attr("disabled","disabled");
@@ -69,6 +89,26 @@ var ReposConfig = (function () {
   	{
   		return $("#" + id).show();
   	}	
+  	
+  	function focusByName(type, name)
+  	{
+  		return $("#dialog-new-repos " + type + "[name='" + name +"']").focus();
+  	}	
+  	
+  	function focusById(id)
+  	{
+  		return $("#" + id).focus();
+  	}	
+  	
+  	function selectByName(type, name, index)
+  	{
+  		return $("#dialog-new-repos " + type + "[name='" + name +"']").get(0).selectedIndex=index;
+  	}	
+  	
+  	function selectById(id, index)
+  	{
+  		return $("#" + id).get(0).selectedIndex=index;
+  	}
 
 	//开放给外部的调用接口
     return {
@@ -83,6 +123,18 @@ var ReposConfig = (function () {
         },
     	setValueById: function(id,value){
     		setValueById(id,value);
+        },
+    	getTextByName: function(type,name){
+    		return getTextByName(type,name);
+        },
+    	getTextById: function(id){
+    		return getTextById(id);
+        },    
+    	setTextByName: function(type,name,text){
+    		setTextByName(type,name,text);
+        },
+    	setTextById: function(id,text){
+    		setTextById(id,text);
         },
         disableByName: function(type,name){
         	disableByName(type,name);
@@ -114,7 +166,18 @@ var ReposConfig = (function () {
         showByeId: function(id){
         	showByeId(id);
         },        
-
+        focusByName: function(type, name){
+        	focusByName(type, name);
+        },   
+        focusById: function(id){
+        	focusById(id);
+        }, 
+        selectByName: function(type, name, index){
+        	selectByName(type, name, index);
+        },   
+        selectById: function(id, index){
+        	selectById(id, index);
+        }, 
     };
 })();
     
