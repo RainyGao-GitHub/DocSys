@@ -327,21 +327,6 @@ function doSelectReposStorageConfigEnable()
 	}
 }
 
-/** 仓库路径设置 **/
-function doSelectReposStoragePathEnable()
-{
-	var reposStoragePathEnable = MyJquery.isChecked("reposStoragePathEnable");
-	console.log("doSelectReposStoragePathEnable reposStoragePathEnable:" + reposStoragePathEnable);
-	if(reposStoragePathEnable == 0)
-	{
-		MyJquery.hide("reposStoragePathConfig");
-	}
-	else
-	{	
-		MyJquery.show("reposStoragePathConfig");
-	}
-}
-
 /** 文件存储路径设置 **/
 function doSelectReposStorageRealDocPathEnable()
 {
