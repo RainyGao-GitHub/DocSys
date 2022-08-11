@@ -231,38 +231,38 @@ var ReposConfig = (function () {
 		
 	   	if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
 	   	{
-	   		$("#autoPull").attr("checked","checked");
+	   		$("#remoteStorage-autoPull").attr("checked","checked");
 	   	}
 	   	else
 	   	{
-	   		$("#autoPull").attr("checked",false);
+	   		$("#remoteStorage-autoPull").attr("checked",false);
 	   	}
 	   		
 	   	if(reposInfo.remoteStorageConfig.autoPullForce != undefined && reposInfo.remoteStorageConfig.autoPullForce == 1)
 	   	{
-			$("#autoPullForce").attr("checked","checked");
+			$("#remoteStorage-autoPullForce").attr("checked","checked");
 	   	}
 	   	else
 	   	{
-	   		$("#autoPullForce").attr("checked",false);
+	   		$("#remoteStorage-autoPullForce").attr("checked",false);
 	   	}
 	   		
 	   	if(reposInfo.remoteStorageConfig.autoPush != undefined && reposInfo.remoteStorageConfig.autoPush == 1)
 	   	{
-	   		$("#autoPush").attr("checked","checked");
+	   		$("#remoteStorage-autoPush").attr("checked","checked");
 	   	}
 	   	else
 	   	{
-			$("#autoPush").attr("checked",false);
+			$("#remoteStorage-autoPush").attr("checked",false);
 	   	}
 	   	
 	   	if(reposInfo.remoteStorageConfig.autoPushForce != undefined && reposInfo.remoteStorageConfig.autoPushForce == 1)
 	   	{
-	   		$("#autoPushForce").attr("checked","checked");
+	   		$("#remoteStorage-autoPushForce").attr("checked","checked");
 	   	}
 	   	else
 	   	{
-	   		$("#autoPushForce").attr("checked",false);
+	   		$("#remoteStorage-autoPushForce").attr("checked",false);
 	   	}
 	}
 	
@@ -554,32 +554,32 @@ var ReposConfig = (function () {
 		if(remoteStorageConfig.allowedMaxFile != undefined)
 		{
 			remoteBackupFilterEnable = 1;
-			$("#allowedMaxFile option[value='" + remoteStorageConfig.allowedMaxFile + "']").attr("selected","selected");	
+			$("#remoteBackup-allowedMaxFile option[value='" + remoteStorageConfig.allowedMaxFile + "']").attr("selected","selected");	
 		}
 		else
 		{
-			$("#allowedMaxFile option[value='0']").attr("selected","selected");			
+			$("#remoteBackup-allowedMaxFile option[value='0']").attr("selected","selected");			
 		}
 		
 		if(remoteStorageConfig.allowedFileTypeHashMap)
 		{
 			remoteBackupFilterEnable = 1;	
 			var allowedFileTypeList = getAllowedFileTypeList(remoteStorageConfig.allowedFileTypeHashMap);
-			$("#allowedFileTypeList").val(allowedFileTypeList);
+			$("#remoteBackup-allowedFileTypeList").val(allowedFileTypeList);
 		}
 		
 		if(remoteStorageConfig.notAllowedFileTypeHashMap)
 		{
 			remoteBackupFilterEnable = 1;
 			var notAllowedFileTypeList = getNotAllowedFileTypeList(remoteStorageConfig.notAllowedFileTypeHashMap);
-			$("#notAllowedFileTypeList").val(notAllowedFileTypeList);
+			$("#remoteBackup-notAllowedFileTypeList").val(notAllowedFileTypeList);
 		}
 		
 		if(remoteStorageConfig.notAllowedFileHashMap)
 		{
 			remoteBackupFilterEnable = 1;
 			var notAllowedFileList = getNotAllowedFileList(remoteStorageConfig.notAllowedFileHashMap);
-			$("#notAllowedFileList").val(notAllowedFileList);
+			$("#remoteBackup-notAllowedFileList").val(notAllowedFileList);
 		}
 		
 		if(remoteBackupFilterEnable == 0)
