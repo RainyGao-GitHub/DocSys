@@ -90,7 +90,13 @@
 				</div>
 				
 				<div id="verCtrlConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
-		            <label>版本仓库类型 <span id="verCtrl-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl()">自定义</span></label>
+		            <label>
+		            	版本仓库类型
+		            	<span id="verCtrl-isRemoteSetting" style="margin-left:20px">
+		            		<input type="checkbox" id="verCtrl-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl()">
+		            		自定义
+		            	</span>
+		            </label>
 		            <select class="form-control" id="repos-verCtrl" onchange="ReposConfig.doSelectVerCtrl();" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
