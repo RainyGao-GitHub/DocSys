@@ -99,31 +99,31 @@
 			</div>
 
 	    	<div id="verCtrlConfigDiv" style="display:none">
-		    	<label style="margin-left:20px">版本仓库看类型<span id="verCtr-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtr-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl()">自定义</span></label>
+		    	<label style="margin-left:20px">版本仓库看类型<span id="verCtrl-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl()">自定义</span></label>
 		       	<select class="form-control" id="repos-verCtrl" onchange="ReposConfig.doSelectVerCtrl();" style="margin-left:20px; width: 86%">   
 		        	<option value="0">无</option>   
 		            <option value="1">SVN</option>   
 		            <option value="2">GIT</option>   
 		        </select>
-			    <div id="verCtr-verReposSetting" style="padding-left:45px;display:none">
-					<div id="verCtr-localVerRepos">
+			    <div id="verCtrl-verReposSetting" style="padding-left:45px;display:none">
+					<div id="verCtrl-localVerRepos">
 						<label>版本仓库所在目录</label>
-					    <input class="form-control" type="text" id="verCtr-localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
+					    <input class="form-control" type="text" id="verCtrl-localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
 				    </div>
-				   	<div id="verCtr-remoteVerRepos">
+				   	<div id="vverCtrl-emoteVerRepos">
 						<label>版本仓库链接</label>
-					    <input class="form-control" type="text" id="verCtr-svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
+					    <input class="form-control" type="text" id="verCtrl-svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
 					    <label>用户名</label>
-					    <input class="form-control" type="text" id="verCtr-svnUser"  value="" style="width: 85%"/>
+					    <input class="form-control" type="text" id="verCtrl-svnUser"  value="" style="width: 85%"/>
 					    <label>密码</label>
-				        <input class="form-control" type="password" id="verCtr-svnPwd" value="" style="width: 85%"/>           
+				        <input class="form-control" type="password" id="verCtrl-svnPwd" value="" style="width: 85%"/>           
 				    </div>	
 				</div>
 			</div>
 	     </div>
 	       	
 	     <div id="virtualDocVerCtrlDiv"  style="margin-top:10px;padding-left:30px;display:none">
-	     	<label >备注版本管理<span id="verCtr1-isRemoteSetting" style="margin-left:20px"><input  type="checkbox" id="verCtr1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">自定义</span></label>
+	     	<label >备注版本管理<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input  type="checkbox" id="verCtrl1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">自定义</span></label>
 		    <select class="form-control" id="repos-verCtrl1" onchange="ReposConfig.doSelectVerCtrl1();" style="width: 86%">   
 		    	<option value="0">无</option>   
 		        <option value="1">SVN</option>   
@@ -132,15 +132,15 @@
 		    <div id="verReposSetting1" style="padding-left:45px;display:none">
 				<div id="localVerRepos1">            
 					<label>版本仓库所在目录</label>
-				    <input class="form-control" type="text" id="verCtr1-localSvnPath"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 85%"/>
+				    <input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 85%"/>
 		        </div>
 		        <div id="remoteVerRepos1">
 					<label>版本仓库链接</label>
-				    <input class="form-control" type="text" id="verCtr1-svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
+				    <input class="form-control" type="text" id="verCtrl1-svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 85%"/>
 				    <label>用户名</label>
-				    <input class="form-control" type="text" id="verCtr1-svnUser"  value="" style="width: 85%"/>
+				    <input class="form-control" type="text" id="verCtrl1-svnUser"  value="" style="width: 85%"/>
 				    <label>密码</label>
-				    <input class="form-control" type="password" id="verCtr1-svnPwd" value="" style="width: 85%"/>          
+				    <input class="form-control" type="password" id="verCtrl1-svnPwd" value="" style="width: 85%"/>          
 				</div>
 			</div>
 		</div>
