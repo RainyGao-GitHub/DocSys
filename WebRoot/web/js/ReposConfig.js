@@ -539,16 +539,16 @@ var ReposConfig = (function () {
 			remoteBackupFilterEnable = 1;
 			if(remoteStorageConfig.isUnkownFileAllowed == 0)
 			{
-	   			$("#isUnkownFileAllowed").attr("checked", false);		
+	   			$("#remoteBackup-isUnkownFileAllowed").attr("checked", false);		
 			}
 			else
 			{
-	   			$("#isUnkownFileAllowed").attr("checked","checked");		
+	   			$("#remoteBackup-isUnkownFileAllowed").attr("checked","checked");		
 			}
 		}
 		else
 		{
-			$("#isUnkownFileAllowed").attr("checked","checked");
+			$("#remoteBackup-isUnkownFileAllowed").attr("checked","checked");
 		}
 		
 		if(remoteStorageConfig.allowedMaxFile != undefined)
