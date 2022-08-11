@@ -1747,5 +1747,8 @@ var ReposConfig = (function () {
 	    cancelAddRepos: function(){
 	    	cancelAddRepos();
 	    },
+	    saveReposBasicSetting: function(){
+	    	saveReposBasicSetting();
+	    },
 	};
 })();
