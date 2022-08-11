@@ -13,7 +13,7 @@
 
         	<div style="margin-top:10px">            
 	        	<label>仓库类型</label>
-            	<select class="form-control" id="repos-type" onchange="doSelectFS();" style="width: 100%">   
+            	<select class="form-control" id="repos-type" onchange="ReposConfig.doSelectFS();" style="width: 100%">   
             		<option value="1" selected="selected">文件管理系统</option>   
             		<option value="5">文件服务器前置</option>
             	</select>
@@ -22,7 +22,7 @@
 			<div id="remoteServerDiv" style="margin-top:10px"  style="display:none">
 				<label>文件服务器</label>
 				<div style="height: 40px">
-					<select class="form-control" id="remoteServerProtocol" onchange="doSelectRemoteServerProtocol();" style="width:87%">   
+					<select class="form-control" id="remoteServerProtocol" onchange="ReposConfig.doSelectRemoteServerProtocol();" style="width:87%">   
 			        	<option value="ftp">FTP</option>   
 			            <option value="sftp">SFTP</option>   
 			            <option value="smb">SMB</option>  
@@ -30,7 +30,7 @@
 			            <option value="git">GIT</option>  
 			            <option value="mxsdoc">MXSDOC</option>  
 			        </select>
-			        <button  type="button" class="btn btnPrimary" onclick="doRemoteSeverTest()" style="position: relative;top:-33px;left:90%">测试</button>
+			        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteSeverTest()" style="position: relative;top:-33px;left:90%">测试</button>
 				</div>
 				<input class="form-control" type="text" id="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
 			</div>  
@@ -39,9 +39,9 @@
 				<label>仓库位置</label>
 				<input class="form-control" type="text" id="repos-path"  value="" style="width: 100%" disabled="disabled"/>
 			    
-			    <label>文件存储位置
+			    <label style="margin-top:10px">文件存储位置
 			    	<span style="margin-left:20px">
-						<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="doSelectReposStorageRealDocPathEnable()">自定义
+						<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="ReposConfig.doSelectReposStorageRealDocPathEnable()">自定义
 					</span> 
 			    </label>
 				<div id="reposStorageRealDocPathConfig" style="display:none">
@@ -52,13 +52,13 @@
         	<div id="remoteStorageDiv" style="margin-top:20px">
 	        	<label>远程存储
 	        		<span style="margin-left:5px">
-	            		<input type="checkbox" id="remoteStorageConfigEnable" value="0" onclick="doSelectRemoteStorageConfigEnable()">
+	            		<input type="checkbox" id="remoteStorageConfigEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageConfigEnable()">
 	            	</span>
 				</label>
 				
 				<div id="remoteStorageConfigDiv" style="display:none">
 					<div style="height: 40px">
-						<select class="form-control" id="remoteStorageProtocol" onchange="doSelectRemoteStorageProtocol();" style="width:87%">   
+						<select class="form-control" id="remoteStorageProtocol" onchange="ReposConfig.doSelectRemoteStorageProtocol();" style="width:87%">   
 				        	<option value="">无</option>
 				            <option value="ftp">FTP</option>   
 				            <option value="sftp">SFTP</option>   
@@ -67,7 +67,7 @@
 				            <option value="git">GIT</option>  
 				            <option value="mxsdoc">MXSDOC</option>  
 				        </select>
-	            		<button  type="button" class="btn btnPrimary" onclick="doRemoteStorageTest()" style="position: relative;top:-33px;left:90%">测试</button>
+	            		<button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteStorageTest()" style="position: relative;top:-33px;left:90%">测试</button>
 				    </div>
 					<div id="remoteStorageProtocolConfig" style="margin-top:10px; display:none">
 			           	<input class="form-control" type="text" id="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
@@ -83,15 +83,15 @@
 	        	<div id="verCtrlEnablelDiv" style="margin-top:10px">
 		            <label>版本管理 
 		            	<span style="margin-left:5px">
-		            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="doSelectVerCtrlEnable()">
+		            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="ReposConfig.doSelectVerCtrlEnable()">
 		            	</span>
 		            </label>
-		            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="doSelectShowVerCtrlConfig()">显示高级选项</span>
+		            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="ReposConfig.doSelectShowVerCtrlConfig()">显示高级选项</span>
 				</div>
 				
 				<div id="verCtrlConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
-		            <label>版本仓库类型 <span id="verCtrl-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl-isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
-		            <select class="form-control" id="repos-verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
+		            <label>版本仓库类型 <span id="verCtrl-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl()">自定义</span></label>
+		            <select class="form-control" id="repos-verCtrl" onchange="ReposConfig.doSelectVerCtrl();" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
 		            	<option value="2">GIT</option>   
@@ -105,7 +105,7 @@
 				            <label>版本仓库链接</label>
 				            <div style="height:40px;">
 				            	<input class="form-control" type="text" id="verCtrl-svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 87%"/>
-				            	<button  type="button" class="btn btnPrimary" onclick="doVerReposTest()" style="position: relative;top:-33px;left:90%">测试</button>
+				            	<button  type="button" class="btn btnPrimary" onclick="ReposConfig.doVerReposTest()" style="position: relative;top:-33px;left:90%">测试</button>
 				            </div>
 				            <label>用户名</label>
 				            <input class="form-control" type="text" id="verCtrl-svnUser"  value="" style="width: 100%"/>
@@ -117,8 +117,8 @@
 		   	</div>
 	        
 	        <div id="virtualDocVerCtrlConfigDiv" style="display:none">
-		    	<label>备注版本管理<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input  type="checkbox" id="verCtrl1-isRemote" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
-		        <select class="form-control" id="repos-verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
+		    	<label>备注版本管理<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input  type="checkbox" id="verCtrl1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">自定义</span></label>
+		        <select class="form-control" id="repos-verCtrl1" onchange="ReposConfig.doSelectVerCtrl1();" style="width: 100%">   
 	            	<option value="0">无</option>   
 	            	<option value="1">SVN</option>   
 	            	<option value="2">GIT</option>  
@@ -146,13 +146,13 @@
 	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0"></span></label>
 			</div>
 			<div id="encryptEnablelDiv" style="margin-top:10px">
-	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0"></span></label>
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="ReposConfig.doSetEncryptConfirm()"></span></label>
 			</div>
 			
 			<div id="autoBackupEnablelDiv" style="margin-top:10px">
 	            <label>自动备份 
 	            	<span style="margin-left:5px">
-	            		<input type="checkbox" id="autoBackupEnable" value="0" onclick="doSelectAutoBackupConfigEanble()">
+	            		<input type="checkbox" id="autoBackupEnable" value="0" onclick="ReposConfig.doSelectAutoBackupConfigEanble()">
 	            	</span>
 	            </label>
 			</div>
@@ -160,7 +160,7 @@
 			<div id="autoBackupConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
 	            <label>本地备份
 	            	<span style="margin-left:5px">
-	            		<input type="checkbox" id="localBackupEnable" value="0" onclick="doSelectLocalBackupEnable()">
+	            		<input type="checkbox" id="localBackupEnable" value="0" onclick="ReposConfig.doSelectLocalBackupEnable()">
 	            	</span>
 	            </label>
 	            <div id="localBackupConfig" style="display:none">
@@ -213,12 +213,12 @@
 
 	            <label style="margin-top:10px">异地备份 
 	            	<span style="margin-left:5px;">
-	            		<input type="checkbox" id="remoteBackupEnable" value="0" onclick="doSelectRemoteBackupEnable()">
+	            		<input type="checkbox" id="remoteBackupEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupEnable()">
 	            	</span>
 	            </label>
 	            <div id="remoteBackupConfig" style="display:none">
 	            	<div style="height:40px;">
-			        	<select class="form-control" id="remoteBackupStorageProtocol" onchange="doSelectRemoteBackupStorageProtocol();" style="width:87%">   
+			        	<select class="form-control" id="remoteBackupStorageProtocol" onchange="ReposConfig.doSelectRemoteBackupStorageProtocol();" style="width:87%">   
 					        <option value="">无</option>
 					        <option value="ftp">FTP</option>   
 					        <option value="sftp">SFTP</option>   
@@ -227,7 +227,7 @@
 					        <option value="git">GIT</option>  
 					        <option value="mxsdoc">MXSDOC</option>  
 					    </select>
-			        	<button  type="button" class="btn btnPrimary" onclick="doRemoteBackupStorageTest()" style="position: relative;top:-33px;left:90%">测试</button>
+			        	<button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteBackupStorageTest()" style="position: relative;top:-33px;left:90%">测试</button>
 				    </div>
 				    <div id="remoteBackupStorageConfig" style="margin-top:10px; display:none">
 		           		<input class="form-control" type="text" id="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
@@ -271,7 +271,7 @@
 		            	
 		            	<label style="margin-top:10px">高级选项
 		            		<span style="margin-left:5px">
-		            			<input type="checkbox" id="remoteBackupFilterEnable" value="0" onclick="doSelectRemoteBackupFilterEnable()">
+		            			<input type="checkbox" id="remoteBackupFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupFilterEnable()">
 		            		</span>
 		            	</label>
 						<div id="remoteBackupFilterConfig" style="margin-top:5px; display:none">
@@ -280,15 +280,15 @@
 							</div> 
 							<div style="height:60px;">
 								<span style="margin-top:5px">允许的文件类型</span>
-								<textarea class="form-control" type="text" id="remoteBackup-allowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"/>
+								<textarea class="form-control" id="remoteBackup-allowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
 							</div>  
 							<div style="height:60px;">
 								<span style="margin-top:5px">不允许的文件类型</span>
-								<textarea class="form-control" type="text" id="remoteBackup-notAllowedFileTypeList" placeholder=".bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:75%"/>
+								<textarea class="form-control" id="remoteBackup-notAllowedFileTypeList" placeholder=".bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
 							</div>  
 							<div style="height:60px;">
 								<span style="margin-top:5px">不允许的文件</span>
-								<textarea class="form-control" type="text" id="remoteBackup-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:75%"/>
+								<textarea class="form-control" id="remoteBackup-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
 							</div>  
 							<div style="height:60px;">
 								<span style="margin-top:5px">允许的最大文件</span>
@@ -322,8 +322,8 @@
     <div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="doAddRepos();" style="width: 100px;height: 42px;">确定</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelAddRepos();" style="width: 100px;height: 42px;">取消</button>
+		        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doAddRepos();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.cancelAddRepos();" style="width: 100px;height: 42px;">取消</button>
 			</div>
 		</div>
 	</div>
