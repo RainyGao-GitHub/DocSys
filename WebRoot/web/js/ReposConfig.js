@@ -27,19 +27,19 @@ var ReposConfig = (function () {
         MyJquery.setValue("repos-svnPwd1", "");
 	}
 	
-	function editReposPageInit()
-	{
-		reposId = getQueryString("vid");;
-		console.log("editReposPageInit() reposId:" + reposId);
-		getReposBasicSetting();
-	}
-	
 	function editReposPageInit(_reposId, _reposInfo)
 	{
+		console.log("editReposPageInit() _reposId:" + _reposId + " _reposInfo:", _reposInfo);
 		reposId = _reposId;
-		gCurReposInfo = _reposInfo;
-		console.log("editReposPageInit() reposId:" + reposId + " gCurReposInfo:", gCurReposInfo);
-		showReposBasicSetting(gCurReposInfo);
+		if(_reposInfo)
+		{
+			gCurReposInfo = _reposInfo;
+			showReposBasicSetting(gCurReposInfo);
+		}
+		else
+		{
+			getReposBasicSetting();			
+		}
 	}
 	
 	function getReposBasicSetting()
@@ -1678,9 +1678,6 @@ var ReposConfig = (function () {
 		addReposPageInit: function(){
 			addReposPageInit();
 	    },    
-	    editReposPageInit: function(){
-	    	editReposPageInit();
-	    },
 	    editReposPageInit: function(reposId, reposInfo){
 	    	editReposPageInit(reposId, reposInfo);
 	    },
