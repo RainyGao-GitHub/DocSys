@@ -1512,7 +1512,7 @@ var ReposConfig = (function () {
 	
 	function getRemoteBackupRemoteStorageConfig()
 	{
-		var protocol = $("#dialog-new-repos select[name='remoteBackupStorageProtocol']").val();
+		var protocol = MyJquery.getValue("remoteBackupStorageProtocol");
 		console.log("getRemoteBackupRemoteStorageConfig protocol:" + protocol);
 		if(protocol == undefined || protocol == "")
 		{
@@ -1676,5 +1676,59 @@ var ReposConfig = (function () {
 	    EnterKeyListenerForEditRepos: function(){
 	    	EnterKeyListenerForEditRepos();
 	    },	    
+	    doSelectFS: function(){
+	    	doSelectFS();
+	    },    
+	    doSelectRemoteServerProtocol: function(){
+	    	doSelectRemoteServerProtocol();
+	    },    
+	    doRemoteSeverTest: function(){
+	    	doRemoteSeverTest();
+	    },    
+	    doSelectReposStorageRealDocPathEnable: function(){
+	    	doSelectReposStorageRealDocPathEnable();
+	    },    
+	    doSelectRemoteStorageConfigEnable: function(){
+	    	doSelectRemoteStorageConfigEnable();
+	    },    
+	    doSelectRemoteStorageProtocol: function(){
+	    	doSelectRemoteStorageProtocol();
+	    },    
+	    doRemoteStorageTest: function(){
+	    	doRemoteStorageTest();
+	    },    
+	    doSelectVerCtrlEnable: function(){
+	    	doSelectVerCtrlEnable();
+	    },    
+	    doSelectShowVerCtrlConfig: function(){
+	    	doSelectShowVerCtrlConfig();
+	    },    
+	    doSelectVerCtrl: function(){
+	    	doSelectVerCtrl();
+	    },    
+	    doVerReposTest: function(){
+	    	doVerReposTest();
+	    },    
+	    doSetEncryptConfirm: function(){
+	    	doSetEncryptConfirm();
+	    },    
+	    doSelectAutoBackupConfigEanble: function(){
+	    	doSelectAutoBackupConfigEanble();
+	    },    
+	    doSelectLocalBackupEnable: function(){
+	    	doSelectLocalBackupEnable();
+	    },    
+	    doSelectRemoteBackupEnable: function(){
+	    	doSelectRemoteBackupEnable();
+	    },    
+	    doSelectRemoteBackupStorageProtocol: function(){
+	    	doSelectRemoteBackupStorageProtocol();
+	    },    
+	    doRemoteBackupStorageTest: function(){
+	    	doRemoteBackupStorageTest();
+	    },    
+	    doSelectRemoteBackupFilterEnable: function(){
+	    	doSelectRemoteBackupFilterEnable();
+	    },       
 	};
 })();
