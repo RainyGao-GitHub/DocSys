@@ -1678,10 +1678,10 @@ var ReposConfig = (function () {
 		addReposPageInit: function(){
 			addReposPageInit();
 	    },    
-	    editReposPageInit(): function(){
+	    editReposPageInit: function(){
 	    	editReposPageInit();
 	    },
-	    editReposPageInit(reposId, reposInfo): function(){
+	    editReposPageInit: function(reposId, reposInfo){
 	    	editReposPageInit(reposId, reposInfo);
 	    },
 	    EnterKeyListenerForAddRepos: function(){
