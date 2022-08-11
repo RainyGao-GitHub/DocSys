@@ -1077,6 +1077,7 @@ var ReposConfig = (function () {
 			MyJquery.setText("showVerCtrlConfig", "显示高级选项");
 			MyJquery.hide("verCtrlConfigDiv");
 		}
+		doSelectVerCtrl();
 	}
 	
 	//According verCtrl value to disale the svnPath or not
