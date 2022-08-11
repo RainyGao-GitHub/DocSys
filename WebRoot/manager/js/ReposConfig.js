@@ -29,9 +29,17 @@ var ReposConfig = (function () {
 	
 	function editReposPageInit()
 	{
-		reposId = getQueryString("vid");
+		reposId = getQueryString("vid");;
 		console.log("editReposPageInit() reposId:" + reposId);
 		getReposBasicSetting();
+	}
+	
+	function editReposPageInit(_reposId, _reposInfo)
+	{
+		reposId = _reposId;
+		gCurReposInfo = _reposInfo;
+		console.log("editReposPageInit() reposId:" + reposId + " gCurReposInfo:", gCurReposInfo);
+		showReposBasicSetting(gCurReposInfo);
 	}
 	
 	function getReposBasicSetting()
@@ -57,582 +65,585 @@ var ReposConfig = (function () {
 	               showErrorMessage("服务器异常:获取仓库信息失败");
 	           }
 	    });
-	    
-		function showReposBasicSetting(reposInfo)
+	}   
+
+	//编辑页面初始化代码 Start	
+	function showReposBasicSetting(reposInfo)
+	{
+	   	$("#repos-name").val(reposInfo.name);
+	   	$("#repos-info").val(reposInfo.info);
+	   	$("#repos-path").val(reposInfo.path);
+	   	
+	   	if(reposInfo.type == 1 || reposInfo.type == 2)
+	   	{
+	   		$("#repos-type").get(0).selectedIndex=0;	//文件管理系统
+	   	}
+	   	else
+	   	{
+	   		$("#repos-type").get(0).selectedIndex=1;	//文件服务器前置
+	   	}
+	   	
+	   	//文件存储路径显示
+	   	showReposStorageRealDocPath(reposInfo);
+	   	
+	   	//文件服务器前置
+	   	showRemoteServerConfig(reposInfo);
+	   	
+	   	//远程存储
+	   	showRemoteStorageConfig(reposInfo);
+	   	
+	   	//版本管理
+	   	if(reposInfo.verCtrl == 0)
+	   	{
+	   		$("#verCtrlEnable").attr("checked",false);
+	   		$("#verCtrlConfigDiv").hide();		//隐藏 高级选项
+	   		$("#showVerCtrlConfig").hide();	//隐藏 高级选项提示
+	   		$("#showVerCtrlConfig").val(0);
+	   		$("#showVerCtrlConfig").text("显示高级选项");
+	   	}
+	   	else
+	   	{	
+	   		$("#verCtrlEnable").attr("checked","checked");
+	   		$("#verCtrlConfigDiv").hide();			//隐藏 高级选项
+	   		$("#showVerCtrlConfig").show();		//显示 高级选项提示
+	   		$("#showVerCtrlConfig").val(0);
+	   		$("#showVerCtrlConfig").text("显示高级选项");						
+	   	}
+	   	$("#repos-verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote == 0)
+	   	{
+		   	$("#verCtrl-isRemote").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#verCtrl-isRemote").attr("checked","checked");
+	   	}
+	   	$("#verCtrl-localSvnPath").val(reposInfo.localSvnPath);
+	   	$("#verCtrl-svnPath").val(reposInfo.svnPath);
+	   	$("#verCtrl-svnUser").val(reposInfo.svnUser);
+	   	$("#verCtrl-svnPwd").val(reposInfo.svnPwd);
+	   	
+	   	//备注版本管理
+	   	$("#repos-verCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote1 == 0)
+	   	{
+		   	$("#verCtrl1-isRemote").attr("checked",false);	   		
+	   	}
+	   	else
+	   	{
+		   	$("#verCtrl1-isRemote").attr("checked","checked");
+	   	}
+	   	$("#verCtrl1-localSvnPath").val(reposInfo.localSvnPath1);
+	   	$("#verCtrl1-svnPath").val(reposInfo.svnPath1);
+	   	$("#verCtrl1-svnUser").val(reposInfo.svnUser1);
+	   	$("#verCtrl1-svnPwd").val(reposInfo.svnPwd1);
+		
+	   	//全文搜索
+	    showTextSearchConfig(reposInfo);
+	   	
+	   	//文件加密
+	   	if(reposInfo.encryptType == 0)
+	   	{
+		   	$("#isEncryptEnabled").attr("checked",false);
+	   	}
+	   	else
+	   	{
+		   	$("#isEncryptEnabled").attr("checked","checked");
+	   	}
+	   	
+	   	//自动备份
+	   	showAutoBackupConfig(reposInfo);
+	   	
+	   	//初始化显示
+	   	doSelectFS();
+	}
+	
+	/** 文件存储位置设置 **/
+	function showReposStorageRealDocPath(reposInfo)
+	{
+	   	if(reposInfo.realDocPath == null || reposInfo.realDocPath == "")
+	   	{
+			$("#reposStorageRealDocPathEnable").attr("checked",false);
+	   		$("#reposStorageRealDocPathConfig").hide();
+	   	}
+	   	else
+	   	{
+	   		$("#reposStorageRealDocPathEnable").attr("checked","checked");
+			$("#reposStorageRealDocPathConfig").show();
+	   		$("#repos-realDocPath").val(reposInfo.realDocPath);
+	   	}	
+	}
+	
+	/*** 文件服务器前置 ****/
+	function showRemoteServerConfig(reposInfo)
+	{
+		if(reposInfo.remoteServerConfig == undefined)
+	   	{
+			$("#remoteServerDiv").hide();
+			$("#remoteServerProtocol option[value='']").attr("selected","selected");		
+			return;
+	   	}
+		
+		var protocol = reposInfo.remoteServerConfig.protocol;
+		if(protocol == undefined || protocol == "")
 		{
-		   	$("#repos-name").val(reposInfo.name);
-		   	$("#repos-info").val(reposInfo.info);
-		   	$("#repos-path").val(reposInfo.path);
-		   	
-		   	if(reposInfo.type == 1 || reposInfo.type == 2)
-		   	{
-		   		$("#repos-type").get(0).selectedIndex=0;	//文件管理系统
-		   	}
-		   	else
-		   	{
-		   		$("#repos-type").get(0).selectedIndex=1;	//文件服务器前置
-		   	}
-		   	
-		   	//文件存储路径显示
-		   	showReposStorageRealDocPath(reposInfo);
-		   	
-		   	//文件服务器前置
-		   	showRemoteServerConfig(reposInfo);
-		   	
-		   	//远程存储
-		   	showRemoteStorageConfig(reposInfo);
-		   	
-		   	//版本管理
-		   	if(reposInfo.verCtrl == 0)
-		   	{
-		   		$("#verCtrlEnable").attr("checked",false);
-		   		$("#verCtrlConfigDiv").hide();		//隐藏 高级选项
-		   		$("#showVerCtrlConfig").hide();	//隐藏 高级选项提示
-		   		$("#showVerCtrlConfig").val(0);
-		   		$("#showVerCtrlConfig").text("显示高级选项");
-		   	}
-		   	else
-		   	{	
-		   		$("#verCtrlEnable").attr("checked","checked");
-		   		$("#verCtrlConfigDiv").hide();			//隐藏 高级选项
-		   		$("#showVerCtrlConfig").show();		//显示 高级选项提示
-		   		$("#showVerCtrlConfig").val(0);
-		   		$("#showVerCtrlConfig").text("显示高级选项");						
-		   	}
-		   	$("#repos-verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
-		   	if(reposInfo.isRemote == 0)
-		   	{
-			   	$("#verCtrl-isRemote").attr("checked",false);
-		   	}
-		   	else
-		   	{
-			   	$("#verCtrl-isRemote").attr("checked","checked");
-		   	}
-		   	$("#verCtrl-localSvnPath").val(reposInfo.localSvnPath);
-		   	$("#verCtrl-svnPath").val(reposInfo.svnPath);
-		   	$("#verCtrl-svnUser").val(reposInfo.svnUser);
-		   	$("#verCtrl-svnPwd").val(reposInfo.svnPwd);
-		   	
-		   	//备注版本管理
-		   	$("#repos-verCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
-		   	if(reposInfo.isRemote1 == 0)
-		   	{
-			   	$("#verCtrl1-isRemote").attr("checked",false);	   		
-		   	}
-		   	else
-		   	{
-			   	$("#verCtrl1-isRemote").attr("checked","checked");
-		   	}
-		   	$("#verCtrl1-localSvnPath").val(reposInfo.localSvnPath1);
-		   	$("#verCtrl1-svnPath").val(reposInfo.svnPath1);
-		   	$("#verCtrl1-svnUser").val(reposInfo.svnUser1);
-		   	$("#verCtrl1-svnPwd").val(reposInfo.svnPwd1);
-			
-		   	//全文搜索
-		    showTextSearchConfig(reposInfo);
-		   	
-		   	//文件加密
-		   	if(reposInfo.encryptType == 0)
-		   	{
-			   	$("#isEncryptEnabled").attr("checked",false);
-		   	}
-		   	else
-		   	{
-			   	$("#isEncryptEnabled").attr("checked","checked");
-		   	}
-		   	
-		   	//自动备份
-		   	showAutoBackupConfig(reposInfo);
-		   	
-		   	//初始化显示
-		   	doSelectFS();
+			$("#remoteServerProtocol option[value='']").attr("selected","selected");			
+			$("#remoteServerDiv").hide();
+			return;
 		}
 		
-		/** 文件存储位置设置 **/
-		function showReposStorageRealDocPath(reposInfo)
+		$("#remoteServerDiv").show();			
+		$("#remoteServerProtocol option[value='" + protocol + "']").attr("selected","selected");	
+		
+		var remoteServer = buildRemoteStorageConfigStr(reposInfo.remoteServerConfig);
+		$("#remoteServer").val(remoteServer);
+	}
+	
+	/*** 远程存储 ****/
+	function showRemoteStorageConfig(reposInfo)
+	{
+		if(reposInfo.remoteStorageConfig == undefined)
+	   	{
+	    	$("#remoteStorageConfigDiv").hide();
+	       	$("#remoteStorageConfigEnable").attr("checked",false);
+			
+			$("#remoteStorageProtocolConfig").hide();
+			$("#remoteStorageProtocol option[value='']").attr("selected","selected");		
+			return;
+	   	}
+		
+		$("#remoteStorageConfigDiv").show();
+	   	$("#remoteStorageConfigEnable").attr("checked","checked");
+	   	
+		var protocol = reposInfo.remoteStorageConfig.protocol;
+		if(protocol == undefined || protocol == "")
 		{
-		   	if(reposInfo.realDocPath == null || reposInfo.realDocPath == "")
-		   	{
-				$("#reposStorageRealDocPathEnable").attr("checked",false);
-		   		$("#reposStorageRealDocPathConfig").hide();
-		   	}
-		   	else
-		   	{
-		   		$("#reposStorageRealDocPathEnable").attr("checked","checked");
-				$("#reposStorageRealDocPathConfig").show();
-		   		$("#repos-realDocPath").val(reposInfo.realDocPath);
-		   	}	
+			$("#remoteStorageProtocol option[value='']").attr("selected","selected");			
+			$("#remoteStorageProtocolConfig").hide();
+			return;
 		}
 		
-		/*** 文件服务器前置 ****/
-		function showRemoteServerConfig(reposInfo)
+		$("#remoteStorageProtocolConfig").show();			
+		$("#remoteStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
+		
+		var remoteStorage =  buildRemoteStorageConfigStr(reposInfo.remoteStorageConfig);
+		$("#remoteStorage").val(remoteStorage);
+		
+	   	if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
+	   	{
+	   		$("#autoPull").attr("checked","checked");
+	   	}
+	   	else
+	   	{
+	   		$("#autoPull").attr("checked",false);
+	   	}
+	   		
+	   	if(reposInfo.remoteStorageConfig.autoPullForce != undefined && reposInfo.remoteStorageConfig.autoPullForce == 1)
+	   	{
+			$("#autoPullForce").attr("checked","checked");
+	   	}
+	   	else
+	   	{
+	   		$("#autoPullForce").attr("checked",false);
+	   	}
+	   		
+	   	if(reposInfo.remoteStorageConfig.autoPush != undefined && reposInfo.remoteStorageConfig.autoPush == 1)
+	   	{
+	   		$("#autoPush").attr("checked","checked");
+	   	}
+	   	else
+	   	{
+			$("#autoPush").attr("checked",false);
+	   	}
+	   	
+	   	if(reposInfo.remoteStorageConfig.autoPushForce != undefined && reposInfo.remoteStorageConfig.autoPushForce == 1)
+	   	{
+	   		$("#autoPushForce").attr("checked","checked");
+	   	}
+	   	else
+	   	{
+	   		$("#autoPushForce").attr("checked",false);
+	   	}
+	}
+	
+	/****** 全文搜索  *****/
+	function showTextSearchConfig(reposInfo)
+	{	
+		console.log("showTextSearchConfig textSearchConfig:", reposInfo.textSearchConfig);
+		if(reposInfo.textSearchConfig == undefined)
+	   	{
+			$("#isTextSearchEnabled").attr("checked",false);
+	   	}
+		else
 		{
-			if(reposInfo.remoteServerConfig == undefined)
-		   	{
-				$("#remoteServerDiv").hide();
-				$("#remoteServerProtocol option[value='']").attr("selected","selected");		
-				return;
-		   	}
-			
-			var protocol = reposInfo.remoteServerConfig.protocol;
-			if(protocol == undefined || protocol == "")
+			var enable = reposInfo.textSearchConfig.enable;
+			if(enable == undefined || enable == false)
 			{
-				$("#remoteServerProtocol option[value='']").attr("selected","selected");			
-				$("#remoteServerDiv").hide();
-				return;
-			}
-			
-			$("#remoteServerDiv").show();			
-			$("#remoteServerProtocol option[value='" + protocol + "']").attr("selected","selected");	
-			
-			var remoteServer = buildRemoteStorageConfigStr(reposInfo.remoteServerConfig);
-			$("#remoteServer").val(remoteServer);
-		}
-		
-		/*** 远程存储 ****/
-		function showRemoteStorageConfig(reposInfo)
-		{
-			if(reposInfo.remoteStorageConfig == undefined)
-		   	{
-		    	$("#remoteStorageConfigDiv").hide();
-		       	$("#remoteStorageConfigEnable").attr("checked",false);
-				
-				$("#remoteStorageProtocolConfig").hide();
-				$("#remoteStorageProtocol option[value='']").attr("selected","selected");		
-				return;
-		   	}
-			
-			$("#remoteStorageConfigDiv").show();
-		   	$("#remoteStorageConfigEnable").attr("checked","checked");
-		   	
-			var protocol = reposInfo.remoteStorageConfig.protocol;
-			if(protocol == undefined || protocol == "")
-			{
-				$("#remoteStorageProtocol option[value='']").attr("selected","selected");			
-				$("#remoteStorageProtocolConfig").hide();
-				return;
-			}
-			
-			$("#remoteStorageProtocolConfig").show();			
-			$("#remoteStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
-			
-			var remoteStorage =  buildRemoteStorageConfigStr(reposInfo.remoteStorageConfig);
-			$("#remoteStorage").val(remoteStorage);
-			
-		   	if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
-		   	{
-		   		$("#autoPull").attr("checked","checked");
-		   	}
-		   	else
-		   	{
-		   		$("#autoPull").attr("checked",false);
-		   	}
-		   		
-		   	if(reposInfo.remoteStorageConfig.autoPullForce != undefined && reposInfo.remoteStorageConfig.autoPullForce == 1)
-		   	{
-				$("#autoPullForce").attr("checked","checked");
-		   	}
-		   	else
-		   	{
-		   		$("#autoPullForce").attr("checked",false);
-		   	}
-		   		
-		   	if(reposInfo.remoteStorageConfig.autoPush != undefined && reposInfo.remoteStorageConfig.autoPush == 1)
-		   	{
-		   		$("#autoPush").attr("checked","checked");
-		   	}
-		   	else
-		   	{
-				$("#autoPush").attr("checked",false);
-		   	}
-		   	
-		   	if(reposInfo.remoteStorageConfig.autoPushForce != undefined && reposInfo.remoteStorageConfig.autoPushForce == 1)
-		   	{
-		   		$("#autoPushForce").attr("checked","checked");
-		   	}
-		   	else
-		   	{
-		   		$("#autoPushForce").attr("checked",false);
-		   	}
-		}
-		
-		/****** 全文搜索  *****/
-		function showTextSearchConfig(reposInfo)
-		{	
-			console.log("showTextSearchConfig textSearchConfig:", reposInfo.textSearchConfig);
-			if(reposInfo.textSearchConfig == undefined)
-		   	{
 				$("#isTextSearchEnabled").attr("checked",false);
-		   	}
+			}
 			else
 			{
-				var enable = reposInfo.textSearchConfig.enable;
-				if(enable == undefined || enable == false)
-				{
-					$("#isTextSearchEnabled").attr("checked",false);
-				}
-				else
-				{
-					$("#isTextSearchEnabled").attr("checked","checked");
-				}
+				$("#isTextSearchEnabled").attr("checked","checked");
 			}
-			
-			reposInfo.textSearch = getTextSearchConfig();
-			console.log("reposInfo.textSearch:" + reposInfo.textSearch);
 		}
 		
-		/******* 自动备份 *************/
-		function showAutoBackupConfig(reposInfo)
-		{
-			if(reposInfo.backupConfig == undefined)
-		   	{
+		reposInfo.textSearch = getTextSearchConfig();
+		console.log("reposInfo.textSearch:" + reposInfo.textSearch);
+	}
+	
+	/******* 自动备份 *************/
+	function showAutoBackupConfig(reposInfo)
+	{
+		if(reposInfo.backupConfig == undefined)
+	   	{
+			$("#autoBackupConfigDiv").hide();
+	   		$("#autoBackupEnable").attr("checked",false);
+		}
+		else
+		{	
+			if(reposInfo.backupConfig.localBackupConfig == undefined && 
+				reposInfo.backupConfig.remoteBackupConfig == undefined)
+			{
 				$("#autoBackupConfigDiv").hide();
 		   		$("#autoBackupEnable").attr("checked",false);
 			}
 			else
-			{	
-				if(reposInfo.backupConfig.localBackupConfig == undefined && 
-					reposInfo.backupConfig.remoteBackupConfig == undefined)
-				{
-					$("#autoBackupConfigDiv").hide();
-			   		$("#autoBackupEnable").attr("checked",false);
-				}
-				else
-				{
-					
-					$("#autoBackupConfigDiv").show();
-					$("#autoBackupEnable").attr("checked", "checked");
-					
-					showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
-					showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
-				}
-			}
-			
-			//init autoBackup
-			reposInfo.autoBackup = getAutoBackupConfig();
-			console.log("reposInfo.autoBackup:" + reposInfo.autoBackup);
-		}
-
-		function showLocalBackupConfig(localBackupConfig)
-		{
-			if(localBackupConfig == undefined)
-		   	{
-				$("#localBackupConfig").hide();
-		   		$("#localBackupEnable").attr("checked",false);
-				return;
-		   	}
-			
-			$("#localBackupConfig").show();
-			$("#localBackupEnable").attr("checked", "checked");	
-			
-			if(localBackupConfig.remoteStorageConfig && localBackupConfig.remoteStorageConfig.FILE &&  localBackupConfig.remoteStorageConfig.FILE.localRootPath)
 			{
-				$("#localBackupRootPath").val(localBackupConfig.remoteStorageConfig.FILE.localRootPath);
-			}
-			
-			if(localBackupConfig.backupTime)
-			{
-				$("#localBackupTime option[value='" + localBackupConfig.backupTime + "']").attr("selected","selected");	
-			}
-			
-			if(localBackupConfig.realTimeBackup == undefined || localBackupConfig.realTimeBackup == 0)
-			{
-				$("#localBackup-realTimeBackupEnable").attr("checked", false);		
-			}	
-			else
-			{
-				$("#localBackup-realTimeBackupEnable").attr("checked", "checked");				
-			}
-			
-			if(localBackupConfig.weekDay1 == undefined || localBackupConfig.weekDay1 == 0)
-			{	
-				$("#localBackupWeekDay1").attr("checked", false);
-			}
-			else
-			{
-				$("#localBackupWeekDay1").attr("checked", "checked");		
-			}
-			
-			if(localBackupConfig.weekDay2 == undefined || localBackupConfig.weekDay2 == 0)
-			{	
-				$("#localBackupWeekDay2").attr("checked", false);
-			}
-			else
-			{
-				$("#localBackupWeekDay2").attr("checked", "checked");		
-			}
-			
-			if(localBackupConfig.weekDay3 == undefined || localBackupConfig.weekDay3 == 0)
-			{	
-				$("#localBackupWeekDay3").attr("checked", false);
-			}
-			else
-			{
-				$("#localBackupWeekDay3").attr("checked", "checked");		
-			}
-			
-			if(localBackupConfig.weekDay4 == undefined || localBackupConfig.weekDay4 == 0)
-			{	
-				$("#localBackupWeekDay4").attr("checked", false);
-			}
-			else
-			{
-				$("#localBackupWeekDay4").attr("checked", "checked");		
-			}
-			
-			if(localBackupConfig.weekDay5 == undefined || localBackupConfig.weekDay5 == 0)
-			{	
-				$("#localBackupWeekDay5").attr("checked", false);
-			}
-			else
-			{
-				$("#localBackupWeekDay5").attr("checked", "checked");		
-			}
-			
-			if(localBackupConfig.weekDay6 == undefined || localBackupConfig.weekDay6 == 0)
-			{	
-				$("#localBackupWeekDay6").attr("checked", false);
-			}
-			else
-			{
-				$("#localBackupWeekDay6").attr("checked", "checked");		
-			}
-			
-			if(localBackupConfig.weekDay7 == undefined || localBackupConfig.weekDay7 == 0)
-			{	
-				$("#localBackupWeekDay7").attr("checked", false);
-			}
-			else
-			{
-				$("#localBackupWeekDay7").attr("checked", "checked");		
-			}
-		}
-
-		function showRemoteBackupConfig(remoteBackupConfig)
-		{
-			if(remoteBackupConfig == undefined)
-		   	{
-				$("#remoteBackupConfig").hide();
-		   		$("#remoteBackupEnable").attr("checked",false);
-				return;
-		   	}
-			
-			if(remoteBackupConfig.remoteStorageConfig == undefined)
-		   	{
-				$("#remoteBackupStorageConfig").hide();
-				$("#remoteBackupStorageProtocol option[value='']").attr("selected","selected");		
-				return;
-		   	}
-			
-			$("#remoteBackupConfig").show();
-			$("#remoteBackupEnable").attr("checked", "checked");
-			
-			showRemoteBackupRemoteStorageConfig(remoteBackupConfig.remoteStorageConfig);
-			
-			var backupTime = remoteBackupConfig.backupTime;
-			console.log("showRemoteBackupConfig() backupTime:" + backupTime);
-			if(backupTime)
-			{
-				$("#remoteBackupTime option[value='" + backupTime + "']").attr("selected","selected");		
-			}
-			
-			if(remoteBackupConfig.realTimeBackup == undefined || remoteBackupConfig.realTimeBackup == 0)
-			{
-				$("#remoteBackup-realTimeBackupEnable").attr("checked", false);		
-			}	
-			else
-			{
-				$("#remoteBackup-realTimeBackupEnable").attr("checked", "checked");				
-			}
-			
-			if(remoteBackupConfig.weekDay1 == undefined || remoteBackupConfig.weekDay1 == 0)
-			{	
-				$("#remoteBackupWeekDay1").attr("checked", false);
-			}
-			else
-			{
-				$("#remoteBackupWeekDay1").attr("checked", "checked");		
-			}
-			
-			if(remoteBackupConfig.weekDay2 == undefined || remoteBackupConfig.weekDay2 == 0)
-			{	
-				$("#remoteBackupWeekDay2").attr("checked", false);
-			}
-			else
-			{
-				$("#remoteBackupWeekDay2").attr("checked", "checked");		
-			}
-			
-			if(remoteBackupConfig.weekDay3 == undefined || remoteBackupConfig.weekDay3 == 0)
-			{	
-				$("#remoteBackupWeekDay3").attr("checked", false);
-			}
-			else
-			{
-				$("#remoteBackupWeekDay3").attr("checked", "checked");		
-			}
-			
-			if(remoteBackupConfig.weekDay4 == undefined || remoteBackupConfig.weekDay4 == 0)
-			{	
-				$("#remoteBackupWeekDay4").attr("checked", false);
-			}
-			else
-			{
-				$("#remoteBackupWeekDay4").attr("checked", "checked");		
-			}
-			
-			if(remoteBackupConfig.weekDay5 == undefined || remoteBackupConfig.weekDay5 == 0)
-			{	
-				$("#remoteBackupWeekDay5").attr("checked", false);
-			}
-			else
-			{
-				$("#remoteBackupWeekDay5").attr("checked", "checked");		
-			}
-			
-			if(remoteBackupConfig.weekDay6 == undefined || remoteBackupConfig.weekDay6 == 0)
-			{	
-				$("#remoteBackupWeekDay6").attr("checked", false);
-			}
-			else
-			{
-				$("#remoteBackupWeekDay6").attr("checked", "checked");		
-			}
-			
-			if(remoteBackupConfig.weekDay7 == undefined || remoteBackupConfig.weekDay7 == 0)
-			{	
-				$("#remoteBackupWeekDay7").attr("checked", false);
-			}
-			else
-			{
-				$("#remoteBackupWeekDay7").attr("checked", "checked");		
-			}
-			
-			//显示高级选项
-			showRemoteBackFilterConfig(remoteBackupConfig);
-		}
-
-		function showRemoteBackFilterConfig(remoteBackupConfig)
-		{
-			console.log("showRemoteBackFilterConfig remoteBackupConfig:", remoteBackupConfig);
-			if(remoteBackupConfig.remoteStorageConfig == undefined)
-			{
-				return;
-			}
-			
-			var remoteStorageConfig = remoteBackupConfig.remoteStorageConfig;
-			
-			var remoteBackupFilterEnable = 0;
-			
-			if(remoteStorageConfig.isUnkownFileAllowed != undefined)
-			{
-				remoteBackupFilterEnable = 1;
-				if(remoteStorageConfig.isUnkownFileAllowed == 0)
-				{
-		   			$("#isUnkownFileAllowed").attr("checked", false);		
-				}
-				else
-				{
-		   			$("#isUnkownFileAllowed").attr("checked","checked");		
-				}
-			}
-			else
-			{
-				$("#isUnkownFileAllowed").attr("checked","checked");
-			}
-			
-			if(remoteStorageConfig.allowedMaxFile != undefined)
-			{
-				remoteBackupFilterEnable = 1;
-				$("#allowedMaxFile option[value='" + remoteStorageConfig.allowedMaxFile + "']").attr("selected","selected");	
-			}
-			else
-			{
-				$("#allowedMaxFile option[value='0']").attr("selected","selected");			
-			}
-			
-			if(remoteStorageConfig.allowedFileTypeHashMap)
-			{
-				remoteBackupFilterEnable = 1;	
-				var allowedFileTypeList = getAllowedFileTypeList(remoteStorageConfig.allowedFileTypeHashMap);
-				$("#allowedFileTypeList").val(allowedFileTypeList);
-			}
-			
-			if(remoteStorageConfig.notAllowedFileTypeHashMap)
-			{
-				remoteBackupFilterEnable = 1;
-				var notAllowedFileTypeList = getNotAllowedFileTypeList(remoteStorageConfig.notAllowedFileTypeHashMap);
-				$("#notAllowedFileTypeList").val(notAllowedFileTypeList);
-			}
-			
-			if(remoteStorageConfig.notAllowedFileHashMap)
-			{
-				remoteBackupFilterEnable = 1;
-				var notAllowedFileList = getNotAllowedFileList(remoteStorageConfig.notAllowedFileHashMap);
-				$("#notAllowedFileList").val(notAllowedFileList);
-			}
-			
-			if(remoteBackupFilterEnable == 0)
-			{
-				//隐藏高级选项
-				$("#remoteBackupFilterConfig").hide();
-		   		$("#remoteBackupFilterEnable").attr("checked",false);
-			}
-			else
-			{
-				//显示高级选项
-				$("#remoteBackupFilterConfig").show();
-		   		$("#remoteBackupFilterEnable").attr("checked","checked");		
+				
+				$("#autoBackupConfigDiv").show();
+				$("#autoBackupEnable").attr("checked", "checked");
+				
+				showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
+				showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
 			}
 		}
 		
-		function getAllowedFileTypeList(allowedFileTypeHashMap)
-		{
-			var listStr = "";
-			for(var key in allowedFileTypeHashMap)
-			{
-				listStr += key + ";"
-			}
-			return listStr;
-		}
+		//init autoBackup
+		reposInfo.autoBackup = getAutoBackupConfig();
+		console.log("reposInfo.autoBackup:" + reposInfo.autoBackup);
+	}
 
-		function getNotAllowedFileTypeList(notAllowedFileTypeHashMap)
+	function showLocalBackupConfig(localBackupConfig)
+	{
+		if(localBackupConfig == undefined)
+	   	{
+			$("#localBackupConfig").hide();
+	   		$("#localBackupEnable").attr("checked",false);
+			return;
+	   	}
+		
+		$("#localBackupConfig").show();
+		$("#localBackupEnable").attr("checked", "checked");	
+		
+		if(localBackupConfig.remoteStorageConfig && localBackupConfig.remoteStorageConfig.FILE &&  localBackupConfig.remoteStorageConfig.FILE.localRootPath)
 		{
-			var listStr = "";
-			for(var key in notAllowedFileTypeHashMap)
-			{
-				listStr += key + ";"
-			}
-			return listStr;
+			$("#localBackupRootPath").val(localBackupConfig.remoteStorageConfig.FILE.localRootPath);
 		}
-
-		function getNotAllowedFileList(notAllowedFileHashMap)
+		
+		if(localBackupConfig.backupTime)
 		{
-			var listStr = "";
-			for(var key in notAllowedFileHashMap)
-			{
-				listStr += key + ";"
-			}
-			return listStr;
+			$("#localBackupTime option[value='" + localBackupConfig.backupTime + "']").attr("selected","selected");	
 		}
-
-		function showRemoteBackupRemoteStorageConfig(remoteStorageConfig)
+		
+		if(localBackupConfig.realTimeBackup == undefined || localBackupConfig.realTimeBackup == 0)
 		{
-			var protocol = remoteStorageConfig.protocol;
-			if(protocol == undefined || protocol == "")
-			{
-				$("#remoteBackupStorageConfig").hide();
-				$("#remoteBackupStorageProtocol option[value='']").attr("selected","selected");			
-				return;
-			}
-			
-			$("#remoteBackupStorageConfig").show();			
-			$("#remoteBackupStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
-			
-			var remoteStorage = buildRemoteStorageConfigStr(remoteStorageConfig);
-			$("#remoteBackupStorage").val(remoteStorage);
+			$("#localBackup-realTimeBackupEnable").attr("checked", false);		
+		}	
+		else
+		{
+			$("#localBackup-realTimeBackupEnable").attr("checked", "checked");				
+		}
+		
+		if(localBackupConfig.weekDay1 == undefined || localBackupConfig.weekDay1 == 0)
+		{	
+			$("#localBackupWeekDay1").attr("checked", false);
+		}
+		else
+		{
+			$("#localBackupWeekDay1").attr("checked", "checked");		
+		}
+		
+		if(localBackupConfig.weekDay2 == undefined || localBackupConfig.weekDay2 == 0)
+		{	
+			$("#localBackupWeekDay2").attr("checked", false);
+		}
+		else
+		{
+			$("#localBackupWeekDay2").attr("checked", "checked");		
+		}
+		
+		if(localBackupConfig.weekDay3 == undefined || localBackupConfig.weekDay3 == 0)
+		{	
+			$("#localBackupWeekDay3").attr("checked", false);
+		}
+		else
+		{
+			$("#localBackupWeekDay3").attr("checked", "checked");		
+		}
+		
+		if(localBackupConfig.weekDay4 == undefined || localBackupConfig.weekDay4 == 0)
+		{	
+			$("#localBackupWeekDay4").attr("checked", false);
+		}
+		else
+		{
+			$("#localBackupWeekDay4").attr("checked", "checked");		
+		}
+		
+		if(localBackupConfig.weekDay5 == undefined || localBackupConfig.weekDay5 == 0)
+		{	
+			$("#localBackupWeekDay5").attr("checked", false);
+		}
+		else
+		{
+			$("#localBackupWeekDay5").attr("checked", "checked");		
+		}
+		
+		if(localBackupConfig.weekDay6 == undefined || localBackupConfig.weekDay6 == 0)
+		{	
+			$("#localBackupWeekDay6").attr("checked", false);
+		}
+		else
+		{
+			$("#localBackupWeekDay6").attr("checked", "checked");		
+		}
+		
+		if(localBackupConfig.weekDay7 == undefined || localBackupConfig.weekDay7 == 0)
+		{	
+			$("#localBackupWeekDay7").attr("checked", false);
+		}
+		else
+		{
+			$("#localBackupWeekDay7").attr("checked", "checked");		
 		}
 	}
+
+	function showRemoteBackupConfig(remoteBackupConfig)
+	{
+		if(remoteBackupConfig == undefined)
+	   	{
+			$("#remoteBackupConfig").hide();
+	   		$("#remoteBackupEnable").attr("checked",false);
+			return;
+	   	}
+		
+		if(remoteBackupConfig.remoteStorageConfig == undefined)
+	   	{
+			$("#remoteBackupStorageConfig").hide();
+			$("#remoteBackupStorageProtocol option[value='']").attr("selected","selected");		
+			return;
+	   	}
+		
+		$("#remoteBackupConfig").show();
+		$("#remoteBackupEnable").attr("checked", "checked");
+		
+		showRemoteBackupRemoteStorageConfig(remoteBackupConfig.remoteStorageConfig);
+		
+		var backupTime = remoteBackupConfig.backupTime;
+		console.log("showRemoteBackupConfig() backupTime:" + backupTime);
+		if(backupTime)
+		{
+			$("#remoteBackupTime option[value='" + backupTime + "']").attr("selected","selected");		
+		}
+		
+		if(remoteBackupConfig.realTimeBackup == undefined || remoteBackupConfig.realTimeBackup == 0)
+		{
+			$("#remoteBackup-realTimeBackupEnable").attr("checked", false);		
+		}	
+		else
+		{
+			$("#remoteBackup-realTimeBackupEnable").attr("checked", "checked");				
+		}
+		
+		if(remoteBackupConfig.weekDay1 == undefined || remoteBackupConfig.weekDay1 == 0)
+		{	
+			$("#remoteBackupWeekDay1").attr("checked", false);
+		}
+		else
+		{
+			$("#remoteBackupWeekDay1").attr("checked", "checked");		
+		}
+		
+		if(remoteBackupConfig.weekDay2 == undefined || remoteBackupConfig.weekDay2 == 0)
+		{	
+			$("#remoteBackupWeekDay2").attr("checked", false);
+		}
+		else
+		{
+			$("#remoteBackupWeekDay2").attr("checked", "checked");		
+		}
+		
+		if(remoteBackupConfig.weekDay3 == undefined || remoteBackupConfig.weekDay3 == 0)
+		{	
+			$("#remoteBackupWeekDay3").attr("checked", false);
+		}
+		else
+		{
+			$("#remoteBackupWeekDay3").attr("checked", "checked");		
+		}
+		
+		if(remoteBackupConfig.weekDay4 == undefined || remoteBackupConfig.weekDay4 == 0)
+		{	
+			$("#remoteBackupWeekDay4").attr("checked", false);
+		}
+		else
+		{
+			$("#remoteBackupWeekDay4").attr("checked", "checked");		
+		}
+		
+		if(remoteBackupConfig.weekDay5 == undefined || remoteBackupConfig.weekDay5 == 0)
+		{	
+			$("#remoteBackupWeekDay5").attr("checked", false);
+		}
+		else
+		{
+			$("#remoteBackupWeekDay5").attr("checked", "checked");		
+		}
+		
+		if(remoteBackupConfig.weekDay6 == undefined || remoteBackupConfig.weekDay6 == 0)
+		{	
+			$("#remoteBackupWeekDay6").attr("checked", false);
+		}
+		else
+		{
+			$("#remoteBackupWeekDay6").attr("checked", "checked");		
+		}
+		
+		if(remoteBackupConfig.weekDay7 == undefined || remoteBackupConfig.weekDay7 == 0)
+		{	
+			$("#remoteBackupWeekDay7").attr("checked", false);
+		}
+		else
+		{
+			$("#remoteBackupWeekDay7").attr("checked", "checked");		
+		}
+		
+		//显示高级选项
+		showRemoteBackFilterConfig(remoteBackupConfig);
+	}
+
+	function showRemoteBackFilterConfig(remoteBackupConfig)
+	{
+		console.log("showRemoteBackFilterConfig remoteBackupConfig:", remoteBackupConfig);
+		if(remoteBackupConfig.remoteStorageConfig == undefined)
+		{
+			return;
+		}
+		
+		var remoteStorageConfig = remoteBackupConfig.remoteStorageConfig;
+		
+		var remoteBackupFilterEnable = 0;
+		
+		if(remoteStorageConfig.isUnkownFileAllowed != undefined)
+		{
+			remoteBackupFilterEnable = 1;
+			if(remoteStorageConfig.isUnkownFileAllowed == 0)
+			{
+	   			$("#isUnkownFileAllowed").attr("checked", false);		
+			}
+			else
+			{
+	   			$("#isUnkownFileAllowed").attr("checked","checked");		
+			}
+		}
+		else
+		{
+			$("#isUnkownFileAllowed").attr("checked","checked");
+		}
+		
+		if(remoteStorageConfig.allowedMaxFile != undefined)
+		{
+			remoteBackupFilterEnable = 1;
+			$("#allowedMaxFile option[value='" + remoteStorageConfig.allowedMaxFile + "']").attr("selected","selected");	
+		}
+		else
+		{
+			$("#allowedMaxFile option[value='0']").attr("selected","selected");			
+		}
+		
+		if(remoteStorageConfig.allowedFileTypeHashMap)
+		{
+			remoteBackupFilterEnable = 1;	
+			var allowedFileTypeList = getAllowedFileTypeList(remoteStorageConfig.allowedFileTypeHashMap);
+			$("#allowedFileTypeList").val(allowedFileTypeList);
+		}
+		
+		if(remoteStorageConfig.notAllowedFileTypeHashMap)
+		{
+			remoteBackupFilterEnable = 1;
+			var notAllowedFileTypeList = getNotAllowedFileTypeList(remoteStorageConfig.notAllowedFileTypeHashMap);
+			$("#notAllowedFileTypeList").val(notAllowedFileTypeList);
+		}
+		
+		if(remoteStorageConfig.notAllowedFileHashMap)
+		{
+			remoteBackupFilterEnable = 1;
+			var notAllowedFileList = getNotAllowedFileList(remoteStorageConfig.notAllowedFileHashMap);
+			$("#notAllowedFileList").val(notAllowedFileList);
+		}
+		
+		if(remoteBackupFilterEnable == 0)
+		{
+			//隐藏高级选项
+			$("#remoteBackupFilterConfig").hide();
+	   		$("#remoteBackupFilterEnable").attr("checked",false);
+		}
+		else
+		{
+			//显示高级选项
+			$("#remoteBackupFilterConfig").show();
+	   		$("#remoteBackupFilterEnable").attr("checked","checked");		
+		}
+	}
+	
+	function getAllowedFileTypeList(allowedFileTypeHashMap)
+	{
+		var listStr = "";
+		for(var key in allowedFileTypeHashMap)
+		{
+			listStr += key + ";"
+		}
+		return listStr;
+	}
+
+	function getNotAllowedFileTypeList(notAllowedFileTypeHashMap)
+	{
+		var listStr = "";
+		for(var key in notAllowedFileTypeHashMap)
+		{
+			listStr += key + ";"
+		}
+		return listStr;
+	}
+
+	function getNotAllowedFileList(notAllowedFileHashMap)
+	{
+		var listStr = "";
+		for(var key in notAllowedFileHashMap)
+		{
+			listStr += key + ";"
+		}
+		return listStr;
+	}
+
+	function showRemoteBackupRemoteStorageConfig(remoteStorageConfig)
+	{
+		var protocol = remoteStorageConfig.protocol;
+		if(protocol == undefined || protocol == "")
+		{
+			$("#remoteBackupStorageConfig").hide();
+			$("#remoteBackupStorageProtocol option[value='']").attr("selected","selected");			
+			return;
+		}
+		
+		$("#remoteBackupStorageConfig").show();			
+		$("#remoteBackupStorageProtocol option[value='" + protocol + "']").attr("selected","selected");	
+		
+		var remoteStorage = buildRemoteStorageConfigStr(remoteStorageConfig);
+		$("#remoteBackupStorage").val(remoteStorage);
+	}
+	//编辑页面初始化代码 End	
+		
 	
 	function saveReposBasicSetting()
 	{
@@ -1667,8 +1678,11 @@ var ReposConfig = (function () {
 		addReposPageInit: function(){
 			addReposPageInit();
 	    },    
-	    editReposPageInit: function(){
+	    editReposPageInit(): function(){
 	    	editReposPageInit();
+	    },
+	    editReposPageInit(reposId, reposInfo): function(){
+	    	editReposPageInit(reposId, reposInfo);
 	    },
 	    EnterKeyListenerForAddRepos: function(){
 			EnterKeyListenerForAddRepos();
@@ -1735,6 +1749,6 @@ var ReposConfig = (function () {
 	    },  
 	    cancelAddRepos: function(){
 	    	cancelAddRepos();
-	    },  
+	    },
 	};
 })();
