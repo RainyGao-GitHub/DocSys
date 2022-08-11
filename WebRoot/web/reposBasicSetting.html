@@ -311,6 +311,7 @@
 //页面初始化代码    
 $(function(){
 	console.log("editRepos Page init");
-	ReposConfig.editReposPageInit();
+	reposId = getQueryString("vid");
+	ReposConfig.editReposPageInit(reposId);
 });
 </script>
