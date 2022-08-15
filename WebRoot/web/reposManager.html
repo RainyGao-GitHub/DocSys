@@ -2006,6 +2006,10 @@ function showReposBasicSettingPanel(){
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
+		callback: function(){
+		    console.log("editRepos.html loaded callback");
+		    ReposConfig.editReposPageInit(gReposId, gReposInfo);
+		}		
 	}, null);
 }
 
