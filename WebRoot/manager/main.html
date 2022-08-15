@@ -3846,6 +3846,7 @@
 	function showAddReposPanel(){
 		console.log("showAddReposPanel");
 		qiao.bs.dialog({
+			id: 'addRepos',
 			url: 'addRepos.html',
 			title: '新增仓库',
 			msg: '页面正在加载，请稍等...',
@@ -3854,11 +3855,21 @@
 			callback: function(){
 			    console.log("addRepos.html loaded callback");
 			    //Page Value Init
-			    ReposConfig.addReposPageInit(showReposList);
+			    ReposConfig.addReposPageInit(callBackForAddReposSuccess);
 				ReposConfig.EnterKeyListenerForAddRepos();
 			}			
 		}, null);
 	}
+	
+    function callBackForAddReposSuccess()
+   	{
+    	showReposList();
+    	
+    	MyJquery.closeBootstrapDialog("addRepos");
+		
+    	//临时方案避免滚动条消失
+		//window.location.reload();
+   	}
 	
 	function clearAllReposCacheConfirm()
 	{	
@@ -3946,6 +3957,7 @@
 		
 		var repos = gReposList[index];		
 		qiao.bs.dialog({
+			id: 'editRepos',
 			url: 'editRepos.html',
 			title: '编辑仓库',
 			msg: '页面正在加载，请稍等...',
@@ -3953,11 +3965,22 @@
 			big: false,
 			callback: function(){
 			    console.log("editRepos.html loaded callback");
-			    ReposConfig.editReposPageInit(reposId, repos, showReposList);
+			    ReposConfig.editReposPageInit(reposId, repos, callBackForEditReposSuccess);
 				ReposConfig.EnterKeyListenerForEditRepos();
 			}
 		}, null);	
 	}
+	
+    function callBackForEditReposSuccess()
+   	{
+    	showReposList();
+    	
+    	MyJquery.closeBootstrapDialog("editRepos");
+		
+    	//临时方案避免滚动条消失
+		//window.location.reload();
+   	}
+	
 	
 	//显示组成员管理页面
 	function showManageReposMemberPanel(e,reposId){
