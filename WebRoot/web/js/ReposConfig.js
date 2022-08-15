@@ -3,6 +3,7 @@ var ReposConfig = (function () {
 	var reposId;
 	var gCurReposInfo;
 	var callbackForAddReposSuccess; //call back for addRepos Success
+	var callbackForEditReposSuccess;
 	
 	function addReposPageInit(_callbackForAddReposSuccess)
 	{
@@ -29,10 +30,11 @@ var ReposConfig = (function () {
         MyJquery.setValue("repos-svnPwd1", "");
 	}
 	
-	function editReposPageInit(_reposId, _reposInfo)
+	function editReposPageInit(_reposId, _reposInfo, _callbackForEditReposSuccess)
 	{
 		console.log("editReposPageInit() _reposId:" + _reposId + " _reposInfo:", _reposInfo);
 		reposId = _reposId;
+		callbackForEditReposSuccess = _callbackForEditReposSuccess;
 		if(_reposInfo)
 		{
 			gCurReposInfo = _reposInfo;
@@ -736,21 +738,22 @@ var ReposConfig = (function () {
 	                	if(ret.status == "ok")
 	                	{
 	                		console.log("更新仓库设置成功");
-	                		getReposBasicSetting();     
 	                		// 普通消息提示条
 							bootstrapQ.msg({
-							msg : '设置完成！',
+							msg : '设置成功！',
 							type : 'success',
 							time : 2000,
 						    });
+
+							callbackForEditReposSuccess && callbackForEditReposSuccess();
 		                }
 	                    else
 	                    {
-	                    	alert(ret.msgInfo);
+	                    	showErrorMessage("设置失败:" + ret.msgInfo);
 	                    }
 	                },
 	                error : function () {
-	                    alert('服务器异常: 设置失败');
+	                	showErrorMessage('设置失败:服务器异常');
 	                }
 	            });
 	            return true;
@@ -989,7 +992,15 @@ var ReposConfig = (function () {
 	            	if(ret.status == "ok")
 	            	{
 	            		console.log("创建仓库成功");
-	            		callbackForAddReposSuccess && callbackForAddReposSuccess();
+	            		
+	        			bootstrapQ.msg({
+	    					msg : "新建仓库成功",
+	    					type : 'success',
+	    					time : 2000,
+	    				    });
+	            		
+	        			callbackForAddReposSuccess && callbackForAddReposSuccess();
+	            		
 	                }
 	                else
 	                {
@@ -1676,8 +1687,8 @@ var ReposConfig = (function () {
 		addReposPageInit: function(callbackForAddReposSuccess){
 			addReposPageInit(callbackForAddReposSuccess);
 	    },    
-	    editReposPageInit: function(reposId, reposInfo){
-	    	editReposPageInit(reposId, reposInfo);
+	    editReposPageInit: function(reposId, reposInfo, callbackForEditReposSuccess){
+	    	editReposPageInit(reposId, reposInfo, callbackForEditReposSuccess);
 	    },
 	    EnterKeyListenerForAddRepos: function(){
 			EnterKeyListenerForAddRepos();
