@@ -2,13 +2,15 @@
 var ReposConfig = (function () {
 	var reposId;
 	var gCurReposInfo;
-	var callbackForAddReposSuccess; //call back for addRepos Success
+	var callbackForAddReposSuccess;
+	var callbackForCancelAddRepos;
 	var callbackForEditReposSuccess;
 	
-	function addReposPageInit(_callbackForAddReposSuccess)
+	function addReposPageInit(_callbackForAddReposSuccess, _callbackForCancelAddRepos)
 	{
 		console.log("addReposPageInit()");
 		callbackForAddReposSuccess = _callbackForAddReposSuccess;
+		callbackForCancelAddRepos = _callbackForCancelAddRepos;
 		MyJquery.focus("repos-name");
 
         //alert(login_user.type);
@@ -869,10 +871,7 @@ var ReposConfig = (function () {
 	
 	function cancelAddRepos()
 	{
-		closeAddReposModal();
-		
-		//临时方案避免滚动条消失
-		//window.location.reload();
+		callbackForCancelAddRepos && callbackForCancelAddRepos();
 	}
 		
 	function doAddRepos()
@@ -1012,10 +1011,6 @@ var ReposConfig = (function () {
 	            }
 	        });
 	    
-	    closeAddReposModal();
-	    
-	    //临时方案避免滚动条消失
-		//window.location.reload();
 	    return true;
 	}
 	
@@ -1684,8 +1679,8 @@ var ReposConfig = (function () {
 
 	//开放给外部的调用接口
 	return {
-		addReposPageInit: function(callbackForAddReposSuccess){
-			addReposPageInit(callbackForAddReposSuccess);
+		addReposPageInit: function(callbackForAddReposSuccess, callbackForCancelAddRepos){
+			addReposPageInit(callbackForAddReposSuccess, callbackForCancelAddRepos);
 	    },    
 	    editReposPageInit: function(reposId, reposInfo, callbackForEditReposSuccess){
 	    	editReposPageInit(reposId, reposInfo, callbackForEditReposSuccess);

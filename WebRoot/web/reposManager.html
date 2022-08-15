@@ -306,13 +306,12 @@
                     $("#projectName").text("项目名");
                     
                     $("#editTime").text((new Date()).toLocaleTimeString());
-                    alert(ret.msgInfo);
-                    window.location.href = "index.html";
                     //隐藏编辑按键和增加用户按键
                     $("#btnAddReposUser").hide();
 				    $("#btnAddReposGroup").hide();
 				    $("#btnSaveAuth").hide();
 				    $("#btnCancelSaveAuth").hide();
+				    showErrorMessage("获取仓库信息失败:" + ret.msgInfo);
                 }
             },
             error : function () {
@@ -321,7 +320,7 @@
 			    $("#btnAddReposGroup").hide();
 			    $("#btnSaveAuth").hide();
 			    $("#btnCancelSaveAuth").hide();
-                showErrorMessage("服务器异常:获取仓库信息失败");
+                showErrorMessage("获取仓库信息失败:服务器异常");
             }
         });
 
@@ -1944,11 +1943,11 @@ function showReposSelectList(callback)
                     }
                     else
                     {
-                    	showErrorMessage("Error:" + ret.msgInfo);
+                    	showErrorMessage("获取仓库列表失败:" + ret.msgInfo);
                     }
                 },
                 error : function () {
-                   showErrorMessage('服务器异常：获取仓库列表失败！');
+                   showErrorMessage('获取仓库列表失败:服务器异常');
                 }
     });
 	    
@@ -1997,10 +1996,18 @@ function showAddReposGroupPanel(){
 	}, null);
 }
 
+
+function callbackForEditReposSuccess()
+{
+	//getReposInfo();	
+	showReposSelectList();
+	MyJquery.closeBootstrapDialog("editRepos");
+}
+
 function showReposBasicSettingPanel(){
 	console.log("showReposBasicSettingPanel");
 	bootstrapQ.dialog({
-		id: 'reposBasicSetting',
+		id: 'editRepos',
 		title: '仓库设置',
 		url: 'reposBasicSetting.html',
 		msg: '页面正在加载，请稍等...',
@@ -2008,7 +2015,7 @@ function showReposBasicSettingPanel(){
 		big: true,
 		callback: function(){
 		    console.log("editRepos.html loaded callback");
-		    ReposConfig.editReposPageInit(gReposId, gReposInfo);
+		    ReposConfig.editReposPageInit(gReposId, gReposInfo, callbackForEditReposSuccess);
 		}		
 	}, null);
 }
@@ -2250,7 +2257,7 @@ function showTextSearchSetPanel()
       		var configErrorTimer = setTimeout(function () {	//超时用户没有动作，则直接继续
             	console.log("用户确认超时,继续配置其他用户");
             	configErrorConfirmSet = 1; //全局继续
-            	closeBootstrapDialog("configErrorConfirm");
+            	MyJqeury.closeBootstrapDialog("configErrorConfirm");
             	configErrorHanlder(UserName,errMsg);
             },5*60*1000);	//5分鐘用戶不確認則關閉對話框
       		
@@ -2269,7 +2276,7 @@ function showTextSearchSetPanel()
     	      		var configErrorTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
     	            	console.log("用户确认超时,后续错误都继续设置");
     	            	configErrorConfirmSet = 1; //全局继续上传
-    	            	closeBootstrapDialog("takeSameActionConfirm");
+    	            	MyJqeury.closeBootstrapDialog("takeSameActionConfirm");
     	            	configErrorHanlder(UserName,errMsg);
     	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
     	 			
