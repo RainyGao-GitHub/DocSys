@@ -380,9 +380,9 @@
     }
 
     
-    function getReposList()
+    function showReposList()
     {
-    	console.log("getReposList");
+    	console.log("showReposList");
         $.ajax({
             url : "/DocSystem/Repos/getReposList.do",
             type :"post",
@@ -408,10 +408,6 @@
             }
         });
     }
-    
-    function onChange(){
-    	getReposList();
-    }
 
     $(function () {
     	pageInit();
@@ -433,7 +429,7 @@
 				big: false,
 				//okbtn: "确定",
 				callback: function(){
-					ReposConfig.addReposPageInit(onChange);
+					ReposConfig.addReposPageInit(showReposList);
 				},
 		});
 	}
