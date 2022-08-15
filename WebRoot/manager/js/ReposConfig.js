@@ -2,10 +2,12 @@
 var ReposConfig = (function () {
 	var reposId;
 	var gCurReposInfo;
+	var callbackForAddReposSuccess; //call back for addRepos Success
 	
-	function addReposPageInit()
+	function addReposPageInit(_callbackForAddReposSuccess)
 	{
 		console.log("addReposPageInit()");
+		callbackForAddReposSuccess = _callbackForAddReposSuccess;
 		MyJquery.focus("repos-name");
 
         //alert(login_user.type);
@@ -864,18 +866,12 @@ var ReposConfig = (function () {
 	
 	function cancelAddRepos()
 	{
-		closeAddReposDialog();
+		closeAddReposModal();
+		
 		//临时方案避免滚动条消失
-		window.location.reload();
+		//window.location.reload();
 	}
-	
-	function closeAddReposDialog()
-	{
-		closeBootstrapDialog("addRepos");
-		//临时方案避免滚动条消失
-		window.location.reload();
-	}
-	
+		
 	function doAddRepos()
 	{
 	    var name = MyJquery.getValue("repos-name");
@@ -993,7 +989,7 @@ var ReposConfig = (function () {
 	            	if(ret.status == "ok")
 	            	{
 	            		console.log("创建仓库成功");
-	                	onChange();
+	            		callbackForAddReposSuccess && callbackForAddReposSuccess();
 	                }
 	                else
 	                {
@@ -1005,9 +1001,10 @@ var ReposConfig = (function () {
 	            }
 	        });
 	    
-	    closeAddReposDialog();
-		//临时方案避免滚动条消失
-		window.location.reload();
+	    closeAddReposModal();
+	    
+	    //临时方案避免滚动条消失
+		//window.location.reload();
 	    return true;
 	}
 	
@@ -1676,8 +1673,8 @@ var ReposConfig = (function () {
 
 	//开放给外部的调用接口
 	return {
-		addReposPageInit: function(){
-			addReposPageInit();
+		addReposPageInit: function(callbackForAddReposSuccess){
+			addReposPageInit(callbackForAddReposSuccess);
 	    },    
 	    editReposPageInit: function(reposId, reposInfo){
 	    	editReposPageInit(reposId, reposInfo);
