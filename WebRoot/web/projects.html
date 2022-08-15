@@ -259,7 +259,7 @@
                 	loginBtnCtrl(user);
                 	
                 	//用戶已經登錄才能看到倉庫
-                	getReposList();
+                	showReposList();
                 }
                 else 
                 {
@@ -417,6 +417,25 @@
     	showAddReposPanel();
     }
     
+    function callBackForAddReposSuccess()
+   	{
+    	showReposList();
+    	
+    	MyJquery.closeBootstrapDialog("addRepos");
+		
+    	//临时方案避免滚动条消失
+		//window.location.reload();
+   	}
+    
+    function callbackForCancelAddRepos()
+    {
+    	MyJquery.closeBootstrapDialog("addRepos");
+
+    	//临时方案避免滚动条消失
+		//window.location.reload();    	
+    }
+    
+    
 	function showAddReposPanel()
 	{
 		console.log("showAddReposPanel()");
@@ -429,7 +448,7 @@
 				big: false,
 				//okbtn: "确定",
 				callback: function(){
-					ReposConfig.addReposPageInit(showReposList);
+					ReposConfig.addReposPageInit(callBackForAddReposSuccess, callbackForCancelAddRepos);
 				},
 		});
 	}

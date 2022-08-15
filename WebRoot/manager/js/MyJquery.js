@@ -54,6 +54,14 @@ var MyJquery = (function () {
   	{
   		return $("#" + id).get(0).selectedIndex=index;
   	}
+  	
+  	//弹出对话框操作接口
+  	function closeBootstrapDialog(id){ 
+  		console.log("closeBootstrapDialog " + id);
+  		$("#"+id).modal('hide');
+  		//$("#"+id + "div").remove();	//删除全屏遮罩
+  		//$("#"+id).remove();	//删除对话框
+  	}
 
 	//开放给外部的调用接口
     return {
@@ -89,7 +97,10 @@ var MyJquery = (function () {
         }, 
         select: function(id, index){
         	select(id, index);
-        }, 
+        },
+        closeBootstrapDialog: function(id){
+    		closeBootstrapDialog(id);
+        },   
     };
 })();
     
