@@ -1402,7 +1402,7 @@ var ReposConfig = (function () {
 	
 	function getTextSearchConfig()
 	{   
-	    var isTextSearchEnabled = $("#dialog-new-repos input[name='isTextSearchEnabled']").is(':checked')? 1: 0;
+	    var isTextSearchEnabled = MyJquery.isChecked("isTextSearchEnabled");
 		console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
 		var config = "{enable:" + isTextSearchEnabled + "}";
 		return config;
@@ -1431,7 +1431,7 @@ var ReposConfig = (function () {
 			return "{}";
 		}
 		
-		var localRootPath = $("#dialog-new-repos input[name='localBackupRootPath']").val();
+		var localRootPath = MyJquery.getValue("localBackupRootPath");
 		if(localRootPath == undefined || localRootPath == "")
 		{
 			return "{}";
