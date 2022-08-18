@@ -3923,8 +3923,7 @@ public class BaseController  extends BaseFunction{
 			return null;			
 		}
 		
-		Log.debug("deleteDoc_FSM() " + docId + " " + doc.getName() + " Lock OK");
-		
+		Log.info("deleteDoc_FSM() " + docId + " " + doc.getPath() + doc.getName() + " Lock OK");		
 
 		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
 		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
@@ -3938,7 +3937,7 @@ public class BaseController  extends BaseFunction{
 			docSysErrorLog(doc.getName() + " 删除失败！", rt);
 			return null;
 		}
-		Log.debug("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
+		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		
 		String revision = null;
 		if(isFSM(repos))
