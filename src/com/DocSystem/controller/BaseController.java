@@ -219,13 +219,18 @@ public class BaseController  extends BaseFunction{
 	protected static void initLogFile(String logFilePath) 
 	{
 	    Log.debug("initLogFile() logFilePath:" + logFilePath);
-		Log.logFile = null;
 		if(logFilePath != null)
 		{
-	        File file = new File(logFilePath);
+			Log.logFile = logFilePath;
+		}
+		
+		if(Log.logFile != null)
+		{
+			boolean ret = false;
+			File file = new File(Log.logFile);
 	        if(file.exists())
 	        {
-	        	Log.logFile = logFilePath;
+	        	ret = true;
 	        }
 	        else
 	        {
@@ -237,16 +242,17 @@ public class BaseController  extends BaseFunction{
 		        		parentFile.mkdirs();
 		        	}
 		        	
-	        		if(file.createNewFile() == true)
-	        		{
-	        			Log.logFile = logFilePath;
-	        		}
+	        		ret = file.createNewFile();
 	        	} catch (IOException e) {
 					Log.debug("initLogFile() Failed to create logFile:" + logFilePath);
 					Log.info(e);
-					Log.logFile = null;
 				}
 			}
+	        
+	        if(ret == false)
+	        {
+	        	Log.logFile = null;
+	        }
 		}
 	    Log.debug("initLogFile() Log.logFile:" + Log.logFile);
 	}

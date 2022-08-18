@@ -132,6 +132,11 @@ public class BaseFunction{
     		defaultLogFilePath = Path.getParentPath(docSysWebPath, 2, OSType) + "logs/docsys.log";
     	}
     	
+    	if(Log.logFile == null)
+    	{
+    		Log.logFile = defaultLogFilePath;
+    	}
+    	
 		docSysIniPath = webappsPath + "docSys.ini/";   
     	initSystemLicenseInfo();
     	initOfficeLicenseInfo();
