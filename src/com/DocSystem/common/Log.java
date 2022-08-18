@@ -76,11 +76,9 @@ public class Log {
 	public static void debug(String content) {
 		if(isLogEnable(debug, allowGeneral))
 		{
-			if(logFile == null)
-			{
-				System.out.println(content);
-			}
-			else
+			System.out.println(content);
+
+			if(logFile != null)
 			{
 				toFile(content + "\n", logFile);
 			}
@@ -90,11 +88,9 @@ public class Log {
 	public static void debug(Exception e) {
 		if(isLogEnable(debug, allowGeneral))
 		{
-			if(logFile == null)
-			{
-				e.printStackTrace(System.out);
-			}
-			else
+			e.printStackTrace(System.out);
+			
+			if(logFile != null)
 			{
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				e.printStackTrace(new PrintStream(baos));
@@ -107,11 +103,9 @@ public class Log {
 		if(isLogEnable(info, allowGeneral))
 		{
 			String timeStamp = DateFormat.dateTimeFormat(new Date());
-			if(logFile == null)
-			{
-				System.out.println(timeStamp + " " + content);
-			}
-			else
+			System.out.println(timeStamp + " " + content);
+
+			if(logFile != null)
 			{
 				toFile(timeStamp + " " + content + "\n", logFile);
 			}
@@ -121,11 +115,9 @@ public class Log {
 	public static void info(Exception e) {
 		if(isLogEnable(info, allowGeneral))
 		{
-			if(logFile == null)
-			{
-				e.printStackTrace(System.out);
-			}
-			else
+			e.printStackTrace(System.out);
+
+			if(logFile != null)
 			{
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				e.printStackTrace(new PrintStream(baos));
@@ -138,11 +130,9 @@ public class Log {
 		if(isLogEnable(warn, allowAll))
 		{
 			String timeStamp = DateFormat.dateTimeFormat(new Date());
-			if(logFile == null)
-			{
-				System.out.println(timeStamp + " [warn] " + content);
-			}
-			else
+			System.out.println(timeStamp + " [warn] " + content);
+
+			if(logFile != null)
 			{
 				toFile(timeStamp + " [warn] " + content  + "\n", logFile);
 			}
@@ -152,11 +142,9 @@ public class Log {
 	public static void warn(Exception e) {
 		if(isLogEnable(warn, allowGeneral))
 		{
-			if(logFile == null)
-			{
-				e.printStackTrace(System.out);
-			}
-			else
+			e.printStackTrace(System.out);
+
+			if(logFile != null)
 			{
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				e.printStackTrace(new PrintStream(baos));
@@ -169,11 +157,9 @@ public class Log {
 		if(isLogEnable(error, allowAll))
 		{
 			String timeStamp = DateFormat.dateTimeFormat(new Date());
-			if(logFile == null)
-			{
-				System.out.println(timeStamp + " [error] " +content);
-			}
-			else
+			System.out.println(timeStamp + " [error] " +content);
+
+			if(logFile != null)
 			{
 				toFile(timeStamp + " [error] " + content  + "\n", logFile);
 			}
@@ -183,11 +169,9 @@ public class Log {
 	public static void error(Exception e) {
 		if(isLogEnable(error, allowGeneral))
 		{
-			if(logFile == null)
-			{
-				e.printStackTrace(System.out);
-			}
-			else
+			e.printStackTrace(System.out);
+
+			if(logFile != null)
 			{
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				e.printStackTrace(new PrintStream(baos));
@@ -250,12 +234,10 @@ public class Log {
 	public static void printByte(byte data) {
 		if(isLogEnable(debug, allowGeneral))
 		{
-			if(logFile == null)
+			System.out.printf( "%02X ", data);
+
+			if(logFile != null)
 			{
-				System.out.printf( "%02X ", data);
-			}
-			else
-			{				
 				toFile(String.format("%02X ", data), logFile);
 			}
 		}
@@ -264,14 +246,12 @@ public class Log {
 	public static void printBytes(byte[] data) {
 		if(isLogEnable(debug, allowGeneral))
 		{
-			if(logFile == null)
+			for(int i=0; i<data.length; i++)
 			{
-				for(int i=0; i<data.length; i++)
-				{
-					System.out.printf( "%02X ", data[i]);
-				}
+				System.out.printf( "%02X ", data[i]);
 			}
-			else
+
+			if(logFile != null)
 			{
 				for(int i=0; i<data.length; i++)
 				{
