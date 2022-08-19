@@ -4403,7 +4403,6 @@ public class BaseController  extends BaseFunction{
 			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && ((remote.autoPull != null && remote.autoPull == 1) || (remote.autoPush != null && remote.autoPush == 1)))
 			{
-				Log.info("syncupForDocChange() 远程自动拉取与推送");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
@@ -4414,7 +4413,7 @@ public class BaseController  extends BaseFunction{
 					}					
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
-						Log.info("syncupForDocChange() 远程自动推送  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
+						Log.info("syncupForDocChange() 远程自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
 						channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, rt);
 					}
 				}
@@ -4447,15 +4446,15 @@ public class BaseController  extends BaseFunction{
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
-			Log.debug("syncUpLocalWithVerRepos() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			Log.debug("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
+			Log.info("syncUpLocalWithVerRepos() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			Log.info("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
 			return false;
 		}
 		Doc remoteEntry = verReposGetDoc(repos, doc, null);
 		if(remoteEntry == null)
 		{
-			Log.debug("syncUpLocalWithVerRepos() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			Log.debug("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
+			Log.info("syncUpLocalWithVerRepos() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			Log.info("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
 			return false;
 		}
 		
