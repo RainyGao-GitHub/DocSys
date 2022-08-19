@@ -39,7 +39,6 @@ import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
-import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.controller.BaseController;
 
 @Controller
