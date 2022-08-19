@@ -4408,12 +4408,12 @@ public class BaseController  extends BaseFunction{
 		        {	
 					if(remote.autoPush != null && remote.autoPush == 1)
 					{
-						Log.info("syncupForDocChange() 远程自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
+						Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
 						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, false, rt);
 					}					
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
-						Log.info("syncupForDocChange() 远程自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
+						Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
 						channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, rt);
 					}
 				}
@@ -4424,15 +4424,17 @@ public class BaseController  extends BaseFunction{
 		if(repos.getIsRemote() == 1)
 		{
 			//Sync Up local VerRepos with remote VerRepos
+			Log.info("syncupForDocChange() 同步远程版本仓库");
 			verReposPullPush(repos, true, null);
 		}
 			
 		//文件管理系统
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-			
+		Log.info("syncupForDocChange() 同步版本管理");	
 		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, syncLocalChangeOnly, login_user, rt);
 
+		Log.info("syncupForDocChange() 刷新文件索引");
 		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
 
 		Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
@@ -4441,20 +4443,21 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, boolean syncLocalChangeOnly, User login_user, ReturnAjax rt) {
 		//对本地文件和版本仓库进行同步
+		Log.info("syncUpLocalWithVerRepos() 开始版本管理同步");
 		Log.info("syncUpLocalWithVerRepos() docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
 			Log.info("syncUpLocalWithVerRepos() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			Log.info("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
+			Log.info("syncUpLocalWithVerRepos() ************************ 结束版本管理同步 ****************************");
 			return false;
 		}
 		Doc remoteEntry = verReposGetDoc(repos, doc, null);
 		if(remoteEntry == null)
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			Log.info("syncUpLocalWithVerRepos() ************************ 结束自动同步 ****************************");
+			Log.info("syncUpLocalWithVerRepos() ************************ 结束版本管理同步  ****************************");
 			return false;
 		}
 		
