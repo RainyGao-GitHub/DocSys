@@ -4361,23 +4361,23 @@ public class BaseController  extends BaseFunction{
 
 	//这个接口要保证只有一次Commit操作
 	protected boolean syncupForDocChange(CommonAction action, boolean remoteStorageEnable ,ReturnAjax rt) {		
-		Log.debug("syncupForDocChange() **************************** 启动自动同步 ********************************");
-		Log.debug("syncupForDocChange() actionType: [" + action.getAction() + "] ");
+		Log.info("syncupForDocChange() **************************** 启动自动同步 ********************************");
+		Log.info("syncupForDocChange() actionType: [" + action.getAction() + "] ");
 		
 		Repos repos =  action.getRepos();
 		Log.printObject("syncupForDocChange() repos:",repos);
 		if(isFSM(repos) == false)
 		{
-			Log.debug("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
-			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			Log.info("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
+			Log.info("syncupForDocChange() ************************ 结束自动同步 ****************************");
 			return true;
 		}
 
 		Doc doc = action.getDoc();
 		if(doc == null)
 		{
-			Log.debug("syncupForDocChange() doc is null");
-			Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+			Log.info("syncupForDocChange() doc is null");
+			Log.info("syncupForDocChange() ************************ 结束自动同步 ****************************");
 			return false;
 		}
 		Log.printObject("syncupForDocChange() doc:",doc);
@@ -4395,7 +4395,7 @@ public class BaseController  extends BaseFunction{
 			subDocSyncupFlag = 2;
 			syncLocalChangeOnly = false;
 		}
-		Log.debug("syncupForDocChange() [" + doc.getPath() + doc.getName() + "] subDocSyncupFlag:" + subDocSyncupFlag + " syncLocalChangeOnly:" + syncLocalChangeOnly);
+		Log.info("syncupForDocChange() [" + doc.getPath() + doc.getName() + "] subDocSyncupFlag:" + subDocSyncupFlag + " syncLocalChangeOnly:" + syncLocalChangeOnly);
 		
 		if(remoteStorageEnable)
 		{
@@ -4403,16 +4403,18 @@ public class BaseController  extends BaseFunction{
 			RemoteStorageConfig remote = repos.remoteStorageConfig;
 			if(remote != null && ((remote.autoPull != null && remote.autoPull == 1) || (remote.autoPush != null && remote.autoPush == 1)))
 			{
-				Log.debug("syncupForDocChange() 远程自动拉取");
+				Log.info("syncupForDocChange() 远程自动拉取与推送");
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
 					if(remote.autoPush != null && remote.autoPush == 1)
 					{
+						Log.info("syncupForDocChange() 远程自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
 						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, false, rt);
 					}					
 					if(remote.autoPull != null && remote.autoPull == 1)
 					{
+						Log.info("syncupForDocChange() 远程自动推送  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
 						channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, rt);
 					}
 				}
@@ -4440,7 +4442,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, boolean syncLocalChangeOnly, User login_user, ReturnAjax rt) {
 		//对本地文件和版本仓库进行同步
-		Log.debug("syncUpLocalWithVerRepos() docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+		Log.info("syncUpLocalWithVerRepos() docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
@@ -4461,27 +4463,27 @@ public class BaseController  extends BaseFunction{
 		
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag, syncLocalChangeOnly);
 
-		Log.debug("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
+		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
 		if(remoteChanges.size() == 0)
 		{
-			Log.debug("syncUpLocalWithVerRepos() 远程没有改动");
+			Log.info("syncUpLocalWithVerRepos() 远程没有改动");
 		}
 		else
 		{
-			Log.debug("syncUpLocalWithVerRepos() 远程有改动，同步到本地");
+			Log.info("syncUpLocalWithVerRepos() 远程有改动，同步到本地");
 			//Do Remote SyncUp			
 			syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
 		}
 		
 		if(localChanges.size() == 0)
 		{
-			Log.debug("syncUpLocalWithVerRepos() 本地没有改动");
+			Log.info("syncUpLocalWithVerRepos() 本地没有改动");
 			return true;
 		}
 		
 		if(action.getAction() == Action.UNDEFINED)
 		{
-			Log.debug("syncUpLocalWithVerRepos() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
+			Log.info("syncUpLocalWithVerRepos() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
 			return true;
 		}
 		
@@ -4810,7 +4812,7 @@ public class BaseController  extends BaseFunction{
 	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, Integer subDocSyncupFlag, ReturnAjax rt) 
 	{
 		//本地有改动需要提交
-		Log.debug("syncupLocalChanges_FSM() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
+		Log.info("syncupLocalChanges_FSM() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
 		if(commitMsg == null)
 		{
 			commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
@@ -4837,7 +4839,7 @@ public class BaseController  extends BaseFunction{
 		if(docLock == null)
 		{
 			docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
-			Log.debug("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+			Log.info("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 			return false;
 		}
 		
@@ -4845,7 +4847,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, localChanges, subDocSyncupFlag, commitActionList);
 		if(revision == null)
 		{
-			Log.debug("syncupLocalChanges_FSM() 本地改动Commit失败:" + revision);
+			Log.info("syncupLocalChanges_FSM() 本地改动Commit失败:" + revision);
 			unlockDoc(doc, lockType, login_user);
 			return false;
 		}
@@ -4884,7 +4886,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		Log.debug("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
+		Log.info("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
 		unlockDoc(doc, lockType, login_user);
 		
 		return true;	
