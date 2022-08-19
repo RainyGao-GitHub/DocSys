@@ -226,13 +226,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(Log.logFile != null)
 		{
-			boolean ret = false;
 			File file = new File(Log.logFile);
-	        if(file.exists())
-	        {
-	        	ret = true;
-	        }
-	        else
+	        if(file.exists() == false)
 	        {
 	        	try {
 						
@@ -242,17 +237,16 @@ public class BaseController  extends BaseFunction{
 		        		parentFile.mkdirs();
 		        	}
 		        	
-	        		ret = file.createNewFile();
+	        		if(file.createNewFile() == false)
+	        		{
+	        			Log.logFile = null;
+	        		}
 	        	} catch (IOException e) {
+	        		Log.logFile = null;
 					Log.debug("initLogFile() Failed to create logFile:" + logFilePath);
 					Log.info(e);
 				}
 			}
-	        
-	        if(ret == false)
-	        {
-	        	Log.logFile = null;
-	        }
 		}
 	    Log.debug("initLogFile() Log.logFile:" + Log.logFile);
 	}
