@@ -2,7 +2,6 @@
 /*
   fileReader was created based on dropzone.js 
  */
-
 function getFileList(e) 
 {
 	var files, items;
@@ -101,6 +100,12 @@ function _addFilesFromDirectory(directory, path,_result)
     						}
     					}
     				}
+
+    				// Recursively call readEntries() again, since browser only handle
+    		        // the first 100 entries.
+    		        // See: https://developer.mozilla.org/en-US/docs/Web/API/DirectoryReader#readEntries
+    		        readEntries();
+    		        
     				return _result;
     			}, 
     			errorHandler);
