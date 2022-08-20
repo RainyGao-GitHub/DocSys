@@ -4437,7 +4437,7 @@ public class BaseController  extends BaseFunction{
 		Log.info("syncupForDocChange() 刷新文件索引");
 		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
 
-		Log.debug("syncupForDocChange() ************************ 结束自动同步 ****************************");
+		Log.info("syncupForDocChange() ************************ 结束自动同步 ****************************");
 		return realDocSyncResult;
 	}
 	
