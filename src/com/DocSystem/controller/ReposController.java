@@ -841,7 +841,7 @@ public class ReposController extends BaseController{
 			return;
 		}	
 		
-		String localTestPath = docSysIniPath + "RemoteStorageTest/" + type + "/";
+		String localTestPath = Path.getDefaultReposRootPath(OSType) + "tmp/RemoteStorageTest/" + type + "/";
 		
 		String localVerReposPathForGit = localTestPath + "LocalGitRepos/";
 		remote = parseRemoteStorageConfig(config, localVerReposPathForGit);
