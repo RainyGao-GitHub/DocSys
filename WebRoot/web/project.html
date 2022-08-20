@@ -185,6 +185,9 @@
 	<script src="static/artDialog/dist/dialog-plus.js"></script>
 	<script src="js/artDialog.js"></script>
 
+	<!-- dropZone.js -->
+	<script src="static/dropzone/dropzone.js"></script>
+
 	<!-- DocSys class -->
 	<script type="text/javascript" src="js/common.js"></script>
 	<script type="text/javascript" src="js/DocSys.js"></script>
@@ -4205,6 +4208,8 @@
 
 	function dragDropUploadZoneInit()
 	{
+		const dropzone = new Dropzone("uuz", { url: "/file/post" });
+		return;
 		var selectedTarget = null;
       	//拖拽上传:目录树区域
     	var uuz = document.getElementById("uuz");
