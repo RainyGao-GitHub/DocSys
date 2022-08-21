@@ -185,9 +185,6 @@
 	<script src="static/artDialog/dist/dialog-plus.js"></script>
 	<script src="js/artDialog.js"></script>
 
-	<!-- dropZone.js -->
-	<script src="static/dropzone/dropzone.js"></script>
-
 	<!-- DocSys class -->
 	<script type="text/javascript" src="js/common.js"></script>
 	<script type="text/javascript" src="js/DocSys.js"></script>
@@ -917,11 +914,11 @@
 		console.log("dragUploadConfirm",e);
 
 		//getFileList
-        var entrys = getFileList(e);
+        var entrys = getFileList(e, parentNode);
         //console.log("entrys",entrys);
 
 		//用户确认上传
-		checkUserUploadRight(entrys,parentNode,uploadConfirm);
+		//checkUserUploadRight(entrys,parentNode,uploadConfirm);
 	    return true;
 	}
 
@@ -4208,8 +4205,6 @@
 
 	function dragDropUploadZoneInit()
 	{
-		const dropzone = new Dropzone("uuz", { url: "/file/post" });
-		return;
 		var selectedTarget = null;
       	//拖拽上传:目录树区域
     	var uuz = document.getElementById("uuz");
