@@ -2,7 +2,7 @@
 /*
   DragUpload was created based on dropzone.js 
  */
-function getFileList(e, parentNode)
+function DragUploadInit(e, parentNode)
 {
 	var drapUpload = new DragUpload(parentNode);
 	return drapUpload.getFileList(e);
