@@ -1,14 +1,14 @@
 
 /*
-  fileReader was created based on dropzone.js 
+  DragUpload was created based on dropzone.js 
  */
 function getFileList(e, parentNode)
 {
-	var fileReader = new FileReader(parentNode);
-	return fileReader.getFileList(e);
+	var drapUpload = new DragUpload(parentNode);
+	return drapUpload.getFileList(e);
 }
 
-function FileReader() {
+function DragUpload() {
 	var parentNode;
 	var result = [];
 	var readRequestCount = 0;
@@ -20,8 +20,8 @@ function FileReader() {
 			  ignoreHiddenFiles: true,			
 		};
 	
-	function FileReader(_parentNode) {
-		console.log("FileReader Init");
+	function DragUpload(_parentNode) {
+		console.log("DragUpload Init");
 		parentNode = _parentNode;
 		result = [];
 		readRequestCount = 0;
