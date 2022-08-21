@@ -913,13 +913,7 @@
 	{
 		console.log("dragUploadConfirm",e);
 
-		//getFileList
-        var entrys = getFileList(e, parentNode);
-        //console.log("entrys",entrys);
-
-		//用户确认上传
-		//checkUserUploadRight(entrys,parentNode,uploadConfirm);
-	    return true;
+		DragUploadInit(e, parentNode);
 	}
 
 	//CheckInUpload Confirm
