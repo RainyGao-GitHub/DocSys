@@ -7891,7 +7891,8 @@ var Dropzone = /*#__PURE__*/function (_Emitter) {
   var _super = _createSuper(Dropzone);
 
   function Dropzone(el, options) {
-    var _this;
+    console.log("Dropzone el:", el, options); 
+	var _this;
 
     dropzone_classCallCheck(this, Dropzone);
 
@@ -8488,6 +8489,8 @@ var Dropzone = /*#__PURE__*/function (_Emitter) {
   }, {
     key: "drop",
     value: function drop(e) {
+      console.log("drop e:", e);
+
       if (!e.dataTransfer) {
         return;
       }
@@ -8553,7 +8556,8 @@ var Dropzone = /*#__PURE__*/function (_Emitter) {
   }, {
     key: "_addFilesFromItems",
     value: function _addFilesFromItems(items) {
-      var _this4 = this;
+        console.log("_addFilesFromItems items:", items);
+    	var _this4 = this;
 
       return function () {
         var result = [];
@@ -8598,6 +8602,7 @@ var Dropzone = /*#__PURE__*/function (_Emitter) {
   }, {
     key: "_addFilesFromDirectory",
     value: function _addFilesFromDirectory(directory, path) {
+      console.log("_addFilesFromDirectory path:", path);
       var _this5 = this;
 
       var dirReader = directory.createReader();
@@ -9619,7 +9624,7 @@ var Dropzone = /*#__PURE__*/function (_Emitter) {
         return;
       }
 
-      xhr.send(formData);
+      //xhr.send(formData);
     } // Called internally when processing is finished.
     // Individual callbacks have to be called in the appropriate sections.
 
