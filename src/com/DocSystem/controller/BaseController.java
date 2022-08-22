@@ -20332,7 +20332,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean doPushToRemoteStorage(RemoteStorageSession session,  RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, boolean pushLocalChangeOnly, ReturnAjax rt) {
-		Log.debug("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "]");
+		Log.info("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "]");
 		
 		//ignore check
 		if(doc.isRemotePushEnabled == null)
@@ -20341,7 +20341,7 @@ public class BaseController  extends BaseFunction{
 	    }
 		if(doc.isRemotePushEnabled == 0)
 		{
-    		Log.debug("doPushToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored for RemotePush");
+    		Log.info("doPushToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored for RemotePush");
 			return false;
 		}
 		
@@ -20373,7 +20373,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
 				{
-					Log.debug("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
+					Log.info("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
 					addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath(), commitMsg,  accessUser.getName());
 				}
 			}
@@ -20406,6 +20406,7 @@ public class BaseController  extends BaseFunction{
 			SyncLock.unlock(synclock, lockInfo);
     	}
 		rt.setDataEx(pushResult);
+		Log.info("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "] ret:" + ret);
 		return ret;	
 	}
 	
