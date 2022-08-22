@@ -8,25 +8,17 @@ function DragUploadInit(e, parentNode)
 	return drapUpload.getFileList(e);
 }
 
-function DragUpload() {
-	var parentNode;
+function DragUpload(_parentNode) {
+	var parentNode = _parentNode;
 	var result = [];
 	var readRequestCount = 0;
 	var readResponseCount = 0;
 	var options = {
-			  /**
-			   * Whether hidden files in directories should be ignored.
-			   */
-			  ignoreHiddenFiles: true,			
-		};
-	
-	function DragUpload(_parentNode) {
-		console.log("DragUpload Init");
-		parentNode = _parentNode;
-		result = [];
-		readRequestCount = 0;
-		readResponseCount = 0;
-	}
+		  /**
+		   * Whether hidden files in directories should be ignored.
+		   */
+		  ignoreHiddenFiles: true,			
+	};
 	
 	function dropzone_createForOfIteratorHelper(o, allowArrayLike) 
 	{ 
@@ -55,7 +47,7 @@ function DragUpload() {
 		}; 
 	}
 	
-	function getFileList(e, parentNode) 
+	function getFileList(e) 
 	{	
 		if (!e.dataTransfer) 
 		{
@@ -77,7 +69,7 @@ function DragUpload() {
 	    	if (items && items.length && items[0].webkitGetAsEntry != null) 
 	    	{
 	    		// The browser supports dropping of folders, so handle items instead of files
-	    		return _addFilesFromItems(items, parentNode);
+	    		return _addFilesFromItems(items);
 	    	} 
 	    	else 
 	    	{
@@ -94,7 +86,7 @@ function DragUpload() {
 	    checkUserUploadRight(result,parentNode,uploadConfirm);
 	}
 		
-	function _addFilesFromItems(items, parentNode) {
+	function _addFilesFromItems(items) {
 		console.log("_addFilesFromItems items:", items);
 	    var _iterator6 = dropzone_createForOfIteratorHelper(items, true),
 	        _step6;
@@ -116,7 +108,7 @@ function DragUpload() {
 					{
 						// Append all files from that directory to files
 						resultIsReady = false;
-						_addFilesFromDirectory(entry, entry.name, parentNode);
+						_addFilesFromDirectory(entry, entry.name);
 					} 
 					else 
 					{
@@ -148,7 +140,7 @@ function DragUpload() {
 	    return;
 	}
 	
-	function _addFilesFromDirectory(directory, path, parentNode) 
+	function _addFilesFromDirectory(directory, path) 
 	{
 	    console.log("_addFilesFromDirectory path:", path);
 	
@@ -227,8 +219,8 @@ function DragUpload() {
 
 	//开放给外部的调用接口
 	return {
-		getFileList: function(e, parentNode){
-			return getFileList(e, parentNode);
+		getFileList: function(e){
+			return getFileList(e);
 	    },
 	};
 }
