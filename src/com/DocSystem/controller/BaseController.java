@@ -20423,7 +20423,7 @@ public class BaseController  extends BaseFunction{
 	private Integer isRemotePushEnabled(RemoteStorageConfig remote, Doc doc, Doc parentDoc) 
 	{
 		//最大文件检查
-		if(remote.allowedMaxFile != null && remote.allowedMaxFile > 0)
+		if(remote.allowedMaxFile != null && remote.allowedMaxFile > 0 && doc.getSize() != null)
 		{
 			if(doc.getSize() > remote.allowedMaxFile)
 			{
