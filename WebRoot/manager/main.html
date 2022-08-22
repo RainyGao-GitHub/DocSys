@@ -3951,6 +3951,58 @@
         });
 	}
 	
+	function showBackupReposConfirmPanel(e, reposId, type, index)
+	{
+		console.log("showBackupReposConfirmPanel() reposId:" + reposId + " type:" + type + " index:" + index);
+		
+		var repos = gReposList[index];
+		qiao.bs.confirm({
+			id: "backupReposConfirmDialog",
+	        title: "备份仓库 [" +repos.name+ "]",
+	        msg: "备份仓库期间可能需要占用服务器较大的磁盘空间，是否备份仓库？",
+	        okbtn: "备份",
+	        qubtn: "取消",
+	    },function () {
+	    	backupRepos(reposId, callbackForBackupReposSuccess);
+	    	return true;   
+	    });
+	}
+	
+    function callbackForBackupReposSuccess(result)
+   	{
+    	//result 中包含了备份压缩文件的link
+    	//用户可以选择“下载”或者“下载后删除备份”
+    	showErrorMessage("备份成功回调函数");
+    }
+    
+	function backupRepos(reposId, callback){
+        $.ajax({
+            url : "/DocSystem/Repos/backupRepos.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 vid : reposId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	if(callback)
+                   	{
+                   		callback(ret);
+                   	}
+                   	else
+                   	{
+                    	showErrorMessage("备份成功");
+                   	}
+                }else {
+                	showErrorMessage("备份仓库失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("备份仓库失败:服务器异常");
+            }
+        });
+	}
+	
 	function showEditReposPanel(e, reposId, type, index)
 	{
 		console.log("showEditReposPanel() reposId:" + reposId + " type:" + type + " index:" + index);
