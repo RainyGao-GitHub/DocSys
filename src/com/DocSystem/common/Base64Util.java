@@ -49,7 +49,7 @@ public class Base64Util {
 	
 	public static String base64Decode(String base64Str) 
 	{
-		if(base64Str.length() <= 1)
+		if(base64Str == null || base64Str.length() <= 1)
 		{
 			return "";
 		}
