@@ -82,7 +82,7 @@ function DragUpload() {
 	    	else 
 	    	{
 	    	    console.log("getFileList() result is ready");
-	    		console.log("getFileList() files:", files);	  
+	    		//console.log("getFileList() files:", files);	  
 	    		checkUserUploadRight(files,parentNode,uploadConfirm);
 	    		return;
 	    	}
@@ -90,7 +90,7 @@ function DragUpload() {
 	    
 	    //触发用户上传确认
 	    console.log("getFileList() result is ready");
-	    console.log("getFileList() result:", result);	  
+	    //console.log("getFileList() result:", result);	  
 	    checkUserUploadRight(result,parentNode,uploadConfirm);
 	}
 		
@@ -142,7 +142,7 @@ function DragUpload() {
 	    if(resultIsReady == true)
 	    {
 	    	console.log("_addFilesFromItems() result is ready");
-	    	console.log("_addFilesFromItems() result:", result);	    	
+	    	//console.log("_addFilesFromItems() result:", result);	    	
 	    	checkUserUploadRight(result, parentNode, uploadConfirm);
 	    }
 	    return;
@@ -201,7 +201,7 @@ function DragUpload() {
 	    	if(readResponseCount >=  readRequestCount)
 	    	{
 	    		console.log("_addFilesFromDirectory successHandler result is ready");
-		    	console.log("_addFilesFromDirectory() successHandler result:", result);	    	
+		    	//console.log("_addFilesFromDirectory() successHandler result:", result);	    	
 	    		checkUserUploadRight(result,parentNode,uploadConfirm);
 	    	}
 		};
