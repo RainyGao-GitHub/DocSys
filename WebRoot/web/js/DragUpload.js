@@ -81,12 +81,16 @@ function DragUpload() {
 	    	} 
 	    	else 
 	    	{
-	    	    checkUserUploadRight(files,parentNode,uploadConfirm);
+	    	    console.log("getFileList() result is ready");
+	    		console.log("getFileList() files:", files);	  
+	    		checkUserUploadRight(files,parentNode,uploadConfirm);
 	    		return;
 	    	}
 	    }
 	    
 	    //触发用户上传确认
+	    console.log("getFileList() result is ready");
+	    console.log("getFileList() result:", result);	  
 	    checkUserUploadRight(result,parentNode,uploadConfirm);
 	}
 		
@@ -138,6 +142,7 @@ function DragUpload() {
 	    if(resultIsReady == true)
 	    {
 	    	console.log("_addFilesFromItems() result is ready");
+	    	console.log("_addFilesFromItems() result:", result);	    	
 	    	checkUserUploadRight(result, parentNode, uploadConfirm);
 	    }
 	    return;
@@ -167,14 +172,15 @@ function DragUpload() {
 		
 		              if (entry.isFile) 
 		              {
-		                  if (options.ignoreHiddenFiles && entry.name.substring(0, 1) === ".") 
-		                  {
-		                    continue;
-		                  }
-		
-		                  entry.fullPath = "".concat(path, "/").concat(entry.name);
-		                  result.push(entry);
-		                
+		            	 entry.file(function (file) {
+		            		  if (options.ignoreHiddenFiles && file.name.substring(0, 1) === ".") {
+		                        return;
+		                      }
+
+		                      file.fullPath = "".concat(path, "/").concat(file.name);
+			                  result.push(file);		                      
+		                      return; _this5.addFile(file);
+		                 });		                
 		              } else if (entry.isDirectory) {
 		                _addFilesFromDirectory(entry, "".concat(path, "/").concat(entry.name));
 		              }
@@ -194,7 +200,8 @@ function DragUpload() {
 	    	console.log("_addFilesFromDirectory successHandler readResponseCount:" + readResponseCount + " readRequestCount:" + readRequestCount);
 	    	if(readResponseCount >=  readRequestCount)
 	    	{
-	    		console.log("_addFilesFromDirectory successHandler all files was loaded");
+	    		console.log("_addFilesFromDirectory successHandler result is ready");
+		    	console.log("_addFilesFromDirectory() successHandler result:", result);	    	
 	    		checkUserUploadRight(result,parentNode,uploadConfirm);
 	    	}
 		};
