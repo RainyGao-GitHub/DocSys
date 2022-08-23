@@ -6365,9 +6365,9 @@ public class BaseController  extends BaseFunction{
 			
 			if(reposId != null)
 			{
-				if(reposId != docShare.getVid())
+				if(!reposId.equals(docShare.getVid()))
 				{
-					Log.debug("checkAndGetAccessInfo() reposId not matched");
+					Log.info("checkAndGetAccessInfo() reposId not matched, reposId:" + reposId + " docShare.vid:" + docShare.getVid());
 					rt.setError("非法仓库访问");
 					return null;
 				}
@@ -6396,7 +6396,7 @@ public class BaseController  extends BaseFunction{
 				{
 					if(accessPath.indexOf(sharedPath) != 0) //分享的文件本身或者子目录才可以访问
 					{
-						Log.debug("checkAndGetAccessInfo() 非法访问路径 accessPath:" + accessPath);
+						Log.info("checkAndGetAccessInfo() 非法访问路径 accessPath:" + accessPath);
 						rt.setError("非法文件访问");
 						return null;
 					}
