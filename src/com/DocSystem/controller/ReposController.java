@@ -506,6 +506,44 @@ public class ReposController extends BaseController{
 		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","成功", repos, null, null, "");
 	}
 	
+	/****************   backup a Repository ******************/
+	@RequestMapping("/backupRepos.do")
+	public void backupRepos(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		Log.info("****************** backupRepos.do ***********************");
+		Log.debug("backupRepos reposId: " + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查是否是超级管理员或者仓库owner
+		if(login_user.getType() != 2)	//超级管理员
+		{
+			rt.setError("您无权进行此操作，请联系系统管理员!");				
+			writeJson(rt, response);	
+			return;
+		}
+		
+		Repos repos = getRepos(reposId);
+		setReposIsBusy(repos.getId(), true);
+		
+		//注意仓库备份需要采用查询模式
+		//创建备份目录
+		//创建仓库目录，压缩仓库data目录
+		//创建版本仓库目录，压缩所有相关版本仓库
+		//压缩备份目录
+		//准备文件下载链接
+		
+		writeJson(rt, response);	
+		setReposIsBusy(repos.getId(), false);			
+
+		addSystemLog(request, login_user, "backupRepos", "backupRepos", "备份仓库","成功", repos, null, null, "");
+	}
+	
 	/****************   set a Repository ******************/
 	@RequestMapping("/updateReposInfo.do")
 	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, 
