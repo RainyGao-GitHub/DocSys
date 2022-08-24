@@ -93,6 +93,7 @@
                	        	SubContext.downloadAll = 1;	
                	        	SubContext.shareId = gShareId;	
                	        	
+                	        showErrorMessage("历史版本下载准备中，可能需要花费较长时间，您可先关闭当前窗口！");
                	        	startDownloadPrepareQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
                	        	return;
                 	    }
