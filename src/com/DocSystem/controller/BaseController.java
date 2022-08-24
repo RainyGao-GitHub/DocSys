@@ -11089,9 +11089,7 @@ public class BaseController  extends BaseFunction{
     protected static String DB_USER = "root";
     protected static String DB_PASS = "";
     protected static String officeEditorApi = null;
-    protected static String serverIP = null;
-    protected static String serverMAC = null;    
-	
+
     //定义数据库的ObjType
     protected final static int DOCSYS_REPOS			=0;
     protected final static int DOCSYS_REPOS_AUTH	=1;
