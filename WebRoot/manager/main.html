@@ -3963,36 +3963,32 @@
 	        okbtn: "备份",
 	        qubtn: "取消",
 	    },function () {
-	    	backupRepos(reposId, callbackForBackupReposSuccess);
+	    	backupRepos(reposId);
 	    	return true;   
 	    });
 	}
-	
-    function callbackForBackupReposSuccess(result)
-   	{
-    	//result 中包含了备份压缩文件的link
-    	//用户可以选择“下载”或者“下载后删除备份”
-    	showErrorMessage("备份成功回调函数");
-    }
     
-	function backupRepos(reposId, callback){
+	function backupRepos(reposId){
         $.ajax({
             url : "/DocSystem/Repos/backupRepos.do",
             type : "post",
             dataType : "json",
             data : {
-                 vid : reposId,
+                 reposId : reposId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                   	if(callback)
-                   	{
-                   		callback(ret);
-                   	}
-                   	else
-                   	{
-                    	showErrorMessage("备份成功");
-                   	}
+            	    console.log("backupRepos Ok:",ret);   
+            	    if(ret.msgData == 5)
+            	    {
+						//下载目录压缩中
+            	        showErrorMessage("仓库备份中，可能需要花费较长时间，您可先关闭当前窗口！");
+						startReposFullBackupQueryTask(ret.data.id, 2000); //2秒后查询
+            	        return;
+            	    }
+
+            	    reposFullBackupSuccessHandler(ret);
+            	   	return;
                 }else {
                 	showErrorMessage("备份仓库失败:" + ret.msgInfo);
                 }
@@ -4001,6 +3997,85 @@
             	showErrorMessage("备份仓库失败:服务器异常");
             }
         });
+	}
+	
+	function reposFullBackupSuccessHandler(ret)
+	{
+			console.log("doQueryReposFullBackupTask 仓库备份完成");
+
+    	    var vid =  ret.data.vid;
+	   		var path = ret.data.path;
+	   		var name = ret.data.name;
+	   		var targetName = ret.data.targetName;
+    	    var targetPath = ret.data.targetPath;
+    	    var deleteFlag = ret.msgData;
+	   		
+    	    path = encodeURI(path);
+    	    name = encodeURI(name);
+    	    targetName = encodeURI(targetName);
+		   	targetPath = encodeURI(targetPath);
+		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&encryptEn=0";
+   			qiao.bs.confirm({
+   				id: "downloadReposFullBackupConfirmDialog",
+   		        title: "仓库备份成功",
+   		        msg: "仓库备份成功，是否下载仓库备份文件？",
+   		        okbtn: "下载",
+   		        qubtn: "取消",
+   		    },function () {
+   		    	window.location.href = url;
+   		    	return true;   
+   		    });		
+	}
+	
+	function startReposFullBackupQueryTask(reposFullBackupTaskId, delayTime)
+	{
+		console.log("startReposFullBackupQueryTask() reposFullBackupTaskId:" + reposFullBackupTaskId + " delayTime:" + delayTime);
+		var nextDelayTime = delayTime; //每次增加5s
+		if(nextDelayTime < 60000) //最长1分钟
+		{
+			nextDelayTime += 5000;
+		}
+		
+		setTimeout(function () {
+			console.log("timerForQueryReposFullBackupTask triggered!");
+			doQueryReposFullBackupTask(reposFullBackupTaskId, nextDelayTime);
+		},delayTime);	//check it 2s later	
+	}
+	
+	function doQueryReposFullBackupTask(reposFullBackupTaskId, nextDelayTime)
+	{
+		console.log("doQueryReposFullBackupTask() reposFullBackupTaskId:" + reposFullBackupTaskId);
+
+		$.ajax({
+            url : "/DocSystem/Repos/queryReposFullBackupTask.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                taskId: reposFullBackupTaskId,
+            },
+            success : function (ret) {
+        	   console.log("doQueryReposFullBackupTask ret:",ret);        
+               if( "ok" == ret.status )
+               {    
+           	        if(ret.msgData == 5)
+            	    {
+           	        	var task = ret.data;
+           	        	var info = task.info;
+           	        	startReposFullBackupQueryTask(task.id, nextDelayTime);
+           	        	return;
+            	    }
+ 
+            	    reposFullBackupSuccessHandler(ret);
+               }
+               else	//后台报错
+               {
+            	   showErrorMessage("备份仓库失败:" + ret.msgInfo);
+               }
+            },
+            error : function () {	//后台异常
+            	showErrorMessage("备份仓库失败:服务器异常");
+            }
+    	});	
 	}
 	
 	function showEditReposPanel(e, reposId, type, index)

@@ -25,5 +25,7 @@ public class ReposFullBackupTask {
 	public String targetPath;
 	public String targetName;
 
+	public long targetSize;
+
 
 }
