@@ -69,6 +69,7 @@ import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
@@ -453,6 +454,10 @@ public class BaseFunction{
 	//目录下载压缩任务
 	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
 
+	//仓库全量备份任务
+	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
+
+	
 	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
 		try {
