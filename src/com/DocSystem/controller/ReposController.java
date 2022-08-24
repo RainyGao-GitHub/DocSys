@@ -516,15 +516,15 @@ public class ReposController extends BaseController{
 		Log.info("****************** backupRepos.do ***********************");
 		Log.debug("backupRepos() reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, "", "", true, rt);
+		if(reposAccess == null)
 		{
-			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
-		//检查是否是超级管理员或者仓库owner
+		User login_user = reposAccess.getAccessUser();
 		if(login_user.getType() != 2)	//超级管理员
 		{
 			rt.setError("您无权进行此操作，请联系系统管理员!");				
@@ -533,8 +533,14 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = getRepos(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+		
 		ReposFullBackupTask reposFullBackupTask = createReposFullBackupTask(
 				repos,
+				reposAccess,
 				backupStorePath,
 				getRequestIpAddress(request),
 				rt);
@@ -575,7 +581,7 @@ public class ReposController extends BaseController{
 	}
 	
 	private ReposFullBackupTask createReposFullBackupTask(Repos repos,
-			String backupStorePath,
+			ReposAccess reposAccess, String backupStorePath,
 			String requestIP, ReturnAjax rt) 
 	{
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
@@ -604,6 +610,7 @@ public class ReposController extends BaseController{
 		task.createTime = curTime;				
 		task.backupTime = backupTime;
 		task.repos = repos;
+		task.reposAccess = reposAccess;
 
 		//压缩backupStorePath
 		if(backupStorePath == null || backupStorePath.isEmpty())

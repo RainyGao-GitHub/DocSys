@@ -3963,12 +3963,12 @@
 	        okbtn: "备份",
 	        qubtn: "取消",
 	    },function () {
-	    	backupRepos(reposId);
+	    	backupRepos(reposId, repos);
 	    	return true;   
 	    });
 	}
     
-	function backupRepos(reposId){
+	function backupRepos(reposId, repos){
         $.ajax({
             url : "/DocSystem/Repos/backupRepos.do",
             type : "post",
@@ -3982,12 +3982,16 @@
             	    if(ret.msgData == 5)
             	    {
 						//下载目录压缩中
+						var SubContext = {};
+               	        SubContext.reposId = reposId;
+               	        SubContext.repos = repos;
+               	        
             	        showErrorMessage("仓库备份中，可能需要花费较长时间，您可先关闭当前窗口！");
-						startReposFullBackupQueryTask(ret.data.id, 2000); //2秒后查询
+						startReposFullBackupQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
             	        return;
             	    }
 
-            	    reposFullBackupSuccessHandler(ret);
+            	    reposFullBackupSuccessHandler(SubContext, ret);
             	   	return;
                 }else {
                 	showErrorMessage("备份仓库失败:" + ret.msgInfo);
@@ -3999,10 +4003,11 @@
         });
 	}
 	
-	function reposFullBackupSuccessHandler(ret)
+	function reposFullBackupSuccessHandler(SubContext, ret)
 	{
-			console.log("doQueryReposFullBackupTask 仓库备份完成");
-
+			console.log("doQueryReposFullBackupTask() " + "仓库 [" + SubContext.repos.name +"] 备份完成");
+			var repos = SubContext.repos;
+			
     	    var vid =  ret.data.vid;
 	   		var path = ret.data.path;
 	   		var name = ret.data.name;
@@ -4017,7 +4022,7 @@
 		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&encryptEn=0";
    			qiao.bs.confirm({
    				id: "downloadReposFullBackupConfirmDialog",
-   		        title: "仓库备份成功",
+   		        title: "仓库备份成功[" + repos.name + "]",
    		        msg: "仓库备份成功，是否下载仓库备份文件？",
    		        okbtn: "下载",
    		        qubtn: "取消",
@@ -4027,9 +4032,9 @@
    		    });		
 	}
 	
-	function startReposFullBackupQueryTask(reposFullBackupTaskId, delayTime)
+	function startReposFullBackupQueryTask(SubContext, reposFullBackupTaskId, delayTime)
 	{
-		console.log("startReposFullBackupQueryTask() reposFullBackupTaskId:" + reposFullBackupTaskId + " delayTime:" + delayTime);
+		console.log("startReposFullBackupQueryTask() repos:" + SubContext.repos.name + " reposFullBackupTaskId:" + reposFullBackupTaskId + " delayTime:" + delayTime);
 		var nextDelayTime = delayTime; //每次增加5s
 		if(nextDelayTime < 60000) //最长1分钟
 		{
@@ -4038,13 +4043,13 @@
 		
 		setTimeout(function () {
 			console.log("timerForQueryReposFullBackupTask triggered!");
-			doQueryReposFullBackupTask(reposFullBackupTaskId, nextDelayTime);
+			doQueryReposFullBackupTask(SubContext, reposFullBackupTaskId, nextDelayTime);
 		},delayTime);	//check it 2s later	
 	}
 	
-	function doQueryReposFullBackupTask(reposFullBackupTaskId, nextDelayTime)
+	function doQueryReposFullBackupTask(SubContext, reposFullBackupTaskId, nextDelayTime)
 	{
-		console.log("doQueryReposFullBackupTask() reposFullBackupTaskId:" + reposFullBackupTaskId);
+		console.log("doQueryReposFullBackupTask() repos:" + SubContext.repos.name + " reposFullBackupTaskId:" + reposFullBackupTaskId);
 
 		$.ajax({
             url : "/DocSystem/Repos/queryReposFullBackupTask.do",
@@ -4061,11 +4066,11 @@
             	    {
            	        	var task = ret.data;
            	        	var info = task.info;
-           	        	startReposFullBackupQueryTask(task.id, nextDelayTime);
+           	        	startReposFullBackupQueryTask(SubContext, task.id, nextDelayTime);
            	        	return;
             	    }
  
-            	    reposFullBackupSuccessHandler(ret);
+            	    reposFullBackupSuccessHandler(SubContext, ret);
                }
                else	//后台报错
                {
