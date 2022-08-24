@@ -17,6 +17,7 @@ import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import util.DateFormat;
 import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
 import com.DocSystem.entity.DocAuth;
@@ -33,10 +34,14 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.channels.Channel;
+import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.BackupTask;
+import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
+import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SyncupTask;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.controller.BaseController;
@@ -508,9 +513,9 @@ public class ReposController extends BaseController{
 	
 	/****************   backup a Repository ******************/
 	@RequestMapping("/backupRepos.do")
-	public void backupRepos(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void backupRepos(Integer reposId, String backupStorePath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.info("****************** backupRepos.do ***********************");
-		Log.debug("backupRepos reposId: " + reposId);
+		Log.debug("backupRepos() reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -529,21 +534,95 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = getRepos(reposId);
-		setReposIsBusy(repos.getId(), true);
-		
-		//注意仓库备份需要采用查询模式
-		//创建备份目录
-		//创建仓库目录，压缩仓库data目录
-		//创建版本仓库目录，压缩所有相关版本仓库
-		//压缩备份目录
-		//准备文件下载链接
-		
-		writeJson(rt, response);	
-		setReposIsBusy(repos.getId(), false);			
+		ReposFullBackupTask reposFullBackupTask = createReposFullBackupTask(
+				repos,
+				backupStorePath,
+				getRequestIpAddress(request),
+				rt);
 
-		addSystemLog(request, login_user, "backupRepos", "backupRepos", "备份仓库","成功", repos, null, null, "");
+		if(reposFullBackupTask == null)
+		{
+			Log.info("backupRepos() 仓库全量备份任务创建失败");
+			writeJson(rt, response);	
+			return;
+		}	
+
+		setReposIsBusy(repos.getId(), true);
+		rt.setData(reposFullBackupTask);
+		rt.setMsgData(5);	//备份中...
+		writeJson(rt, response);	
+		
+		//启动备份线程
+		new Thread(new Runnable() {
+			ReposFullBackupTask task = reposFullBackupTask;
+			public void run() {
+				Log.debug("backupRepos() executeReposFullBackupTask in new thread");
+				executeReposFullBackupTask(task);
+			}
+		}).start();
 	}
 	
+	private boolean executeReposFullBackupTask(ReposFullBackupTask task) {
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.info("backupRepos 非商业版本不支持仓库全量备份");
+			return false;
+	    }
+		return channel.reposFullBackUp(task);
+	}
+	
+	private ReposFullBackupTask createReposFullBackupTask(Repos repos,
+			String backupStorePath,
+			String requestIP, ReturnAjax rt) 
+	{
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.info("backupRepos 非商业版本不支持仓库全量备份");
+			rt.setError("非商业版本不支持仓库全量备份");
+			return null;
+	    }
+
+        Date curDate = new Date();
+		long curTime = curDate.getTime();
+		String backupTime = DateFormat.dateTimeFormat2(curDate);
+        Log.info("createReposFullBackupTask() backupTime:" + backupTime);
+        		
+		String taskId = repos.getId() + "-" + backupTime;
+		if(reposFullBackupTaskHashMap.get(taskId) != null)
+		{
+			Log.info("createReposFullBackupTask() 仓库全量备份任务 " + taskId + " 已存在");
+			rt.setError("仓库全量备份任务 " + taskId + " 已存在");
+			return null;
+		}
+		
+		ReposFullBackupTask task =	new ReposFullBackupTask();
+		task.id = taskId;
+		task.createTime = curTime;				
+		task.backupTime = backupTime;
+		task.repos = repos;
+
+		//压缩backupStorePath
+		if(backupStorePath == null || backupStorePath.isEmpty())
+		{
+			task.backupStorePath = Path.getDefaultReposRootPath(OSType) + "ReposFullBackup/";
+		}
+		else
+		{
+			task.backupStorePath = backupStorePath;
+		}
+
+		task.targetPath = task.backupStorePath;
+		task.targetName = repos.getId() + "-" + backupTime + ".zip";
+
+		
+		task.status = 1; //备份中..
+		
+		task.info = "备份中...";
+		reposFullBackupTaskHashMap.put(taskId, task);
+		return task;
+	}
 	/****************   set a Repository ******************/
 	@RequestMapping("/updateReposInfo.do")
 	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, 
