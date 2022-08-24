@@ -1200,6 +1200,43 @@ public class FileUtil {
         return false;
     }
     
+	/***** compress with Zip *****/
+    public static boolean compressMultiFolderWithZip(List<String> folderList, String finalFile) {
+    	File zipFile = new File(finalFile);	//finalFile
+    	
+        Project prj = new Project();    
+        Zip zip = new Zip();    
+        zip.setEncoding("gbk");	//文件名的编码格式，默认是运行平台使用的编码格式，会导致压缩后的文件在其他平台上打开
+        zip.setProject(prj);    
+        zip.setDestFile(zipFile);    
+        
+        for(int i=0; i < folderList.size(); i++)
+        {
+        	File srcdir = new File(folderList.get(i));
+            if (srcdir.exists())
+            {
+            	FileSet fileSet = new FileSet();    
+            	fileSet.setProject(prj);    
+            	fileSet.setDir(srcdir);    
+            	//fileSet.setIncludes("**/*.java"); //包括哪些文件或文件夹 eg:zip.setIncludes("*.java");    
+            	//fileSet.setExcludes(...); //排除哪些文件或文件夹    
+            	zip.addFileset(fileSet);
+            }
+            else
+            {
+            	Log.info("compressMultiFolderWithZip() " + folderList.get(i) + "不存在！");
+            }
+        }
+        
+        zip.execute();  
+		
+        if(zipFile.exists())
+        {
+        	return true;
+        }
+        return false;
+    }
+    
     /***** compress with 7Z *****/
     public static boolean compressWith7z(String inputFile, String outputFile) 
     {
