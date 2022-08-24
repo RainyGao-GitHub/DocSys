@@ -124,6 +124,10 @@ public class BaseFunction{
 	
 	protected static int systemDisabled = 0; //系统禁用标记
     
+	//服务器IP和MAC
+    protected static String serverIP = null;
+    protected static String serverMAC = null;
+	
 	static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
@@ -657,51 +661,50 @@ public class BaseFunction{
 		return backupConfig.indexLibBase + "Doc-RealTime";
 	}
 
-	
 	public static String getBackupOffsetPathForRealDoc(Repos repos, RemoteStorageConfig remote, Date date) {
 		if(remote.isVerRepos)
 		{
-			return "Backup/" + repos.getId() + "/data/rdata/";			
+			return "Backup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data/rdata/";			
 		}
 		
 		String backupTime = DateFormat.dateTimeFormat2(date);
-		return "Backup/" + repos.getId() + "/data-" + backupTime + "/rdata/"; 
+		return "Backup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data-" + backupTime + "/rdata/"; 
 	}
 
 	public static String getBackupOffsetPathForVirtualDoc(Repos repos, RemoteStorageConfig remote, Date date) {
 		//对于备份服务器是版本仓库，那么备份不按时间存放
 		if(remote.isVerRepos)
 		{
-			return "Backup/" + repos.getId() + "/data/vdata/";
+			return "Backup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data/vdata/";
 		}
 		
 		String backupTime = DateFormat.dateTimeFormat2(date);
-		return "Backup/" + repos.getId() + "/data-" + backupTime + "/vdata/"; 
+		return "Backup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data-" + backupTime + "/vdata/"; 
 	}
 
 	
 	public static String getRealTimeBackupOffsetPathForRealDoc(Repos repos, RemoteStorageConfig remote, Date date) {
 		if(remote.isVerRepos)
 		{
-			return "Backup/" + repos.getId() + "/data/rdata/";			
+			return "Backup/" + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data/rdata/";			
 		}
 		
 		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录
 		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
 		String backupTime = DateFormat.dateTimeFormat2(date); //20211125091005
-		return "RealTimeBackup/" + repos.getId() + "/rdata/" + backupDate + "/" + backupTime + "/"; 
+		return "RealTimeBackup/" + serverIP + "-" + serverMAC + "-" + repos.getId() + "/rdata/" + backupDate + "/" + backupTime + "/"; 
 	}
 
 	public static String getRealTimeBackupOffsetPathForVirtualDoc(Repos repos, RemoteStorageConfig remote, Date date) {
 		if(remote.isVerRepos)
 		{
-			return "Backup/" + repos.getId() + "/data/vdata/";			
+			return "Backup/" + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data/vdata/";			
 		}
 		
 		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录		
 		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
 		String backupTime = DateFormat.dateTimeFormat2(date); //9-33-05
-		return "RealTimeBackup/" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/"; 
+		return "RealTimeBackup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/"; 
 	}
 	
 	//**** 服务器前置配置 *******
