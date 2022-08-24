@@ -37,7 +37,6 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.BackupTask;
-import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -555,9 +554,11 @@ public class ReposController extends BaseController{
 		//启动备份线程
 		new Thread(new Runnable() {
 			ReposFullBackupTask task = reposFullBackupTask;
+			Integer reposId = repos.getId();
 			public void run() {
 				Log.debug("backupRepos() executeReposFullBackupTask in new thread");
 				executeReposFullBackupTask(task);
+				setReposIsBusy(reposId, false);
 			}
 		}).start();
 	}
@@ -569,7 +570,8 @@ public class ReposController extends BaseController{
 			Log.info("backupRepos 非商业版本不支持仓库全量备份");
 			return false;
 	    }
-		return channel.reposFullBackUp(task);
+		boolean ret = channel.reposFullBackUp(task);
+		return ret;
 	}
 	
 	private ReposFullBackupTask createReposFullBackupTask(Repos repos,
@@ -622,6 +624,60 @@ public class ReposController extends BaseController{
 		task.info = "备份中...";
 		reposFullBackupTaskHashMap.put(taskId, task);
 		return task;
+	}
+	
+	/**************** queryReposFullBackupTask ******************/
+	@RequestMapping("/queryReposFullBackupTask.do")
+	public void queryReposFullBackupTask(String taskId, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.info("************** queryReposFullBackupTask.do ****************");
+		Log.info("queryReposFullBackupTask taskId:" + taskId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposFullBackupTask task = reposFullBackupTaskHashMap.get(taskId);
+		if(task == null)
+		{
+			//可能任务已被取消或者超时删除
+			rt.setError("仓库全量备份任务 " + taskId + " 不存在");
+			writeJson(rt, response);			
+			return;
+		}
+
+		switch(task.status)
+		{
+		case 0:
+		case 1:
+			//任务未结束
+			rt.setData(task); //任务
+
+			//更新task的targetSize
+			File compressFile = new File(task.targetPath, task.targetName);
+			if(compressFile.exists())
+			{
+				task.targetSize = compressFile.length();
+			}
+			
+			rt.setMsgData(5);
+			break;
+		case 2:
+			Repos repos = task.repos;
+			Doc downloadDoc = buildDownloadDocInfo(repos.getId(), "", "", task.targetPath, task.targetName, 0);
+			rt.setData(downloadDoc);
+			rt.setMsgData(0);	//下载后不删除目标文件
+			
+			//删除下载压缩任务
+			reposFullBackupTaskHashMap.remove(task.id);
+			break;
+		case 3:	
+			//备份失败
+			rt.setError(task.info);
+			break;
+		default:	//未知压缩状态
+			rt.setError("未知备份状态");
+			break;
+		}
+
+		writeJson(rt, response);			
 	}
 	/****************   set a Repository ******************/
 	@RequestMapping("/updateReposInfo.do")
