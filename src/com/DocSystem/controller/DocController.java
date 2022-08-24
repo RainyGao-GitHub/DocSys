@@ -2543,7 +2543,7 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	/**************** downloadDocPrepare ******************/
+	/**************** queryDownloadPrepareTask ******************/
 	@RequestMapping("/queryDownloadPrepareTask.do")
 	public void queryDownloadPrepareTask(String taskId, HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
