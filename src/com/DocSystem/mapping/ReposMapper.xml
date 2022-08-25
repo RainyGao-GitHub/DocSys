@@ -417,6 +417,9 @@
       <if test="pwd != null">
         PWD,
       </if>
+	  <if test="owner != null">
+        OWNER,
+      </if>
       <if test="createTime != null">
         CREATE_TIME,
       </if>
@@ -496,6 +499,9 @@
       </if>
       <if test="pwd != null">
         #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="owner != null">
+        #{owner,jdbcType=INTEGER},
       </if>
       <if test="createTime != null">
         #{createTime,jdbcType=BIGINT},
