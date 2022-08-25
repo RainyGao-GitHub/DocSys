@@ -651,6 +651,7 @@ public class FileUtil {
         File dir=new File(path);
         if(dir.exists())
         {
+        	Log.info("delDir() delete Dir:" + path);
             File[] tmp=dir.listFiles();            
             for(int i=0;i<tmp.length;i++)
             {
@@ -672,9 +673,10 @@ public class FileUtil {
                     }
                 }
             }
+            
             if(dir.delete() == false)
             {
-            	Log.debug("delDir() delete Dir Failed:" + path);
+            	Log.info("delDir() delete Dir Failed:" + path);
                 return false;
             }
         }
@@ -688,6 +690,7 @@ public class FileUtil {
         {
             if(file.isDirectory())
             {
+            	Log.info("delFileOrDir() delete Dir:" + path);
 	            File[] tmp=file.listFiles();            
 	            for(int i=0;i<tmp.length;i++)
 	            {
@@ -698,13 +701,21 @@ public class FileUtil {
 	                    return false;
 	                }
 	            }
+	            
+	            if(file.delete() == false)
+	            {
+	            	Log.info("delFileOrDir() delete Dir Failed:" + path);
+	                return false;
+	            }
+	            return true;	            
             }
             
             if(file.delete() == false)
             {
-            	Log.debug("delFileOrDir() delete Dir Failed:" + path);
-                return false;
+            	Log.debug("delFileOrDir() delete File Failed:" + path);
+            	return false;
             }
+            return true;
         }
         return true;
     }
