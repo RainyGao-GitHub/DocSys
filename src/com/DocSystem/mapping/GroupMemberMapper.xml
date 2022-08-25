@@ -86,7 +86,7 @@
   </select>
   
   <delete id="deleteSelective" parameterType="com.DocSystem.entity.GroupMember">
-    delete from doc_auth
+    delete from group_member
       where 1 = 1
       <if test="id != null">
       	  and ID = #{id,jdbcType=INTEGER}
