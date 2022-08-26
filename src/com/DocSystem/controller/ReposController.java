@@ -611,6 +611,7 @@ public class ReposController extends BaseController{
 		task.backupTime = backupTime;
 		task.repos = repos;
 		task.reposAccess = reposAccess;
+		task.requestIP = requestIP;
 
 		//压缩backupStorePath
 		if(backupStorePath == null || backupStorePath.isEmpty())
