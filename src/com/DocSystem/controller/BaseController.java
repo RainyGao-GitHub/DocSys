@@ -17395,20 +17395,23 @@ public class BaseController  extends BaseFunction{
 	    }
 		if(doc.isRemotePushEnabled == 0)
 		{
-    		Log.debug("doPushEntryToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored  for RemotePush");
+    		Log.info("doPushEntryToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored  for RemotePush");
 			return false;
 		}
 		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			Log.debug("doPushEntryToRemoteStorage() 推送根目录");
-			
+			Log.info("doPushEntryToRemoteStorage() 推送根目录");
 			return doPushSubEntriesToRemoteStorage(session, remote, repos, doc, accessUser, subEntryPushFlag, force, pushResult, actionList, isSubAction, pushLocalChangeOnly);			
 		}
 		
 		boolean ret = false;
 		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localDoc);		
-		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+		DocChangeType remoteChangeType = DocChangeType.NOCHANGE;
+		if(pushLocalChangeOnly == false && remote.isVerRepos == false)
+		{
+			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+		}
 		
 		//远程没有改动（如果不是强制推送，那么只能推送新增的文件或目录）
 		if(remoteChangeType == DocChangeType.NOCHANGE || remoteChangeType == DocChangeType.REMOTEDELETE)
@@ -17579,6 +17582,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> remoteList = getRemoteStorageEntryList(session, remote, repos, doc, commitId);
 		if(remoteList == null)
 		{
+			Log.info("doPullSubEntriesFromRemoteStorage() getRemoteStorageEntryList return null for:" + doc.getPath() + doc.getName());			
 			return false;
 		}
 		
@@ -17655,8 +17659,9 @@ public class BaseController  extends BaseFunction{
 	
 	//actionList and isSubAction is for Gvn/Git RemoteStorage
 	private boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, boolean force, 
-			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) {		
-		Log.debug("doPushSubEntriesToRemoteStorage() doc:[" + doc.getPath() + doc.getName() + "]");
+			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, boolean pushLocalChangeOnly) 
+	{		
+		Log.info("doPushSubEntriesToRemoteStorage() doc:[" + doc.getPath() + doc.getName() + "]");
 
 		//子目录不递归
 		if(subEntryPushFlag == 0)
@@ -17673,6 +17678,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> localList = getLocalEntryList(repos, doc);
 		if(localList == null)
 		{
+			Log.info("doPushSubEntriesToRemoteStorage() getLocalEntryList return null for:" + doc.getPath() + doc.getName());			
 			return false;
 		}
 		
@@ -20358,15 +20364,14 @@ public class BaseController  extends BaseFunction{
 		pushResult.actionList = new ArrayList<CommitAction>();
 		
 		Doc localDoc = fsGetDoc(repos, doc);
-
+		Log.printObject("doPushToRemoteStorage() localDoc:", localDoc);
+		
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
+		Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
 		
 		//TODO: 如果doc.offsetPath非空的话，那么远程根目录实际上并不是真正的根目录（此时是需要检查节点是否存在的）
-		Doc remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
-		
-		Log.printObject("doPushToRemoteStorage() localDoc:", localDoc);
-		Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
-		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);
+		Doc	remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
+		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);			
 		
 		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
     	synchronized(synclock)
