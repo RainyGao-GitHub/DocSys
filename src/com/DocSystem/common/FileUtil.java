@@ -471,6 +471,8 @@ public class FileUtil {
     			return false;	    				    		
 	    	}
 	    	
+	    	Log.info("copyDir() copy Dir:" + srcPath + " to " + dstPath + " cover:" + cover);
+	    	
 	    	//Check the newPath
 	    	File dstDir = new File(dstPath);
 	    	if(dstDir.exists())
@@ -777,17 +779,17 @@ public class FileUtil {
             File oldfile=new File(oldFilePath);
             if(oldfile.exists() == false)
             {
-            	Log.debug("moveFile() oldFilePath:" + oldFilePath + " does not exist");
+            	Log.info("moveFileOrDir() oldFilePath:" + oldFilePath + " does not exist");
             	return false;
             }
             
             File newfile=new File(newFilePath);
             if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
             {
-            	Log.debug("moveFile() newFilePath:" + newFilePath + " already exists");
+            	Log.info("moveFileOrDir() newFilePath:" + newFilePath + " already exists");
             	if(cover)//覆盖
                 {
-                	Log.debug("moveFile() 强制覆盖！");
+                	Log.info("moveFileOrDir() 强制覆盖！");
                     return oldfile.renameTo(newfile);
                 }
                 else
@@ -802,7 +804,7 @@ public class FileUtil {
         }
         else
         {
-        	Log.debug("moveFile() newFilePath:" + newFilePath + " is same to oldFilePath:" + oldFilePath);
+        	Log.info("moveFileOrDir() newFilePath:" + newFilePath + " is same to oldFilePath:" + oldFilePath);
         	return true;
         }
     }
