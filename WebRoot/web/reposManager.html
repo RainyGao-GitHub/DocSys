@@ -838,6 +838,16 @@
 								showReposLocalBackupIgnoreListManagePanel();
 							}
 						},
+						{text: '增量备份',  action: function(e){
+								e.preventDefault();
+								reposLocalBackupConfirm(1); 
+							}		
+						},				
+						{text: '全量备份',  action: function(e){
+								e.preventDefault();
+								reposLocalBackupConfirm(2);	
+							}
+						},						
 					]
 				},
 				{text: '异地备份', subMenu: [
@@ -856,6 +866,16 @@
 								showReposRemoteBackupIgnoreListManagePanel();
 							}
 						},
+						{text: '增量备份',  action: function(e){
+								e.preventDefault();
+								reposRemoteBackupConfirm(1); 
+							}	
+						},
+						{text: '全量备份',  action: function(e){
+								e.preventDefault();
+								reposRemoteBackupConfirm(2);	
+							}
+						},						
 					]					
 				},
 				]
