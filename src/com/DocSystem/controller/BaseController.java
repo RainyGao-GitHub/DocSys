@@ -11423,8 +11423,8 @@ public class BaseController  extends BaseFunction{
 				//启动定时备份任务
 				if(repos.backupConfig != null)
 				{
-					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 3600L);	//1小时后开始本地备份
-					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, 7200L); //2小时后开始远程备份
+					addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null); //3600L);	//1小时后开始本地备份
+					addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, null); //7200L); //2小时后开始远程备份
 				}
 				
 				//启动定时同步任务
