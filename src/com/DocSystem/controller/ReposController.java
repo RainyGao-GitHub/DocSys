@@ -348,16 +348,16 @@ public class ReposController extends BaseController{
 		
 		//自动备份初始化
 		//每个仓库都必须有备份任务状态HashMap（无论是否有自动备份任务，避免仓库修改时修改了HashMap导致旧的Task无法关闭，再addRepos和系统初始化时创建）
-		reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());
-		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, BackupTask>());		
+		reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
+		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());		
 		if(autoBackup != null)
 		{
 			setReposAutoBackup(repos, autoBackup);
 			initReposAutoBackupConfig(repos, autoBackup);
 			if(repos.backupConfig != null)
 			{
-				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null); //3600L); //1小时后开始备份
-				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, null); //7200L); //2小时后开始备份
+				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
+				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始备份
 			}
 		}
 		
@@ -510,6 +510,167 @@ public class ReposController extends BaseController{
 		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","成功", repos, null, null, "");
 	}
 	
+	/****************   user triggered Repository Auto Backup ******************/
+	@RequestMapping("/reposAutoBackup.do")
+	public void reposAutoBackup(Integer reposId, Integer type, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		Log.info("****************** reposAutoBackup.do ***********************");
+		Log.debug("reposAutoBackup() reposId: " + reposId + " type:" + type);
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, "", "", true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		User login_user = reposAccess.getAccessUser();
+		if(login_user.getType() != 2)	//超级管理员
+		{
+			rt.setError("您无权进行此操作，请联系系统管理员!");				
+			writeJson(rt, response);	
+			return;
+		}
+		
+		Repos repos = getRepos(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(repos.backupConfig == null)
+		{
+			rt.setError("该仓库未配置自动备份，请联系系统管理员!");				
+			writeJson(rt, response);
+			return;
+		}
+		
+		BackupTask reposAutoBackupTask = null;
+		switch(type)
+		{
+		case 1:
+		case 2:
+			if(repos.backupConfig.localBackupConfig == null)
+			{
+				rt.setError("该仓库未配置本地自动备份，请联系系统管理员!");				
+				writeJson(rt, response);
+				return;
+			}
+			reposAutoBackupTask = addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 120L, false); //2分钟后开始备份
+			break;
+		case 3:
+		case 4:
+			if(repos.backupConfig.remoteBackupConfig == null)
+			{
+				rt.setError("该仓库未配置异地自动备份，请联系系统管理员!");				
+				writeJson(rt, response);
+				return;
+			}
+			reposAutoBackupTask = addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, 120L, false); //2分钟后开始备份
+			break;
+		default:
+			rt.setError("仓库备份类型错误[" +type+ "]，请联系系统管理员!");				
+			writeJson(rt, response);
+			return;			
+		}
+
+		if(reposAutoBackupTask == null)
+		{
+			Log.info("reposAutoBackup() 仓库自动备份任务创建失败");
+			rt.setError("仓库自动备份任务创建失败");				
+			writeJson(rt, response);	
+			return;
+		}	
+
+		rt.setData(reposAutoBackupTask);
+		rt.setMsgData(5);	//备份中...
+		writeJson(rt, response);	
+	}
+	
+	/**************** queryReposAutoBackupTask ******************/
+	@RequestMapping("/queryReposAutoBackupTask.do")
+	public void queryReposAutoBackupTask(String taskId, Integer reposId, Integer type, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.info("************** queryReposAutoBackupTask.do ****************");
+		Log.info("queryReposAutoBackupTask taskId:" + taskId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		Repos repos = getRepos(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		ConcurrentHashMap<String, BackupTask> backUpTaskHashMap = null;
+		BackupTask task = null;
+
+		switch(type)
+		{
+		case 1:
+		case 2:
+			backUpTaskHashMap = reposLocalBackupTaskHashMap.get(repos.getId());
+			if(backUpTaskHashMap == null)
+			{
+				Log.info("queryReposAutoBackupTask backUpTaskHashMap 未初始化");
+				rt.setError("backUpTaskHashMap 未初始化");
+				writeJson(rt, response);
+				return;
+			}
+			
+			task = backUpTaskHashMap.get(taskId);
+			break;
+		case 3:
+		case 4:
+			backUpTaskHashMap = reposRemoteBackupTaskHashMap.get(repos.getId());
+			if(backUpTaskHashMap == null)
+			{
+				Log.info("queryReposAutoBackupTask backUpTaskHashMap 未初始化");
+				rt.setError("backUpTaskHashMap 未初始化");
+				writeJson(rt, response);
+				return;
+			}
+			
+			task = backUpTaskHashMap.get(taskId);
+			break;
+		default:
+			rt.setError("仓库备份类型错误[" +type+ "]，请联系系统管理员!");				
+			writeJson(rt, response);
+			return;			
+		}
+				
+		if(task == null)
+		{
+			//可能任务已被取消或者超时删除
+			rt.setError("仓库自动备份任务 " + taskId + " 不存在");
+			writeJson(rt, response);			
+			return;
+		}
+
+		switch(task.status)
+		{
+		case 0:
+		case 1:
+			//任务未结束
+			rt.setData(task); //任务			
+			rt.setMsgData(5);
+			break;
+		case 2:
+			rt.setMsgData(0); //备份成功
+			break;
+		case 3:	
+			//备份失败
+			rt.setError(task.info);
+			break;
+		default:	//未知备份状态
+			rt.setError("未知备份状态");
+			break;
+		}
+		writeJson(rt, response);			
+	}
+
 	/****************   backup a Repository ******************/
 	@RequestMapping("/backupRepos.do")
 	public void backupRepos(Integer reposId, String backupStorePath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -809,8 +970,8 @@ public class ReposController extends BaseController{
 			initReposAutoBackupConfig(reposInfo, autoBackup);
 			if(reposInfo.backupConfig != null)
 			{
-				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 10, null); //3600L); //1小时后开始自动备份
-				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 10, null); //7200L); //2小时后开始自动备份
+				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始自动备份
+				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始自动备份
 			}
 		}
 		

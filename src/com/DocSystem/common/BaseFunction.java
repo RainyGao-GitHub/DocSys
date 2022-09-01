@@ -441,8 +441,8 @@ public class BaseFunction{
 	//远程存储
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, BackupTask>>();	
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
 	//版本仓库同步
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
 
