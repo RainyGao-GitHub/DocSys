@@ -4005,7 +4005,7 @@
 	
 	function reposFullBackupSuccessHandler(SubContext, ret)
 	{
-			console.log("doQueryReposFullBackupTask() " + "仓库 [" + SubContext.repos.name +"] 备份完成");
+			console.log("reposFullBackupSuccessHandler() " + "仓库 [" + SubContext.repos.name +"] 备份完成");
 			var repos = SubContext.repos;
 			
     	    var vid =  ret.data.vid;
