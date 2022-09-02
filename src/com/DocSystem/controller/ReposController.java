@@ -622,7 +622,6 @@ public class ReposController extends BaseController{
 		switch(type)
 		{
 		case 1:
-		case 2:
 			backUpTaskHashMap = reposLocalBackupTaskHashMap.get(repos.getId());
 			if(backUpTaskHashMap == null)
 			{
@@ -634,8 +633,7 @@ public class ReposController extends BaseController{
 			
 			task = backUpTaskHashMap.get(taskId);
 			break;
-		case 3:
-		case 4:
+		case 2:
 			backUpTaskHashMap = reposRemoteBackupTaskHashMap.get(repos.getId());
 			if(backUpTaskHashMap == null)
 			{
