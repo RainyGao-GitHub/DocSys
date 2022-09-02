@@ -40,8 +40,8 @@
                       <button onclick="showEditReposPanel(event, {{value.id}}, {{value.type}}, {{i}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">编辑</button>
                       <button onclick="showManageReposMemberPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">成员管理</button>
                       <button onclick="showReposManagerPage(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">权限管理</button>
-                      <button onclick="showReposManagerPage(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">高级设置</button>
                       <button onclick="showBackupReposConfirmPanel(event, {{value.id}}, {{value.type}}, {{i}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">备份仓库</button>
+                      <button onclick="showReposManagerPage(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">高级设置</button>
                     </td>
                   </tr>
                 {{/each}}

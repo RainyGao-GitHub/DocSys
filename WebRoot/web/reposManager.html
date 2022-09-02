@@ -838,16 +838,11 @@
 								showReposLocalBackupIgnoreListManagePanel();
 							}
 						},
-						{text: '增量备份',  action: function(e){
+						{text: '立即本地备份',  action: function(e){
 								e.preventDefault();
-								reposLocalBackupConfirm(1); 
+								reposAutoBackupConfirm(1, 1); 
 							}		
-						},				
-						{text: '全量备份',  action: function(e){
-								e.preventDefault();
-								reposLocalBackupConfirm(2);	
-							}
-						},						
+						},			
 					]
 				},
 				{text: '异地备份', subMenu: [
@@ -866,15 +861,10 @@
 								showReposRemoteBackupIgnoreListManagePanel();
 							}
 						},
-						{text: '增量备份',  action: function(e){
+						{text: '立即异地备份',  action: function(e){
 								e.preventDefault();
-								reposRemoteBackupConfirm(1); 
+								reposAutoBackupConfirm(2, 1); 
 							}	
-						},
-						{text: '全量备份',  action: function(e){
-								e.preventDefault();
-								reposRemoteBackupConfirm(2);	
-							}
 						},						
 					]					
 				},
@@ -1084,6 +1074,160 @@ function isLocalBackupEnabled(reposInfo)
    	}
 	
 	return true;
+}
+function reposAutoBackupConfirm(type, fullBackup)
+{
+   	console.log("reposAutoBackupConfirm() type:" + type + " fullBackup:" + fullBackup);
+   	
+	var msg = "是否立即执行仓库自动备份？"
+   	if(type == 1)
+   	{
+		if(isLocalBackupEnabled(gReposInfo) == false)
+		{
+			showErrorMessage("该仓库未设置本地自动备份，请联系管理员！");
+			return;
+		}
+		msg = "是否立即执行仓库本地自动备份？"
+   	}
+   	else
+   	{
+		if(isRemoteBackupEnabled(gReposInfo) == false)
+		{
+			showErrorMessage("该仓库未设置异地自动备份，请联系管理员！");
+			return;
+		}
+		msg = "是否立即执行仓库异地自动备份？"
+   	}
+	
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'reposAutoBackupConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "备份",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	reposAutoBackup(type, fullBackup);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+
+function reposAutoBackup(type, fullBackup)
+{
+	console.log("reposAutoBackup()");
+    $.ajax({
+        url : "/DocSystem/Repos/reposAutoBackup.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId : gReposId,
+        	type: type,
+        	fullBackup: fullBackup,
+        },
+        success : function (ret) {
+    	    console.log("reposAutoBackup Ok:",ret);   
+        	if( "ok" == ret.status ){
+        	    if(ret.msgData == 5)
+        	    {
+					//下载目录压缩中
+					var SubContext = {};
+           	        SubContext.reposId = gReposId;
+           	        SubContext.type = type;
+           	        SubContext.fullBackup = fullBackup;
+        	        
+        	        showErrorMessage("仓库备份中，可能需要花费较长时间，您可先关闭当前窗口！");
+					startReposAutoBackupQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
+        	        return;
+        	    }
+
+        	    reposAutoBackupSuccessHandler(SubContext, ret);
+        	    return;
+            }
+            else
+            {
+            	showErrorMessage("备份失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+           	showErrorMessage('备份失败:服务器异常！');
+        }
+	});
+}
+
+function startReposAutoBackupQueryTask(SubContext, reposAutoBackupTaskId, delayTime)
+{
+	console.log("startReposAutoBackupQueryTask() repos:" + SubContext.reposId + " reposAutoBackupTaskId:" + reposAutoBackupTaskId + " delayTime:" + delayTime);
+	var nextDelayTime = delayTime; //每次增加5s
+	if(nextDelayTime < 60000) //最长1分钟
+	{
+		nextDelayTime += 5000;
+	}
+	
+	setTimeout(function () {
+		console.log("timerForQueryReposAutoBackupTask triggered!");
+		doQueryReposAutoBackupTask(SubContext, reposAutoBackupTaskId, nextDelayTime);
+	},delayTime);	//check it 2s later	
+}
+
+function doQueryReposAutoBackupTask(SubContext, reposAutoBackupTaskId, nextDelayTime)
+{
+	console.log("doQueryReposAutoBackupTask() repos:" + SubContext.reposId + " reposAutoBackupTaskId:" + reposAutoBackupTaskId);
+
+	$.ajax({
+        url : "/DocSystem/Repos/queryReposAutoBackupTask.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            taskId: reposAutoBackupTaskId,
+            reposId: SubContext.reposId,
+            type: SubContext.type,
+            fullBackup: SubContext.fullBackup,
+        },
+        success : function (ret) {
+    	   console.log("doQueryReposAutoBackupTask ret:",ret);        
+           if( "ok" == ret.status )
+           {    
+       	        if(ret.msgData == 5)
+        	    {
+       	        	var task = ret.data;
+       	        	var info = task.info;
+       	        	startReposAutoBackupQueryTask(SubContext, task.id, nextDelayTime);
+       	        	return;
+        	    }
+
+       	     reposAutoBackupSuccessHandler(SubContext, ret);
+           }
+           else	//后台报错
+           {
+        	   showErrorMessage("仓库自动备份失败:" + ret.msgInfo);
+           }
+        },
+        error : function () {	//后台异常
+        	showErrorMessage("仓库自动备份失败:服务器异常");
+        }
+	});	
+}
+
+function reposAutoBackupSuccessHandler(SubContext, ret)
+{
+	console.log("reposAutoBackupSuccessHandler() " + "仓库 [" + SubContext.reposId +"] 自动备份成功");
+   	
+	//bootstrapQ.msg({
+	//	msg : '自动备份成功！',
+	//	type : 'success',
+	//	time : 2000,
+	//    });	
+	if(SubContext.type == 1)
+	{
+		showErrorMessage("本地自动备份成功！");
+	}
+	else
+	{
+		showErrorMessage("异地自动备份成功！");		
+	}
 }
 
 function addDocToLocalBackupIgnoreListConfirm(node)
