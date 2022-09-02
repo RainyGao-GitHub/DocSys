@@ -512,10 +512,17 @@ public class ReposController extends BaseController{
 	
 	/****************   user triggered Repository Auto Backup ******************/
 	@RequestMapping("/reposAutoBackup.do")
-	public void reposAutoBackup(Integer reposId, Integer type, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void reposAutoBackup(Integer reposId, Integer type, Integer fullBackup, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.info("****************** reposAutoBackup.do ***********************");
 		Log.debug("reposAutoBackup() reposId: " + reposId + " type:" + type);
 		ReturnAjax rt = new ReturnAjax();
+		
+		if(reposId == null || type == null)
+		{
+			rt.setError("参数错误, reposId:" + reposId + " type:" + type);			
+			writeJson(rt, response);			
+			return;				
+		}
 		
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, "", "", true, rt);
 		if(reposAccess == null)
@@ -523,7 +530,7 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;	
 		}
-		
+				
 		User login_user = reposAccess.getAccessUser();
 		if(login_user.getType() != 2)	//超级管理员
 		{
@@ -549,8 +556,7 @@ public class ReposController extends BaseController{
 		BackupTask reposAutoBackupTask = null;
 		switch(type)
 		{
-		case 1:
-		case 2:
+		case 1:	//本地备份
 			if(repos.backupConfig.localBackupConfig == null)
 			{
 				rt.setError("该仓库未配置本地自动备份，请联系系统管理员!");				
@@ -559,8 +565,7 @@ public class ReposController extends BaseController{
 			}
 			reposAutoBackupTask = addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 120L, false); //2分钟后开始备份
 			break;
-		case 3:
-		case 4:
+		case 2: //异地备份
 			if(repos.backupConfig.remoteBackupConfig == null)
 			{
 				rt.setError("该仓库未配置异地自动备份，请联系系统管理员!");				
@@ -590,12 +595,19 @@ public class ReposController extends BaseController{
 	
 	/**************** queryReposAutoBackupTask ******************/
 	@RequestMapping("/queryReposAutoBackupTask.do")
-	public void queryReposAutoBackupTask(String taskId, Integer reposId, Integer type, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	public void queryReposAutoBackupTask(String taskId, Integer reposId, Integer type, Integer fullBackup, HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		Log.info("************** queryReposAutoBackupTask.do ****************");
-		Log.info("queryReposAutoBackupTask taskId:" + taskId);
+		Log.info("queryReposAutoBackupTask taskId:" + taskId + " reposId:" + reposId + " type:" + type + " fullBackup:" + fullBackup);
 		
 		ReturnAjax rt = new ReturnAjax();
+		
+		if(reposId == null || type == null)
+		{
+			rt.setError("参数错误, reposId:" + reposId + " type:" + type);			
+			writeJson(rt, response);			
+			return;				
+		}
 		
 		Repos repos = getRepos(reposId);
 		if(!reposCheck(repos, rt, response))
