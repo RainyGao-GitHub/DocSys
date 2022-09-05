@@ -4365,7 +4365,24 @@ public class BaseController  extends BaseFunction{
 		return syncupForDocChange(action, true, rt);
 	}
 
-	//这个接口要保证只有一次Commit操作
+    /**
+     * This function will execute following actions:
+     * 1. Push local change to remote storage sever / Pull remote change from remote storage server when remoteStorageEnable and repos.remoteStorageConfig was configured
+     * 	  if action.type is SYNC / FORCESYNC / SYNCVerRepos subDocs will be push and pull
+     * 2. SyncUp Local Entry with VerRepos Entry (always treat remote change as local change)
+     *    if action.type is SYNC / FORCESYNC / SYNCVerRepos current doc and all subEntries under doc is local or remote changed will be syncuped, 
+     *    otherwise only current doc and subEntries just under current doc is local changed will be syncuped
+     * 3. Check and Update Index 
+     * 	  if action.type is SYNC / FORCESYNC then Index of current doc and all subEntries under current doc will be updated
+     *    if action.type is UNDEFINED only Index of changed entries(the result of Step2) will be updated
+     *    if action.type is SYNCVerRepos or unknown, then nothing will be done
+     * 
+     * @param  action      			 SyncUp Action
+     * 								 if action.type is SYNC or FORCESYNC    
+     * @param  remoteStorageEnable   if true then enable push to or pull from remote storage server
+     * @param  rt  					 SyncUpResult
+     * @return              		 true or false
+    */
 	protected boolean syncupForDocChange(CommonAction action, boolean remoteStorageEnable ,ReturnAjax rt) {		
 		Log.info("syncupForDocChange() **************************** 启动自动同步 ********************************");
 		Log.info("syncupForDocChange() actionType: [" + action.getAction() + "] ");
