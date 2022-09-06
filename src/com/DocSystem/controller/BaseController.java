@@ -5176,17 +5176,10 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(treatRemoteChaneAsLocalChange)
+			docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
+			if(treatRemoteChaneAsLocalChange && isRemoteChangedCase(docChangeType))
 			{
 				docChangeType = getLocalDocChangeTypeWithRemoteDoc(localEntry, remoteEntry);
-				if(docChangeType == DocChangeType.NOCHANGE)
-				{
-					docChangeType = getLocalDocChangeType(dbDoc, localEntry);
-				}
-			}
-			else
-			{
-				docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
 			}
 		}
 		
@@ -5255,7 +5248,24 @@ public class BaseController  extends BaseFunction{
 		}		
 		return false;
 	}
-	
+
+	private boolean isRemoteChangedCase(DocChangeType docChangeType) {
+		boolean ret = false;
+		switch(docChangeType)
+		{
+		case REMOTEADD:	//remoteAdd
+		case REMOTEDELETE:	//remoteDelete
+		case REMOTECHANGE:	//remoteFileChanged
+		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
+		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
+			ret = true;
+			break;
+		default:
+			break;
+		}
+		return ret;
+	}
+
 	private boolean isDocInVerRepos(Repos repos, Doc doc, String commitId) {
 		
 		if(commitId == null || commitId.isEmpty())
@@ -5336,7 +5346,11 @@ public class BaseController  extends BaseFunction{
 		return DocChangeType.UNDEFINED;
 	}
 	
-	//确定Doc localChangeType
+	/* Function: 
+	 * 		According lcoalEntry and remoteEntry info to determine the Doc localChangeType
+	 * Attention: 
+	 * 		This interface can not realy decide the file modification case, so it should be called after there is really remtoteChanged 
+	*/
 	protected static DocChangeType getLocalDocChangeTypeWithRemoteDoc(Doc localEntry, Doc remoteDoc) 
 	{						
 		//remoteDoc不存在
