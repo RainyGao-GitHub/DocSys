@@ -17501,7 +17501,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			Log.debug("doPullEntryFromRemoteStorage() 拉取根目录");
+			Log.info("doPullEntryFromRemoteStorage() 拉取根目录");
 			return doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, pullResult);					
 		}
 		
@@ -17559,6 +17559,7 @@ public class BaseController  extends BaseFunction{
 			//pullSubEntries
 			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
+				Log.debug("doPullEntryFromRemoteStorage [" +doc.getPath() + doc.getName()+ "] 拉取子目录");
 				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, pullResult);					
 			}
 			return true;
@@ -17602,12 +17603,13 @@ public class BaseController  extends BaseFunction{
 					{
 						deleteRemoteStorageDBEntry(repos, dbDoc, remote);
 					}
-					ret = true;
-				}	
+				}
+				ret = true;
 			}
 			
 			if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
+				Log.debug("doPullEntryFromRemoteStorage [" +doc.getPath() + doc.getName()+ "] 拉取子目录");
 				doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, force, pullResult);
 			}
 		}		
@@ -20525,7 +20527,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, ReturnAjax rt) {
-		Log.debug(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "]");
+		Log.info(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "] commitId:" + commitId + " recurcive:" + recurcive + " force:" + force);
 		
 		boolean ret = false;
 		DocPullResult pullResult = new DocPullResult();
