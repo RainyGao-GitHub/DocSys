@@ -21,6 +21,7 @@ Boolean isBussienss = BaseController.isBussienss();;
     	var editor;
 	    var docInfo = getDocInfoFromRequestParamStr();	    
 	    var fileType = getFileSuffix(docInfo.name);
+	    fileType = convertWpsToOfficeType(fileType);
 	    var documentType = getDocumentType(fileType);
 	    var title = docInfo.name;
 	    var key = docInfo.docId + "";
