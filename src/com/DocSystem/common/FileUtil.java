@@ -1157,6 +1157,10 @@ public class FileUtil {
 		case "xlsx":
 		case "ppt":
 		case "pptx":
+		case "csv":
+		case "wps":
+		case "et":
+		case "dps":
 			return true;
 		default:
 			break;
@@ -1770,5 +1774,18 @@ public class FileUtil {
             return null;
         }
         return charsetName;
+	}
+
+	public static String convertWpsSuffixToOfficeSuffix(String fileSuffix) {
+		switch(fileSuffix)
+		{
+		case "wps":
+			return "doc";
+		case "et":
+			return "xls";
+		case "dps":
+			return "ppt";
+		}
+		return fileSuffix;
 	}
 }

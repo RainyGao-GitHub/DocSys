@@ -28,6 +28,7 @@ var OfficeEditor = (function () {
 		console.log("officeEditorPageInit InputDoc:", Input_doc);
 		docInfo = Input_doc;
 	    fileType = getFileSuffix(docInfo.name);
+	    fileType = convertWpsToOfficeType(fileType);
 	    documentType = getDocumentType(fileType);
 	    title = docInfo.name;
 	    

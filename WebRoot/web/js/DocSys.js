@@ -912,6 +912,10 @@ function isOffice(suffix)
 			pptx : true,
 			xls : true,
 			xlsx : true,
+			csv: true,
+			wps: true,
+			et: true,
+			dps: true,
 		};
 	
 	var type = fileTypeMap[suffix];
@@ -1055,6 +1059,7 @@ function getDocumentType(fileType)
 			txt 	:	"word",	
 			djvu 	:	"word",	
 			xps 	:	"word",	
+			wps		:	"word",
 			fodp 	: 	"slide",
 		    odp 	: 	"slide",
 		    potm	:	"slide",
@@ -1066,6 +1071,7 @@ function getDocumentType(fileType)
 		    ppt 	: 	"slide",
 		    pptm 	: 	"slide",
 		    pptx 	: 	"slide",
+		    dps		:	"slide",
 		    csv 	: 	"cell",
 		    fods 	: 	"cell",
 		    ods 	: 	"cell",
@@ -1075,6 +1081,7 @@ function getDocumentType(fileType)
 	        xlt 	: 	"cell",
 			xltm 	: 	"cell",
 			xltx 	: 	"cell",
+			et		:	"cell",
 	};
 	
     var type = documentTypeMap[fileType];
@@ -1084,6 +1091,20 @@ function getDocumentType(fileType)
 	}
 	
 	return type;
+}
+
+function convertWpsToOfficeType(fileType)
+{
+	switch(fileType)
+	{
+	case "wps":
+		return "doc";
+	case "et":
+		return "xls";
+	case "dps":
+		return "ppt";
+	}
+	return fileType
 }
 
 //显示文件详情
