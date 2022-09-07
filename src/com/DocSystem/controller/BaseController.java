@@ -152,6 +152,7 @@ import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.LogEntry;
+import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.Role;
@@ -20615,53 +20616,179 @@ public class BaseController  extends BaseFunction{
 		Doc	remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);			
 		
-		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
-    	synchronized(synclock)
-    	{
-    		String lockInfo = "doPushToRemoteStorage() synclock:" + remote.remoteStorageIndexLib;
-			SyncLock.lock(lockInfo);
-			
-			if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
+		if(lockRemoteStorage(remote, accessUser, doc) == false)
+		{
+			Log.info("doPushToRemoteStorage() lockRemoteStorage [" + remote.remoteStorageIndexLib + "] failed");
+			return false;
+		}
+    	
+		if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
+		{
+			if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
 			{
-				if(localDoc != null && localDoc.getType() != null && localDoc.getType() != 0)
-				{
-					Log.info("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
-					addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath(), commitMsg,  accessUser.getName());
-				}
+				Log.info("doPushToRemoteStorage() addDirsToRemoteStorage:" + remote.rootPath + doc.offsetPath + doc.getPath());				
+				addDirsToRemoteStorage(session, remote, remote.rootPath, doc.offsetPath + doc.getPath(), commitMsg,  accessUser.getName());
 			}
-			
-			Integer subEntryPushFlag = 1;
-			if(recurcive)
+		}
+		
+		Integer subEntryPushFlag = 1;
+		if(recurcive)
+		{
+			subEntryPushFlag = 2;
+		}
+		ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
+		if(ret == true)
+		{
+			if(remote.isVerRepos == true)
 			{
-				subEntryPushFlag = 2;
-			}
-			ret = doPushEntryToRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, subEntryPushFlag, force, pushResult, pushResult.actionList, false, pushLocalChangeOnly);
-			if(ret == true)
-			{
-				if(remote.isVerRepos == true)
+				if(pushResult.actionList.size() > 0)
 				{
-					if(pushResult.actionList.size() > 0)
+					if(remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult) == null)
 					{
-						if(remoteStorageVerReposCommitAndPush(session, remote, repos, accessUser.getName(), commitMsg, pushResult) == null)
-						{
-							pushResult.successCount = 0;
-							pushResult.failCount = pushResult.totalCount;
-						}
+						pushResult.successCount = 0;
+						pushResult.failCount = pushResult.totalCount;
 					}
 				}
-				else
-				{
-					pushResult.revision = "";
-				}
 			}
-			
-			SyncLock.unlock(synclock, lockInfo);
-    	}
+			else
+			{
+				pushResult.revision = "";
+			}
+		}
+
 		rt.setDataEx(pushResult);
 		Log.info("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "] ret:" + ret);
+
+		unlockRemoteStorage(remote, accessUser, doc);
 		return ret;	
 	}
 	
+	//unlockRemoteStorage not need to executed with synclock, because it already is thread safe 
+	private boolean unlockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) 
+	{
+		Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] Start for [" + doc.getPath() + doc.getName() + "]");
+		RemoteStorageLock curLock = remoteStorageLocksMap.get(remote.remoteStorageIndexLib);
+		if(curLock == null)
+		{
+			Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] was not locked");
+			return true;
+		}
+		
+		if(curLock.lockBy == null || curLock.lockBy.equals(accessUser.getId()))
+		{
+			curLock.state = 0;
+			//wakeup all pendding thread for this lock
+			Log.info("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] for [" + doc.getPath() + doc.getName() + "], wakeup all sleep threads");
+			synchronized(curLock.synclock)
+			{
+				curLock.synclock.notifyAll();
+			}
+			Log.debug("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] unlock success for [" + doc.getPath() + doc.getName() + "]");
+			return true;
+		}
+		
+		Log.info("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] unlock failed " + " for [" + doc.getPath() + doc.getName() + "] (lockBy:" + curLock.lockBy + " unlock user:" + accessUser.getId());
+		return false;
+	}
+
+	//这是一个阻塞函数，只有在获取到锁才会退出
+	private boolean lockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) {
+		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
+		int count = 0;
+		for(;;)
+		{
+			RemoteStorageLock remoteStorageLock = lockRemoteStorage(remote.remoteStorageIndexLib, 2*60*60*1000, accessUser, doc, synclock);
+			if(remoteStorageLock != null)
+			{
+				Log.debug("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
+				return true;
+			}
+			
+			if(count > 10)
+			{
+				Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock failed with max retries:" + count + " for [" + doc.getPath() + doc.getName() + "]");
+				return false;
+			}
+
+			count ++;
+			Log.debug("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock tried:" + count + " for [" + doc.getPath() + doc.getName() + "]");
+		}
+	}
+	
+	private RemoteStorageLock lockRemoteStorage(String lockName, long lockDuration, User accessUser, Doc doc, Object synclock) 
+	{
+		Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] Start");
+
+		RemoteStorageLock remoteStorageLock = null;
+		RemoteStorageLock curLock = null;
+		synchronized(synclock)
+		{
+			String lockInfo = "lockRemoteStorage() synclock:" + lockName;
+			SyncLock.lock(lockInfo);
+			curLock = remoteStorageLocksMap.get(lockName);
+			if(curLock == null)
+			{
+				Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] not locked");
+				curLock = new RemoteStorageLock();
+				curLock.state = 1;
+				curLock.name = lockName;
+				curLock.lockBy = accessUser.getId();
+				curLock.locker = accessUser.getName();
+				curLock.lockTime = new Date().getTime() + lockDuration;
+				curLock.synclock = new Object();
+				remoteStorageLocksMap.put(lockName, curLock);
+				remoteStorageLock = curLock;
+			}
+			else
+			{
+				//check if it is locked
+				if(curLock.state == 0)
+				{
+					Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] not locked");
+					curLock.state = 1;
+					curLock.lockBy = accessUser.getId();
+					curLock.locker = accessUser.getName();
+					curLock.lockTime = new Date().getTime() + lockDuration;
+					remoteStorageLock = curLock;
+				}
+				else
+				{
+					long curTime = new Date().getTime();
+					if(curLock.lockTime < curTime)
+					{
+						Log.info("lockRemoteStorage() remoteStorageLock [" + curLock.name + "] is expired");
+						curLock.state = 1;
+						curLock.lockBy = accessUser.getId();
+						curLock.locker = accessUser.getName();
+						curLock.lockTime = new Date().getTime() + lockDuration;
+						remoteStorageLock = curLock;
+					}
+				}
+			}
+			SyncLock.unlock(synclock, lockInfo);
+		}
+		
+		if(remoteStorageLock == null) 
+		{
+			//wait for wake up or timeout
+			Log.info("lockRemoteStorage() remoteStorageLock [" + lockName + "] lock failed" + " for [" + doc.getPath() + doc.getName() + "], sleep");			
+			synchronized(curLock.synclock)
+			{
+				try {
+					curLock.synclock.wait(2*60*60*100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		else
+		{
+			Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
+		}
+		return remoteStorageLock;
+	}
+
+
 	private Object getRemoteStorageSyncLock(String remoteStorage) {
 		Object synclock = remoteStorageSyncLockHashMap.get(remoteStorage);
     	if(synclock == null)
