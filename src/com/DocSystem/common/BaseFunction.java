@@ -80,6 +80,7 @@ import com.DocSystem.commonService.ProxyThread;
 import com.DocSystem.commonService.ShareThread;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
+import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
@@ -113,6 +114,7 @@ public class BaseFunction{
     //TODO: 集群部署时，docLocks和reposLocks信息需要存储在redis中
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
+	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
 	
 	public static int OSType = OS.UNKOWN; //
 	
