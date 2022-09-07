@@ -5641,13 +5641,13 @@ public class BaseController  extends BaseFunction{
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
 		Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
-        syncupScanForDocList_FSM(verReposEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly);
+        syncupScanForDocList_FSM(verReposEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly, treatRemoteChaneAsLocalChange);
 		
         Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
-        syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly);
+        syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly, treatRemoteChaneAsLocalChange);
 		
         Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
-        syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly);
+        syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly, treatRemoteChaneAsLocalChange);
 
 		return true;
     }
@@ -5678,7 +5678,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag, boolean syncLocalChangeOnly)
+	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag, boolean syncLocalChangeOnly, boolean treatRemoteChaneAsLocalChange)
 	{
 		if(docList == null)
 		{
@@ -5705,7 +5705,7 @@ public class BaseController  extends BaseFunction{
     		Doc remoteEntry = getDocFromList(subDoc, remoteDocHashMap);
     		//Log.printObject("syncupForDocChange_FSM() remoteEntry: ", remoteEntry);
     		docHashMap.put(subDoc.getName(), subDoc);
-    		syncupScanForDoc_FSM(repos, subDoc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly, true);
+    		syncupScanForDoc_FSM(repos, subDoc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly, treatRemoteChaneAsLocalChange);
 	    }
 		return true;
 	}
@@ -20700,7 +20700,7 @@ public class BaseController  extends BaseFunction{
 			RemoteStorageLock remoteStorageLock = lockRemoteStorage(remote.remoteStorageIndexLib, 2*60*60*1000, accessUser, doc, synclock);
 			if(remoteStorageLock != null)
 			{
-				Log.debug("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
+				Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
 				return true;
 			}
 			
@@ -20783,7 +20783,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
+			Log.info("lockRemoteStorage() remoteStorageLock [" + lockName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
 		}
 		return remoteStorageLock;
 	}
