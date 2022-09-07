@@ -4730,24 +4730,28 @@ public class DocController extends BaseController{
 				if(remoteChanges.size() > 0)
 				{
 					Log.debug("revertDocHistory() 远程有改动！");
-					String remoteChangeInfo = buildChangeReminderInfo(remoteChanges);				
-					docSysErrorLog(remoteChangeInfo,rt);
-					unlockDoc(doc, lockType, reposAccess.getAccessUser());
-					writeJson(rt, response);
-					return;
+					//远程有改动才需要恢复
+					//String remoteChangeInfo = buildChangeReminderInfo(remoteChanges);				
+					//docSysErrorLog(remoteChangeInfo,rt);
+					//unlockDoc(doc, lockType, reposAccess.getAccessUser());
+					//writeJson(rt, response);
+					//return;
 				}
-				
-				if(localEntry.getType() != 0)
+				else
 				{
-					if(commitId.equals(remoteEntry.getRevision()))
+					//只有扫描且本地和远程都没有改动，才判断是否为最新版本
+					if(localEntry.getType() != 0)
 					{
-						Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
-						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-						unlockDoc(doc, lockType, reposAccess.getAccessUser());
-						writeJson(rt, response);
-						return;
+						if(commitId.equals(remoteEntry.getRevision()))
+						{
+							Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
+							docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+							unlockDoc(doc, lockType, reposAccess.getAccessUser());
+							writeJson(rt, response);
+							return;
+						}
 					}
-				}
+				}	
 			}	
 			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
 		}	
