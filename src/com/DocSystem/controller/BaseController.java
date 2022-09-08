@@ -3513,14 +3513,17 @@ public class BaseController  extends BaseFunction{
 			if(doc.getIsRealDoc())
 			{
 				//Force update docInfo
+				//get changeItemList
+				List<ChangedItem> changItemList = verReposGetHistoryDetail(repos, false, doc, revision);
+				HashMap<String, ChangedItem> changItemHashMap = convertChangeItemListToHashMap(changItemList);
+						
 				//Log.printObject("revertDocHistory() successDocList:", successDocList);
 				for(int i=0; i< successDocList.size(); i++)
 				{
 					Doc successDoc = successDocList.get(i);
 					Log.debug("revertDocHistory() " + successDoc.getDocId() + " [" + successDoc.getPath() + successDoc.getName() + "] 恢复成功");
-					
-					//TODO: 返回的revision未必是正确的，可能文件内容没有改动过，所以此时可能文件还是旧的revison
-					successDoc.setRevision(revision);
+					String realRevision = getRealRevision(repos, successDoc, changItemHashMap, revision);
+					successDoc.setRevision(realRevision);
 					successDoc.setCreator(login_user.getId());
 					successDoc.setLatestEditor(login_user.getId());
 					dbUpdateDoc(repos, successDoc, true);
@@ -3535,6 +3538,28 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
+	private HashMap<String, ChangedItem> convertChangeItemListToHashMap(List<ChangedItem> changItemList) {
+		HashMap<String, ChangedItem> hashMap = new HashMap<String, ChangedItem>();
+		if(changItemList == null)
+		{
+			return hashMap;
+		}
+		for(int i=0; i < changItemList.size(); i++)
+		{
+			ChangedItem item = changItemList.get(i);
+			hashMap.put(item.getEntryPath(), item);
+		}
+		return hashMap;
+	}
+
+	private String getRealRevision(Repos repos, Doc successDoc, HashMap<String, ChangedItem> changItemHashMap, String revision) {
+		if(changItemHashMap.get(successDoc.getPath() + successDoc.getName()) == null)
+		{
+			return verReposGetLatestRevision(repos, false, successDoc);
+		}
+		return revision;
+	}
+
 	//底层addDoc接口
 	//uploadFile: null为新建文件，否则为文件上传（新增）
 	protected boolean addDoc(Repos repos, Doc doc, 
@@ -5177,7 +5202,7 @@ public class BaseController  extends BaseFunction{
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			Log.debug("syncupScanForDoc_FSM() 同步根目录 subDocSyncFlag:" + subDocSyncFlag + " syncLocalChangeOnly:" + syncLocalChangeOnly + " treatRemoteChaneAsLocalChange:" + treatRemoteChaneAsLocalChange);			
+			Log.debug("syncupScanForDoc_FSM() 扫描根目录 subDocSyncFlag:" + subDocSyncFlag + " syncLocalChangeOnly:" + syncLocalChangeOnly + " treatRemoteChaneAsLocalChange:" + treatRemoteChaneAsLocalChange);			
 			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, syncLocalChangeOnly, treatRemoteChaneAsLocalChange);
 		}
 		
