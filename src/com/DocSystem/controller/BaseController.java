@@ -3505,6 +3505,7 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
 				return null;
 			}
+			Log.info("revertDocHistory()  verReposDocCommit return revision:" + revision);
 			
 			//推送至远程仓库
 			verReposPullPush(repos, doc.getIsRealDoc(), rt);
@@ -3517,7 +3518,8 @@ public class BaseController  extends BaseFunction{
 				{
 					Doc successDoc = successDocList.get(i);
 					Log.debug("revertDocHistory() " + successDoc.getDocId() + " [" + doc.getPath() + doc.getName() + "] 恢复成功");
-							
+					
+					//TODO: 返回的revision未必是正确的，可能文件内容没有改动过，所以此时可能文件还是旧的revison
 					successDoc.setRevision(revision);
 					successDoc.setCreator(login_user.getId());
 					successDoc.setLatestEditor(login_user.getId());
@@ -4364,6 +4366,24 @@ public class BaseController  extends BaseFunction{
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
 		Log.printObject("executeSyncUpAction() action:",action);
 		return syncupForDocChange(action, true, rt);
+	}
+	
+	protected boolean doSyncupForDocChange(Repos repos, Doc doc, User user, String commitMsg, boolean recurcive) {
+		CommonAction action = new CommonAction();
+		action.setType(ActionType.AUTOSYNCUP);		
+		action.setAction(Action.UNDEFINED);	//只同步有改动的文件
+		action.setDocType( DocType.REALDOC);
+		action.setRepos(repos);
+		action.setDoc(doc);
+		action.setNewDoc(null);
+		action.setUser(user);
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(user.getName());
+		action.setSubActionList(null);
+		action.recursion = recurcive;		
+		
+		ReturnAjax rt = new ReturnAjax();
+		return syncupForDocChange(action, false, rt );
 	}
 
     /**
