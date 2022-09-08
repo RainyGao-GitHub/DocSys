@@ -3517,7 +3517,7 @@ public class BaseController  extends BaseFunction{
 				for(int i=0; i< successDocList.size(); i++)
 				{
 					Doc successDoc = successDocList.get(i);
-					Log.debug("revertDocHistory() " + successDoc.getDocId() + " [" + doc.getPath() + doc.getName() + "] 恢复成功");
+					Log.debug("revertDocHistory() " + successDoc.getDocId() + " [" + successDoc.getPath() + successDoc.getName() + "] 恢复成功");
 					
 					//TODO: 返回的revision未必是正确的，可能文件内容没有改动过，所以此时可能文件还是旧的revison
 					successDoc.setRevision(revision);
