@@ -4717,19 +4717,21 @@ public class DocController extends BaseController{
 				
 				if(localChanges.size() > 0)
 				{
-					//docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
-					unlockDoc(doc, lockType, reposAccess.getAccessUser());
-
-					Log.debug("revertDocHistory() 本地有改动！");
-					String localChangeInfo = buildChangeReminderInfo(localChanges);
-					docSysErrorLog(localChangeInfo, rt);
-					writeJson(rt, response);
-					return;
+					Log.info("revertDocHistory() 本地有改动！");
+					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true) == false)
+		        	{	
+						unlockDoc(doc, lockType, reposAccess.getAccessUser());
+						
+						String localChangeInfo = buildChangeReminderInfo(localChanges);
+						docSysErrorLog(localChangeInfo, rt);
+						writeJson(rt, response);
+						return;
+		        	}
 				}
 				
 				if(remoteChanges.size() > 0)
 				{
-					Log.debug("revertDocHistory() 远程有改动！");
+					Log.info("revertDocHistory() 远程有改动！");
 					//远程有改动才需要恢复
 					//String remoteChangeInfo = buildChangeReminderInfo(remoteChanges);				
 					//docSysErrorLog(remoteChangeInfo,rt);
