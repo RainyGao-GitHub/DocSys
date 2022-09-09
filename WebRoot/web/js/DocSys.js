@@ -831,34 +831,44 @@ function isText(suffix)
 		return false;
 	}
 	var fileTypeMap = {
+			//text
 			txt : true,
-			log : true,
+			//markdown (it will be opened by markdown editor)
 			//md : true,
-			py : true,
-			java : true,
+			//code
 			cpp : true,
 			hpp : true,
 			c : true,
 			h : true,
-			json : true,
-			xml : true,
-			html : true,
-			sql : true,
+			java : true,
+			py : true,
+			go : true,
 			js : true,
 			css : true,
+			html : true,
 			jsp : true,
 			php : true,
+			//config
+			json : true,
+			xml : true,
+			sql : true,
 			properties : true,
 			conf : true,
-			out : true,
-			bash: true,
+			cnf : true,
+			asn : true,
+			//script
 			sh : true,
+			bash: true,
 			bat : true,
-			msg : true,
-			cmake : true,
 			cmake : true,
 			yaml : true,
 			yml : true,
+			cmake : true,
+			//log
+			log : true,
+			out : true,
+			//email
+			msg : true,
 	};
 	
 	var type = fileTypeMap[suffix];
@@ -868,6 +878,60 @@ function isText(suffix)
 	}
 	
 	return true;
+}
+
+function isEditableText(suffix)
+{
+	if(!suffix || suffix == "")
+	{
+		return false;
+	}
+	var fileTypeMap = {
+			//text
+			txt : true,
+			//markdown
+			md : true,
+			//code
+			cpp : true,
+			hpp : true,
+			c : true,
+			h : true,
+			java : true,
+			py : true,
+			go : true,
+			js : true,
+			css : true,
+			html : true,
+			jsp : true,
+			php : true,
+			//config
+			json : true,
+			xml : true,
+			sql : true,
+			properties : true,
+			conf : true,
+			cnf : true,
+			asn : true,
+			//script
+			sh : true,
+			bash: true,
+			bat : true,
+			cmake : true,
+			yaml : true,
+			yml : true,
+			cmake : true,
+			//log
+			log : true,
+			out : true,
+	};
+	
+	var type = fileTypeMap[suffix];
+	if ( undefined == type )
+	{
+		return false;
+	}
+	
+	return true;	
 }
 
 function isZip(suffix)

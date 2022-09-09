@@ -1064,31 +1064,43 @@ public class FileUtil {
 
 		switch(fileSuffix)
 		{
+		//text
 		case "txt":
-		case "log":	
-		case "md":	
-		case "py":
-		case "java":
+		//markdown
+		case "md":
+		//code
 		case "cpp":
 		case "hpp":
 		case "c":
 		case "h":
-		case "json":
-		case "xml":
-		case "html":
-		case "sql":
+		case "java":
+		case "py":
+		case "go":
 		case "js":
 		case "css":
+		case "html":			
 		case "jsp":
 		case "php":
+		//config
+		case "json":
+		case "xml":
+		case "sql":
 		case "properties":
 		case "conf":
-		case "out":
+		case "cnf":
+		case "asn":
+		//script		
 		case "sh":
 		case "bash":
 		case "bat":
-		case "msg":
+		case "yaml":
+		case "yml":
 		case "cmake":
+		//log
+		case "log":	
+		case "out": 	
+		//email
+		//case "msg":			
 			return true;
 		default:
 			break;
