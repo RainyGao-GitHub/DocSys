@@ -5,16 +5,16 @@
             <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"></input>
         </div>
         <div class="col-sm-4">
-           <span class="btn" title="打开分享链接" onclick="openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
+           <span class="btn" title="打开分享链接" onclick="DocShare.openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
 				<i class="icons open"></i>
 			</span>
-           <span class="btn" title="发送邮件" onclick="showDocShareSendMail();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+           <span class="btn" title="发送邮件" onclick="DocShare.showDocShareSendMail();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
 				<i class="icons mail"></i>
 		   </span>
-           <span class="btn" title="复制链接" onclick="copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+           <span class="btn" title="复制链接" onclick="DocShare.copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
 				<i class="icons copy"></i>
 		   </span>
-           <span class="btn" title="二维码" onclick="showShareLinkQRCode();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
+           <span class="btn" title="二维码" onclick="DocShare.showShareLinkQRCode();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
 				<i class="icons qrcode"></i>
 		   </span>
         </div>
@@ -25,7 +25,7 @@
             <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码"/>
         </div>
         <div class="col-sm-4">
-           <span class="btn" onclick="generateSharePwd();" style="border:1px solid #ccc; border-radius:4px;">
+           <span class="btn" onclick="DocShare.generateSharePwd();" style="border:1px solid #ccc; border-radius:4px;">
 				随机生成
 			</span>
         </div>
@@ -52,13 +52,14 @@
     </div>    
 	<div class="form-group">
 	    <div class="col-sm-12 text-center">
-	        <button  type="button" class="btn btnPrimary" onclick="deleteDocShare();" style="width: 100px;height: 42px;">取消分享</button>
-	        <button  type="button" class="btn btnPrimary" onclick="updateDocShare();" style="width: 100px;height: 42px;">保存</button>
+	        <button  type="button" class="btn btnPrimary" onclick="DocShare.deleteDocShare();" style="width: 100px;height: 42px;">取消分享</button>
+	        <button  type="button" class="btn btnPrimary" onclick="DocShare.updateDocShare();" style="width: 100px;height: 42px;">保存</button>
 		</div>
 	</div>
 </div>
 
 <script type="text/javascript">
+var DocShare = (function () {
 	var shareId = null;
 	var shareLink = null;
 	var callback = null;
@@ -325,4 +326,39 @@
         });
 		return true;
     }
+	
+	//开放给外部的调用接口
+    return {
+    	DocSharePageInit: function(docShare, docName, url, _callback){
+    		DocSharePageInit(docShare, docName, url, _callback);
+        },
+        showDocShare: function(){
+        	showDocShare();
+        },
+        hideDocShare: function(){
+        	hideDocShare();
+        },
+        openShareLink: function(){
+        	return openShareLink();
+        },
+        copyShareLink: function(){
+        	return copyShareLink();
+        },
+        showShareLinkQRCode: function(){
+        	return showShareLinkQRCode();
+        },
+        showDocShareSendMail: function(){
+        	return showDocShareSendMail();
+        },
+        generateSharePwd: function(){
+        	return generateSharePwd();
+        },
+        updateDocShare: function(){
+        	return updateDocShare();
+        },
+        deleteDocShare: function(){
+        	return deleteDocShare();
+        },
+	};
+})();
 </script>
