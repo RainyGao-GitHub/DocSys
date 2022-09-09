@@ -1,11 +1,12 @@
 package util.FileUtil;
 import java.io.*;
-import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.poi.poifs.filesystem.FileMagic;
+
+import com.DocSystem.common.Log;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
@@ -128,7 +129,7 @@ public class FileUtils2 {
             is.close();
             
             String fileCode = bytesToHexString(b);    
-            System.out.println(fileCode);
+            Log.debug(fileCode);
             
             
             //这种方法在字典的头代码不够位数的时候可以用但是速度相对慢一点
@@ -145,7 +146,7 @@ public class FileUtils2 {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("getFileType() " + res);
+        Log.debug("getFileType() " + res);
         return res;
     }
     
@@ -167,7 +168,7 @@ public class FileUtils2 {
             ex.printStackTrace();
             return null;
         }
-        //System.out.println("getFileEncode() " + charsetName);
+        Log.debug("getFileEncode() " + charsetName);
         return charsetName;
     }
     
@@ -177,12 +178,12 @@ public class FileUtils2 {
     	FileMagic fm = FileMagic.valueOf(is);
     	is.close();
     	istream.close();
-    	System.out.println("getFileMagic() " + fm.toString());
+    	Log.debug("getFileMagic() " + fm.toString());
     	return fm;
     }
     
 	public static boolean isBinaryFile(String code) {
-		//System.out.println("isBinaryFile:" + code);
+		Log.debug("isBinaryFile() code:" + code);
 		if(code == null)
 		{
 			return true;
@@ -196,6 +197,7 @@ public class FileUtils2 {
 		case "UTF-16":
 		case "Unicode":
 		case "US-ASCII":
+		case "windows-1252":
 			return false;
 		}
 		return true;
@@ -214,38 +216,36 @@ public class FileUtils2 {
     public static void main(String[] args) throws Exception {
         
         String type = getFileType("C:\\Users\\ragao\\Desktop\\LinFeng\\timg (2).jpg");
-        System.out.println("type: "+type);
-        System.out.println();         
+        Log.debug("type: "+type);
         
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\ddddddddddd.docx");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
       
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\基本数据结构：链表（list） - CSDN博客.html");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
       
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\新建文本文档.txt");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
         
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\unordered_map.jpg");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
         
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\timg.jpg");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
       
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\Debate.pptx");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
         
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\poi-bin-4.0.0-20180907.zip");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
         
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\TTI_trace_Analyzer.xlsb");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
         
         type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\TtiTraceFilter.exe");
-        System.out.println("type: "+type);
+        Log.debug("type: "+type);
         
         String code = getFileEncode("C:\\Users\\ragao\\Desktop\\LinFeng\\新建 OpenDocument 文本.odt");
-        System.out.println("code: "+code);
-        System.out.println();             
+        Log.debug("code: "+code);
     }
 }

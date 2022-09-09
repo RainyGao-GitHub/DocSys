@@ -66,13 +66,22 @@ var TextEditor = (function () {
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
 	
+	function ace_showErrorInfo(msg)
+	{
+		bootstrapQ.msg({
+			msg : msg,
+			type : 'warning',
+			time : 5000,
+		    }); 
+	}
+	
 	function textEditorPageInit(Input_doc)
 	{
 		console.log("textEditorPageInit InputDoc:", Input_doc);
 		//console.log("textEditorPageInit Input_docText:", Input_docText);
 		docInfo = Input_doc;		
 	
-		getDocText(docInfo, showText, showErrorMessage);	  	
+		getDocText(docInfo, showText, ace_showErrorInfo);	  	
   	}
 
 	function showText(docText, tmpSavedDocText)
@@ -208,7 +217,7 @@ var TextEditor = (function () {
 		console.log("enableEdit()");
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			showErrorMessage("请选择文件!");
+			ace_showErrorInfo("请选择文件!");
 			return;
 		}
 
@@ -237,13 +246,13 @@ var TextEditor = (function () {
  				}
 				else
 				{
-					showErrorMessage("lockDoc Error:" + ret.msgInfo);
+					ace_showErrorInfo("lockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function () 
 			{
-				showErrorMessage("lockDoc 异常");
+				ace_showErrorInfo("lockDoc 异常");
 				return;
 			}
 		});
@@ -254,7 +263,7 @@ var TextEditor = (function () {
 		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			showErrorMessage("文件不存在");
+			ace_showErrorInfo("文件不存在");
 			switchEditMode(false);
 			return;
 		}
@@ -282,13 +291,13 @@ var TextEditor = (function () {
  				}
 				else
 				{
-					showErrorMessage("exitEdit() unlockDoc Error:" + ret.msgInfo);
+					ace_showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function () 
 			{
-				showErrorMessage("exitEdit() unlockDoc 异常");
+				ace_showErrorInfo("exitEdit() unlockDoc 异常");
 				return;
 			}
 		});
@@ -337,33 +346,9 @@ var TextEditor = (function () {
 			return;
 		}
 		
-		if(docInfo.fileSuffix)
+		if(isEditableText(docInfo.fileSuffix) == true)
 		{
-			switch(docInfo.fileSuffix)
-			{
-			case "md":
-	    	case "cpp":
-	    	case "hpp":
-	    	case "c":
-	    	case "h":
-	    	case "java":
-	    	case "py":
-	    	case "go":
-	    	case "js":
-	    	case "css":
-	    	case "html":
-	    	case "json":
-	    	case "sql":
-	    	case "xml":
-	    	case "php":
-	    	case "sh":
-	    	case "bash":
-	    	case "txt":
-	    	case "yaml":
-	    	case "yml":
-				$("#textEditorEditBtn").show();
-	    		break;
-			}
+			$("#textEditorEditBtn").show();
 		}
 	}
 	
