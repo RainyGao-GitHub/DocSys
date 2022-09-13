@@ -70,6 +70,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"web/static/office-editor",
 		//For Sales
 		"Sales/checkLicense",
+		"Sales/applyFreeLicense",
 		//For Office Editor
 		"Bussiness/saveDoc",
 		//For remote Access
