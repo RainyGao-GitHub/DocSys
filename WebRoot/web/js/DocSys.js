@@ -1205,7 +1205,7 @@ function showDocDetailPanel(node)
 //弹出对话框操作接口
 function closeBootstrapDialog(id){ 
 	console.log("closeBootstrapDialog " + id);
-	$("#"+id + "div").remove();	//删除全屏遮罩
+	$("#"+id + " div").remove();	//删除全屏遮罩
 	$("#"+id).remove();	//删除对话框
 }
 
