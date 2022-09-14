@@ -98,6 +98,8 @@
                	        	return;
                 	    }
               	        
+              	        //下载准备完成
+               	        closeBootstrapDialog("bsmodal"); //showErrorMessage's default id is bsmodal
                 	    var docDownloadInfo = ret.data;
                 	    docDownloadInfo.deleteFlag = ret.msgData;
 
@@ -171,6 +173,8 @@
                 	    }
                	        
                	        //下载任务准备完成
+               	        closeBootstrapDialog("bsmodal"); //showErrorMessage's default id is bsmodal
+                	    
                 	    var docDownloadInfo = ret.data;
                 	    docDownloadInfo.deleteFlag = ret.msgData;
 
