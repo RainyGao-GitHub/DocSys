@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,6 +37,7 @@ import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate.Result;
+import org.eclipse.jgit.lib.ReflogEntry;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryState;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -349,6 +351,40 @@ public class GITUtil  extends BaseController{
         return timestamp;
 	}
 	
+    public String getLatestRefLogCommit() 
+    {
+    	String commitId = null;
+    	
+    	Log.debug("getHistoryRefLogs");	
+
+    	if(OpenRepos() == false)
+    	{
+        	Log.debug("getHistoryRefLogs() Failed to open git repository");
+    		return null;
+    	}
+    	
+    	try {
+	    	Collection<ReflogEntry> refLogs = git.reflog().call();
+						    
+		    Iterator<ReflogEntry> iter = refLogs.iterator();
+	        while (iter.hasNext()){
+	        	ReflogEntry commit=iter.next();
+	            commitId = commit.getNewId().name();  //这个应该就是提交的版本号
+	            Log.debug("commitId:"+commitId);
+	            break;
+	        }
+	        
+	    } catch (Exception e) {
+			Log.info("getHistoryLogs Error");	
+			Log.info(e);
+		} 
+    	finally
+    	{
+	        CloseRepos();			
+    	}
+    	return commitId;
+    }
+	
 	//getHistory entryPath: remote File Path under repositoryURL
     public List<LogEntry> getHistoryLogs(String entryPath,String startRevision, String endRevision,int maxLogNum) 
     {
@@ -356,7 +392,7 @@ public class GITUtil  extends BaseController{
 
     	if(OpenRepos() == false)
     	{
-        	Log.debug("getLatestRevCommit() Failed to open git repository");
+        	Log.debug("getHistoryLogs() Failed to open git repository");
     		return null;
     	}
     	
@@ -476,7 +512,7 @@ public class GITUtil  extends BaseController{
 	        CloseRepos();
 	        return logList;
 	    } catch (Exception e) {
-			Log.info("getHistoryLogs Exception");	
+			Log.info("getWCHistoryLogs Exception");	
 			Log.info(e);
 			CloseRepos();
 			return null;
@@ -1854,7 +1890,7 @@ public class GITUtil  extends BaseController{
     		return false;
     	}
 
-		if(checkAndCleanBranch(git, repository, "master") == false)
+		if(checkAndCleanBranch(git, repository, "master", true) == false)
 		{
 			Log.info("doPullEx() Failed to checkAndCleanBranch");
     		return false;
@@ -1867,7 +1903,7 @@ public class GITUtil  extends BaseController{
     	return ret;
 	}
 	
-	public boolean checkAndClearnBranch()
+	public boolean checkAndClearnBranch(boolean force)
 	{
     	if(OpenRepos() == false)
     	{
@@ -1875,7 +1911,7 @@ public class GITUtil  extends BaseController{
     		return false;
     	}
 
-		if(checkAndCleanBranch(git, repository, "master") == false)
+		if(checkAndCleanBranch(git, repository, "master", force) == false)
 		{
 	    	CloseRepos();
 			Log.info("checkAndClearnBranch() Failed to checkAndCleanBranch");
@@ -1887,7 +1923,7 @@ public class GITUtil  extends BaseController{
 	}
 	
 	
-	public boolean checkAndCleanBranch(Git git, Repository repo, String branchName) 
+	public boolean checkAndCleanBranch(Git git, Repository repo, String branchName, boolean force) 
 	{
 		Log.debug("checkAndCleanBranch branchName:" + branchName);
 		
@@ -1936,20 +1972,28 @@ public class GITUtil  extends BaseController{
             }
             
     		Log.debug("checkAndCleanBranch branch is dirty, doCleanBranch");        	
-            return doCleanBranch(git, repo, status);            
+            return doCleanBranch(git, force);            
 		} catch (Exception e) {
 			Log.info("checkAndCleanBranch check and clean branch Exception");
 			Log.info(e);
 			return false;
 		}
 	}
-	
-	private boolean doCleanBranch(Git git, Repository repo, org.eclipse.jgit.api.Status status) {
+		
+	private boolean doCleanBranch(Git git, boolean force) {
 		if(deleteIndexLock() == false)
 		{
 			Log.error("doCleanBranch() delete index.lock Failed!");
 		}
-		return doResetBranch(git, "HEAD");
+		
+		boolean ret = false;
+		ret = doResetBranch(git, "HEAD");
+		if(ret == false && force == true)
+		{
+			String latestRefCommitId = getLatestRefLogCommit();
+			ret = doResetBranch(git, latestRefCommitId);
+		}
+		return ret;
 	}
 
 	private boolean deleteIndexLock() {
