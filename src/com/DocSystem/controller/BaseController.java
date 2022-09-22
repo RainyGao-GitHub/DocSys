@@ -10077,7 +10077,7 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 		
-			if(verReposUtil.checkAndClearnBranch() == false)
+			if(verReposUtil.checkAndClearnBranch(true) == false)
 			{
 				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
 				SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
