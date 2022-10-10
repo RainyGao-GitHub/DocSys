@@ -5,10 +5,13 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
+import com.DocSystem.common.Log;
+
 class RedisTest  
 {  	
 	//参考资料: https://blog.csdn.net/qq_38697437/article/details/121359818
-
+	public static RedissonClient redissonClient = null;
+	
 	public static void main(String[] args)    
     {  
         System.out.println("This is test app");
@@ -17,8 +20,25 @@ class RedisTest
         Config config = new Config();
         //config.useSingleServer().setAddress("redis://192.168.182.150:6379");
         config.useSingleServer().setAddress("redis://localhost:6379");
-        RedissonClient redissonClient = Redisson.create(config);
+        redissonClient = Redisson.create(config);
         
+        runNewThread();
+        runNewThread();
+        runNewThread();
+    }
+	
+	public static void runNewThread()
+	{
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("runNewThread() lockAndRun in new thread");
+				lockAndRun();
+			}
+		}).start();
+	}
+	
+	public static void lockAndRun()
+	{
         //Get Lock
         RLock lock = redissonClient.getLock("my-lock");
 
@@ -36,5 +56,5 @@ class RedisTest
             System.out.println("解锁..."+Thread.currentThread().getId());
             lock.unlock();
         }
-    }  
+	}
 }  
