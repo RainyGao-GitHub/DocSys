@@ -3605,16 +3605,8 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "addDoc_FSM() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//LockDoc
-			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
-
-			SyncLock.unlock(syncLock, lockInfo);
-		}
+		String lockInfo = "addDoc_FSM() syncLock";
+		docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
 		
 		if(docLock == null)
 		{
@@ -3728,16 +3720,9 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "addDocEx_FSM() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//LockDoc
-			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false);
-
-			SyncLock.unlock(syncLock, lockInfo);
-		}
+		String lockInfo = "addDocEx_FSM() syncLock";
+		//LockDoc
+		docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
 		
 		if(docLock == null)
 		{
@@ -3940,16 +3925,8 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "deleteDoc_FSM() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//Try to lock the Doc
-			docLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
-
-			SyncLock.unlock(syncLock, lockInfo); 
-		}
+		String lockInfo = "deleteDoc_FSM() syncLock";
+		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, lockInfo);	//lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
 		{
@@ -4898,16 +4875,8 @@ public class BaseController  extends BaseFunction{
 		//LockDoc
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "syncupLocalChanges_FSM() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//Try to lock the Doc
-			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
-			
-			SyncLock.unlock(syncLock, lockInfo); 
-		}
+		String lockInfo = "syncupLocalChanges_FSM() syncLock";
+		docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
 		
 		if(docLock == null)
 		{
@@ -4986,16 +4955,8 @@ public class BaseController  extends BaseFunction{
 			//LockDoc
 			DocLock docLock = null;
 			int lockType = DocLock.LOCK_TYPE_FORCE;
-			synchronized(syncLock)
-			{
-				String lockInfo = "syncupForDocChange() syncLock";
-				SyncLock.lock(lockInfo);
-				
-				//Try to lock the Doc
-				docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
-
-				SyncLock.unlock(syncLock, lockInfo); 
-			}
+			String lockInfo = "syncupForDocChange() syncLock";
+			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
 			
 			if(docLock == null)
 			{
@@ -6905,17 +6866,9 @@ public class BaseController  extends BaseFunction{
 	{	
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "updateDoc_FSM() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//Try to lock the doc
-			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
-			
-			SyncLock.unlock(syncLock, lockInfo); 
-		}
-
+		String lockInfo = "updateDoc_FSM() syncLock";
+		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
+		
 		if(docLock == null)
 		{
 			Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
@@ -6997,16 +6950,8 @@ public class BaseController  extends BaseFunction{
 	{	
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "updateDocEx_FSM() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//Try to lock the doc
-			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
-			
-			SyncLock.unlock(syncLock, lockInfo); 
-		}
+		String lockInfo = "updateDocEx_FSM() syncLock";
+		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
 		{
@@ -7091,32 +7036,20 @@ public class BaseController  extends BaseFunction{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
+		String lockInfo = "moveDoc_FSM() syncLock";
+		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo);
+		if(srcDocLock == null)
 		{
-			String lockInfo = "moveDoc_FSM() syncLock";
-			SyncLock.lock(lockInfo);
+			docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
+			return false;
+		}
 			
-			//Try to lock the srcDoc
-			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
-			if(srcDocLock == null)
-			{
-				docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
-
-				SyncLock.unlock(syncLock, lockInfo); 
-				return false;
-			}
-			
-			dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true);
-			if(dstDocLock == null)
-			{
-				docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
-				SyncLock.unlock(syncLock, lockInfo); 
-				
-				unlockDoc(srcDoc, lockType, login_user);
-				return false;
-			}
-			
-			SyncLock.unlock(syncLock, lockInfo); 
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo);
+		if(dstDocLock == null)
+		{
+			docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);		
+			unlockDoc(srcDoc, lockType, login_user);
+			return false;
 		}
 		
 		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
@@ -7190,30 +7123,21 @@ public class BaseController  extends BaseFunction{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
+		String lockInfo = "copyDoc_FSM() syncLock";
+		//Try to lock the srcDoc
+		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
+		if(srcDocLock == null)
 		{
-			String lockInfo = "copyDoc_FSM() syncLock";
-			SyncLock.lock(lockInfo);
+			Log.debug("copyDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed");
+			return false;
+		}
 			
-			//Try to lock the srcDoc
-			srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true);
-			if(srcDocLock == null)
-			{
-				Log.debug("copyDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed");
-				SyncLock.unlock(syncLock, lockInfo); 
-				return false;
-			}
-			
-			dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true);
-			if(dstDocLock == null)
-			{
-				Log.debug("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");				
-				unlockDoc(srcDoc, lockType, login_user);				
-				SyncLock.unlock(syncLock, lockInfo);
-				return false;
-			}
-			
-			SyncLock.unlock(syncLock, lockInfo); 
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
+		if(dstDocLock == null)
+		{
+			Log.debug("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");				
+			unlockDoc(srcDoc, lockType, login_user);				
+			return false;
 		}
 						
 		//复制文件或目录
@@ -7280,16 +7204,8 @@ public class BaseController  extends BaseFunction{
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "updateRealDocContent() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//Try to lock Doc
-			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
-			
-			SyncLock.unlock(syncLock, lockInfo); 
-		}
+		String lockInfo = "updateRealDocContent() syncLock";
+		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
 		
 		if(docLock == null)
 		{
@@ -7364,16 +7280,8 @@ public class BaseController  extends BaseFunction{
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_VFORCE;
-		synchronized(syncLock)
-		{
-			String lockInfo = "updateVirualDocContent() syncLock";
-			SyncLock.lock(lockInfo);
-			
-			//Try to lock Doc
-			docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false);
-
-			SyncLock.unlock(syncLock, lockInfo); 
-		}
+		String lockInfo = "updateVirualDocContent() syncLock";
+		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
 		
 		if(docLock == null)
 		{	
@@ -7561,6 +7469,20 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Lock Doc
+	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User accessUser, ReturnAjax rt, boolean subDocCheckFlag, String lockInfo) 
+	{
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+    		SyncLock.lock(lockInfo);
+    		
+			//LockDoc
+			docLock = lockDoc(doc, lockType,  lockDuration, accessUser, rt, false);
+
+			SyncLock.unlock(syncLock, lockInfo);
+		}
+		return docLock;
+	}
 	//TODO: 文件锁定接口需要支持集群部署时服务器之间操作的原子性
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		Log.debug("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);

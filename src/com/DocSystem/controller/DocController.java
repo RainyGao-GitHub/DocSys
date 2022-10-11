@@ -4078,16 +4078,8 @@ public class DocController extends BaseController{
 		}
 		
 		DocLock docLock = null;
-		synchronized(syncLock)
-		{
-    		String lockInfo = "lockDoc() syncLock";
-    		SyncLock.lock(lockInfo);
-			
-    		//Try to lock the Doc
-			docLock = lockDoc(doc,lockType,lockDuration,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
-
-			SyncLock.unlock(syncLock, lockInfo); //线程锁
-		}
+		String lockInfo = "lockDoc() syncLock";
+    	docLock = lockDoc(doc, lockType, lockDuration, reposAccess.getAccessUser(), rt, subDocCheckFlag, lockInfo); //24 Hours 24*60*60*1000 = 86400,000
 		
 		if(docLock == null)
 		{
@@ -4657,16 +4649,8 @@ public class DocController extends BaseController{
 		DocLock docLock = null;
 		
 		int lockType = isRealDoc? DocLock.LOCK_TYPE_FORCE : DocLock.LOCK_TYPE_VFORCE;
-		synchronized(syncLock)
-		{
-    		String lockInfo = "revertDocHistory() syncLock";
-    		SyncLock.lock(lockInfo);
-    		
-			//LockDoc
-			docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false);
-
-			SyncLock.unlock(syncLock, lockInfo);
-		}
+		String lockInfo = "revertDocHistory() syncLock";
+    	docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false, lockInfo);
 		
 		if(docLock == null)
 		{
