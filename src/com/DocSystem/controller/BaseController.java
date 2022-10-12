@@ -7372,7 +7372,22 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/************************ DocSys仓库与文件锁定接口 *******************************/
-	//Lock Doc
+	//Lock Repos
+	protected DocLock lockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag, String lockInfo) {
+		DocLock reposLock = null;
+		synchronized(syncLock)
+		{	
+    		SyncLock.lock(lockInfo);
+    		redisSyncLock("DocLock", lockInfo);
+			
+			reposLock = lockRepos(repos, lockType, lockDuration, login_user, rt, false); 
+			
+			redisSyncLock("DocLock", lockInfo);
+			SyncLock.unlock(syncLock, lockInfo);
+		}
+		return reposLock;
+	}	
+	
 	protected DocLock lockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) {
 		Log.debug("lockRepos() Repos:" + repos.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
 
@@ -7425,21 +7440,74 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void addReposLock(Repos repos, DocLock reposLock) {
+		if(redisEn)
+		{
+			addReposLockRedis(repos, reposLock);
+			return;
+		}
+		
+		addReposLockLocal(repos, reposLock);
+	}
+	
+	private void addReposLockLocal(Repos repos, DocLock reposLock) {
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void addReposLockRedis(Repos repos, DocLock reposLock) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("ReposLock-" + repos.getId());
 		reposLocksMap.put(repos.getId(), reposLock);
 	}
 	
 	private void deleteReposLock(Repos repos) {
+		if(redisEn)
+		{
+			deleteReposLockRedis(repos);
+			return;
+		}
+		
+		deleteReposLockLocal(repos);
+	}
+
+	private void deleteReposLockLocal(Repos repos) {
+		reposLocksMap.remove(repos.getId());
+	}
+
+	private void deleteReposLockRedis(Repos repos) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("ReposLock-" + repos.getId());
+		if(reposLocksMap == null || reposLocksMap.size() == 0)
+		{
+			return;
+		}
 		reposLocksMap.remove(repos.getId());
 	}
 
 	private DocLock getReposLock(Repos repos) {
+		if(redisEn)
+		{
+			return getReposLockRedis(repos);
+		}
+		
+		return getReposLockLocal(repos);
+	}
+	
+	private DocLock getReposLockLocal(Repos repos) {
 		DocLock reposLock = reposLocksMap.get(repos.getId());
+		return reposLock;
+	}
+	
+	private DocLock getReposLockRedis(Repos repos) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("ReposLock-" + repos.getId());
+		if(reposLocksMap == null || reposLocksMap.size() == 0)
+		{
+			return null;
+		}
+		DocLock reposLock = (DocLock) reposLocksMap.get(repos.getId());
 		return reposLock;
 	}
 
 	//Unlock Doc
 	protected boolean unlockRepos(Repos repos, Integer lockType, User login_user) {
-		DocLock reposLock = reposLocksMap.get(repos.getId());
+		DocLock reposLock = getReposLock(repos);
 		
 		if(reposLock == null)
 		{
@@ -7662,11 +7730,11 @@ public class BaseController  extends BaseFunction{
 	private void deleteDocLock(Doc doc) {
 		if(redisEn)
 		{
-			deleteDocLockLocal(doc);
+			deleteDocLockRedis(doc);
 			return;
 		}
 		
-		deleteDocLockRedis(doc);
+		deleteDocLockLocal(doc);
 	}
 	
 	private void deleteDocLockLocal(Doc doc) {
