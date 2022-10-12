@@ -82,6 +82,7 @@ import org.apache.tools.zip.ZipFile;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -7476,14 +7477,17 @@ public class BaseController  extends BaseFunction{
 		synchronized(syncLock)
 		{
     		SyncLock.lock(lockInfo);
+    		redisSyncLock("DocLock", lockInfo);
     		
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  lockDuration, accessUser, rt, false);
-
+			
+			redisSyncUnlock("DocLock", lockInfo);
 			SyncLock.unlock(syncLock, lockInfo);
 		}
 		return docLock;
 	}
+
 	//TODO: 文件锁定接口需要支持集群部署时服务器之间操作的原子性
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		Log.debug("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
