@@ -113,9 +113,11 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		String lockInfo = "LuceneUtil2 deleteIndexLib synclock:" + indexLib;
 			SyncLock.lock(lockInfo);
+			redisSyncLock(indexLib, lockInfo);
 			
     		ret = FileUtil.delFileOrDir(indexLib);
     		
+    		redisSyncUnlock(indexLib, lockInfo);
     		SyncLock.unlock(synclock, lockInfo);
     	}
     	return ret;
@@ -165,6 +167,7 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		String lockInfo = "LuceneUtil2 addIndex synclock:" + indexLib;
 			SyncLock.lock(lockInfo);
+			redisSyncLock(indexLib, lockInfo);
 			
     		try {
 		    	Date date1 = new Date();
@@ -198,6 +201,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);
 			}
     		
+			redisSyncUnlock(indexLib, lockInfo);
 	        SyncLock.unlock(synclock, lockInfo);
     	}
     	
@@ -394,6 +398,7 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		String lockInfo = "LuceneUtil2 updateIndex synclock:" + indexLib;
 			SyncLock.lock(lockInfo);
+			redisSyncLock(indexLib, lockInfo);
 			
 			try {
 		    	Date date1 = new Date();
@@ -426,7 +431,9 @@ public class LuceneUtil2   extends BaseFunction
 				e.printStackTrace();
 			} finally {
 				closeResource(indexWriter, directory, analyzer);
-			}			
+			}	
+			
+			redisSyncUnlock(indexLib, lockInfo);
 			SyncLock.unlock(synclock, lockInfo);
 		}
     	return ret;
@@ -452,6 +459,7 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		String lockInfo = "LuceneUtil2 deleteIndex synclock:" + indexLib;
 			SyncLock.lock(lockInfo);
+			redisSyncLock(indexLib, lockInfo);
 			
 			try {
 				Date date1 = new Date();
@@ -480,6 +488,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);					
 			}
 			
+			redisSyncUnlock(indexLib, lockInfo);
 	        SyncLock.unlock(synclock, lockInfo);
     	}
     	return ret;
@@ -510,6 +519,7 @@ public class LuceneUtil2   extends BaseFunction
 		    	{
 		    		String lockInfo = "LuceneUtil2 deleteIndexEx synclock:" + indexLib;
 					SyncLock.lock(lockInfo);
+					redisSyncLock(indexLib, lockInfo);
 					
 					try {
 						Date date1 = new Date();
@@ -539,6 +549,8 @@ public class LuceneUtil2   extends BaseFunction
 					} finally {
 						closeResource(indexWriter, directory, analyzer);
 					}
+					
+					redisSyncUnlock(indexLib, lockInfo);
 					SyncLock.unlock(synclock, lockInfo);
 		    	}
 	    	}

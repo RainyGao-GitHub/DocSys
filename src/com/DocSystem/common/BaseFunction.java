@@ -156,7 +156,7 @@ public class BaseFunction{
 		serverHost = getServerHost();		
     }
 	
-	protected void redisSyncLock(String lockName, String lockInfo) {
+	protected static void redisSyncLock(String lockName, String lockInfo) {
 		if(redisEn)
 		{
 			Log.debug("\n********** redisSyncUnlock() " + lockInfo + " lock ++++++");
@@ -165,7 +165,7 @@ public class BaseFunction{
 		}
 	}
 	
-	protected void redisSyncUnlock(String lockName, String lockInfo) {
+	protected static void redisSyncUnlock(String lockName, String lockInfo) {
 		if(redisEn)
 		{
 			Log.debug("********** redisSyncUnlock() " + lockInfo + " unlock -------\n");	
@@ -2133,8 +2133,11 @@ public class BaseFunction{
 		{
     		String lockInfo = "addSystemLog() syncLockForSystemLog";
     		SyncLock.lock(lockInfo);
+    		redisSyncLock("SystemLogLock", lockInfo);
     		
 			ret = addSystemLogIndex(log, indexLib);
+
+			redisSyncUnlock("SystemLogLock", lockInfo);
 			SyncLock.unlock(syncLockForSystemLog, lockInfo); //线程锁
 		}
 		return ret;
