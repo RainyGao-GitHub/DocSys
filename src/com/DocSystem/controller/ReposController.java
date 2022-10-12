@@ -263,6 +263,7 @@ public class ReposController extends BaseController{
 		{
     		String lockInfo = "addRepos() syncLockForRepos";
     		SyncLock.lock(lockInfo);
+    		redisSyncLock("ReposLock", lockInfo);
 			
 			//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 			if(checkReposInfoForAdd(repos, rt) == false)
@@ -282,6 +283,8 @@ public class ReposController extends BaseController{
 			}
 			Integer reposId = repos.getId();
 			Log.debug("new ReposId" + reposId);
+
+			redisSyncUnlock("ReposLock", lockInfo);
 			SyncLock.unlock(syncLockForRepos, lockInfo);			
 		}
 		
