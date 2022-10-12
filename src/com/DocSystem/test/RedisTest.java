@@ -2,6 +2,7 @@ package com.DocSystem.test;
 
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
+import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
@@ -54,8 +55,13 @@ class RedisTest
         //加锁的业务只要运行完成，就不会给当前锁续期，即使不手动解锁，锁默认在30秒后也会自动删除
         try {
             System.out.println(Thread.currentThread().getId() + " 加锁成功，执行业务.... ");
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
+            //Thread.sleep(3000);
+            RMap<Object, Object> map = redissonClient.getMap("myFirstMap");
+            map.put("product", "Hello! I am " + Thread.currentThread().getId() + "");
+            
+            Object var = map.get("product");
+            System.out.println(Thread.currentThread().getId() + " " + var);            
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             //手动解锁
