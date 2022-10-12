@@ -82,6 +82,7 @@ import org.apache.tools.zip.ZipFile;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.redisson.api.RMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
@@ -7537,16 +7538,14 @@ public class BaseController  extends BaseFunction{
 	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag, ReturnAjax rt) 
 	{	
 		Log.debug("checkDocLocked() repos:" + doc.getVid() + " doc:" + doc.getPath() + doc.getName() + " lockType:" + lockType + " user:" + login_user.getId() + "_" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
-		DocLock docLock = null;
-		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap == null)
+		
+		if(isReposDocLocksMapEmpty(doc) == true)
 		{
-			Log.debug("checkDocLocked() reposDocLocskMap is null");
+			//reposDocLocksMap is empty, so no need to check anymore
 			return false;
 		}
 		
-		String docLockId = getDocLockId(doc);
-		docLock = reposDocLocskMap.get(docLockId);
+        DocLock docLock = getDocLock(doc);
 		
 		//协同编辑只需要检查当前和父节点是否强制锁定即可
 		if(login_user.getId().equals(coEditUser.getId()))
@@ -7593,6 +7592,16 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void addDocLock(Doc doc, DocLock docLock) {
+		if(redisEn)
+		{
+			addDocLockRedis(doc, docLock);
+			return;
+		}
+		
+		addDocLockLocal(doc, docLock);
+	}
+	
+	private void addDocLockLocal(Doc doc, DocLock docLock) {
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
@@ -7601,25 +7610,78 @@ public class BaseController  extends BaseFunction{
 		}
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
+	
+	private void addDocLockRedis(Doc doc, DocLock docLock) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			Log.debug("addDocLockRedis() reposDocLocskMap for " + doc.getVid() + " is null");
+			return;
+		}
+		
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
+	}
 
 	public static DocLock getDocLock(Doc doc) {
+		if(redisEn)
+		{
+			return getDocLockRedis(doc);
+		}
+		
+		return getDocLockLocal(doc);
+	}
+
+	public static DocLock getDocLockLocal(Doc doc) {
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
-			Log.debug("getDocLock() reposDocLocskMap for " + doc.getVid() + " is null");
+			Log.debug("getDocLockLocal() reposDocLocskMap for " + doc.getVid() + " is null");
 			return null;
 		}
 		
 		String docLockId = getDocLockId(doc);
 		return reposDocLocskMap.get(docLockId);
 	}
-	
+
+	public static DocLock getDocLockRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			Log.debug("getDocLockRedis() reposDocLocskMap for " + doc.getVid() + " is null");
+			return null;
+		}
+		
+		String docLockId = getDocLockId(doc);
+		return (DocLock) reposDocLocskMap.get(docLockId);
+	}
+
 	private void deleteDocLock(Doc doc) {
+		if(redisEn)
+		{
+			deleteDocLockLocal(doc);
+			return;
+		}
+		
+		deleteDocLockRedis(doc);
+	}
+	
+	private void deleteDocLockLocal(Doc doc) {
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null)
 		{
 			return;
 		}
+		reposDocLocskMap.remove(getDocLockId(doc));
+	}
+	
+	private void deleteDocLockRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			Log.debug("deleteDocLockRedis() reposDocLocskMap for " + doc.getVid() + " is null");
+			return;
+		}
+		
 		reposDocLocskMap.remove(getDocLockId(doc));
 	}
 
@@ -7779,14 +7841,11 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.printObject("isParentDocLocked() doc:", doc);
 		
-		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap == null)
+		if(isReposDocLocksMapEmpty(doc) == true)
 		{
-			Log.debug("isParentDocLocked() reposDocLocskMap for " + doc.getVid() + " is null");
+			//reposDocLocksMap is empty, so no need to check anymore
 			return false;
 		}
-		
-		DocLock docLock = null;
 		
 		//Check if the rootDoc locked
 		Integer reposId = doc.getVid();
@@ -7795,7 +7854,8 @@ public class BaseController  extends BaseFunction{
 		tempDoc.setLocalRootPath(doc.getLocalRootPath());
 		tempDoc.setPath("");
 		tempDoc.setName("");
-		docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+		
+		DocLock docLock = getDocLock(tempDoc);
 		if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
 				isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
 		{
@@ -7822,7 +7882,7 @@ public class BaseController  extends BaseFunction{
 			
 			tempDoc.setPath(path);
 			tempDoc.setName(name);
-			docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+			docLock = getDocLock(tempDoc);
 			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
 					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
 			{
@@ -7837,15 +7897,12 @@ public class BaseController  extends BaseFunction{
 	private boolean isParentDocForceLocked(Doc doc, User login_user,ReturnAjax rt) 
 	{
 		Log.printObject("isParentDocForceLocked() doc:", doc);
-		
-		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap == null)
+
+		if(isReposDocLocksMapEmpty(doc) == true)
 		{
-			Log.debug("isParentDocForceLocked() reposDocLocskMap for " + doc.getVid() + " is null");
+			//reposDocLocksMap is empty, so no need to check anymore
 			return false;
 		}
-		
-		DocLock docLock = null;
 		
 		//Check if the rootDoc locked
 		Integer reposId = doc.getVid();
@@ -7854,7 +7911,7 @@ public class BaseController  extends BaseFunction{
 		tempDoc.setLocalRootPath(doc.getLocalRootPath());
 		tempDoc.setPath("");
 		tempDoc.setName("");
-		docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+		DocLock docLock = getDocLock(tempDoc);
 		if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt)) 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
 		{
 			return true;
@@ -7880,7 +7937,7 @@ public class BaseController  extends BaseFunction{
 			
 			tempDoc.setPath(path);
 			tempDoc.setName(name);
-			docLock = reposDocLocskMap.get(getDocLockId(tempDoc));
+			docLock = getDocLock(tempDoc);
 			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt)) 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
 			{
 				return true;
@@ -7896,6 +7953,18 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.printObject("isSubDocLocked() doc:", doc);
 
+		if(redisEn)
+		{
+			return isSubDocLockedRedis(doc, login_user, rt);
+		}
+		
+		return isSubDocLockedLocal(doc, login_user, rt);
+	}
+
+	private boolean isSubDocLockedLocal(Doc doc, User login_user, ReturnAjax rt)
+	{
+		Log.printObject("isSubDocLockedLocal() doc:", doc);
+
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
 		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
@@ -7904,21 +7973,56 @@ public class BaseController  extends BaseFunction{
 		
 		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
 		//遍历所有docLocks
-        Log.debug("isSubDocLocked() reposDocLocskMap size:" + reposDocLocskMap.size());
+        Log.debug("isSubDocLockedLocal() reposDocLocskMap size:" + reposDocLocskMap.size());
 		Iterator<Entry<String, DocLock>> iterator = reposDocLocskMap.entrySet().iterator();
     	while (iterator.hasNext()) 
         {
         	Entry<String, DocLock> entry = iterator.next();
             if(entry != null)
         	{
-            	Log.debug("isSubDocLocked reposDocLocskMap entry:" + entry.getKey());
+            	Log.debug("isSubDocLockedLocal reposDocLocskMap entry:" + entry.getKey());
             	DocLock docLock = entry.getValue();
     			if(isSudDocLock(docLock, parentDocPath))
     			{
     				//检查所有的锁
 	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt))
 	        		{
-	        			Log.debug("isSubDocLocked() " + docLock.getName() + " is locked!");
+	        			Log.debug("isSubDocLockedLocal() " + docLock.getName() + " is locked!");
+	        			return true;
+	        		}
+	            }
+        	}
+        }
+		return false;
+	}
+	
+	private boolean isSubDocLockedRedis(Doc doc, User login_user, ReturnAjax rt)
+	{
+		Log.printObject("isSubDocLockedRedis() doc:", doc);
+
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
+		{
+			return false;
+		}
+		
+		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
+		//遍历所有docLocks
+        Log.debug("isSubDocLockedRedis() reposDocLocskMap size:" + reposDocLocskMap.size());
+		Iterator<Entry<Object, Object>> iterator = reposDocLocskMap.entrySet().iterator();
+    	while (iterator.hasNext()) 
+        {
+        	Entry<Object, Object> entry = iterator.next();
+            if(entry != null)
+        	{
+            	Log.debug("isSubDocLockedRedis reposDocLocskMap entry:" + entry.getKey());
+            	DocLock docLock = (DocLock) entry.getValue();
+    			if(isSudDocLock(docLock, parentDocPath))
+    			{
+    				//检查所有的锁
+	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt))
+	        		{
+	        			Log.debug("isSubDocLockedRedis() " + docLock.getName() + " is locked!");
 	        			return true;
 	        		}
 	            }
@@ -7927,6 +8031,34 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
+	private boolean isReposDocLocksMapEmpty(Doc doc) {
+		if(redisEn)
+		{
+			return isReposDocLocksMapEmptyRedis(doc);
+		}
+		
+		return isReposDocLocksMapEmptyLocal(doc);
+	}
+
+	private boolean isReposDocLocksMapEmptyLocal(Doc doc) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean isReposDocLocksMapEmptyRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	
 	private boolean isSudDocLock(DocLock docLock, String parentDocPath) {
 		return parentDocPath.length() == 0 || (docLock.getPath().length() >= parentDocPath.length() && docLock.getPath().indexOf(parentDocPath) == 0);
 	}

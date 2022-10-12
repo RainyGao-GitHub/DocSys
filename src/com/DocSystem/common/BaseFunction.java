@@ -44,6 +44,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
+import org.redisson.api.RedissonClient;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import util.DateFormat;
@@ -111,6 +112,9 @@ public class BaseFunction{
     //系统LDAP设置
     public static LDAPConfig systemLdapConfig = null;
 	
+    public static boolean redisEn = false;
+    public static RedissonClient redisClient = null;
+
     //TODO: 集群部署时，docLocks和reposLocks信息需要存储在redis中
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
