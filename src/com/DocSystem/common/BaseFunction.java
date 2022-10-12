@@ -44,6 +44,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
@@ -154,6 +155,24 @@ public class BaseFunction{
     	initLdapConfig();
 		serverHost = getServerHost();		
     }
+	
+	protected void redisSyncLock(String lockName, String lockInfo) {
+		if(redisEn)
+		{
+			Log.debug("\n********** redisSyncUnlock() " + lockInfo + " lock ++++++");
+			RLock lock = redisClient.getLock(lockName);
+			lock.lock();
+		}
+	}
+	
+	protected void redisSyncUnlock(String lockName, String lockInfo) {
+		if(redisEn)
+		{
+			Log.debug("********** redisSyncUnlock() " + lockInfo + " unlock -------\n");	
+			RLock lock = redisClient.getLock(lockName);
+			lock.unlock();
+		}
+	}
     
 	private static void initSystemLicenseInfo() {
 		Log.debug("initSystemLicenseInfo() ");
