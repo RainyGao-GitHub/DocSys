@@ -288,15 +288,9 @@ public class ReposController extends BaseController{
 		//Lock the repos
 		DocLock reposLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		synchronized(syncLock)
-		{	
-    		String lockInfo = "addRepos() syncLock";
-    		SyncLock.lock(lockInfo);
-			
-			long lockTime = nowTimeStamp + 4*60*60*1000;
-			reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false); 
-			SyncLock.unlock(syncLock, lockInfo);
-		}	
+		String lockInfo = "addRepos() syncLock";
+    	long lockTime = nowTimeStamp + 4*60*60*1000;
+		reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false, lockInfo); 
 		
 		if(reposLock == null)
 		{
