@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.redisson.api.RMap;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -31,6 +32,7 @@ import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.ReposData;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -1091,7 +1093,25 @@ public class ReposController extends BaseController{
 	}
 
 	private void setReposIsBusy(Integer reposId, boolean isBusy) {
+		if(redisEn)
+		{
+			setReposIsBusyRedis(reposId, isBusy);
+		}
+		else
+		{
+			setReposIsBusyLocal(reposId, isBusy);			
+		}
+	}
+
+	private void setReposIsBusyLocal(Integer reposId, boolean isBusy) {
 		reposDataHashMap.get(reposId).isBusy = isBusy;
+	}
+
+	private void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
+		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
+		ReposData reposData = (ReposData) reposDataHashMap.get(reposId);
+		reposData.isBusy = isBusy;
+		reposDataHashMap.put(reposId, reposData);
 	}
 
 	private boolean isReposVerCtrlChanged(Repos newReposInfo, Repos reposInfo) {
