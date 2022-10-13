@@ -501,14 +501,16 @@ public class ReposController extends BaseController{
 	    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
 		}
 		
-		deleteRemoteStorageConfig(repos);
+		deleteReposRemoteStorageConfig(repos);
+
+		deleteReposRemoteServerConfig(repos);
 
 		writeJson(rt, response);	
 		setReposIsBusy(repos.getId(), false);			
 
 		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","成功", repos, null, null, "");
 	}
-	
+
 	/****************   user triggered Repository Auto Backup ******************/
 	@RequestMapping("/reposAutoBackup.do")
 	public void reposAutoBackup(Integer reposId, Integer type, Integer fullBackup, HttpSession session,HttpServletRequest request,HttpServletResponse response){
