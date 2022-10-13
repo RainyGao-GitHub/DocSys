@@ -13156,12 +13156,12 @@ public class BaseController  extends BaseFunction{
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
 		if(textSearchConfig == null)
 		{
-			reposTextSearchConfigHashMap.remove(repos.getId());
+			deleteReposTextSearchConfig(repos);
 			return;
 		}
 		
 		//add or update text search config
-		reposTextSearchConfigHashMap.put(repos.getId(), textSearchConfig);
+		addReposTextSearchConfig(repos, textSearchConfig);
 		
 		//set to repos 
 		repos.textSearchConfig = textSearchConfig;
@@ -13169,7 +13169,10 @@ public class BaseController  extends BaseFunction{
 		//Init RealDocTextSearchDisableHashMap
 		initRealDocTextSearchDisableHashMap(repos);
 		//Init VirtualDocTextSearchDisableHashMap
-		initVirtualDocTextSearchDisableHashMap(repos);		
+		initVirtualDocTextSearchDisableHashMap(repos);	
+		
+		//update reposTextSearchConfig
+		updateReposTextSearchConfig(repos, repos.textSearchConfig);
 	}
 	
 	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
@@ -15861,7 +15864,7 @@ public class BaseController  extends BaseFunction{
 				repos.setVerCtrl(0);
 			}
 			
-			repos.textSearchConfig = reposTextSearchConfigHashMap.get(repos.getId());
+			repos.textSearchConfig = getReposTextSearchConfig(repos);
 			repos.isBussiness = systemLicenseInfo.hasLicense;
 			repos.officeType = officeType;
 			//get encrypt Config
@@ -15880,6 +15883,98 @@ public class BaseController  extends BaseFunction{
 		return repos;
 	}
 	
+	private TextSearchConfig addReposTextSearchConfig(Repos repos, TextSearchConfig config) 
+	{
+		if(redisEn)
+		{
+			return addReposTextSearchConfigRedis(repos, config);
+		}
+		
+		return addReposTextSearchConfigLocal(repos, config);
+	}
+	
+	private TextSearchConfig addReposTextSearchConfigLocal(Repos repos, TextSearchConfig config) 
+	{
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+
+	private TextSearchConfig addReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+	
+	private boolean deleteReposTextSearchConfig(Repos repos) 
+	{
+		if(redisEn)
+		{
+			return deleteReposTextSearchConfigRedis(repos);
+		}
+		
+		return deleteReposTextSearchConfigLocal(repos);
+	}
+	
+	private boolean deleteReposTextSearchConfigLocal(Repos repos) 
+	{
+		reposTextSearchConfigHashMap.remove(repos.getId());
+		return true;
+	}
+
+	private boolean deleteReposTextSearchConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		reposTextSearchConfigHashMap.remove(repos.getId());
+		return true;
+	}
+	
+	protected TextSearchConfig updateReposTextSearchConfig(Repos repos, TextSearchConfig config) 
+	{
+		if(redisEn)
+		{
+			return updateReposTextSearchConfigRedis(repos, config);
+		}
+		
+		return updateReposTextSearchConfigLocal(repos, config);
+	}
+	
+	private TextSearchConfig updateReposTextSearchConfigLocal(Repos repos, TextSearchConfig config) 
+	{
+		//Local no need to update
+		//reposTextSearchConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+
+	private TextSearchConfig updateReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+	
+	private TextSearchConfig getReposTextSearchConfig(Repos repos) 
+	{
+		if(redisEn)
+		{
+			return getReposTextSearchConfigRedis(repos);
+		}
+		
+		return getReposTextSearchConfigLocal(repos);
+	}
+	
+	private TextSearchConfig getReposTextSearchConfigLocal(Repos repos) 
+	{
+		return reposTextSearchConfigHashMap.get(repos.getId());
+	}
+
+	private TextSearchConfig getReposTextSearchConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		return (TextSearchConfig) reposTextSearchConfigHashMap.get(repos.getId());
+	}
+
+
 	//注意：该接口需要返回真正的parentZipDoc
 	protected Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 
 	{
@@ -20893,7 +20988,7 @@ public class BaseController  extends BaseFunction{
 	private boolean unlockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) 
 	{
 		Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] Start for [" + doc.getPath() + doc.getName() + "]");
-		RemoteStorageLock curLock = remoteStorageLocksMap.get(remote.remoteStorageIndexLib);
+		RemoteStorageLock curLock = getRemoteStorageLock(remote.remoteStorageIndexLib);
 		if(curLock == null)
 		{
 			Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] was not locked");
@@ -20917,6 +21012,47 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
+	
+	private void addRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		if(redisEn)
+		{
+			addRemoteStorageLockRedis(remoteStorageName, remoteStorageLock);
+		}
+		else
+		{
+			addRemoteStorageLockLocal(remoteStorageName, remoteStorageLock);
+		}
+	}
+	
+	private void addRemoteStorageLockLocal(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+	
+	private void addRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+	
+	private RemoteStorageLock getRemoteStorageLock(String remoteStorageName) {
+		if(redisEn)
+		{
+			return getRemoteStorageLockRedis(remoteStorageName);
+		}
+		
+		return getRemoteStorageLockLocal(remoteStorageName);
+	}
+
+	private RemoteStorageLock getRemoteStorageLockLocal(String remoteStorageName) {
+		return remoteStorageLocksMap.get(remoteStorageName);
+	}
+	
+	private RemoteStorageLock getRemoteStorageLockRedis(String remoteStorageName) {
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		return (RemoteStorageLock) remoteStorageLocksMap.get(remoteStorageName);
+	}
+	
+	
+	
 	//这是一个阻塞函数，只有在获取到锁才会退出
 	private boolean lockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) {
 		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
@@ -20941,28 +21077,31 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	private RemoteStorageLock lockRemoteStorage(String lockName, long lockDuration, User accessUser, Doc doc, Object synclock) 
+	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock) 
 	{
-		Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] Start");
+		Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Start");
 
 		RemoteStorageLock remoteStorageLock = null;
 		RemoteStorageLock curLock = null;
 		synchronized(synclock)
 		{
-			String lockInfo = "lockRemoteStorage() synclock:" + lockName;
+			String lockInfo = "lockRemoteStorage() synclock:" + remoteStorageName;
+			String redisLockName = "RemoteStorage-" + remoteStorageName;
 			SyncLock.lock(lockInfo);
-			curLock = remoteStorageLocksMap.get(lockName);
+			redisSyncLock(redisLockName ,lockInfo);
+			
+			curLock = getRemoteStorageLock(remoteStorageName);
 			if(curLock == null)
 			{
-				Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] not locked");
+				Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
 				curLock = new RemoteStorageLock();
 				curLock.state = 1;
-				curLock.name = lockName;
+				curLock.name = remoteStorageName;
 				curLock.lockBy = accessUser.getId();
 				curLock.locker = accessUser.getName();
 				curLock.lockTime = new Date().getTime() + lockDuration;
 				curLock.synclock = new Object();
-				remoteStorageLocksMap.put(lockName, curLock);
+				addRemoteStorageLock(remoteStorageName, curLock);
 				remoteStorageLock = curLock;
 			}
 			else
@@ -20970,7 +21109,7 @@ public class BaseController  extends BaseFunction{
 				//check if it is locked
 				if(curLock.state == 0)
 				{
-					Log.debug("lockRemoteStorage() remoteStorageLock [" + lockName + "] not locked");
+					Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
 					curLock.state = 1;
 					curLock.lockBy = accessUser.getId();
 					curLock.locker = accessUser.getName();
@@ -20991,13 +21130,15 @@ public class BaseController  extends BaseFunction{
 					}
 				}
 			}
+			
+			redisSyncUnlock(redisLockName, lockInfo);
 			SyncLock.unlock(synclock, lockInfo);
 		}
 		
 		if(remoteStorageLock == null) 
 		{
 			//wait for wake up or timeout
-			Log.info("lockRemoteStorage() remoteStorageLock [" + lockName + "] lock failed" + " for [" + doc.getPath() + doc.getName() + "], sleep");			
+			Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] lock failed" + " for [" + doc.getPath() + doc.getName() + "], sleep");			
 			synchronized(curLock.synclock)
 			{
 				try {
@@ -21009,7 +21150,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			Log.info("lockRemoteStorage() remoteStorageLock [" + lockName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
+			Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
 		}
 		return remoteStorageLock;
 	}
