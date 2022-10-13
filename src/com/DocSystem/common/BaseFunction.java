@@ -112,15 +112,7 @@ public class BaseFunction{
     
     //系统LDAP设置
     public static LDAPConfig systemLdapConfig = null;
-	
-    public static boolean redisEn = false;
-    public static RedissonClient redisClient = null;
-
-    //TODO: 集群部署时，docLocks和reposLocks信息需要存储在redis中
-	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
-	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
-	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
-	
+		
 	public static int OSType = OS.UNKOWN; //
 	
 	//DocSysType
@@ -135,6 +127,50 @@ public class BaseFunction{
     protected static String serverIP = null;
     protected static String serverMAC = null;
 	
+	//分享代理服务线程（一个服务器只允许启动一个）
+	protected static ProxyThread proxyThread = null;
+	//远程分享服务线程（一个服务器只允许启动一个）
+	protected static ShareThread shareThread = null;
+
+    public static boolean redisEn = false;
+    public static RedissonClient redisClient = null;
+
+    //TODO: 全局HashMap, 集群部署时，需要存储在redis中
+    //docLockHashMap\reposLockHashMap\remoteStorageLockHashMap
+	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
+	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
+	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
+
+	//仓库配置缓存信息需要增加timestamp信息，集群部署时需要能够识别仓库配置已变更
+	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchConfigHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
+	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
+	protected static ConcurrentHashMap<Integer, VersionIgnoreConfig> reposVersionIgnoreConfigHashMap = new ConcurrentHashMap<Integer, VersionIgnoreConfig>();		
+	
+	//远程服务器前置
+	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
+	//远程存储
+	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
+	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
+	//版本仓库同步
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
+
+	//数据库备份
+	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();	
+	
+	//仓库额外数据（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
+	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
+
+	//远程存储服务器 同步锁
+	protected static ConcurrentHashMap<String, Object> remoteStorageSyncLockHashMap = new ConcurrentHashMap<String, Object>();	
+
+	//目录下载压缩任务
+	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
+
+	//仓库全量备份任务
+	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
+    
 	static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
@@ -450,42 +486,6 @@ public class BaseFunction{
 	protected static boolean isWinOS() {
 		return OS.isWinOS(OSType);
 	}	
-
-	//分享代理服务线程（一个服务器只允许启动一个）
-	protected static ProxyThread proxyThread = null;
-	//远程分享服务线程（一个服务器只允许启动一个）
-	protected static ShareThread shareThread = null;
-
-	//TODO: 仓库配置缓存信息需要增加timestamp信息，集群部署时需要能够识别仓库配置已变更
-	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchConfigHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
-	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
-	protected static ConcurrentHashMap<Integer, VersionIgnoreConfig> reposVersionIgnoreConfigHashMap = new ConcurrentHashMap<Integer, VersionIgnoreConfig>();		
-	
-	//远程服务器前置
-	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
-	//远程存储
-	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
-	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
-	//版本仓库同步
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
-
-	//数据库备份
-	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();	
-	
-	//仓库额外数据（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
-	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
-
-	//远程存储服务器 同步锁
-	protected static ConcurrentHashMap<String, Object> remoteStorageSyncLockHashMap = new ConcurrentHashMap<String, Object>();	
-
-	//目录下载压缩任务
-	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
-
-	//仓库全量备份任务
-	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
-
 	
 	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
