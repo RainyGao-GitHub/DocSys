@@ -7430,6 +7430,7 @@ public class BaseController  extends BaseFunction{
 			reposLock.locker[lockType] = login_user.getName();
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
+			updateReposLock(repos, reposLock);
 		}
 		
 		Log.debug("lockRepos() " + repos.getName() + " success lockType:" + lockType + " by " + login_user.getName());
@@ -7440,10 +7441,11 @@ public class BaseController  extends BaseFunction{
 		if(redisEn)
 		{
 			addReposLockRedis(repos, reposLock);
-			return;
 		}
-		
-		addReposLockLocal(repos, reposLock);
+		else
+		{
+			addReposLockLocal(repos, reposLock);
+		}
 	}
 	
 	private void addReposLockLocal(Repos repos, DocLock reposLock) {
@@ -7451,7 +7453,28 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void addReposLockRedis(Repos repos, DocLock reposLock) {
-		RMap<Object, Object> reposLocksMap = redisClient.getMap("ReposLock-" + repos.getId());
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void updateReposLock(Repos repos, DocLock reposLock) {
+		if(redisEn)
+		{
+			updateReposLockRedis(repos, reposLock);
+		}
+		else
+		{
+			//TODO: local no need to update
+			//updateReposLockLocal(repos, reposLock);
+		}
+	}
+	
+	private void updateReposLockLocal(Repos repos, DocLock reposLock) {
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void updateReposLockRedis(Repos repos, DocLock reposLock) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
 		reposLocksMap.put(repos.getId(), reposLock);
 	}
 	
@@ -7459,10 +7482,11 @@ public class BaseController  extends BaseFunction{
 		if(redisEn)
 		{
 			deleteReposLockRedis(repos);
-			return;
 		}
-		
-		deleteReposLockLocal(repos);
+		else
+		{
+			deleteReposLockLocal(repos);
+		}
 	}
 
 	private void deleteReposLockLocal(Repos repos) {
@@ -7470,11 +7494,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void deleteReposLockRedis(Repos repos) {
-		RMap<Object, Object> reposLocksMap = redisClient.getMap("ReposLock-" + repos.getId());
-		if(reposLocksMap == null || reposLocksMap.size() == 0)
-		{
-			return;
-		}
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
 		reposLocksMap.remove(repos.getId());
 	}
 
@@ -7483,8 +7503,10 @@ public class BaseController  extends BaseFunction{
 		{
 			return getReposLockRedis(repos);
 		}
-		
-		return getReposLockLocal(repos);
+		else
+		{
+			return getReposLockLocal(repos);
+		}
 	}
 	
 	private DocLock getReposLockLocal(Repos repos) {
@@ -7493,13 +7515,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private DocLock getReposLockRedis(Repos repos) {
-		RMap<Object, Object> reposLocksMap = redisClient.getMap("ReposLock-" + repos.getId());
-		if(reposLocksMap == null || reposLocksMap.size() == 0)
-		{
-			return null;
-		}
-		DocLock reposLock = (DocLock) reposLocksMap.get(repos.getId());
-		return reposLock;
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
+		return (DocLock) reposLocksMap.get(repos.getId());
 	}
 
 	//Unlock Doc
@@ -7531,6 +7548,7 @@ public class BaseController  extends BaseFunction{
 		{
 			deleteReposLock(repos);
 		}
+
 		Log.debug("unlockRepos() success:" + repos.getName());
 		return true;
 	}
