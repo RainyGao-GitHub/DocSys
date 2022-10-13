@@ -45,6 +45,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.redisson.api.RLock;
+import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
@@ -55,6 +56,7 @@ import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.constants.LICENSE_RESULT;
+import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
@@ -132,36 +134,6 @@ public class BaseFunction{
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
 
-    public static boolean redisEn = false;
-    public static RedissonClient redisClient = null;
-
-    //TODO: 全局HashMap, 集群部署时，需要存储在redis中
-    //docLockHashMap\reposLockHashMap\remoteStorageLockHashMap
-	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
-	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
-	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
-
-	//仓库配置缓存信息需要增加timestamp信息，集群部署时需要能够识别仓库配置已变更
-	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchConfigHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
-	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
-	protected static ConcurrentHashMap<Integer, VersionIgnoreConfig> reposVersionIgnoreConfigHashMap = new ConcurrentHashMap<Integer, VersionIgnoreConfig>();		
-	
-	//远程服务器前置
-	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
-	//远程存储
-	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
-	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
-	//版本仓库同步
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
-
-	//数据库备份
-	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();	
-	
-	//仓库额外数据（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
-	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
-
 	//远程存储服务器 同步锁
 	protected static ConcurrentHashMap<String, Object> remoteStorageSyncLockHashMap = new ConcurrentHashMap<String, Object>();	
 
@@ -170,7 +142,44 @@ public class BaseFunction{
 
 	//仓库全量备份任务
 	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
-    
+
+    public static boolean redisEn = false;
+    public static RedissonClient redisClient = null;
+
+    //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
+
+    //仓库的文件锁HashMap
+	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
+	//仓库锁HashMap
+	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
+
+	//远程存储服务器锁HashMap
+	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
+
+	//仓库全文搜索配置HashMap
+	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchConfigHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
+	//仓库加密配置HashMap
+	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
+	//仓库版管理忽略配置HashMap
+	protected static ConcurrentHashMap<Integer, VersionIgnoreConfig> reposVersionIgnoreConfigHashMap = new ConcurrentHashMap<Integer, VersionIgnoreConfig>();		
+	//仓库远程服务器前置配置HashMap
+	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
+	//仓库远程存储配置HashMap
+	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
+	//仓库自动备份配置HashMap
+	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
+	//仓库额外数据HashMap（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
+	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
+	//仓库文件同步任务HashMap
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
+
+	//数据库备份任务HashMap
+	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();		
+	//访问授权码HashMap
+	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
+
 	static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
@@ -751,7 +760,7 @@ public class BaseFunction{
 		remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteServer");
 		if(remote == null)
 		{
-			reposRemoteServerHashMap.remove(repos.getId());
+			deleteReposRemoteServerConfig(repos);
 			return;
 		}
 		
@@ -759,7 +768,65 @@ public class BaseFunction{
 		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteServer/" + repos.getId() + "/Doc";
 		
 		//add remote config to hashmap
+		addReposRemoteServerConfig(repos, remote);
+	}
+	
+	private static void addReposRemoteServerConfig(Repos repos, RemoteStorageConfig remote) {
+		if(redisEn)
+		{
+			addReposRemoteServerConfigRedis(repos, remote);
+		}
+		else
+		{
+			addReposRemoteServerConfigLocal(repos, remote);	
+		}
+	}
+
+	private static void addReposRemoteServerConfigLocal(Repos repos, RemoteStorageConfig remote) {
 		reposRemoteServerHashMap.put(repos.getId(), remote);
+	}	
+	
+	private static void addReposRemoteServerConfigRedis(Repos repos, RemoteStorageConfig remote) {
+		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+		reposRemoteServerHashMap.put(repos.getId(), remote);
+	}
+	
+	protected static void deleteReposRemoteServerConfig(Repos repos) {
+		if(redisEn)
+		{
+			deleteReposRemoteServerConfigRedis(repos);
+		}
+		else
+		{
+			deleteReposRemoteServerConfigLocal(repos);	
+		}
+	}
+	
+	protected static void deleteReposRemoteServerConfigLocal(Repos repos) {
+		reposRemoteServerHashMap.remove(repos.getId());		
+	}	
+	
+	protected static void deleteReposRemoteServerConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+		reposRemoteServerHashMap.remove(repos.getId());		
+	}	
+
+	protected RemoteStorageConfig getReposRemoteServerConfig(Repos repos) {
+		if(redisEn)
+		{
+			return getReposRemoteServerConfigRedis(repos);
+		}
+		
+		return getReposRemoteServerConfigLocal(repos);
+	}
+
+	private RemoteStorageConfig getReposRemoteServerConfigLocal(Repos repos) {
+		return reposRemoteServerHashMap.get(repos.getId());
+	}
+
+	private RemoteStorageConfig getReposRemoteServerConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+		return (RemoteStorageConfig) reposRemoteServerHashMap.get(repos.getId());
 	}
 	
 	protected static boolean isFSM(Repos repos) {
@@ -767,12 +834,6 @@ public class BaseFunction{
 	}
 	
 	//******** 远程存储配置 **********
-	protected void deleteRemoteStorageConfig(Repos repos) {
-		Log.debug("deleteRemoteStorageConfig for  repos:" + repos.getId() + " " + repos.getName());
-		reposRemoteStorageHashMap.remove(repos.getId());
-		reposRemoteServerHashMap.remove(repos.getId());		
-	}	
-
 	private static String buildRemoteStorageStr(Repos repos) {
 		switch(repos.getType())
 		{
@@ -844,7 +905,8 @@ public class BaseFunction{
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
 		if(remote == null)
 		{
-			reposRemoteStorageHashMap.remove(repos.getId());
+			
+			deleteReposRemoteStorageConfig(repos);
 			return;
 		}
 		
@@ -852,7 +914,64 @@ public class BaseFunction{
 		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
 
 		//add remote config to hashmap
+		addReposRemoteStorageConfig(repos, remote);
+	}
+	
+	private static void addReposRemoteStorageConfig(Repos repos, RemoteStorageConfig remote) {
+		if(redisEn)
+		{
+			addReposRemoteStorageConfigRedis(repos, remote);			
+		}
+		else
+		{
+			addReposRemoteStorageConfigLocal(repos, remote);
+		}	
+	}
+
+	private static void addReposRemoteStorageConfigLocal(Repos repos, RemoteStorageConfig remote) {
 		reposRemoteStorageHashMap.put(repos.getId(), remote);
+	}
+
+	private static void addReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig remote) {
+		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
+	}
+
+	protected static void deleteReposRemoteStorageConfig(Repos repos) {
+		if(redisEn)
+		{
+			deleteReposRemoteStorageConfigRedis(repos);			
+		}
+		else
+		{
+			deleteReposRemoteStorageConfigLocal(repos);
+		}		
+	}
+	
+	private static void deleteReposRemoteStorageConfigLocal(Repos repos) {
+		reposRemoteStorageHashMap.remove(repos.getId());
+	}
+	
+	private static void deleteReposRemoteStorageConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+		reposRemoteStorageHashMap.remove(repos.getId());
+	}
+	
+	protected RemoteStorageConfig getReposRemoteStorageConfig(Repos repos) {
+		if(redisEn)
+		{
+			return getReposRemoteStorageConfigRedis(repos);
+		}
+		return getReposRemoteStorageConfigLocal(repos);
+	}
+	
+	private RemoteStorageConfig getReposRemoteStorageConfigLocal(Repos repos) {
+		return reposRemoteStorageHashMap.get(repos.getId());
+	}
+
+	private RemoteStorageConfig getReposRemoteStorageConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+		return (RemoteStorageConfig) reposRemoteStorageHashMap.get(repos.getId());
 	}
 
 	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage, String type) {
