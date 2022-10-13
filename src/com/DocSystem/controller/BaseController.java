@@ -7682,10 +7682,11 @@ public class BaseController  extends BaseFunction{
 		if(redisEn)
 		{
 			addDocLockRedis(doc, docLock);
-			return;
 		}
-		
-		addDocLockLocal(doc, docLock);
+		else
+		{
+			addDocLockLocal(doc, docLock);
+		}
 	}
 	
 	private void addDocLockLocal(Doc doc, DocLock docLock) {
@@ -7699,23 +7700,45 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void addDocLockRedis(Doc doc, DocLock docLock) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
-		if(reposDocLocskMap == null)
-		{
-			Log.debug("addDocLockRedis() reposDocLocskMap for " + doc.getVid() + " is null");
-			return;
-		}
-		
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
+	
+	private void deleteDocLock(Doc doc) {
+		if(redisEn)
+		{
+			deleteDocLockRedis(doc);
+		}
+		else
+		{
+			deleteDocLockLocal(doc);
+		}
+	}
+	
+	private void deleteDocLockLocal(Doc doc) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			return;
+		}
+		reposDocLocskMap.remove(getDocLockId(doc));
+	}
+	
+	private void deleteDocLockRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		reposDocLocskMap.remove(getDocLockId(doc));
+	}
+
 
 	public static DocLock getDocLock(Doc doc) {
 		if(redisEn)
 		{
 			return getDocLockRedis(doc);
 		}
-		
-		return getDocLockLocal(doc);
+		else
+		{
+			return getDocLockLocal(doc);
+		}
 	}
 
 	public static DocLock getDocLockLocal(Doc doc) {
@@ -7731,45 +7754,38 @@ public class BaseController  extends BaseFunction{
 	}
 
 	public static DocLock getDocLockRedis(Doc doc) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
-		if(reposDocLocskMap == null)
-		{
-			Log.debug("getDocLockRedis() reposDocLocskMap for " + doc.getVid() + " is null");
-			return null;
-		}
-		
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		String docLockId = getDocLockId(doc);
 		return (DocLock) reposDocLocskMap.get(docLockId);
 	}
-
-	private void deleteDocLock(Doc doc) {
+	
+	private boolean isReposDocLocksMapEmpty(Doc doc) {
 		if(redisEn)
 		{
-			deleteDocLockRedis(doc);
-			return;
+			return isReposDocLocksMapEmptyRedis(doc);
 		}
-		
-		deleteDocLockLocal(doc);
+		else
+		{
+			return isReposDocLocksMapEmptyLocal(doc);
+		}
 	}
-	
-	private void deleteDocLockLocal(Doc doc) {
+
+	private boolean isReposDocLocksMapEmptyLocal(Doc doc) {
 		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap == null)
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
-			return;
+			return true;
 		}
-		reposDocLocskMap.remove(getDocLockId(doc));
+		return false;
 	}
 	
-	private void deleteDocLockRedis(Doc doc) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
-		if(reposDocLocskMap == null)
+	private boolean isReposDocLocksMapEmptyRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap-" + doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
-			Log.debug("deleteDocLockRedis() reposDocLocskMap for " + doc.getVid() + " is null");
-			return;
+			return true;
 		}
-		
-		reposDocLocskMap.remove(getDocLockId(doc));
+		return false;
 	}
 
 	private static String getDocLockId(Doc doc) {
@@ -8087,7 +8103,7 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.printObject("isSubDocLockedRedis() doc:", doc);
 
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
 			return false;
@@ -8118,34 +8134,6 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean isReposDocLocksMapEmpty(Doc doc) {
-		if(redisEn)
-		{
-			return isReposDocLocksMapEmptyRedis(doc);
-		}
-		
-		return isReposDocLocksMapEmptyLocal(doc);
-	}
-
-	private boolean isReposDocLocksMapEmptyLocal(Doc doc) {
-		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean isReposDocLocksMapEmptyRedis(Doc doc) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("DocLock-" + doc.getVid());
-		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
-		{
-			return true;
-		}
-		return false;
-	}
-
-	
 	private boolean isSudDocLock(DocLock docLock, String parentDocPath) {
 		return parentDocPath.length() == 0 || (docLock.getPath().length() >= parentDocPath.length() && docLock.getPath().indexOf(parentDocPath) == 0);
 	}
