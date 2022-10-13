@@ -195,9 +195,6 @@ public class BaseController  extends BaseFunction{
 	protected static User coEditUser = new User();
     protected static User systemUser = new User();
     
-	//TODO: 全局HashMap, 集群部署时, 需要存储在redis中
-	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
-
     static {		
 		initSystemUsers();
 		initLogLevel();
@@ -15855,12 +15852,12 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isFSM(repos))
 			{
-				repos.remoteStorageConfig = reposRemoteStorageHashMap.get(repos.getId());
+				repos.remoteStorageConfig = getReposRemoteStorageConfig(repos);
 				repos.backupConfig = reposBackupConfigHashMap.get(repos.getId());
 			}
 			else
 			{
-				repos.remoteServerConfig = reposRemoteServerHashMap.get(repos.getId());
+				repos.remoteServerConfig = getReposRemoteServerConfig(repos);
 				repos.setVerCtrl(0);
 			}
 			
