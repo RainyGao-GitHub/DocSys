@@ -82,7 +82,6 @@ import org.apache.tools.zip.ZipFile;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -196,6 +195,9 @@ public class BaseController  extends BaseFunction{
 	protected static User coEditUser = new User();
     protected static User systemUser = new User();
     
+	//TODO: 全局HashMap, 集群部署时, 需要存储在redis中
+	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
+
     static {		
 		initSystemUsers();
 		initLogLevel();
@@ -303,8 +305,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	//TODO: 集群部署时,authCode需要存储在redis中
-	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
 	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
 		Long curTime = new Date().getTime();
 
