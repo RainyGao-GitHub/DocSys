@@ -10166,19 +10166,24 @@ public class BaseController  extends BaseFunction{
 		SVNUtil verReposUtil = new SVNUtil();		
 		String revision = null;
 		
-		ReposData reposData = reposDataHashMap.get(repos.getId());
+		ReposData reposData = getReposData(repos);
 		synchronized(reposData.syncLockForSvnCommit)
 		{
 			String lockInfo = "svnDocCommit() reposData.syncLockForSvnCommit";
+			String redisLockName = "syncLockForSvnCommit-" + repos.getId();
 			SyncLock.lock(lockInfo);
+			redisSyncLock(redisLockName, lockInfo);
 			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
+				redisSyncUnlock(redisLockName, lockInfo);
 				SyncLock.unlock(reposData.syncLockForSvnCommit, lockInfo); //线程锁
 				return null;
 			}
 
 			revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+
+			redisSyncUnlock(redisLockName, lockInfo);
 			SyncLock.unlock(reposData.syncLockForSvnCommit, lockInfo); //线程锁
 		}
 		return revision;
@@ -10191,14 +10196,17 @@ public class BaseController  extends BaseFunction{
 		GITUtil verReposUtil = new GITUtil();
 		String revision = null;
 		
-		ReposData reposData = reposDataHashMap.get(repos.getId());
+		ReposData reposData = getReposData(repos);
 		synchronized(reposData.syncLockForGitCommit)
 		{
 			String lockInfo = "gitDocCommit() reposData.syncLockForGitCommit";
+			String redisLockName = "syncLockForGitCommit-" + repos.getId();
 			SyncLock.lock(lockInfo);
+			redisSyncLock(redisLockName, lockInfo);
 			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
+				redisSyncUnlock(redisLockName, lockInfo);
 				SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
 				return null;
 			}
@@ -10206,11 +10214,14 @@ public class BaseController  extends BaseFunction{
 			if(verReposUtil.checkAndClearnBranch(true) == false)
 			{
 				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
+				redisSyncUnlock(redisLockName, lockInfo);
 				SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
 				return null;
 			}
 		
 			revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+
+			redisSyncUnlock(redisLockName, lockInfo);
 			SyncLock.unlock(reposData.syncLockForGitCommit, lockInfo); //线程锁
 		}
 		return revision;
@@ -13030,6 +13041,15 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected ReposData initReposData(Repos repos) {
+		if(redisEn)
+		{
+			return initReposDataRedis(repos);
+		}
+		
+		return initReposDataLocal(repos);		
+	}
+	
+	protected ReposData initReposDataLocal(Repos repos) {
 		ReposData reposData = new ReposData();
 		reposData.reposId = repos.getId();
 		reposData.syncLockForSvnCommit = new Object();
@@ -13042,6 +13062,39 @@ public class BaseController  extends BaseFunction{
 		return reposData;
 	}
 	
+	protected ReposData initReposDataRedis(Repos repos) {
+		ReposData reposData = new ReposData();
+		reposData.reposId = repos.getId();
+		reposData.syncLockForSvnCommit = new Object();
+		reposData.syncLockForGitCommit = new Object();
+		reposData.syncLockForDocNameIndex = new Object();
+		reposData.syncLockForRDocIndex = new Object();
+		reposData.syncLockForVDocIndex = new Object();
+		
+		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
+		reposDataHashMap.put(repos.getId(), reposData);
+		return reposData;
+	}
+	
+	protected ReposData getReposData(Repos repos) {
+		if(redisEn)
+		{
+			return getReposDataRedis(repos);
+		}
+		
+		return getReposDataLocal(repos);		
+	}
+	
+	ReposData getReposDataLocal(Repos repos)
+	{
+		return reposDataHashMap.get(repos.getId());
+	}
+	
+	ReposData getReposDataRedis(Repos repos)
+	{
+		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
+		return (ReposData) reposDataHashMap.get(repos.getId());
+	}
 	
 	protected void initReposVersionIgnoreConfig(Repos repos) {
 		//add TextSearchConfig For repos
@@ -15820,7 +15873,9 @@ public class BaseController  extends BaseFunction{
 			}			
 			
 			repos.versionIgnoreConfig = reposVersionIgnoreConfigHashMap.get(repos.getId());
-			repos.isBusy = reposDataHashMap.get(repos.getId()).isBusy;
+			
+			ReposData reposData = getReposData(repos);
+			repos.isBusy = reposData.isBusy;
 		}
 		return repos;
 	}
