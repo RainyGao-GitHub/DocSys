@@ -5242,6 +5242,7 @@ public class DocController extends BaseController{
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
 				repos.textSearchConfig.realDocTextSearchDisableHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				updateReposTextSearchConfig(repos, repos.textSearchConfig);
 				return true;
 			}
 			return false;
@@ -5251,6 +5252,7 @@ public class DocController extends BaseController{
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
 			repos.textSearchConfig.realDocTextSearchDisableHashMap.remove("/" + doc.getPath() + doc.getName());
+			updateReposTextSearchConfig(repos, repos.textSearchConfig);
 			return true;			
 		}
 		return false;
