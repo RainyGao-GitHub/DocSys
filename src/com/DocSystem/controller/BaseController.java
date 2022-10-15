@@ -12015,12 +12015,12 @@ public class BaseController  extends BaseFunction{
 		
 		if(forceStartDelay != null)
 		{
-			Log.info("addDelayTaskForReposSyncUp forceStartDelay:" + forceStartDelay + " 秒后强制开始同步！" );											
+			Log.info("addDelayTaskForReposSyncUp forceStartDelay:" + forceStartDelay + " 秒后强制开始同步仓库 ["  + repos.getId() + " " + repos.getName() + "]");											
 			delayTime = forceStartDelay; //1分钟后执行第一次备份
 		}
 		
 		delayTime = delayTime + repos.getId() * 10; //根据仓库ID增加偏移时间，避免同时开始
-		Log.info("addDelayTaskForReposSyncUp delayTime:" + delayTime + " 秒后开始同步！" );		
+		Log.info("addDelayTaskForReposSyncUp delayTime:" + delayTime + " 秒后开始同步仓库 ["  + repos.getId() + " " + repos.getName() + "]");		
 		
 		ConcurrentHashMap<Long, SyncupTask> syncupTaskHashMap = reposSyncupTaskHashMap.get(repos.getId());
 		if(syncupTaskHashMap == null)
@@ -12453,11 +12453,11 @@ public class BaseController  extends BaseFunction{
 		
 		if(forceStartDelay != null)
 		{
-			Log.info("addDelayTaskForRemoteBackup forceStartDelay:" + forceStartDelay + " 秒后强制开始备份！" );											
+			Log.info("addDelayTaskForRemoteBackup forceStartDelay:" + forceStartDelay + " 秒后强制开始备份仓库 ["  + repos.getId() + " " + repos.getName() + "]");											
 			delayTime = forceStartDelay; //1分钟后执行第一次备份
 
 		}
-		Log.info("addDelayTaskForRemoteBackup delayTime:" + delayTime + " 秒后开始备份！" );											
+		Log.info("addDelayTaskForRemoteBackup delayTime:" + delayTime + " 秒后开始备份仓库 ["  + repos.getId() + " " + repos.getName() + "]");											
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
