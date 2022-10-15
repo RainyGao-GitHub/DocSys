@@ -12291,7 +12291,7 @@ public class BaseController  extends BaseFunction{
 		Long delayTime = null;
 		if(forceStartDelay != null)
 		{
-			Log.info("addDelayTaskForLocalBackup forceStartDelay:" + forceStartDelay + " 秒后强制开始备份！" );											
+			Log.info("addDelayTaskForLocalBackup forceStartDelay:" + forceStartDelay + " 秒后强制开始备份仓库 ["  + repos.getId() + " " + repos.getName() + "]");											
 			delayTime = forceStartDelay; //1分钟后执行第一次备份
 		}
 		else
@@ -12304,7 +12304,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		Log.info("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份！" );											
+		Log.info("addDelayTaskForLocalBackup delayTime:" + delayTime + " 秒后开始备份仓库 ["  + repos.getId() + " " + repos.getName() + "]");											
 				
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
