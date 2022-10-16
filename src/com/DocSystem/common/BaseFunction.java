@@ -909,10 +909,12 @@ public class BaseFunction{
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
 		if(remote == null)
 		{
-			
 			deleteReposRemoteStorageConfig(repos);
 			return;
 		}
+		
+		//设置
+		remote.checkSum = remoteStorage.hashCode();
 		
 		//设置索引库位置
 		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
@@ -974,8 +976,32 @@ public class BaseFunction{
 	}
 
 	private RemoteStorageConfig getReposRemoteStorageConfigRedis(Repos repos) {
-		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-		return (RemoteStorageConfig) reposRemoteStorageHashMap.get(repos.getId());
+		RemoteStorageConfig config = reposRemoteStorageHashMap.get(repos.getId());
+		if(isReposRemoteStorageConfigChanged(repos, config))
+		{
+			RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+			config = (RemoteStorageConfig) reposRemoteStorageHashMap.get(repos.getId());
+		}
+		return config;
+	}
+
+	private boolean isReposRemoteStorageConfigChanged(Repos repos, RemoteStorageConfig config) {
+		if(repos.reposExtConfigDigest == null)
+		{
+			return false;
+		}
+		
+		if(repos.reposExtConfigDigest.digestForRemoteStorageConfig == null)
+		{
+			return false;
+		}
+		
+		if(config == null || config.checkSum == null || !config.checkSum.equals(repos.reposExtConfigDigest.digestForRemoteStorageConfig))
+		{
+			return true;
+		}
+		
+		return false;
 	}
 
 	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage, String type) {
