@@ -7704,6 +7704,34 @@ public class BaseController  extends BaseFunction{
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 	
+	private void updateDocLock(Doc doc, DocLock docLock) {
+		if(redisEn)
+		{
+			updateDocLockRedis(doc, docLock);
+		}
+		else
+		{
+			//TODO: local no need to update
+			//updateDocLockLocal(doc, docLock);
+		}
+	}
+	
+	private void updateDocLockLocal(Doc doc, DocLock docLock) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			Log.info("updateDocLockLocal() reposDocLocskMap is null for repos:" + doc.getVid());
+			return;
+		}
+		
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
+	}
+	
+	private void updateDocLockRedis(Doc doc, DocLock docLock) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
+	}
+	
 	private void deleteDocLock(Doc doc) {
 		if(redisEn)
 		{
@@ -8165,7 +8193,9 @@ public class BaseController  extends BaseFunction{
 			Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName());
 			return true;
 		}
+		
 		curDocLock.setState(newLockState);
+		updateDocLock(doc, curDocLock);
 		Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName() + " newLockState:" + newLockState);
 		return true;
 	}
@@ -13044,15 +13074,6 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected ReposData initReposData(Repos repos) {
-		if(redisEn)
-		{
-			return initReposDataRedis(repos);
-		}
-		
-		return initReposDataLocal(repos);		
-	}
-	
-	protected ReposData initReposDataLocal(Repos repos) {
 		ReposData reposData = new ReposData();
 		reposData.reposId = repos.getId();
 		reposData.syncLockForSvnCommit = new Object();
@@ -13061,42 +13082,12 @@ public class BaseController  extends BaseFunction{
 		reposData.syncLockForRDocIndex = new Object();
 		reposData.syncLockForVDocIndex = new Object();
 		
-		reposDataHashMap.put(repos.getId(), reposData);
-		return reposData;
-	}
-	
-	protected ReposData initReposDataRedis(Repos repos) {
-		ReposData reposData = new ReposData();
-		reposData.reposId = repos.getId();
-		reposData.syncLockForSvnCommit = new Object();
-		reposData.syncLockForGitCommit = new Object();
-		reposData.syncLockForDocNameIndex = new Object();
-		reposData.syncLockForRDocIndex = new Object();
-		reposData.syncLockForVDocIndex = new Object();
-		
-		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
 		reposDataHashMap.put(repos.getId(), reposData);
 		return reposData;
 	}
 	
 	protected ReposData getReposData(Repos repos) {
-		if(redisEn)
-		{
-			return getReposDataRedis(repos);
-		}
-		
-		return getReposDataLocal(repos);		
-	}
-	
-	ReposData getReposDataLocal(Repos repos)
-	{
 		return reposDataHashMap.get(repos.getId());
-	}
-	
-	ReposData getReposDataRedis(Repos repos)
-	{
-		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
-		return (ReposData) reposDataHashMap.get(repos.getId());
 	}
 	
 	protected void initReposVersionIgnoreConfig(Repos repos) {
@@ -21015,7 +21006,6 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	
 	private void addRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
 		if(redisEn)
 		{
@@ -21032,6 +21022,27 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void addRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+
+	private void updateRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		if(redisEn)
+		{
+			updateRemoteStorageLockRedis(remoteStorageName, remoteStorageLock);
+		}
+		else
+		{
+			//TODO: local no need to update
+			//updateRemoteStorageLockLocal(remoteStorageName, remoteStorageLock);
+		}
+	}
+	
+	private void updateRemoteStorageLockLocal(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+	
+	private void updateRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
 		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
 		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
 	}
@@ -21132,6 +21143,7 @@ public class BaseController  extends BaseFunction{
 						remoteStorageLock = curLock;
 					}
 				}
+				updateRemoteStorageLock(remoteStorageName, curLock);
 			}
 			
 			redisSyncUnlock(redisLockName, lockInfo);
