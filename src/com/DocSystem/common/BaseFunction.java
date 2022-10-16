@@ -147,7 +147,10 @@ public class BaseFunction{
     public static RedissonClient redisClient = null;
 
     //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
-
+    //接口访问授权码HashMap
+    //TODO: 集群支持
+  	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
+    
     //仓库的文件锁HashMap
 	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	//仓库锁HashMap
@@ -168,18 +171,19 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	//仓库自动备份配置HashMap
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
+	
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
-	//仓库额外数据HashMap（用于存放仓库相关的线程锁之类的输出，在系统初始化和新建时更新）
-	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
+
 	//仓库文件同步任务HashMap
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
 
 	//数据库备份任务HashMap
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();		
-	//访问授权码HashMap
-	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
 
+	//reposDataHashMap（主要用于存放仓库相关的线程锁，因此集群时不需要放入redis）
+	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
+	
 	static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
