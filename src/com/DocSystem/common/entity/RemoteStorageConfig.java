@@ -3,7 +3,8 @@ package com.DocSystem.common.entity;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RemoteStorageConfig {
-
+	public Integer checkSum;
+	
 	public String protocol;
 	public String rootPath;	//remote root path
 	public Integer autoPull = 0;
@@ -26,6 +27,5 @@ public class RemoteStorageConfig {
 	public ConcurrentHashMap<String, Integer> notAllowedFileTypeHashMap = null;
 	public Integer isUnkownFileAllowed = null;
 	
-	public ConcurrentHashMap<String, Integer> ignoreHashMap = null;
-	
+	public ConcurrentHashMap<String, Integer> ignoreHashMap = null;	
 }
