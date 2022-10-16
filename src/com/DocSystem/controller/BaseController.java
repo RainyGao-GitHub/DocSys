@@ -156,6 +156,7 @@ import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.Role;
 import com.DocSystem.entity.SysConfig;
 import com.DocSystem.entity.User;
@@ -11669,7 +11670,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
 				initReposData(repos);
-								
+				
 				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
 				
 				//int remoteServerConifg
@@ -11713,6 +11714,11 @@ public class BaseController  extends BaseFunction{
 	        Log.info("initReposExtentionConfig 异常");
 	        Log.info(e);
 		}	
+	}
+
+	private ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
+		RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+		return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
 	}
 
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
@@ -15847,6 +15853,9 @@ public class BaseController  extends BaseFunction{
 	public Repos getReposEx(Repos repos) {
 		if(repos != null)
 		{
+			//从redis中获取仓库扩展配置摘要信息,用于确定remoteStorage/remoteServer/autoBackup/textSearch/versionIgnore/encrypt的配置是否有更新
+			repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
+			
 			if(isFSM(repos))
 			{
 				repos.remoteStorageConfig = getReposRemoteStorageConfig(repos);
