@@ -429,7 +429,7 @@ public class ReposController extends BaseController{
 				config.checkSum = config.hashCode() + "";
 				if(updateDigest)
 				{
-					updateReposExtConfigDigest(repos, "EncryptConfig", config.checkSum);
+					updateReposExtConfigDigest(repos, ReposExtConfigDigest.Encrypt, config.checkSum);
 				}
 			}
 		}

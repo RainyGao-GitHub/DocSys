@@ -11717,6 +11717,11 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
+		if(redisEn == false)
+		{
+			return null;
+		}
+		
 		RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
 		return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
 	}
@@ -12205,7 +12210,7 @@ public class BaseController  extends BaseFunction{
 			reposBackupConfigHashMap.remove(repos.getId());
 			if(updateDigest)
 			{
-				updateReposExtConfigDigest(repos, "backupConfig", "");
+				updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackup, "");
 			}
 			Log.debug("initReposRemoteServerConfig 自动备份未设置或者设置错误");
 			return;
@@ -12222,7 +12227,7 @@ public class BaseController  extends BaseFunction{
 		repos.backupConfig.checkSum = repos.backupConfig.hashCode() + "";
 		if(updateDigest)
 		{
-			updateReposExtConfigDigest(repos, "backupConfig", repos.backupConfig.checkSum);
+			updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackup, repos.backupConfig.checkSum);
 		}
 
 		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");	
@@ -13119,7 +13124,7 @@ public class BaseController  extends BaseFunction{
 		repos.versionIgnoreConfig.checkSum = versionIgnoreConfig.hashCode() + "";
 		if(updateDigest)
 		{
-			updateReposExtConfigDigest(repos, "versionIgnore", repos.versionIgnoreConfig.checkSum);
+			updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, repos.versionIgnoreConfig.checkSum);
 		}
 	}
 	
@@ -13192,7 +13197,7 @@ public class BaseController  extends BaseFunction{
 		repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
 		if(updateDigest)
 		{
-			updateReposExtConfigDigest(repos, "TextSearch", repos.textSearchConfig.checkSum);
+			updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, repos.textSearchConfig.checkSum);
 		}
 	}
 	
