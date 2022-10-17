@@ -768,7 +768,7 @@ public class BaseFunction{
 			reposRemoteServerHashMap.remove(repos.getId());
 			if(updateDigest)
 			{
-				updateReposExtConfigDigest(repos, "RemoteServer", "");
+				updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServer, "");
 			}
 			return;
 		}
@@ -778,12 +778,13 @@ public class BaseFunction{
 		
 		//add remote config to hashmap
 		reposRemoteServerHashMap.put(repos.getId(), remote);
+		remote.checkSum = remote.hashCode() + "";
 		if(updateDigest)
 		{
-			updateReposExtConfigDigest(repos, "RemoteServer", "");
+			updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServer, "");
 		}
 	}
-	
+		
 	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
 		if(redisEn == false)
 		{
@@ -802,11 +803,23 @@ public class BaseFunction{
 		boolean isValidKey = true;
 		switch(key)
 		{
-		case "RemoteStorage":
+		case ReposExtConfigDigest.RemoteStorage:
 			repos.reposExtConfigDigest.remoteStorageConfigCheckSum = checkSum;
 			break;
-		case "RemoteServer":
-			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;			
+		case ReposExtConfigDigest.RemoteServer:
+			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.AutoBackup:
+			repos.reposExtConfigDigest.autoBackupConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.TextSearch:
+			repos.reposExtConfigDigest.textSearchConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.VersionIgnore:
+			repos.reposExtConfigDigest.versionIgnoreConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.Encrypt:
+			repos.reposExtConfigDigest.encryptConfigCheckSum = checkSum;
 			break;
 		default:
 			isValidKey = false;
@@ -918,7 +931,7 @@ public class BaseFunction{
 			reposRemoteStorageHashMap.remove(repos.getId());
 			if(updateDigest)
 			{
-				updateReposExtConfigDigest(repos, "RemoteStorage", "");
+				updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, "");
 			}	
 			return;
 		}
@@ -932,25 +945,13 @@ public class BaseFunction{
 		remote.checkSum = remote.hashCode() + "";
 		if(updateDigest)
 		{
-			updateReposExtConfigDigest(repos, "RemoteStorage", remote.checkSum);
+			updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, remote.checkSum);
 		}	
 	}
 	
 	protected RemoteStorageConfig getReposRemoteStorageConfig(Repos repos) {
-		if(redisEn)
-		{
-			return getReposRemoteStorageConfigRedis(repos);
-		}
-		return getReposRemoteStorageConfigLocal(repos);
-	}
-	
-	private RemoteStorageConfig getReposRemoteStorageConfigLocal(Repos repos) {
-		return reposRemoteStorageHashMap.get(repos.getId());
-	}
-
-	private RemoteStorageConfig getReposRemoteStorageConfigRedis(Repos repos) {
 		RemoteStorageConfig config = reposRemoteStorageHashMap.get(repos.getId());
-		if(isReposRemoteStorageConfigChanged(repos, config))
+		if(isReposExtConfigDigestChanged(repos,  "RemoteStorage", config))
 		{
 			return config;
 		}
@@ -959,23 +960,78 @@ public class BaseFunction{
 		return reposRemoteStorageHashMap.get(repos.getId());
 	}
 
-	private boolean isReposRemoteStorageConfigChanged(Repos repos, RemoteStorageConfig config) {
+	private boolean isReposExtConfigDigestChanged(Repos repos, String key, Object config) {
+		if(redisEn == false)
+		{
+			return false;
+		}
+		
 		if(repos.reposExtConfigDigest == null)
 		{
 			return false;
 		}
-		
-		if(repos.reposExtConfigDigest.remoteStorageConfigCheckSum == null)
+
+		String remoteCheckSum = getReposExtConfigDigestCheckSum(repos.reposExtConfigDigest, key);
+		if(remoteCheckSum == null)
 		{
 			return false;
 		}
-		
-		if(config == null || config.checkSum == null || !config.checkSum.equals(repos.reposExtConfigDigest.remoteStorageConfigCheckSum))
+
+		if(config == null)
+		{
+			return true;
+		}
+
+		String localCheckSum = getReposExtConfigDigestCheckSumLocal(config, key);
+		if(localCheckSum == null || !localCheckSum.equals(remoteCheckSum))
 		{
 			return true;
 		}
 		
 		return false;
+	}
+
+
+	private String getReposExtConfigDigestCheckSumLocal(Object config, String key) {
+		switch(key)
+		{
+		case ReposExtConfigDigest.RemoteStorage: 
+			return ((RemoteStorageConfig)config).checkSum;
+		case ReposExtConfigDigest.RemoteServer:
+			return ((RemoteStorageConfig)config).checkSum;
+		case ReposExtConfigDigest.AutoBackup:
+			return ((ReposBackupConfig)config).checkSum;
+		case ReposExtConfigDigest.TextSearch:
+			return ((TextSearchConfig)config).checkSum;
+		case ReposExtConfigDigest.VersionIgnore:
+			return ((VersionIgnoreConfig)config).checkSum;
+		case ReposExtConfigDigest.Encrypt:
+			return ((EncryptConfig)config).checkSum;
+		default:
+			break;
+		}
+		return null;
+	}
+
+	private String getReposExtConfigDigestCheckSum(ReposExtConfigDigest reposExtConfigDigest, String key) {
+		switch(key)
+		{
+		case ReposExtConfigDigest.RemoteStorage: 
+			return reposExtConfigDigest.remoteStorageConfigCheckSum;
+		case ReposExtConfigDigest.RemoteServer:
+			return reposExtConfigDigest.remoteServerConfigCheckSum;
+		case ReposExtConfigDigest.AutoBackup:
+			return reposExtConfigDigest.autoBackupConfigCheckSum;
+		case ReposExtConfigDigest.TextSearch:
+			return reposExtConfigDigest.textSearchConfigCheckSum;
+		case ReposExtConfigDigest.VersionIgnore:
+			return reposExtConfigDigest.versionIgnoreConfigCheckSum;
+		case ReposExtConfigDigest.Encrypt:
+			return reposExtConfigDigest.encryptConfigCheckSum;
+		default:
+			break;
+		}
+		return null;
 	}
 
 	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage, String type) {
