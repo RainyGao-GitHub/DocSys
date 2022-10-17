@@ -86,6 +86,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -746,7 +747,7 @@ public class BaseFunction{
 	}
 	
 	//**** 服务器前置配置 *******
-	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage)
+	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage, boolean updateDigest)
 	{
 		if(isFSM(repos))
 		{
@@ -764,7 +765,11 @@ public class BaseFunction{
 		remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteServer");
 		if(remote == null)
 		{
-			deleteReposRemoteServerConfig(repos);
+			reposRemoteServerHashMap.remove(repos.getId());
+			if(updateDigest)
+			{
+				updateReposExtConfigDigest(repos, "RemoteServer", "");
+			}
 			return;
 		}
 		
@@ -772,48 +777,49 @@ public class BaseFunction{
 		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteServer/" + repos.getId() + "/Doc";
 		
 		//add remote config to hashmap
-		addReposRemoteServerConfig(repos, remote);
-	}
-	
-	private static void addReposRemoteServerConfig(Repos repos, RemoteStorageConfig remote) {
-		if(redisEn)
-		{
-			addReposRemoteServerConfigRedis(repos, remote);
-		}
-		else
-		{
-			addReposRemoteServerConfigLocal(repos, remote);	
-		}
-	}
-
-	private static void addReposRemoteServerConfigLocal(Repos repos, RemoteStorageConfig remote) {
 		reposRemoteServerHashMap.put(repos.getId(), remote);
-	}	
-	
-	private static void addReposRemoteServerConfigRedis(Repos repos, RemoteStorageConfig remote) {
-		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
-		reposRemoteServerHashMap.put(repos.getId(), remote);
-	}
-	
-	protected static void deleteReposRemoteServerConfig(Repos repos) {
-		if(redisEn)
+		if(updateDigest)
 		{
-			deleteReposRemoteServerConfigRedis(repos);
-		}
-		else
-		{
-			deleteReposRemoteServerConfigLocal(repos);	
+			updateReposExtConfigDigest(repos, "RemoteServer", "");
 		}
 	}
 	
-	protected static void deleteReposRemoteServerConfigLocal(Repos repos) {
-		reposRemoteServerHashMap.remove(repos.getId());		
-	}	
-	
-	protected static void deleteReposRemoteServerConfigRedis(Repos repos) {
-		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
-		reposRemoteServerHashMap.remove(repos.getId());		
-	}	
+	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
+		if(redisEn == false)
+		{
+			return;
+		}
+		
+		String lockInfo = "updateReposExtConfigDigest for repos [" + repos.getId() + " " + repos.getName() + "]";
+		String lockName = "reposExtConfigDigest" + repos.getId();
+		redisSyncLock(lockName, lockInfo);
+		
+		if(repos.reposExtConfigDigest == null)
+		{
+			repos.reposExtConfigDigest = new ReposExtConfigDigest();
+		}
+		
+		boolean isValidKey = true;
+		switch(key)
+		{
+		case "RemoteStorage":
+			repos.reposExtConfigDigest.remoteStorageConfigCheckSum = checkSum;
+			break;
+		case "RemoteServer":
+			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;			
+			break;
+		default:
+			isValidKey = false;
+			break;
+		}
+		
+		if(isValidKey)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			reposExtConfigDigestHashMap.put(repos.getId(), repos.reposExtConfigDigest);
+		}	
+		redisSyncUnlock(lockName, lockInfo);		
+	}
 
 	protected RemoteStorageConfig getReposRemoteServerConfig(Repos repos) {
 		if(redisEn)
@@ -898,7 +904,7 @@ public class BaseFunction{
 		return remoteStorage;
 	}
 
-	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
+	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage, boolean updateDigest)
 	{
 		if(isFSM(repos) == false)
 		{
@@ -909,58 +915,25 @@ public class BaseFunction{
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
 		if(remote == null)
 		{
-			deleteReposRemoteStorageConfig(repos);
+			reposRemoteStorageHashMap.remove(repos.getId());
+			if(updateDigest)
+			{
+				updateReposExtConfigDigest(repos, "RemoteStorage", "");
+			}	
 			return;
 		}
-		
-		//设置
-		remote.checkSum = remoteStorage.hashCode();
 		
 		//设置索引库位置
 		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
 
 		//add remote config to hashmap
-		addReposRemoteStorageConfig(repos, remote);
-	}
-	
-	private static void addReposRemoteStorageConfig(Repos repos, RemoteStorageConfig remote) {
-		if(redisEn)
+		reposRemoteStorageHashMap.put(repos.getId(), remote);
+		
+		remote.checkSum = remote.hashCode() + "";
+		if(updateDigest)
 		{
-			addReposRemoteStorageConfigRedis(repos, remote);			
-		}
-		else
-		{
-			addReposRemoteStorageConfigLocal(repos, remote);
+			updateReposExtConfigDigest(repos, "RemoteStorage", remote.checkSum);
 		}	
-	}
-
-	private static void addReposRemoteStorageConfigLocal(Repos repos, RemoteStorageConfig remote) {
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
-	}
-
-	private static void addReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig remote) {
-		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-		reposRemoteStorageHashMap.put(repos.getId(), remote);
-	}
-
-	protected static void deleteReposRemoteStorageConfig(Repos repos) {
-		if(redisEn)
-		{
-			deleteReposRemoteStorageConfigRedis(repos);			
-		}
-		else
-		{
-			deleteReposRemoteStorageConfigLocal(repos);
-		}		
-	}
-	
-	private static void deleteReposRemoteStorageConfigLocal(Repos repos) {
-		reposRemoteStorageHashMap.remove(repos.getId());
-	}
-	
-	private static void deleteReposRemoteStorageConfigRedis(Repos repos) {
-		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-		reposRemoteStorageHashMap.remove(repos.getId());
 	}
 	
 	protected RemoteStorageConfig getReposRemoteStorageConfig(Repos repos) {
@@ -979,10 +952,11 @@ public class BaseFunction{
 		RemoteStorageConfig config = reposRemoteStorageHashMap.get(repos.getId());
 		if(isReposRemoteStorageConfigChanged(repos, config))
 		{
-			RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-			config = (RemoteStorageConfig) reposRemoteStorageHashMap.get(repos.getId());
+			return config;
 		}
-		return config;
+		
+		initReposRemoteStorageConfig(repos, repos.getRemoteStorage(), false);
+		return reposRemoteStorageHashMap.get(repos.getId());
 	}
 
 	private boolean isReposRemoteStorageConfigChanged(Repos repos, RemoteStorageConfig config) {
@@ -991,12 +965,12 @@ public class BaseFunction{
 			return false;
 		}
 		
-		if(repos.reposExtConfigDigest.digestForRemoteStorageConfig == null)
+		if(repos.reposExtConfigDigest.remoteStorageConfigCheckSum == null)
 		{
 			return false;
 		}
 		
-		if(config == null || config.checkSum == null || !config.checkSum.equals(repos.reposExtConfigDigest.digestForRemoteStorageConfig))
+		if(config == null || config.checkSum == null || !config.checkSum.equals(repos.reposExtConfigDigest.remoteStorageConfigCheckSum))
 		{
 			return true;
 		}

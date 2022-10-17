@@ -11671,12 +11671,12 @@ public class BaseController  extends BaseFunction{
 				
 				initReposData(repos);
 				
-				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
+				initReposRemoteStorageConfig(repos, repos.getRemoteStorage(), false);
 				
 				//int remoteServerConifg
 				String remoteServer = getReposRemoteServer(repos);
 				repos.remoteServer = remoteServer;
-				initReposRemoteServerConfig(repos, remoteServer);
+				initReposRemoteServerConfig(repos, remoteServer, false);
 				
 				//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
 				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
@@ -11685,13 +11685,13 @@ public class BaseController  extends BaseFunction{
 				
 				String autoBackup = getReposAutoBackup(repos);
 				repos.setAutoBackup(autoBackup);
-				initReposAutoBackupConfig(repos, autoBackup);
+				initReposAutoBackupConfig(repos, autoBackup, false);
 
 				String textSearch = getReposTextSearch(repos);
 				repos.setTextSearch(textSearch);
-				initReposTextSearchConfig(repos, textSearch);
+				initReposTextSearchConfig(repos, textSearch, false);
 				
-				initReposVersionIgnoreConfig(repos);
+				initReposVersionIgnoreConfig(repos, false);
 				
 				initReposEncryptConfig(repos);
 				
@@ -12187,7 +12187,7 @@ public class BaseController  extends BaseFunction{
 		return getDelayTimeForNextBackupTask(backupConfig, offsetMinute);
 	}
 
-	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
+	protected void initReposAutoBackupConfig(Repos repos, String autoBackup, boolean updateDigest)
 	{
 		Log.debug("\n***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: " + autoBackup);
 		
@@ -12203,6 +12203,10 @@ public class BaseController  extends BaseFunction{
 		if(config == null)
 		{
 			reposBackupConfigHashMap.remove(repos.getId());
+			if(updateDigest)
+			{
+				updateReposExtConfigDigest(repos, "backupConfig", "");
+			}
 			Log.debug("initReposRemoteServerConfig 自动备份未设置或者设置错误");
 			return;
 		}
@@ -12215,6 +12219,12 @@ public class BaseController  extends BaseFunction{
 		//Init RemoteBackup ignoreHashMap
 		initReposRemoteBackupIgnoreHashMap(repos);
 		
+		repos.backupConfig.checkSum = repos.backupConfig.hashCode() + "";
+		if(updateDigest)
+		{
+			updateReposExtConfigDigest(repos, "backupConfig", repos.backupConfig.checkSum);
+		}
+
 		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");	
 	}
 	
@@ -13096,7 +13106,7 @@ public class BaseController  extends BaseFunction{
 		return reposDataHashMap.get(repos.getId());
 	}
 	
-	protected void initReposVersionIgnoreConfig(Repos repos) {
+	protected void initReposVersionIgnoreConfig(Repos repos, boolean updateDigest) {
 		//add TextSearchConfig For repos
 		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
 		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
@@ -13106,6 +13116,11 @@ public class BaseController  extends BaseFunction{
 		repos.versionIgnoreConfig = versionIgnoreConfig;
 		
 		initReposVersionIgnoreHashMap(repos);
+		repos.versionIgnoreConfig.checkSum = versionIgnoreConfig.hashCode() + "";
+		if(updateDigest)
+		{
+			updateReposExtConfigDigest(repos, "versionIgnore", repos.versionIgnoreConfig.checkSum);
+		}
 	}
 	
 	private void initReposVersionIgnoreHashMap(Repos repos) {
@@ -13152,7 +13167,7 @@ public class BaseController  extends BaseFunction{
 		}	
 	}
 
-	protected void initReposTextSearchConfig(Repos repos, String config) {
+	protected void initReposTextSearchConfig(Repos repos, String config, boolean updateDigest) {
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
 		if(textSearchConfig == null)
 		{
@@ -13173,6 +13188,12 @@ public class BaseController  extends BaseFunction{
 		
 		//update reposTextSearchConfig
 		updateReposTextSearchConfig(repos, repos.textSearchConfig);
+		
+		repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
+		if(updateDigest)
+		{
+			updateReposExtConfigDigest(repos, "TextSearch", repos.textSearchConfig.checkSum);
+		}
 	}
 	
 	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
@@ -15855,6 +15876,9 @@ public class BaseController  extends BaseFunction{
 		{
 			//从redis中获取仓库扩展配置摘要信息,用于确定remoteStorage/remoteServer/autoBackup/textSearch/versionIgnore/encrypt的配置是否有更新
 			repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
+
+			ReposData reposData = getReposData(repos);
+			repos.isBusy = reposData.isBusy;
 			
 			if(isFSM(repos))
 			{
@@ -15878,10 +15902,7 @@ public class BaseController  extends BaseFunction{
 				repos.encryptType = encryptConfig.type;
 			}			
 			
-			repos.versionIgnoreConfig = reposVersionIgnoreConfigHashMap.get(repos.getId());
-			
-			ReposData reposData = getReposData(repos);
-			repos.isBusy = reposData.isBusy;
+			repos.versionIgnoreConfig = reposVersionIgnoreConfigHashMap.get(repos.getId());			
 		}
 		return repos;
 	}
@@ -21073,8 +21094,6 @@ public class BaseController  extends BaseFunction{
 		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
 		return (RemoteStorageLock) remoteStorageLocksMap.get(remoteStorageName);
 	}
-	
-	
 	
 	//这是一个阻塞函数，只有在获取到锁才会退出
 	private boolean lockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) {

@@ -1,10 +1,10 @@
 package com.DocSystem.entity;
 
 public class ReposExtConfigDigest {
-	public Integer digestForRemoteStorageConfig;
-	public Integer digestForRemoteServerConfig;
-	public Integer digestForAutoBackupConfig;
-	public Integer digestForTextSearchConfig;
-	public Integer digestForVersionIgnoreConfig;
-	public Integer digestForEncryptConfig;
+	public String remoteStorageConfigCheckSum;
+	public String remoteServerConfigCheckSum;
+	public String autoBackupConfigCheckSum;
+	public String textSearchConfigCheckSum;
+	public String versionIgnoreConfigCheckSum;
+	public String encryptConfigCheckSum;
 }
