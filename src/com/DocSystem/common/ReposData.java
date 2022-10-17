@@ -5,7 +5,7 @@ public class ReposData {
 	public Integer reposId;
 	
 	public Boolean isBusy = false;
-	
+		
 	//线程锁
 	public Object syncLockForSvnCommit; //用于svnCommit
 	public Object syncLockForGitCommit; //用于gitCommit

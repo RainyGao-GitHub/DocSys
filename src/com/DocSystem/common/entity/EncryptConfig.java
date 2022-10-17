@@ -9,4 +9,5 @@ public class EncryptConfig {
 	public Integer blockSize = 1024;
 	public Integer skipSize = 4096;
 	public Integer maxSize = 100*1024*1024; //100M
+	public String checkSum;
 }

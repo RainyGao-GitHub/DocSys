@@ -29,6 +29,7 @@ import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
@@ -336,13 +337,13 @@ public class ReposController extends BaseController{
 
 		if(remoteStorage != null)
 		{
-			initReposRemoteStorageConfig(repos, remoteStorage);
+			initReposRemoteStorageConfig(repos, remoteStorage, true);
 		}
 		
 		if(remoteServer != null)
 		{
 			setReposRemoteServer(repos, remoteServer);
-			initReposRemoteServerConfig(repos, remoteServer);		
+			initReposRemoteServerConfig(repos, remoteServer, true);
 		}
 		
 		//自动备份初始化
@@ -352,7 +353,7 @@ public class ReposController extends BaseController{
 		if(autoBackup != null)
 		{
 			setReposAutoBackup(repos, autoBackup);
-			initReposAutoBackupConfig(repos, autoBackup);
+			initReposAutoBackupConfig(repos, autoBackup, true);
 			if(repos.backupConfig != null)
 			{
 				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
@@ -364,14 +365,14 @@ public class ReposController extends BaseController{
 		if(textSearch != null)
 		{
 			setReposTextSearch(repos, textSearch);			
-			initReposTextSearchConfig(repos, textSearch);
+			initReposTextSearchConfig(repos, textSearch, true);
 		}
 		
 		//初始化仓库的版本管理忽略配置
-		initReposVersionIgnoreConfig(repos);
+		initReposVersionIgnoreConfig(repos, true);
 		
-		setReposEncrypt(repos, encryptType);			
-
+		setReposEncrypt(repos, encryptType, true);			
+		
 		InitReposAuthInfo(repos,login_user,rt);		
 		
 		//如果有版本管理，则需要启动定时扫描提交任务
@@ -412,7 +413,7 @@ public class ReposController extends BaseController{
 		return FileUtil.saveDocContentToFile(config, configPath, "textSearch.conf", "UTF-8");
 	}
 
-	private void setReposEncrypt(Repos repos, Integer encryptType) {
+	private void setReposEncrypt(Repos repos, Integer encryptType, boolean updateDigest) {
 		EncryptConfig config = null;
 		if(encryptType != null && encryptType != 0)
 		{
@@ -425,13 +426,22 @@ public class ReposController extends BaseController{
 			if(config != null)
 			{
 				reposEncryptConfigHashMap.put(repos.getId(), config);
+				config.checkSum = config.hashCode() + "";
+				if(updateDigest)
+				{
+					updateReposExtConfigDigest(repos, "EncryptConfig", config.checkSum);
+				}
 			}
 		}
 		else
 		{
 			if(removeReposEncryptConfig(repos) == true)
 			{
-				reposEncryptConfigHashMap.remove(repos.getId());				
+				reposEncryptConfigHashMap.remove(repos.getId());	
+				if(updateDigest)
+				{
+					updateReposExtConfigDigest(repos, "EncryptConfig", "");
+				}
 			}
 		}		
 	}
@@ -501,9 +511,9 @@ public class ReposController extends BaseController{
 	    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
 		}
 		
-		deleteReposRemoteStorageConfig(repos);
+		reposRemoteStorageHashMap.remove(repos.getId());
 
-		deleteReposRemoteServerConfig(repos);
+		reposRemoteServerHashMap.remove(repos.getId());
 
 		writeJson(rt, response);	
 		setReposIsBusy(repos.getId(), false);			
@@ -960,25 +970,19 @@ public class ReposController extends BaseController{
 		
 		if(remoteStorage != null)
 		{
-			initReposRemoteStorageConfig(reposInfo, remoteStorage);
+			initReposRemoteStorageConfig(reposInfo, remoteStorage, true);
 		}
 		
 		if(remoteServer != null)
 		{
 			setReposRemoteServer(reposInfo, remoteServer);
-			initReposRemoteServerConfig(reposInfo, remoteServer);
-		}	
-		
-		if(textSearch != null)
-		{
-			setReposTextSearch(reposInfo, textSearch);
-			initReposTextSearchConfig(reposInfo, textSearch);
+			initReposRemoteServerConfig(reposInfo, remoteServer, true);
 		}	
 		
 		if(autoBackup != null)
 		{
 			setReposAutoBackup(reposInfo, autoBackup);
-			initReposAutoBackupConfig(reposInfo, autoBackup);
+			initReposAutoBackupConfig(reposInfo, autoBackup, true);
 			if(reposInfo.backupConfig != null)
 			{
 				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始自动备份
@@ -990,14 +994,14 @@ public class ReposController extends BaseController{
 		if(textSearch != null)
 		{
 			setReposTextSearch(reposInfo, textSearch);
-			initReposTextSearchConfig(reposInfo, textSearch);
+			initReposTextSearchConfig(reposInfo, textSearch, true);
 		}
-		
+				
 		if(encryptType != null)
 		{			
 			if(reposInfo.encryptType == null || encryptType != reposInfo.encryptType)
 			{
-				setReposEncrypt(reposInfo, encryptType);				
+				setReposEncrypt(reposInfo, encryptType, true);				
 			}			
 		}
 		

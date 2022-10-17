@@ -83,7 +83,7 @@ public class Repos {
 	
 	//仓库扩展配置信息
 	public ReposExtConfigDigest reposExtConfigDigest = null;
-	
+
 	public RemoteStorageConfig remoteServerConfig;
 	public RemoteStorageConfig remoteStorageConfig;
 	public TextSearchConfig textSearchConfig;
