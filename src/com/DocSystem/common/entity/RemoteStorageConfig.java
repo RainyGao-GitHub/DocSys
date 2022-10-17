@@ -3,7 +3,7 @@ package com.DocSystem.common.entity;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RemoteStorageConfig {
-	public Integer checkSum;
+	public String checkSum;
 	
 	public String protocol;
 	public String rootPath;	//remote root path
