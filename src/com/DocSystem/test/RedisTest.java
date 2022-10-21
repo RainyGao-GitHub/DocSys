@@ -7,6 +7,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
 import com.DocSystem.common.Log;
+import com.alibaba.fastjson.JSONObject;
 
 class RedisTest  
 {  	
@@ -57,10 +58,13 @@ class RedisTest
             System.out.println(Thread.currentThread().getId() + " 加锁成功，执行业务.... ");
             //Thread.sleep(3000);
             RMap<Object, Object> map = redissonClient.getMap("myFirstMap");
-            map.put("product", "Hello! I am " + Thread.currentThread().getId() + "");
+            JSONObject inputData = new JSONObject();
+            inputData.put("key1", "Hello! I am " + Thread.currentThread().getId() + "");
+            inputData.put("key2", "Hello! I am " + Thread.currentThread().getId() + "");
+            map.put("product", inputData);
             
-            Object var = map.get("product");
-            System.out.println(Thread.currentThread().getId() + " " + var);            
+            JSONObject var = (JSONObject) map.get("product");
+            System.out.println(Thread.currentThread().getId() + " key1.value=" + var.getString("key1") + " key2.value=" + var.getString("key2"));            
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

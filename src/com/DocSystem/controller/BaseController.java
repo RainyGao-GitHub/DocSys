@@ -109,7 +109,6 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
-import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.TextSearchConfig;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
@@ -2573,8 +2572,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			str = URLDecoder.decode(encStr, "utf-8");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.error(e);
 		}
 		return str;
 	}
