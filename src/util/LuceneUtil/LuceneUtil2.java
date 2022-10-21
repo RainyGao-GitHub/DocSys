@@ -114,11 +114,11 @@ public class LuceneUtil2   extends BaseFunction
 		String lockName = "indexLibSyncLock" + indexLib;
     	synchronized(synclock)
     	{
-			redisSyncLock(lockName, lockInfo);
+			redisSyncLockEx(lockName, lockInfo);
 			
     		ret = FileUtil.delFileOrDir(indexLib);
     		
-    		redisSyncUnlock(lockName, lockInfo, synclock);
+    		redisSyncUnlockEx(lockName, lockInfo, synclock);
     	}
     	return ret;
     }
@@ -168,7 +168,7 @@ public class LuceneUtil2   extends BaseFunction
 		String lockName = "indexLibSyncLock" + indexLib;
 		synchronized(synclock)
     	{
-    		redisSyncLock(lockName, lockInfo);
+    		redisSyncLockEx(lockName, lockInfo);
 			
     		try {
 		    	Date date1 = new Date();
@@ -202,7 +202,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);
 			}
     		
-			redisSyncUnlock(lockName, lockInfo, synclock);
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
     	}
     	
     	return ret;
@@ -398,7 +398,7 @@ public class LuceneUtil2   extends BaseFunction
     	String lockName = "indexLibSyncLock" + indexLib;
     	synchronized(synclock)
     	{    		
-    		redisSyncLock(lockName, lockInfo);
+    		redisSyncLockEx(lockName, lockInfo);
 			
 			try {
 		    	Date date1 = new Date();
@@ -433,7 +433,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);
 			}	
 			
-			redisSyncUnlock(lockName, lockInfo, synclock);
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
 		}
     	return ret;
     }
@@ -458,7 +458,7 @@ public class LuceneUtil2   extends BaseFunction
 		String lockName = "indexLibSyncLock" + indexLib;
     	synchronized(synclock)
     	{
-			redisSyncLock(lockName, lockInfo);
+			redisSyncLockEx(lockName, lockInfo);
 			
 			try {
 				Date date1 = new Date();
@@ -487,7 +487,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);					
 			}
 			
-			redisSyncUnlock(lockName, lockInfo, synclock);
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
     	}
     	return ret;
     }  
@@ -517,7 +517,7 @@ public class LuceneUtil2   extends BaseFunction
 		    	String lockName = "indexLibSyncLock" + indexLib;
 		    	synchronized(synclock)
 		    	{
-					redisSyncLock(lockName, lockInfo);
+					redisSyncLockEx(lockName, lockInfo);
 					
 					try {
 						Date date1 = new Date();
@@ -548,7 +548,7 @@ public class LuceneUtil2   extends BaseFunction
 						closeResource(indexWriter, directory, analyzer);
 					}
 					
-					redisSyncUnlock(lockName, lockInfo, synclock);
+					redisSyncUnlockEx(lockName, lockInfo, synclock);
 		    	}
 	    	}
     	}

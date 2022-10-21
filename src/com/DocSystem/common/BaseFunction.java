@@ -205,9 +205,18 @@ public class BaseFunction{
     	initLdapConfig();
 		serverHost = getServerHost();		
     }
+
+	protected static void redisSyncLockEx(String lockName, String lockInfo) {
+		SyncLock.lock(lockInfo);
+		redisSyncLock(lockName, lockInfo);
+	}
+	
+	protected static void redisSyncUnlockEx(String lockName, String lockInfo, Object syncLock) {
+		redisSyncUnlock(lockName, lockInfo);
+		SyncLock.unlock(syncLock, lockInfo);
+	}
 	
 	protected static void redisSyncLock(String lockName, String lockInfo) {
-		SyncLock.lock(lockInfo);
 		if(redisEn)
 		{
 			Log.debug("\n********** redisSyncUnlock() " + lockInfo + " lock ++++++");
@@ -216,15 +225,13 @@ public class BaseFunction{
 		}
 	}
 	
-	protected static void redisSyncUnlock(String lockName, String lockInfo, Object syncLock) {
+	protected static void redisSyncUnlock(String lockName, String lockInfo) {
 		if(redisEn)
 		{
 			Log.debug("********** redisSyncUnlock() " + lockInfo + " unlock -------\n");	
 			RLock lock = redisClient.getLock(lockName);
 			lock.unlock();
 		}
-		
-		SyncLock.unlock(syncLock, lockInfo);
 	}
     
 	private static void initSystemLicenseInfo() {
@@ -796,7 +803,7 @@ public class BaseFunction{
 		
 		String lockInfo = "updateReposExtConfigDigest for repos [" + repos.getId() + " " + repos.getName() + "]";
 		String lockName = "reposExtConfigDigest" + repos.getId();
-		redisSyncLock(lockName, lockInfo);
+		redisSyncLockEx(lockName, lockInfo);
 		
 		if(repos.reposExtConfigDigest == null)
 		{
@@ -834,7 +841,7 @@ public class BaseFunction{
 			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
 			reposExtConfigDigestHashMap.put(repos.getId(), repos.reposExtConfigDigest);
 		}	
-		redisSyncUnlock(lockName, lockInfo, null);		
+		redisSyncUnlockEx(lockName, lockInfo, null);		
 	}
 
 	protected RemoteStorageConfig getReposRemoteServerConfig(Repos repos) {
@@ -2316,11 +2323,11 @@ public class BaseFunction{
 		String lockName = "syncLockForSystemLog";
 		synchronized(syncLockForSystemLog)
 		{
-    		redisSyncLock(lockName, lockInfo);
+    		redisSyncLockEx(lockName, lockInfo);
     		
 			ret = addSystemLogIndex(log, indexLib);
 
-			redisSyncUnlock(lockName, lockInfo, syncLockForSystemLog);
+			redisSyncUnlockEx(lockName, lockInfo, syncLockForSystemLog);
 		}
 		return ret;
     }
