@@ -4164,19 +4164,19 @@ public class DocController extends BaseController{
 		String lockName = "syncLock";
 		synchronized(syncLock)
 		{
-    		redisSyncLock(lockName, lockInfo);
+    		redisSyncLockEx(lockName, lockInfo);
     		
 			//解锁不需要检查子目录的锁定，因为不会影响子目录
 			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
 			{
-				redisSyncUnlock(lockName, lockInfo, syncLock);
+				redisSyncUnlockEx(lockName, lockInfo, syncLock);
 
 				writeJson(rt, response);
 				return;
 			}				
 			unlockDoc(doc, lockType, reposAccess.getAccessUser());
 
-			redisSyncUnlock(lockName, lockInfo, syncLock);
+			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
 		
 		Log.debug("unlockDoc() unlock " + doc.getName() + " success");
