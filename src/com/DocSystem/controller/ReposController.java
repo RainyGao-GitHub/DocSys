@@ -262,16 +262,16 @@ public class ReposController extends BaseController{
 		repos.setTextSearch(textSearch);
 		
 		//以下这段代码是为了避免有用户同时发起addRepos(前端快速点击添加操作也会引起该行为)，导致两个仓库的文件存储路径信息相同
+		String lockInfo = "addRepos() syncLockForRepos";
+		String lockName = "syncLockForRepos";
 		synchronized(syncLockForRepos)
 		{
-    		String lockInfo = "addRepos() syncLockForRepos";
-    		SyncLock.lock(lockInfo);
-    		redisSyncLock("ReposLock", lockInfo);
+    		redisSyncLock(lockName, lockInfo);
 			
 			//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 			if(checkReposInfoForAdd(repos, rt) == false)
 			{
-				SyncLock.unlock(syncLockForRepos, lockInfo);
+				redisSyncUnlock(lockName, lockInfo, syncLockForRepos);
 				Log.debug("checkReposInfoForAdd() failed");
 				writeJson(rt, response);		
 				return;			
@@ -279,7 +279,7 @@ public class ReposController extends BaseController{
 			
 			if(reposService.addRepos(repos) == 0)
 			{
-				SyncLock.unlock(syncLockForRepos, lockInfo);
+				redisSyncUnlock(lockName, lockInfo, syncLockForRepos);
 				rt.setError("新增仓库记录失败");
 				writeJson(rt, response);		
 				return;
@@ -287,14 +287,12 @@ public class ReposController extends BaseController{
 			Integer reposId = repos.getId();
 			Log.debug("new ReposId" + reposId);
 
-			redisSyncUnlock("ReposLock", lockInfo);
-			SyncLock.unlock(syncLockForRepos, lockInfo);			
+			redisSyncUnlock(lockName, lockInfo, syncLockForRepos);
 		}
 		
 		//Lock the repos
 		DocLock reposLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "addRepos() syncLock";
     	long lockTime = nowTimeStamp + 4*60*60*1000;
 		reposLock = lockRepos(repos, lockType, lockTime, login_user, rt, false, lockInfo); 
 		
