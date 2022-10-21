@@ -266,12 +266,12 @@ public class ReposController extends BaseController{
 		String lockName = "syncLockForRepos";
 		synchronized(syncLockForRepos)
 		{
-    		redisSyncLock(lockName, lockInfo);
+    		redisSyncLockEx(lockName, lockInfo);
 			
 			//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 			if(checkReposInfoForAdd(repos, rt) == false)
 			{
-				redisSyncUnlock(lockName, lockInfo, syncLockForRepos);
+				redisSyncUnlockEx(lockName, lockInfo, syncLockForRepos);
 				Log.debug("checkReposInfoForAdd() failed");
 				writeJson(rt, response);		
 				return;			
@@ -279,7 +279,7 @@ public class ReposController extends BaseController{
 			
 			if(reposService.addRepos(repos) == 0)
 			{
-				redisSyncUnlock(lockName, lockInfo, syncLockForRepos);
+				redisSyncUnlockEx(lockName, lockInfo, syncLockForRepos);
 				rt.setError("新增仓库记录失败");
 				writeJson(rt, response);		
 				return;
@@ -287,7 +287,7 @@ public class ReposController extends BaseController{
 			Integer reposId = repos.getId();
 			Log.debug("new ReposId" + reposId);
 
-			redisSyncUnlock(lockName, lockInfo, syncLockForRepos);
+			redisSyncUnlockEx(lockName, lockInfo, syncLockForRepos);
 		}
 		
 		//Lock the repos

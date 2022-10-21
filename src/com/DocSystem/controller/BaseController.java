@@ -7376,11 +7376,11 @@ public class BaseController  extends BaseFunction{
 		String lockName = "syncLock";
 		synchronized(syncLock)
 		{	
-			redisSyncLock(lockName, lockInfo);
+			redisSyncLockEx(lockName, lockInfo);
 			
 			reposLock = lockRepos(repos, lockType, lockDuration, login_user, rt, false); 
 			
-			redisSyncUnlock(lockName, lockInfo, syncLock);
+			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
 		return reposLock;
 	}	
@@ -7560,12 +7560,12 @@ public class BaseController  extends BaseFunction{
 		String lockName = "syncLock";
 		synchronized(syncLock)
 		{
-    		redisSyncLock(lockName, lockInfo);
+    		redisSyncLockEx(lockName, lockInfo);
     		
 			//LockDoc
 			docLock = lockDoc(doc, lockType,  lockDuration, accessUser, rt, false);
 			
-			redisSyncUnlock(lockName, lockInfo, syncLock);
+			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
 		return docLock;
 	}
@@ -10204,17 +10204,17 @@ public class BaseController  extends BaseFunction{
 		String lockName = "reposData.syncLockForSvnCommit" + repos.getId();
 		synchronized(reposData.syncLockForSvnCommit)
 		{
-			redisSyncLock(lockName, lockInfo);
+			redisSyncLockEx(lockName, lockInfo);
 			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				redisSyncUnlock(lockName, lockInfo, reposData.syncLockForSvnCommit);
+				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
 				return null;
 			}
 
 			revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 
-			redisSyncUnlock(lockName, lockInfo, reposData.syncLockForSvnCommit);
+			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
 		}
 		return revision;
 	}
@@ -10232,24 +10232,24 @@ public class BaseController  extends BaseFunction{
 		String lockName = "reposData.syncLockForGitCommit-" + repos.getId();
 		synchronized(reposData.syncLockForGitCommit)
 		{
-			redisSyncLock(lockName, lockInfo);
+			redisSyncLockEx(lockName, lockInfo);
 			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				redisSyncUnlock(lockName, lockInfo, reposData.syncLockForGitCommit);
+				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 				return null;
 			}
 		
 			if(verReposUtil.checkAndClearnBranch(true) == false)
 			{
 				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
-				redisSyncUnlock(lockName, lockInfo, reposData.syncLockForGitCommit);
+				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 				return null;
 			}
 		
 			revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 
-			redisSyncUnlock(lockName, lockInfo, reposData.syncLockForGitCommit);
+			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 		}
 		return revision;
 	}
@@ -21127,7 +21127,7 @@ public class BaseController  extends BaseFunction{
 		String lockName = "remoteStorageSyncLock" + remoteStorageName;
 		synchronized(synclock)
 		{
-			redisSyncLock(lockName ,lockInfo);
+			redisSyncLockEx(lockName ,lockInfo);
 			
 			curLock = getRemoteStorageLock(remoteStorageName);
 			if(curLock == null)
@@ -21171,7 +21171,7 @@ public class BaseController  extends BaseFunction{
 				updateRemoteStorageLock(remoteStorageName, curLock);
 			}
 			
-			redisSyncUnlock(lockName, lockInfo, synclock);
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
 		}
 		
 		if(remoteStorageLock == null) 
