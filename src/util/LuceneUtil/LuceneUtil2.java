@@ -109,16 +109,16 @@ public class LuceneUtil2   extends BaseFunction
     {
 		Object synclock = getSyncLock(indexLib);
 		boolean ret = false;
+
+		String lockInfo = "LuceneUtil2 deleteIndexLib synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
     	synchronized(synclock)
     	{
-    		String lockInfo = "LuceneUtil2 deleteIndexLib synclock:" + indexLib;
-			SyncLock.lock(lockInfo);
-			redisSyncLock(indexLib, lockInfo);
+			redisSyncLock(lockName, lockInfo);
 			
     		ret = FileUtil.delFileOrDir(indexLib);
     		
-    		redisSyncUnlock(indexLib, lockInfo);
-    		SyncLock.unlock(synclock, lockInfo);
+    		redisSyncUnlock(lockName, lockInfo, synclock);
     	}
     	return ret;
     }
@@ -163,11 +163,12 @@ public class LuceneUtil2   extends BaseFunction
 		boolean ret = false;
 		
 		Object synclock = getSyncLock(indexLib);
-    	synchronized(synclock)
+		
+		String lockInfo = "LuceneUtil2 addIndex synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
     	{
-    		String lockInfo = "LuceneUtil2 addIndex synclock:" + indexLib;
-			SyncLock.lock(lockInfo);
-			redisSyncLock(indexLib, lockInfo);
+    		redisSyncLock(lockName, lockInfo);
 			
     		try {
 		    	Date date1 = new Date();
@@ -201,8 +202,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);
 			}
     		
-			redisSyncUnlock(indexLib, lockInfo);
-	        SyncLock.unlock(synclock, lockInfo);
+			redisSyncUnlock(lockName, lockInfo, synclock);
     	}
     	
     	return ret;
@@ -394,11 +394,11 @@ public class LuceneUtil2   extends BaseFunction
 	
     	boolean ret = false;
     	Object synclock = getSyncLock(indexLib);
+    	String lockInfo = "LuceneUtil2 updateIndex synclock:" + indexLib;
+    	String lockName = "indexLibSyncLock" + indexLib;
     	synchronized(synclock)
-    	{
-    		String lockInfo = "LuceneUtil2 updateIndex synclock:" + indexLib;
-			SyncLock.lock(lockInfo);
-			redisSyncLock(indexLib, lockInfo);
+    	{    		
+    		redisSyncLock(lockName, lockInfo);
 			
 			try {
 		    	Date date1 = new Date();
@@ -433,8 +433,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);
 			}	
 			
-			redisSyncUnlock(indexLib, lockInfo);
-			SyncLock.unlock(synclock, lockInfo);
+			redisSyncUnlock(lockName, lockInfo, synclock);
 		}
     	return ret;
     }
@@ -455,11 +454,11 @@ public class LuceneUtil2   extends BaseFunction
     	
     	boolean ret  = false;
     	Object synclock = getSyncLock(indexLib);
+    	String lockInfo = "LuceneUtil2 deleteIndex synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
     	synchronized(synclock)
     	{
-    		String lockInfo = "LuceneUtil2 deleteIndex synclock:" + indexLib;
-			SyncLock.lock(lockInfo);
-			redisSyncLock(indexLib, lockInfo);
+			redisSyncLock(lockName, lockInfo);
 			
 			try {
 				Date date1 = new Date();
@@ -488,8 +487,7 @@ public class LuceneUtil2   extends BaseFunction
 				closeResource(indexWriter, directory, analyzer);					
 			}
 			
-			redisSyncUnlock(indexLib, lockInfo);
-	        SyncLock.unlock(synclock, lockInfo);
+			redisSyncUnlock(lockName, lockInfo, synclock);
     	}
     	return ret;
     }  
@@ -515,11 +513,11 @@ public class LuceneUtil2   extends BaseFunction
 		    	IndexWriter indexWriter = null;
 		    	
 		    	Object synclock = getSyncLock(indexLib);
+	    		String lockInfo = "LuceneUtil2 deleteIndexEx synclock:" + indexLib;
+		    	String lockName = "indexLibSyncLock" + indexLib;
 		    	synchronized(synclock)
 		    	{
-		    		String lockInfo = "LuceneUtil2 deleteIndexEx synclock:" + indexLib;
-					SyncLock.lock(lockInfo);
-					redisSyncLock(indexLib, lockInfo);
+					redisSyncLock(lockName, lockInfo);
 					
 					try {
 						Date date1 = new Date();
@@ -550,8 +548,7 @@ public class LuceneUtil2   extends BaseFunction
 						closeResource(indexWriter, directory, analyzer);
 					}
 					
-					redisSyncUnlock(indexLib, lockInfo);
-					SyncLock.unlock(synclock, lockInfo);
+					redisSyncUnlock(lockName, lockInfo, synclock);
 		    	}
 	    	}
     	}

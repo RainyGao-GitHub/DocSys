@@ -4160,24 +4160,23 @@ public class DocController extends BaseController{
 		}
 		
 		//正常情况下unlockDoc是不需要上锁的，因为都是已经取到锁的情况下解锁，所以肯定不会冲突，但这里比较特殊是尝试直接解锁
+		String lockInfo = "unlockDoc() syncLock";
+		String lockName = "syncLock";
 		synchronized(syncLock)
 		{
-    		String lockInfo = "unlockDoc() syncLock";
-    		SyncLock.lock(lockInfo);
-    		redisSyncLock("DocLock", lockInfo);
+    		redisSyncLock(lockName, lockInfo);
     		
 			//解锁不需要检查子目录的锁定，因为不会影响子目录
 			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
 			{
-				redisSyncUnlock("DocLock", lockInfo);
-				SyncLock.unlock(syncLock, lockInfo); //线程锁
+				redisSyncUnlock(lockName, lockInfo, syncLock);
+
 				writeJson(rt, response);
 				return;
 			}				
 			unlockDoc(doc, lockType, reposAccess.getAccessUser());
 
-			redisSyncUnlock("DocLock", lockInfo);
-			SyncLock.unlock(syncLock, lockInfo); //线程锁
+			redisSyncUnlock(lockName, lockInfo, syncLock);
 		}
 		
 		Log.debug("unlockDoc() unlock " + doc.getName() + " success");

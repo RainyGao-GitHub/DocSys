@@ -207,6 +207,7 @@ public class BaseFunction{
     }
 	
 	protected static void redisSyncLock(String lockName, String lockInfo) {
+		SyncLock.lock(lockInfo);
 		if(redisEn)
 		{
 			Log.debug("\n********** redisSyncUnlock() " + lockInfo + " lock ++++++");
@@ -215,13 +216,15 @@ public class BaseFunction{
 		}
 	}
 	
-	protected static void redisSyncUnlock(String lockName, String lockInfo) {
+	protected static void redisSyncUnlock(String lockName, String lockInfo, Object syncLock) {
 		if(redisEn)
 		{
 			Log.debug("********** redisSyncUnlock() " + lockInfo + " unlock -------\n");	
 			RLock lock = redisClient.getLock(lockName);
 			lock.unlock();
 		}
+		
+		SyncLock.unlock(syncLock, lockInfo);
 	}
     
 	private static void initSystemLicenseInfo() {
@@ -831,7 +834,7 @@ public class BaseFunction{
 			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
 			reposExtConfigDigestHashMap.put(repos.getId(), repos.reposExtConfigDigest);
 		}	
-		redisSyncUnlock(lockName, lockInfo);		
+		redisSyncUnlock(lockName, lockInfo, null);		
 	}
 
 	protected RemoteStorageConfig getReposRemoteServerConfig(Repos repos) {
@@ -2107,7 +2110,7 @@ public class BaseFunction{
 	//syncLockForRepos只用于新建仓库的同步执行，要保证每个仓库都有唯一的ID
 	protected static final Object syncLockForRepos = new Object(); //For Repos (add/update)
 	//syncLockForSystemLo用于保证系统日志的顺序写入
-	protected static final Object syncLockForSystemLog = new Object(); //For SystemLog	
+	protected static final Object syncLockForSystemLog = new Object(); //For SystemLog
 	
 	/****************** 路径相关的接口 *****************************************/
 	//WebTmpPath was accessable for web
@@ -2308,16 +2311,16 @@ public class BaseFunction{
 		String indexLib = getIndexLibPathForSystemLog();
 
 		boolean ret = false;
+		
+		String lockInfo = "addSystemLog() syncLockForSystemLog";
+		String lockName = "syncLockForSystemLog";
 		synchronized(syncLockForSystemLog)
 		{
-    		String lockInfo = "addSystemLog() syncLockForSystemLog";
-    		SyncLock.lock(lockInfo);
-    		redisSyncLock("SystemLogLock", lockInfo);
+    		redisSyncLock(lockName, lockInfo);
     		
 			ret = addSystemLogIndex(log, indexLib);
 
-			redisSyncUnlock("SystemLogLock", lockInfo);
-			SyncLock.unlock(syncLockForSystemLog, lockInfo); //线程锁
+			redisSyncUnlock(lockName, lockInfo, syncLockForSystemLog);
 		}
 		return ret;
     }
