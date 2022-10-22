@@ -12326,7 +12326,7 @@ public class BaseController  extends BaseFunction{
 		return getDelayTimeForNextBackupTask(backupConfig, offsetMinute);
 	}
 
-	protected void initReposAutoBackupConfig(Repos repos, String autoBackup, boolean updateDigest)
+	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
 		Log.debug("\n***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: " + autoBackup);
 		
@@ -12341,17 +12341,10 @@ public class BaseController  extends BaseFunction{
 		
 		if(config == null)
 		{
-			reposBackupConfigHashMap.remove(repos.getId());
-			if(updateDigest)
-			{
-				updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackup, "");
-			}
+			deleteReposBackupConfig(repos);
 			Log.debug("initReposRemoteServerConfig 自动备份未设置或者设置错误");
 			return;
 		}
-		
-		//add backup config to hashmap
-		reposBackupConfigHashMap.put(repos.getId(), config);		
 		
 		//Init LocalBackup ignoreHashMap
 		initReposLocalBackupIgnoreHashMap(repos);
@@ -12359,14 +12352,38 @@ public class BaseController  extends BaseFunction{
 		initReposRemoteBackupIgnoreHashMap(repos);
 		
 		repos.backupConfig.checkSum = repos.backupConfig.hashCode() + "";
-		if(updateDigest)
-		{
-			updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackup, repos.backupConfig.checkSum);
-		}
 
+		addReposBackupConfig(repos, config);		
+		
 		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");	
 	}
 	
+	private void addReposBackupConfig(Repos repos, ReposBackupConfig config) {
+		reposBackupConfigHashMap.put(repos.getId(), config);		
+		if(redisEn)
+		{
+			addReposBackupConfigRedis(repos, config);
+		}
+	}
+
+	private void addReposBackupConfigRedis(Repos repos, ReposBackupConfig config) {
+		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+		reposBackupConfigHashMap.put(repos.getId(), config);
+	}
+
+	private void deleteReposBackupConfig(Repos repos) {
+		reposBackupConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			deleteReposBackupConfigRedis(repos);
+		}
+	}
+	
+	private void deleteReposBackupConfigRedis(Repos repos) {
+		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+		reposBackupConfigHashMap.remove(repos.getId());
+	}
+
 	private void initReposRemoteBackupIgnoreHashMap(Repos repos) {
 		String configPath = Path.getReposRemoteBackupConfigPath(repos);
 		

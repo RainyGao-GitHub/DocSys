@@ -353,7 +353,7 @@ public class ReposController extends BaseController{
 		if(autoBackup != null)
 		{
 			setReposAutoBackup(repos, autoBackup);
-			initReposAutoBackupConfig(repos, autoBackup, true);
+			initReposAutoBackupConfig(repos, autoBackup);
 			if(repos.backupConfig != null)
 			{
 				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
@@ -984,7 +984,7 @@ public class ReposController extends BaseController{
 		if(autoBackup != null)
 		{
 			setReposAutoBackup(reposInfo, autoBackup);
-			initReposAutoBackupConfig(reposInfo, autoBackup, true);
+			initReposAutoBackupConfig(reposInfo, autoBackup);
 			if(reposInfo.backupConfig != null)
 			{
 				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始自动备份
