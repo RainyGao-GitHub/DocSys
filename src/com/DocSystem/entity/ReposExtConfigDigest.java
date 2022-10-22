@@ -7,7 +7,8 @@ public class ReposExtConfigDigest {
     public final static String TextSearch = "TextSearch";
     public final static String VersionIgnore = "VersionIgnore";
     public final static String Encrypt = "EncryptConfig";
-	
+
+	public Integer reposId;
 	public String remoteStorageConfigCheckSum;
 	public String remoteServerConfigCheckSum;
 	public String autoBackupConfigCheckSum;
