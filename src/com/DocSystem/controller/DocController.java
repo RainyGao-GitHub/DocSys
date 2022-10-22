@@ -29,6 +29,7 @@ import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
+import org.redisson.api.RMap;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -76,6 +77,7 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
+import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
@@ -268,7 +270,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, type, true,localRootPath,localVRootPath, 0L, "");
 
-		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
@@ -310,7 +312,7 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "成功",  repos, doc, null, "");
 		executeCommonActionList(actionList, rt);
 	}
-
+	
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
 	public void feeback(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
@@ -560,7 +562,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
@@ -921,7 +923,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc dstParentDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
-		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
@@ -1840,7 +1842,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
 		
 		//Check Edit Right
-		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
 		{
@@ -2626,7 +2628,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);			
 				return;
 			}
-			//reposAccess = authCodeMap.get(authCode).getReposAccess();
+			//reposAccess = getAuthCode(authCode).getReposAccess();
 		}
 		else
 		{
@@ -2762,7 +2764,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);			
 				return;
 			}
-			//reposAccess = authCodeMap.get(authCode).getReposAccess();
+			//reposAccess = getAuthCode(authCode).getReposAccess();
 		}
 		else
 		{
@@ -2845,7 +2847,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);			
 				return;
 			}
-			//reposAccess = authCodeMap.get(authCode).getReposAccess();
+			//reposAccess = getAuthCode(authCode).getReposAccess();
 		}
 		else
 		{
@@ -3624,7 +3626,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
 		//检查用户是否有文件读取权限
-		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUseAccessRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			Log.debug("getDocRS() you have no access right on doc:" + doc.getDocId());
@@ -3735,7 +3737,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath, localVRootPath, null, null);
 		
 		//检查用户是否有权限下载文件
-		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
@@ -4027,7 +4029,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);		
 				return;
 			}
-			reposAccess = authCodeMap.get(authCode).getReposAccess();
+			reposAccess = getAuthCode(authCode).getReposAccess();
 		}
 		else
 		{
@@ -4117,7 +4119,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);		
 				return;
 			}
-			reposAccess = authCodeMap.get(authCode).getReposAccess();
+			reposAccess = getAuthCode(authCode).getReposAccess();
 		}
 		else
 		{
