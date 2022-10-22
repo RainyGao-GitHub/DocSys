@@ -773,6 +773,8 @@ public class BaseFunction{
 		}	
 		
 		remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteServer");
+		repos.remoteServerConfig = remote;
+		
 		if(remote == null)
 		{
 			deleteReposRemoteServerConfig(repos);
@@ -952,6 +954,7 @@ public class BaseFunction{
 		}
 		
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
+		repos.remoteStorageConfig = remote;
 		if(remote == null)
 		{
 			deleteReposRemoteStorageConfig(repos);
