@@ -1793,7 +1793,7 @@ public class ReposController extends BaseController{
 		}
 			
 		//get the rootDocAuth
-		ReposAccess reposAccess = authCodeMap.get(authCode).getReposAccess();
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
 		{
