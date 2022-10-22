@@ -303,6 +303,16 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+		if(redisEn)
+		{
+			return generateAuthCodeRedis(usage, duration, maxUseCount, reposAccess);
+		}
+		else
+		{
+			return generateAuthCodeLocal(usage, duration, maxUseCount, reposAccess);
+		}
+	}
+	protected static AuthCode generateAuthCodeLocal(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
 		Long curTime = new Date().getTime();
 
 		if(authCodeMap.size() > 100)
@@ -323,7 +333,7 @@ public class BaseController  extends BaseFunction{
 	        }
 		    for(int i=0; i < deleteList.size(); i++)
 		    {
-		    	authCodeMap.remove(deleteList.get(i));
+		    	deleteAuthCode(deleteList.get(i));
 		    }
 		}
 		
@@ -337,6 +347,49 @@ public class BaseController  extends BaseFunction{
 		authCode.setExpTime(expTime);
 		authCode.setRemainCount(maxUseCount);
 		authCode.setReposAccess(reposAccess);
+		
+		authCodeMap.put(code, authCode);
+		return authCode;
+	}
+	
+	protected static AuthCode generateAuthCodeRedis(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+		Long curTime = new Date().getTime();
+
+		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
+		if(authCodeMap.size() > 100)
+		{
+			//Do clean expired authCode
+			ArrayList<String> deleteList = new ArrayList<String>();
+			Iterator<Entry<Object, Object>> iterator = authCodeMap.entrySet().iterator();
+		    while (iterator.hasNext()) 
+		    {
+		    	Entry<Object, Object> entry = iterator.next();
+		        if(entry != null)
+		        {
+		        	AuthCode authCode = (AuthCode) entry.getValue();
+		        	if(authCode.getExpTime() < curTime || authCode.getRemainCount() <=0 )
+		        	{
+		        		deleteList.add((String) entry.getKey());
+		        	}
+		        }
+	        }
+		    for(int i=0; i < deleteList.size(); i++)
+		    {
+		    	deleteAuthCode(deleteList.get(i));
+		    }
+		}
+		
+		//add authCode to authCodeMap
+		AuthCode authCode = new AuthCode();
+		Long expTime = curTime + duration;
+		String codeStr = usage + curTime;
+		String code = "" + codeStr.hashCode();
+		authCode.setUsage(usage);
+		authCode.setCode(code);
+		authCode.setExpTime(expTime);
+		authCode.setRemainCount(maxUseCount);
+		authCode.setReposAccess(reposAccess);
+		
 		authCodeMap.put(code, authCode);
 		return authCode;
 	}
@@ -359,7 +412,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean checkAuthCode(String code, String expUsage) {
 		Log.debug("checkAuthCode() authCode:" + code);
-		AuthCode authCode = authCodeMap.get(code);
+		AuthCode authCode = getAuthCode(code);
 		if(authCode == null || authCode.getUsage() == null || authCode.getExpTime() == null || authCode.getRemainCount() == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码");
@@ -381,7 +434,7 @@ public class BaseController  extends BaseFunction{
 		if(remainCount == 0)
 		{
 			Log.debug("checkAuthCode() 授权码使用次数为0");
-			authCodeMap.remove(code);
+			deleteAuthCode(code);
 			return false;	
 		}
 		
@@ -389,7 +442,7 @@ public class BaseController  extends BaseFunction{
 		if(curTime > authCode.getExpTime())
 		{
 			Log.debug("checkAuthCode() 授权码已过期");
-			authCodeMap.remove(code);
+			deleteAuthCode(code);
 			return false;			
 		}
 		
@@ -397,6 +450,67 @@ public class BaseController  extends BaseFunction{
 		authCode.setRemainCount(remainCount-1);				
 		return true;
 	}
+	
+	private void addAuthCode(AuthCode authCode) {
+		if(redisEn)
+		{
+			addAuthCodeRedis(authCode);
+		}
+		else
+		{
+			addAuthCodeLocal(authCode);
+		}
+	}
+
+	private void addAuthCodeLocal(AuthCode authCode) {
+		authCodeMap.put(authCode.getCode(), authCode);
+	}
+
+	private void addAuthCodeRedis(AuthCode authCode) {
+		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
+		authCodeMap.put(authCode.getCode(), authCode);
+	}
+	
+	private static void deleteAuthCode(String authCode) {
+		if(redisEn)
+		{
+			deleteAuthCodeRedis(authCode);
+		}
+		else
+		{
+			deleteAuthCodeLocal(authCode);
+		}
+	}
+
+	private static void deleteAuthCodeLocal(String authCode) {
+		authCodeMap.remove(authCode);
+	}
+
+	private static void deleteAuthCodeRedis(String authCode) {
+		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
+		authCodeMap.remove(authCode);
+	}
+	
+	protected AuthCode getAuthCode(String authCode) {
+		if(redisEn)
+		{
+			return getAuthCodeRedis(authCode);
+		}
+		else
+		{
+			return getAuthCodeLocal(authCode);
+		}
+	}
+
+	private AuthCode getAuthCodeLocal(String authCode) {
+		return authCodeMap.get(authCode);
+	}
+
+	private AuthCode getAuthCodeRedis(String authCode) {
+		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
+		return (AuthCode) authCodeMap.get(authCode);
+	}
+	
 	
 	/****************************** DocSys manage 页面权限检查接口  **********************************************/
 	protected boolean superAdminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
