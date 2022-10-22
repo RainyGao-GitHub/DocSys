@@ -11774,14 +11774,16 @@ public class BaseController  extends BaseFunction{
 				Repos repos = list.get(i);
 				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
+				initReposExtConfigDigest(repos);
+				
 				initReposData(repos);
 				
-				initReposRemoteStorageConfig(repos, repos.getRemoteStorage(), false);
+				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
 				
 				//int remoteServerConifg
 				String remoteServer = getReposRemoteServer(repos);
 				repos.remoteServer = remoteServer;
-				initReposRemoteServerConfig(repos, remoteServer, false);
+				initReposRemoteServerConfig(repos, remoteServer);
 				
 				//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
 				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
@@ -11821,15 +11823,42 @@ public class BaseController  extends BaseFunction{
 		}	
 	}
 
+	protected void initReposExtConfigDigest(Repos repos) {
+		if(redisEn)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			ReposExtConfigDigest reposExtConfigDigest = (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
+			if(reposExtConfigDigest == null)
+			{
+				reposExtConfigDigest = new ReposExtConfigDigest();
+				reposExtConfigDigest.reposId = repos.getId();
+				reposExtConfigDigestHashMap.put(repos.getId(), reposExtConfigDigest);
+			}
+			repos.reposExtConfigDigest = reposExtConfigDigest;
+		}
+	}
+
+	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
+		if(redisEn)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			reposExtConfigDigestHashMap.put(repos.getId(), config);
+		}
+	}
+
 	private ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
 		if(redisEn == false)
 		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
+		}
+		else
+		{
 			return null;
 		}
-		
-		RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-		return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
 	}
+	
+	
 
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("********* realTimeRemoteStoragPush() ***********");
@@ -15993,7 +16022,7 @@ public class BaseController  extends BaseFunction{
 			if(isFSM(repos))
 			{
 				repos.remoteStorageConfig = getReposRemoteStorageConfig(repos);
-				repos.backupConfig = reposBackupConfigHashMap.get(repos.getId());
+				repos.backupConfig = getReposBackupConfig(repos);
 			}
 			else
 			{
@@ -16016,7 +16045,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return repos;
 	}
-	
+
 	private TextSearchConfig addReposTextSearchConfig(Repos repos, TextSearchConfig config) 
 	{
 		if(redisEn)

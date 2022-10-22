@@ -333,15 +333,17 @@ public class ReposController extends BaseController{
 			return;			
 		}
 
+		initReposExtConfigDigest(repos);
+
 		if(remoteStorage != null)
 		{
-			initReposRemoteStorageConfig(repos, remoteStorage, true);
+			initReposRemoteStorageConfig(repos, remoteStorage);
 		}
 		
 		if(remoteServer != null)
 		{
 			setReposRemoteServer(repos, remoteServer);
-			initReposRemoteServerConfig(repos, remoteServer, true);
+			initReposRemoteServerConfig(repos, remoteServer);
 		}
 		
 		//自动备份初始化
@@ -370,6 +372,8 @@ public class ReposController extends BaseController{
 		initReposVersionIgnoreConfig(repos, true);
 		
 		setReposEncrypt(repos, encryptType, true);			
+		
+		setReposExtConfigDigest(repos, repos.reposExtConfigDigest);
 		
 		InitReposAuthInfo(repos,login_user,rt);		
 		
@@ -968,13 +972,13 @@ public class ReposController extends BaseController{
 		
 		if(remoteStorage != null)
 		{
-			initReposRemoteStorageConfig(reposInfo, remoteStorage, true);
+			initReposRemoteStorageConfig(reposInfo, remoteStorage);
 		}
 		
 		if(remoteServer != null)
 		{
 			setReposRemoteServer(reposInfo, remoteServer);
-			initReposRemoteServerConfig(reposInfo, remoteServer, true);
+			initReposRemoteServerConfig(reposInfo, remoteServer);
 		}	
 		
 		if(autoBackup != null)
