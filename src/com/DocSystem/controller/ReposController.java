@@ -333,8 +333,6 @@ public class ReposController extends BaseController{
 			return;			
 		}
 
-		initReposExtConfigDigest(repos);
-
 		if(remoteStorage != null)
 		{
 			initReposRemoteStorageConfig(repos, remoteStorage);
@@ -365,15 +363,13 @@ public class ReposController extends BaseController{
 		if(textSearch != null)
 		{
 			setReposTextSearch(repos, textSearch);			
-			initReposTextSearchConfig(repos, textSearch, true);
+			initReposTextSearchConfig(repos, textSearch);
 		}
 		
 		//初始化仓库的版本管理忽略配置
 		initReposVersionIgnoreConfig(repos, true);
 		
-		setReposEncrypt(repos, encryptType, true);			
-		
-		setReposExtConfigDigest(repos, repos.reposExtConfigDigest);
+		setReposEncrypt(repos, encryptType, true);
 		
 		InitReposAuthInfo(repos,login_user,rt);		
 		
@@ -996,7 +992,7 @@ public class ReposController extends BaseController{
 		if(textSearch != null)
 		{
 			setReposTextSearch(reposInfo, textSearch);
-			initReposTextSearchConfig(reposInfo, textSearch, true);
+			initReposTextSearchConfig(reposInfo, textSearch);
 		}
 				
 		if(encryptType != null)

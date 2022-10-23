@@ -11774,34 +11774,41 @@ public class BaseController  extends BaseFunction{
 				Repos repos = list.get(i);
 				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
-				initReposExtConfigDigest(repos);
-				
 				initReposData(repos);
-				
+
+				/*** Init ReposExtConfig Start ***/
+				//TODO: 目前仓库扩展配置的初始化没有判断是否其他服务器已经进行了初始化，而是直接再初始化一遍，未来需要考虑检测到已初始化直接读取
+				//Init RemoteStorageConfig
 				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
 				
-				//int remoteServerConifg
+				//Init RemoteServerConifg
 				String remoteServer = getReposRemoteServer(repos);
 				repos.remoteServer = remoteServer;
 				initReposRemoteServerConfig(repos, remoteServer);
 				
+				//Init ReposAutoBackupConfig
+				String autoBackup = getReposAutoBackup(repos);
+				repos.setAutoBackup(autoBackup);
+				initReposAutoBackupConfig(repos, autoBackup);
+
+				//Init ReposTextSearchConfig
+				String textSearch = getReposTextSearch(repos);
+				repos.setTextSearch(textSearch);
+				initReposTextSearchConfig(repos, textSearch);
+				
+				//Init ReposVersionIgnoreConfig
+				initReposVersionIgnoreConfig(repos, false);
+				
+				//Init ReposEncryptConfig
+				initReposEncryptConfig(repos);
+				/*** Init ReposExtConfig End ***/
+				
+				/*** Init Repos related Async Tasks Start ***/
 				//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
 				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
 				reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
 				reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
-				
-				String autoBackup = getReposAutoBackup(repos);
-				repos.setAutoBackup(autoBackup);
-				initReposAutoBackupConfig(repos, autoBackup, false);
 
-				String textSearch = getReposTextSearch(repos);
-				repos.setTextSearch(textSearch);
-				initReposTextSearchConfig(repos, textSearch, false);
-				
-				initReposVersionIgnoreConfig(repos, false);
-				
-				initReposEncryptConfig(repos);
-				
 				//启动定时备份任务
 				if(repos.backupConfig != null)
 				{
@@ -11814,6 +11821,7 @@ public class BaseController  extends BaseFunction{
 				{
 					addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
 				}
+				/*** Init Repos related Async Tasks End ***/
 				
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
 			}
@@ -11822,43 +11830,6 @@ public class BaseController  extends BaseFunction{
 	        Log.info(e);
 		}	
 	}
-
-	protected void initReposExtConfigDigest(Repos repos) {
-		if(redisEn)
-		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			ReposExtConfigDigest reposExtConfigDigest = (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
-			if(reposExtConfigDigest == null)
-			{
-				reposExtConfigDigest = new ReposExtConfigDigest();
-				reposExtConfigDigest.reposId = repos.getId();
-				reposExtConfigDigestHashMap.put(repos.getId(), reposExtConfigDigest);
-			}
-			repos.reposExtConfigDigest = reposExtConfigDigest;
-		}
-	}
-
-	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
-		if(redisEn)
-		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			reposExtConfigDigestHashMap.put(repos.getId(), config);
-		}
-	}
-
-	private ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
-		if(redisEn == false)
-		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
-		}
-		else
-		{
-			return null;
-		}
-	}
-	
-	
 
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("********* realTimeRemoteStoragPush() ***********");
@@ -12382,6 +12353,24 @@ public class BaseController  extends BaseFunction{
 	private void deleteReposBackupConfigRedis(Repos repos) {
 		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
 		reposBackupConfigHashMap.remove(repos.getId());
+	}
+	
+	protected ReposBackupConfig getReposBackupConfig(Repos repos) {
+		ReposBackupConfig config = reposBackupConfigHashMap.get(repos.getId());
+	
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackup, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposBackupConfigRedis(repos);
+		reposBackupConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+	
+	private ReposBackupConfig getReposBackupConfigRedis(Repos repos) {
+		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+		return (ReposBackupConfig) reposBackupConfigHashMap.get(repos.getId());
 	}
 
 	private void initReposRemoteBackupIgnoreHashMap(Repos repos) {
@@ -13319,161 +13308,6 @@ public class BaseController  extends BaseFunction{
 			{
 				File subFile = list[i];
 				checkAndSetVersionIgnored(parentPath + subFile.getName(), subFile, repos);			
-			}
-		}	
-	}
-
-	protected void initReposTextSearchConfig(Repos repos, String config, boolean updateDigest) {
-		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
-		if(textSearchConfig == null)
-		{
-			deleteReposTextSearchConfig(repos);
-			return;
-		}
-		
-		//add or update text search config
-		addReposTextSearchConfig(repos, textSearchConfig);
-		
-		//set to repos 
-		repos.textSearchConfig = textSearchConfig;
-		
-		//Init RealDocTextSearchDisableHashMap
-		initRealDocTextSearchDisableHashMap(repos);
-		//Init VirtualDocTextSearchDisableHashMap
-		initVirtualDocTextSearchDisableHashMap(repos);	
-		
-		//update reposTextSearchConfig
-		updateReposTextSearchConfig(repos, repos.textSearchConfig);
-		
-		repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
-		if(updateDigest)
-		{
-			updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, repos.textSearchConfig.checkSum);
-		}
-	}
-	
-	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
-		try {
-			//config中不允许出现转义字符 \ ,否则会导致JSON解析错误
-			if(config == null || config.isEmpty())
-			{
-				return null;
-			}
-			
-			config = config.replace('\\', '/');	
-			
-			JSONObject jsonObj = JSON.parseObject(config);
-			if(jsonObj == null)
-			{
-				return null;
-			}
-			
-			Log.printObject("parseTextSearchConfig() ", jsonObj);
-			
-			TextSearchConfig textSearchConfig = new TextSearchConfig();
-			textSearchConfig.enable = false;
-			
-			Integer enable = jsonObj.getInteger("enable");
-			if(enable != null && enable == 1)
-			{
-				textSearchConfig.enable = true;
-			}
-			Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
-			
-			textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, Integer>();
-			textSearchConfig.virtualDocTextSearchDisablehHashMap = new ConcurrentHashMap<String, Integer>();			
-			return textSearchConfig;
-		}
-		catch(Exception e) {
-			errorLog(e);
-			return null;
-		}
-	}
-	
-	private void initRealDocTextSearchDisableHashMap(Repos repos) {
-		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
-		
-		//root doc
-		File dir = new File(configPath);
-		checkAndSetRealDocTextSearchIgnored("/", dir, repos);
-	}
-	
-	private void checkAndSetRealDocTextSearchIgnored(String entryPath, File file, Repos repos) {
-		Log.debug("checkAndSetRealDocTextSearchIgnored() entryPath:" + entryPath);
-	
-		if(file.isFile() == true)
-		{
-			return;
-		}
-		
-		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
-		Log.debug("checkAndSetRealDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
-		
-		File ignoreFile = new File(ignoreFilePath);
-		if(ignoreFile.exists() == true)
-		{
-			Log.debug("checkAndSetRealDocTextSearchIgnored() RealDoc textSearch was ignored for [" + entryPath +"]");
-			repos.textSearchConfig.realDocTextSearchDisableHashMap.put(entryPath, 1);
-			return;
-		}
-		
-		File[] list = file.listFiles();
-		String parentPath = "/";
-		if(!entryPath.equals("/"))
-		{
-			parentPath = entryPath + "/";
-		}
-		
-		if(list != null)
-		{
-			for(int i=0; i<list.length; i++)
-			{
-				File subFile = list[i];
-				checkAndSetRealDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
-			}
-		}	
-	}
-
-	private void initVirtualDocTextSearchDisableHashMap(Repos repos) {
-		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
-		
-		//root doc
-		File dir = new File(configPath);
-		checkAndSetVirtualDocTextSearchIgnored("/", dir, repos);
-	}
-	
-	private void checkAndSetVirtualDocTextSearchIgnored(String entryPath, File file, Repos repos) {
-		Log.debug("checkAndSetVirtualDocTextSearchIgnored() entryPath:" + entryPath);
-	
-		if(file.isFile() == true)
-		{
-			return;
-		}
-		
-		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
-		Log.debug("checkAndSetVirtualDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
-		
-		File ignoreFile = new File(ignoreFilePath);
-		if(ignoreFile.exists() == true)
-		{
-			Log.debug("checkAndSetVirtualDocTextSearchIgnored() VirtualDoc textSearch was ignored for [" + entryPath +"]");
-			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(entryPath, 1);
-			return;
-		}
-		
-		File[] list = file.listFiles();
-		String parentPath = "/";
-		if(!entryPath.equals("/"))
-		{
-			parentPath = entryPath + "/";
-		}
-		
-		if(list != null)
-		{
-			for(int i=0; i<list.length; i++)
-			{
-				File subFile = list[i];
-				checkAndSetVirtualDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
 			}
 		}	
 	}
@@ -16062,98 +15896,6 @@ public class BaseController  extends BaseFunction{
 		}
 		return repos;
 	}
-
-	private TextSearchConfig addReposTextSearchConfig(Repos repos, TextSearchConfig config) 
-	{
-		if(redisEn)
-		{
-			return addReposTextSearchConfigRedis(repos, config);
-		}
-		
-		return addReposTextSearchConfigLocal(repos, config);
-	}
-	
-	private TextSearchConfig addReposTextSearchConfigLocal(Repos repos, TextSearchConfig config) 
-	{
-		reposTextSearchConfigHashMap.put(repos.getId(), config);
-		return config;
-	}
-
-	private TextSearchConfig addReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
-	{
-		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
-		reposTextSearchConfigHashMap.put(repos.getId(), config);
-		return config;
-	}
-	
-	private boolean deleteReposTextSearchConfig(Repos repos) 
-	{
-		if(redisEn)
-		{
-			return deleteReposTextSearchConfigRedis(repos);
-		}
-		
-		return deleteReposTextSearchConfigLocal(repos);
-	}
-	
-	private boolean deleteReposTextSearchConfigLocal(Repos repos) 
-	{
-		reposTextSearchConfigHashMap.remove(repos.getId());
-		return true;
-	}
-
-	private boolean deleteReposTextSearchConfigRedis(Repos repos) 
-	{
-		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
-		reposTextSearchConfigHashMap.remove(repos.getId());
-		return true;
-	}
-	
-	protected TextSearchConfig updateReposTextSearchConfig(Repos repos, TextSearchConfig config) 
-	{
-		if(redisEn)
-		{
-			return updateReposTextSearchConfigRedis(repos, config);
-		}
-		
-		return updateReposTextSearchConfigLocal(repos, config);
-	}
-	
-	private TextSearchConfig updateReposTextSearchConfigLocal(Repos repos, TextSearchConfig config) 
-	{
-		//Local no need to update
-		//reposTextSearchConfigHashMap.put(repos.getId(), config);
-		return config;
-	}
-
-	private TextSearchConfig updateReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
-	{
-		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
-		reposTextSearchConfigHashMap.put(repos.getId(), config);
-		return config;
-	}
-	
-	private TextSearchConfig getReposTextSearchConfig(Repos repos) 
-	{
-		if(redisEn)
-		{
-			return getReposTextSearchConfigRedis(repos);
-		}
-		
-		return getReposTextSearchConfigLocal(repos);
-	}
-	
-	private TextSearchConfig getReposTextSearchConfigLocal(Repos repos) 
-	{
-		return reposTextSearchConfigHashMap.get(repos.getId());
-	}
-
-	private TextSearchConfig getReposTextSearchConfigRedis(Repos repos) 
-	{
-		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
-		return (TextSearchConfig) reposTextSearchConfigHashMap.get(repos.getId());
-	}
-
 
 	//注意：该接口需要返回真正的parentZipDoc
 	protected Doc checkAndExtractEntryFromCompressDoc(Repos repos, Doc rootDoc, Doc doc) 
