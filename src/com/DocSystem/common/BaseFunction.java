@@ -981,33 +981,47 @@ public class BaseFunction{
 		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteServer/" + repos.getId() + "/Doc";
 		remote.checkSum = remote.hashCode() + "";
 
-		addReposRemoteServerConfig(repos, remote);
+		setReposRemoteServerConfig(repos, remote);
 	}
 	
-	private static void addReposRemoteServerConfig(Repos repos, RemoteStorageConfig config) {
+	private static void setReposRemoteServerConfig(Repos repos, RemoteStorageConfig config) {
 		reposRemoteServerHashMap.put(repos.getId(), config);
 		if(redisEn)
 		{
-			addReposRemoteServerConfigRedis(repos, config);
+			String lockInfo = "setReposRemoteServerConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposRemoteServerConfigRedis(repos, config);
+			
+			redisSyncUnlock(lockName, lockInfo);		
 		}
 	}
 	
-	private static void addReposRemoteServerConfigRedis(Repos repos, RemoteStorageConfig config) {
+	private static void setReposRemoteServerConfigRedis(Repos repos, RemoteStorageConfig config) {
 		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
 		reposRemoteServerHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServer, repos.remoteServerConfig.hashCode() + "");			
 	}
 	
 	private static void deleteReposRemoteServerConfig(Repos repos) {
 		reposRemoteServerHashMap.remove(repos.getId());
 		if(redisEn)
 		{
+			String lockInfo = "deleteReposRemoteServerConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
 			deleteReposRemoteServerConfigRedis(repos);
+			
+			redisSyncUnlock(lockName, lockInfo);				
 		}
 	}
 	
 	private static void deleteReposRemoteServerConfigRedis(Repos repos) {
 		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
 		reposRemoteServerHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServer, "");
 	}
 	
 	protected RemoteStorageConfig getReposRemoteServerConfig(Repos repos) {
@@ -1118,40 +1132,40 @@ public class BaseFunction{
 		reposRemoteStorageHashMap.put(repos.getId(), config);
 		if(redisEn)
 		{
+			String lockInfo = "setReposRemoteStorageConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
 			setReposRemoteStorageConfigRedis(repos, config);		
+			
+			redisSyncUnlock(lockName, lockInfo);		
 		}
 	}
 	
 	private static void setReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig config) {
-		String lockInfo = "setReposRemoteStorageConfigRedis for repos [" + repos.getId() + " " + repos.getName() + "]";
-		String lockName = "reposExtConfigSyncLock" + repos.getId();
-		redisSyncLock(lockName, lockInfo);
-		
 		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
 		reposRemoteStorageHashMap.put(repos.getId(), config);
 		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, repos.remoteStorageConfig.hashCode() + "");
-		
-		redisSyncUnlock(lockName, lockInfo);		
 	}
 	
 	private static void deleteReposRemoteStorageConfig(Repos repos) {
 		reposRemoteStorageHashMap.remove(repos.getId());
 		if(redisEn)
 		{
+			String lockInfo = "deleteReposRemoteStorageConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
 			deleteReposRemoteStorageConfigRedis(repos);
+			
+			redisSyncUnlock(lockName, lockInfo);					
 		}
 	}
 	
 	private static void deleteReposRemoteStorageConfigRedis(Repos repos) {
-		String lockInfo = "deleteReposRemoteStorageConfigRedis for repos [" + repos.getId() + " " + repos.getName() + "]";
-		String lockName = "reposExtConfigSyncLock" + repos.getId();
-		redisSyncLock(lockName, lockInfo);
-		
 		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
 		reposRemoteStorageHashMap.remove(repos.getId());
 		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, "");
-		
-		redisSyncUnlock(lockName, lockInfo);		
 	}
 	
 	protected RemoteStorageConfig getReposRemoteStorageConfig(Repos repos) {
@@ -1207,21 +1221,6 @@ public class BaseFunction{
 		{
 			setReposExtConfigDigest(repos, repos.reposExtConfigDigest);
 		}	
-	}
-	
-	protected void initReposExtConfigDigest(Repos repos) {
-		if(redisEn)
-		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			ReposExtConfigDigest reposExtConfigDigest = (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
-			if(reposExtConfigDigest == null)
-			{
-				reposExtConfigDigest = new ReposExtConfigDigest();
-				reposExtConfigDigest.reposId = repos.getId();
-				reposExtConfigDigestHashMap.put(repos.getId(), reposExtConfigDigest);
-			}
-			repos.reposExtConfigDigest = reposExtConfigDigest;
-		}
 	}
 
 	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
