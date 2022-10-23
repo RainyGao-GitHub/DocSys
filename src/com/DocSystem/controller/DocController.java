@@ -49,6 +49,7 @@ import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -5243,7 +5244,10 @@ public class DocController extends BaseController{
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
 				repos.textSearchConfig.realDocTextSearchDisableHashMap.put("/" + doc.getPath() + doc.getName(), 1);
-				updateReposTextSearchConfig(repos, repos.textSearchConfig);
+				repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
+				
+				setReposTextSearchConfig(repos, repos.textSearchConfig);
+				updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, repos.textSearchConfig.checkSum);
 				return true;
 			}
 			return false;
@@ -5253,7 +5257,8 @@ public class DocController extends BaseController{
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
 			repos.textSearchConfig.realDocTextSearchDisableHashMap.remove("/" + doc.getPath() + doc.getName());
-			updateReposTextSearchConfig(repos, repos.textSearchConfig);
+			repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
+			setReposTextSearchConfig(repos, repos.textSearchConfig);
 			return true;			
 		}
 		return false;
