@@ -756,7 +756,203 @@ public class BaseFunction{
 		return "RealTimeBackup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/"; 
 	}
 	
-	//**** 服务器前置配置 *******
+	//*** 仓库全文搜索配置  ***
+	protected void initReposTextSearchConfig(Repos repos, String config) {
+		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
+		repos.textSearchConfig = textSearchConfig;
+
+		if(textSearchConfig == null)
+		{
+			deleteReposTextSearchConfig(repos);
+			return;
+		}
+				
+		//Init RealDocTextSearchDisableHashMap
+		initRealDocTextSearchDisableHashMap(repos);
+		//Init VirtualDocTextSearchDisableHashMap
+		initVirtualDocTextSearchDisableHashMap(repos);	
+		
+		setReposTextSearchConfig(repos, textSearchConfig);
+	}
+	
+	protected void setReposTextSearchConfig(Repos repos, TextSearchConfig config) 
+	{
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		if(redisEn)
+		{
+			setReposTextSearchConfigRedis(repos, config);
+		}
+	}
+
+	private void setReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, repos.textSearchConfig.hashCode() + "");	
+	}
+	
+	private void deleteReposTextSearchConfig(Repos repos) 
+	{
+		reposTextSearchConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			deleteReposTextSearchConfigRedis(repos);
+		}		
+	}
+	
+	private void deleteReposTextSearchConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		reposTextSearchConfigHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, "");	
+	}
+	
+	protected TextSearchConfig getReposTextSearchConfig(Repos repos) 
+	{
+		TextSearchConfig config = reposTextSearchConfigHashMap.get(repos.getId());
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearch, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposTextSearchConfigRedis(repos);
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+
+	private TextSearchConfig getReposTextSearchConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		return (TextSearchConfig) reposTextSearchConfigHashMap.get(repos.getId());
+	}
+	
+	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
+		try {
+			//config中不允许出现转义字符 \ ,否则会导致JSON解析错误
+			if(config == null || config.isEmpty())
+			{
+				return null;
+			}
+			
+			config = config.replace('\\', '/');	
+			
+			JSONObject jsonObj = JSON.parseObject(config);
+			if(jsonObj == null)
+			{
+				return null;
+			}
+			
+			Log.printObject("parseTextSearchConfig() ", jsonObj);
+			
+			TextSearchConfig textSearchConfig = new TextSearchConfig();
+			textSearchConfig.enable = false;
+			
+			Integer enable = jsonObj.getInteger("enable");
+			if(enable != null && enable == 1)
+			{
+				textSearchConfig.enable = true;
+			}
+			Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
+			
+			textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, Integer>();
+			textSearchConfig.virtualDocTextSearchDisablehHashMap = new ConcurrentHashMap<String, Integer>();			
+			return textSearchConfig;
+		}
+		catch(Exception e) {
+			errorLog(e);
+			return null;
+		}
+	}
+	
+	private void initRealDocTextSearchDisableHashMap(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetRealDocTextSearchIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetRealDocTextSearchIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetRealDocTextSearchIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetRealDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetRealDocTextSearchIgnored() RealDoc textSearch was ignored for [" + entryPath +"]");
+			repos.textSearchConfig.realDocTextSearchDisableHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetRealDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+
+	private void initVirtualDocTextSearchDisableHashMap(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetVirtualDocTextSearchIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetVirtualDocTextSearchIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetVirtualDocTextSearchIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetVirtualDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetVirtualDocTextSearchIgnored() VirtualDoc textSearch was ignored for [" + entryPath +"]");
+			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetVirtualDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+	
+	//*** 仓库服务器前置配置 *******
 	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage)
 	{
 		if(isFSM(repos))
@@ -831,60 +1027,11 @@ public class BaseFunction{
 		return (RemoteStorageConfig) reposRemoteServerHashMap.get(repos.getId());
 	}
 		
-	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
-		if(redisEn == false)
-		{
-			return;
-		}
-		
-		String lockInfo = "updateReposExtConfigDigest for repos [" + repos.getId() + " " + repos.getName() + "]";
-		String lockName = "reposExtConfigDigest" + repos.getId();
-		redisSyncLockEx(lockName, lockInfo);
-		
-		if(repos.reposExtConfigDigest == null)
-		{
-			repos.reposExtConfigDigest = new ReposExtConfigDigest();
-		}
-		
-		boolean isValidKey = true;
-		switch(key)
-		{
-		case ReposExtConfigDigest.RemoteStorage:
-			repos.reposExtConfigDigest.remoteStorageConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.RemoteServer:
-			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.AutoBackup:
-			repos.reposExtConfigDigest.autoBackupConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.TextSearch:
-			repos.reposExtConfigDigest.textSearchConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.VersionIgnore:
-			repos.reposExtConfigDigest.versionIgnoreConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.Encrypt:
-			repos.reposExtConfigDigest.encryptConfigCheckSum = checkSum;
-			break;
-		default:
-			isValidKey = false;
-			break;
-		}
-		
-		if(isValidKey)
-		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			reposExtConfigDigestHashMap.put(repos.getId(), repos.reposExtConfigDigest);
-		}	
-		redisSyncUnlockEx(lockName, lockInfo, null);		
-	}
-	
 	protected static boolean isFSM(Repos repos) {
 		return repos.getType() < 3;
 	}
 	
-	//******** 远程存储配置 **********
+	//*** 仓库远程存储配置 **********
 	private static String buildRemoteStorageStr(Repos repos) {
 		switch(repos.getType())
 		{
@@ -963,23 +1110,28 @@ public class BaseFunction{
 		
 		//设置索引库位置
 		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
-		//设置checkSum
-		remote.checkSum = remote.hashCode() + "";
 
-		addReposRemoteStorageConfig(repos, remote);
+		setReposRemoteStorageConfig(repos, remote);
 	}
 	
-	private static void addReposRemoteStorageConfig(Repos repos, RemoteStorageConfig config) {
+	private static void setReposRemoteStorageConfig(Repos repos, RemoteStorageConfig config) {
 		reposRemoteStorageHashMap.put(repos.getId(), config);
 		if(redisEn)
 		{
-			addReposRemoteStorageConfigRedis(repos, config);
+			setReposRemoteStorageConfigRedis(repos, config);		
 		}
 	}
 	
-	private static void addReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig config) {
+	private static void setReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig config) {
+		String lockInfo = "setReposRemoteStorageConfigRedis for repos [" + repos.getId() + " " + repos.getName() + "]";
+		String lockName = "reposExtConfigSyncLock" + repos.getId();
+		redisSyncLock(lockName, lockInfo);
+		
 		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
 		reposRemoteStorageHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, repos.remoteStorageConfig.hashCode() + "");
+		
+		redisSyncUnlock(lockName, lockInfo);		
 	}
 	
 	private static void deleteReposRemoteStorageConfig(Repos repos) {
@@ -991,8 +1143,15 @@ public class BaseFunction{
 	}
 	
 	private static void deleteReposRemoteStorageConfigRedis(Repos repos) {
+		String lockInfo = "deleteReposRemoteStorageConfigRedis for repos [" + repos.getId() + " " + repos.getName() + "]";
+		String lockName = "reposExtConfigSyncLock" + repos.getId();
+		redisSyncLock(lockName, lockInfo);
+		
 		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
 		reposRemoteStorageHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, "");
+		
+		redisSyncUnlock(lockName, lockInfo);		
 	}
 	
 	protected RemoteStorageConfig getReposRemoteStorageConfig(Repos repos) {
@@ -1012,28 +1171,80 @@ public class BaseFunction{
 		return (RemoteStorageConfig) reposRemoteStorageHashMap.get(repos.getId());
 	}
 	
-	protected ReposBackupConfig getReposBackupConfig(Repos repos) {
-		ReposBackupConfig config = reposBackupConfigHashMap.get(repos.getId());
-	
-		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackup, config) == false)
+	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
+		if(repos.reposExtConfigDigest == null)
 		{
-			return config;
+			repos.reposExtConfigDigest = new ReposExtConfigDigest();
 		}
-		config = getReposBackupConfigRedis(repos);
-		reposBackupConfigHashMap.put(repos.getId(), config);
-		return config;
+		
+		boolean isValidKey = true;
+		switch(key)
+		{
+		case ReposExtConfigDigest.RemoteStorage:
+			repos.reposExtConfigDigest.remoteStorageConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.RemoteServer:
+			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.AutoBackup:
+			repos.reposExtConfigDigest.autoBackupConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.TextSearch:
+			repos.reposExtConfigDigest.textSearchConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.VersionIgnore:
+			repos.reposExtConfigDigest.versionIgnoreConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.Encrypt:
+			repos.reposExtConfigDigest.encryptConfigCheckSum = checkSum;
+			break;
+		default:
+			isValidKey = false;
+			break;
+		}
+		
+		if(isValidKey)
+		{
+			setReposExtConfigDigest(repos, repos.reposExtConfigDigest);
+		}	
 	}
 	
-	private ReposBackupConfig getReposBackupConfigLocal(Repos repos) {
-		return reposBackupConfigHashMap.get(repos.getId());
-	}
-	
-	private ReposBackupConfig getReposBackupConfigRedis(Repos repos) {
-		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
-		return (ReposBackupConfig) reposBackupConfigHashMap.get(repos.getId());
+	protected void initReposExtConfigDigest(Repos repos) {
+		if(redisEn)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			ReposExtConfigDigest reposExtConfigDigest = (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
+			if(reposExtConfigDigest == null)
+			{
+				reposExtConfigDigest = new ReposExtConfigDigest();
+				reposExtConfigDigest.reposId = repos.getId();
+				reposExtConfigDigestHashMap.put(repos.getId(), reposExtConfigDigest);
+			}
+			repos.reposExtConfigDigest = reposExtConfigDigest;
+		}
 	}
 
-	private boolean isReposExtConfigDigestChanged(Repos repos, String key, Object config) {
+	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
+		if(redisEn)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			reposExtConfigDigestHashMap.put(repos.getId(), config);
+		}
+	}
+
+	protected ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
+		if(redisEn)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	protected boolean isReposExtConfigDigestChanged(Repos repos, String key, Object config) {
 		if(redisEn == false)
 		{
 			return false;
@@ -1055,35 +1266,13 @@ public class BaseFunction{
 			return true;
 		}
 
-		String localCheckSum = getReposExtConfigDigestCheckSumLocal(config, key);
-		if(localCheckSum == null || !localCheckSum.equals(remoteCheckSum))
+		String localCheckSum = config.hashCode() + "";
+		if(!localCheckSum.equals(remoteCheckSum))
 		{
 			return true;
 		}
 		
 		return false;
-	}
-
-
-	private String getReposExtConfigDigestCheckSumLocal(Object config, String key) {
-		switch(key)
-		{
-		case ReposExtConfigDigest.RemoteStorage: 
-			return ((RemoteStorageConfig)config).checkSum;
-		case ReposExtConfigDigest.RemoteServer:
-			return ((RemoteStorageConfig)config).checkSum;
-		case ReposExtConfigDigest.AutoBackup:
-			return ((ReposBackupConfig)config).checkSum;
-		case ReposExtConfigDigest.TextSearch:
-			return ((TextSearchConfig)config).checkSum;
-		case ReposExtConfigDigest.VersionIgnore:
-			return ((VersionIgnoreConfig)config).checkSum;
-		case ReposExtConfigDigest.Encrypt:
-			return ((EncryptConfig)config).checkSum;
-		default:
-			break;
-		}
-		return null;
 	}
 
 	private String getReposExtConfigDigestCheckSum(ReposExtConfigDigest reposExtConfigDigest, String key) {
