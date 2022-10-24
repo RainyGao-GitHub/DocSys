@@ -4817,7 +4817,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(repos.backupConfig == null || repos.backupConfig.localBackupConfig == null)
+		if(repos.autoBackupConfig == null || repos.autoBackupConfig.localBackupConfig == null)
 		{
 			rt.setError("该仓库未设置本地自动备份，请联系管理员!");			
 			writeJson(rt, response);
@@ -4845,7 +4845,7 @@ public class DocController extends BaseController{
 			//将ignore路径加入到repos的ignore HashMap中			
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
-				repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				repos.autoBackupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
 				return true;
 			}
 			return false;
@@ -4854,7 +4854,7 @@ public class DocController extends BaseController{
 		//将ignore从repos的ignore HashMap中删除
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
-			repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.remove("/" + doc.getPath() + doc.getName());
+			repos.autoBackupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.remove("/" + doc.getPath() + doc.getName());
 			return true;			
 		}
 		return false;
@@ -4893,7 +4893,7 @@ public class DocController extends BaseController{
 	}
 	
 	private Integer getLocalBackupIgnore(Repos repos, Doc doc) {
-		if(repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		if(repos.autoBackupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			return 1;
 		}
@@ -4940,7 +4940,7 @@ public class DocController extends BaseController{
 			ignoreList = new ArrayList<Doc>();
 		}
 		
-		if(repos.backupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		if(repos.autoBackupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			ignoreList.add(doc);
 		}
@@ -5016,7 +5016,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(repos.backupConfig == null || repos.backupConfig.remoteBackupConfig == null)
+		if(repos.autoBackupConfig == null || repos.autoBackupConfig.remoteBackupConfig == null)
 		{
 			rt.setError("该仓库未设置远程自动备份，请联系管理员!");			
 			writeJson(rt, response);
@@ -5044,7 +5044,7 @@ public class DocController extends BaseController{
 			//将ignore路径加入到repos的ignore HashMap中			
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
-				repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				repos.autoBackupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
 				return true;
 			}
 			return false;
@@ -5053,7 +5053,7 @@ public class DocController extends BaseController{
 		//将ignore从repos的ignore HashMap中删除
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
-			repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.remove("/" + doc.getPath() + doc.getName());
+			repos.autoBackupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.remove("/" + doc.getPath() + doc.getName());
 			return true;			
 		}
 		return false;
@@ -5092,7 +5092,7 @@ public class DocController extends BaseController{
 	}
 	
 	private Integer getRemoteBackupIgnore(Repos repos, Doc doc) {
-		if(repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		if(repos.autoBackupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			return 1;
 		}
@@ -5139,7 +5139,7 @@ public class DocController extends BaseController{
 			ignoreList = new ArrayList<Doc>();
 		}
 		
-		if(repos.backupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		if(repos.autoBackupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			ignoreList.add(doc);
 		}
@@ -5247,7 +5247,7 @@ public class DocController extends BaseController{
 				repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
 				
 				setReposTextSearchConfig(repos, repos.textSearchConfig);
-				updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, repos.textSearchConfig.checkSum);
+				updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig.checkSum);
 				return true;
 			}
 			return false;

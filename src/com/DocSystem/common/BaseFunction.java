@@ -12,12 +12,14 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,6 +54,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
+import util.Encrypt.DES;
 import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -72,6 +75,7 @@ import com.DocSystem.common.entity.PreferLink;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
+import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
@@ -135,16 +139,24 @@ public class BaseFunction{
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
 
-	//远程存储服务器 同步锁
+	//远程存储服务器同步锁HashMap
 	protected static ConcurrentHashMap<String, Object> remoteStorageSyncLockHashMap = new ConcurrentHashMap<String, Object>();	
 
-	//目录下载压缩任务
+	//目录下载压缩任务HashMap
 	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
 
-	//仓库全量备份任务
+	//仓库全量备份任务HashMap
 	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
 
-    public static boolean redisEn = false;
+	//TODO: 需要确认是否放入redis
+	//仓库同步任务HashMap
+	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
+	
+	//系统默认用户
+	protected static User coEditUser = new User();
+    protected static User systemUser = new User();
+
+	public static boolean redisEn = false;
     public static RedissonClient redisClient = null;
 
     //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
@@ -152,27 +164,32 @@ public class BaseFunction{
     //TODO: 集群支持
   	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
     
-    //仓库的文件锁HashMap
-	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 	//仓库锁HashMap
 	protected static ConcurrentHashMap<Integer, DocLock> reposLocksMap = new ConcurrentHashMap<Integer, DocLock>();
+
+  	//仓库的文件锁HashMap
+	public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>> docLocksMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, DocLock>>();
 
 	//远程存储服务器锁HashMap
 	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
 
-	//仓库全文搜索配置HashMap
-	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchConfigHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
-	//仓库加密配置HashMap
-	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
-	//仓库版管理忽略配置HashMap
-	protected static ConcurrentHashMap<Integer, VersionIgnoreConfig> reposVersionIgnoreConfigHashMap = new ConcurrentHashMap<Integer, VersionIgnoreConfig>();		
-	//仓库远程服务器前置配置HashMap
-	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
+	//**** 仓库扩展配置 ***
+	//reposDataHashMap（主要用于存放仓库相关的线程锁，因此集群时不需要放入redis）
+	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
 	//仓库远程存储配置HashMap
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
+	//仓库远程服务器前置配置HashMap
+	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
 	//仓库自动备份配置HashMap
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
+	//仓库全文搜索配置HashMap
+	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchConfigHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
+	//仓库版本忽略配置HashMap
+	protected static ConcurrentHashMap<Integer, VersionIgnoreConfig> reposVersionIgnoreConfigHashMap = new ConcurrentHashMap<Integer, VersionIgnoreConfig>();		
+	//仓库加密配置HashMap
+	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
 	
+	//仓库自动备份任务HashMap
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
 
@@ -182,9 +199,6 @@ public class BaseFunction{
 	//数据库备份任务HashMap
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();		
 
-	//reposDataHashMap（主要用于存放仓库相关的线程锁，因此集群时不需要放入redis）
-	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
-	
 	static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
@@ -204,8 +218,21 @@ public class BaseFunction{
     	initOfficeLicenseInfo();
     	initLdapConfig();
 		serverHost = getServerHost();		
-    }
 
+		initSystemUsers();
+	}
+	
+	private static void initSystemUsers() {
+		//系统用户
+		systemUser.setId(0);
+		systemUser.setName("System");		
+		
+		//协同编辑用户
+		coEditUser.setId(-1);
+		coEditUser.setName("CoEditUser");		
+	}
+
+	//*** 集群相关接口 ***
 	protected static void redisSyncLockEx(String lockName, String lockInfo) {
 		SyncLock.lock(lockInfo);
 		redisSyncLock(lockName, lockInfo);
@@ -232,6 +259,1538 @@ public class BaseFunction{
 			RLock lock = redisClient.getLock(lockName);
 			lock.unlock();
 		}
+	}
+	
+	//*** authCodeMap
+	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+		if(redisEn)
+		{
+			return generateAuthCodeRedis(usage, duration, maxUseCount, reposAccess);
+		}
+		else
+		{
+			return generateAuthCodeLocal(usage, duration, maxUseCount, reposAccess);
+		}
+	}
+	protected static AuthCode generateAuthCodeLocal(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+		Long curTime = new Date().getTime();
+
+		if(authCodeMap.size() > 100)
+		{
+			//Do clean expired authCode
+			ArrayList<String> deleteList = new ArrayList<String>();
+			Iterator<Entry<String, AuthCode>> iterator = authCodeMap.entrySet().iterator();
+		    while (iterator.hasNext()) 
+		    {
+		    	Entry<String, AuthCode> entry = iterator.next();
+		        if(entry != null)
+		        {
+		        	if(entry.getValue().getExpTime() < curTime || entry.getValue().getRemainCount() <=0 )
+		        	{
+		        		deleteList.add(entry.getKey());
+		        	}
+		        }
+	        }
+		    for(int i=0; i < deleteList.size(); i++)
+		    {
+		    	deleteAuthCode(deleteList.get(i));
+		    }
+		}
+		
+		//add authCode to authCodeMap
+		AuthCode authCode = new AuthCode();
+		Long expTime = curTime + duration;
+		String codeStr = usage + curTime;
+		String code = "" + codeStr.hashCode();
+		authCode.setUsage(usage);
+		authCode.setCode(code);
+		authCode.setExpTime(expTime);
+		authCode.setRemainCount(maxUseCount);
+		authCode.setReposAccess(reposAccess);
+		
+		authCodeMap.put(code, authCode);
+		return authCode;
+	}
+	
+	protected static AuthCode generateAuthCodeRedis(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+		Long curTime = new Date().getTime();
+
+		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
+		if(authCodeMap.size() > 100)
+		{
+			//Do clean expired authCode
+			ArrayList<String> deleteList = new ArrayList<String>();
+			Iterator<Entry<Object, Object>> iterator = authCodeMap.entrySet().iterator();
+		    while (iterator.hasNext()) 
+		    {
+		    	Entry<Object, Object> entry = iterator.next();
+		        if(entry != null)
+		        {
+		        	AuthCode authCode = (AuthCode) entry.getValue();
+		        	if(authCode.getExpTime() < curTime || authCode.getRemainCount() <=0 )
+		        	{
+		        		deleteList.add((String) entry.getKey());
+		        	}
+		        }
+	        }
+		    for(int i=0; i < deleteList.size(); i++)
+		    {
+		    	deleteAuthCode(deleteList.get(i));
+		    }
+		}
+		
+		//add authCode to authCodeMap
+		AuthCode authCode = new AuthCode();
+		Long expTime = curTime + duration;
+		String codeStr = usage + curTime;
+		String code = "" + codeStr.hashCode();
+		authCode.setUsage(usage);
+		authCode.setCode(code);
+		authCode.setExpTime(expTime);
+		authCode.setRemainCount(maxUseCount);
+		authCode.setReposAccess(reposAccess);
+		
+		authCodeMap.put(code, authCode);
+		return authCode;
+	}
+		
+	protected static void deleteAuthCode(String authCode) {
+		if(redisEn)
+		{
+			deleteAuthCodeRedis(authCode);
+		}
+		else
+		{
+			deleteAuthCodeLocal(authCode);
+		}
+	}
+
+	private static void deleteAuthCodeLocal(String authCode) {
+		authCodeMap.remove(authCode);
+	}
+
+	private static void deleteAuthCodeRedis(String authCode) {
+		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
+		authCodeMap.remove(authCode);
+	}
+	
+	protected AuthCode getAuthCode(String authCode) {
+		if(redisEn)
+		{
+			return getAuthCodeRedis(authCode);
+		}
+		else
+		{
+			return getAuthCodeLocal(authCode);
+		}
+	}
+
+	private AuthCode getAuthCodeLocal(String authCode) {
+		return authCodeMap.get(authCode);
+	}
+
+	private AuthCode getAuthCodeRedis(String authCode) {
+		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
+		return (AuthCode) authCodeMap.get(authCode);
+	}
+	
+	//*** 仓库扩展配置 ***
+	//*** reposExtConfigDigestHashMap
+	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
+		if(repos.reposExtConfigDigest == null)
+		{
+			repos.reposExtConfigDigest = new ReposExtConfigDigest();
+		}
+		
+		boolean isValidKey = true;
+		switch(key)
+		{
+		case ReposExtConfigDigest.RemoteStorageConfig:
+			repos.reposExtConfigDigest.remoteStorageConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.RemoteServerConfig:
+			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.AutoBackupConfig:
+			repos.reposExtConfigDigest.autoBackupConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.TextSearchConfig:
+			repos.reposExtConfigDigest.textSearchConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.VersionIgnoreConfig:
+			repos.reposExtConfigDigest.versionIgnoreConfigCheckSum = checkSum;
+			break;
+		case ReposExtConfigDigest.EncryptConfig:
+			repos.reposExtConfigDigest.encryptConfigCheckSum = checkSum;
+			break;
+		default:
+			isValidKey = false;
+			break;
+		}
+		
+		if(isValidKey)
+		{
+			setReposExtConfigDigest(repos, repos.reposExtConfigDigest);
+		}	
+	}
+
+	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
+		if(redisEn)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			reposExtConfigDigestHashMap.put(repos.getId(), config);
+		}
+	}
+
+	protected ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
+		if(redisEn)
+		{
+			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
+			return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	protected boolean isReposExtConfigDigestChanged(Repos repos, String key, Object config) {
+		if(redisEn == false)
+		{
+			return false;
+		}
+		
+		if(repos.reposExtConfigDigest == null)
+		{
+			return false;
+		}
+
+		String remoteCheckSum = getReposExtConfigDigestCheckSum(repos.reposExtConfigDigest, key);
+		if(remoteCheckSum == null)
+		{
+			return false;
+		}
+
+		if(config == null)
+		{
+			return true;
+		}
+
+		String localCheckSum = config.hashCode() + "";
+		if(!localCheckSum.equals(remoteCheckSum))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+
+	private String getReposExtConfigDigestCheckSum(ReposExtConfigDigest reposExtConfigDigest, String key) {
+		switch(key)
+		{
+		case ReposExtConfigDigest.RemoteStorageConfig: 
+			return reposExtConfigDigest.remoteStorageConfigCheckSum;
+		case ReposExtConfigDigest.RemoteServerConfig:
+			return reposExtConfigDigest.remoteServerConfigCheckSum;
+		case ReposExtConfigDigest.AutoBackupConfig:
+			return reposExtConfigDigest.autoBackupConfigCheckSum;
+		case ReposExtConfigDigest.TextSearchConfig:
+			return reposExtConfigDigest.textSearchConfigCheckSum;
+		case ReposExtConfigDigest.VersionIgnoreConfig:
+			return reposExtConfigDigest.versionIgnoreConfigCheckSum;
+		case ReposExtConfigDigest.EncryptConfig:
+			return reposExtConfigDigest.encryptConfigCheckSum;
+		default:
+			break;
+		}
+		return null;
+	}
+
+	//*** reposRemoteStorageHashMap
+	private static void setReposRemoteStorageConfig(Repos repos, RemoteStorageConfig config) {
+		reposRemoteStorageHashMap.put(repos.getId(), config);
+		if(redisEn)
+		{
+			String lockInfo = "setReposRemoteStorageConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposRemoteStorageConfigRedis(repos, config);		
+			
+			redisSyncUnlock(lockName, lockInfo);		
+		}
+	}
+	
+	private static void setReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig config) {
+		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+		reposRemoteStorageHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorageConfig, repos.remoteStorageConfig.hashCode() + "");
+	}
+	
+	protected static void deleteReposRemoteStorageConfig(Repos repos) {
+		reposRemoteStorageHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposRemoteStorageConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			deleteReposRemoteStorageConfigRedis(repos);
+			
+			redisSyncUnlock(lockName, lockInfo);					
+		}
+	}
+	
+	private static void deleteReposRemoteStorageConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+		reposRemoteStorageHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorageConfig, "");
+	}
+	
+	protected RemoteStorageConfig getReposRemoteStorageConfig(Repos repos) {
+		RemoteStorageConfig config = reposRemoteStorageHashMap.get(repos.getId());
+	
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteStorageConfig, config) == false)
+		{
+			return config;
+		}
+		config = getReposRemoteStorageConfigRedis(repos);
+		reposRemoteStorageHashMap.put(repos.getId(), config);
+		return config;
+	}
+	
+	protected RemoteStorageConfig getReposRemoteStorageConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+		return (RemoteStorageConfig) reposRemoteStorageHashMap.get(repos.getId());
+	}
+	
+	//*** reposRemoteServerHashMap	
+	private static void setReposRemoteServerConfig(Repos repos, RemoteStorageConfig config) {
+		reposRemoteServerHashMap.put(repos.getId(), config);
+		if(redisEn)
+		{
+			String lockInfo = "setReposRemoteServerConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposRemoteServerConfigRedis(repos, config);
+			
+			redisSyncUnlock(lockName, lockInfo);		
+		}
+	}
+	
+	private static void setReposRemoteServerConfigRedis(Repos repos, RemoteStorageConfig config) {
+		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+		reposRemoteServerHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServerConfig, repos.remoteServerConfig.hashCode() + "");			
+	}
+	
+	protected static void deleteReposRemoteServerConfig(Repos repos) {
+		reposRemoteServerHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposRemoteServerConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			deleteReposRemoteServerConfigRedis(repos);
+			
+			redisSyncUnlock(lockName, lockInfo);				
+		}
+	}
+	
+	private static void deleteReposRemoteServerConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+		reposRemoteServerHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServerConfig, "");
+	}
+	
+	protected RemoteStorageConfig getReposRemoteServerConfig(Repos repos) {
+		RemoteStorageConfig config = reposRemoteServerHashMap.get(repos.getId());
+	
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteServerConfig, config) == false)
+		{
+			return config;
+		}
+		config = getReposRemoteServerConfigRedis(repos);
+		reposRemoteServerHashMap.put(repos.getId(), config);
+		return config;
+	}
+	
+	protected RemoteStorageConfig getReposRemoteServerConfigRedis(Repos repos) {
+		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+		return (RemoteStorageConfig) reposRemoteServerHashMap.get(repos.getId());
+	}		
+	
+	//*** reposBackupConfigHashMap
+	private void setReposBackupConfig(Repos repos, ReposBackupConfig config) {
+		reposBackupConfigHashMap.put(repos.getId(), config);		
+		if(redisEn)
+		{
+			String lockInfo = "setReposBackupConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposBackupConfigRedis(repos, config);
+
+			redisSyncUnlock(lockName, lockInfo);
+		}
+	}
+
+	private void setReposBackupConfigRedis(Repos repos, ReposBackupConfig config) {
+		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+		reposBackupConfigHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackupConfig, repos.autoBackupConfig.hashCode() + "");			
+	}
+
+	private void deleteReposBackupConfig(Repos repos) {
+		reposBackupConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposBackupConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			deleteReposBackupConfigRedis(repos);
+			
+			redisSyncUnlock(lockName, lockInfo);
+		}
+	}
+	
+	private void deleteReposBackupConfigRedis(Repos repos) {
+		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+		reposBackupConfigHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackupConfig, "");	
+	}
+	
+	protected ReposBackupConfig getReposBackupConfig(Repos repos) {
+		ReposBackupConfig config = reposBackupConfigHashMap.get(repos.getId());
+	
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackupConfig, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposBackupConfigRedis(repos);
+		reposBackupConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+	
+	private ReposBackupConfig getReposBackupConfigRedis(Repos repos) {
+		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+		return (ReposBackupConfig) reposBackupConfigHashMap.get(repos.getId());
+	}
+	
+	//*** reposTextSearchConfigHashMap
+	protected void setReposTextSearchConfig(Repos repos, TextSearchConfig config) 
+	{
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		if(redisEn)
+		{
+			String lockInfo = "setReposTextSearchConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposTextSearchConfigRedis(repos, config);
+
+			redisSyncUnlock(lockName, lockInfo);
+		}
+	}
+
+	private void setReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig.hashCode() + "");	
+	}
+	
+	private void deleteReposTextSearchConfig(Repos repos) 
+	{
+		reposTextSearchConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposTextSearchConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			deleteReposTextSearchConfigRedis(repos);
+
+			redisSyncUnlock(lockName, lockInfo);
+		}		
+	}
+	
+	private void deleteReposTextSearchConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		reposTextSearchConfigHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearchConfig, "");	
+	}
+	
+	protected TextSearchConfig getReposTextSearchConfig(Repos repos) 
+	{
+		TextSearchConfig config = reposTextSearchConfigHashMap.get(repos.getId());
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearchConfig, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposTextSearchConfigRedis(repos);
+		reposTextSearchConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+
+	private TextSearchConfig getReposTextSearchConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		return (TextSearchConfig) reposTextSearchConfigHashMap.get(repos.getId());
+	}
+	
+	//*** reposVersionIgnoreConfigHashMap
+	protected void setReposVersionIgnoreConfig(Repos repos, VersionIgnoreConfig config) 
+	{
+		reposVersionIgnoreConfigHashMap.put(repos.getId(), config);
+		if(redisEn)
+		{
+			String lockInfo = "setReposVersionIgnoreConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposVersionIgnoreConfigRedis(repos, config);
+
+			redisSyncUnlock(lockName, lockInfo);
+		}
+	}
+
+	private void setReposVersionIgnoreConfigRedis(Repos repos, VersionIgnoreConfig config) 
+	{
+		RMap<Object, Object> reposVersionIgnoreConfigHashMap = redisClient.getMap("reposVersionIgnoreConfigHashMap");
+		reposVersionIgnoreConfigHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.VersionIgnoreConfig, repos.versionIgnoreConfig.hashCode() + "");	
+	}
+	
+	private void deleteReposVersionIgnoreConfig(Repos repos) 
+	{
+		reposVersionIgnoreConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposVersionIgnoreConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			deleteReposVersionIgnoreConfigRedis(repos);
+
+			redisSyncUnlock(lockName, lockInfo);			
+		}		
+	}
+	
+	private void deleteReposVersionIgnoreConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposVersionIgnoreConfigHashMap = redisClient.getMap("reposVersionIgnoreConfigHashMap");
+		reposVersionIgnoreConfigHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.VersionIgnoreConfig, "");	
+	}
+	
+	protected VersionIgnoreConfig getReposVersionIgnoreConfig(Repos repos) 
+	{
+		VersionIgnoreConfig config = reposVersionIgnoreConfigHashMap.get(repos.getId());
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.VersionIgnoreConfig, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposVersionIgnoreConfigRedis(repos);
+		reposVersionIgnoreConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+
+	private VersionIgnoreConfig getReposVersionIgnoreConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposVersionIgnoreConfigHashMap = redisClient.getMap("reposVersionIgnoreConfigHashMap");
+		return (VersionIgnoreConfig) reposVersionIgnoreConfigHashMap.get(repos.getId());
+	}
+	
+	//*** reposEncryptConfigHashMap
+	protected void setReposEncryptConfig(Repos repos, EncryptConfig config) 
+	{
+		reposEncryptConfigHashMap.put(repos.getId(), config);
+		if(redisEn)
+		{
+			String lockInfo = "setReposEncryptConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+						
+			setReposEncryptConfigRedis(repos, config);
+
+			redisSyncUnlock(lockName, lockInfo);	
+		}
+	}
+
+	private void setReposEncryptConfigRedis(Repos repos, EncryptConfig config) 
+	{
+		RMap<Object, Object> reposEncryptConfigHashMap = redisClient.getMap("reposEncryptConfigHashMap");
+		reposEncryptConfigHashMap.put(repos.getId(), config);
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.EncryptConfig, repos.encryptConfig.hashCode() + "");	
+	}
+	
+	protected void deleteReposEncryptConfig(Repos repos) 
+	{
+		reposEncryptConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposEncryptConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+						
+			deleteReposEncryptConfigRedis(repos);
+
+			redisSyncUnlock(lockName, lockInfo);	
+		}		
+	}
+	
+	private void deleteReposEncryptConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposEncryptConfigHashMap = redisClient.getMap("reposEncryptConfigHashMap");
+		reposEncryptConfigHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.EncryptConfig, "");	
+	}
+	
+	protected EncryptConfig getReposEncryptConfig(Repos repos) 
+	{
+		EncryptConfig config = reposEncryptConfigHashMap.get(repos.getId());
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.EncryptConfig, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposEncryptConfigRedis(repos);
+		reposEncryptConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+
+	private EncryptConfig getReposEncryptConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposEncryptConfigHashMap = redisClient.getMap("reposEncryptConfigHashMap");
+		return (EncryptConfig) reposEncryptConfigHashMap.get(repos.getId());
+	}
+	
+	/************************ DocSys仓库与文件锁定接口 *******************************/
+	//*** reposLocksMap ***
+	//Lock Repos
+	protected DocLock lockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag, String lockInfo) {
+		DocLock reposLock = null;
+		String lockName = "syncLock";
+		synchronized(syncLock)
+		{	
+			redisSyncLockEx(lockName, lockInfo);
+			
+			reposLock = lockRepos(repos, lockType, lockDuration, login_user, rt, false); 
+			
+			redisSyncUnlockEx(lockName, lockInfo, syncLock);
+		}
+		return reposLock;
+	}	
+	
+	protected DocLock lockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) {
+		Log.debug("lockRepos() Repos:" + repos.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
+
+		//仓库锁使用了和DocLock相同的数据结构，因此借用了docLock的接口
+		DocLock reposLock = getReposLock(repos);
+		if(reposLock != null && isDocLocked(reposLock, lockType, login_user,rt))
+		{
+			Log.debug("lockRepos() Repos " + repos.getName() +" was locked");
+			return null;
+		}
+		
+		//检查仓库是否有文件锁定
+		if(docLockCheckFlag)
+		{
+			Doc rootDoc = new Doc();
+			rootDoc.setVid(repos.getId());
+			rootDoc.setPath("");
+			rootDoc.setName("");
+			if(checkDocLocked(rootDoc, DocLock.LOCK_TYPE_FORCE, login_user, true) == true)
+			{
+				return null;
+			}
+		}
+		
+		//Do Lock
+		//lockTime is the time to release lock 
+		long lockTime = new Date().getTime() + lockDuration;
+		int lockState = getLockState(lockType);
+		if(reposLock == null)
+		{
+			reposLock = new DocLock();
+			reposLock.setVid(repos.getId());
+			reposLock.setState(lockState);
+			reposLock.locker[lockType] = login_user.getName();
+			reposLock.lockBy[lockType] = login_user.getId();
+			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
+			addReposLock(repos, reposLock);			
+		}
+		else
+		{
+			int curLockState = reposLock.getState();
+			reposLock.setState(curLockState | lockState);
+			reposLock.locker[lockType] = login_user.getName();
+			reposLock.lockBy[lockType] = login_user.getId();
+			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
+			updateReposLock(repos, reposLock);
+		}
+		
+		Log.debug("lockRepos() " + repos.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+		return reposLock;
+	}
+	
+	private void addReposLock(Repos repos, DocLock reposLock) {
+		if(redisEn)
+		{
+			addReposLockRedis(repos, reposLock);
+		}
+		else
+		{
+			addReposLockLocal(repos, reposLock);
+		}
+	}
+	
+	private void addReposLockLocal(Repos repos, DocLock reposLock) {
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void addReposLockRedis(Repos repos, DocLock reposLock) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void updateReposLock(Repos repos, DocLock reposLock) {
+		if(redisEn)
+		{
+			updateReposLockRedis(repos, reposLock);
+		}
+		else
+		{
+			//TODO: local no need to update
+			//updateReposLockLocal(repos, reposLock);
+		}
+	}
+	
+	private void updateReposLockLocal(Repos repos, DocLock reposLock) {
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void updateReposLockRedis(Repos repos, DocLock reposLock) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
+		reposLocksMap.put(repos.getId(), reposLock);
+	}
+	
+	private void deleteReposLock(Repos repos) {
+		if(redisEn)
+		{
+			deleteReposLockRedis(repos);
+		}
+		else
+		{
+			deleteReposLockLocal(repos);
+		}
+	}
+
+	private void deleteReposLockLocal(Repos repos) {
+		reposLocksMap.remove(repos.getId());
+	}
+
+	private void deleteReposLockRedis(Repos repos) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
+		reposLocksMap.remove(repos.getId());
+	}
+
+	private DocLock getReposLock(Repos repos) {
+		if(redisEn)
+		{
+			return getReposLockRedis(repos);
+		}
+		else
+		{
+			return getReposLockLocal(repos);
+		}
+	}
+	
+	private DocLock getReposLockLocal(Repos repos) {
+		DocLock reposLock = reposLocksMap.get(repos.getId());
+		return reposLock;
+	}
+	
+	private DocLock getReposLockRedis(Repos repos) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
+		return (DocLock) reposLocksMap.get(repos.getId());
+	}
+
+	//Unlock Doc
+	protected boolean unlockRepos(Repos repos, Integer lockType, User login_user) {
+		DocLock reposLock = getReposLock(repos);
+		
+		if(reposLock == null)
+		{
+			return true;
+		}
+		
+		if(reposLock.getState() == 0)
+		{
+			Log.debug("unlockRepos() repos was not locked:" + reposLock.getState());			
+			return true;
+		}
+		
+		Integer lockBy = reposLock.lockBy[lockType];
+		Integer curLockState = reposLock.getState();
+		Integer lockState = getLockState(lockType);
+		if(lockBy != null && lockBy != login_user.getId())
+		{
+			Log.debug("unlockRepos() repos was not locked by " + login_user.getName());
+			return false;
+		}
+
+		Integer newLockState = curLockState & (~lockState);
+		if(newLockState == 0)
+		{
+			deleteReposLock(repos);
+		}
+
+		Log.debug("unlockRepos() success:" + repos.getName());
+		return true;
+	}
+	
+	//*** docLocksMap ***
+	//Lock Doc
+	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User accessUser, ReturnAjax rt, boolean subDocCheckFlag, String lockInfo) 
+	{
+		DocLock docLock = null;
+		String lockName = "syncLock";
+		synchronized(syncLock)
+		{
+    		redisSyncLockEx(lockName, lockInfo);
+    		
+			//LockDoc
+			docLock = lockDoc(doc, lockType,  lockDuration, accessUser, rt, false);
+			
+			redisSyncUnlockEx(lockName, lockInfo, syncLock);
+		}
+		return docLock;
+	}
+
+	//TODO: 文件锁定接口需要支持集群部署时服务器之间操作的原子性
+	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
+		Log.debug("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
+
+		if(checkDocLocked(doc, lockType, login_user, subDocCheckFlag, rt))
+		{
+			return null;
+		}
+		
+		//Do Lock
+		DocLock docLock = getDocLock(doc);
+		if(docLock == null)
+		{
+			Log.debug("lockDoc() docLock is null");
+			docLock = new DocLock();
+			//设置基本信息
+			docLock.setVid(doc.getVid());
+			docLock.setPid(doc.getPid());			
+			docLock.setDocId(doc.getDocId());
+			docLock.setPath(doc.getPath());			
+			docLock.setName(doc.getName());			
+			docLock.setType(doc.getType());
+			
+			//设置锁状态
+			docLock.setState(getLockState(lockType));
+			docLock.locker[lockType] = login_user.getName();
+			docLock.lockBy[lockType] = login_user.getId();
+			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime
+			addDocLock(doc, docLock);
+			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+			return docLock;
+		}
+		else
+		{
+			Log.printObject("lockDoc() docLock:", docLock);
+			int curLockState = docLock.getState();
+			docLock.setState(curLockState | getLockState(lockType));
+			docLock.locker[lockType] = login_user.getName();
+			docLock.lockBy[lockType] = login_user.getId();
+			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime		
+			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+			return docLock;
+		}
+	}
+	
+	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag) 
+	{	
+		ReturnAjax rt = new ReturnAjax();
+		return checkDocLocked(doc, lockType, login_user, subDocCheckFlag, rt);
+	}
+	
+	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag, ReturnAjax rt) 
+	{	
+		Log.debug("checkDocLocked() repos:" + doc.getVid() + " doc:" + doc.getPath() + doc.getName() + " lockType:" + lockType + " user:" + login_user.getId() + "_" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
+		
+		if(isReposDocLocksMapEmpty(doc) == true)
+		{
+			//reposDocLocksMap is empty, so no need to check anymore
+			return false;
+		}
+		
+        DocLock docLock = getDocLock(doc);
+		
+		//协同编辑只需要检查当前和父节点是否强制锁定即可
+		if(login_user.getId().equals(coEditUser.getId()))
+		{
+			Log.debug("checkDocLocked() is coEditUser");
+			return (isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || isParentDocForceLocked(doc,login_user,rt));
+		}
+		
+		if(isDocLocked(docLock, lockType, login_user,rt ))
+		{
+			Log.debug("lockDoc() Doc " + doc.getPath() + doc.getName() +" was locked");
+			return true;
+		}
+		
+		//备注文件时平面结构，不需要检查父节点和子节点
+		switch(lockType)
+		{
+		case DocLock.LOCK_TYPE_FORCE:
+		case DocLock.LOCK_TYPE_NORMAL:
+			//检查其父节点是否强制锁定
+			if(isParentDocLocked(doc,login_user,rt))
+			{
+				Log.debug("lockDoc() Parent Doc of " + doc.getPath() + doc.getName() +" was locked！");				
+				return true;
+			}
+			
+			//Check If SubDoc was locked
+			if(subDocCheckFlag)
+			{
+				if(isSubDocLocked(doc,login_user, rt) == true)
+				{
+					Log.debug("lockDoc() subDoc of " + doc.getPath() + doc.getName() +" was locked！");
+					return true;
+				}
+			}
+			break;
+		}
+		
+		return false;
+	}
+	
+	protected static Integer getLockState(Integer lockType) {
+		return DocLock.lockStateMap[lockType];
+	}
+
+	private void addDocLock(Doc doc, DocLock docLock) {
+		if(redisEn)
+		{
+			addDocLockRedis(doc, docLock);
+		}
+		else
+		{
+			addDocLockLocal(doc, docLock);
+		}
+	}
+	
+	private void addDocLockLocal(Doc doc, DocLock docLock) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			reposDocLocskMap = new ConcurrentHashMap<String, DocLock>();
+			docLocksMap.put(doc.getVid(), reposDocLocskMap);
+		}
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
+	}
+	
+	private void addDocLockRedis(Doc doc, DocLock docLock) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
+	}
+	
+	private void updateDocLock(Doc doc, DocLock docLock) {
+		if(redisEn)
+		{
+			updateDocLockRedis(doc, docLock);
+		}
+		else
+		{
+			//TODO: local no need to update
+			//updateDocLockLocal(doc, docLock);
+		}
+	}
+	
+	private void updateDocLockLocal(Doc doc, DocLock docLock) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			Log.info("updateDocLockLocal() reposDocLocskMap is null for repos:" + doc.getVid());
+			return;
+		}
+		
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
+	}
+	
+	private void updateDocLockRedis(Doc doc, DocLock docLock) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		reposDocLocskMap.put(getDocLockId(doc), docLock);
+	}
+	
+	private void deleteDocLock(Doc doc) {
+		if(redisEn)
+		{
+			deleteDocLockRedis(doc);
+		}
+		else
+		{
+			deleteDocLockLocal(doc);
+		}
+	}
+	
+	private void deleteDocLockLocal(Doc doc) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			return;
+		}
+		reposDocLocskMap.remove(getDocLockId(doc));
+	}
+	
+	private void deleteDocLockRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		reposDocLocskMap.remove(getDocLockId(doc));
+	}
+
+
+	public static DocLock getDocLock(Doc doc) {
+		if(redisEn)
+		{
+			return getDocLockRedis(doc);
+		}
+		else
+		{
+			return getDocLockLocal(doc);
+		}
+	}
+
+	public static DocLock getDocLockLocal(Doc doc) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null)
+		{
+			Log.debug("getDocLockLocal() reposDocLocskMap for " + doc.getVid() + " is null");
+			return null;
+		}
+		
+		String docLockId = getDocLockId(doc);
+		return reposDocLocskMap.get(docLockId);
+	}
+
+	public static DocLock getDocLockRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		String docLockId = getDocLockId(doc);
+		return (DocLock) reposDocLocskMap.get(docLockId);
+	}
+	
+	private boolean isReposDocLocksMapEmpty(Doc doc) {
+		if(redisEn)
+		{
+			return isReposDocLocksMapEmptyRedis(doc);
+		}
+		else
+		{
+			return isReposDocLocksMapEmptyLocal(doc);
+		}
+	}
+
+	private boolean isReposDocLocksMapEmptyLocal(Doc doc) {
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean isReposDocLocksMapEmptyRedis(Doc doc) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap-" + doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	private static String getDocLockId(Doc doc) {
+		String lockId = doc.getVid() + "_" + doc.getPath() + doc.getName();
+		Log.debug("getDocLockId docLockId:" + lockId);
+		return lockId;
+	}
+	
+	public static boolean isDocForceLocked(DocLock docLock, User login_user,ReturnAjax rt) {
+		if(docLock == null)
+		{
+			return false;
+		}
+		
+		int curLockState = docLock.getState();
+		if(curLockState == 0)
+		{
+			return false;
+		}
+		
+		return isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt);
+	}
+	
+	public static boolean isDocLocked(DocLock docLock, Integer lockType, User login_user,ReturnAjax rt) {
+		Log.debug("isDocLocked() lockType:" + lockType);
+		if(docLock == null)
+		{
+			return false;
+		}
+		
+		int curLockState = docLock.getState();
+		if(curLockState == 0)
+		{
+			return false;
+		}
+		
+		boolean ret = false;
+		switch(lockType)
+		{
+		//RealDoc Lock
+		case DocLock.LOCK_TYPE_FORCE:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt) ||	//检查文件是否上了普通锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_COEDIT, DocLock.LOCK_STATE_COEDIT, login_user, rt))	//检查文件是否上了协同编辑锁
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_NORMAL:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_COEDIT:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt))	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）		
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_VFORCE:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VNORMAL, DocLock.LOCK_STATE_VNORMAL, login_user, rt) ||	//检查文件是否上了普通锁
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VCOEDIT, DocLock.LOCK_STATE_VCOEDIT, login_user, rt))	//检查文件是否上了协同编辑锁
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_VNORMAL:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_VNORMAL, DocLock.LOCK_STATE_VNORMAL, login_user, rt))		//检查文件是否上了普通锁			
+			{
+				ret = true;
+			}
+			break;
+		case DocLock.LOCK_TYPE_VCOEDIT:
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_VFORCE, DocLock.LOCK_STATE_VFORCE, login_user, rt))	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）		
+			{
+				ret = true;
+			}
+			break;
+		}
+		return ret;
+	}
+	
+	public static boolean isDocForceLocked(DocLock docLock, Integer lockType, Integer lockState, User login_user,ReturnAjax rt) {
+		if(docLock == null)
+		{
+			return false;
+		}
+		
+		Integer curLockState = docLock.getState();	
+		if((curLockState & lockState) == 0) 
+		{
+			return false;
+		}
+		
+		if(isLockOutOfDate(docLock.lockTime[lockType]))
+		{
+			docLock.setState(curLockState & (~lockState)); //锁已过期，删除锁			
+			return false;
+		}
+			
+		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
+		rt.setError(docLock.getPath() + docLock.getName() +" was force locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		Log.debug("isDocForceLocked() " + docLock.getPath() + docLock.getName() +" was force locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+
+		return true;	
+	}
+	
+	public static boolean isDocLocked(DocLock docLock, Integer lockType, Integer lockState, User login_user,ReturnAjax rt) {
+		if(docLock == null)
+		{
+			return false;
+		}
+		
+		int curLockState = docLock.getState();	
+		if((curLockState & lockState) == 0) 
+		{
+			return false;
+		}
+		
+		if(isLockOutOfDate(docLock.lockTime[lockType]))
+		{
+			docLock.setState(curLockState & (~lockState)); //锁已过期，删除锁			
+			return false;
+		}
+		
+		if(docLock.lockBy[lockType] == login_user.getId())
+		{
+			return false;
+		}
+			
+		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
+		rt.setError(docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		Log.debug("isDocLocked() " + docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		return true;	
+	}
+
+	public static boolean isLockOutOfDate(long lockTime) {
+		//check if the lock was out of date
+		long curTime = new Date().getTime();
+		//Log.debug("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);
+		if(curTime < lockTime)	//
+		{
+			return false;
+		}
+
+		//Lock 自动失效
+		return true;
+	}
+
+	//确定parentDoc is Locked
+	private boolean isParentDocLocked(Doc doc, User login_user,ReturnAjax rt) 
+	{
+		Log.printObject("isParentDocLocked() doc:", doc);
+		
+		if(isReposDocLocksMapEmpty(doc) == true)
+		{
+			//reposDocLocksMap is empty, so no need to check anymore
+			return false;
+		}
+		
+		//Check if the rootDoc locked
+		Integer reposId = doc.getVid();
+		Doc tempDoc = new Doc();
+		tempDoc.setVid(reposId);
+		tempDoc.setLocalRootPath(doc.getLocalRootPath());
+		tempDoc.setPath("");
+		tempDoc.setName("");
+		
+		DocLock docLock = getDocLock(tempDoc);
+		if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+				isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
+		{
+			return true;
+		}
+		
+		//Check parentDoc locked
+		String parentPath = doc.getPath();
+		if(parentPath == null || parentPath.isEmpty())
+		{
+			return false;
+		}
+				
+		String [] paths = parentPath.split("/");
+
+		String path = "";		
+		for(int i=0; i< paths.length; i++)
+		{
+			String name = paths[i];
+			if(name.isEmpty())
+			{
+				continue;
+			}
+			
+			tempDoc.setPath(path);
+			tempDoc.setName(name);
+			docLock = getDocLock(tempDoc);
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+					isDocLocked(docLock, DocLock.LOCK_TYPE_NORMAL, DocLock.LOCK_STATE_NORMAL, login_user, rt))		//检查文件是否上了普通锁
+			{
+				return true;
+			}
+			path = path + name +"/";
+		}
+		return false;
+	}
+	
+	//确定parentDoc is Locked
+	private boolean isParentDocForceLocked(Doc doc, User login_user,ReturnAjax rt) 
+	{
+		Log.printObject("isParentDocForceLocked() doc:", doc);
+
+		if(isReposDocLocksMapEmpty(doc) == true)
+		{
+			//reposDocLocksMap is empty, so no need to check anymore
+			return false;
+		}
+		
+		//Check if the rootDoc locked
+		Integer reposId = doc.getVid();
+		Doc tempDoc = new Doc();
+		tempDoc.setVid(reposId);
+		tempDoc.setLocalRootPath(doc.getLocalRootPath());
+		tempDoc.setPath("");
+		tempDoc.setName("");
+		DocLock docLock = getDocLock(tempDoc);
+		if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt)) 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+		{
+			return true;
+		}
+		
+		//Check parentDoc locked
+		String parentPath = doc.getPath();
+		if(parentPath == null || parentPath.isEmpty())
+		{
+			return false;
+		}
+				
+		String [] paths = parentPath.split("/");
+
+		String path = "";		
+		for(int i=0; i< paths.length; i++)
+		{
+			String name = paths[i];
+			if(name.isEmpty())
+			{
+				continue;
+			}
+			
+			tempDoc.setPath(path);
+			tempDoc.setName(name);
+			docLock = getDocLock(tempDoc);
+			if(isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt)) 	//检查文件是否上了强制锁（表明当前文件正在删除、写入、移动、复制、重命名）
+			{
+				return true;
+			}
+			path = path + name +"/";
+		}
+		return false;
+	}
+	
+	//docId目录下是否有锁定的doc(包括所有锁定状态)
+	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy/delete the Directory
+	private boolean isSubDocLocked(Doc doc, User login_user, ReturnAjax rt)
+	{
+		Log.printObject("isSubDocLocked() doc:", doc);
+
+		if(redisEn)
+		{
+			return isSubDocLockedRedis(doc, login_user, rt);
+		}
+		
+		return isSubDocLockedLocal(doc, login_user, rt);
+	}
+
+	private boolean isSubDocLockedLocal(Doc doc, User login_user, ReturnAjax rt)
+	{
+		Log.printObject("isSubDocLockedLocal() doc:", doc);
+
+		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
+		{
+			return false;
+		}
+		
+		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
+		//遍历所有docLocks
+        Log.debug("isSubDocLockedLocal() reposDocLocskMap size:" + reposDocLocskMap.size());
+		Iterator<Entry<String, DocLock>> iterator = reposDocLocskMap.entrySet().iterator();
+    	while (iterator.hasNext()) 
+        {
+        	Entry<String, DocLock> entry = iterator.next();
+            if(entry != null)
+        	{
+            	Log.debug("isSubDocLockedLocal reposDocLocskMap entry:" + entry.getKey());
+            	DocLock docLock = entry.getValue();
+    			if(isSudDocLock(docLock, parentDocPath))
+    			{
+    				//检查所有的锁
+	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt))
+	        		{
+	        			Log.debug("isSubDocLockedLocal() " + docLock.getName() + " is locked!");
+	        			return true;
+	        		}
+	            }
+        	}
+        }
+		return false;
+	}
+	
+	private boolean isSubDocLockedRedis(Doc doc, User login_user, ReturnAjax rt)
+	{
+		Log.printObject("isSubDocLockedRedis() doc:", doc);
+
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
+		{
+			return false;
+		}
+		
+		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
+		//遍历所有docLocks
+        Log.debug("isSubDocLockedRedis() reposDocLocskMap size:" + reposDocLocskMap.size());
+		Iterator<Entry<Object, Object>> iterator = reposDocLocskMap.entrySet().iterator();
+    	while (iterator.hasNext()) 
+        {
+        	Entry<Object, Object> entry = iterator.next();
+            if(entry != null)
+        	{
+            	Log.debug("isSubDocLockedRedis reposDocLocskMap entry:" + entry.getKey());
+            	DocLock docLock = (DocLock) entry.getValue();
+    			if(isSudDocLock(docLock, parentDocPath))
+    			{
+    				//检查所有的锁
+	            	if(isDocLocked(docLock, DocLock.LOCK_TYPE_FORCE, login_user, rt))
+	        		{
+	        			Log.debug("isSubDocLockedRedis() " + docLock.getName() + " is locked!");
+	        			return true;
+	        		}
+	            }
+        	}
+        }
+		return false;
+	}
+
+	private boolean isSudDocLock(DocLock docLock, String parentDocPath) {
+		return parentDocPath.length() == 0 || (docLock.getPath().length() >= parentDocPath.length() && docLock.getPath().indexOf(parentDocPath) == 0);
+	}
+
+	//Unlock Doc
+	protected boolean unlockDoc(Doc doc, Integer lockType, User login_user) 
+	{
+		DocLock curDocLock = getDocLock(doc);
+		if(curDocLock == null)
+		{
+			Log.debug("unlockDoc() curDocLock is null ");
+			return true;
+		}
+		
+		Integer curLockState = curDocLock.getState();
+		if(curLockState == 0)
+		{
+			deleteDocLock(doc);
+			Log.debug("unlockDoc() doc was not locked:" + curDocLock.getState());			
+			return true;
+		}
+		
+		int lockState = getLockState(lockType);
+		Log.debug("unlockDoc() curLockState:" + curLockState + " lockState:" + lockState);
+		Integer newLockState = curLockState & (~lockState);
+		if(newLockState == 0)
+		{
+			deleteDocLock(doc);
+			Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName());
+			return true;
+		}
+		
+		curDocLock.setState(newLockState);
+		updateDocLock(doc, curDocLock);
+		Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName() + " newLockState:" + newLockState);
+		return true;
+	}
+	
+	//*** remoteStorageLocksMap ***
+	//unlockRemoteStorage not need to executed with synclock, because it already is thread safe 
+	protected boolean unlockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) 
+	{
+		Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] Start for [" + doc.getPath() + doc.getName() + "]");
+		RemoteStorageLock curLock = getRemoteStorageLock(remote.remoteStorageIndexLib);
+		if(curLock == null)
+		{
+			Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] was not locked");
+			return true;
+		}
+		
+		if(curLock.lockBy == null || curLock.lockBy.equals(accessUser.getId()))
+		{
+			curLock.state = 0;
+			//wakeup all pendding thread for this lock
+			Log.info("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] for [" + doc.getPath() + doc.getName() + "], wakeup all sleep threads");
+			synchronized(curLock.synclock)
+			{
+				curLock.synclock.notifyAll();
+			}
+			Log.debug("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] unlock success for [" + doc.getPath() + doc.getName() + "]");
+			return true;
+		}
+		
+		Log.info("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] unlock failed " + " for [" + doc.getPath() + doc.getName() + "] (lockBy:" + curLock.lockBy + " unlock user:" + accessUser.getId());
+		return false;
+	}
+
+	protected void addRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		if(redisEn)
+		{
+			addRemoteStorageLockRedis(remoteStorageName, remoteStorageLock);
+		}
+		else
+		{
+			addRemoteStorageLockLocal(remoteStorageName, remoteStorageLock);
+		}
+	}
+	
+	private void addRemoteStorageLockLocal(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+	
+	private void addRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+
+	protected void updateRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		if(redisEn)
+		{
+			updateRemoteStorageLockRedis(remoteStorageName, remoteStorageLock);
+		}
+		else
+		{
+			//TODO: local no need to update
+			//updateRemoteStorageLockLocal(remoteStorageName, remoteStorageLock);
+		}
+	}
+	
+	private void updateRemoteStorageLockLocal(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+	
+	private void updateRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+	}
+	
+	protected RemoteStorageLock getRemoteStorageLock(String remoteStorageName) {
+		if(redisEn)
+		{
+			return getRemoteStorageLockRedis(remoteStorageName);
+		}
+		
+		return getRemoteStorageLockLocal(remoteStorageName);
+	}
+
+	private RemoteStorageLock getRemoteStorageLockLocal(String remoteStorageName) {
+		return remoteStorageLocksMap.get(remoteStorageName);
+	}
+	
+	private RemoteStorageLock getRemoteStorageLockRedis(String remoteStorageName) {
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		return (RemoteStorageLock) remoteStorageLocksMap.get(remoteStorageName);
 	}
     
 	private static void initSystemLicenseInfo() {
@@ -756,296 +2315,33 @@ public class BaseFunction{
 		return "RealTimeBackup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/"; 
 	}
 	
-	//*** 仓库全文搜索配置  ***
-	protected void initReposTextSearchConfig(Repos repos, String config) {
-		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
-		repos.textSearchConfig = textSearchConfig;
-
-		if(textSearchConfig == null)
-		{
-			deleteReposTextSearchConfig(repos);
-			return;
-		}
-				
-		//Init RealDocTextSearchDisableHashMap
-		initRealDocTextSearchDisableHashMap(repos);
-		//Init VirtualDocTextSearchDisableHashMap
-		initVirtualDocTextSearchDisableHashMap(repos);	
-		
-		setReposTextSearchConfig(repos, textSearchConfig);
-	}
-	
-	protected void setReposTextSearchConfig(Repos repos, TextSearchConfig config) 
-	{
-		reposTextSearchConfigHashMap.put(repos.getId(), config);
-		if(redisEn)
-		{
-			setReposTextSearchConfigRedis(repos, config);
-		}
-	}
-
-	private void setReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
-	{
-		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
-		reposTextSearchConfigHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, repos.textSearchConfig.hashCode() + "");	
-	}
-	
-	private void deleteReposTextSearchConfig(Repos repos) 
-	{
-		reposTextSearchConfigHashMap.remove(repos.getId());
-		if(redisEn)
-		{
-			deleteReposTextSearchConfigRedis(repos);
-		}		
-	}
-	
-	private void deleteReposTextSearchConfigRedis(Repos repos) 
-	{
-		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
-		reposTextSearchConfigHashMap.remove(repos.getId());
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearch, "");	
-	}
-	
-	protected TextSearchConfig getReposTextSearchConfig(Repos repos) 
-	{
-		TextSearchConfig config = reposTextSearchConfigHashMap.get(repos.getId());
-		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearch, config) == false)
-		{
-			return config;
-		}
-		
-		config = getReposTextSearchConfigRedis(repos);
-		reposTextSearchConfigHashMap.put(repos.getId(), config);
-		return config;
-	}
-
-	private TextSearchConfig getReposTextSearchConfigRedis(Repos repos) 
-	{
-		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
-		return (TextSearchConfig) reposTextSearchConfigHashMap.get(repos.getId());
-	}
-	
-	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
-		try {
-			//config中不允许出现转义字符 \ ,否则会导致JSON解析错误
-			if(config == null || config.isEmpty())
-			{
-				return null;
-			}
-			
-			config = config.replace('\\', '/');	
-			
-			JSONObject jsonObj = JSON.parseObject(config);
-			if(jsonObj == null)
-			{
-				return null;
-			}
-			
-			Log.printObject("parseTextSearchConfig() ", jsonObj);
-			
-			TextSearchConfig textSearchConfig = new TextSearchConfig();
-			textSearchConfig.enable = false;
-			
-			Integer enable = jsonObj.getInteger("enable");
-			if(enable != null && enable == 1)
-			{
-				textSearchConfig.enable = true;
-			}
-			Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
-			
-			textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, Integer>();
-			textSearchConfig.virtualDocTextSearchDisablehHashMap = new ConcurrentHashMap<String, Integer>();			
-			return textSearchConfig;
-		}
-		catch(Exception e) {
-			errorLog(e);
-			return null;
-		}
-	}
-	
-	private void initRealDocTextSearchDisableHashMap(Repos repos) {
-		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
-		
-		//root doc
-		File dir = new File(configPath);
-		checkAndSetRealDocTextSearchIgnored("/", dir, repos);
-	}
-	
-	private void checkAndSetRealDocTextSearchIgnored(String entryPath, File file, Repos repos) {
-		Log.debug("checkAndSetRealDocTextSearchIgnored() entryPath:" + entryPath);
-	
-		if(file.isFile() == true)
-		{
-			return;
-		}
-		
-		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
-		Log.debug("checkAndSetRealDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
-		
-		File ignoreFile = new File(ignoreFilePath);
-		if(ignoreFile.exists() == true)
-		{
-			Log.debug("checkAndSetRealDocTextSearchIgnored() RealDoc textSearch was ignored for [" + entryPath +"]");
-			repos.textSearchConfig.realDocTextSearchDisableHashMap.put(entryPath, 1);
-			return;
-		}
-		
-		File[] list = file.listFiles();
-		String parentPath = "/";
-		if(!entryPath.equals("/"))
-		{
-			parentPath = entryPath + "/";
-		}
-		
-		if(list != null)
-		{
-			for(int i=0; i<list.length; i++)
-			{
-				File subFile = list[i];
-				checkAndSetRealDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
-			}
-		}	
-	}
-
-	private void initVirtualDocTextSearchDisableHashMap(Repos repos) {
-		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
-		
-		//root doc
-		File dir = new File(configPath);
-		checkAndSetVirtualDocTextSearchIgnored("/", dir, repos);
-	}
-	
-	private void checkAndSetVirtualDocTextSearchIgnored(String entryPath, File file, Repos repos) {
-		Log.debug("checkAndSetVirtualDocTextSearchIgnored() entryPath:" + entryPath);
-	
-		if(file.isFile() == true)
-		{
-			return;
-		}
-		
-		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
-		Log.debug("checkAndSetVirtualDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
-		
-		File ignoreFile = new File(ignoreFilePath);
-		if(ignoreFile.exists() == true)
-		{
-			Log.debug("checkAndSetVirtualDocTextSearchIgnored() VirtualDoc textSearch was ignored for [" + entryPath +"]");
-			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(entryPath, 1);
-			return;
-		}
-		
-		File[] list = file.listFiles();
-		String parentPath = "/";
-		if(!entryPath.equals("/"))
-		{
-			parentPath = entryPath + "/";
-		}
-		
-		if(list != null)
-		{
-			for(int i=0; i<list.length; i++)
-			{
-				File subFile = list[i];
-				checkAndSetVirtualDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
-			}
-		}	
-	}
-	
-	//*** 仓库服务器前置配置 *******
-	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage)
-	{
-		if(isFSM(repos))
-		{
-			Log.debug("initReposRemoteServerConfig 非前置类型仓库！");
-			return;
-		}
-		
-		RemoteStorageConfig remote = null;
-		if(remoteStorage == null || remoteStorage.isEmpty())
-		{
-			//这部分是用来兼容2.02.15版本之前的SVN前置和GIT前置的
-			remoteStorage = buildRemoteStorageStr(repos);
-		}	
-		
-		remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteServer");
-		repos.remoteServerConfig = remote;
-		
-		if(remote == null)
-		{
-			deleteReposRemoteServerConfig(repos);
-			return;
-		}
-		
-		//设置索引库位置
-		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteServer/" + repos.getId() + "/Doc";
-		remote.checkSum = remote.hashCode() + "";
-
-		setReposRemoteServerConfig(repos, remote);
-	}
-	
-	private static void setReposRemoteServerConfig(Repos repos, RemoteStorageConfig config) {
-		reposRemoteServerHashMap.put(repos.getId(), config);
-		if(redisEn)
-		{
-			String lockInfo = "setReposRemoteServerConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
-			String lockName = "reposExtConfigSyncLock" + repos.getId();
-			redisSyncLock(lockName, lockInfo);
-			
-			setReposRemoteServerConfigRedis(repos, config);
-			
-			redisSyncUnlock(lockName, lockInfo);		
-		}
-	}
-	
-	private static void setReposRemoteServerConfigRedis(Repos repos, RemoteStorageConfig config) {
-		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
-		reposRemoteServerHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServer, repos.remoteServerConfig.hashCode() + "");			
-	}
-	
-	private static void deleteReposRemoteServerConfig(Repos repos) {
-		reposRemoteServerHashMap.remove(repos.getId());
-		if(redisEn)
-		{
-			String lockInfo = "deleteReposRemoteServerConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
-			String lockName = "reposExtConfigSyncLock" + repos.getId();
-			redisSyncLock(lockName, lockInfo);
-			
-			deleteReposRemoteServerConfigRedis(repos);
-			
-			redisSyncUnlock(lockName, lockInfo);				
-		}
-	}
-	
-	private static void deleteReposRemoteServerConfigRedis(Repos repos) {
-		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
-		reposRemoteServerHashMap.remove(repos.getId());
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServer, "");
-	}
-	
-	protected RemoteStorageConfig getReposRemoteServerConfig(Repos repos) {
-		RemoteStorageConfig config = reposRemoteServerHashMap.get(repos.getId());
-	
-		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteServer, config) == false)
-		{
-			return config;
-		}
-		config = getReposRemoteServerConfigRedis(repos);
-		reposRemoteServerHashMap.put(repos.getId(), config);
-		return config;
-	}
-	
-	protected RemoteStorageConfig getReposRemoteServerConfigRedis(Repos repos) {
-		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
-		return (RemoteStorageConfig) reposRemoteServerHashMap.get(repos.getId());
-	}
-		
 	protected static boolean isFSM(Repos repos) {
 		return repos.getType() < 3;
 	}
 	
 	//*** 仓库远程存储配置 **********
+	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
+	{
+		if(isFSM(repos) == false)
+		{
+			Log.debug("initReposRemoteStroageConfig 前置类型仓库不支持远程存储！");
+			return;
+		}
+		
+		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
+		repos.remoteStorageConfig = remote;
+		if(remote == null)
+		{
+			deleteReposRemoteStorageConfig(repos);
+			return;
+		}
+		
+		//设置索引库位置
+		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
+
+		setReposRemoteStorageConfig(repos, remote);
+	}
+	
 	private static String buildRemoteStorageStr(Repos repos) {
 		switch(repos.getType())
 		{
@@ -1105,196 +2401,7 @@ public class BaseFunction{
 		}
 		return remoteStorage;
 	}
-
-	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
-	{
-		if(isFSM(repos) == false)
-		{
-			Log.debug("initReposRemoteServerConfig 前置类型仓库不支持远程存储！");
-			return;
-		}
-		
-		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
-		repos.remoteStorageConfig = remote;
-		if(remote == null)
-		{
-			deleteReposRemoteStorageConfig(repos);
-			return;
-		}
-		
-		//设置索引库位置
-		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
-
-		setReposRemoteStorageConfig(repos, remote);
-	}
 	
-	private static void setReposRemoteStorageConfig(Repos repos, RemoteStorageConfig config) {
-		reposRemoteStorageHashMap.put(repos.getId(), config);
-		if(redisEn)
-		{
-			String lockInfo = "setReposRemoteStorageConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
-			String lockName = "reposExtConfigSyncLock" + repos.getId();
-			redisSyncLock(lockName, lockInfo);
-			
-			setReposRemoteStorageConfigRedis(repos, config);		
-			
-			redisSyncUnlock(lockName, lockInfo);		
-		}
-	}
-	
-	private static void setReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig config) {
-		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-		reposRemoteStorageHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, repos.remoteStorageConfig.hashCode() + "");
-	}
-	
-	private static void deleteReposRemoteStorageConfig(Repos repos) {
-		reposRemoteStorageHashMap.remove(repos.getId());
-		if(redisEn)
-		{
-			String lockInfo = "deleteReposRemoteStorageConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
-			String lockName = "reposExtConfigSyncLock" + repos.getId();
-			redisSyncLock(lockName, lockInfo);
-			
-			deleteReposRemoteStorageConfigRedis(repos);
-			
-			redisSyncUnlock(lockName, lockInfo);					
-		}
-	}
-	
-	private static void deleteReposRemoteStorageConfigRedis(Repos repos) {
-		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-		reposRemoteStorageHashMap.remove(repos.getId());
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorage, "");
-	}
-	
-	protected RemoteStorageConfig getReposRemoteStorageConfig(Repos repos) {
-		RemoteStorageConfig config = reposRemoteStorageHashMap.get(repos.getId());
-	
-		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteStorage, config) == false)
-		{
-			return config;
-		}
-		config = getReposRemoteStorageConfigRedis(repos);
-		reposRemoteStorageHashMap.put(repos.getId(), config);
-		return config;
-	}
-	
-	protected RemoteStorageConfig getReposRemoteStorageConfigRedis(Repos repos) {
-		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-		return (RemoteStorageConfig) reposRemoteStorageHashMap.get(repos.getId());
-	}
-	
-	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
-		if(repos.reposExtConfigDigest == null)
-		{
-			repos.reposExtConfigDigest = new ReposExtConfigDigest();
-		}
-		
-		boolean isValidKey = true;
-		switch(key)
-		{
-		case ReposExtConfigDigest.RemoteStorage:
-			repos.reposExtConfigDigest.remoteStorageConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.RemoteServer:
-			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.AutoBackup:
-			repos.reposExtConfigDigest.autoBackupConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.TextSearch:
-			repos.reposExtConfigDigest.textSearchConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.VersionIgnore:
-			repos.reposExtConfigDigest.versionIgnoreConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.Encrypt:
-			repos.reposExtConfigDigest.encryptConfigCheckSum = checkSum;
-			break;
-		default:
-			isValidKey = false;
-			break;
-		}
-		
-		if(isValidKey)
-		{
-			setReposExtConfigDigest(repos, repos.reposExtConfigDigest);
-		}	
-	}
-
-	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
-		if(redisEn)
-		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			reposExtConfigDigestHashMap.put(repos.getId(), config);
-		}
-	}
-
-	protected ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
-		if(redisEn)
-		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
-		}
-		else
-		{
-			return null;
-		}
-	}
-
-	protected boolean isReposExtConfigDigestChanged(Repos repos, String key, Object config) {
-		if(redisEn == false)
-		{
-			return false;
-		}
-		
-		if(repos.reposExtConfigDigest == null)
-		{
-			return false;
-		}
-
-		String remoteCheckSum = getReposExtConfigDigestCheckSum(repos.reposExtConfigDigest, key);
-		if(remoteCheckSum == null)
-		{
-			return false;
-		}
-
-		if(config == null)
-		{
-			return true;
-		}
-
-		String localCheckSum = config.hashCode() + "";
-		if(!localCheckSum.equals(remoteCheckSum))
-		{
-			return true;
-		}
-		
-		return false;
-	}
-
-	private String getReposExtConfigDigestCheckSum(ReposExtConfigDigest reposExtConfigDigest, String key) {
-		switch(key)
-		{
-		case ReposExtConfigDigest.RemoteStorage: 
-			return reposExtConfigDigest.remoteStorageConfigCheckSum;
-		case ReposExtConfigDigest.RemoteServer:
-			return reposExtConfigDigest.remoteServerConfigCheckSum;
-		case ReposExtConfigDigest.AutoBackup:
-			return reposExtConfigDigest.autoBackupConfigCheckSum;
-		case ReposExtConfigDigest.TextSearch:
-			return reposExtConfigDigest.textSearchConfigCheckSum;
-		case ReposExtConfigDigest.VersionIgnore:
-			return reposExtConfigDigest.versionIgnoreConfigCheckSum;
-		case ReposExtConfigDigest.Encrypt:
-			return reposExtConfigDigest.encryptConfigCheckSum;
-		default:
-			break;
-		}
-		return null;
-	}
-
 	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage, String type) {
 		if(remoteStorage == null)
 		{
@@ -1829,8 +2936,555 @@ public class BaseFunction{
 		rootPath += "/";
 		return rootPath;
 	}
+	
+	//*** 仓库服务器前置配置 *******
+	protected static void initReposRemoteServerConfig(Repos repos, String remoteStorage)
+	{
+		if(isFSM(repos))
+		{
+			Log.debug("initReposRemoteServerConfig 非前置类型仓库！");
+			return;
+		}
+		
+		RemoteStorageConfig remote = null;
+		if(remoteStorage == null || remoteStorage.isEmpty())
+		{
+			//这部分是用来兼容2.02.15版本之前的SVN前置和GIT前置的
+			remoteStorage = buildRemoteStorageStr(repos);
+		}	
+		
+		remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteServer");
+		repos.remoteServerConfig = remote;
+		
+		if(remote == null)
+		{
+			deleteReposRemoteServerConfig(repos);
+			return;
+		}
+		
+		//设置索引库位置
+		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteServer/" + repos.getId() + "/Doc";
 
-	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
+		setReposRemoteServerConfig(repos, remote);
+	}
+	
+	protected boolean setReposRemoteServer(Repos repos, String remoteServer) {
+		String reposRemoteServerConfigPath = Path.getReposRemoteServerConfigPath(repos);
+		
+		if(remoteServer == null || remoteServer.isEmpty())
+		{
+			return FileUtil.delFile(reposRemoteServerConfigPath + "remoteServer.conf");
+		}
+		
+		return FileUtil.saveDocContentToFile(remoteServer, reposRemoteServerConfigPath, "remoteServer.conf", "UTF-8");
+	}
+	
+	protected String getReposRemoteServer(Repos repos) {
+		String configPath = Path.getReposRemoteServerConfigPath(repos);		
+		return FileUtil.readDocContentFromFile(configPath, "remoteServer.conf", "UTF-8");
+	}
+	
+	//*** 仓库自动备份配置 *****
+	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
+	{
+		Log.debug("\n***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: " + autoBackup);
+		
+		if(isFSM(repos) == false)
+		{
+			Log.debug("initReposRemoteServerConfig 前置类型仓库不支持自动备份！");
+			return;
+		}
+		
+		ReposBackupConfig config = parseAutoBackupConfig(repos, autoBackup);
+		repos.autoBackupConfig = config;
+		
+		if(config == null)
+		{
+			deleteReposBackupConfig(repos);
+			Log.debug("initReposRemoteServerConfig 自动备份未设置或者设置错误");
+			return;
+		}
+		
+		//Init LocalBackup ignoreHashMap
+		initReposLocalBackupIgnoreHashMap(repos);
+		//Init RemoteBackup ignoreHashMap
+		initReposRemoteBackupIgnoreHashMap(repos);
+		
+		repos.autoBackupConfig.checkSum = repos.autoBackupConfig.hashCode() + "";
+
+		setReposBackupConfig(repos, config);		
+		
+		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");	
+	}
+	
+	private void initReposRemoteBackupIgnoreHashMap(Repos repos) {
+		String configPath = Path.getReposRemoteBackupConfigPath(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetRemoteBackupIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetRemoteBackupIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetRemoteBackupIgnored() entryPath:" + entryPath);
+	
+		if(repos.autoBackupConfig == null || repos.autoBackupConfig.remoteBackupConfig == null)
+		{
+			Log.debug("checkAndSetRemoteBackupIgnored() localBackupConfig is null");	
+			return;			
+		}
+		
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetRemoteBackupIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetRemoteBackupIgnored() RemoteBackup was ignored for [" + entryPath +"]");
+			repos.autoBackupConfig.remoteBackupConfig.remoteStorageConfig.ignoreHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetRemoteBackupIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+
+	private void initReposLocalBackupIgnoreHashMap(Repos repos) {
+		String configPath = Path.getReposLocalBackupConfigPath(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetLocalBackupIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetLocalBackupIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetLocalBackupIgnored() entryPath:" + entryPath);
+
+		if(repos.autoBackupConfig == null || repos.autoBackupConfig.localBackupConfig == null)
+		{
+			Log.debug("checkAndSetLocalBackupIgnored() localBackupConfig is null");	
+			return;			
+		}
+		
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetLocalBackupIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetLocalBackupIgnored() LocalBackup was ignored for [" + entryPath +"]");
+			repos.autoBackupConfig.localBackupConfig.remoteStorageConfig.ignoreHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetLocalBackupIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+	
+	protected boolean setReposAutoBackup(Repos repos, String autoBackup) {
+		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);
+		
+		if(autoBackup == null || autoBackup.isEmpty())
+		{
+			return FileUtil.delFile(reposAutoBackupConfigPath + "autoBackup.json");
+		}
+		
+		return FileUtil.saveDocContentToFile(autoBackup, reposAutoBackupConfigPath, "autoBackup.json", "UTF-8");
+	}
+	
+	protected String getReposAutoBackup(Repos repos) {
+		String reposAutoBackupConfigPath = Path.getReposAutoBackupConfigPath(repos);		
+		return FileUtil.readDocContentFromFile(reposAutoBackupConfigPath, "autoBackup.json", "UTF-8");
+	}
+	
+	//*** 仓库全文搜索配置  ***
+	protected void initReposTextSearchConfig(Repos repos, String config) {
+		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
+		repos.textSearchConfig = textSearchConfig;
+
+		if(textSearchConfig == null)
+		{
+			deleteReposTextSearchConfig(repos);
+			return;
+		}
+				
+		//Init RealDocTextSearchDisableHashMap
+		initRealDocTextSearchDisableHashMap(repos);
+		//Init VirtualDocTextSearchDisableHashMap
+		initVirtualDocTextSearchDisableHashMap(repos);	
+		
+		setReposTextSearchConfig(repos, textSearchConfig);
+	}
+	
+	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
+		try {
+			//config中不允许出现转义字符 \ ,否则会导致JSON解析错误
+			if(config == null || config.isEmpty())
+			{
+				return null;
+			}
+			
+			config = config.replace('\\', '/');	
+			
+			JSONObject jsonObj = JSON.parseObject(config);
+			if(jsonObj == null)
+			{
+				return null;
+			}
+			
+			Log.printObject("parseTextSearchConfig() ", jsonObj);
+			
+			TextSearchConfig textSearchConfig = new TextSearchConfig();
+			textSearchConfig.enable = false;
+			
+			Integer enable = jsonObj.getInteger("enable");
+			if(enable != null && enable == 1)
+			{
+				textSearchConfig.enable = true;
+			}
+			Log.debug("parseTextSearchConfig textSearchConfig.enable:" + textSearchConfig.enable);
+			
+			textSearchConfig.realDocTextSearchDisableHashMap = new ConcurrentHashMap<String, Integer>();
+			textSearchConfig.virtualDocTextSearchDisablehHashMap = new ConcurrentHashMap<String, Integer>();			
+			return textSearchConfig;
+		}
+		catch(Exception e) {
+			errorLog(e);
+			return null;
+		}
+	}
+	
+	private void initRealDocTextSearchDisableHashMap(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetRealDocTextSearchIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetRealDocTextSearchIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetRealDocTextSearchIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetRealDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetRealDocTextSearchIgnored() RealDoc textSearch was ignored for [" + entryPath +"]");
+			repos.textSearchConfig.realDocTextSearchDisableHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetRealDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+
+	private void initVirtualDocTextSearchDisableHashMap(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+		
+		//root doc
+		File dir = new File(configPath);
+		checkAndSetVirtualDocTextSearchIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetVirtualDocTextSearchIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetVirtualDocTextSearchIgnored() entryPath:" + entryPath);
+	
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetVirtualDocTextSearchIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetVirtualDocTextSearchIgnored() VirtualDoc textSearch was ignored for [" + entryPath +"]");
+			repos.textSearchConfig.virtualDocTextSearchDisablehHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetVirtualDocTextSearchIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+	
+	protected String getReposTextSearch(Repos repos) {
+		String configPath = Path.getReposTextSearchConfigPath(repos);		
+		String textSearch =  FileUtil.readDocContentFromFile(configPath, "textSearch.conf", "UTF-8");
+		if(textSearch == null || textSearch.isEmpty())
+		{
+			//兼容2.02.33以前的版本（使用docId作为关闭标记）
+			String reposRealDocTextSearchConfigPath = Path.getReposTextSearchConfigPathForRealDoc(repos);
+			String disableRealDocTextSearchFileName = "0";
+			if(FileUtil.isFileExist(reposRealDocTextSearchConfigPath + disableRealDocTextSearchFileName) == false)
+			{
+				textSearch = "{enable:1}";
+			}
+			else
+			{
+				textSearch = "{enable:0}";
+			}
+			FileUtil.saveDocContentToFile(textSearch, configPath, "textSearch.conf", "UTF-8");
+		}
+		return textSearch;		
+	}
+	
+	//*** 仓库版本忽略配置 ***
+	protected void initReposVersionIgnoreConfig(Repos repos) {
+		//add TextSearchConfig For repos
+		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
+		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
+		
+		//set to repos 
+		repos.versionIgnoreConfig = versionIgnoreConfig;
+		
+		initReposVersionIgnoreHashMap(repos);
+		
+		setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
+	}
+	
+	private void initReposVersionIgnoreHashMap(Repos repos) {
+		String reposTextSearchConfigPath = Path.getReposVersionIgnoreConfigPath(repos);
+		
+		//root doc
+		File dir = new File(reposTextSearchConfigPath);
+		checkAndSetVersionIgnored("/", dir, repos);
+	}
+	
+	private void checkAndSetVersionIgnored(String entryPath, File file, Repos repos) {
+		Log.debug("checkAndSetVersionIgnored() entryPath:" + entryPath);
+		//文件忽略
+		if(file.isFile() == true)
+		{
+			return;
+		}
+		
+		String ignoreFilePath = file.getAbsolutePath() + "/.ignore";
+		Log.debug("checkAndSetVersionIgnored() ignoreFilePath:" + ignoreFilePath);
+		
+		File ignoreFile = new File(ignoreFilePath);
+		if(ignoreFile.exists() == true)
+		{
+			Log.debug("checkAndSetVersionIgnored() version was ignored for [" + entryPath +"]");
+			repos.versionIgnoreConfig.versionIgnoreHashMap.put(entryPath, 1);
+			return;
+		}
+		
+		File[] list = file.listFiles();
+		String parentPath = "/";
+		if(!entryPath.equals("/"))
+		{
+			parentPath = entryPath + "/";
+		}
+		
+		if(list != null)
+		{
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				checkAndSetVersionIgnored(parentPath + subFile.getName(), subFile, repos);			
+			}
+		}	
+	}
+	
+	//*** 仓库加密配置 ****
+	protected void initReposEncryptConfig(Repos repos) {
+		EncryptConfig config = parseReposEncryptConfig(repos);
+		if(config == null)
+		{
+			deleteReposEncryptConfig(repos);
+		}
+		else
+		{
+			setReposEncryptConfig(repos, config);
+		}
+	}
+	
+	protected EncryptConfig parseReposEncryptConfig(Repos repos) {
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+			
+		EncryptConfig config = new EncryptConfig();
+		String jsonStr = FileUtil.readDocContentFromFile(path, name, "UTF-8");
+		if(jsonStr != null && !jsonStr.isEmpty())
+		{
+			JSONObject json = JSON.parseObject(jsonStr);
+			config.type = json.getInteger("type");
+			if(config.type == null)
+			{
+				return null;
+			}
+			config.key = json.getString("key");
+			if(config.key == null)
+			{
+				return null;
+			}
+			
+			Integer firstBlockSize = json.getInteger("firstBlockSize");
+			if(firstBlockSize != null)
+			{
+				config.firstBlockSize = firstBlockSize;
+			}		
+			
+			Integer blockSize = json.getInteger("blockSize");
+			if(blockSize != null)
+			{
+				config.blockSize = blockSize; //default block size
+			}			
+			
+			Integer skipSize = json.getInteger("skipSize");
+			if(skipSize != null)
+			{
+				config.skipSize = skipSize;
+			}	
+			Integer maxSize = json.getInteger("maxSize");
+			if(maxSize != null)
+			{
+				config.maxSize = maxSize;	//默认最大加密100M
+			}	
+			return config;
+		}
+		return null;
+	}
+	
+	protected boolean removeReposEncryptConfig(Repos repos)
+	{
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		File file = new File(path, name);
+		if(file.exists() == false)
+		{
+			return true;
+		}
+		
+		return FileUtil.moveFileOrDir(path, name, path, "old" + name, true);
+	}
+	
+	protected EncryptConfig recoverReposEncryptConfig(Repos repos) 
+	{
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		File file = new File(path, "old" + name);
+		if(file.exists() == false)
+		{
+			Log.info("recoverReposEncryptConfig() there is no old config:" + path + "old" + name);
+			return null;
+		}
+		if(FileUtil.moveFileOrDir(path, "old" + name, path, name, true) == false)
+		{
+			Log.info("recoverReposEncryptConfig() move config failed, from " + path + "old" + name + " to " + path + name);
+			return null;
+		}
+		
+		return parseReposEncryptConfig(repos);
+	}
+	
+	protected EncryptConfig generateReposEncryptConfig(Repos repos, Integer encryptType) {
+		EncryptConfig config = null;
+		
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		File file = new File(path, name);
+		if(file.exists() == false)
+		{
+			//Try to recover the file
+			config = recoverReposEncryptConfig(repos);
+		}
+		if(config != null)
+		{
+			return config;
+		}
+		
+		//重新生成		
+		config = new EncryptConfig();
+		config.type = encryptType;
+		config.key = DES.getKey();
+		//config.firstBlockSize = 1024; 
+		//config.blockSize = 1024;
+		//config.maxSize = 100*1024*1024;
+		//config.skipSize = 4096;
+		
+		//Save Config
+		String jsonStr = JSON.toJSONString(config);
+		if(FileUtil.saveDocContentToFile(jsonStr, path, name, "UTF-8") == false)
+    	{
+    		Log.info("generateReposEncryptConfig() 密钥保存失败");
+    		return null;
+    	}
+		return config;
+	}
+	
+	//*** uniqueActionHashMap
 	protected boolean insertUniqueCommonAction(CommonAction action)
 	{
 		Doc srcDoc = action.getDoc();

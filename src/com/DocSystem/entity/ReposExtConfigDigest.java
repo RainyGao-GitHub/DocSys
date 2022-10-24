@@ -1,12 +1,12 @@
 package com.DocSystem.entity;
 
 public class ReposExtConfigDigest {
-	public final static String RemoteStorage = "RemoteStorage";
-    public final static String RemoteServer = "RemoteServer";
-    public final static String AutoBackup = "AutoBackup";
-    public final static String TextSearch = "TextSearch";
-    public final static String VersionIgnore = "VersionIgnore";
-    public final static String Encrypt = "EncryptConfig";
+	public final static String RemoteStorageConfig = "RemoteStorageConfig";
+    public final static String RemoteServerConfig = "RemoteServerConfig";
+    public final static String AutoBackupConfig = "AutoBackupConfig";
+    public final static String TextSearchConfig = "TextSearchConfig";
+    public final static String VersionIgnoreConfig = "VersionIgnoreConfig";
+    public final static String EncryptConfig = "EncryptConfig";
 
 	public Integer reposId;
 	public String remoteStorageConfigCheckSum;
