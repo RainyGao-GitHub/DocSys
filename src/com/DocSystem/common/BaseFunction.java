@@ -139,17 +139,17 @@ public class BaseFunction{
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
 
-	//远程存储服务器同步锁HashMap
+	//远程存储服务器同步锁HashMap: 远程存储服务器访问线程锁，集群时是结合redisSyncLock一起使用
 	protected static ConcurrentHashMap<String, Object> remoteStorageSyncLockHashMap = new ConcurrentHashMap<String, Object>();	
 
-	//目录下载压缩任务HashMap
+	//目录下载压缩任务HashMap: 下载任务只会在用户登录的服务器上创建，因此不需要考虑集群
 	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
 
-	//仓库全量备份任务HashMap
+	//仓库全量备份任务HashMap: 全量备份任务只会在用户登录的服务器上创建，因此不需要考虑集群
 	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
 
-	//TODO: 需要确认是否放入redis
 	//仓库同步任务HashMap
+	//TODO: 需要考虑集群
 	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 	
 	//系统默认用户
@@ -161,7 +161,6 @@ public class BaseFunction{
 
     //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
     //接口访问授权码HashMap
-    //TODO: 集群支持
   	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
     
 	//仓库锁HashMap
@@ -174,7 +173,7 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
 
 	//**** 仓库扩展配置 ***
-	//reposDataHashMap（主要用于存放仓库相关的线程锁，因此集群时不需要放入redis）
+	//reposDataHashMap（主要用于存放仓库相关的线程锁，因此集群时不需要放入redis，但其中的isBusy标志需要存入redis）
 	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
 	//仓库远程存储配置HashMap
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
@@ -394,6 +393,35 @@ public class BaseFunction{
 		return (AuthCode) authCodeMap.get(authCode);
 	}
 	
+	//*** ReposIsBusy Flag
+	protected void setReposIsBusy(Integer reposId, boolean isBusy) {
+		if(redisEn)
+		{
+			setReposIsBusyRedis(reposId, isBusy);
+		}
+		else
+		{
+			setReposIsBusyLocal(reposId, isBusy);			
+		}
+	}
+
+	private void setReposIsBusyLocal(Integer reposId, boolean isBusy) {
+		reposDataHashMap.get(reposId).isBusy = isBusy;
+	}
+
+	private void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
+		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
+		ReposData reposData = (ReposData) reposDataHashMap.get(reposId);
+		reposData.isBusy = isBusy;
+		reposDataHashMap.put(reposId, reposData);
+	}
+	
+	protected boolean getReposIsBusyRedis(Integer reposId) {
+		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
+		ReposData reposData = (ReposData) reposDataHashMap.get(reposId);
+		return reposData.isBusy;
+	}	
+	
 	//*** 仓库扩展配置 ***
 	//*** reposExtConfigDigestHashMap
 	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
@@ -505,7 +533,7 @@ public class BaseFunction{
 		}
 		return null;
 	}
-
+	
 	//*** reposRemoteStorageHashMap
 	private static void setReposRemoteStorageConfig(Repos repos, RemoteStorageConfig config) {
 		reposRemoteStorageHashMap.put(repos.getId(), config);

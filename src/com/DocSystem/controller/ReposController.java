@@ -1087,28 +1087,6 @@ public class ReposController extends BaseController{
 		setReposIsBusy(reposId, false);
 	}
 
-	private void setReposIsBusy(Integer reposId, boolean isBusy) {
-		if(redisEn)
-		{
-			setReposIsBusyRedis(reposId, isBusy);
-		}
-		else
-		{
-			setReposIsBusyLocal(reposId, isBusy);			
-		}
-	}
-
-	private void setReposIsBusyLocal(Integer reposId, boolean isBusy) {
-		reposDataHashMap.get(reposId).isBusy = isBusy;
-	}
-
-	private void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
-		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
-		ReposData reposData = (ReposData) reposDataHashMap.get(reposId);
-		reposData.isBusy = isBusy;
-		reposDataHashMap.put(reposId, reposData);
-	}
-
 	private boolean isReposVerCtrlChanged(Repos newReposInfo, Repos reposInfo) {
 		Integer newVerCtrl = newReposInfo.getVerCtrl();
 		Integer verCtrl = reposInfo.getVerCtrl();
