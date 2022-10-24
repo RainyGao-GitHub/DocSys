@@ -11897,7 +11897,15 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected ReposData getReposData(Repos repos) {
-		return reposDataHashMap.get(repos.getId());
+		ReposData reposData = reposDataHashMap.get(repos.getId());
+		//TODO: 注意：reposData可能为空，这里不做判断是为了保证系统性能
+		//TODO: 理论上是不会为空的，只有在仓库是直接从数据库导入产生时才会有这种情况
+		//TODO: 因此需要在数据库导入成功后，对仓库进行一次重新初始化
+		if(redisEn)
+		{
+			reposData.isBusy = getReposIsBusyRedis(repos.getId());
+		}
+		return reposData;
 	}
 
 	protected void collectDocSysInstallationInfo(String serverIP, HttpServletRequest request) 
