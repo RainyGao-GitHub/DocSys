@@ -352,10 +352,10 @@ public class ReposController extends BaseController{
 		{
 			setReposAutoBackup(repos, autoBackup);
 			initReposAutoBackupConfig(repos, autoBackup);
-			if(repos.backupConfig != null)
+			if(repos.autoBackupConfig != null)
 			{
-				addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
-				addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始备份
+				addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
+				addDelayTaskForRemoteBackup(repos, repos.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始备份
 			}
 		}
 		
@@ -367,9 +367,9 @@ public class ReposController extends BaseController{
 		}
 		
 		//初始化仓库的版本管理忽略配置
-		initReposVersionIgnoreConfig(repos, true);
+		initReposVersionIgnoreConfig(repos);
 		
-		setReposEncrypt(repos, encryptType, true);
+		setReposEncrypt(repos, encryptType);
 		
 		InitReposAuthInfo(repos,login_user,rt);		
 		
@@ -411,11 +411,11 @@ public class ReposController extends BaseController{
 		return FileUtil.saveDocContentToFile(config, configPath, "textSearch.conf", "UTF-8");
 	}
 
-	private void setReposEncrypt(Repos repos, Integer encryptType, boolean updateDigest) {
+	private void setReposEncrypt(Repos repos, Integer encryptType) {
 		EncryptConfig config = null;
 		if(encryptType != null && encryptType != 0)
 		{
-			config = getReposEncryptConfig(repos);
+			config = parseReposEncryptConfig(repos);
 			if(config == null)
 			{
 				config = generateReposEncryptConfig(repos, encryptType);
@@ -423,23 +423,14 @@ public class ReposController extends BaseController{
 			
 			if(config != null)
 			{
-				reposEncryptConfigHashMap.put(repos.getId(), config);
-				config.checkSum = config.hashCode() + "";
-				if(updateDigest)
-				{
-					updateReposExtConfigDigest(repos, ReposExtConfigDigest.Encrypt, config.checkSum);
-				}
+				setReposEncryptConfig(repos, config);
 			}
 		}
 		else
 		{
 			if(removeReposEncryptConfig(repos) == true)
 			{
-				reposEncryptConfigHashMap.remove(repos.getId());	
-				if(updateDigest)
-				{
-					updateReposExtConfigDigest(repos, "EncryptConfig", "");
-				}
+				deleteReposEncryptConfig(repos);
 			}
 		}		
 	}
@@ -509,9 +500,9 @@ public class ReposController extends BaseController{
 	    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
 		}
 		
-		reposRemoteStorageHashMap.remove(repos.getId());
+		deleteReposRemoteStorageConfig(repos);
 
-		reposRemoteServerHashMap.remove(repos.getId());
+		deleteReposRemoteServerConfig(repos);
 
 		writeJson(rt, response);	
 		setReposIsBusy(repos.getId(), false);			
@@ -555,7 +546,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		if(repos.backupConfig == null)
+		if(repos.autoBackupConfig == null)
 		{
 			rt.setError("该仓库未配置自动备份，请联系系统管理员!");				
 			writeJson(rt, response);
@@ -566,22 +557,22 @@ public class ReposController extends BaseController{
 		switch(type)
 		{
 		case 1:	//本地备份
-			if(repos.backupConfig.localBackupConfig == null)
+			if(repos.autoBackupConfig.localBackupConfig == null)
 			{
 				rt.setError("该仓库未配置本地自动备份，请联系系统管理员!");				
 				writeJson(rt, response);
 				return;
 			}
-			reposAutoBackupTask = addDelayTaskForLocalBackup(repos, repos.backupConfig.localBackupConfig, 10, 120L, false); //2分钟后开始备份
+			reposAutoBackupTask = addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, 120L, false); //2分钟后开始备份
 			break;
 		case 2: //异地备份
-			if(repos.backupConfig.remoteBackupConfig == null)
+			if(repos.autoBackupConfig.remoteBackupConfig == null)
 			{
 				rt.setError("该仓库未配置异地自动备份，请联系系统管理员!");				
 				writeJson(rt, response);
 				return;
 			}
-			reposAutoBackupTask = addDelayTaskForRemoteBackup(repos, repos.backupConfig.remoteBackupConfig, 10, 120L, false); //2分钟后开始备份
+			reposAutoBackupTask = addDelayTaskForRemoteBackup(repos, repos.autoBackupConfig.remoteBackupConfig, 10, 120L, false); //2分钟后开始备份
 			break;
 		default:
 			rt.setError("仓库备份类型错误[" +type+ "]，请联系系统管理员!");				
@@ -981,10 +972,10 @@ public class ReposController extends BaseController{
 		{
 			setReposAutoBackup(reposInfo, autoBackup);
 			initReposAutoBackupConfig(reposInfo, autoBackup);
-			if(reposInfo.backupConfig != null)
+			if(reposInfo.autoBackupConfig != null)
 			{
-				addDelayTaskForLocalBackup(reposInfo, reposInfo.backupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始自动备份
-				addDelayTaskForRemoteBackup(reposInfo, reposInfo.backupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始自动备份
+				addDelayTaskForLocalBackup(reposInfo, reposInfo.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始自动备份
+				addDelayTaskForRemoteBackup(reposInfo, reposInfo.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始自动备份
 			}
 		}
 		
@@ -999,7 +990,7 @@ public class ReposController extends BaseController{
 		{			
 			if(reposInfo.encryptType == null || encryptType != reposInfo.encryptType)
 			{
-				setReposEncrypt(reposInfo, encryptType, true);				
+				setReposEncrypt(reposInfo, encryptType);				
 			}			
 		}
 		
