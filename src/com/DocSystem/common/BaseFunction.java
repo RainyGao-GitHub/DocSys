@@ -46,6 +46,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
+import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
@@ -410,16 +411,18 @@ public class BaseFunction{
 	}
 
 	private void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
-		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
-		ReposData reposData = (ReposData) reposDataHashMap.get(reposId);
-		reposData.isBusy = isBusy;
-		reposDataHashMap.put(reposId, reposData);
+		RBucket<Object> bucket = redisClient.getBucket("ReposIsBusy" + reposId);
+		bucket.set(isBusy);
 	}
 	
 	protected boolean getReposIsBusyRedis(Integer reposId) {
-		RMap<Object, Object> reposDataHashMap = redisClient.getMap("ReposDataHashMap");
-		ReposData reposData = (ReposData) reposDataHashMap.get(reposId);
-		return reposData.isBusy;
+		RBucket<Object> bucket = redisClient.getBucket("ReposIsBusy" + reposId);
+		Boolean isBusy = (Boolean) bucket.get();
+		if(isBusy == null)
+		{
+			return false;
+		}
+		return isBusy;
 	}	
 	
 	//*** 仓库扩展配置 ***
