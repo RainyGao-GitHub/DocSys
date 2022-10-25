@@ -140,7 +140,7 @@ public class BaseFunction{
 	//远程分享服务线程（一个服务器只允许启动一个）
 	protected static ShareThread shareThread = null;
 
-	//远程存储服务器同步锁HashMap: 远程存储服务器访问线程锁，集群时是结合redisSyncLock一起使用
+	//远程存储服务器同步锁HashMap: 远程存储服务器访问线程锁，集群时结合redisSyncLock一起使用，Map不需要存入redis
 	protected static ConcurrentHashMap<String, Object> remoteStorageSyncLockHashMap = new ConcurrentHashMap<String, Object>();	
 
 	//目录下载压缩任务HashMap: 下载任务只会在用户登录的服务器上创建，因此不需要考虑集群
@@ -148,10 +148,6 @@ public class BaseFunction{
 
 	//仓库全量备份任务HashMap: 全量备份任务只会在用户登录的服务器上创建，因此不需要考虑集群
 	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
-
-	//仓库同步任务HashMap
-	//TODO: 需要考虑集群
-	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 	
 	//系统默认用户
 	protected static User coEditUser = new User();
@@ -173,9 +169,10 @@ public class BaseFunction{
 	//远程存储服务器锁HashMap
 	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
 
-	//**** 仓库扩展配置 ***
-	//reposDataHashMap（主要用于存放仓库相关的线程锁，因此集群时不需要放入redis，但其中的isBusy标志需要存入redis）
+	//reposDataHashMap（isBusy字段集群时需要放入redis，其他字段是存放仓库的线程锁，集群时是结合redisSyncLock一起使用，Map不需要放入redis）
 	protected static ConcurrentHashMap<Integer, ReposData> reposDataHashMap = new ConcurrentHashMap<Integer, ReposData>();	
+
+	//**** 仓库扩展配置: 结合reposExtConfigDigest一起使用，digest变动时才从redis中同步对应的扩展配置到localMap
 	//仓库远程存储配置HashMap
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	//仓库远程服务器前置配置HashMap
@@ -190,13 +187,19 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
 	
 	//仓库自动备份任务HashMap
+	//TODO: 目前每个服务器都会启动备份任务线程，但由于备份的时候需要lockDoc，因此可以避免备份任务冲突
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
 
 	//仓库文件同步任务HashMap
+	//TODO: 目前每个服务器都会启动仓库同步任务线程，同步任务的执行依赖uniqueActionHashMap，因此uniqueActionHashMap需要考虑集群
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
+	//仓库同步任务HashMap
+	//TODO: 需要考虑集群以避免跨服之间的冲突，可以考虑将uniqueActionHashMap直接存入redis中
+	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 
 	//数据库备份任务HashMap
+	//TODO: 目前不会有太大的风险，最多每个服务器备份一次，可以考虑将Map存入redis
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();		
 
 	static {
