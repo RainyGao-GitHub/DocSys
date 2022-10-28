@@ -331,6 +331,10 @@ authMode=1：表示需要进行登录密码校验
 
 FTP服务器为被动模式情况下，需要在MxsDoc的FTP配置中增加参数 isPassive=1
 
+#### 7、nginx反向代理时，大文件上传时提示服务器异常
+
+将nginx的client_max_body_size改为100M
+
 ### 十、调试日志获取
 
 #### 1、调试日志获取（系统可登录）
