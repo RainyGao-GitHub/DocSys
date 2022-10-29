@@ -42,8 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.Vector;
-import java.util.Map.Entry;
-
 import javax.naming.AuthenticationException;
 import javax.naming.CommunicationException;
 import javax.naming.Context;
@@ -82,7 +80,6 @@ import org.apache.tools.zip.ZipFile;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.redisson.api.RMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
@@ -93,7 +90,6 @@ import util.DateFormat;
 import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
-import util.Encrypt.DES;
 import util.Encrypt.MD5;
 
 import com.DocSystem.common.Base64Util;
@@ -109,12 +105,10 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
-import com.DocSystem.common.TextSearchConfig;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
-import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
@@ -155,7 +149,6 @@ import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
-import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.Role;
 import com.DocSystem.entity.SysConfig;
 import com.DocSystem.entity.User;
@@ -193,6 +186,7 @@ public class BaseController  extends BaseFunction{
 	
     static {		
 		initLogLevel();
+		initDocSysDataPath();
     }
 
 	private static void initLogLevel() {
@@ -243,6 +237,31 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 	    Log.debug("initLogFile() Log.logFile:" + Log.logFile);
+	}
+	
+	private static void initDocSysDataPath() {
+		Log.debug("initDocSysDataPath()");
+		docSysDataPath = Path.getDefaultDataStorePath(OSType);
+		if(docSysDataPath != null)
+		{
+			File file = new File(docSysDataPath);
+	        if(file.exists() == false)
+	        {
+	        	try {
+	        		file.mkdirs();
+	        	} catch (Exception e) {
+	        		docSysDataPath = null;
+					Log.debug("initDocSysDataPath() Failed to create docSysData folder:" + docSysDataPath);
+					Log.info(e);
+				}
+			}
+		}
+		
+		if(docSysDataPath == null)
+		{
+			docSysDataPath = docSysIniPath;
+		}
+		Log.debug("initDocSysDataPath docSysDataPath:" + docSysDataPath);
 	}
 
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
