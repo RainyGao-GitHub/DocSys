@@ -109,6 +109,9 @@ public class BaseFunction{
     protected static String docSysWebPath = null;
     protected static String defaultLogFilePath = null;
     protected static String webappsPath = null;
+    
+    //MxsDoc的数据存储路径(用于存放userImg/IndexLib/SystemLog/SalesData等)，当配置文件有配置时则以配置为准
+    protected static String docSysDataPath = null;
 	
     //系统License
     public static License systemLicenseInfo = null;
