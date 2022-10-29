@@ -938,7 +938,7 @@ public class UserController extends BaseController {
 	
 	private String getUserImgPath()
 	{	
-		String imgDirPath = docSysIniPath + "userImg/";
+		String imgDirPath = docSysDataPath + "userImg/";
         return imgDirPath;
 	}
 		

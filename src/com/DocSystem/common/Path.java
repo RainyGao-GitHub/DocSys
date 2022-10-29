@@ -342,6 +342,34 @@ public class Path {
 		return path;
 	}
 	
+	//获取MxsDoc默认数据存储路径（Data目录用于存放userImg/IndexLib/SystemLog/salesData等）
+	public static String getDefaultDataStorePath(Integer OSType) {
+		String path = ReadProperties.read("docSysConfig.properties", "defaultDataStorePath");
+		if(OS.isWinOS(OSType))
+		{
+			if(path == null || path.isEmpty())
+			{
+				path = "C:/DocSysData/";
+			}
+			else
+			{
+				path = localDirPathFormat(path, OSType);
+			}
+	    }	
+		else
+		{
+			if(path == null || path.isEmpty())
+			{
+				path = "/DocSysData/";
+			}
+			else
+			{
+				path = localDirPathFormat(path, OSType);
+			}
+		}	    
+		return path;
+	}
+	
 	public static String getSaleDataStorePath(Integer OSType) {
     	String path = null;
     	path = ReadProperties.read("docSysConfig.properties", "SalesDataStorePath");
