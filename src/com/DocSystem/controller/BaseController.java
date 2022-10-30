@@ -15729,7 +15729,7 @@ public class BaseController  extends BaseFunction{
 		{
 			requestUrl += "&type="+type;
 		}
-		JSONObject ret = postJson(requestUrl, null);	//AuthCode
+		JSONObject ret = postJson(requestUrl, null, true);	//AuthCode
 
 		if(ret == null)
 		{

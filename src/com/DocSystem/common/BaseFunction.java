@@ -4477,7 +4477,7 @@ public class BaseFunction{
      *
      * @return
      */
-    public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, HashMap<String, String> params) {
+    public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, HashMap<String, String> params, boolean waitForResponse) {
 		JSONObject returnJson = null;
 		Log.debug("\n*************************** postFileStreamAndJsonObj Start");
         try {
@@ -4545,16 +4545,20 @@ public class BaseFunction{
             out.flush();
             out.close();
             
-			// 读取响应
-			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(),"utf-8"));//**注意点3**，需要此格式
-			String lines;
-			StringBuffer sb = new StringBuffer("");
-			while ((lines = reader.readLine()) != null) {
-				sb.append(lines);
-			}
-			Log.debug("postFileStreamAndJsonObj response:"+sb);			
-			returnJson = JSONObject.parseObject(sb.toString());
-			reader.close();
+            if(waitForResponse)
+            {
+				// 读取响应
+				BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(),"utf-8"));//**注意点3**，需要此格式
+				String lines;
+				StringBuffer sb = new StringBuffer("");
+				while ((lines = reader.readLine()) != null) {
+					sb.append(lines);
+				}
+				Log.debug("postFileStreamAndJsonObj response:"+sb);			
+				returnJson = JSONObject.parseObject(sb.toString());
+				reader.close();
+            }
+            
 			// 断开连接
 			conn.disconnect();			
         } catch (Exception e) {
@@ -4566,8 +4570,8 @@ public class BaseFunction{
         return returnJson;
     }
     
-	public static JSONObject postJson(String urlString , HashMap<String, String> params) {
-		return postFileStreamAndJsonObj(urlString, null, null, params);
+	public static JSONObject postJson(String urlString , HashMap<String, String> params, boolean waitForResponse) {
+		return postFileStreamAndJsonObj(urlString, null, null, params,waitForResponse);
 	}
 
     //注意：该函数只能用于传输小量二进制文件，而且接收也必须是非标方法
