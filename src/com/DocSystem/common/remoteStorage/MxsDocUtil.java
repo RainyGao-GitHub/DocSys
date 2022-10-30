@@ -51,7 +51,7 @@ public class MxsDocUtil {
 		}
 		Log.debug("MxsDocUtil login() requestUrl:" + requestUrl);		
 		
-		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, params);
+		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, params, true);
 		if(ret == null)
 		{
 			Log.debug("MxsDocUtil login() ret is null");
@@ -93,7 +93,7 @@ public class MxsDocUtil {
 			reqParams.put("remoteDirectory", remoteDirectory);
 		}
 		reqParams.put("path", directory);
-		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
+		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
 		if(ret == null)
 		{
 			Log.debug("MxsDocUtil listFiles() ret is null");
@@ -132,7 +132,7 @@ public class MxsDocUtil {
 		reqParams.put("path", path);
 		reqParams.put("name", name);
 		
-		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
+		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
 		if(ret == null)
 		{
 			Log.debug("MxsDocUtil getEntry() ret is null");
@@ -296,7 +296,7 @@ public class MxsDocUtil {
 					//reqParams.put("chunkNum", chunkNum);
 					reqParams.put("chunkSize", size+"");					
 				}				
-				JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, name, docData, reqParams);
+				JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, name, docData, reqParams, true);
 				if(ret == null)
 				{
 					Log.debug("remoteUploadFile() ret is null");
@@ -338,7 +338,7 @@ public class MxsDocUtil {
     		reqParams.put("path", remotePath);
     		reqParams.put("name", name);
            
-    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
+    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
     		if(ret == null)
     		{
     			Log.debug("MxsDocUtil add() ret is null");
@@ -389,7 +389,7 @@ public class MxsDocUtil {
     			reqParams.put("isMove", "1");
     		}
            
-    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
+    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
     		if(ret == null)
     		{
     			Log.debug("MxsDocUtil copy() ret is null");
@@ -434,7 +434,7 @@ public class MxsDocUtil {
     		reqParams.put("path", remotePath);
     		reqParams.put("name", fileName);
            
-    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams);
+    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
     		if(ret == null)
     		{
     			Log.debug("MxsDocUtil delete() ret is null");
