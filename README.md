@@ -197,6 +197,8 @@ fc-cache
 
 运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
 
+##### 2.6、重启MxsDoc
+
 #### 3、Linux系统 Office 编辑握手延时过大，导致文件打开失败
 
 与DNS解析的配置有关,解决方法如下：
@@ -214,6 +216,8 @@ fc-cache
 ##### 4.1、检查系统缺少的动态库并修复
 
 双击运行 DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.bat ，根据报错提示确定需要修复的动态库
+
+##### 4.2、重启MxsDoc
 
 ### 六、什么是分布式远程存储
 
