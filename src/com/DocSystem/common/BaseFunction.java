@@ -953,7 +953,8 @@ public class BaseFunction{
 		
 		//Do Lock
 		//lockTime is the time to release lock 
-		long lockTime = new Date().getTime() + lockDuration;
+		long currentTime = new Date().getTime();
+		long lockTime = currentTime + lockDuration;
 		int lockState = getLockState(lockType);
 		if(reposLock == null)
 		{
@@ -963,6 +964,7 @@ public class BaseFunction{
 			reposLock.locker[lockType] = login_user.getName();
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
+			reposLock.createTime[lockType] = currentTime;
 			addReposLock(repos, reposLock);			
 		}
 		else
@@ -1140,7 +1142,9 @@ public class BaseFunction{
 			docLock.setState(getLockState(lockType));
 			docLock.locker[lockType] = login_user.getName();
 			docLock.lockBy[lockType] = login_user.getId();
-			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime
+			Long currentTime = new Date().getTime();
+			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime
+			docLock.createTime[lockType] = currentTime;	//Set createTime
 			addDocLock(doc, docLock);
 			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
