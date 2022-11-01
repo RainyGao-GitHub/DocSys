@@ -49,6 +49,8 @@ public class DocLock {
 
     public Long[] lockTime = {null, null, null, null, null, null, null};
     
+    public Long[] createTime = {null, null, null, null, null, null, null};
+    
     public Integer getId() {
         return id;
     }
