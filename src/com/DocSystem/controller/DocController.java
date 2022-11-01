@@ -4169,14 +4169,18 @@ public class DocController extends BaseController{
 		{
     		redisSyncLockEx(lockName, lockInfo);
     		
-			//解锁不需要检查子目录的锁定，因为不会影响子目录
+    		//解锁不需要检查子目录的锁定，因为不会影响子目录
 			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
 			{
-				redisSyncUnlockEx(lockName, lockInfo, syncLock);
+				if(isForceUnlockAllow(doc, lockType, reposAccess.getAccessUser()) == false)
+				{				
+					redisSyncUnlockEx(lockName, lockInfo, syncLock);
 
-				writeJson(rt, response);
-				return;
-			}				
+					writeJson(rt, response);
+					return;
+				}
+			}
+			
 			unlockDoc(doc, lockType, reposAccess.getAccessUser());
 
 			redisSyncUnlockEx(lockName, lockInfo, syncLock);
@@ -4189,6 +4193,35 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "解锁文件", "成功", repos, doc, null, "");	
 	}
 	
+	private boolean isForceUnlockAllow(Doc doc, Integer lockType, User accessUser) {
+		
+		if(accessUser.getType() < 2)	//超级管理员才可以强行解锁
+		{
+			return false;
+		}
+		
+		DocLock docLock = getDocLock(doc);
+		if(docLock == null)
+		{
+			return true;
+		}
+		
+		Long createTime = docLock.createTime[lockType];
+		if(createTime == null)
+		{
+			return true;
+		}
+		
+		//十分钟可以强行解锁
+		long curTime = new Date().getTime();
+		if((curTime - createTime) > 10*60*1000)
+		{
+			return true;
+		}
+		
+		return false;
+	}
+
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
 	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
