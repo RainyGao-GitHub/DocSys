@@ -2092,13 +2092,13 @@
  				}
 				else
 				{
-					showErrorMessage("LockDoc Error:" + ret.msgInfo);
+					showErrorMessage(ret.msgInfo);
 					return;
 				}
 			},
 			error : function ()
 			{
-				showErrorMessage("LockDoc 异常");
+				showErrorMessage("锁定失败: 服务器异常");
 				return;
 			}
 		});
@@ -2141,13 +2141,13 @@
  				}
 				else
 				{
-					showErrorMessage("UnlockDoc Error:" + ret.msgInfo);
+					showErrorMessage(ret.msgInfo);
 					return;
 				}
 			},
 			error : function ()
 			{
-				showErrorMessage("UnlockDoc 异常");
+				showErrorMessage("解锁失败: 服务器异常");
 				return;
 			}
 		});
@@ -3868,13 +3868,13 @@
  				}
 				else
 				{
-					showErrorMessage("LockDoc Error:" + ret.msgInfo);
+					showErrorMessage(ret.msgInfo);
 					return;
 				}
 			},
 			error : function ()
 			{
-				showErrorMessage("LockDoc 异常");
+				showErrorMessage("锁定失败: 服务器异常");
 				return;
 			}
 		});
