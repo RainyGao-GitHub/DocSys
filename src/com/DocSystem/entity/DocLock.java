@@ -16,6 +16,7 @@ public class DocLock {
 	public static final int LOCK_TYPE_COEDIT 	= 4;
 	public static final int LOCK_TYPE_VCOEDIT 	= 5;
 	public static final int LOCK_TYPE_VFORCE 	= 6;
+	public static final int LOCK_TYPE_ALL 		= 999;
 	
 	public static int lockStateMap[] = {
 			DocLock.LOCK_STATE_NONE,
