@@ -829,7 +829,7 @@ public class ManageController extends BaseController{
 	
 	/********** 禁用系统 ***************/
 	@RequestMapping("/disableSystem.do")
-	public void setSystemInfo(String authCode,
+	public void disableSystem(String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("****************** disableSystem.do ***********************");

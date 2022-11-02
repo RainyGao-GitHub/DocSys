@@ -110,7 +110,7 @@ public class BaseFunction{
     protected static String defaultLogFilePath = null;
     protected static String webappsPath = null;
     
-    //MxsDoc的数据存储路径(用于存放userImg/IndexLib/SystemLog/SalesData等)，当配置文件有配置时则以配置为准
+    //用户头像和IndexLib存放路径
     protected static String docSysDataPath = null;
 	
     //系统License
@@ -2175,7 +2175,7 @@ public class BaseFunction{
 		remoteBackupConfig.weekDay5 = remoteBackupObj.getInteger("weekDay5");
 		remoteBackupConfig.weekDay6 = remoteBackupObj.getInteger("weekDay6");
 		remoteBackupConfig.weekDay7 = remoteBackupObj.getInteger("weekDay7");
-		remoteBackupConfig.indexLibBase = getDBStorePath() + "RemoteBackup/" + repos.getId() + "/";
+		remoteBackupConfig.indexLibBase = Path.getDataStorePath(OSType)  + "RemoteBackup/" + repos.getId() + "/";
 
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr, "RemoteBackup");
 		remoteBackupConfig.remoteStorageConfig = remote;
@@ -2259,7 +2259,7 @@ public class BaseFunction{
 		localBackupConfig.weekDay5 = localBackupObj.getInteger("weekDay5");
 		localBackupConfig.weekDay6 = localBackupObj.getInteger("weekDay6");
 		localBackupConfig.weekDay7 = localBackupObj.getInteger("weekDay7");
-		localBackupConfig.indexLibBase = getDBStorePath() + "LocalBackup/" + repos.getId() + "/";
+		localBackupConfig.indexLibBase = Path.getDataStorePath(OSType) + "LocalBackup/" + repos.getId() + "/";
 		
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "file";
@@ -2378,7 +2378,7 @@ public class BaseFunction{
 		}
 		
 		//设置索引库位置
-		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
+		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
 
 		setReposRemoteStorageConfig(repos, remote);
 	}
@@ -3004,7 +3004,7 @@ public class BaseFunction{
 		}
 		
 		//设置索引库位置
-		remote.remoteStorageIndexLib = getDBStorePath() + "RemoteServer/" + repos.getId() + "/Doc";
+		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
 
 		setReposRemoteServerConfig(repos, remote);
 	}
@@ -4357,11 +4357,11 @@ public class BaseFunction{
 	}
 	
 	protected static String getIndexLibPathForPreferLink() {
-		return getDBStorePath() + "UserPreferLink/";
+		return Path.getDataStorePath(OSType) + "UserPreferLink/";
 	}
 	
 	protected static String getIndexLibPathForUserPreferServer() {
-		return getDBStorePath() + "UserPreferServer/";
+		return Path.getDataStorePath(OSType) + "UserPreferServer/";
 	}
 	
 	protected static String getIndexLibPathForRemoteStorageDoc(Repos repos, RemoteStorageConfig remote) {
@@ -4373,29 +4373,6 @@ public class BaseFunction{
 		return remote.remoteStorageIndexLib;
 
 	}
-	
-	protected static String getDBStorePath() {
-    	String path = null;
-    	path = ReadProperties.read("docSysConfig.properties", "DBStorePath");
-        if(path != null && !path.isEmpty())
-        {
-        	return Path.localDirPathFormat(path, OSType);
-        }
-
-        switch(OSType)
-        {
-        case OS.Windows:
-        	path = "C:/DocSysDB/";
-        	break;
-        case OS.Linux: 
-        	path = "/data/DocSysDB/";
-        	break;
-        case OS.MacOS:
-        	path = "/data/DocSysDB/";
-        	break;
-        }
-        return path;
-    }	
 	
 	protected static String getRequestIpAddress(HttpServletRequest request) {
 	    String ip = null;
