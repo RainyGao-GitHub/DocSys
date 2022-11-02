@@ -240,8 +240,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private static void initDocSysDataPath() {
-		Log.debug("initDocSysDataPath()");
-		docSysDataPath = Path.getDefaultDataStorePath(OSType);
+		Log.info("initDocSysDataPath()");
+		docSysDataPath = Path.getDataStorePath(OSType);
 		if(docSysDataPath != null)
 		{
 			File file = new File(docSysDataPath);
@@ -251,7 +251,7 @@ public class BaseController  extends BaseFunction{
 	        		file.mkdirs();
 	        	} catch (Exception e) {
 	        		docSysDataPath = null;
-					Log.debug("initDocSysDataPath() Failed to create docSysData folder:" + docSysDataPath);
+					Log.info("initDocSysDataPath() Failed to create docSysData folder:" + docSysDataPath);
 					Log.info(e);
 				}
 			}
@@ -261,7 +261,7 @@ public class BaseController  extends BaseFunction{
 		{
 			docSysDataPath = docSysIniPath;
 		}
-		Log.debug("initDocSysDataPath docSysDataPath:" + docSysDataPath);
+		Log.info("initDocSysDataPath docSysDataPath:" + docSysDataPath);
 	}
 
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
@@ -19787,7 +19787,7 @@ public class BaseController  extends BaseFunction{
 		String systemLogStorePath = Path.getSystemLogStorePath(OSType);
 		systemInfo.put("systemLogStorePath", systemLogStorePath);
 		
-		String indexDBStorePath = getDBStorePath();
+		String indexDBStorePath = Path.getDataStorePath(OSType);
 		systemInfo.put("indexDBStorePath", indexDBStorePath);
 
 		String salesDataStorePath = Path.getSaleDataStorePath(OSType);
