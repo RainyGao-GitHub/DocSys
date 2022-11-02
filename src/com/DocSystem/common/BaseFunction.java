@@ -1193,7 +1193,7 @@ public class BaseFunction{
 			return true;
 		}
 		
-		//备注文件时平面结构，不需要检查父节点和子节点
+		//备注文件是平面结构，不需要检查父节点和子节点
 		switch(lockType)
 		{
 		case DocLock.LOCK_TYPE_FORCE:
@@ -1278,7 +1278,7 @@ public class BaseFunction{
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 	
-	private void deleteDocLock(Doc doc) {
+	protected void deleteDocLock(Doc doc) {
 		if(redisEn)
 		{
 			deleteDocLockRedis(doc);
@@ -1465,7 +1465,7 @@ public class BaseFunction{
 		}
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError(docLock.getPath() + docLock.getName() +" was force locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
 		Log.debug("isDocForceLocked() " + docLock.getPath() + docLock.getName() +" was force locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
 
 		return true;	
@@ -1495,7 +1495,7 @@ public class BaseFunction{
 		}
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError(docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
+		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
 		Log.debug("isDocLocked() " + docLock.getPath() + docLock.getName() +" was locked by [" + docLock.lockBy[lockType] + "] " + docLock.locker[lockType] + " till " + lockTime);
 		return true;	
 	}

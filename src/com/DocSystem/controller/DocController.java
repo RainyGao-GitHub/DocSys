@@ -4165,6 +4165,7 @@ public class DocController extends BaseController{
 		//正常情况下unlockDoc是不需要上锁的，因为都是已经取到锁的情况下解锁，所以肯定不会冲突，但这里比较特殊是尝试直接解锁
 		String lockInfo = "unlockDoc() syncLock";
 		String lockName = "syncLock";
+		Boolean isForceUnlockAllow = false;
 		synchronized(syncLock)
 		{
     		redisSyncLockEx(lockName, lockInfo);
@@ -4172,21 +4173,36 @@ public class DocController extends BaseController{
     		//解锁不需要检查子目录的锁定，因为不会影响子目录
 			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
 			{
-				if(isForceUnlockAllow(doc, lockType, reposAccess.getAccessUser()) == false)
+				isForceUnlockAllow = isForceUnlockAllow(doc, lockType, reposAccess.getAccessUser());
+				if(isForceUnlockAllow == false)
 				{				
 					redisSyncUnlockEx(lockName, lockInfo, syncLock);
-
 					writeJson(rt, response);
 					return;
 				}
 			}
 			
-			unlockDoc(doc, lockType, reposAccess.getAccessUser());
-
+			if(isForceUnlockAllow == false)
+			{
+				unlockDoc(doc, lockType, reposAccess.getAccessUser());
+			}
+			else
+			{
+				//强行解锁是直接删除锁
+				deleteDocLock(doc);
+			}
 			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
 		
-		Log.debug("unlockDoc() unlock " + doc.getName() + " success");
+		if(isForceUnlockAllow == false)
+		{
+			Log.debug("unlockDoc() unlock " + doc.getName() + " success");
+		}
+		else
+		{
+			Log.debug("unlockDoc() superAdmin force unlock " + doc.getName() + " success");
+			rt.setStatus("ok");
+		}
 		rt.setData(doc);
 		writeJson(rt, response);	
 
@@ -4197,6 +4213,7 @@ public class DocController extends BaseController{
 		
 		if(accessUser.getType() < 2)	//超级管理员才可以强行解锁
 		{
+			Log.debug("isForceUnlockAllow() " + accessUser.getName() + " is not superAdmin");
 			return false;
 		}
 		
@@ -4206,20 +4223,36 @@ public class DocController extends BaseController{
 			return true;
 		}
 		
-		Long createTime = docLock.createTime[lockType];
-		if(createTime == null)
-		{
-			return true;
-		}
-		
-		//十分钟可以强行解锁
+		//必须ForceLock和NormalLock同时满足条件才可以强制解锁
+		//check forceLock createTime
 		long curTime = new Date().getTime();
-		if((curTime - createTime) > 10*60*1000)
+		Long forceLockCreateTime = docLock.createTime[DocLock.LOCK_TYPE_FORCE];
+		if(forceLockCreateTime != null)
 		{
-			return true;
+			//5分钟内不允许强行解锁
+			if((curTime - forceLockCreateTime) < 5*60*1000)
+			{
+				Log.debug("isForceUnlockAllow() file was force locked, lock time less than 5 minutes:" + (curTime - forceLockCreateTime));
+				return false;
+			}
 		}
 		
-		return false;
+		//check NormalLock
+		if(lockType != DocLock.LOCK_TYPE_FORCE)
+		{
+			Long createTime = docLock.createTime[lockType];
+			if(createTime != null)
+			{
+				//5分钟内不允许强行解锁
+				if((curTime - createTime) < 5*60*1000)
+				{
+					Log.debug("isForceUnlockAllow() file was locked, lock time less than 5 minutes:" + (curTime - createTime));
+					return false;
+				}
+			}
+		}
+		
+		return true;
 	}
 
 	/****************   get Document History (logList) ******************/
