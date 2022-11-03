@@ -239,7 +239,7 @@ public class BaseController  extends BaseFunction{
 	    Log.debug("initLogFile() Log.logFile:" + Log.logFile);
 	}
 	
-	private static void initDocSysDataPath() {
+	protected static void initDocSysDataPath() {
 		Log.info("initDocSysDataPath()");
 		docSysDataPath = Path.getDataStorePath(OSType);
 		if(docSysDataPath != null)
@@ -257,10 +257,6 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		if(docSysDataPath == null)
-		{
-			docSysDataPath = docSysIniPath;
-		}
 		Log.info("initDocSysDataPath docSysDataPath:" + docSysDataPath);
 	}
 

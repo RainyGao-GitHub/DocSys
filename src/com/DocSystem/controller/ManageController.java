@@ -1038,6 +1038,11 @@ public class ManageController extends BaseController{
 		{
 			applySystemLdapConfig(ldapConfig);			
 		}
+		
+		if(indexDBStorePath != null)
+		{
+			initDocSysDataPath();
+		}
 	}
 	
 	@RequestMapping("/ldapTest.do")
