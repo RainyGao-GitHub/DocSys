@@ -471,6 +471,25 @@
     	}		
     }
 	
+    function selectRedisEn()
+    {
+    	var redisEn = $("#redisEn").is(':checked')? 1: 0;
+    	console.log("redisEn redisEn:" + redisEn);
+    	if(redisEn == 0)
+    	{
+    		$("#redisUrl").attr('disabled',true);
+    	}
+    	else
+    	{	
+    		$("#redisUrl").attr('disabled',false);
+    		var redisUrl = $("#redisUrl").val();
+    		if(redisUrl == undefined || redisUrl == "")
+    		{
+    			$("#redisUrl").val("redis://localhost:6379");
+    		}
+    	}		
+    }
+	
 	function downloadLogFile(){
 		$.ajax({
 	        url : "/DocSystem/Manage/downloadLogFile.do",
@@ -1342,9 +1361,14 @@
 		$("#maxThreadCount").attr('disabled',false);		
 		$("#logLevel").attr('disabled',false);		
 		$("#outputToFileEn").attr('disabled',false);
-    	if(systemInfo.outputToFileEn == 1)
+		$("#redisEn").attr('disabled',false);
+		if(systemInfo.outputToFileEn == 1)
     	{
     		$("#logFile").attr('disabled',false);
+    	}
+		if(systemInfo.redisEn == 1)
+    	{
+    		$("#redisUrl").attr('disabled',false);
     	}
 	}
 	
@@ -1368,6 +1392,7 @@
 		$("#logLevel").attr('disabled',true);
 		$("#outputToFileEn").attr('disabled',true);
 		$("#logFile").attr('disabled',true);
+		$("#redisEn").attr('disabled',true);
 		
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#javaHome").val(systemInfo.javaHome);
@@ -1381,6 +1406,7 @@
 		$("#maxThreadCount option[value='"+systemInfo.maxThreadCount+"']").attr("selected","selected");
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
 		$("#logFile").val(systemInfo.logFile);
+		$("#redisUrl").val(systemInfo.redisUrl);
 		if(systemInfo.outputToFileEn == 1)
 		{
 			$("#outputToFileEn").prop("checked", true);
@@ -1388,6 +1414,14 @@
 		else
 		{
 			$("#outputToFileEn").prop("checked", false);			
+		}
+		if(systemInfo.redisEnd == 1)
+		{
+			$("#redisEn").prop("checked", true);
+		}
+		else
+		{
+			$("#redisEn").prop("checked", false);			
 		}
 	}
 	
@@ -1414,8 +1448,10 @@
 		$("#logLevel").attr('disabled',true);
 		$("#outputToFileEn").attr('disabled',true);
 		$("#logFile").attr('disabled',true);
+		$("#redisEn").attr('disabled',true);
+		$("#redisUrl").attr('disabled',true);
 		
-
+		
 		var tomcatPath = $("#tomcatPath").val();
 		var javaHome = $("#javaHome").val();
 		var openOfficePath = $("#openOfficePath").val();
@@ -1433,6 +1469,12 @@
     	{
 			logFile =  $("#logFile").val();
     	}
+    	var redisEn = $("#redisEn").is(':checked')? 1: 0;
+    	var redisUrl = "";
+    	if(redisEn == 1)
+    	{
+    		redisUrl =  $("#redisUrl").val();
+    	}
     	
 		updateSystemInfo(tomcatPath, 
 				javaHome, 
@@ -1446,7 +1488,9 @@
 				logLevel,
 				outputToFileEn,
 				logFile,
-				maxThreadCount);
+				maxThreadCount,
+				redisEn,
+				redisUrl);
 	}
 	
 	function updateSystemInfo(tomcatPath, 
@@ -1461,7 +1505,10 @@
 			logLevel, 
 			ouputToFileEn,
 			logFile,
-			maxThreadCount){
+			maxThreadCount,
+			redisEn,
+			redisUrl)
+	{
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
 	        type : "post",
@@ -1479,6 +1526,8 @@
 	        	logLevel: logLevel,
 	        	logFile: logFile,
 	        	maxThreadCount: maxThreadCount,
+	        	redisEnd: redisEn,
+	        	redisUrl: redisUrl,
 	        },
 	        success : function (ret) {
 	        	console.log("setSystemInfo ret:",ret);
@@ -1497,6 +1546,8 @@
 	        		systemInfo.logLevel = logLevel;
 	        		systemInfo.logFile = logFile;
 	        		systemInfo.ouputToFileEn = ouputToFileEn;
+	        		systemInfo.redisEn = redisEn;
+	        		systemInfo.redisUrl = redisUrl;
 	        		showErrorMessage("更新成功！");
 	            }
 	            else 
@@ -1524,6 +1575,15 @@
 	        		{
 	        			$("#outputToFileEn").prop("checked",false);			
 	        		}	
+	        		if(systemInfo.redisEn == 1)
+	        		{
+	        			$("#redisEn").prop("checked", true);
+	        		}
+	        		else
+	        		{
+	        			$("#redisEn").prop("checked",false);			
+	        		}
+	        		$("#redisUrl").val(systemInfo.redisUrl);
 	            }
 	        },
 	        error : function () {
@@ -1549,6 +1609,15 @@
         		{
         			$("#outputToFileEn").prop("checked",false);			
         		}	
+        		if(systemInfo.redisEn == 1)
+        		{
+        			$("#redisEn").prop("checked", true);
+        		}
+        		else
+        		{
+        			$("#redisEn").prop("checked",false);			
+        		}
+        		$("#redisUrl").val(systemInfo.redisUrl);
 	        }
 	    });
 	}
@@ -1582,6 +1651,11 @@
 	        		{
 	        			systemInfo.outputToFileEn = 1;
 	        		}
+	        		if(systemInfo.redisEn == undefined)
+	            	{
+	            		systemInfo.redisEn = 0;	//defulat info
+	            	}
+	        		
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
 	            else 
