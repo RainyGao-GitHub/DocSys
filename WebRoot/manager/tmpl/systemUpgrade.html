@@ -169,6 +169,17 @@
 	                    	<button onclick="cleanLogFile()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>清除</button>
 	                    </td>
 	                  </tr>
+	                  <tr>
+	                    <td>集群部署</td>
+	                    <td>
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>启用</div>
+	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="请填写redis服务器地址,例如：redis://localhost:6379" disabled="disabled">			            		                    
+			            </td>
+	                    <td class="edit">
+	                      	<button onclick="testRedis()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
+	                    </td>
+	                  </tr>
+
 	                </tbody>
 	          </table>
               <div class="widget-foot">
