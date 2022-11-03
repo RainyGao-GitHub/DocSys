@@ -1749,6 +1749,34 @@
 	    });
 	}
 	
+	function testRedis()
+	{
+		var redisUrl = $("#redisUrl").val();
+		console.log("testRedis() redisUrl:" + redisUrl);
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/testRedis.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	redisUrl: redisUrl,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("<font color='green'><strong>测试成功</strong></font><br/><br/>" + ret.msgInfo);
+	            }
+	            else
+	            {
+	            	showErrorMessage("<font color='red'><strong>测试失败</strong></font><br/><br/>" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("测试失败:服务器异常");
+	        }
+	    });
+	}
+	
 	function generateRootKey()
 	{
         $.ajax({

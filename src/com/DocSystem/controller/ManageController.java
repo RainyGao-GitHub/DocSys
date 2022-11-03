@@ -11,6 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.redisson.Redisson;
+import org.redisson.api.RLock;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -1043,6 +1048,77 @@ public class ManageController extends BaseController{
 		{
 			initDocSysDataPath();
 		}
+	}
+	
+	@RequestMapping("/testRedis.do")
+	public void testRedis(String redisUrl, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** redisUrl.do ***********************");
+
+		Log.debug("testRedis() redisUrl:" + redisUrl);
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String testResult = "1. 配置检查<br/>";
+		if(redisUrl == null || redisUrl.isEmpty())
+		{
+			testResult += "配置内容为空<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;
+		}	
+		testResult += "配置正常<br/><br/>";
+		
+		testResult += "2. 连接服务器测试<br/>";
+		//注册RedissonClient对象
+        Config config = new Config();
+        config.useSingleServer().setAddress(redisUrl);
+        RedissonClient redissonClient = Redisson.create(config);
+        testResult += "连接成功<br/><br/>";
+		
+        testResult += "3. Lock测试<br/>";
+		//Get Lock
+		Log.debug("testRedis() " + Thread.currentThread().getId() + " getLock(my-lock)");
+		RLock lock = redissonClient.getLock("my-lock");
+		Log.debug("testRedis() " + Thread.currentThread().getId() + " try to lock(my-lock)");
+        lock.lock();
+        testResult += "加锁成功<br/><br/>";
+        
+		testResult += "4. Map测试<br/>";
+		boolean isSuccess = true;
+        try {
+            Log.debug("testRedis() " + Thread.currentThread().getId() + " 执行业务.... ");
+            RMap<Object, Object> map = redissonClient.getMap("myFirstMap");
+            JSONObject inputData = new JSONObject();
+            inputData.put("key1", "Hello! I am " + Thread.currentThread().getId() + "");
+            inputData.put("key2", "Hello! I am " + Thread.currentThread().getId() + "");
+            map.put("product", inputData);
+            
+            JSONObject var = (JSONObject) map.get("product");
+            Log.debug("redisTest() " + Thread.currentThread().getId() + " key1.value=" + var.getString("key1") + " key2.value=" + var.getString("key2"));            
+        } catch (Exception e) {
+        	isSuccess = false;
+        	Log.info(e);
+        } finally {
+            //手动解锁
+            Log.debug("redisEn() " + Thread.currentThread().getId() + " 解锁...");
+            lock.unlock();
+        }
+        if(isSuccess)
+        {
+        	testResult += "Map测试成功<br/><br/>";
+        }
+        else
+        {
+        	testResult += "Map测试失败<br/><br/>";
+        }
+        
+		rt.setMsgInfo(testResult);				
+		writeJson(rt, response);
 	}
 	
 	@RequestMapping("/ldapTest.do")
