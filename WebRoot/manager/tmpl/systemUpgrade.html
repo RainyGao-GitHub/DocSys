@@ -83,6 +83,16 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
+	                  {{if value.isSalesServer == 1}}
+	                  <tr>
+	                    <td>销售数据存储位置</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="salesDataStorePath" name="salesDataStorePath" value="{{value.salesDataStorePath}}" disabled="disabled">
+	                    </td>
+	                    <td class="edit">
+	                    </td>
+	                  </tr>
+	                  {{/if}}
 	                  <tr>
 	                    <td>系统日志存储位置</td>
 	                    <td>
@@ -100,34 +110,6 @@
 	                      	<button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
 	                    </td>
 	                  </tr>
-	                  {{if value.isSalesServer == 1}}
-	                  <tr>
-	                    <td>系统密钥</td>
-	                    <td></td>
-	                    <td class="edit">
-	                      	<button onclick="generateRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
-	                      	<button onclick="exportRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
-	                    	<button onclick="deleteRootKey()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>证书密钥</td>
-	                    <td></td>
-	                    <td class="edit">
-	                      	<button onclick="generateLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
-	                      	<button onclick="exportLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
-	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>销售数据存储位置</td>
-	                    <td>
-	                    	<input type="text" class="form-control" id="salesDataStorePath" name="salesDataStorePath" value="{{value.salesDataStorePath}}" disabled="disabled">
-	                    </td>
-	                    <td class="edit">
-	                    </td>
-	                  </tr>
-	                  {{/if}}
 	                  <tr>
 	                    <td>最大上传线程数</td>
 	                    <td>
@@ -153,6 +135,16 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
+	                    <td>集群部署</td>
+	                    <td>
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>启用</div>
+	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="请填写redis服务器地址,例如：redis://localhost:6379" disabled="disabled">			            		                    
+			            </td>
+	                    <td class="edit">
+	                      	<button onclick="testRedis()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
+	                    </td>
+	                  </tr>
+	                  <tr>
 	                    <td>调试日志</td>
 	                    <td>
 			            	<select class="form-control" id="logLevel" style="width: 100%" disabled="disabled">   
@@ -169,17 +161,26 @@
 	                    	<button onclick="cleanLogFile()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>清除</button>
 	                    </td>
 	                  </tr>
+	                  {{if value.isSalesServer == 1}}
 	                  <tr>
-	                    <td>集群部署</td>
-	                    <td>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>启用</div>
-	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="请填写redis服务器地址,例如：redis://localhost:6379" disabled="disabled">			            		                    
-			            </td>
+	                    <td>系统密钥</td>
+	                    <td></td>
 	                    <td class="edit">
-	                      	<button onclick="testRedis()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
+	                      	<button onclick="generateRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
+	                      	<button onclick="exportRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
+	                    	<button onclick="deleteRootKey()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
 	                    </td>
 	                  </tr>
-
+	                  <tr>
+	                    <td>证书密钥</td>
+	                    <td></td>
+	                    <td class="edit">
+	                      	<button onclick="generateLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
+	                      	<button onclick="exportLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
+	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+	                    </td>
+	                  </tr>
+	                  {{/if}}
 	                </tbody>
 	          </table>
               <div class="widget-foot">
