@@ -189,9 +189,10 @@ public class BaseController  extends BaseFunction{
     static {		
 		initLogLevel();
 		initDocSysDataPath();
+		initRedis();
     }
     
-	private static void initRedis() {
+	protected static void initRedis() {
 		//初始化调试等级
 		Log.debug("initRedis()");
 		int isRedisEn = getRedisEn();

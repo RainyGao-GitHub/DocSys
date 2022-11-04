@@ -4191,7 +4191,7 @@ public class BaseFunction{
 
 	protected static Integer getRedisEn() {
     	String redisEnStr = null;
-    	redisEnStr = ReadProperties.read("docSysConfig.properties", "redisEnStr");
+    	redisEnStr = ReadProperties.read("docSysConfig.properties", "redisEn");
         Log.debug("getRedisEn() redisEnStr:" + redisEnStr);
     	if(redisEnStr == null || redisEnStr.isEmpty())
         {
