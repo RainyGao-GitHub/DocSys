@@ -471,23 +471,27 @@ public class BaseFunction{
 		
 		if(repos.reposExtConfigDigest == null)
 		{
+			Log.debug("isReposExtConfigDigestChanged() repos.reposExtConfigDigest is null");
 			return false;
 		}
 
 		String remoteCheckSum = getReposExtConfigDigestCheckSum(repos.reposExtConfigDigest, key);
 		if(remoteCheckSum == null)
 		{
+			Log.debug("isReposExtConfigDigestChanged() remoteCheckSum for " + key + " is null");
 			return false;
 		}
 
-		if(config == null)
+		if(config == null && remoteCheckSum.isEmpty() == false)
 		{
+			Log.debug("isReposExtConfigDigestChanged() config is null");
 			return true;
 		}
 
 		String localCheckSum = config.hashCode() + "";
 		if(!localCheckSum.equals(remoteCheckSum))
 		{
+			Log.debug("isReposExtConfigDigestChanged() checkSum not matched localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);
 			return true;
 		}
 		
@@ -547,7 +551,14 @@ public class BaseFunction{
 			return config;
 		}
 		config = getReposRemoteStorageConfigRedis(repos);
-		reposRemoteStorageHashMap.put(repos.getId(), config);
+		if(config == null)
+		{
+			reposRemoteStorageHashMap.remove(repos.getId());
+		}
+		else
+		{
+			reposRemoteStorageHashMap.put(repos.getId(), config);
+		}
 		return config;
 	}
 	
@@ -821,7 +832,7 @@ public class BaseFunction{
 	{
 		RMap<Object, Object> reposEncryptConfigHashMap = redisClient.getMap("reposEncryptConfigHashMap");
 		reposEncryptConfigHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.EncryptConfig, repos.encryptConfig.hashCode() + "");	
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.EncryptConfig, config.hashCode() + "");	
 	}
 	
 	protected void deleteReposEncryptConfig(Repos repos) 
