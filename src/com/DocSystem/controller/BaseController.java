@@ -80,6 +80,8 @@ import org.apache.tools.zip.ZipFile;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.redisson.Redisson;
+import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
@@ -188,6 +190,37 @@ public class BaseController  extends BaseFunction{
 		initLogLevel();
 		initDocSysDataPath();
     }
+    
+	private static void initRedis() {
+		//初始化调试等级
+		Log.debug("initRedis()");
+		int isRedisEn = getRedisEn();
+		Log.debug("initRedis() isRedisEn:" + isRedisEn);
+
+		if(isRedisEn == 1)
+		{
+			String redisUrl = getRedisUrl();
+			if(redisUrl == null || redisUrl.isEmpty())
+			{
+				redisEn = false;
+				Log.error("initRedis() redisUrl not configured");
+				return;
+			}
+			
+	        Config config = new Config();
+	        config.useSingleServer().setAddress(redisUrl);
+	        redisClient = Redisson.create(config);
+	        if(redisClient == null)
+	        {
+	        	redisEn = false;
+	        	Log.error("initRedis() failed to connect to redisServer:" + redisUrl);				
+	        }
+	        else
+	        {
+	        	redisEn = true;
+	        }
+		}
+	}
 
 	private static void initLogLevel() {
 		//初始化调试等级

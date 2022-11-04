@@ -772,6 +772,8 @@ public class ManageController extends BaseController{
 		String officeEditorApi = Path.getOfficeEditorApi();
 		String ldapConfig = getLdapConfig();
 		Integer maxThreadCount = getMaxThreadCount();
+		Integer redisEn = getRedisEn();
+		String redisUrl = getResidUrl();
 
 		JSONObject config = getSystemInfo();
 		config.put("docSysType", docSysType);
@@ -785,6 +787,8 @@ public class ManageController extends BaseController{
 		config.put("logFile", Log.logFileConfig);
 		config.put("maxThreadCount", maxThreadCount);	
 		config.put("systemDisabled", systemDisabled);
+		config.put("redisEn", redisEn);
+		config.put("redisUrl", redisUrl);		
 		
 		if(docSysType < 1)
 		{
@@ -885,6 +889,9 @@ public class ManageController extends BaseController{
 			Integer logLevel,
 			String logFile,
 			Integer maxThreadCount,
+			Integer redisEn,
+			String redisUrl,
+			
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("****************** setSystemInfo.do ***********************");
@@ -896,7 +903,8 @@ public class ManageController extends BaseController{
 				+ " indexDBStorePath:" + indexDBStorePath 
 				+ " salesDataStorePath:" + salesDataStorePath 
 				+ " maxThreadCount:" + maxThreadCount 
-				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel + " logFile:" + logFile);
+				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel + " logFile:" + logFile
+				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -1027,6 +1035,12 @@ public class ManageController extends BaseController{
 			Log.logFileConfig = logFile;
 			setLogFileToFile(logFile);
 			initLogFile(logFile);
+		}
+		
+		if(redisEn != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "redisEn", redisEn+"");
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "redisUrl", redisUrl);			
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
