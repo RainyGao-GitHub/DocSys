@@ -436,42 +436,14 @@ public class BaseFunction{
 	protected static void updateReposExtConfigDigest(Repos repos, String key, String checkSum) {
 		if(repos.reposExtConfigDigest == null)
 		{
-			repos.reposExtConfigDigest = new ReposExtConfigDigest();
+			repos.reposExtConfigDigest = new JSONObject();
 		}
 		
-		boolean isValidKey = true;
-		switch(key)
-		{
-		case ReposExtConfigDigest.RemoteStorageConfig:
-			repos.reposExtConfigDigest.remoteStorageConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.RemoteServerConfig:
-			repos.reposExtConfigDigest.remoteServerConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.AutoBackupConfig:
-			repos.reposExtConfigDigest.autoBackupConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.TextSearchConfig:
-			repos.reposExtConfigDigest.textSearchConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.VersionIgnoreConfig:
-			repos.reposExtConfigDigest.versionIgnoreConfigCheckSum = checkSum;
-			break;
-		case ReposExtConfigDigest.EncryptConfig:
-			repos.reposExtConfigDigest.encryptConfigCheckSum = checkSum;
-			break;
-		default:
-			isValidKey = false;
-			break;
-		}
-		
-		if(isValidKey)
-		{
-			setReposExtConfigDigest(repos, repos.reposExtConfigDigest);
-		}	
+		repos.reposExtConfigDigest.put(key, checkSum);
+		setReposExtConfigDigest(repos, repos.reposExtConfigDigest);	
 	}
 
-	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
+	protected static void setReposExtConfigDigest(Repos repos, JSONObject config) {
 		if(redisEn)
 		{
 			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
@@ -479,11 +451,11 @@ public class BaseFunction{
 		}
 	}
 
-	protected ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
+	protected JSONObject getReposExtConfigDigest(Repos repos) {
 		if(redisEn)
 		{
 			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
-			return (ReposExtConfigDigest) bucket.get();
+			return (JSONObject) bucket.get();
 		}
 		else
 		{
@@ -522,25 +494,8 @@ public class BaseFunction{
 		return false;
 	}
 
-	private String getReposExtConfigDigestCheckSum(ReposExtConfigDigest reposExtConfigDigest, String key) {
-		switch(key)
-		{
-		case ReposExtConfigDigest.RemoteStorageConfig: 
-			return reposExtConfigDigest.remoteStorageConfigCheckSum;
-		case ReposExtConfigDigest.RemoteServerConfig:
-			return reposExtConfigDigest.remoteServerConfigCheckSum;
-		case ReposExtConfigDigest.AutoBackupConfig:
-			return reposExtConfigDigest.autoBackupConfigCheckSum;
-		case ReposExtConfigDigest.TextSearchConfig:
-			return reposExtConfigDigest.textSearchConfigCheckSum;
-		case ReposExtConfigDigest.VersionIgnoreConfig:
-			return reposExtConfigDigest.versionIgnoreConfigCheckSum;
-		case ReposExtConfigDigest.EncryptConfig:
-			return reposExtConfigDigest.encryptConfigCheckSum;
-		default:
-			break;
-		}
-		return null;
+	private String getReposExtConfigDigestCheckSum(JSONObject reposExtConfigDigest, String key) {
+		return reposExtConfigDigest.getString(key);
 	}
 	
 	//*** reposRemoteStorageHashMap

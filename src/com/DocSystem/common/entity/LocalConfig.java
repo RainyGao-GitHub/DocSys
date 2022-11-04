@@ -1,5 +1,11 @@
 package com.DocSystem.common.entity;
 
-public class LocalConfig {
+import java.io.Serializable;
+
+public class LocalConfig  implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4865278961160603659L;
 	public String localRootPath;
 }
