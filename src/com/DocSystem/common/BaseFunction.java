@@ -474,16 +474,16 @@ public class BaseFunction{
 	protected static void setReposExtConfigDigest(Repos repos, ReposExtConfigDigest config) {
 		if(redisEn)
 		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			reposExtConfigDigestHashMap.put(repos.getId(), config);
+			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
+			bucket.set(config);
 		}
 	}
 
 	protected ReposExtConfigDigest getReposExtConfigDigest(Repos repos) {
 		if(redisEn)
 		{
-			RMap<Object, Object> reposExtConfigDigestHashMap = redisClient.getMap("reposExtConfigDigestHashMap");
-			return (ReposExtConfigDigest) reposExtConfigDigestHashMap.get(repos.getId());
+			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
+			return (ReposExtConfigDigest) bucket.get();
 		}
 		else
 		{
