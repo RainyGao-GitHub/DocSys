@@ -1,8 +1,14 @@
 package com.DocSystem.common.entity;
 
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RemoteStorageConfig {
+public class RemoteStorageConfig  implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3193212926845814704L;
+
 	public String checkSum;
 	
 	public String protocol;
@@ -11,14 +17,14 @@ public class RemoteStorageConfig {
 	public Integer autoPullForce = 0;
 	public Integer autoPush = 0;
 	public Integer autoPushForce = 0;
-	public LocalConfig FILE;
-	public SftpConfig SFTP;
-	public FtpConfig FTP;
+	public LocalConfig FILE = null;
+	public SftpConfig SFTP = null;
+	public FtpConfig FTP = null;
 	public SmbConfig SMB = null;
 	public SvnConfig SVN = null;
 	public GitConfig GIT = null;
 	public boolean isVerRepos = false;
-	public MxsDocConfig MXSDOC;
+	public MxsDocConfig MXSDOC = null;
 	public String remoteStorageIndexLib;
 	
 	public Long allowedMaxFile = null;

@@ -1,12 +1,16 @@
 package com.DocSystem.test;
 
 import org.redisson.Redisson;
+import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
 import com.DocSystem.common.Log;
+import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.entity.ReposExtConfigDigest;
+import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSONObject;
 
 class RedisTest  
@@ -56,7 +60,8 @@ class RedisTest
         //加锁的业务只要运行完成，就不会给当前锁续期，即使不手动解锁，锁默认在30秒后也会自动删除
         try {
             System.out.println(Thread.currentThread().getId() + " 加锁成功，执行业务.... ");
-            //Thread.sleep(3000);
+            
+            //RMap Test
             RMap<Object, Object> map = redissonClient.getMap("myFirstMap");
             JSONObject inputData = new JSONObject();
             inputData.put("key1", "Hello! I am " + Thread.currentThread().getId() + "");
@@ -65,6 +70,11 @@ class RedisTest
             
             JSONObject var = (JSONObject) map.get("product");
             System.out.println(Thread.currentThread().getId() + " key1.value=" + var.getString("key1") + " key2.value=" + var.getString("key2"));            
+
+            //RBucket Test
+            RBucket<Object> bucket = redissonClient.getBucket("myFirstBucket");
+            ReposBackupConfig config = new ReposBackupConfig();
+            bucket.set(config);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

@@ -1,6 +1,12 @@
 package com.DocSystem.common.entity;
 
-public class EncryptConfig {
+import java.io.Serializable;
+
+public class EncryptConfig  implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1561278763425722444L;
 	public final static int TYPE_XOR = 1;
 	public final static int TYPE_DES = 2;	
 	public Integer type;

@@ -1,6 +1,12 @@
 package com.DocSystem.common.entity;
 
-public class BackupConfig {
+import java.io.Serializable;
+
+public class BackupConfig  implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3661781575183787382L;
 	public RemoteStorageConfig remoteStorageConfig;
 	public Integer fullBackupEn = 0;
 	public Integer realTimeBackup;

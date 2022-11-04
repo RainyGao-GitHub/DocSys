@@ -5,6 +5,7 @@ import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.alibaba.fastjson.JSONObject;
 
 public class Repos {    
 	public static final Integer FSM = 1;
@@ -82,7 +83,7 @@ public class Repos {
 	public Long freeSize;
 	
 	//仓库扩展配置信息
-	public ReposExtConfigDigest reposExtConfigDigest = null;
+	public JSONObject reposExtConfigDigest = null;
 	public RemoteStorageConfig remoteStorageConfig;
 	public RemoteStorageConfig remoteServerConfig;
 	public ReposBackupConfig autoBackupConfig;
