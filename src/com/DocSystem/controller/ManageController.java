@@ -773,7 +773,7 @@ public class ManageController extends BaseController{
 		String ldapConfig = getLdapConfig();
 		Integer maxThreadCount = getMaxThreadCount();
 		Integer redisEn = getRedisEn();
-		String redisUrl = getResidUrl();
+		String redisUrl = getRedisUrl();
 
 		JSONObject config = getSystemInfo();
 		config.put("docSysType", docSysType);
@@ -1061,6 +1061,11 @@ public class ManageController extends BaseController{
 		if(indexDBStorePath != null)
 		{
 			initDocSysDataPath();
+		}
+		
+		if(redisEn != null)
+		{
+			initRedis();
 		}
 	}
 	
