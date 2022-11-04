@@ -469,6 +469,7 @@ public class BaseFunction{
 			return false;
 		}
 		
+		//reposExtConfigDigest is impossible be null, so if it is null do nothing
 		if(repos.reposExtConfigDigest == null)
 		{
 			Log.debug("isReposExtConfigDigestChanged() repos.reposExtConfigDigest is null");
@@ -476,18 +477,22 @@ public class BaseFunction{
 		}
 
 		String remoteCheckSum = getReposExtConfigDigestCheckSum(repos.reposExtConfigDigest, key);
-		if(remoteCheckSum == null)
+		if(remoteCheckSum == null || remoteCheckSum.isEmpty())
 		{
-			Log.debug("isReposExtConfigDigestChanged() remoteCheckSum for " + key + " is null");
-			return false;
-		}
-
-		if(config == null && remoteCheckSum.isEmpty() == false)
-		{
-			Log.debug("isReposExtConfigDigestChanged() config is null");
+			Log.debug("isReposExtConfigDigestChanged() remoteCheckSum for " + key + " is null or empty");
+			if(config == null)
+			{
+				return false;
+			}
 			return true;
 		}
 
+		//remoteCheckSume was set
+		if(config == null)
+		{
+			return true;
+		}
+		
 		String localCheckSum = config.hashCode() + "";
 		if(!localCheckSum.equals(remoteCheckSum))
 		{
