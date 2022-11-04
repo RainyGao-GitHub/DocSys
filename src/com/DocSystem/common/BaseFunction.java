@@ -4178,6 +4178,42 @@ public class BaseFunction{
 		return maxThreadCount;
 	}
 	
+	protected static String getRedisUrl() {
+    	String redisUrl = null;
+    	redisUrl = ReadProperties.read("docSysConfig.properties", "redisUrl");
+        if(redisUrl != null && !redisUrl.isEmpty())
+        {
+        	return redisUrl;
+        }
+
+		return null;
+	}
+
+	protected static Integer getRedisEn() {
+    	String redisEnStr = null;
+    	redisEnStr = ReadProperties.read("docSysConfig.properties", "redisEnStr");
+        Log.debug("getRedisEn() redisEnStr:" + redisEnStr);
+    	if(redisEnStr == null || redisEnStr.isEmpty())
+        {
+        	return 0;
+        }
+        
+        Integer redisEn = null;
+        try {
+        	redisEn = Integer.parseInt(redisEnStr);
+        } catch (Exception e) {
+        	errorLog("getRedisEn() 异常");
+        	errorLog(e);
+        }
+        
+        Log.debug("getRedisEn() redisEn:" + redisEn);    	
+        if(redisEn == null)
+        {
+        	redisEn = 0;
+        }
+		return redisEn;
+	}
+	
 	
 	//获取OpenOffice的安装路径
     public String getOpenOfficePath() {
