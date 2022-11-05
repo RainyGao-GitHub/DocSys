@@ -1,6 +1,12 @@
 package com.DocSystem.common.entity;
 
-public class AuthCode {
+import java.io.Serializable;
+
+public class AuthCode  implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5529626390699711917L;
 	private String code = null; //hashCode for authCode
 	private String usage = null;	//用途
     private Long expTime = null;	//超时时间戳
