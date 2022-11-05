@@ -1,7 +1,14 @@
 package com.DocSystem.entity;
 
-public class DocShare {
-    private Integer id;
+import java.io.Serializable;
+
+public class DocShare    implements Serializable {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4577116065944331053L;
+
+	private Integer id;
    
     private Integer shareId;
 
