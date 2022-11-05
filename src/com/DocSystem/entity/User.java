@@ -1,7 +1,14 @@
 package com.DocSystem.entity;
 
-public class User {
-    private Integer id;
+import java.io.Serializable;
+
+public class User implements Serializable {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4543706613855037637L;
+
+	private Integer id;
 
     private String name;
 

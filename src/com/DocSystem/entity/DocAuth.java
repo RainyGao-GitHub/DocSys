@@ -1,7 +1,14 @@
 package com.DocSystem.entity;
 
-public class DocAuth {
-    private Integer id;
+import java.io.Serializable;
+
+public class DocAuth  implements Serializable {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -1280855707270615692L;
+
+	private Integer id;
 
     private Integer reposAuthId;
 
