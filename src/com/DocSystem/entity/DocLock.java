@@ -1,6 +1,12 @@
 package com.DocSystem.entity;
 
-public class DocLock {
+import java.io.Serializable;
+
+public class DocLock  implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 709275362922188292L;
 	public static final int LOCK_STATE_NONE 	= 0b00000000;
 	public final static int LOCK_STATE_FORCE 	= 0b00000001;
 	public final static int LOCK_STATE_NORMAL 	= 0b00000010;

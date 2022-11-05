@@ -1,7 +1,14 @@
 package com.DocSystem.entity;
 
-public class RemoteStorageLock {	
+import java.io.Serializable;
+
+public class RemoteStorageLock  implements Serializable {	
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7436064038303366230L;
+
 	public Integer id;
 
 	public Integer type;
