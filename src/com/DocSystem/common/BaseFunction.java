@@ -202,7 +202,7 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 
 	//数据库备份任务HashMap
-	//TODO: 目前不会有太大的风险，最多每个服务器备份一次，可以考虑将Map存入redis
+	//数据库备份任务对系统性能影响不大，而且不存在存储冲突问题，因此不考虑集群的任务唯一性问题
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();		
 
 	static {
@@ -266,6 +266,63 @@ public class BaseFunction{
 			lock.unlock();
 		}
 	}
+	
+	//UniqueTask
+	public void addUniqueTaskRedis(String id, JSONObject task) {
+		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");
+		Long expireTime = new Date().getTime() + 24*60*60*1000; //24小时后过期，理论上应该主动被删除
+		task.put("ExpTime", expireTime);
+		uniqueTaskMap.put(id, task);
+	}
+	
+	public void deleteUniqueTaskRedis(String id) {
+		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");
+		uniqueTaskMap.remove(id);
+	}
+	
+	public JSONObject getUniqueTaskRedis(String id) {
+		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");
+		
+		checkAndClearExpiredUniqueTask(uniqueTaskMap);
+		
+		return (JSONObject) uniqueTaskMap.get(id);
+	}
+	
+	
+	private void checkAndClearExpiredUniqueTask(RMap<Object, Object> uniqueTaskMap) {
+		if(uniqueTaskMap.size() > 100)
+		{
+			Long curTime = new Date().getTime();
+
+			//Do clean expired UniqueTask
+			ArrayList<String> deleteList = new ArrayList<String>();
+			Iterator<Entry<Object, Object>> iterator = uniqueTaskMap.entrySet().iterator();
+		    while (iterator.hasNext()) 
+		    {
+		    	Entry<Object, Object> entry = iterator.next();
+		        if(entry != null)
+		        {
+		        	JSONObject uniqueTask = (JSONObject) entry.getValue();
+		        	Long expireTime = uniqueTask.getLong("ExpTime");
+		        	if(expireTime != null && expireTime < curTime)
+		        	{
+		        		deleteList.add((String) entry.getKey());
+		        	}
+		        }
+	        }
+		
+		    for(int i=0; i < deleteList.size(); i++)
+		    {
+		    	deleteUniqueTaskRedis(deleteList.get(i));
+		    }
+		}
+	}
+
+	
+	
+	
+		
+		
 	
 	//*** authCodeMap
 	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
@@ -1771,17 +1828,8 @@ public class BaseFunction{
 		{
 			updateRemoteStorageLockRedis(remoteStorageName, remoteStorageLock);
 		}
-		else
-		{
-			//TODO: local no need to update
-			//updateRemoteStorageLockLocal(remoteStorageName, remoteStorageLock);
-		}
 	}
-	
-	private void updateRemoteStorageLockLocal(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
-	}
-	
+
 	private void updateRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
 		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
 		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
