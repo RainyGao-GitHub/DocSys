@@ -11278,9 +11278,33 @@ public class BaseController  extends BaseFunction{
 	        				String localRootPath = Path.getReposRealPath(latestReposInfo);
 	        				String localVRootPath = Path.getReposVirtualPath(latestReposInfo);		
 	        				Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	        				addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
-	        				executeUniqueCommonActionList(actionList, rt);
-	                    	
+
+	        				if(redisEn)
+        					{	
+	        					
+		        				//TODO: 检查该同步任务是否已经被添加过了，如果已经被其他服务器添加过了则不需要添加
+		        				JSONObject uniqueTask = getUniqueTaskRedis("ReposAutoSyncup" + repos.getId());
+		        				if(uniqueTask == null)
+		        				{
+		        					//Add Unique Task
+		        					uniqueTask = new JSONObject();
+		        					uniqueTask.put("id", "ReposAutoSyncup" + repos.getId());
+		        					addUniqueTaskRedis("ReposAutoSyncup" + repos.getId(), uniqueTask);
+		        					
+		        					//执行仓库同步
+		        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
+		        					executeUniqueCommonActionList(actionList, rt);
+		        					
+		        					//删除uniqueTaskReis
+		        					deleteUniqueTaskRedis("ReposAutoSyncup" + repos.getId());
+		        				}
+        					}
+	        				else
+	        				{
+	        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
+	        					executeUniqueCommonActionList(actionList, rt);	        					
+	        				}
+	        				
 	                        //将自己从任务备份任务表中删除
 	                        latestSyncupTask.remove(createTime);
 	                        
@@ -11295,6 +11319,7 @@ public class BaseController  extends BaseFunction{
                         }
                         
                     }
+
                 },
                 delayTime,
                 TimeUnit.SECONDS);
