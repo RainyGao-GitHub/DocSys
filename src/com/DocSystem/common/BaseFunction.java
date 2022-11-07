@@ -270,8 +270,6 @@ public class BaseFunction{
 	//UniqueTask
 	public void addUniqueTaskRedis(String id, JSONObject task) {
 		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");
-		Long expireTime = new Date().getTime() + 24*60*60*1000; //24小时后过期，理论上应该主动被删除
-		task.put("ExpTime", expireTime);
 		uniqueTaskMap.put(id, task);
 	}
 	
@@ -281,48 +279,63 @@ public class BaseFunction{
 	}
 	
 	public JSONObject getUniqueTaskRedis(String id) {
-		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");
-		
-		checkAndClearExpiredUniqueTask(uniqueTaskMap);
-		
-		return (JSONObject) uniqueTaskMap.get(id);
-	}
-	
-	
-	private void checkAndClearExpiredUniqueTask(RMap<Object, Object> uniqueTaskMap) {
-		if(uniqueTaskMap.size() > 100)
+		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");	
+		JSONObject task =  (JSONObject) uniqueTaskMap.get(id);
+		if(task != null)
 		{
-			Long curTime = new Date().getTime();
-
-			//Do clean expired UniqueTask
-			ArrayList<String> deleteList = new ArrayList<String>();
-			Iterator<Entry<Object, Object>> iterator = uniqueTaskMap.entrySet().iterator();
-		    while (iterator.hasNext()) 
-		    {
-		    	Entry<Object, Object> entry = iterator.next();
-		        if(entry != null)
-		        {
-		        	JSONObject uniqueTask = (JSONObject) entry.getValue();
-		        	Long expireTime = uniqueTask.getLong("ExpTime");
-		        	if(expireTime != null && expireTime < curTime)
-		        	{
-		        		deleteList.add((String) entry.getKey());
-		        	}
-		        }
-	        }
-		
-		    for(int i=0; i < deleteList.size(); i++)
-		    {
-		    	deleteUniqueTaskRedis(deleteList.get(i));
-		    }
+			Long expireTime = task.getLong("expireTime");
+			if(expireTime == null)
+			{
+				//无效UniqueTask
+				Log.info("getUniqueTaskRedis() invalid uniqueTask: have not expireTime");
+				return null;
+			}
+			long curTime = new Date().getTime(); 
+			if(expireTime < curTime)
+			{
+				Log.info("getUniqueTaskRedis() uniqueTask was expired");
+				return null;
+			}
+			
+			return task;
 		}
+		return task;
 	}
-
 	
-	
-	
+	public JSONObject checkStartUniqueTaskRedis(String uniqueTaskId) 
+	{
+		redisSyncLock("uniqueTaskMapSyncLock", uniqueTaskId);
 		
+		JSONObject uniqueTask = getUniqueTaskRedis(uniqueTaskId);
+		if(uniqueTask == null)
+		{
+			//任务不存在或已过期
+			Long expireTime = new Date().getTime() + 24*60*60*1000; //24小时后过期
+			uniqueTask = new JSONObject();
+			uniqueTask.put("id", uniqueTaskId);
+			uniqueTask.put("state", 1);	//1: start 2: end
+			uniqueTask.put("expireTime", expireTime);
+			addUniqueTaskRedis(uniqueTaskId, uniqueTask);
+		}
+		else
+		{
+			//任务已存在
+			uniqueTask = null;
+		}
 		
+		redisSyncUnlock("uniqueTaskMapSyncLock", uniqueTaskId);
+		return uniqueTask;
+	}
+	
+	public void stopUniqueTaskRedis(String id, JSONObject uniqueTask) {
+		//更新UniqueTask状态
+		Long expireTime = new Date().getTime() + 6*60*60*1000; //6小时后过期
+		uniqueTask.put("state", 2);
+		uniqueTask.put("expireTime", expireTime);
+		
+		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");
+		uniqueTaskMap.put(id, uniqueTask);
+	}
 	
 	//*** authCodeMap
 	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
