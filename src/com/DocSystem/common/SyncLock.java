@@ -1,6 +1,14 @@
 package com.DocSystem.common;
 
-public class SyncLock {
+import java.io.Serializable;
+
+public class SyncLock implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5460004560748011678L;
+	public String id; 
+	
 	public static void lock(String lockInfo) {
 		// TODO Auto-generated method stub
 		Log.debug("\n********** " + lockInfo + " lock ++++++");

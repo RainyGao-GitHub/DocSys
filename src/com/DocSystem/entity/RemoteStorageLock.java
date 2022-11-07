@@ -2,6 +2,8 @@ package com.DocSystem.entity;
 
 import java.io.Serializable;
 
+import com.DocSystem.common.SyncLock;
+
 public class RemoteStorageLock  implements Serializable {	
 	
 	/**
@@ -23,5 +25,5 @@ public class RemoteStorageLock  implements Serializable {
 
     public Long lockTime = null;
     
-    public Object synclock = null;
+    public SyncLock synclock = null;
 }
