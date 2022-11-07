@@ -11281,22 +11281,16 @@ public class BaseController  extends BaseFunction{
 
 	        				if(redisEn)
         					{	
-	        					
-		        				//TODO: 检查该同步任务是否已经被添加过了，如果已经被其他服务器添加过了则不需要添加
-		        				JSONObject uniqueTask = getUniqueTaskRedis("ReposAutoSyncup" + repos.getId());
-		        				if(uniqueTask == null)
+	        					//TODO: 检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+		        				String uniqueTaskId = "ReposAutoSyncupTask" + repos.getId();
+	        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
+		        				if(uniqueTask != null)
 		        				{
-		        					//Add Unique Task
-		        					uniqueTask = new JSONObject();
-		        					uniqueTask.put("id", "ReposAutoSyncup" + repos.getId());
-		        					addUniqueTaskRedis("ReposAutoSyncup" + repos.getId(), uniqueTask);
-		        					
 		        					//执行仓库同步
 		        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
 		        					executeUniqueCommonActionList(actionList, rt);
-		        					
-		        					//删除uniqueTaskReis
-		        					deleteUniqueTaskRedis("ReposAutoSyncup" + repos.getId());
+			                              					
+		        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
 		        				}
         					}
 	        				else
@@ -11487,8 +11481,27 @@ public class BaseController  extends BaseFunction{
 	                        lastestBackupTask.status = 1; //backup is running
 	                        lastestBackupTask.info = "本地自动备份中...";                      
 	                        Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	                        channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
 	                        
+	        				if(redisEn)
+        					{	
+	        					//TODO: 检查该任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+		        				String uniqueTaskId = "ReposLocalBackupTask" + repos.getId();
+	        					
+		        				JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
+		        				if(uniqueTask != null)
+		        				{
+		        					
+		        					//执行仓库本地备份
+		        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+			                              					
+		        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
+		        				}
+        					}
+	        				else
+	        				{
+	        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+	        				}
+	        				
 	                        //将自己从任务备份任务表中删除
 	                        lastestBackupTask.stopFlag = true;
 	                        if(rt.getStatus().equals("ok"))
@@ -11619,13 +11632,13 @@ public class BaseController  extends BaseFunction{
 	                        BackupTask lastestBackupTask = latestBackupTaskHashMap.get(taskId);
 	                        if(lastestBackupTask == null)
 	                        {
-	                        	Log.info("LocalBackupDelayTask lastestBackupTask is null for task:" + taskId);	  
+	                        	Log.info("RemoteBackupDelayTask lastestBackupTask is null for task:" + taskId);	  
 	                        	return;
 	                        }
 
 	                		if(lastestBackupTask.stopFlag == true)
 	                		{
-		                        Log.info("LocalBackupDelayTask [" + taskId + "] for repos:" + reposId + " 任务已取消");	                        	
+		                        Log.info("RemoteBackupDelayTask [" + taskId + "] for repos:" + reposId + " 任务已取消");	                        	
 	                			//移除备份任务	                        	
 	                			latestBackupTaskHashMap.remove(taskId);
 	                			return;
@@ -11638,8 +11651,24 @@ public class BaseController  extends BaseFunction{
 	                        lastestBackupTask.status = 1;
 	                        lastestBackupTask.info = "异地自动备份中...";                      
 	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	                        channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
 	                        
+	        				if(redisEn)
+        					{	
+	        					//TODO: 检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+		        				String uniqueTaskId = "ReposRemoteBackupTask" + repos.getId();
+	        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
+		        				if(uniqueTask != null)
+		        				{			        				
+			        				channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+			                              					
+		        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
+		        				}
+        					}
+	        				else
+	        				{
+		                    	channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+	        				}
+	        				
 	                        //将自己从任务备份任务表中删除
 	                        lastestBackupTask.stopFlag = true;
 	                        if(rt.getStatus().equals("ok"))
