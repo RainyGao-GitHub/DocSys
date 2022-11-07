@@ -17,7 +17,7 @@ class RedisTest
 {  	
 	//参考资料: https://blog.csdn.net/qq_38697437/article/details/121359818
 	public static RedissonClient redissonClient = null;
-	
+
 	public static void main(String[] args)    
     {  
         System.out.println("This is test app");
