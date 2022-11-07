@@ -107,6 +107,7 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
+import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
@@ -19650,7 +19651,7 @@ public class BaseController  extends BaseFunction{
 				curLock.lockBy = accessUser.getId();
 				curLock.locker = accessUser.getName();
 				curLock.lockTime = new Date().getTime() + lockDuration;
-				curLock.synclock = new Object();
+				curLock.synclock = new SyncLock();
 				addRemoteStorageLock(remoteStorageName, curLock);
 				remoteStorageLock = curLock;
 			}
@@ -19688,7 +19689,7 @@ public class BaseController  extends BaseFunction{
 		if(remoteStorageLock == null) 
 		{
 			//wait for wake up or timeout
-			Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] lock failed" + " for [" + doc.getPath() + doc.getName() + "], sleep");			
+			Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] lock failed" + " for [" + doc.getPath() + doc.getName() + "], sleep");
 			synchronized(curLock.synclock)
 			{
 				try {
