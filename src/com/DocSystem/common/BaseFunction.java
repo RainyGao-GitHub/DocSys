@@ -189,22 +189,20 @@ public class BaseFunction{
 	//仓库加密配置HashMap
 	protected static ConcurrentHashMap<Integer, EncryptConfig> reposEncryptConfigHashMap = new ConcurrentHashMap<Integer, EncryptConfig>();		
 	
+	//注意: 仓库的自动备份和同步任务跨服务器唯一性通过Redis中的UniqeTask来保证
 	//仓库自动备份任务HashMap
-	//TODO: 目前每个服务器都会启动备份任务线程，但由于备份的时候需要lockDoc，因此可以避免备份任务冲突
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
-
 	//仓库文件同步任务HashMap
-	//TODO: 目前每个服务器都会启动仓库同步任务线程，同步任务的执行依赖uniqueActionHashMap，因此uniqueActionHashMap需要考虑集群
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
-	//仓库同步任务HashMap
-	//TODO: 需要考虑集群以避免跨服之间的冲突，可以考虑将uniqueActionHashMap直接存入redis中
+
+	//仓库线性任务HashMap（用于保证仓库的任务按顺序执行，不需要考虑集群）
 	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 
 	//数据库备份任务HashMap
 	//数据库备份任务对系统性能影响不大，而且不存在存储冲突问题，因此不考虑集群的任务唯一性问题
-	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();		
-
+	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();
+	
 	static {
     	initOSType();
     	docSysWebPath = Path.getWebPath(OSType);
@@ -287,16 +285,17 @@ public class BaseFunction{
 			if(expireTime == null)
 			{
 				//无效UniqueTask
-				Log.info("getUniqueTaskRedis() invalid uniqueTask: have not expireTime");
+				Log.info("getUniqueTaskRedis() invalid uniqueTask " + id + ": have not expireTime");
 				return null;
 			}
 			long curTime = new Date().getTime(); 
 			if(expireTime < curTime)
 			{
-				Log.info("getUniqueTaskRedis() uniqueTask was expired");
+				Log.info("getUniqueTaskRedis() uniqueTask " + id + " was expired");
 				return null;
 			}
 			
+			Log.info("getUniqueTaskRedis() uniqueTask state:" + task.getString("state"));
 			return task;
 		}
 		return task;
@@ -304,22 +303,26 @@ public class BaseFunction{
 	
 	public JSONObject checkStartUniqueTaskRedis(String uniqueTaskId) 
 	{
+		Log.info("checkStartUniqueTaskRedis() uniqueTaskId:" + uniqueTaskId);
 		redisSyncLock("uniqueTaskMapSyncLock", uniqueTaskId);
 		
 		JSONObject uniqueTask = getUniqueTaskRedis(uniqueTaskId);
 		if(uniqueTask == null)
 		{
+			Log.info("checkStartUniqueTaskRedis() 启动 uniqueTask:" + uniqueTaskId);
+			
 			//任务不存在或已过期
 			Long expireTime = new Date().getTime() + 24*60*60*1000; //24小时后过期
 			uniqueTask = new JSONObject();
 			uniqueTask.put("id", uniqueTaskId);
-			uniqueTask.put("state", 1);	//1: start 2: end
+			uniqueTask.put("state", "running");	//1: start 2: end
 			uniqueTask.put("expireTime", expireTime);
 			addUniqueTaskRedis(uniqueTaskId, uniqueTask);
 		}
 		else
 		{
 			//任务已存在
+			Log.info("checkStartUniqueTaskRedis() uniqueTask:" + uniqueTaskId + " 执行中或者已执行");
 			uniqueTask = null;
 		}
 		
@@ -330,7 +333,7 @@ public class BaseFunction{
 	public void stopUniqueTaskRedis(String id, JSONObject uniqueTask) {
 		//更新UniqueTask状态
 		Long expireTime = new Date().getTime() + 6*60*60*1000; //6小时后过期
-		uniqueTask.put("state", 2);
+		uniqueTask.put("state", "completed");
 		uniqueTask.put("expireTime", expireTime);
 		
 		RMap<Object, Object> uniqueTaskMap = redisClient.getMap("uniqueTaskMap");
