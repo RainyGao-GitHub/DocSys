@@ -4386,8 +4386,11 @@ public class BaseController  extends BaseFunction{
 
     /**
      * This function will execute following actions:
-     * 1. Push local change to remote storage sever / Pull remote change from remote storage server when remoteStorageEnable and repos.remoteStorageConfig was configured
-     * 	  if action.type is SYNC / FORCESYNC / SYNCVerRepos subDocs will be push and pull
+     * 1. Push local change to remote storage sever / Pull remote change from remote storage server
+     * pre-condition: 
+     * (1) remoteStorageEnable == true and repos.remoteStorageConfig was configured
+     * (2) action.type is SYNC / FORCESYNC / SYNCVerRepos subDocs will be push and pull
+     * 
      * 2. SyncUp Local Entry with VerRepos Entry (always treat remote change as local change)
      *    if action.type is SYNC / FORCESYNC / SYNCVerRepos current doc and all subEntries under doc is local or remote changed will be syncuped, 
      *    otherwise only current doc and subEntries just under current doc is local changed will be syncuped
@@ -4430,13 +4433,26 @@ public class BaseController  extends BaseFunction{
 			login_user = systemUser;
 		}
 		
+		//set syncup options for RemoteStorage / VersionRepos / IndexLib 
 		Integer subDocSyncupFlag = 1;
 		boolean syncLocalChangeOnly = true;
-		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNCVerRepos)
+		switch(action.getAction())
 		{
+		case SYNC:			
+		case SYNCFORCE:
 			subDocSyncupFlag = 2;
 			syncLocalChangeOnly = false;
+			break;
+		case SYNCVerRepos:
+			subDocSyncupFlag = 2;
+			syncLocalChangeOnly = false;
+			break;
+		case UNDEFINED:
+			break;
+		default:
+			break;
 		}
+		
 		Log.info("syncupForDocChange() [" + doc.getPath() + doc.getName() + "] subDocSyncupFlag:" + subDocSyncupFlag + " syncLocalChangeOnly:" + syncLocalChangeOnly);
 		
 		if(remoteStorageEnable)
@@ -4547,7 +4563,7 @@ public class BaseController  extends BaseFunction{
 		switch(action.getAction())
 		{
 		case SYNC:
-		case FORCESYNC:
+		case SYNCFORCE:
 			Log.info("**************************** checkAndUpdateIndex() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{

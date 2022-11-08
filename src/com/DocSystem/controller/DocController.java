@@ -433,7 +433,7 @@ public class DocController extends BaseController{
 		{
 			if(force != null && force == 1)
 			{
-				addDocToSyncUpList(actionList, repos, doc, Action.FORCESYNC, reposAccess.getAccessUser(), commitMsg, true);
+				addDocToSyncUpList(actionList, repos, doc, Action.SYNCFORCE, reposAccess.getAccessUser(), commitMsg, true);
 			}
 			else
 			{
