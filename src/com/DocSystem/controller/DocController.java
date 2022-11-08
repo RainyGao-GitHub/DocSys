@@ -4763,7 +4763,7 @@ public class DocController extends BaseController{
 				
 				HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, false, false) == false)
+				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, 3) == false)
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
 					Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
