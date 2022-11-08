@@ -746,6 +746,11 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		writeJson(rt, response);
+		
+		//重新初始化仓库扩展配置（此时可能引入新的仓库）
+		systemDisabled = 1;
+		initReposExtentionConfig();
+		systemDisabled = 0;
 	}
 
 	@RequestMapping("/getSystemInfo.do")
