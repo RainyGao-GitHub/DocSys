@@ -795,8 +795,7 @@ public class ReposController extends BaseController{
 		}
 
 		task.targetPath = task.backupStorePath;
-		task.targetName = repos.getId() + "-" + backupTime + ".zip";
-
+		task.targetName = repos.getId() + "-" + repos.getName() + "-" + backupTime + ".zip";
 		
 		task.status = 1; //备份中..
 		
