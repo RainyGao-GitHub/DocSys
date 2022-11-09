@@ -3352,7 +3352,7 @@ public class BaseFunction{
 
 		if(textSearchConfig == null)
 		{
-			if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.TextSearchConfig, config))
+			if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.TextSearchConfig, textSearchConfig))
 			{
 				Log.error("checkAndInitReposTextSearchConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
 				return false;
@@ -3366,7 +3366,7 @@ public class BaseFunction{
 		//Init VirtualDocTextSearchDisableHashMap
 		initVirtualDocTextSearchDisableHashMap(repos);	
 		
-		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.TextSearchConfig, config))
+		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.TextSearchConfig, textSearchConfig))
 		{
 			Log.error("checkAndInitReposTextSearchConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
 			return false;
