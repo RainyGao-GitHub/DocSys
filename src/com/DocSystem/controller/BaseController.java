@@ -10851,7 +10851,7 @@ public class BaseController  extends BaseFunction{
 		FileUtil.saveDocContentToFile(logFile, docSysIniPath, "debugLogFile", "UTF-8");
 	}
 
-	protected void initReposExtentionConfig() {
+	protected void checkAndInitReposExtentionConfig() {
 		Log.debug("initReposExtentionConfig for All Repos");
 		
 		redisSyncLock("initReposExtentionConfigLock", "initReposExtentionConfig for All Repos");
@@ -10952,6 +10952,81 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		redisSyncUnlock("initReposExtentionConfigLock", "initReposExtentionConfig for All Repos");		
+	}
+	
+	protected void initReposExtentionConfig() {
+		Log.debug("initReposExtentionConfig for All Repos");
+		
+		try {
+			List <Repos> list = reposService.getAllReposList();
+			if(list == null)
+			{
+				Log.debug("initReposExtentionConfig there is no repos");
+				return;
+			}
+			
+			for(int i=0; i<list.size(); i++)
+			{
+				Repos repos = list.get(i);
+				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
+				
+				ReposData reposData = initReposData(repos);
+
+				repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
+						
+				/*** Init ReposExtConfig Start ***/
+				//Init RemoteStorageConfig
+				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
+				
+				//Init RemoteServerConifg
+				String remoteServer = getReposRemoteServer(repos);
+				repos.remoteServer = remoteServer;
+				initReposRemoteServerConfig(repos, remoteServer);
+				
+				//Init ReposAutoBackupConfig
+				String autoBackup = getReposAutoBackup(repos);
+				repos.setAutoBackup(autoBackup);
+				initReposAutoBackupConfig(repos, autoBackup);
+				
+				//Init ReposTextSearchConfig
+				String textSearch = getReposTextSearch(repos);
+				repos.setTextSearch(textSearch);
+				initReposTextSearchConfig(repos, textSearch);
+				
+				//Init ReposVersionIgnoreConfig
+				initReposVersionIgnoreConfig(repos);
+				
+				//Init ReposEncryptConfig
+				initReposEncryptConfig(repos);
+				
+				/*** Init ReposExtConfig End ***/
+				
+				/*** Init Repos related Async Tasks Start ***/
+				//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
+				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
+				reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
+				reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
+
+				//启动定时备份任务
+				if(repos.autoBackupConfig != null)
+				{
+					addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L);	//1小时后开始本地备份
+					addDelayTaskForRemoteBackup(repos, repos.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始远程备份
+				}
+				
+				//启动定时同步任务
+				if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+				{
+					addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
+				}
+				/*** Init Repos related Async Tasks End ***/
+				
+				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
+			}
+	    } catch (Exception e) {
+	        Log.info("initReposExtentionConfig 异常");
+	        Log.info(e);
+		}
 	}
 
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
