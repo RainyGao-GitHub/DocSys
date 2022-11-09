@@ -2395,6 +2395,7 @@ public class BaseFunction{
 		return repos.getType() < 3;
 	}
 	
+	
 	//*** 仓库远程存储配置 **********
 	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
 	{
