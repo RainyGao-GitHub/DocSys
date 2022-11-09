@@ -10853,6 +10853,9 @@ public class BaseController  extends BaseFunction{
 
 	protected void initReposExtentionConfig() {
 		Log.debug("initReposExtentionConfig for All Repos");
+		
+		redisSyncLock("initReposExtentionConfigLock", "initReposExtentionConfig for All Repos");
+		
 		try {
 			List <Repos> list = reposService.getAllReposList();
 			if(list == null)
@@ -10866,33 +10869,59 @@ public class BaseController  extends BaseFunction{
 				Repos repos = list.get(i);
 				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
-				initReposData(repos);
+				ReposData reposData = initReposData(repos);
 
+				repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
+						
 				/*** Init ReposExtConfig Start ***/
-				//TODO: 目前仓库扩展配置的初始化没有判断是否其他服务器已经进行了初始化，而是直接再初始化一遍，未来需要考虑检测到已初始化直接读取
 				//Init RemoteStorageConfig
-				initReposRemoteStorageConfig(repos, repos.getRemoteStorage());
+				if(checkAndInitReposRemoteStorageConfig(repos, repos.getRemoteStorage()) == false)
+				{
+					reposData.disabled = "集群检测失败，请检查该仓库的远程存储参数设置！";
+					continue;
+				}
 				
 				//Init RemoteServerConifg
 				String remoteServer = getReposRemoteServer(repos);
 				repos.remoteServer = remoteServer;
-				initReposRemoteServerConfig(repos, remoteServer);
+				if(checkAndInitReposRemoteServerConfig(repos, remoteServer) == false)
+				{
+					reposData.disabled = "集群检测失败，请检查该仓库的前置参数设置！";
+					continue;
+				}
 				
 				//Init ReposAutoBackupConfig
 				String autoBackup = getReposAutoBackup(repos);
 				repos.setAutoBackup(autoBackup);
-				initReposAutoBackupConfig(repos, autoBackup);
+				if(checkAndInitReposAutoBackupConfig(repos, autoBackup) == false)
+				{
+					reposData.disabled = "集群检测失败，请检查该仓库的自动备份参数设置！";
+					continue;
+				}
 
 				//Init ReposTextSearchConfig
 				String textSearch = getReposTextSearch(repos);
 				repos.setTextSearch(textSearch);
-				initReposTextSearchConfig(repos, textSearch);
+				if(checkAndInitReposTextSearchConfig(repos, textSearch) == false)
+				{
+					reposData.disabled = "集群检测失败，请检查该仓库的全文搜索参数设置！";
+					continue;					
+				}
 				
 				//Init ReposVersionIgnoreConfig
-				initReposVersionIgnoreConfig(repos);
+				if(checkAndInitReposVersionIgnoreConfig(repos) == false)
+				{
+					reposData.disabled = "集群检测失败，请检查该仓库的版本忽略参数设置！";
+					continue;					
+				}
 				
 				//Init ReposEncryptConfig
-				initReposEncryptConfig(repos);
+				if(checkAndInitReposEncryptConfig(repos) == false)
+				{
+					reposData.disabled = "集群检测失败，请检查该仓库的加密参数设置！";
+					continue;					
+				}
+				
 				/*** Init ReposExtConfig End ***/
 				
 				/*** Init Repos related Async Tasks Start ***/
@@ -10920,7 +10949,9 @@ public class BaseController  extends BaseFunction{
 	    } catch (Exception e) {
 	        Log.info("initReposExtentionConfig 异常");
 	        Log.info(e);
-		}	
+		}
+		
+		redisSyncUnlock("initReposExtentionConfigLock", "initReposExtentionConfig for All Repos");		
 	}
 
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
@@ -14589,6 +14620,14 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		if(repos.disabled != null)
+		{
+			Log.info("仓库 " + repos.getName() + " was disabled:" + repos.disabled);
+			rt.setError("仓库已被禁用:" + repos.disabled);
+			writeJson(rt, response);			
+			return false;					
+		}
+		
 		if(repos.isBusy)
 		{
 			Log.info("仓库 " + repos.getName() + " is busy");
@@ -14606,7 +14645,9 @@ public class BaseController  extends BaseFunction{
 			repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
 
 			ReposData reposData = getReposData(repos);
+			repos.disabled = reposData.disabled;
 			repos.isBusy = reposData.isBusy;
+			
 			
 			if(isFSM(repos))
 			{

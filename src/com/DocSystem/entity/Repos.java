@@ -75,6 +75,8 @@ public class Repos {
 
 	public Boolean  isBusy;
 	
+	public String disabled;	//仓库禁用（填写禁用理由）
+	
 	public Integer officeType;	//0:内置   1:外置
 	
 	public String remoteServer;
