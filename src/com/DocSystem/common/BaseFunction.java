@@ -491,17 +491,18 @@ public class BaseFunction{
 
 	private void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
 		RBucket<Object> bucket = redisClient.getBucket("ReposIsBusy" + reposId);
-		bucket.set(isBusy);
+		Long expireTime = new Date().getTime() + 7200000;	//2 hours
+		bucket.set(expireTime);
 	}
 	
 	protected boolean getReposIsBusyRedis(Integer reposId) {
 		RBucket<Object> bucket = redisClient.getBucket("ReposIsBusy" + reposId);
-		Boolean isBusy = (Boolean) bucket.get();
-		if(isBusy == null)
+		Long expireTime = (Long) bucket.get();
+		if(expireTime == null)
 		{
 			return false;
 		}
-		return isBusy;
+		return (expireTime > new Date().getTime());
 	}	
 	
 	//*** 仓库扩展配置 ***
