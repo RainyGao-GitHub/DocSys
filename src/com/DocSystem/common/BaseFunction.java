@@ -536,7 +536,7 @@ public class BaseFunction{
 		}
 	}
 
-	protected boolean isReposExtConfigDigestChanged(Repos repos, String key, Object config) {
+	protected static boolean isReposExtConfigDigestChanged(Repos repos, String key, Object config) {
 		if(redisEn == false)
 		{
 			return false;
@@ -576,7 +576,7 @@ public class BaseFunction{
 		return false;
 	}
 
-	private String getReposExtConfigDigestCheckSum(JSONObject reposExtConfigDigest, String key) {
+	private static String getReposExtConfigDigestCheckSum(JSONObject reposExtConfigDigest, String key) {
 		return reposExtConfigDigest.getString(key);
 	}
 	
@@ -2418,6 +2418,41 @@ public class BaseFunction{
 		setReposRemoteStorageConfig(repos, remote);
 	}
 	
+	protected static boolean checkAndInitReposRemoteStorageConfig(Repos repos, String remoteStorage)
+	{
+		if(isFSM(repos) == false)
+		{
+			Log.debug("initReposRemoteStroageConfig 前置类型仓库不支持远程存储！");
+			return true;
+		}
+		
+		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
+		repos.remoteStorageConfig = remote;
+		if(remote == null)
+		{
+			if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.RemoteStorageConfig, remote))
+			{
+				Log.error("checkAndInitReposRemoteStorageConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+				return false;
+			}
+			
+			deleteReposRemoteStorageConfig(repos);
+			return true;
+		}
+		
+		//设置索引库位置
+		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
+
+		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.RemoteStorageConfig, remote))
+		{
+			Log.error("checkAndInitReposRemoteStorageConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+			return false;
+		}
+		
+		setReposRemoteStorageConfig(repos, remote);
+		return true;
+	}
+	
 	private static String buildRemoteStorageStr(Repos repos) {
 		switch(repos.getType())
 		{
@@ -3044,6 +3079,47 @@ public class BaseFunction{
 		setReposRemoteServerConfig(repos, remote);
 	}
 	
+	protected static boolean checkAndInitReposRemoteServerConfig(Repos repos, String remoteStorage)
+	{
+		if(isFSM(repos))
+		{
+			Log.debug("checkAndInitReposRemoteServerConfig() 非前置类型仓库！");
+			return true;
+		}
+		
+		RemoteStorageConfig remote = null;
+		if(remoteStorage == null || remoteStorage.isEmpty())
+		{
+			//这部分是用来兼容2.02.15版本之前的SVN前置和GIT前置的
+			remoteStorage = buildRemoteStorageStr(repos);
+		}	
+		
+		remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteServer");
+		repos.remoteServerConfig = remote;
+		
+		if(remote == null)
+		{
+			if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.RemoteServerConfig, remote))
+			{
+				Log.error("checkAndInitReposRemoteServerConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+				return false;
+			}
+			deleteReposRemoteServerConfig(repos);
+			return true;
+		}
+		
+		//设置索引库位置
+		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
+
+		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.RemoteServerConfig, remote))
+		{
+			Log.error("checkAndInitReposRemoteServerConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+			return false;
+		}
+		setReposRemoteServerConfig(repos, remote);
+		return true;
+	}
+	
 	protected boolean setReposRemoteServer(Repos repos, String remoteServer) {
 		String reposRemoteServerConfigPath = Path.getReposRemoteServerConfigPath(repos);
 		
@@ -3091,6 +3167,48 @@ public class BaseFunction{
 		setReposBackupConfig(repos, config);		
 		
 		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");	
+	}
+	
+	protected boolean checkAndInitReposAutoBackupConfig(Repos repos, String autoBackup)
+	{
+		Log.debug("\n***** checkAndInitReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: " + autoBackup);
+		
+		if(isFSM(repos) == false)
+		{
+			Log.debug("checkAndInitReposAutoBackupConfig() 前置类型仓库不支持自动备份！");
+			return true;
+		}
+		
+		ReposBackupConfig config = parseAutoBackupConfig(repos, autoBackup);
+		repos.autoBackupConfig = config;
+		
+		if(config == null)
+		{
+			if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.AutoBackupConfig, config))
+			{
+				Log.error("checkAndInitReposAutoBackupConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+				return false;
+			}
+			
+			deleteReposBackupConfig(repos);
+			return true;
+		}
+		
+		//Init LocalBackup ignoreHashMap
+		initReposLocalBackupIgnoreHashMap(repos);
+		//Init RemoteBackup ignoreHashMap
+		initReposRemoteBackupIgnoreHashMap(repos);
+		
+		repos.autoBackupConfig.checkSum = repos.autoBackupConfig.hashCode() + "";
+
+		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.AutoBackupConfig, config))
+		{
+			Log.error("checkAndInitReposAutoBackupConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+			return false;
+		}
+		
+		setReposBackupConfig(repos, config);
+		return true;
 	}
 	
 	private void initReposRemoteBackupIgnoreHashMap(Repos repos) {
@@ -3226,6 +3344,36 @@ public class BaseFunction{
 		initVirtualDocTextSearchDisableHashMap(repos);	
 		
 		setReposTextSearchConfig(repos, textSearchConfig);
+	}
+	
+	protected boolean checkAndInitReposTextSearchConfig(Repos repos, String config) {
+		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
+		repos.textSearchConfig = textSearchConfig;
+
+		if(textSearchConfig == null)
+		{
+			if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.TextSearchConfig, config))
+			{
+				Log.error("checkAndInitReposTextSearchConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+				return false;
+			}
+			deleteReposTextSearchConfig(repos);
+			return true;
+		}
+				
+		//Init RealDocTextSearchDisableHashMap
+		initRealDocTextSearchDisableHashMap(repos);
+		//Init VirtualDocTextSearchDisableHashMap
+		initVirtualDocTextSearchDisableHashMap(repos);	
+		
+		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.TextSearchConfig, config))
+		{
+			Log.error("checkAndInitReposTextSearchConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+			return false;
+		}
+		
+		setReposTextSearchConfig(repos, textSearchConfig);
+		return true;
 	}
 	
 	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
@@ -3389,6 +3537,26 @@ public class BaseFunction{
 		setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
 	}
 	
+	protected boolean checkAndInitReposVersionIgnoreConfig(Repos repos) {
+		//add TextSearchConfig For repos
+		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
+		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
+		
+		//set to repos 
+		repos.versionIgnoreConfig = versionIgnoreConfig;
+		
+		initReposVersionIgnoreHashMap(repos);
+		
+		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.VersionIgnoreConfig, versionIgnoreConfig))
+		{
+			Log.error("checkAndInitReposVersionIgnoreConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+			return false;
+		}
+		
+		setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
+		return true;
+	}
+	
 	private void initReposVersionIgnoreHashMap(Repos repos) {
 		String reposTextSearchConfigPath = Path.getReposVersionIgnoreConfigPath(repos);
 		
@@ -3446,6 +3614,32 @@ public class BaseFunction{
 		}
 	}
 	
+	protected boolean checkAndInitReposEncryptConfig(Repos repos) {
+		EncryptConfig config = parseReposEncryptConfig(repos);
+		if(config == null)
+		{
+			if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.EncryptConfig, config))
+			{
+				Log.error("checkAndInitReposEncryptConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+				return false;
+			}
+			
+			deleteReposEncryptConfig(repos);
+			return true;
+		}
+		
+		
+		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.EncryptConfig, config))
+		{
+			Log.error("checkAndInitReposEncryptConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
+			return false;
+		}
+		
+		setReposEncryptConfig(repos, config);
+		return true;
+	}
+	
+
 	protected EncryptConfig parseReposEncryptConfig(Repos repos) {
 		String path = Path.getReposEncryptConfigPath(repos);
 		String name = Path.getReposEncryptConfigFileName();
