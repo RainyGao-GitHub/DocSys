@@ -117,7 +117,6 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 # 技术咨询与购买 
 ## 购买与咨询 请加群 : 953982034
 
-
 # 常见问题
 ### 一、二次开发如何集成商业版功能
 
@@ -360,3 +359,12 @@ FTP服务器为被动模式情况下，需要在MxsDoc的FTP配置中增加参�
 2. Windows系统：用startWithLog.bat启动，日志在docsys/logs目录
 
 3. Linux系统： start.sh > docSys.log
+
+# 联系方式
+## 个人QQ: 652055239
+## 个人Email: gaoyu@gofreeteam.com
+
+官方QQ群号：953982034
+
+重点说明： 申请进群时提供的是码云star显示的名字(列如下图)，管理员会挨个审核是否已star，如果没有star或者乱填的直接拒绝，出现拒绝2次的永久不允许进群：
+![输入图片说明](WebRoot/web/images/starexample.png)
