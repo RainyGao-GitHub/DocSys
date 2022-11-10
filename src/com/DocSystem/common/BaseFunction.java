@@ -490,19 +490,21 @@ public class BaseFunction{
 	}
 
 	private void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
-		RBucket<Object> bucket = redisClient.getBucket("ReposIsBusy" + reposId);
-		Long expireTime = new Date().getTime() + 7200000;	//2 hours
-		bucket.set(expireTime);
+		RBucket<Object> bucket = redisClient.getBucket("ReposBusyLock" + reposId);
+		BasicLock lock = new BasicLock();
+		lock.expireTime = new Date().getTime() + 7200000;
+		lock.locker = serverIP;
+		bucket.set(lock);
 	}
 	
 	protected boolean getReposIsBusyRedis(Integer reposId) {
-		RBucket<Object> bucket = redisClient.getBucket("ReposIsBusy" + reposId);
-		Long expireTime = (Long) bucket.get();
-		if(expireTime == null)
+		RBucket<Object> bucket = redisClient.getBucket("ReposBusyLock" + reposId);
+		BasicLock lock = (BasicLock) bucket.get();
+		if(lock == null || lock.expireTime == null)
 		{
 			return false;
 		}
-		return (expireTime > new Date().getTime());
+		return (lock.expireTime > new Date().getTime());
 	}	
 	
 	//*** 仓库扩展配置 ***
