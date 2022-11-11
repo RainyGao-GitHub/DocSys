@@ -4053,6 +4053,110 @@
         });
 	}
 	
+	function disableRepos(reposId){
+		console.log("disableRepos() " + reposId);
+		disableReposConfirm(reposId);
+	}
+	
+	function enableRepos(reposId){
+		console.log("enableRepos() " + reposId);
+		enableReposConfirm(reposId);
+	}
+	
+	function disableReposConfirm(reposId)
+	{
+		console.log("disableReposConfirm() " + reposId);
+	    qiao.bs.confirm({
+	    		id: "disableReposConfirmDialog",
+		        title: "禁用仓库",
+		        msg: "是否禁用仓库？",
+		        okbtn: "禁用",
+		        qubtn: "取消",
+	    	},function () {
+				doDisableRepos(reposId);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function enableReposConfirm(reposId)
+	{
+		console.log("enableReposConfirm() " + reposId);
+	    qiao.bs.confirm({
+	    		id: "enableReposConfirmDialog",
+		        title: "启用仓库",
+		        msg: "是否启用仓库？",
+		        okbtn: "启用",
+		        qubtn: "取消",
+	    	},function () {
+				doEnableRepos(reposId);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function doDisableRepos(reposId){
+		$.ajax({
+	        url : "/DocSystem/Manage/disableRepos.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	reposId: reposId,
+	        },
+	        success : function (ret) {
+	        	console.log("doDisableRepos ret:",ret);
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.systemDisabled = 1;
+	        		$("#btnEnableRepos" + reposId).show();
+	        		$("#btnDisableRepos" + reposId).hide();
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("禁用仓库失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("禁用仓库失败::服务器异常");
+	        }
+	    });
+	}
+	
+	function doEnableRepos(reposId){
+		$.ajax({
+	        url : "/DocSystem/Manage/enableRepos.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	reposId: reposId,
+	        },
+	        success : function (ret) {
+	        	console.log("enableRepos ret:",ret);
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.systemDisabled = 0;
+	        		$("#btnEnableRepos" + reposId).hide();
+	        		$("#btnDisableRepos" + reposId).show();
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("启用仓库失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("启用仓库失败::服务器异常");
+	        }
+	    });
+	}
+	
 	function showBackupReposConfirmPanel(e, reposId, type, index)
 	{
 		console.log("showBackupReposConfirmPanel() reposId:" + reposId + " type:" + type + " index:" + index);

@@ -40,6 +40,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.ReposData;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.LDAPConfig;
@@ -865,7 +866,7 @@ public class ManageController extends BaseController{
 	public void enableSystem(String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** disableSystem.do ***********************");
+		Log.info("****************** enableSystem.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -875,6 +876,44 @@ public class ManageController extends BaseController{
 		}
 		
 		systemDisabled = 0;
+					
+		writeJson(rt, response);
+	}
+	
+	/********** 禁用仓库 ***************/
+	@RequestMapping("/disableRepos.do")
+	public void disableSystem(Integer reposId, String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** disableRepos.do reposId:" + reposId +  " ***********************");
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		setReposIsBusy(reposId, true);
+					
+		writeJson(rt, response);
+	}
+	
+	/********** 启用系统 ***************/
+	@RequestMapping("/enableRepos.do")
+	public void enableRepos(Integer reposId, String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** enableRepos.do reposId:" + reposId +" ***********************");
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		setReposIsBusy(reposId, false);
 					
 		writeJson(rt, response);
 	}
