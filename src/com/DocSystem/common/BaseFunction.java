@@ -489,12 +489,19 @@ public class BaseFunction{
 		reposDataHashMap.get(reposId).isBusy = isBusy;
 	}
 
-	private void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
+	protected void setReposIsBusyRedis(Integer reposId, boolean isBusy) {
 		RBucket<Object> bucket = redisClient.getBucket("ReposBusyLock" + reposId);
-		BasicLock lock = new BasicLock();
-		lock.expireTime = new Date().getTime() + 7200000;
-		lock.locker = serverIP;
-		bucket.set(lock);
+		if(isBusy)
+		{
+			BasicLock lock = new BasicLock();
+			lock.expireTime = new Date().getTime() + 7200000;
+			lock.locker = serverIP;
+			bucket.set(lock);
+		}
+		else
+		{
+			bucket.delete();
+		}
 	}
 	
 	protected boolean getReposIsBusyRedis(Integer reposId) {

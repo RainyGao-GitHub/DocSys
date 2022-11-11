@@ -42,6 +42,13 @@
                       <button onclick="showReposManagerPage(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">权限管理</button>
                       <button onclick="showBackupReposConfirmPanel(event, {{value.id}}, {{value.type}}, {{i}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">备份仓库</button>
                       <button onclick="showReposManagerPage(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">高级设置</button>
+	                  {{if value.isBusy}}
+	                  <button id="btnEnableRepos{{value.id}}" onclick="enableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">启用仓库</button>
+		              <button id="btnDisableRepos{{value.id}}" onclick="disableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban" style="display:none;">禁用仓库</button>
+	                  {{else}}
+	                  <button id="btnEnableRepos{{value.id}}" onclick="enableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban" style="display:none;">启用仓库</button>
+		              <button id="btnDisableRepos{{value.id}}"  onclick="disableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban">禁用仓库</button>
+		              {{/if}}
                     </td>
                   </tr>
                 {{/each}}
