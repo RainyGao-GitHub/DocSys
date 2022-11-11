@@ -10772,7 +10772,13 @@ public class BaseController  extends BaseFunction{
 		
 		//数据库已存在
 		Log.info("docSysInit() checkAndUpdateDB start");
-		String ret = checkAndUpdateDB(true);
+		String ret = "ok";
+		if(redisEn == false)
+		{
+			//集群情况下禁止进行数据库升级（必须假定数据库是兼容的）
+			ret = checkAndUpdateDB(true);
+		}
+		
 		if(ret.equals("ok"))
 		{
 			initReposExtentionConfig();
