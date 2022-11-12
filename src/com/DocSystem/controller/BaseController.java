@@ -4529,7 +4529,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag, scanOption);
 
 		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
-		if(remoteChanges.size() == 0)
+		if(isRemoteChangesEmpty(remoteChanges, scanOption) == false)
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程没有改动");
 		}
@@ -4540,7 +4540,7 @@ public class BaseController  extends BaseFunction{
 			syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
 		}
 		
-		if(localChanges.size() == 0)
+		if(isLocalChangesEmpty(localChanges, scanOption) == true)
 		{
 			Log.info("syncUpLocalWithVerRepos() 本地没有改动");
 			return true;
@@ -4553,6 +4553,35 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+	}
+	
+	
+	protected boolean isLocalChangesEmpty(HashMap<Long, DocChange> localChanges, ScanOption scanOption) {
+		if(scanOption.localChangesRootPath == null)
+		{
+			return (localChanges.size() == 0);
+		}
+		
+		File dir = new File(scanOption.localChangesRootPath);
+		if(dir.exists() == false)
+		{
+			return true;
+		}
+		return (dir.list().length == 0);
+	}
+	
+	protected boolean isRemoteChangesEmpty(HashMap<Long, DocChange> remoteChanges, ScanOption scanOption) {
+		if(scanOption.remoteChangesRootPath == null)
+		{
+			return (remoteChanges.size() == 0);
+		}
+		
+		File dir = new File(scanOption.remoteChangesRootPath);
+		if(dir.exists() == false)
+		{
+			return true;
+		}
+		return (dir.list().length == 0);
 	}
 
 	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ReturnAjax rt) {

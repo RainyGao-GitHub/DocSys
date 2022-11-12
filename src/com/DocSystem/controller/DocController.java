@@ -4775,7 +4775,8 @@ public class DocController extends BaseController{
 					return;
 				}
 				
-				if(localChanges.size() > 0)
+				
+				if(isLocalChangesEmpty(localChanges, scanOption) == false)
 				{
 					Log.info("revertDocHistory() 本地有改动！");
 					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true) == false)
@@ -4789,7 +4790,7 @@ public class DocController extends BaseController{
 		        	}
 				}
 				
-				if(remoteChanges.size() > 0)
+				if(isRemoteChangesEmpty(remoteChanges, scanOption) == false)
 				{
 					Log.info("revertDocHistory() 远程有改动！");
 					//远程有改动才需要恢复
@@ -4846,7 +4847,7 @@ public class DocController extends BaseController{
 		
 		addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, "历史版本:" + commitId);	
 	}
-	
+
 	/****************   set  LocalBackup Ignore ******************/
 	@RequestMapping("/setLocalBackupIgnore.do")
 	public void setLocalBackupIgnore(Integer reposId, String path, String name,
