@@ -107,6 +107,7 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
+import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
@@ -4489,8 +4490,10 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-		Log.info("syncupForDocChange() 同步版本管理");	
-		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, 2, login_user, rt); //localChange and treatRevisionNullAsLocalChange
+		Log.info("syncupForDocChange() 同步版本管理");
+		ScanOption scanOption = new ScanOption();
+		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange
+		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, login_user, rt); 
 
 		Log.info("syncupForDocChange() 刷新文件索引");
 		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
@@ -4500,7 +4503,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, 
-			Integer subDocSyncupFlag, int scanType,
+			Integer subDocSyncupFlag, ScanOption scanOption,
 			User login_user, ReturnAjax rt) {
 		//对本地文件和版本仓库进行同步
 		Log.info("syncUpLocalWithVerRepos() 开始版本管理同步");
@@ -4523,7 +4526,7 @@ public class BaseController  extends BaseFunction{
 		
 		Doc dbDoc = dbGetDoc(repos, doc, false);
 		
-		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag, scanType);
+		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag, scanOption);
 
 		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
 		if(remoteChanges.size() == 0)
@@ -5169,14 +5172,14 @@ public class BaseController  extends BaseFunction{
 	protected boolean syncupScanForDoc_FSM(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user, ReturnAjax rt, 
 			HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, 
 			int subDocSyncFlag, 
-			int scanType) 
+			ScanOption scanOption) 
 	{
 		//Log.printObject("syncupScanForDoc_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			Log.debug("syncupScanForDoc_FSM() 扫描根目录 subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanType);			
-			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanType);
+			Log.debug("syncupScanForDoc_FSM() 扫描根目录 subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanOption.scanType);			
+			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 		}
 		
 		if(repos.getVerCtrl() == 2)
@@ -5189,7 +5192,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		DocChangeType docChangeType = DocChangeType.UNDEFINED;
-		switch(scanType)
+		switch(scanOption.scanType)
 		{
 		case 1: //syncLocalChangeOnly == true
 			docChangeType = getLocalDocChangeType(dbDoc, localEntry);
@@ -5226,7 +5229,7 @@ public class BaseController  extends BaseFunction{
 			localChange.setLocalEntry(localEntry);
 			localChange.setRemoteEntry(remoteEntry);
 			localChange.setType(docChangeType);
-			localChanges.put(doc.getDocId(), localChange);
+			insertLocalChange(doc, localChanges, localChange, scanOption);
 			//Log.debug("syncupScanForDoc_FSM() docChangeType: " + localChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		//由于远程同步需要直接修改或删除本地文件，一旦误操作将无法恢复，必须保证删除修改操作的文件的历史已经在版本仓库中
@@ -5244,7 +5247,7 @@ public class BaseController  extends BaseFunction{
 				localChange1.setLocalEntry(localEntry);
 				localChange1.setRemoteEntry(remoteEntry);
 				localChange1.setType(DocChangeType.LOCALCHANGE);	//LOCALCHANGE才能保证在AutoCommit的时候正常工作
-				localChanges.put(dbDoc.getDocId(), localChange1);
+				insertLocalChange(dbDoc, localChanges, localChange1, scanOption);
 				//Log.debug("syncupScanForDoc_FSM() docChangeType: " + localChange1.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 				return true;
 			}
@@ -5255,6 +5258,7 @@ public class BaseController  extends BaseFunction{
 			remoteChange.setRemoteEntry(remoteEntry);
 			remoteChange.setType(docChangeType);
 			remoteChanges.put(doc.getDocId(), remoteChange);
+			insertRemoteChange(doc, remoteChanges, remoteChange, scanOption);
 			//Log.debug("syncupScanForDoc_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		case REMOTEADD:	//remoteAdd
@@ -5265,18 +5269,43 @@ public class BaseController  extends BaseFunction{
 			remoteChange1.setRemoteEntry(remoteEntry);
 			remoteChange1.setType(docChangeType);
 			remoteChanges.put(doc.getDocId(), remoteChange1);
+			insertRemoteChange(doc, remoteChanges, remoteChange1, scanOption);
 			//Log.debug("syncupScanForDoc_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		case NOCHANGE:		//no change
 			if(dbDoc != null && dbDoc.getType() == 2)
 			{
-				return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanType);
+				return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 			}
 			return true;
 		default:
 			break;
 		}		
 		return false;
+	}
+
+	private void insertLocalChange(Doc doc, HashMap<Long, DocChange> localChanges, DocChange localChange, ScanOption scanOption) {
+		if(scanOption.localChangesRootPath == null)
+		{
+			localChanges.put(doc.getDocId(), localChange);
+		}
+		else
+		{
+			File node = new File(scanOption.localChangesRootPath, doc.getPath() + doc.getName());
+			node.mkdirs();
+		}	
+	}
+	
+	private void insertRemoteChange(Doc doc, HashMap<Long, DocChange> remoteChanges, DocChange remoteChange, ScanOption scanOption) {
+		if(scanOption.remoteChangesRootPath == null)
+		{
+			remoteChanges.put(doc.getDocId(), remoteChange);
+		}
+		else
+		{
+			File node = new File(scanOption.remoteChangesRootPath, doc.getPath() + doc.getName());
+			node.mkdirs();
+		}	
 	}
 
 	private boolean isRemoteChangedCase(DocChangeType docChangeType) {
@@ -5614,9 +5643,9 @@ public class BaseController  extends BaseFunction{
 	protected boolean syncupScanForSubDocs_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt, 
 			HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, 
 			int subDocSyncFlag, 
-			int scanType) 
+			ScanOption scanOption) 
 	{
-		Log.debug("************************ syncupScanForSubDocs_FSM()  docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "] subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanType);
+		Log.debug("************************ syncupScanForSubDocs_FSM()  docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "] subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanOption.scanType);
 
 		//子目录不递归
 		if(subDocSyncFlag == 0)
@@ -5650,7 +5679,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> verReposEntryList = null;
 		boolean isVerReposSyncUpNeed = false;
 		
-		if(scanType == 3 || scanType == 4)
+		if(scanOption.scanType == 3 || scanOption.scanType == 4)
 		{
 	    	isVerReposSyncUpNeed = isVerReposSyncupNeed(repos);
 		}
@@ -5681,13 +5710,13 @@ public class BaseController  extends BaseFunction{
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
 		Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
-        syncupScanForDocList_FSM(verReposEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanType);
+        syncupScanForDocList_FSM(verReposEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 		
         Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
-        syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanType);
+        syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 		
         Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
-        syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanType);
+        syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 
 		return true;
     }
@@ -5718,7 +5747,8 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag, int scanType)
+	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, 
+			HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag, ScanOption scanOption)
 	{
 		if(docList == null)
 		{
@@ -5745,7 +5775,8 @@ public class BaseController  extends BaseFunction{
     		Doc remoteEntry = getDocFromList(subDoc, remoteDocHashMap);
     		//Log.printObject("syncupForDocChange_FSM() remoteEntry: ", remoteEntry);
     		docHashMap.put(subDoc.getName(), subDoc);
-    		syncupScanForDoc_FSM(repos, subDoc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanType);
+    		
+    		syncupScanForDoc_FSM(repos, subDoc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 	    }
 		return true;
 	}
