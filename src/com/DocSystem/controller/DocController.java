@@ -72,6 +72,7 @@ import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.CommonAction.Action;
@@ -4763,7 +4764,9 @@ public class DocController extends BaseController{
 				
 				HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, 3) == false)
+				ScanOption scanOption = new ScanOption();
+				scanOption.scanType = 3;
+				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, scanOption) == false)
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
 					Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
