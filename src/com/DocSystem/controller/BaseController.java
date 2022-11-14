@@ -3496,7 +3496,7 @@ public class BaseController  extends BaseFunction{
 		String revision = null;
 		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
-			revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
+			revision = verReposDocCommitEx(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
 			if(revision == null)
 			{			
 				docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
@@ -4537,7 +4537,14 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程有改动，同步到本地");
 			//Do Remote SyncUp			
-			syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
+			if(scanOption.remoteChangesRootPath == null)
+			{
+				syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
+			}
+			else
+			{
+				syncupRemoteChangesEx_FSM(repos, login_user, doc, scanOption.remoteChangesRootPath, rt);				
+			}
 		}
 		
 		if(isLocalChangesEmpty(localChanges, scanOption) == true)
@@ -4552,7 +4559,14 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		return syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+		if(scanOption.localChangesRootPath == null)
+		{
+			return syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+		}
+		else
+		{
+			return syncupLocalChangesEx_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, scanOption.localChangesRootPath, subDocSyncupFlag, rt);			
+		}
 	}
 	
 	
@@ -4902,6 +4916,93 @@ public class BaseController  extends BaseFunction{
 	    }
 		return true;
 	}
+	
+	private boolean syncupRemoteChangesEx_FSM(Repos repos, User login_user, Doc doc, String remoteChangesRootPath, ReturnAjax rt) 
+	{
+		File parentDir = new File(remoteChangesRootPath, doc.getPath() + doc.getName());
+		syncUpRemoteChangeEx_FSM(repos, doc, parentDir, login_user, rt);
+		return true;
+	}
+
+	private void syncUpRemoteChangeEx_FSM(Repos repos, Doc doc, File parentDir, User login_user, ReturnAjax rt) {
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = doc.getLocalRootPath();
+		String localVRootPath = doc.getLocalVRootPath();
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+
+		File[] list = parentDir.listFiles();
+		for(int i=0; i<list.length; i++)
+		{
+			File subEntry = list[i];
+			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
+    		Doc localDoc = fsGetDoc(repos, subDoc);
+			Doc remoteDoc = verReposGetDoc(repos, subDoc, null);
+			DocChange docChange = new DocChange();
+			
+			//localDoc not exists
+			if(localDoc == null || localDoc.getType() == 0)
+			{
+				if(remoteDoc == null || remoteDoc.getType() == 0)
+				{
+					continue;
+				}
+				
+				docChange.setType(DocChangeType.REMOTEADD);
+				docChange.setDoc(remoteDoc);
+				docChange.setLocalEntry(localDoc);
+				docChange.setRemoteEntry(remoteDoc);
+				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
+				continue;
+			}
+			
+			//localDoc exists
+			if(remoteDoc == null || remoteDoc.getType() == 0)
+			{
+				docChange.setType(DocChangeType.REMOTEDELETE);
+				docChange.setDoc(localDoc);
+				docChange.setLocalEntry(localDoc);
+				docChange.setRemoteEntry(remoteDoc);
+				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
+				continue;			
+			}
+			
+			//localDoc is File and remoteDoc exists 
+			if(localDoc.getType() == 1)
+			{
+				if(remoteDoc.getType() == 1)
+				{
+					docChange.setType(DocChangeType.REMOTECHANGE);
+					docChange.setDoc(localDoc);
+					docChange.setLocalEntry(localDoc);
+					docChange.setRemoteEntry(remoteDoc);
+					syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
+					continue;
+				}
+				
+				docChange.setType(DocChangeType.REMOTEFILETODIR);
+				docChange.setDoc(localDoc);
+				docChange.setLocalEntry(localDoc);
+				docChange.setRemoteEntry(remoteDoc);
+				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
+				continue;
+			}
+			
+			//localDoc is Folder and remoteDoc is File
+			if(remoteDoc.getType() == 1)
+			{
+				docChange.setType(DocChangeType.REMOTEDIRTOFILE);
+				docChange.setDoc(localDoc);
+				docChange.setLocalEntry(localDoc);
+				docChange.setRemoteEntry(remoteDoc);
+				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
+				continue;
+			}
+			
+			//localDoc and remoteDoc is Folder
+			syncUpRemoteChangeEx_FSM(repos, localDoc, subEntry, login_user, rt);
+		}
+	}
 
 	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, Integer subDocSyncupFlag, ReturnAjax rt) 
 	{
@@ -4960,6 +5061,16 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//将localChanges中的版本号更新为文件的最新版本
+		updateLocalChangesRevision(repos, localChanges);
+		
+		Log.info("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
+		unlockDoc(doc, lockType, login_user);
+		
+		return true;	
+	}
+	
+
+	private void updateLocalChangesRevision(Repos repos, HashMap<Long, DocChange> localChanges) {
 		if(localChanges != null)
 		{
 			for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet())
@@ -4971,11 +5082,134 @@ public class BaseController  extends BaseFunction{
 				dbUpdateDoc(repos, localChangeDoc, true);
 			}
 		}
+	}
+	
+	private boolean syncupLocalChangesEx_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, String localChangesRootPath, Integer subDocSyncupFlag, ReturnAjax rt) 
+	{
+		//本地有改动需要提交
+		Log.info("syncupLocalChanges_FSM() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
+		if(commitMsg == null)
+		{
+			commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
+		}
+		if(commitUser == null)
+		{
+			commitUser = login_user.getName();
+		}
+		
+		//LockDoc
+		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
+		String lockInfo = "syncupLocalChanges_FSM() syncLock";
+		docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
+		
+		if(docLock == null)
+		{
+			docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
+			Log.info("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+			return false;
+		}
+		
+		List<CommitAction> commitActionList = new ArrayList<CommitAction>();
+		String revision = verReposDocCommitEx(repos, false, doc, commitMsg, commitUser, rt, true, localChangesRootPath, subDocSyncupFlag, commitActionList);
+		if(revision == null)
+		{
+			Log.info("syncupLocalChanges_FSM() 本地改动Commit失败:" + revision);
+			unlockDoc(doc, lockType, login_user);
+			return false;
+		}
+		//推送到远程仓库
+		verReposPullPush(repos, true, rt);
+		
+		if(commitActionList.size() > 0)
+		{
+			for(int i=0; i<commitActionList.size(); i++)
+			{
+				CommitAction commitAction = commitActionList.get(i);
+				if(commitAction.getResult())
+				{
+					Doc commitDoc = commitActionList.get(i).getDoc();
+					Log.printObject("syncupLocalChanges_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
+					//需要根据commitAction的行为来决定相应的操作
+					commitDoc.setRevision(revision);
+					commitDoc.setLatestEditorName(login_user.getName());
+					dbUpdateDoc(repos, commitDoc, true);				
+					dbCheckAddUpdateParentDoc(repos, commitDoc, null, null);
+				}
+			}			
+			dbUpdateDocRevision(repos, doc, revision);
+		}
+		
+		//将localChanges中的版本号更新为文件的最新版本
+		updateLocalChangesRevisionEx(repos, doc, localChangesRootPath);
 		
 		Log.info("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
 		unlockDoc(doc, lockType, login_user);
 		
 		return true;	
+	}
+
+	private void updateLocalChangesRevisionEx(Repos repos, Doc parentDoc, String localChangesRootPath) {
+		File parentDir = new File(localChangesRootPath, parentDoc.getPath() + parentDoc.getName());
+		updateLocalChangesRevisionEx(repos, parentDoc, parentDir);
+	}
+	
+	private void updateLocalChangesRevisionEx(Repos repos, Doc parentDoc, File parentDir) {
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = parentDoc.getLocalRootPath();
+		String localVRootPath = parentDoc.getLocalVRootPath();
+		String subDocParentPath = getSubDocParentPath(parentDoc);
+		Integer subDocLevel = getSubDocLevel(parentDoc);
+
+		File[] list = parentDir.listFiles();
+		for(int i=0; i<list.length; i++)
+		{
+			File subEntry = list[i];
+			Doc subDoc = buildBasicDoc(repos.getId(), null, parentDoc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", parentDoc.offsetPath);
+			Doc localDoc = fsGetDoc(repos, subDoc);
+			if(localDoc == null)
+			{
+				continue;
+			}
+			
+			if(localDoc.getType() == 0)
+			{
+				//这次commit是一个删除操作
+				Log.debug("updateLocalChangesRevisionEx() 本地删除文件/目录:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
+				dbDeleteDoc(repos, subDoc, true);
+				continue;
+			}
+			
+			String latestRevison = verReposGetLatestRevision(repos, true, localDoc);
+    		localDoc.setRevision(latestRevison);
+			
+			Doc dbDoc = dbGetDoc(repos, subDoc, false);
+			if(dbDoc == null)
+			{
+				Log.debug("updateLocalChangesRevisionEx() 本地新增文件/目录:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
+				dbAddDoc(repos, subDoc, true, true);
+				continue;
+			}
+			
+			if(dbDoc.getType() != localDoc.getType())
+			{
+				Log.debug("updateLocalChangesRevisionEx() 本地文件/目录类型改变:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
+				if(dbDeleteDoc(repos, dbDoc, true) == false)
+				{
+					Log.debug("updateLocalChangesRevisionEx() 删除dbDoc失败:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
+					continue;
+				}
+				dbAddDoc(repos, subDoc, false, false);
+				continue;
+			}
+				
+    		dbUpdateDoc(repos, localDoc, false);
+			
+			if(localDoc.getType() == 2)
+			{
+				updateLocalChangesRevisionEx(repos, localDoc, subEntry);
+			}
+		}
 	}
 
 	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
@@ -9446,6 +9680,29 @@ public class BaseController  extends BaseFunction{
 		return "";
 	}
 	
+	protected String verReposDocCommitEx(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
+	{	
+		Log.debug("verReposDocCommit() for doc:[" + doc.getPath() + doc.getName() + "]");
+
+		doc = docConvert(doc, convert);
+		
+		int verCtrl = getVerCtrl(repos, doc);
+		
+		Log.debug("verReposDocCommit verCtrl:"+verCtrl);
+		if(verCtrl == 1)
+		{
+			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
+			return svnDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+		}
+		else if(verCtrl == 2)
+		{
+			return gitDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+		}
+		
+		//对于没有版本管理的仓库，需要认为所有的LocalChanges都会commit成功
+		return "";
+	}
+	
 	private int getVerCtrl(Repos repos, Doc doc) {
 		int verCtrl = repos.getVerCtrl();
 		if(doc.getIsRealDoc() == false)
@@ -9483,6 +9740,34 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
+	protected String svnDocCommitEx(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList)
+	{			
+		boolean isRealDoc = doc.getIsRealDoc();
+		
+		SVNUtil verReposUtil = new SVNUtil();		
+		String revision = null;
+		
+		ReposData reposData = getReposData(repos);
+
+		String lockInfo = "svnDocCommit() reposData.syncLockForSvnCommit";
+		String lockName = "reposData.syncLockForSvnCommit" + repos.getId();
+		synchronized(reposData.syncLockForSvnCommit)
+		{
+			redisSyncLockEx(lockName, lockInfo);
+			
+			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+			{
+				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
+				return null;
+			}
+
+			revision = verReposUtil.doAutoCommitEx(repos, doc, commitMsg,commitUser,modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+
+			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
+		}
+		return revision;
+	}
+	
 	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
@@ -9512,6 +9797,41 @@ public class BaseController  extends BaseFunction{
 			}
 		
 			revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+
+			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
+		}
+		return revision;
+	}
+	
+	protected String gitDocCommitEx(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
+	{
+		boolean isRealDoc = doc.getIsRealDoc();
+		
+		GITUtil verReposUtil = new GITUtil();
+		String revision = null;
+		
+		ReposData reposData = getReposData(repos);
+
+		String lockInfo = "gitDocCommit() reposData.syncLockForGitCommit";
+		String lockName = "reposData.syncLockForGitCommit-" + repos.getId();
+		synchronized(reposData.syncLockForGitCommit)
+		{
+			redisSyncLockEx(lockName, lockInfo);
+			
+			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+			{
+				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
+				return null;
+			}
+		
+			if(verReposUtil.checkAndClearnBranch(true) == false)
+			{
+				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
+				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
+				return null;
+			}
+		
+			revision =  verReposUtil.doAutoCommitEx(repos, doc, commitMsg,commitUser,modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
 
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 		}
