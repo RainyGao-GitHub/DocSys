@@ -4580,6 +4580,7 @@ public class BaseController  extends BaseFunction{
 			return localChanges.size() > 0;
 		}
 		
+		Log.debug("isLocalChanged() scanOption.localChangesRootPath:" + scanOption.localChangesRootPath);
 		File dir = new File(scanOption.localChangesRootPath);
 		if(dir.exists())
 		{
@@ -4594,12 +4595,15 @@ public class BaseController  extends BaseFunction{
 			return remoteChanges.size() > 0;
 		}
 		
+		Log.debug("isRemoteChanged() scanOption.remoteChangesRootPath:" + scanOption.remoteChangesRootPath);
 		File dir = new File(scanOption.remoteChangesRootPath);
-		if(dir.exists())
+		if(dir.exists() == false)
 		{
-			return dir.listFiles().length > 0;
+			Log.debug("isRemoteChanged() " + scanOption.remoteChangesRootPath + " 不存在");		
+			return false;
 		}
-		return false;
+		
+		return dir.listFiles().length > 0;
 	}
 
 	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
