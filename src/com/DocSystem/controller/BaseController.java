@@ -4493,6 +4493,10 @@ public class BaseController  extends BaseFunction{
 		Log.info("syncupForDocChange() 同步版本管理");
 		ScanOption scanOption = new ScanOption();
 		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange
+		scanOption.scanTime = new Date().getTime();
+		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "syncupForDocChange-" + scanOption.scanTime + "/localChanges/";
+		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "syncupForDocChange-" + scanOption.scanTime + "/remoteChanges/";
+		
 		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, login_user, rt); 
 
 		Log.info("syncupForDocChange() 刷新文件索引");
@@ -4529,7 +4533,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag, scanOption);
 
 		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
-		if(isRemoteChangesEmpty(remoteChanges, scanOption) == false)
+		if(isRemoteChanged(remoteChanges, scanOption))
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程没有改动");
 		}
@@ -4547,7 +4551,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		if(isLocalChangesEmpty(localChanges, scanOption) == true)
+		if(isLocalChanged(localChanges, scanOption) == false)
 		{
 			Log.info("syncUpLocalWithVerRepos() 本地没有改动");
 			return true;
@@ -4570,32 +4574,32 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	
-	protected boolean isLocalChangesEmpty(HashMap<Long, DocChange> localChanges, ScanOption scanOption) {
+	protected boolean isLocalChanged(HashMap<Long, DocChange> localChanges, ScanOption scanOption) {
 		if(scanOption.localChangesRootPath == null)
 		{
-			return (localChanges.size() == 0);
+			return localChanges.size() > 0;
 		}
 		
 		File dir = new File(scanOption.localChangesRootPath);
-		if(dir.exists() == false)
+		if(dir.exists())
 		{
-			return true;
+			return dir.listFiles().length > 0;
 		}
-		return (dir.list().length == 0);
+		return false;
 	}
 	
-	protected boolean isRemoteChangesEmpty(HashMap<Long, DocChange> remoteChanges, ScanOption scanOption) {
+	protected boolean isRemoteChanged(HashMap<Long, DocChange> remoteChanges, ScanOption scanOption) {
 		if(scanOption.remoteChangesRootPath == null)
 		{
-			return (remoteChanges.size() == 0);
+			return remoteChanges.size() > 0;
 		}
 		
 		File dir = new File(scanOption.remoteChangesRootPath);
-		if(dir.exists() == false)
+		if(dir.exists())
 		{
-			return true;
+			return dir.listFiles().length > 0;
 		}
-		return (dir.list().length == 0);
+		return false;
 	}
 
 	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
@@ -5554,7 +5558,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			File node = new File(scanOption.localChangesRootPath, doc.getPath() + doc.getName());
+			File node = new File(scanOption.localChangesRootPath + doc.getPath() + doc.getName());
 			node.mkdirs();
 		}	
 	}
@@ -5566,7 +5570,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			File node = new File(scanOption.remoteChangesRootPath, doc.getPath() + doc.getName());
+			File node = new File(scanOption.remoteChangesRootPath + doc.getPath() + doc.getName());
 			node.mkdirs();
 		}	
 	}
