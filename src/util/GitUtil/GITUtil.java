@@ -1639,6 +1639,152 @@ public class GITUtil  extends BaseController{
 	    return newRevision;
 	}
 	
+	public String doAutoCommitEx(Repos repos, Doc doc, String commitMsg,String commitUser, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
+	{		
+		String localRootPath = doc.getLocalRootPath();
+		String localRefRootPath = doc.getLocalRefRootPath();
+		
+		Log.debug("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
+    	
+		if(commitActionList == null)
+		{
+			commitActionList = new ArrayList<CommitAction>();
+		}
+		
+		if(isVersionIgnored(repos, doc, true))
+	    {
+	    	Log.debug("doAutoCommmit() version was ignored for:" + doc.getPath() + doc.getName());
+	        return getLatestReposRevision();
+	    }
+		
+		String entryPath = doc.getPath() + doc.getName();			
+		File localEntry = new File(localRootPath + entryPath);
+		
+		//LocalEntry does not exist
+		if(!localEntry.exists())	//Delete Commit
+		{
+			Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
+			Integer type = checkPath(entryPath, null);
+		    if(type == null)
+		    {
+		    	return null;
+		    }
+		    
+		    if(type == 0)
+		    {
+				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
+		        return getLatestRevision(doc);
+		    }
+
+    		CommitAction.insertDeleteAction(commitActionList,doc, true);
+		}
+		else
+		{		
+	    	File localParentDir = new File(localRootPath+doc.getPath());
+			if(!localParentDir.exists())
+			{
+				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
+				return null;
+			}
+			if(!localParentDir.isDirectory())
+			{
+				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
+				return null;
+			}
+			
+			//If remote parentPath not exists, need to set the autoCommit entry to parentPath
+			Integer type = checkPath(doc.getPath(), null);
+			if(type == null)
+			{
+				Log.debug("doAutoCommit() checkPath for " + doc.getPath() + " 异常");
+				return null;
+			}
+	
+			//如果远程的父节点不存在且不是根节点，那么调用doAutoCommitParent
+			if(type == 0)
+			{					
+				if(!doc.getPath().isEmpty())
+				{
+					Log.debug("doAutoCommit() parent entry " + doc.getPath() + " not exists, do commit parent");
+					return doAutoCommitParent(repos, doc, commitMsg, commitUser, modifyEnable, commitActionList);
+				}
+			}	
+	
+			//LocalEntry is File
+			if(localEntry.isFile())
+			{
+				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
+					
+			    type = checkPath(entryPath, null);
+			    if(type == null)
+			    {
+			    	return null;
+			    }
+			    if(type == 0)
+			    {
+	        		Log.debug("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			CommitAction.insertAddFileAction(commitActionList,doc,false, true);
+			    }
+			    else if(type != 1)
+			    {
+			    	Log.debug("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		    		CommitAction.insertDeleteAction(commitActionList,doc, true);
+	    			CommitAction.insertAddFileAction(commitActionList,doc,false, true);
+			    }
+			    else
+			    {
+		    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
+		    		Log.debug("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		            CommitAction.insertModifyAction(commitActionList,doc, true);
+			    }
+			}
+			else
+			{
+				//LocalEntry is Directory
+				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				File file = new File(localChangesRootPath, doc.getPath() + doc.getName());
+				scheduleForCommitEx(commitActionList, repos, doc, modifyEnable, false, file, subDocCommitFlag);
+			}
+		}
+		
+		if(commitActionList == null || commitActionList.size() ==0)
+		{
+		    Log.debug("doAutoCommmit() There is nothing to commit");
+		    return getLatestReposRevision();
+		}
+		
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			Log.info("doAutoCommit() Failed to open wcDir:" + wcDir);
+			Log.info(e);
+			return null;
+		}
+		
+	    if(executeCommitActionList(git,commitActionList,true) == false)
+	    {
+	    	Log.debug("doAutoCommit() executeCommitActionList Failed");
+	    	git.close();
+	        return null;
+	    }
+	    
+	    String newRevision =  doCommit(git, commitUser, commitMsg, commitActionList);
+	    
+	    if(newRevision == null)
+	    {
+	    	//Do rollBack
+			//Do roll back Index
+			rollBackIndex(git, entryPath, null);
+			rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录	
+			git.close();
+			return null;
+	    }
+	    
+	    git.close();
+	    return newRevision;
+	}
+	
 	private boolean isVersionIgnored(Repos repos, Doc doc, boolean parentCheck) {
 		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
@@ -2610,6 +2756,88 @@ public class GITUtil  extends BaseController{
     	return; 
 	}
 
+	private void scheduleForCommitEx(List<CommitAction> actionList, Repos repos, Doc doc, boolean modifyEnable,boolean isSubAction, File parentDir, int subDocCommitFlag) {
+		
+		String localRootPath = doc.getLocalRootPath();
+		//Log.debug("scheduleForCommit()  localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
+		
+    	if(doc.getName().isEmpty())
+    	{
+    		scanForSubDocCommitEx(actionList, repos, doc, modifyEnable, isSubAction, parentDir, subDocCommitFlag);
+    		return;
+    	}
+    	
+    	if(isIgnoreNeed(repos, doc) == true)
+    	{
+    		Log.debug("scheduleForCommit() " + doc.getPath() + doc.getName() + " was ignored");
+    		return;    		
+    	}
+ 	
+    	String entryPath = doc.getPath() + doc.getName();
+    	String localEntryPath = localRootPath + entryPath;    	
+    	File localEntry = new File(localEntryPath);
+
+		Integer type = checkPath(entryPath, null);
+    	if(type == null)
+    	{
+    		Log.debug("scheduleForCommit() checkPath 异常!");
+			return;
+		}
+    	
+    	//本地删除
+    	if(!localEntry.exists())
+    	{
+    		if(type == 0)
+    		{
+    			//已同步
+    			return;
+    		}
+    		CommitAction.insertDeleteAction(actionList,doc, true);
+    		return;
+    	}
+    	
+    	//本地存在
+    	int localEntryType = localEntry.isDirectory()? 2:1;
+    	switch(localEntryType)
+    	{
+    	case 1:	//文件
+    		if(type == 0) 	//新增文件
+	    	{
+    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, true);
+	            return;
+    		}
+    		
+    		if(type != 1)	//文件类型改变
+    		{
+    			CommitAction.insertDeleteAction(actionList,doc, true);
+    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, true);
+	            return;
+    		}
+    		
+    		Log.debug("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+            CommitAction.insertModifyAction(actionList,doc, true);
+            return;
+    	case 2:
+    		if(type == 0) 	//新增目录
+	    	{
+    			//Add Dir
+    			CommitAction.insertAddDirAction(actionList,doc,isSubAction, true);
+	            return;
+    		}
+    		
+    		if(type != 2)	//文件类型改变
+    		{
+    			CommitAction.insertDeleteAction(actionList,doc, true);
+	        	CommitAction.insertAddDirAction(actionList,doc, isSubAction, true);
+	            return;
+    		}
+    		
+    		scanForSubDocCommitEx(actionList, repos, doc, modifyEnable, isSubAction, parentDir, subDocCommitFlag);
+    		break;
+    	}
+    	return; 
+	}
+	
 	private boolean isIgnoreNeed(Repos repos, Doc doc) {
     	if(doc.getName().equals(".git") || doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
     	{
@@ -2693,6 +2921,43 @@ public class GITUtil  extends BaseController{
         			CommitAction.insertAddFileAction(actionList, subDoc, isSubAction, true);
         		}
         	}
+        }
+	}
+	
+	private void scanForSubDocCommitEx(List<CommitAction> actionList, Repos repos, Doc doc, boolean modifyEnable, boolean isSubAction, File parentDir,
+			int subDocCommitFlag) {
+		String localRootPath = doc.getLocalRootPath();
+		String localRefRootPath = doc.getLocalRefRootPath();
+		Log.debug("scanForSubDocCommit()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		
+		if(subDocCommitFlag == 0) //不递归
+		{
+			return;
+		}		
+		if(subDocCommitFlag == 1)	//不可继承递归
+		{
+			subDocCommitFlag = 0;
+		}
+		
+		String subDocParentPath = getSubDocParentPath(doc);
+		int subDocLevel = getSubDocLevel(doc);
+
+    	Log.debug("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
+		File[] list = parentDir.listFiles();
+        for(int i=0;i<list.length;i++)
+        {
+        	File localSubEntry = list[i];
+        	int subDocType = localSubEntry.isFile()? 1: 2;
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
+        	Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+        	
+        	if(isIgnoreNeed(repos, subDoc) == true)
+        	{
+        		Log.debug("scanForSubDocCommit() " + subDoc.getPath() + subDoc.getName() + " was ignored");
+        		continue;  		
+        	}
+        	
+            scheduleForCommitEx(actionList, repos, subDoc, modifyEnable, isSubAction, localSubEntry, subDocCommitFlag);
         }
 	}
 
