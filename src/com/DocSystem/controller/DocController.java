@@ -4765,7 +4765,11 @@ public class DocController extends BaseController{
 				HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 				ScanOption scanOption = new ScanOption();
-				scanOption.scanType = 3;
+				scanOption.scanType = 2;
+				scanOption.scanTime = new Date().getTime();
+				scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "revertDocHistory-" + scanOption.scanTime + "/localChanges/";
+				scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "revertDocHistory-" + scanOption.scanTime + "/remoteChanges/";
+				
 				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, scanOption) == false)
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
@@ -4776,7 +4780,7 @@ public class DocController extends BaseController{
 				}
 				
 				
-				if(isLocalChangesEmpty(localChanges, scanOption) == false)
+				if(isLocalChanged(localChanges, scanOption))
 				{
 					Log.info("revertDocHistory() 本地有改动！");
 					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true) == false)
@@ -4790,7 +4794,7 @@ public class DocController extends BaseController{
 		        	}
 				}
 				
-				if(isRemoteChangesEmpty(remoteChanges, scanOption) == false)
+				if(isRemoteChanged(remoteChanges, scanOption))
 				{
 					Log.info("revertDocHistory() 远程有改动！");
 					//远程有改动才需要恢复
