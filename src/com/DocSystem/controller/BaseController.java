@@ -4923,7 +4923,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncupRemoteChangesEx_FSM(Repos repos, User login_user, Doc doc, String remoteChangesRootPath, ReturnAjax rt) 
 	{
-		File parentDir = new File(remoteChangesRootPath, doc.getPath() + doc.getName());
+		File parentDir = new File(remoteChangesRootPath + doc.getPath() + doc.getName());
 		syncUpRemoteChangeEx_FSM(repos, doc, parentDir, login_user, rt);
 		return true;
 	}
