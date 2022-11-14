@@ -4533,7 +4533,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag, scanOption);
 
 		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
-		if(isRemoteChanged(remoteChanges, scanOption))
+		if(isRemoteChanged(remoteChanges, scanOption) == false)
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程没有改动");
 		}
