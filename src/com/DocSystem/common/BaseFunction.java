@@ -250,7 +250,7 @@ public class BaseFunction{
 	protected static void redisSyncLock(String lockName, String lockInfo) {
 		if(redisEn)
 		{
-			Log.debug("\n********** redisSyncUnlock() " + lockInfo + " lock ++++++");
+			Log.debug("\n********** redisSyncLock() " + lockInfo + " lock ++++++");
 			RLock lock = redisClient.getLock(lockName);
 			lock.lock();
 		}
