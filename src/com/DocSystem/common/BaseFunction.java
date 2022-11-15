@@ -1060,15 +1060,6 @@ public class BaseFunction{
 		{
 			updateReposLockRedis(repos, reposLock);
 		}
-		else
-		{
-			//TODO: local no need to update
-			//updateReposLockLocal(repos, reposLock);
-		}
-	}
-	
-	private void updateReposLockLocal(Repos repos, DocLock reposLock) {
-		reposLocksMap.put(repos.getId(), reposLock);
 	}
 	
 	private void updateReposLockRedis(Repos repos, DocLock reposLock) {
@@ -1309,22 +1300,6 @@ public class BaseFunction{
 		{
 			updateDocLockRedis(doc, docLock);
 		}
-		else
-		{
-			//TODO: local no need to update
-			//updateDocLockLocal(doc, docLock);
-		}
-	}
-	
-	private void updateDocLockLocal(Doc doc, DocLock docLock) {
-		ConcurrentHashMap<String, DocLock> reposDocLocskMap = docLocksMap.get(doc.getVid());
-		if(reposDocLocskMap == null)
-		{
-			Log.info("updateDocLockLocal() reposDocLocskMap is null for repos:" + doc.getVid());
-			return;
-		}
-		
-		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 	
 	private void updateDocLockRedis(Doc doc, DocLock docLock) {
@@ -3173,8 +3148,6 @@ public class BaseFunction{
 		//Init RemoteBackup ignoreHashMap
 		initReposRemoteBackupIgnoreHashMap(repos);
 		
-		repos.autoBackupConfig.checkSum = repos.autoBackupConfig.hashCode() + "";
-
 		setReposBackupConfig(repos, config);		
 		
 		Log.debug("\n**** initReposRemoteServerConfig 自动备份初始化完成 *****");	
@@ -3210,8 +3183,6 @@ public class BaseFunction{
 		//Init RemoteBackup ignoreHashMap
 		initReposRemoteBackupIgnoreHashMap(repos);
 		
-		repos.autoBackupConfig.checkSum = repos.autoBackupConfig.hashCode() + "";
-
 		if(repos.reposExtConfigDigest != null && isReposExtConfigDigestChanged(repos, ReposExtConfigDigest.AutoBackupConfig, config))
 		{
 			Log.error("checkAndInitReposAutoBackupConfig() cluster deploy check failed for repos: " + repos.getId() + " " + repos.getName());
