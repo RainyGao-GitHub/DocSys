@@ -29,7 +29,6 @@ import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
-import org.redisson.api.RMap;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -73,13 +72,11 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.ScanOption;
-import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
-import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
@@ -5317,11 +5314,8 @@ public class DocController extends BaseController{
 			//将ignore路径加入到repos的ignore HashMap中			
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
-				repos.textSearchConfig.realDocTextSearchDisableHashMap.put("/" + doc.getPath() + doc.getName(), 1);
-				repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
-				
+				repos.textSearchConfig.realDocTextSearchDisableHashMap.put("/" + doc.getPath() + doc.getName(), 1);				
 				setReposTextSearchConfig(repos, repos.textSearchConfig);
-				updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig.checkSum);
 				return true;
 			}
 			return false;
@@ -5331,7 +5325,6 @@ public class DocController extends BaseController{
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
 			repos.textSearchConfig.realDocTextSearchDisableHashMap.remove("/" + doc.getPath() + doc.getName());
-			repos.textSearchConfig.checkSum = repos.textSearchConfig.hashCode() + "";
 			setReposTextSearchConfig(repos, repos.textSearchConfig);
 			return true;			
 		}
@@ -5524,6 +5517,7 @@ public class DocController extends BaseController{
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
 				repos.versionIgnoreConfig.versionIgnoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				setReposVersionIgnoreConfig(repos, repos.versionIgnoreConfig);
 				return true;
 			}
 			return false;
@@ -5533,6 +5527,7 @@ public class DocController extends BaseController{
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
 			repos.versionIgnoreConfig.versionIgnoreHashMap.remove("/" + doc.getPath() + doc.getName());
+			setReposVersionIgnoreConfig(repos, repos.versionIgnoreConfig);
 			return true;			
 		}
 		return false;
