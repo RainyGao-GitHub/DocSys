@@ -1660,7 +1660,12 @@ public class ReposController extends BaseController{
 		Log.debug("getSubDocList() docList ready");
 		writeJson(rt, response);
 		
-		//Add doc for AutoSync
+		//Add doc for AutoSync: 目前已经有自动同步和手动刷新机制，不再需要每次访问时进行同步
+		//addDocForAutoSync(repos, doc, rt);
+	}
+	
+	void addDocForAutoSync(Repos repos, Doc doc, ReturnAjax rt)
+	{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null, true);
 		if(insertActionListToUniqueActionList(actionList, rt) == true)
