@@ -12,5 +12,4 @@ public class TextSearchConfig  implements Serializable {
 	public ConcurrentHashMap<String, Integer> realDocTextSearchDisableHashMap = null;	
 	public ConcurrentHashMap<String, Integer> virtualDocTextSearchDisablehHashMap = null;	
 	public ConcurrentHashMap<String, Integer> docNameTextSearchDisableHashMap = null;
-	public String checkSum;	
 }
