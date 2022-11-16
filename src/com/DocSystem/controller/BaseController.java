@@ -20355,6 +20355,7 @@ public class BaseController  extends BaseFunction{
 					curLock.locker = accessUser.getName();
 					curLock.lockTime = new Date().getTime() + lockDuration;
 					remoteStorageLock = curLock;
+					updateRemoteStorageLock(remoteStorageName, curLock);
 				}
 				else
 				{
@@ -20367,9 +20368,13 @@ public class BaseController  extends BaseFunction{
 						curLock.locker = accessUser.getName();
 						curLock.lockTime = new Date().getTime() + lockDuration;
 						remoteStorageLock = curLock;
+						updateRemoteStorageLock(remoteStorageName, curLock);
+					}
+					else
+					{
+						Log.debug("lockRemoteStorage() " + remoteStorageName + " was locked by " + curLock.locker + " state:" + curLock.state);
 					}
 				}
-				updateRemoteStorageLock(remoteStorageName, curLock);
 			}
 			
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
