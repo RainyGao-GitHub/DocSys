@@ -2137,6 +2137,58 @@
 		systemLicenseInfo.createTime = licenseInfo.createTime;
 	}
 	
+	function cleanSystemLocks(){
+		console.log("cleanSystemLocks()");
+		cleanSystemLocksConfirm();
+	}
+	
+	function cleanSystemLocksConfirm()
+	{
+		console.log("cleanSystemLocksConfirm()");
+	    qiao.bs.confirm({
+	    		id: "cleanSystemLocksConfirmDialog",
+		        title: "清除锁定",
+		        msg: "是否清除系统所有锁定？",
+		        okbtn: "清除",
+		        qubtn: "取消",
+	    	},function () {
+	    		doCleanSystemLocks();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function doCleanSystemLocks(){
+		$.ajax({
+	        url : "/DocSystem/Manage/cleanSystemLocks.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	        	console.log("disableSystem ret:",ret);
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.systemDisabled = 1;
+	        		$("#btnEnableSystem").show();
+	        		$("#btnDisableSystem").hide();
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("禁用系统失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("禁用系统失败::服务器异常");
+	        }
+	    });
+	}
+	
+	
+	
 	function disableSystem(){
 		console.log("disableSystem()");
 		disableSystemConfirm();
