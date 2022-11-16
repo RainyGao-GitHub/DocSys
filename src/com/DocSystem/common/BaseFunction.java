@@ -1790,6 +1790,8 @@ public class BaseFunction{
 		if(curLock.lockBy == null || curLock.lockBy.equals(accessUser.getId()))
 		{
 			curLock.state = 0;
+			updateRemoteStorageLock(remote.remoteStorageIndexLib, curLock);
+			
 			//wakeup all pendding thread for this lock
 			Log.info("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] for [" + doc.getPath() + doc.getName() + "], wakeup all sleep threads");
 			synchronized(curLock.synclock)
@@ -1820,8 +1822,8 @@ public class BaseFunction{
 	}
 	
 	private void addRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
-		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+		RBucket<Object> bucket = redisClient.getBucket("remoteStorageLock" + remoteStorageName);
+		bucket.set(remoteStorageLock);
 	}
 
 	protected void updateRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
@@ -1832,8 +1834,8 @@ public class BaseFunction{
 	}
 
 	private void updateRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
-		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
+		RBucket<Object> bucket = redisClient.getBucket("remoteStorageLock" + remoteStorageName);
+		bucket.set(remoteStorageLock);
 	}
 	
 	protected RemoteStorageLock getRemoteStorageLock(String remoteStorageName) {
@@ -1850,8 +1852,8 @@ public class BaseFunction{
 	}
 	
 	private RemoteStorageLock getRemoteStorageLockRedis(String remoteStorageName) {
-		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
-		return (RemoteStorageLock) remoteStorageLocksMap.get(remoteStorageName);
+		RBucket<Object> bucket = redisClient.getBucket("remoteStorageLock" + remoteStorageName);
+		return (RemoteStorageLock) bucket.get();
 	}
     
 	private static void initSystemLicenseInfo() {
