@@ -4577,32 +4577,38 @@ public class BaseController  extends BaseFunction{
 	protected boolean isLocalChanged(HashMap<Long, DocChange> localChanges, ScanOption scanOption) {
 		if(scanOption.localChangesRootPath == null)
 		{
+			Log.debug("isLocalChanged() localChanges size:" + localChanges.size());		
 			return localChanges.size() > 0;
 		}
 		
 		Log.debug("isLocalChanged() scanOption.localChangesRootPath:" + scanOption.localChangesRootPath);
 		File dir = new File(scanOption.localChangesRootPath);
-		if(dir.exists())
+		if(dir.exists() == false)
 		{
-			return dir.listFiles().length > 0;
+			Log.debug("isLocalChanged() no localChanges:" + scanOption.localChangesRootPath + " not exists");		
+			return false;
 		}
-		return false;
+		
+		Log.debug("isLocalChanged() localChanges count:" + dir.listFiles().length + " under " + scanOption.localChangesRootPath);		
+		return dir.listFiles().length > 0;
 	}
 	
 	protected boolean isRemoteChanged(HashMap<Long, DocChange> remoteChanges, ScanOption scanOption) {
 		if(scanOption.remoteChangesRootPath == null)
 		{
+			Log.debug("isRemoteChanged() remoteChanges size:" + remoteChanges.size());		
 			return remoteChanges.size() > 0;
 		}
 		
-		Log.debug("isRemoteChanged() scanOption.remoteChangesRootPath:" + scanOption.remoteChangesRootPath);
+		//Log.debug("isRemoteChanged() scanOption.remoteChangesRootPath:" + scanOption.remoteChangesRootPath);
 		File dir = new File(scanOption.remoteChangesRootPath);
 		if(dir.exists() == false)
 		{
-			Log.debug("isRemoteChanged() " + scanOption.remoteChangesRootPath + " 不存在");		
+			Log.debug("isRemoteChanged() no remoteChanges:" + scanOption.remoteChangesRootPath + " not exists");		
 			return false;
 		}
-		
+
+		Log.debug("isRemoteChanged() remoteChanges count:" + dir.listFiles().length + " under " + scanOption.remoteChangesRootPath);		
 		return dir.listFiles().length > 0;
 	}
 
