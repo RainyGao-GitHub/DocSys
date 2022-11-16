@@ -1822,8 +1822,8 @@ public class BaseFunction{
 	}
 	
 	private void addRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		RBucket<Object> bucket = redisClient.getBucket("remoteStorageLock" + remoteStorageName);
-		bucket.set(remoteStorageLock);
+		RMap<Object, Object>  remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
 	}
 
 	protected void updateRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
@@ -1834,8 +1834,8 @@ public class BaseFunction{
 	}
 
 	private void updateRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		RBucket<Object> bucket = redisClient.getBucket("remoteStorageLock" + remoteStorageName);
-		bucket.set(remoteStorageLock);
+		RMap<Object, Object>  remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
 	}
 	
 	protected RemoteStorageLock getRemoteStorageLock(String remoteStorageName) {
@@ -1852,8 +1852,8 @@ public class BaseFunction{
 	}
 	
 	private RemoteStorageLock getRemoteStorageLockRedis(String remoteStorageName) {
-		RBucket<Object> bucket = redisClient.getBucket("remoteStorageLock" + remoteStorageName);
-		return (RemoteStorageLock) bucket.get();
+		RMap<Object, Object>  remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		return (RemoteStorageLock) remoteStorageLocksMap.get(remoteStorageName);
 	}
     
 	private static void initSystemLicenseInfo() {
