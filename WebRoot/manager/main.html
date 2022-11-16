@@ -2168,21 +2168,19 @@
 	        dataType : "json",
 	        data : {},
 	        success : function (ret) {
-	        	console.log("disableSystem ret:",ret);
+	        	console.log("doCleanSystemLocks ret:",ret);
 	            if( "ok" == ret.status )
-	            {	        		
-	        		systemInfo.systemDisabled = 1;
-	        		$("#btnEnableSystem").show();
-	        		$("#btnDisableSystem").hide();
+	            {
+	                showErrorMessage("清除成功");	            	
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("禁用系统失败:" + ret.msgInfo);
+	                showErrorMessage("清除失败:" + ret.msgInfo);
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("禁用系统失败::服务器异常");
+	        	showErrorMessage("清除失败:服务器异常");
 	        }
 	    });
 	}
