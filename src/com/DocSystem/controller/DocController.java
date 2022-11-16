@@ -4168,39 +4168,30 @@ public class DocController extends BaseController{
 		{
     		redisSyncLockEx(lockName, lockInfo);
     		
-    		//解锁不需要检查子目录的锁定，因为不会影响子目录
-			if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
+    		isForceUnlockAllow = isForceUnlockAllow(doc, lockType, reposAccess.getAccessUser());
+			if(isForceUnlockAllow)
+			{				
+				//强行解锁是直接删除锁
+				deleteDocLock(doc);
+				Log.debug("unlockDoc() superAdmin force unlock " + doc.getName() + " success");
+			}
+			else
 			{
-				isForceUnlockAllow = isForceUnlockAllow(doc, lockType, reposAccess.getAccessUser());
-				if(isForceUnlockAllow == false)
-				{				
+				//解锁不需要检查子目录的锁定，因为不会影响子目录
+				if(checkDocLocked(doc, lockType, reposAccess.getAccessUser(), false, rt))
+				{
 					redisSyncUnlockEx(lockName, lockInfo, syncLock);
 					writeJson(rt, response);
 					return;
 				}
-			}
-			
-			if(isForceUnlockAllow == false)
-			{
+				
 				unlockDoc(doc, lockType, reposAccess.getAccessUser());
-			}
-			else
-			{
-				//强行解锁是直接删除锁
-				deleteDocLock(doc);
-			}
+				Log.debug("unlockDoc() unlock " + doc.getName() + " success");
+			}	
+			
 			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
 		
-		if(isForceUnlockAllow == false)
-		{
-			Log.debug("unlockDoc() unlock " + doc.getName() + " success");
-		}
-		else
-		{
-			Log.debug("unlockDoc() superAdmin force unlock " + doc.getName() + " success");
-			rt.setStatus("ok");
-		}
 		rt.setData(doc);
 		writeJson(rt, response);	
 
