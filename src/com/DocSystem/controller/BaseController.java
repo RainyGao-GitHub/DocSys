@@ -4500,7 +4500,7 @@ public class BaseController  extends BaseFunction{
 		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, login_user, rt); 
 
 		Log.info("syncupForDocChange() 刷新文件索引");
-		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, rt);
+		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, rt);
 
 		Log.info("syncupForDocChange() ************************ 结束自动同步 ****************************");
 		return realDocSyncResult;
@@ -4606,7 +4606,7 @@ public class BaseController  extends BaseFunction{
 		return dir.listFiles().length > 0;
 	}
 
-	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
+	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ScanOption scanOption, ReturnAjax rt) {
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == null)
 		{
@@ -4616,7 +4616,6 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case SYNC:
 		case SYNCFORCE:
 			Log.info("**************************** checkAndUpdateIndex() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
@@ -4644,17 +4643,28 @@ public class BaseController  extends BaseFunction{
 			}
 			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			break;
+		case SYNC:	    //只同步有改动的文件	
 		case UNDEFINED:	//只同步有改动的文件
-			if(localChanges.size() > 0 || remoteChanges.size() > 0)
+			if(scanOption.localChangesRootPath == null)
 			{
-				Log.info("**************************** checkAndUpdateIndex() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-				if(docDetect(repos, doc))
-				{	
-					HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
-					Log.info("checkAndUpdateIndex() rebuildIndexForDoc");					
-					rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
+				if(localChanges.size() > 0 || remoteChanges.size() > 0)
+				{
+					Log.info("**************************** checkAndUpdateIndex() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+					if(docDetect(repos, doc))
+					{	
+						HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
+						Log.info("checkAndUpdateIndex() rebuildIndexForDoc");					
+						rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
+					}
+					Log.info("**************************** checkAndUpdateIndex() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 				}
-				Log.info("**************************** checkAndUpdateIndex() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			}
+			else
+			{
+				if(isLocalChanged(localChanges, scanOption))
+				{
+					rebuildIndexForDocEx(repos, doc, scanOption.localChangesRootPath, rt);	
+				}
 			}
 			break;
 		case SYNCVerRepos:	//只同步版本仓库
@@ -4845,6 +4855,73 @@ public class BaseController  extends BaseFunction{
     	}
 		return true;
 	}
+	
+	private void rebuildIndexForDocEx(Repos repos, Doc doc, String localChangesRootPath, ReturnAjax rt) {
+		File file = new File(localChangesRootPath + doc.getPath() + doc.getName());
+		rebuildIndexForDocEx(repos, doc, file, rt);
+	}
+
+	private void rebuildIndexForDocEx(Repos repos, Doc doc, File file, ReturnAjax rt) {
+		if(doc.getDocId() != 0)
+		{	
+			Doc localDoc = fsGetDoc(repos, doc);
+			if(localDoc == null)
+			{
+				Log.info("rebuildIndexForDocEx() failed to get localDoc");
+				return;
+			}
+			
+			if(localDoc.getType() == 0)
+			{
+				Log.debug("rebuildIndexForDocEx() localDoc not exists, do delete all index for doc:" + doc.getPath() + doc.getName());
+				deleteAllIndexForDoc(repos, doc, 2);
+				return;
+			}
+			
+			Doc indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
+			if(indexDoc == null)
+			{
+				//delete and rebuild all index
+				Log.debug("rebuildIndexForDocEx() indexDoc == null, do rebuild all index for doc:" + doc.getPath() + doc.getName());
+				deleteAllIndexForDoc(repos, doc, 2);
+				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				return;
+			}
+			
+			if(indexDoc.getType() != localDoc.getType())
+			{
+				//delete and rebuild all index
+				Log.debug("rebuildIndexForDocEx() docType changed, do rebuild all index for doc:" + doc.getPath() + doc.getName());
+				deleteAllIndexForDoc(repos, doc, 2);
+				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				return;
+			}
+				
+			//if it is file do update
+			if(localDoc.getType() != 2)
+			{
+				Log.debug("rebuildIndexForDocEx() doc Changed, do rebuild all index for doc:" + doc.getPath() + doc.getName());
+				deleteAllIndexForDoc(repos, doc, 2);
+				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				return;
+			}
+		}
+		
+		//Update the subDocs
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = doc.getLocalRootPath();
+		String localVRootPath = doc.getLocalVRootPath();
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+
+		File[] list = file.listFiles();
+		for(int i=0; i<list.length; i++)
+		{
+			File subFile = list[i];
+			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subFile.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
+			rebuildIndexForDocEx(repos, subDoc, subFile, rt);
+		}
+	}
 
 	private boolean isDocChanged(Doc localDoc, Doc indexDoc) {
 		if(localDoc == null || indexDoc == null)
@@ -4927,25 +5004,16 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncupRemoteChangesEx_FSM(Repos repos, User login_user, Doc doc, String remoteChangesRootPath, ReturnAjax rt) 
 	{
-		File parentDir = new File(remoteChangesRootPath + doc.getPath() + doc.getName());
-		syncUpRemoteChangeEx_FSM(repos, doc, parentDir, login_user, rt);
+		File file = new File(remoteChangesRootPath + doc.getPath() + doc.getName());
+		syncUpRemoteChangeEx_FSM(repos, doc, file, login_user, rt);
 		return true;
 	}
 
-	private void syncUpRemoteChangeEx_FSM(Repos repos, Doc doc, File parentDir, User login_user, ReturnAjax rt) {
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = doc.getLocalRootPath();
-		String localVRootPath = doc.getLocalVRootPath();
-		String subDocParentPath = getSubDocParentPath(doc);
-		Integer subDocLevel = getSubDocLevel(doc);
-
-		File[] list = parentDir.listFiles();
-		for(int i=0; i<list.length; i++)
+	private void syncUpRemoteChangeEx_FSM(Repos repos, Doc doc, File file, User login_user, ReturnAjax rt) {
+		if(doc.getDocId() != 0)
 		{
-			File subEntry = list[i];
-			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
-    		Doc localDoc = fsGetDoc(repos, subDoc);
-			Doc remoteDoc = verReposGetDoc(repos, subDoc, null);
+    		Doc localDoc = fsGetDoc(repos, doc);
+			Doc remoteDoc = verReposGetDoc(repos, doc, null);
 			DocChange docChange = new DocChange();
 			
 			//localDoc not exists
@@ -4953,7 +5021,8 @@ public class BaseController  extends BaseFunction{
 			{
 				if(remoteDoc == null || remoteDoc.getType() == 0)
 				{
-					continue;
+					//There is no change
+					return;
 				}
 				
 				docChange.setType(DocChangeType.REMOTEADD);
@@ -4961,7 +5030,7 @@ public class BaseController  extends BaseFunction{
 				docChange.setLocalEntry(localDoc);
 				docChange.setRemoteEntry(remoteDoc);
 				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				continue;
+				return;
 			}
 			
 			//localDoc exists
@@ -4972,7 +5041,7 @@ public class BaseController  extends BaseFunction{
 				docChange.setLocalEntry(localDoc);
 				docChange.setRemoteEntry(remoteDoc);
 				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				continue;			
+				return;			
 			}
 			
 			//localDoc is File and remoteDoc exists 
@@ -4985,7 +5054,7 @@ public class BaseController  extends BaseFunction{
 					docChange.setLocalEntry(localDoc);
 					docChange.setRemoteEntry(remoteDoc);
 					syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-					continue;
+					return;
 				}
 				
 				docChange.setType(DocChangeType.REMOTEFILETODIR);
@@ -4993,7 +5062,7 @@ public class BaseController  extends BaseFunction{
 				docChange.setLocalEntry(localDoc);
 				docChange.setRemoteEntry(remoteDoc);
 				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				continue;
+				return;
 			}
 			
 			//localDoc is Folder and remoteDoc is File
@@ -5004,11 +5073,22 @@ public class BaseController  extends BaseFunction{
 				docChange.setLocalEntry(localDoc);
 				docChange.setRemoteEntry(remoteDoc);
 				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				continue;
+				return;
 			}
-			
-			//localDoc and remoteDoc is Folder
-			syncUpRemoteChangeEx_FSM(repos, localDoc, subEntry, login_user, rt);
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = doc.getLocalRootPath();
+		String localVRootPath = doc.getLocalVRootPath();
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+
+		File[] list = file.listFiles();
+		for(int i=0; i<list.length; i++)
+		{
+			File subEntry = list[i];
+			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
+			syncUpRemoteChangeEx_FSM(repos, subDoc, subEntry, login_user, rt);
 		}
 	}
 
@@ -5157,66 +5237,72 @@ public class BaseController  extends BaseFunction{
 		return true;	
 	}
 
-	private void updateLocalChangesRevisionEx(Repos repos, Doc parentDoc, String localChangesRootPath) {
-		File parentDir = new File(localChangesRootPath, parentDoc.getPath() + parentDoc.getName());
-		updateLocalChangesRevisionEx(repos, parentDoc, parentDir);
+	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, String localChangesRootPath) {
+		File file = new File(localChangesRootPath + doc.getPath() + doc.getName());
+		updateLocalChangesRevisionEx(repos, doc, file);
 	}
 	
-	private void updateLocalChangesRevisionEx(Repos repos, Doc parentDoc, File parentDir) {
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = parentDoc.getLocalRootPath();
-		String localVRootPath = parentDoc.getLocalVRootPath();
-		String subDocParentPath = getSubDocParentPath(parentDoc);
-		Integer subDocLevel = getSubDocLevel(parentDoc);
-
-		File[] list = parentDir.listFiles();
-		for(int i=0; i<list.length; i++)
+	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, File file) {
+		if(doc.getDocId() != 0)
 		{
-			File subEntry = list[i];
-			Doc subDoc = buildBasicDoc(repos.getId(), null, parentDoc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", parentDoc.offsetPath);
-			Doc localDoc = fsGetDoc(repos, subDoc);
+			Doc localDoc = fsGetDoc(repos, doc);
 			if(localDoc == null)
 			{
-				continue;
+				Log.info("updateLocalChangesRevisionEx() localDoc is null:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+				return;
 			}
-			
+		
 			if(localDoc.getType() == 0)
 			{
 				//这次commit是一个删除操作
-				Log.debug("updateLocalChangesRevisionEx() 本地删除文件/目录:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-				dbDeleteDoc(repos, subDoc, true);
-				continue;
+				Log.debug("updateLocalChangesRevisionEx() localDoc was deleted:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+				dbDeleteDoc(repos, doc, true);
+				return;
 			}
-			
+		
 			String latestRevison = verReposGetLatestRevision(repos, true, localDoc);
-    		localDoc.setRevision(latestRevison);
-			
-			Doc dbDoc = dbGetDoc(repos, subDoc, false);
+			localDoc.setRevision(latestRevison);
+		
+			Doc dbDoc = dbGetDoc(repos, doc, false);
 			if(dbDoc == null)
 			{
-				Log.debug("updateLocalChangesRevisionEx() 本地新增文件/目录:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-				dbAddDoc(repos, subDoc, true, true);
-				continue;
+				Log.debug("updateLocalChangesRevisionEx() localDoc was added:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
+				dbAddDoc(repos, localDoc, true, true);
+				return;
 			}
-			
+		
 			if(dbDoc.getType() != localDoc.getType())
 			{
-				Log.debug("updateLocalChangesRevisionEx() 本地文件/目录类型改变:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
+				Log.debug("updateLocalChangesRevisionEx() docType was changed:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
 				if(dbDeleteDoc(repos, dbDoc, true) == false)
 				{
-					Log.debug("updateLocalChangesRevisionEx() 删除dbDoc失败:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-					continue;
+					Log.debug("updateLocalChangesRevisionEx() failed to delete dbDoc:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
+					return;
 				}
-				dbAddDoc(repos, subDoc, false, false);
-				continue;
+				dbAddDoc(repos, localDoc, true, false);
+				return;
 			}
-				
-    		dbUpdateDoc(repos, localDoc, false);
 			
-			if(localDoc.getType() == 2)
+			if(localDoc.getType() != 2)
 			{
-				updateLocalChangesRevisionEx(repos, localDoc, subEntry);
+				dbUpdateDoc(repos, localDoc, false);
+				return;
 			}
+		}
+
+		//update subDocs
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = doc.getLocalRootPath();
+		String localVRootPath = doc.getLocalVRootPath();
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+
+		File[] list = file.listFiles();
+		for(int i=0; i<list.length; i++)
+		{
+			File subEntry = list[i];
+			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
+			updateLocalChangesRevisionEx(repos, subDoc, subEntry);
 		}
 	}
 
