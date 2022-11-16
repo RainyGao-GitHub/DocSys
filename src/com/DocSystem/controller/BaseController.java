@@ -8629,7 +8629,7 @@ public class BaseController  extends BaseFunction{
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
 	protected DocAuth getDocAuthFromHashMap(Long docId, DocAuth parentDocAuth,HashMap<Long,DocAuth> docAuthHashMap)
 	{
-		Log.debug("getDocAuthFromHashMap() docId:" + docId);
+		//Log.debug("getDocAuthFromHashMap() docId:" + docId);
 		if(docAuthHashMap == null)
 		{
 			return null;

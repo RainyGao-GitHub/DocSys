@@ -1393,7 +1393,7 @@ public class BaseFunction{
 
 	private static String getDocLockId(Doc doc) {
 		String lockId = doc.getVid() + "_" + doc.getPath() + doc.getName();
-		Log.debug("getDocLockId docLockId:" + lockId);
+		//Log.debug("getDocLockId docLockId:" + lockId);
 		return lockId;
 	}
 	
