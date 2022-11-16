@@ -4494,8 +4494,8 @@ public class BaseController  extends BaseFunction{
 		ScanOption scanOption = new ScanOption();
 		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange
 		scanOption.scanTime = new Date().getTime();
-		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "syncupForDocChange-" + scanOption.scanTime + "/localChanges/";
-		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "syncupForDocChange-" + scanOption.scanTime + "/remoteChanges/";
+		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-" + scanOption.scanTime + "/localChanges/";
+		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-" + scanOption.scanTime + "/remoteChanges/";
 		
 		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, login_user, rt); 
 
