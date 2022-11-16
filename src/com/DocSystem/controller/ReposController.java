@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.redisson.api.RMap;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -29,12 +28,9 @@ import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
-import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.ReposData;
-import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
