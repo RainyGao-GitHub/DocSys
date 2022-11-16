@@ -855,14 +855,19 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+
+		//clean all RemoteStorageLocks
+		Log.info("cleanSystemLocks() cleanAllRemoteStorageLocks Start");
+		cleanAllRemoteStorageLocks();
+		Log.info("cleanSystemLocks() cleanAllRemoteStorageLocks End");
 		
-		//TODO: docLock logic is too complicated, so need superadmin to unlock it on repos page
 		
 		//clean all reposLocks
+		Log.info("cleanSystemLocks() cleanAllReposLocks Start");
 		cleanAllReposLocks();
-		
-		//clean all RemoteStorageLocks
-		cleanAllRemoteStorageLocks();
+		Log.info("cleanSystemLocks() cleanAllReposLocks End");
+
+		//TODO: docLock logic is too complicated, so need superadmin to unlock it on repos page		
 					
 		writeJson(rt, response);
 	}
