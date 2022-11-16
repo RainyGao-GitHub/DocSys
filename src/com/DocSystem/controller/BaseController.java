@@ -5548,6 +5548,12 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
+		if(isVersionIgnored(repos, doc, false) == true)
+		{
+			Log.debug("syncupScanForDoc_FSM() version was ignored for doc:" + doc.getPath() + doc.getName());		
+			return true;
+		}
+		
 		DocChangeType docChangeType = DocChangeType.UNDEFINED;
 		switch(scanOption.scanType)
 		{
@@ -5641,6 +5647,49 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
+	private boolean isVersionIgnored(Repos repos, Doc doc, boolean parentCheck) {
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			Log.debug("isVersionIgnored() version was ignored for [/" + doc.getPath() + doc.getName() + "]");
+			return true;
+		}
+		
+		if(parentCheck == false)
+		{
+			return false;
+		}
+		
+		//check if version ignore for root doc
+		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/") != null)
+		{
+			Log.debug("isVersionIgnored() version was ignored for [/]");
+			return true;
+		}
+		
+		//check if parent was version ignored 
+		if(doc.getPath() != null)
+		{
+			String [] paths = doc.getPath().split("/");
+			String path = "/" + paths[0];
+			if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(path) != null)
+			{
+				Log.debug("isVersionIgnored() version was ignored:" + path);
+				return true;
+			}
+			
+			for(int i = 1; i < paths.length; i++)
+			{
+				path = path + "/" + paths[i];
+				if(repos.versionIgnoreConfig.versionIgnoreHashMap.get(path) != null)
+				{
+					Log.debug("isVersionIgnored() version was ignored:" + path);
+					return true;
+				}
+			}			
+		}
+		return false;
+	}
+
 	private void insertLocalChange(Doc doc, HashMap<Long, DocChange> localChanges, DocChange localChange, ScanOption scanOption) {
 		if(scanOption.localChangesRootPath == null)
 		{
@@ -5705,7 +5754,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(localEntry == null || localEntry.getType() == null || localEntry.getType() == 0)
 			{
-				Log.debug("getLocalDocChangeType " + DocChangeType.NOCHANGE); 
+				//Log.debug("getLocalDocChangeType " + DocChangeType.NOCHANGE); 
 				return DocChangeType.NOCHANGE;
 			}
 			
@@ -5741,7 +5790,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("getLocalDocChangeType " +  localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALCHANGE); 
 				return DocChangeType.LOCALCHANGE;
 			}	
-			Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			//Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -5753,7 +5802,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALFILETODIR); 
 				return DocChangeType.LOCALFILETODIR;
 			}		
-			Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			//Log.debug("getLocalDocChangeType "  + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -6066,13 +6115,13 @@ public class BaseController  extends BaseFunction{
 
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
-		Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
+		//Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
         syncupScanForDocList_FSM(verReposEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 		
-        Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
+        //Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
         syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 		
-        Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
+        //Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
         syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 
 		return true;
