@@ -12671,9 +12671,6 @@ public class BaseController  extends BaseFunction{
 		reposData.reposId = repos.getId();
 		reposData.syncLockForSvnCommit = new Object();
 		reposData.syncLockForGitCommit = new Object();
-		reposData.syncLockForDocNameIndex = new Object();
-		reposData.syncLockForRDocIndex = new Object();
-		reposData.syncLockForVDocIndex = new Object();
 		
 		reposDataHashMap.put(repos.getId(), reposData);
 		return reposData;
