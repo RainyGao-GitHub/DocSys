@@ -842,6 +842,55 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/********** 清除系统所有锁定 ***************/
+	@RequestMapping("/cleanSystemLocks.do")
+	public void cleanSystemLocks(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("****************** cleanSystemLocks.do ***********************");
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//TODO: docLock logic is too complicated, so need superadmin to unlock it on repos page
+		
+		//clean all reposLocks
+		cleanAllReposLocks();
+		
+		//clean all RemoteStorageLocks
+		cleanAllRemoteStorageLocks();
+					
+		writeJson(rt, response);
+	}
+	
+	private void cleanAllRemoteStorageLocks() {
+		if(redisEn)
+		{
+			RMap<Object, Object>  redisRemoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+			redisRemoteStorageLocksMap.clear();
+		}
+		else
+		{
+			remoteStorageLocksMap.clear();
+		}
+	}
+	
+	private void cleanAllReposLocks() {
+		if(redisEn)
+		{
+			RMap<Object, Object>  redisReposLocksMap = redisClient.getMap("reposLocksMap");
+			redisReposLocksMap.clear();
+		}
+		else
+		{
+			reposLocksMap.clear();
+		}
+	}
+
 	/********** 禁用系统 ***************/
 	@RequestMapping("/disableSystem.do")
 	public void disableSystem(String authCode,
