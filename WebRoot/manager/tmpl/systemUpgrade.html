@@ -30,6 +30,7 @@
 	                      	<button onclick="upgradeSystem()" data-id="" class="btn btn-lg btn-warning examine_ban">系统升级</button>	                      	
 	                      	<button id="btnDisableSystem" onclick="disableSystem()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.systemDisabled == 1}} style="display:none" {{/if}}>禁用系统</button>
 	                      	<button id="btnEnableSystem" onclick="enableSystem()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.systemDisabled == 0}} style="display:none" {{/if}}>启用系统</button>
+	                      	<button onclick="cleanSystemLocks()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>清除锁定</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
