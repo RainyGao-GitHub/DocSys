@@ -138,6 +138,9 @@ public class BaseFunction{
     protected static String serverIP = null;
     protected static String serverMAC = null;
 	
+    //serverUrl(http://serverIP:port)集群时用于服务器之间通信
+    protected static String serverUrl = null;
+	    
 	//分享代理服务线程（一个服务器只允许启动一个）
 	protected static ProxyThread proxyThread = null;
 	//远程分享服务线程（一个服务器只允许启动一个）
@@ -221,7 +224,8 @@ public class BaseFunction{
     	initSystemLicenseInfo();
     	initOfficeLicenseInfo();
     	initLdapConfig();
-		serverHost = getServerHost();		
+		serverHost = getServerHost();
+		serverUrl = getServerUrl();
 
 		initSystemUsers();
 	}
@@ -1880,6 +1884,18 @@ public class BaseFunction{
 		}		
 	}
 	
+	//集群时使用
+	private static String getServerUrl() {
+		Log.debug("getServerUrl() ");
+		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "serverUrl");
+		if(value != null)
+		{
+			return value;
+		}
+		
+		return "http://localhost:8100";
+	}
+		
 	protected static void applySystemLdapConfig(String ldapConfig) {
 		//UPdate系统ldapConfig
 		if(docSysType == constants.DocSys_Enterprise_Edition)
