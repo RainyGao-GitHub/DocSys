@@ -4755,8 +4755,8 @@ public class DocController extends BaseController{
 				ScanOption scanOption = new ScanOption();
 				scanOption.scanType = 2;
 				scanOption.scanTime = new Date().getTime();
-				scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-" + scanOption.scanTime + "/localChanges/";
-				scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-" + scanOption.scanTime + "/remoteChanges/";
+				scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + scanOption.scanTime + "/";
+				scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-remoteChanges-" + scanOption.scanTime + "/";
 				
 				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, scanOption) == false)
 				{
