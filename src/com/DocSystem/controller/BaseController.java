@@ -4494,18 +4494,34 @@ public class BaseController  extends BaseFunction{
 		ScanOption scanOption = new ScanOption();
 		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange
 		scanOption.scanTime = new Date().getTime();
-		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-" + scanOption.scanTime + "/localChanges/";
-		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-" + scanOption.scanTime + "/remoteChanges/";
+		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-localChanges-" + scanOption.scanTime + "/";
+		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-remoteChanges-" + scanOption.scanTime + "/";
 		
 		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, login_user, rt); 
 
 		Log.info("syncupForDocChange() 刷新文件索引");
 		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, rt);
 
+		Log.info("syncupForDocChange() clean tmp files");
+		cleanSyncUpTmpFiles(scanOption);
+		
 		Log.info("syncupForDocChange() ************************ 结束自动同步 ****************************");
 		return realDocSyncResult;
 	}
 	
+	private void cleanSyncUpTmpFiles(ScanOption scanOption) {
+		if(scanOption.localChangesRootPath != null)
+		{
+			FileUtil.delDir(scanOption.localChangesRootPath);
+		}
+
+		if(scanOption.remoteChangesRootPath != null)
+		{
+			FileUtil.delDir(scanOption.remoteChangesRootPath);
+		}
+
+	}
+
 	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, 
 			Integer subDocSyncupFlag, ScanOption scanOption,
 			User login_user, ReturnAjax rt) {
