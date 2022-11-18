@@ -1402,7 +1402,7 @@ public class LuceneUtil2   extends BaseFunction
 			stripper.setEndPage(pages);
 			String content = stripper.getText(document);
 			
-            ret = addIndex(doc, content.toString().trim(), indexLib);
+            ret = addIndex(doc, content, indexLib);
 	   } catch(Exception e) {		
 			Log.info("addIndexForPdf() 异常:" + filePath);
 			Log.info(e);
