@@ -11218,7 +11218,7 @@ public class BaseController  extends BaseFunction{
 		serverIP = IPUtil.getIpAddress();
 		serverMAC = IPUtil.getMacAddress();
 		Log.info("docSysInit() serverIP:" + serverIP + " serverMAC:" + serverMAC);
-		
+						
 		//检查并更新数据库配置文件
 		String JDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
 		String UserJDBCSettingPath = docSysIniPath + "jdbc.properties";
