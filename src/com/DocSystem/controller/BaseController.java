@@ -11327,7 +11327,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(ret.equals("ok"))
 		{
-			initReposExtentionConfig();
+			initReposExtentionConfigEx();
 			
 			//start DataBase auto backup thread
 			addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
