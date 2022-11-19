@@ -81,6 +81,7 @@ import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.redisson.Redisson;
+import org.redisson.api.RBucket;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -11306,7 +11307,7 @@ public class BaseController  extends BaseFunction{
 				FileUtil.copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
 				Log.info("docSysInit() updateVersion done");
 				
-				initReposExtentionConfig();
+				initReposExtentionConfigEx();
 				
 				//start DataBase auto backup thread
 				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
@@ -11402,10 +11403,8 @@ public class BaseController  extends BaseFunction{
 		FileUtil.saveDocContentToFile(logFile, docSysIniPath, "debugLogFile", "UTF-8");
 	}
 
-	protected void checkAndInitReposExtentionConfig() {
-		Log.debug("initReposExtentionConfig for All Repos");
-		
-		redisSyncLock("initReposExtentionConfigLock", "initReposExtentionConfig for All Repos");
+	protected void initReposExtentionConfigEx() {
+		Log.debug("initReposExtentionConfigEx for All Repos");
 		
 		try {
 			List <Repos> list = reposService.getAllReposList();
@@ -11421,90 +11420,129 @@ public class BaseController  extends BaseFunction{
 				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
 				ReposData reposData = initReposData(repos);
-
-				repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
-						
-				/*** Init ReposExtConfig Start ***/
-				//Init RemoteStorageConfig
-				if(checkAndInitReposRemoteStorageConfig(repos, repos.getRemoteStorage()) == false)
-				{
-					reposData.disabled = "集群检测失败，请检查该仓库的远程存储参数设置！";
-					continue;
-				}
-				
-				//Init RemoteServerConifg
-				String remoteServer = getReposRemoteServer(repos);
-				repos.remoteServer = remoteServer;
-				if(checkAndInitReposRemoteServerConfig(repos, remoteServer) == false)
-				{
-					reposData.disabled = "集群检测失败，请检查该仓库的前置参数设置！";
-					continue;
-				}
-				
-				//Init ReposAutoBackupConfig
-				String autoBackup = getReposAutoBackup(repos);
-				repos.setAutoBackup(autoBackup);
-				if(checkAndInitReposAutoBackupConfig(repos, autoBackup) == false)
-				{
-					reposData.disabled = "集群检测失败，请检查该仓库的自动备份参数设置！";
-					continue;
-				}
-
-				//Init ReposTextSearchConfig
-				String textSearch = getReposTextSearch(repos);
-				repos.setTextSearch(textSearch);
-				if(checkAndInitReposTextSearchConfig(repos, textSearch) == false)
-				{
-					reposData.disabled = "集群检测失败，请检查该仓库的全文搜索参数设置！";
-					continue;					
-				}
-				
-				//Init ReposVersionIgnoreConfig
-				if(checkAndInitReposVersionIgnoreConfig(repos) == false)
-				{
-					reposData.disabled = "集群检测失败，请检查该仓库的版本忽略参数设置！";
-					continue;					
-				}
-				
-				//Init ReposEncryptConfig
-				if(checkAndInitReposEncryptConfig(repos) == false)
-				{
-					reposData.disabled = "集群检测失败，请检查该仓库的加密参数设置！";
-					continue;					
-				}
-				
-				/*** Init ReposExtConfig End ***/
-				
-				/*** Init Repos related Async Tasks Start ***/
-				//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
-				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
-				reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
-				reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
-
-				//启动定时备份任务
-				if(repos.autoBackupConfig != null)
-				{
-					addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L);	//1小时后开始本地备份
-					addDelayTaskForRemoteBackup(repos, repos.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始远程备份
-				}
-				
-				//启动定时同步任务
-				if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
-				{
-					addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
-				}
-				/*** Init Repos related Async Tasks End ***/
-				
-				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
+				initReposExtentionConfigEx(repos, reposData);
 			}
 	    } catch (Exception e) {
 	        Log.info("initReposExtentionConfig 异常");
 	        Log.info(e);
 		}
-		
-		redisSyncUnlock("initReposExtentionConfigLock", "initReposExtentionConfig for All Repos");		
 	}
 	
+	private void initReposExtentionConfigEx(Repos repos, ReposData reposData) {
+		// TODO Auto-generated method stub
+		if(clusterDeployCheck(repos, reposData) == false)
+		{
+			reposData.disabled = "集群检测失败，请检查该仓库的存储路径是否符合集群条件！";					
+			return;
+		}
+		
+		repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
+				
+		/*** Init ReposExtConfig Start ***/
+		//Init RemoteStorageConfig
+		initReposRemoteStorageConfigEx(repos, repos.getRemoteStorage());
+		
+		//Init RemoteServerConifg
+		String remoteServer = getReposRemoteServer(repos);
+		repos.remoteServer = remoteServer;
+		initReposRemoteServerConfigEx(repos, remoteServer);
+		
+		//Init ReposAutoBackupConfig
+		String autoBackup = getReposAutoBackup(repos);
+		repos.setAutoBackup(autoBackup);
+		initReposAutoBackupConfigEx(repos, autoBackup);
+		
+		//Init ReposTextSearchConfig
+		String textSearch = getReposTextSearch(repos);
+		repos.setTextSearch(textSearch);
+		initReposTextSearchConfigEx(repos, textSearch);					
+		
+		//Init ReposVersionIgnoreConfig
+		initReposVersionIgnoreConfigEx(repos);
+		
+		//Init ReposEncryptConfig
+		initReposEncryptConfigEx(repos);
+		
+		/*** Init ReposExtConfig End ***/
+		
+		/*** Init Repos related Async Tasks Start ***/
+		//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
+		reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
+		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
+		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
+
+		//启动定时备份任务
+		if(repos.autoBackupConfig != null)
+		{
+			addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L);	//1小时后开始本地备份
+			addDelayTaskForRemoteBackup(repos, repos.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始远程备份
+		}
+		
+		//启动定时同步任务
+		if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+		{
+			addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
+		}
+		/*** Init Repos related Async Tasks End ***/
+		
+		Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");		
+	}
+
+	private boolean clusterDeployCheck(Repos repos, ReposData reposData) {
+		if(redisEn == false)
+		{
+			return true;
+		}
+		
+		redisSyncLock("clusterDeployCheck" + repos.getId(), repos.getId() + " " + repos.getName() + " Cluster Deploy Check ");
+		
+		boolean ret = false;
+		RBucket<Object> bucket = redisClient.getBucket("clusterDeployCheckSum" + repos.getId());
+		String checkSum = (String) bucket.get();
+		if(checkSum == null)
+		{
+			checkSum = "clusterDeployCheckSum-" + repos.getId() + " " + repos.getName(); 
+			bucket.set(checkSum);
+			setReposClusterDeployLocalCheckSum(repos, checkSum);
+			ret =  true;
+		}
+		else
+		{
+			String localCheckSum = getReposClusterDeployLocalCheckSum(repos);
+			if(localCheckSum != null && localCheckSum.equals(checkSum))
+			{
+				ret = true;
+			}
+		}
+		
+		redisSyncUnlock("clusterDeployCheck" + repos.getId(), repos.getId() + " " + repos.getName() + " Cluster Deploy Check ");
+
+		Log.debug("clusterDeployCheck() check result:" + ret);
+		return ret;
+	}
+	
+	protected boolean setReposClusterDeployLocalCheckSum(Repos repos, String checkSum) {
+		String path = Path.getReposClusterDeployConfigPath(repos);
+		String name = "checkSum.txt";
+			
+		if(FileUtil.saveDocContentToFile(checkSum, path, name, "UTF-8") == false)
+    	{
+    		Log.info("setReposClusterDeployLocalCheckSum() checkSum保存失败");
+    		return false;
+    	}
+		
+		return true;
+	}
+	
+	protected String getReposClusterDeployLocalCheckSum(Repos repos) {
+		String path = Path.getReposClusterDeployConfigPath(repos);
+		String name = "checkSum.txt";
+			
+		String checkSum = FileUtil.readDocContentFromFile(path, name, "UTF-8");
+		Log.info("setReposClusterDeployLocalCheckSum() checkSum:" + checkSum);
+		return checkSum;
+	}
+
 	protected void initReposExtentionConfig() {
 		Log.debug("initReposExtentionConfig for All Repos");
 		
@@ -11521,7 +11559,7 @@ public class BaseController  extends BaseFunction{
 				Repos repos = list.get(i);
 				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
-				ReposData reposData = initReposData(repos);
+				initReposData(repos);
 
 				repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
 						

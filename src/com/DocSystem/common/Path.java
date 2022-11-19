@@ -691,6 +691,11 @@ public class Path {
 		return pid;
 	}
 	
+	public static String getReposClusterDeployConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/clusterDeployConfigSetting/";
+		return path;
+	}
+	
 	public static String getReposEncryptConfigPath(Repos repos) {
 		String path = getReposPath(repos) + "data/encryptSetting/";
 		return path;
