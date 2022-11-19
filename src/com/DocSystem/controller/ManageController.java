@@ -750,7 +750,7 @@ public class ManageController extends BaseController{
 		
 		//重新初始化仓库扩展配置（此时可能引入新的仓库）
 		systemDisabled = 1;
-		initReposExtentionConfig();
+		initReposExtentionConfigEx();
 		systemDisabled = 0;
 	}
 
