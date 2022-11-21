@@ -583,7 +583,7 @@ public class BaseFunction{
 		
 		String localCheckSum = getReposExtConfigDigestLocalCheckSum(config, key);
 		Log.debug("isReposExtConfigDigestChanged() localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);		
-		if(!localCheckSum.equals(remoteCheckSum))
+		if(localCheckSum == null || !localCheckSum.equals(remoteCheckSum))
 		{
 			Log.info("isReposExtConfigDigestChanged() " + repos.getId() +  " " + repos.getName() + " " + key + "'s checkSum not matched localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);
 			return true;
