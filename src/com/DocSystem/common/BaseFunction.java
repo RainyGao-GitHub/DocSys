@@ -2471,6 +2471,10 @@ public class BaseFunction{
 			if(repos.remoteStorageConfig != null)
 			{
 				reposRemoteStorageHashMap.put(repos.getId(), repos.remoteStorageConfig);
+				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteStorageConfig, repos.remoteStorageConfig))
+				{
+					setReposRemoteStorageConfig(repos, repos.remoteStorageConfig);
+				}
 			}
 			return;
 		}
@@ -3130,6 +3134,10 @@ public class BaseFunction{
 			if(repos.remoteServerConfig != null)
 			{
 				reposRemoteServerHashMap.put(repos.getId(), repos.remoteServerConfig);
+				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteServerConfig, repos.remoteServerConfig))
+				{
+					setReposRemoteServerConfig(repos, repos.remoteServerConfig);
+				}
 			}
 			return;
 		}
@@ -3219,8 +3227,12 @@ public class BaseFunction{
 			Log.debug("initReposAutoBackupConfigEx() 仓库 " + repos.getName() + " 自动备份配置已被其他服务器初始化，直接读取!");
 			repos.autoBackupConfig = getReposBackupConfigRedis(repos);
 			if(repos.autoBackupConfig != null)
-			{
+			{				
 				reposBackupConfigHashMap.put(repos.getId(), repos.autoBackupConfig);
+				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackupConfig, repos.autoBackupConfig))
+				{
+					setReposBackupConfig(repos, repos.autoBackupConfig);
+				}
 			}
 			return;
 		}
@@ -3388,6 +3400,10 @@ public class BaseFunction{
 			if(repos.textSearchConfig != null)
 			{
 				reposTextSearchConfigHashMap.put(repos.getId(), repos.textSearchConfig);
+				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig))
+				{
+					setReposTextSearchConfig(repos, repos.textSearchConfig);
+				}
 			}			
 			return;
 		}
@@ -3578,6 +3594,10 @@ public class BaseFunction{
 			if(repos.versionIgnoreConfig != null)
 			{
 				reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);
+				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.VersionIgnoreConfig, repos.versionIgnoreConfig))
+				{
+					setReposVersionIgnoreConfig(repos, repos.versionIgnoreConfig);
+				}
 			}
 			return;
 		}
@@ -3658,6 +3678,10 @@ public class BaseFunction{
 			if(repos.encryptConfig != null)
 			{
 				reposEncryptConfigHashMap.put(repos.getId(), repos.encryptConfig);
+				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.EncryptConfig, repos.encryptConfig))
+				{
+					setReposEncryptConfig(repos, repos.encryptConfig);
+				}
 			}
 			return;
 		}
