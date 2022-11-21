@@ -633,8 +633,10 @@ public class BaseFunction{
 	
 	private static void setReposRemoteStorageConfigRedis(Repos repos, RemoteStorageConfig config) {
 		RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
-		reposRemoteStorageHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorageConfig, repos.remoteStorageConfig.hashCode() + "");
+		config.checkSum = new Date().getTime() + "";
+		reposRemoteStorageHashMap.put(repos.getId(), config);		
+		
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteStorageConfig, config.checkSum);
 	}
 	
 	protected static void deleteReposRemoteStorageConfig(Repos repos) {
@@ -698,8 +700,10 @@ public class BaseFunction{
 	
 	private static void setReposRemoteServerConfigRedis(Repos repos, RemoteStorageConfig config) {
 		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+		config.checkSum = new Date().getTime() + "";
 		reposRemoteServerHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServerConfig, repos.remoteServerConfig.hashCode() + "");			
+		
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RemoteServerConfig, config.checkSum);			
 	}
 	
 	protected static void deleteReposRemoteServerConfig(Repos repos) {
@@ -756,8 +760,10 @@ public class BaseFunction{
 
 	private void setReposBackupConfigRedis(Repos repos, ReposBackupConfig config) {
 		RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+		config.checkSum = new Date().getTime() + "";
 		reposBackupConfigHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackupConfig, repos.autoBackupConfig.hashCode() + "");			
+
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoBackupConfig, config.checkSum);			
 	}
 
 	private void deleteReposBackupConfig(Repos repos) {
@@ -817,8 +823,10 @@ public class BaseFunction{
 	private void setReposTextSearchConfigRedis(Repos repos, TextSearchConfig config) 
 	{
 		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+		config.checkSum = new Date().getTime() + "";
 		reposTextSearchConfigHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig.hashCode() + "");	
+		
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.TextSearchConfig, config.checkSum);	
 	}
 	
 	private void deleteReposTextSearchConfig(Repos repos) 
@@ -881,8 +889,10 @@ public class BaseFunction{
 	private void setReposVersionIgnoreConfigRedis(Repos repos, VersionIgnoreConfig config) 
 	{
 		RMap<Object, Object> reposVersionIgnoreConfigHashMap = redisClient.getMap("reposVersionIgnoreConfigHashMap");
+		config.checkSum = new Date().getTime() + "";
 		reposVersionIgnoreConfigHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.VersionIgnoreConfig, repos.versionIgnoreConfig.hashCode() + "");	
+		
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.VersionIgnoreConfig, config.checkSum);	
 	}
 	
 	private void deleteReposVersionIgnoreConfig(Repos repos) 
@@ -945,8 +955,10 @@ public class BaseFunction{
 	private void setReposEncryptConfigRedis(Repos repos, EncryptConfig config) 
 	{
 		RMap<Object, Object> reposEncryptConfigHashMap = redisClient.getMap("reposEncryptConfigHashMap");
+		config.checkSum = new Date().getTime() + "";
 		reposEncryptConfigHashMap.put(repos.getId(), config);
-		updateReposExtConfigDigest(repos, ReposExtConfigDigest.EncryptConfig, config.hashCode() + "");	
+		
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.EncryptConfig, config.checkSum);	
 	}
 	
 	protected void deleteReposEncryptConfig(Repos repos) 
