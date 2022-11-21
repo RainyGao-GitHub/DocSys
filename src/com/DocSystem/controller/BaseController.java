@@ -11501,6 +11501,7 @@ public class BaseController  extends BaseFunction{
 		String checkSum = (String) bucket.get();
 		if(checkSum == null)
 		{
+			Log.debug("clusterDeployCheck() remoteCheckSum is null, do init remote and local CheckSum");
 			checkSum = "clusterDeployCheckSum-" + repos.getId() + " " + repos.getName(); 
 			bucket.set(checkSum);
 			setReposClusterDeployLocalCheckSum(repos, checkSum);
@@ -11509,7 +11510,13 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			String localCheckSum = getReposClusterDeployLocalCheckSum(repos);
-			if(localCheckSum != null && localCheckSum.equals(checkSum))
+			Log.debug("clusterDeployCheck() remoteCheckSum:" + checkSum + " localCheckSum:" + localCheckSum);
+			if(localCheckSum == null || !localCheckSum.equals(checkSum))
+			{
+				Log.info("clusterDeployCheck() " + repos.getId() + " " + repos.getName() + " cluster deploy check failed: remoteCheckSum:" + checkSum + " localCheckSum:" + localCheckSum);
+				ret = false;
+			}
+			else
 			{
 				ret = true;
 			}
