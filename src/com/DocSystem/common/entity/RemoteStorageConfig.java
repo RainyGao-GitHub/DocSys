@@ -9,6 +9,8 @@ public class RemoteStorageConfig  implements Serializable {
 	 */
 	private static final long serialVersionUID = -3193212926845814704L;
 
+	public String checkSum;	//for cluster deploy usage
+
 	public String protocol;
 	public String rootPath;	//remote root path
 	public Integer autoPull = 0;
