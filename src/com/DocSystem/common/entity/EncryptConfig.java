@@ -8,7 +8,8 @@ public class EncryptConfig  implements Serializable {
 	 */
 	private static final long serialVersionUID = 1561278763425722444L;
 	public final static int TYPE_XOR = 1;
-	public final static int TYPE_DES = 2;	
+	public final static int TYPE_DES = 2;
+	public String checkSum;	//For cluster usage
 	public Integer type;
 	public String key;
 	public Integer firstBlockSize = 1024;
