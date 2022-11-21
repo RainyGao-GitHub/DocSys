@@ -571,6 +571,7 @@ public class BaseFunction{
 			{
 				return false;
 			}
+			Log.info("isReposExtConfigDigestChanged() " + repos.getId() +  " " + repos.getName() + " " + key + "'s remoteCheckSum is empty but local config not null");
 			return true;
 		}
 
@@ -580,16 +581,37 @@ public class BaseFunction{
 			return true;
 		}
 		
-		String localCheckSum = config.hashCode() + "";
+		String localCheckSum = getReposExtConfigDigestLocalCheckSum(config, key);
+		Log.debug("isReposExtConfigDigestChanged() localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);		
 		if(!localCheckSum.equals(remoteCheckSum))
 		{
-			Log.debug("isReposExtConfigDigestChanged() checkSum not matched localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);
+			Log.info("isReposExtConfigDigestChanged() " + repos.getId() +  " " + repos.getName() + " " + key + "'s checkSum not matched localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);
 			return true;
 		}
 		
 		return false;
 	}
-
+	
+	private static String getReposExtConfigDigestLocalCheckSum(Object config, String key) {
+		switch(key)
+		{
+		case ReposExtConfigDigest.RemoteStorageConfig:
+		case ReposExtConfigDigest.RemoteServerConfig:
+			return ((RemoteStorageConfig) config).checkSum;
+		case ReposExtConfigDigest.AutoBackupConfig:
+			return ((ReposBackupConfig) config).checkSum;
+		case ReposExtConfigDigest.TextSearchConfig:
+			return ((TextSearchConfig) config).checkSum;	
+		case ReposExtConfigDigest.VersionIgnoreConfig:
+			return ((VersionIgnoreConfig) config).checkSum;			
+		case ReposExtConfigDigest.EncryptConfig:
+			return ((EncryptConfig) config).checkSum;
+		default:
+			break;
+		}
+		return null;
+	}
+	
 	private static String getReposExtConfigDigestCheckSum(JSONObject reposExtConfigDigest, String key) {
 		return reposExtConfigDigest.getString(key);
 	}

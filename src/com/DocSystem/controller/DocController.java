@@ -48,7 +48,6 @@ import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
-import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
