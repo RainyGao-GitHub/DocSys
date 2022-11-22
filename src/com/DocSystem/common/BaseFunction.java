@@ -559,14 +559,14 @@ public class BaseFunction{
 		//reposExtConfigDigest is impossible be null, so if it is null do nothing
 		if(repos.reposExtConfigDigest == null)
 		{
-			Log.debug("isReposExtConfigDigestChanged() repos.reposExtConfigDigest is null");
+			//Log.debug("isReposExtConfigDigestChanged() repos.reposExtConfigDigest is null");
 			return false;
 		}
 
 		String remoteCheckSum = getReposExtConfigDigestCheckSum(repos.reposExtConfigDigest, key);
 		if(remoteCheckSum == null || remoteCheckSum.isEmpty())
 		{
-			Log.debug("isReposExtConfigDigestChanged() remoteCheckSum for " + key + " is null or empty");
+			//Log.debug("isReposExtConfigDigestChanged() remoteCheckSum for " + key + " is null or empty");
 			if(config == null)
 			{
 				return false;
@@ -578,11 +578,12 @@ public class BaseFunction{
 		//remoteCheckSume was set
 		if(config == null)
 		{
+			Log.info("isReposExtConfigDigestChanged() " + repos.getId() +  " " + repos.getName() + " " + key + "'s remoteCheckSum:" + remoteCheckSum + " but local config is null");
 			return true;
 		}
 		
 		String localCheckSum = getReposExtConfigDigestLocalCheckSum(config, key);
-		Log.debug("isReposExtConfigDigestChanged() localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);		
+		//Log.debug("isReposExtConfigDigestChanged() localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);		
 		if(localCheckSum == null || !localCheckSum.equals(remoteCheckSum))
 		{
 			Log.info("isReposExtConfigDigestChanged() " + repos.getId() +  " " + repos.getName() + " " + key + "'s checkSum not matched localCheckSum:" + localCheckSum + " remoteCheckSum:" + remoteCheckSum);
