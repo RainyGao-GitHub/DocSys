@@ -40,7 +40,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.ReposData;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.LDAPConfig;
