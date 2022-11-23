@@ -11,11 +11,11 @@ public class SyncLock implements Serializable {
 	
 	public static void lock(String lockInfo) {
 		// TODO Auto-generated method stub
-		Log.debug("\n********** " + lockInfo + " lock ++++++");
+		Log.debug("++++++++++ " + lockInfo + " lock +++++++++");
 	}  
 	
 	public static void unlock(Object syncLock, String lockInfo) {
-		Log.debug("********** " + lockInfo + " unlock -------\n");																
+		Log.debug("---------- " + lockInfo + " unlock -------");																
 		
 		//syncLock.notifyAll();//唤醒等待线程（如果有其他线程调用过wait，才需要唤醒）
 		
