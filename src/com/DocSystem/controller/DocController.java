@@ -5963,6 +5963,13 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
 		
+		//检查用户是否有权限分享文件
+		if(checkUserShareRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
 		DocShare docShare = new DocShare();
 		docShare.setVid(doc.getVid());
 		docShare.setReposName(repos.getName());

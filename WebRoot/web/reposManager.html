@@ -137,11 +137,11 @@
 							<i class="cell groupname w10">组</i>
 							<i class="cell docpath w15">路径</i>
 							<i class="cell access w6">管理员权限</i>
-							<i class="cell read w6">读权限</i>
-							<i class="cell edit w6">写权限</i>
+							<i class="cell read w5">读权限</i>
+							<i class="cell edit w5">写权限</i>
 							<i class="cell add w6">增加权限</i>
 							<i class="cell delete w6">删除权限</i>
-							<i class="cell download w6">下载权限</i>
+							<i class="cell download w8">下载/分享权限</i>
 							<i class="cell uploadSize w7">上传限制</i>
 							<i class="cell heritable w6">可继承</i>
 							<i class="cell selectAll w6"></i>
@@ -1804,10 +1804,10 @@ function showDocAuthList(){
 				+"	<i class='cell access w6'>"
 				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>管理员</input>"
 				+"	</i>"
-				+"	<i class='cell  read w6'>"
+				+"	<i class='cell  read w5'>"
 				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>读</input>"
 				+"	</i>"
-				+"	<i class='cell edit w6'>"
+				+"	<i class='cell edit w5'>"
 				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>写</input>"
 				+"	</i>"
 				+"	<i class='cell add w6'>"
@@ -1816,8 +1816,8 @@ function showDocAuthList(){
 				+"	<i class='cell delete w6'>"
 				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>删除</input>"
 				+"	</i>"
-				+"	<i class='cell download w6'>"
-				+"		<input id='DownloadEn"+i+"' value='"+ d.downloadEn+"' type='checkbox' " + downloadChecked + " onchange='EnableUserConfig("+i+");'>下载</input>"
+				+"	<i class='cell download w8'>"
+				+"		<input id='DownloadEn"+i+"' value='"+ d.downloadEn+"' type='checkbox' " + downloadChecked + " onchange='EnableUserConfig("+i+");'>下载/分享</input>"
 				+"	</i>"
 				+"	<i class='cell uploadSize w8'>"
 				+"      <select class='form-control' id='UploadSize" + i +"' style='width:90%' onchange='EnableUserConfig("+i+");'>"
