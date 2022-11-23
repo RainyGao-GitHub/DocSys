@@ -8000,7 +8000,27 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
-	
+
+	protected boolean checkUserShareRight(Repos repos, Integer userId, Doc doc, DocAuth authMask, ReturnAjax rt)
+	{
+		DocAuth docAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			return false;
+		}
+		else
+		{
+			Integer downloadEn = docAuth.getDownloadEn();
+			if(downloadEn == null || downloadEn.equals(0))
+			{
+				rt.setError("您无权分享该文件，请联系管理员");
+				return false;
+			}
+		}
+		return true;
+	}
+
 	protected String getUserName(Integer userId) {
 		if(userId == null)
 		{
