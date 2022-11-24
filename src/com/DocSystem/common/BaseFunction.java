@@ -2471,7 +2471,10 @@ public class BaseFunction{
 			repos.remoteStorageConfig = getReposRemoteStorageConfigRedis(repos);
 			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteStorageConfig, repos.remoteStorageConfig) == false)
 			{
-				reposRemoteStorageHashMap.put(repos.getId(), repos.remoteStorageConfig);
+				if(repos.remoteStorageConfig != null)
+				{
+					reposRemoteStorageHashMap.put(repos.getId(), repos.remoteStorageConfig);
+				}
 				return;
 			}
 			
@@ -3132,7 +3135,10 @@ public class BaseFunction{
 			repos.remoteServerConfig = getReposRemoteServerConfigRedis(repos);
 			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteServerConfig, repos.remoteServerConfig) == false)
 			{
-				reposRemoteServerHashMap.put(repos.getId(), repos.remoteServerConfig);					
+				if(repos.remoteServerConfig != null)
+				{
+					reposRemoteServerHashMap.put(repos.getId(), repos.remoteServerConfig);					
+				}
 				return;
 			}
 			
@@ -3224,7 +3230,10 @@ public class BaseFunction{
 			repos.autoBackupConfig = getReposBackupConfigRedis(repos);
 			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackupConfig, repos.autoBackupConfig) == false)
 			{
-				reposBackupConfigHashMap.put(repos.getId(), repos.autoBackupConfig);
+				if(repos.autoBackupConfig != null)
+				{
+					reposBackupConfigHashMap.put(repos.getId(), repos.autoBackupConfig);
+				}
 				return;
 			}
 			
@@ -3393,7 +3402,10 @@ public class BaseFunction{
 			repos.textSearchConfig = getReposTextSearchConfigRedis(repos);
 			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig) == false)
 			{
-				reposTextSearchConfigHashMap.put(repos.getId(), repos.textSearchConfig);
+				if(repos.textSearchConfig != null)
+				{
+					reposTextSearchConfigHashMap.put(repos.getId(), repos.textSearchConfig);
+				}
 				return;
 			}
 		}
@@ -3583,7 +3595,10 @@ public class BaseFunction{
 			repos.versionIgnoreConfig = getReposVersionIgnoreConfigRedis(repos);
 			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.VersionIgnoreConfig, repos.versionIgnoreConfig) == false)
 			{
-				reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);
+				if(repos.versionIgnoreConfig != null)
+				{
+					reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);
+				}
 				return;
 			}
 			
@@ -3665,7 +3680,10 @@ public class BaseFunction{
 			repos.encryptConfig = getReposEncryptConfigRedis(repos);
 			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.EncryptConfig, repos.encryptConfig) == false)
 			{
-				reposEncryptConfigHashMap.put(repos.getId(), repos.encryptConfig);
+				if(repos.encryptConfig != null)
+				{
+					reposEncryptConfigHashMap.put(repos.getId(), repos.encryptConfig);
+				}
 				return;
 			}
 			
