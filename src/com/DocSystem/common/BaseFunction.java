@@ -2464,20 +2464,18 @@ public class BaseFunction{
 			Log.debug("initReposRemoteStorageConfigEx() 前置类型仓库不支持远程存储！");
 			return;
 		}
-		
+
 		if(redisEn && repos.reposExtConfigDigest != null)
 		{
 			Log.debug("initReposRemoteStorageConfigEx() 仓库 " + repos.getName() + " 远程存储配置已被其他服务器初始化，直接从redis读取");
 			repos.remoteStorageConfig = getReposRemoteStorageConfigRedis(repos);
-			if(repos.remoteStorageConfig != null)
+			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteStorageConfig, repos.remoteStorageConfig) == false)
 			{
 				reposRemoteStorageHashMap.put(repos.getId(), repos.remoteStorageConfig);
-				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteStorageConfig, repos.remoteStorageConfig))
-				{
-					setReposRemoteStorageConfig(repos, repos.remoteStorageConfig);
-				}
+				return;
 			}
-			return;
+			
+			Log.debug("initReposRemoteStorageConfigEx() 仓库 " + repos.getName() + " 远程存储配置有改动，重新初始化");
 		}
 		
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
@@ -3127,20 +3125,18 @@ public class BaseFunction{
 			Log.debug("initReposRemoteServerConfigEx() 非前置类型仓库！");
 			return;
 		}
-		
+
 		if(redisEn && repos.reposExtConfigDigest != null)
 		{
 			Log.debug("initReposRemoteServerConfigEx() 仓库 " + repos.getName() + " 前置服务器配置已被其他服务器初始化，直接读取!");
 			repos.remoteServerConfig = getReposRemoteServerConfigRedis(repos);
-			if(repos.remoteServerConfig != null)
+			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteServerConfig, repos.remoteServerConfig) == false)
 			{
-				reposRemoteServerHashMap.put(repos.getId(), repos.remoteServerConfig);
-				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteServerConfig, repos.remoteServerConfig))
-				{
-					setReposRemoteServerConfig(repos, repos.remoteServerConfig);
-				}
+				reposRemoteServerHashMap.put(repos.getId(), repos.remoteServerConfig);					
+				return;
 			}
-			return;
+			
+			Log.debug("initReposRemoteServerConfigEx() 仓库 " + repos.getName() + " 前置服务器配置有改动，重新初始化!");
 		}
 		
 		RemoteStorageConfig remote = null;
@@ -3222,20 +3218,17 @@ public class BaseFunction{
 			return;
 		}
 		
-		
 		if(redisEn && repos.reposExtConfigDigest != null)
 		{
 			Log.debug("initReposAutoBackupConfigEx() 仓库 " + repos.getName() + " 自动备份配置已被其他服务器初始化，直接读取!");
 			repos.autoBackupConfig = getReposBackupConfigRedis(repos);
-			if(repos.autoBackupConfig != null)
-			{				
+			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackupConfig, repos.autoBackupConfig) == false)
+			{
 				reposBackupConfigHashMap.put(repos.getId(), repos.autoBackupConfig);
-				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackupConfig, repos.autoBackupConfig))
-				{
-					setReposBackupConfig(repos, repos.autoBackupConfig);
-				}
+				return;
 			}
-			return;
+			
+			Log.debug("initReposAutoBackupConfigEx() 仓库 " + repos.getName() + " 自动备份配置有改动，重新初始化!");
 		}
 		
 		ReposBackupConfig config = parseAutoBackupConfig(repos, autoBackup);
@@ -3398,15 +3391,11 @@ public class BaseFunction{
 		{
 			Log.debug("initReposTextSearchConfigEx() 仓库 " + repos.getName() + " 全文搜索配置已被其他服务器初始化，直接读取!");
 			repos.textSearchConfig = getReposTextSearchConfigRedis(repos);
-			if(repos.textSearchConfig != null)
+			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig) == false)
 			{
 				reposTextSearchConfigHashMap.put(repos.getId(), repos.textSearchConfig);
-				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig))
-				{
-					setReposTextSearchConfig(repos, repos.textSearchConfig);
-				}
-			}			
-			return;
+				return;
+			}
 		}
 		
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
@@ -3592,15 +3581,13 @@ public class BaseFunction{
 		{
 			Log.debug("initReposVersionIgnoreConfigEx() 仓库 " + repos.getName() + " 版本忽略管理配置已被其他服务器初始化，直接读取!");
 			repos.versionIgnoreConfig = getReposVersionIgnoreConfigRedis(repos);
-			if(repos.versionIgnoreConfig != null)
+			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.VersionIgnoreConfig, repos.versionIgnoreConfig) == false)
 			{
 				reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);
-				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.VersionIgnoreConfig, repos.versionIgnoreConfig))
-				{
-					setReposVersionIgnoreConfig(repos, repos.versionIgnoreConfig);
-				}
+				return;
 			}
-			return;
+			
+			Log.debug("initReposVersionIgnoreConfigEx() 仓库 " + repos.getName() + " 版本忽略管理配置有改动，重新初始化!");
 		}
 		
 		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
@@ -3671,22 +3658,20 @@ public class BaseFunction{
 		}
 	}
 	
-	protected void initReposEncryptConfigEx(Repos repos) {
+	protected void initReposEncryptConfigEx(Repos repos) {		
 		if(redisEn && repos.reposExtConfigDigest != null)
 		{
 			Log.debug("initReposEncryptConfigEx() 仓库 " + repos.getName() + " 加密配置已被其他服务器初始化，直接读取!");
 			repos.encryptConfig = getReposEncryptConfigRedis(repos);
-			if(repos.encryptConfig != null)
+			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.EncryptConfig, repos.encryptConfig) == false)
 			{
 				reposEncryptConfigHashMap.put(repos.getId(), repos.encryptConfig);
-				if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.EncryptConfig, repos.encryptConfig))
-				{
-					setReposEncryptConfig(repos, repos.encryptConfig);
-				}
+				return;
 			}
-			return;
+			
+			Log.debug("initReposEncryptConfigEx() 仓库 " + repos.getName() + " 加密配置有改动，重新初始化!");
 		}
-		
+				
 		EncryptConfig config = parseReposEncryptConfig(repos);
 		if(config == null)
 		{
