@@ -5538,7 +5538,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
