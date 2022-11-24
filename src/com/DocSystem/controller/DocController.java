@@ -38,31 +38,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.tukaani.xz.XZInputStream;
 
-import util.ReturnAjax;
-import util.FileUtil.FileUtils2;
-import util.LuceneUtil.LuceneUtil2;
-
-import com.DocSystem.entity.ChangedItem;
-import com.DocSystem.entity.Doc;
-import com.DocSystem.entity.DocAuth;
-import com.DocSystem.entity.DocLock;
-import com.DocSystem.entity.DocShare;
-import com.DocSystem.entity.LogEntry;
-import com.DocSystem.entity.Repos;
-import com.DocSystem.entity.User;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.github.junrar.Archive;
-import com.github.junrar.rarfile.FileHeader;
-import com.jcraft.jzlib.GZIPInputStream;
-
-import net.sf.sevenzipjbinding.IInArchive;
-import net.sf.sevenzipjbinding.SevenZip;
-import net.sf.sevenzipjbinding.SevenZipException;
-import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
-import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
-import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
-
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.FileUtil;
@@ -83,8 +58,30 @@ import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
-import com.DocSystem.controller.BaseController;
 import com.DocSystem.commonService.ProxyThread;
+import com.DocSystem.entity.ChangedItem;
+import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.DocLock;
+import com.DocSystem.entity.DocShare;
+import com.DocSystem.entity.LogEntry;
+import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.User;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.github.junrar.Archive;
+import com.github.junrar.rarfile.FileHeader;
+import com.jcraft.jzlib.GZIPInputStream;
+
+import net.sf.sevenzipjbinding.IInArchive;
+import net.sf.sevenzipjbinding.SevenZip;
+import net.sf.sevenzipjbinding.SevenZipException;
+import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
+import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
+import util.ReturnAjax;
+import util.FileUtil.FileUtils2;
+import util.LuceneUtil.LuceneUtil2;
 
 /*
 Something you need to know

@@ -11272,6 +11272,12 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.info("docSysInit() 用户自定义 系统 配置文件与默认配置文件不一致，更新文件！");
 				FileUtil.copyFile(userDocSysConfigPath, docSysConfigPath, true);
+				//重新初始化docSysConfig.properties相关的全局变量
+				initDocSysDataPath();
+				initRedis();		
+				initLdapConfig();
+				serverUrl = getServerUrl();
+				
 			}
 		}
 				
