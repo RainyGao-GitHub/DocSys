@@ -15281,10 +15281,6 @@ public class BaseController  extends BaseFunction{
      }  
      return url;  
   }
-
-	public Repos getRepos(Integer reposId) {
-		return getReposEx(reposId);
-	}  
 	
 	//获取仓库信息（包括非数据库的信息）
 	public Repos getReposEx(Integer reposId) {

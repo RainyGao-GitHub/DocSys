@@ -461,7 +461,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		Repos repos = getRepos(vid);
+		Repos repos = getReposEx(vid);
 		setReposIsBusy(repos.getId(), true);
 		
 		if(reposService.deleteRepos(vid) == 0)
@@ -535,7 +535,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
 			writeJson(rt, response);
@@ -605,7 +605,7 @@ public class ReposController extends BaseController{
 			return;				
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
 			writeJson(rt, response);
@@ -699,7 +699,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
 			return;
@@ -1997,7 +1997,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -2117,7 +2117,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -2226,7 +2226,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -2288,7 +2288,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -2439,7 +2439,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
@@ -2552,7 +2552,7 @@ public class ReposController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getRepos(reposId);
+		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
 			rt.setError("仓库 " + reposId + " 不存在！");
