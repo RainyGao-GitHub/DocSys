@@ -1905,7 +1905,7 @@ public class BaseFunction{
 		systemLicenseInfo.hasLicense = false;
 	}
 	
-	private static void initLdapConfig() {
+	protected static void initLdapConfig() {
 		Log.debug("initLdapConfig() ");
 		//Default LDAPConfig
 		systemLdapConfig = new LDAPConfig();
@@ -1920,7 +1920,7 @@ public class BaseFunction{
 	}
 	
 	//集群时使用
-	private static String getServerUrl() {
+	protected static String getServerUrl() {
 		Log.debug("getServerUrl() ");
 		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "serverUrl");
 		if(value != null)
