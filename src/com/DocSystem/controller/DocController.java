@@ -5556,6 +5556,10 @@ public class DocController extends BaseController{
 	}
 	
 	private Integer getVersionIgnore(Repos repos, Doc doc) {
+		if(repos.versionIgnoreConfig == null || repos.versionIgnoreConfig.versionIgnoreHashMap == null)
+		{
+			return 0;
+		}
 		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			return 1;
