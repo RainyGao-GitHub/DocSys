@@ -2448,13 +2448,14 @@ public class BaseFunction{
 		if(remote == null)
 		{
 			deleteReposRemoteStorageConfig(repos);
-			return;
 		}
-		
-		//设置索引库位置
-		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
-
-		setReposRemoteStorageConfig(repos, remote);
+		else
+		{
+			//设置索引库位置
+			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
+	
+			setReposRemoteStorageConfig(repos, remote);
+		}
 	}
 	
 	protected static void initReposRemoteStorageConfigEx(Repos repos, String remoteStorage)
@@ -2464,35 +2465,32 @@ public class BaseFunction{
 			Log.debug("initReposRemoteStorageConfigEx() 前置类型仓库不支持远程存储！");
 			return;
 		}
-
-		if(redisEn && repos.reposExtConfigDigest != null)
-		{
-			Log.debug("initReposRemoteStorageConfigEx() 仓库 " + repos.getName() + " 远程存储配置已被其他服务器初始化，直接从redis读取");
-			repos.remoteStorageConfig = getReposRemoteStorageConfigRedis(repos);
-			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteStorageConfig, repos.remoteStorageConfig) == false)
-			{
-				if(repos.remoteStorageConfig != null)
-				{
-					reposRemoteStorageHashMap.put(repos.getId(), repos.remoteStorageConfig);
-				}
-				return;
-			}
-			
-			Log.debug("initReposRemoteStorageConfigEx() 仓库 " + repos.getName() + " 远程存储配置有改动，重新初始化");
-		}
 		
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorage, "RemoteStorage");
 		repos.remoteStorageConfig = remote;
 		if(remote == null)
 		{
-			deleteReposRemoteStorageConfig(repos);
-			return;
+			reposRemoteStorageHashMap.remove(repos.getId());
 		}
-		
-		//设置索引库位置
-		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
-
-		setReposRemoteStorageConfig(repos, remote);
+		else
+		{
+			//设置索引库位置
+			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
+			reposRemoteStorageHashMap.put(repos.getId(), remote);
+		}
+				
+		//set digest to redis
+		if(redisEn && repos.reposExtConfigDigest == null)
+		{
+			if(repos.remoteStorageConfig == null)
+			{
+				deleteReposRemoteStorageConfig(repos);					
+			}
+			else
+			{
+				setReposRemoteStorageConfig(repos, remote);
+			}
+		}
 	}
 	
 	private static String buildRemoteStorageStr(Repos repos) {
@@ -3112,13 +3110,13 @@ public class BaseFunction{
 		if(remote == null)
 		{
 			deleteReposRemoteServerConfig(repos);
-			return;
 		}
-		
-		//设置索引库位置
-		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
-
-		setReposRemoteServerConfig(repos, remote);
+		else
+		{	
+			//设置索引库位置
+			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
+			setReposRemoteServerConfig(repos, remote);
+		}
 	}
 	
 	protected static void initReposRemoteServerConfigEx(Repos repos, String remoteStorage)
@@ -3127,22 +3125,6 @@ public class BaseFunction{
 		{
 			Log.debug("initReposRemoteServerConfigEx() 非前置类型仓库！");
 			return;
-		}
-
-		if(redisEn && repos.reposExtConfigDigest != null)
-		{
-			Log.debug("initReposRemoteServerConfigEx() 仓库 " + repos.getName() + " 前置服务器配置已被其他服务器初始化，直接读取!");
-			repos.remoteServerConfig = getReposRemoteServerConfigRedis(repos);
-			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RemoteServerConfig, repos.remoteServerConfig) == false)
-			{
-				if(repos.remoteServerConfig != null)
-				{
-					reposRemoteServerHashMap.put(repos.getId(), repos.remoteServerConfig);					
-				}
-				return;
-			}
-			
-			Log.debug("initReposRemoteServerConfigEx() 仓库 " + repos.getName() + " 前置服务器配置有改动，重新初始化!");
 		}
 		
 		RemoteStorageConfig remote = null;
@@ -3157,14 +3139,26 @@ public class BaseFunction{
 		
 		if(remote == null)
 		{
-			deleteReposRemoteServerConfig(repos);
-			return;
+			reposRemoteServerHashMap.remove(repos.getId());
+		}
+		else
+		{
+			//设置索引库位置
+			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
+			reposRemoteServerHashMap.put(repos.getId(), remote);
 		}
 		
-		//设置索引库位置
-		remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
-
-		setReposRemoteServerConfig(repos, remote);
+		if(redisEn && repos.reposExtConfigDigest == null)
+		{
+			if(remote == null)
+			{
+				deleteReposRemoteServerConfig(repos);
+			}
+			else
+			{
+				setReposRemoteServerConfig(repos, remote);
+			}
+		}
 	}
 	
 	protected boolean setReposRemoteServer(Repos repos, String remoteServer) {
@@ -3201,17 +3195,17 @@ public class BaseFunction{
 		{
 			deleteReposBackupConfig(repos);
 			Log.debug("initReposAutoBackupConfig 自动备份未设置或者设置错误");
-			return;
 		}
-		
-		//Init LocalBackup ignoreHashMap
-		initReposLocalBackupIgnoreHashMap(repos);
-		//Init RemoteBackup ignoreHashMap
-		initReposRemoteBackupIgnoreHashMap(repos);
-		
-		setReposBackupConfig(repos, config);		
-		
-		Log.debug("\n**** initReposAutoBackupConfig 自动备份初始化完成 *****");	
+		else
+		{
+			//Init LocalBackup ignoreHashMap
+			initReposLocalBackupIgnoreHashMap(repos);
+			//Init RemoteBackup ignoreHashMap
+			initReposRemoteBackupIgnoreHashMap(repos);
+			
+			setReposBackupConfig(repos, config);		
+		}
+		Log.debug("\n**** initReposAutoBackupConfig 自动备份初始化完成 *****");
 	}
 	
 	protected void initReposAutoBackupConfigEx(Repos repos, String autoBackup)
@@ -3224,38 +3218,35 @@ public class BaseFunction{
 			return;
 		}
 		
-		if(redisEn && repos.reposExtConfigDigest != null)
-		{
-			Log.debug("initReposAutoBackupConfigEx() 仓库 " + repos.getName() + " 自动备份配置已被其他服务器初始化，直接读取!");
-			repos.autoBackupConfig = getReposBackupConfigRedis(repos);
-			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoBackupConfig, repos.autoBackupConfig) == false)
-			{
-				if(repos.autoBackupConfig != null)
-				{
-					reposBackupConfigHashMap.put(repos.getId(), repos.autoBackupConfig);
-				}
-				return;
-			}
-			
-			Log.debug("initReposAutoBackupConfigEx() 仓库 " + repos.getName() + " 自动备份配置有改动，重新初始化!");
-		}
-		
 		ReposBackupConfig config = parseAutoBackupConfig(repos, autoBackup);
 		repos.autoBackupConfig = config;
 		
 		if(config == null)
 		{
-			deleteReposBackupConfig(repos);
+			reposBackupConfigHashMap.remove(repos.getId());
 			Log.debug("initReposAutoBackupConfigEx() 自动备份未设置或者设置错误");
-			return;
+		}
+		else
+		{
+			//Init LocalBackup ignoreHashMap
+			initReposLocalBackupIgnoreHashMap(repos);
+			//Init RemoteBackup ignoreHashMap
+			initReposRemoteBackupIgnoreHashMap(repos);
+			
+			reposBackupConfigHashMap.put(repos.getId(), config);	
 		}
 		
-		//Init LocalBackup ignoreHashMap
-		initReposLocalBackupIgnoreHashMap(repos);
-		//Init RemoteBackup ignoreHashMap
-		initReposRemoteBackupIgnoreHashMap(repos);
-		
-		setReposBackupConfig(repos, config);		
+		if(redisEn && repos.reposExtConfigDigest == null)
+		{
+			if(config == null)
+			{
+				deleteReposBackupConfig(repos);
+			}
+			else
+			{				
+				setReposBackupConfig(repos, config);		
+			}
+		}
 		
 		Log.debug("\n**** initReposAutoBackupConfigEx() 自动备份初始化完成 *****");	
 	}
@@ -3384,49 +3375,46 @@ public class BaseFunction{
 		if(textSearchConfig == null)
 		{
 			deleteReposTextSearchConfig(repos);
-			return;
 		}
-				
-		//Init RealDocTextSearchDisableHashMap
-		initRealDocTextSearchDisableHashMap(repos);
-		//Init VirtualDocTextSearchDisableHashMap
-		initVirtualDocTextSearchDisableHashMap(repos);	
-		
-		setReposTextSearchConfig(repos, textSearchConfig);
+		else
+		{
+			//Init RealDocTextSearchDisableHashMap
+			initRealDocTextSearchDisableHashMap(repos);
+			//Init VirtualDocTextSearchDisableHashMap
+			initVirtualDocTextSearchDisableHashMap(repos);	
+			
+			setReposTextSearchConfig(repos, textSearchConfig);
+		}
 	}
 	
 	protected void initReposTextSearchConfigEx(Repos repos, String config) {
-		if(redisEn && repos.reposExtConfigDigest != null)
-		{
-			Log.debug("initReposTextSearchConfigEx() 仓库 " + repos.getName() + " 全文搜索配置已被其他服务器初始化，直接读取!");
-			repos.textSearchConfig = getReposTextSearchConfigRedis(repos);
-			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.TextSearchConfig, repos.textSearchConfig) == false)
-			{
-				if(repos.textSearchConfig != null)
-				{
-					reposTextSearchConfigHashMap.put(repos.getId(), repos.textSearchConfig);
-				}
-				return;
-			}
-			
-			Log.debug("initReposTextSearchConfigEx() 仓库 " + repos.getName() + " 全文搜索配置有改动，重新初始化!");
-		}
-		
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
 		repos.textSearchConfig = textSearchConfig;
-
 		if(textSearchConfig == null)
 		{
-			deleteReposTextSearchConfig(repos);
-			return;
+			reposTextSearchConfigHashMap.remove(repos.getId());
 		}
-				
-		//Init RealDocTextSearchDisableHashMap
-		initRealDocTextSearchDisableHashMap(repos);
-		//Init VirtualDocTextSearchDisableHashMap
-		initVirtualDocTextSearchDisableHashMap(repos);	
+		else
+		{
+			//Init RealDocTextSearchDisableHashMap
+			initRealDocTextSearchDisableHashMap(repos);
+			//Init VirtualDocTextSearchDisableHashMap
+			initVirtualDocTextSearchDisableHashMap(repos);	
 		
-		setReposTextSearchConfig(repos, textSearchConfig);
+			reposTextSearchConfigHashMap.put(repos.getId(), textSearchConfig);
+		}
+		
+		if(redisEn && repos.reposExtConfigDigest == null)
+		{
+			if(textSearchConfig == null)
+			{
+				deleteReposTextSearchConfig(repos);
+			}
+			else
+			{
+				setReposTextSearchConfig(repos, textSearchConfig);
+			}			
+		}
 	}
 	
 	protected static TextSearchConfig parseTextSearchConfig(Repos repos, String config) {
@@ -3590,32 +3578,20 @@ public class BaseFunction{
 		setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
 	}
 	
-	protected void initReposVersionIgnoreConfigEx(Repos repos) {
-		if(redisEn && repos.reposExtConfigDigest != null)
-		{
-			Log.debug("initReposVersionIgnoreConfigEx() 仓库 " + repos.getName() + " 版本忽略管理配置已被其他服务器初始化，直接读取!");
-			repos.versionIgnoreConfig = getReposVersionIgnoreConfigRedis(repos);
-			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.VersionIgnoreConfig, repos.versionIgnoreConfig) == false)
-			{
-				if(repos.versionIgnoreConfig != null)
-				{
-					reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);				
-				}
-				return;
-			}
-			
-			Log.debug("initReposVersionIgnoreConfigEx() 仓库 " + repos.getName() + " 版本忽略管理配置有改动，重新初始化!");
-		}
-		
+	protected void initReposVersionIgnoreConfigEx(Repos repos) {		
 		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
 		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
 		
 		//set to repos 
-		repos.versionIgnoreConfig = versionIgnoreConfig;
-		
+		repos.versionIgnoreConfig = versionIgnoreConfig;		
 		initReposVersionIgnoreHashMap(repos);
 		
-		setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
+		reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);	
+		
+		if(redisEn && repos.reposExtConfigDigest == null)
+		{
+			setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
+		}
 	}
 	
 	private void initReposVersionIgnoreHashMap(Repos repos) {
@@ -3676,30 +3652,27 @@ public class BaseFunction{
 	}
 	
 	protected void initReposEncryptConfigEx(Repos repos) {		
-		if(redisEn && repos.reposExtConfigDigest != null)
-		{
-			Log.debug("initReposEncryptConfigEx() 仓库 " + repos.getName() + " 加密配置已被其他服务器初始化，直接读取!");
-			repos.encryptConfig = getReposEncryptConfigRedis(repos);
-			if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.EncryptConfig, repos.encryptConfig) == false)
-			{
-				if(repos.encryptConfig != null)
-				{
-					reposEncryptConfigHashMap.put(repos.getId(), repos.encryptConfig);
-				}
-				return;
-			}
-			
-			Log.debug("initReposEncryptConfigEx() 仓库 " + repos.getName() + " 加密配置有改动，重新初始化!");
-		}
-				
 		EncryptConfig config = parseReposEncryptConfig(repos);
+		repos.encryptConfig = config;
 		if(config == null)
 		{
-			deleteReposEncryptConfig(repos);
+			reposEncryptConfigHashMap.remove(repos.getId());
 		}
 		else
 		{
-			setReposEncryptConfig(repos, config);
+			reposEncryptConfigHashMap.put(repos.getId(), config);
+		}
+		
+		if(redisEn && repos.reposExtConfigDigest == null)
+		{
+			if(config == null)
+			{
+				deleteReposEncryptConfig(repos);
+			}
+			else
+			{
+				setReposEncryptConfig(repos, config);
+			}
 		}
 	}
 	

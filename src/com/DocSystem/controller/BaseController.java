@@ -11436,20 +11436,20 @@ public class BaseController  extends BaseFunction{
 			List <Repos> list = reposService.getAllReposList();
 			if(list == null)
 			{
-				Log.debug("initReposExtentionConfig there is no repos");
+				Log.debug("initReposExtentionConfigEx there is no repos");
 				return;
 			}
 			
 			for(int i=0; i<list.size(); i++)
 			{
 				Repos repos = list.get(i);
-				Log.debug("\n************* initReposExtentionConfig Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
+				Log.debug("\n************* initReposExtentionConfigEx Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
 				
 				ReposData reposData = initReposData(repos);
 				initReposExtentionConfigEx(repos, reposData);
 			}
 	    } catch (Exception e) {
-	        Log.info("initReposExtentionConfig 异常");
+	        Log.info("initReposExtentionConfigEx 异常");
 	        Log.info(e);
 		}
 	}
