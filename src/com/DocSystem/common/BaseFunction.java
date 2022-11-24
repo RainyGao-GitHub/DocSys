@@ -3408,6 +3408,8 @@ public class BaseFunction{
 				}
 				return;
 			}
+			
+			Log.debug("initReposTextSearchConfigEx() 仓库 " + repos.getName() + " 全文搜索配置有改动，重新初始化!");
 		}
 		
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
@@ -3597,7 +3599,7 @@ public class BaseFunction{
 			{
 				if(repos.versionIgnoreConfig != null)
 				{
-					reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);
+					reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);				
 				}
 				return;
 			}
