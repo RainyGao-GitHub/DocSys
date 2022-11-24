@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -72,6 +73,7 @@ import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.URLInfo;
+import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
@@ -5477,7 +5479,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(repos.versionIgnoreConfig == null)
+		Integer verCtr = repos.getVerCtrl();
+		if(verCtr == null || verCtr == 0)
 		{
 			rt.setError("该仓库未开启版本管理，请联系管理员!");			
 			writeJson(rt, response);
@@ -5506,6 +5509,11 @@ public class DocController extends BaseController{
 			//将ignore路径加入到repos的ignore HashMap中			
 			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
 			{
+				if(repos.versionIgnoreConfig == null)
+				{
+					repos.versionIgnoreConfig = new VersionIgnoreConfig();
+					repos.versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
+				}
 				repos.versionIgnoreConfig.versionIgnoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
 				setReposVersionIgnoreConfig(repos, repos.versionIgnoreConfig);
 				return true;
@@ -5516,8 +5524,11 @@ public class DocController extends BaseController{
 		//将ignore从repos的ignore HashMap中删除
 		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
 		{
-			repos.versionIgnoreConfig.versionIgnoreHashMap.remove("/" + doc.getPath() + doc.getName());
-			setReposVersionIgnoreConfig(repos, repos.versionIgnoreConfig);
+			if(repos.versionIgnoreConfig != null)
+			{
+				repos.versionIgnoreConfig.versionIgnoreHashMap.remove("/" + doc.getPath() + doc.getName());
+				setReposVersionIgnoreConfig(repos, repos.versionIgnoreConfig);
+			}
 			return true;			
 		}
 		return false;
