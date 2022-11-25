@@ -58,6 +58,10 @@ public class DocLock  implements Serializable {
     
     public Long[] createTime = {null, null, null, null, null, null, null};
     
+    public String[] server = {null, null, null, null, null, null, null};
+	
+    public String lockId;
+    
     public Integer getId() {
         return id;
     }
