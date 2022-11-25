@@ -39,4 +39,6 @@ public interface Channel {
 	
 	//获取最新保存的Office文件下载信息
 	Doc getDownloadDocInfoForOffice(Repos repos, Doc doc);
+	//清除redis缓存
+	void clearAllOfficeData(String targetServerUrl);
 }

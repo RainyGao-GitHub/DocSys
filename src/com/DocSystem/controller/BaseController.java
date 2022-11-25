@@ -84,10 +84,12 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.redisson.Redisson;
 import org.redisson.api.RBucket;
+import org.redisson.api.RList;
 import org.redisson.api.RMap;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.socket.WebSocketSession;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tukaani.xz.XZInputStream;
@@ -163,6 +165,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.websocket.OfficeUser;
 import com.DocSystem.websocket.ParticipantServer;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -11393,7 +11396,14 @@ public class BaseController  extends BaseFunction{
 
 	private void clearAllOfficeData(String targetServerUrl) {
 		// TODO Auto-generated method stub
+		Channel channel = ChannelFactory.getByChannelName("businessChannel");
+		if(channel == null)
+	    {
+			Log.debug("clearAllOfficeData 非商业版本不支持Office编辑");
+			return;
+	    }
 		
+		channel.clearAllOfficeData(targetServerUrl);
 	}
 
 	private void clearAllRemoteStorageLocksMap(String targetServerUrl) {
