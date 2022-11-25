@@ -3180,7 +3180,7 @@ public class BaseFunction{
 	//*** 仓库自动备份配置 *****
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
-		Log.debug("\n***** initReposAutoBackupConfig for repos:" + repos.getName() + " autoBackup: " + autoBackup);
+		Log.debug("+++++++++ initReposAutoBackupConfig for repos [" + repos.getName() + "] autoBackup: " + autoBackup);
 		
 		if(isFSM(repos) == false)
 		{
@@ -3205,12 +3205,12 @@ public class BaseFunction{
 			
 			setReposBackupConfig(repos, config);		
 		}
-		Log.debug("\n**** initReposAutoBackupConfig 自动备份初始化完成 *****");
+		Log.debug("------- initReposAutoBackupConfig 自动备份配置初始化完成 -------");
 	}
 	
 	protected void initReposAutoBackupConfigEx(Repos repos, String autoBackup)
 	{
-		Log.debug("\n***** initReposAutoBackupConfigEx() for repos:" + repos.getName() + " autoBackup: " + autoBackup);
+		Log.debug("+++++++ initReposAutoBackupConfigEx() for repos [" + repos.getName() + "] autoBackup: " + autoBackup);
 		
 		if(isFSM(repos) == false)
 		{
@@ -3248,7 +3248,7 @@ public class BaseFunction{
 			}
 		}
 		
-		Log.debug("\n**** initReposAutoBackupConfigEx() 自动备份初始化完成 *****");	
+		Log.debug("------- initReposAutoBackupConfigEx() 自动备份配置初始化完成 *****");	
 	}
 	
 	private void initReposRemoteBackupIgnoreHashMap(Repos repos) {
@@ -3369,6 +3369,8 @@ public class BaseFunction{
 	
 	//*** 仓库全文搜索配置  ***
 	protected void initReposTextSearchConfig(Repos repos, String config) {
+		Log.debug("initReposTextSearchConfigEx() config:" + config);
+
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
 		repos.textSearchConfig = textSearchConfig;
 
@@ -3388,6 +3390,8 @@ public class BaseFunction{
 	}
 	
 	protected void initReposTextSearchConfigEx(Repos repos, String config) {
+		Log.debug("initReposTextSearchConfigEx() config:" + config);
+
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
 		repos.textSearchConfig = textSearchConfig;
 		if(textSearchConfig == null)
@@ -3583,7 +3587,7 @@ public class BaseFunction{
 		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
 		
 		//set to repos 
-		repos.versionIgnoreConfig = versionIgnoreConfig;		
+		repos.versionIgnoreConfig = versionIgnoreConfig;
 		initReposVersionIgnoreHashMap(repos);
 		
 		reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);	
