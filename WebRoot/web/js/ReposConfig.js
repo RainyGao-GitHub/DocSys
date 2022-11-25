@@ -300,15 +300,15 @@ var ReposConfig = (function () {
 	/******* 自动备份 *************/
 	function showAutoBackupConfig(reposInfo)
 	{
-		if(reposInfo.backupConfig == undefined)
+		if(reposInfo.autoBackupConfig == undefined)
 	   	{
 			$("#autoBackupConfigDiv").hide();
 	   		$("#autoBackupEnable").attr("checked",false);
 		}
 		else
 		{	
-			if(reposInfo.backupConfig.localBackupConfig == undefined && 
-				reposInfo.backupConfig.remoteBackupConfig == undefined)
+			if(reposInfo.autoBackupConfig.localBackupConfig == undefined && 
+				reposInfo.autoBackupConfig.remoteBackupConfig == undefined)
 			{
 				$("#autoBackupConfigDiv").hide();
 		   		$("#autoBackupEnable").attr("checked",false);
@@ -319,8 +319,8 @@ var ReposConfig = (function () {
 				$("#autoBackupConfigDiv").show();
 				$("#autoBackupEnable").attr("checked", "checked");
 				
-				showLocalBackupConfig(reposInfo.backupConfig.localBackupConfig);
-				showRemoteBackupConfig(reposInfo.backupConfig.remoteBackupConfig);
+				showLocalBackupConfig(reposInfo.autoBackupConfig.localBackupConfig);
+				showRemoteBackupConfig(reposInfo.autoBackupConfig.remoteBackupConfig);
 			}
 		}
 		
