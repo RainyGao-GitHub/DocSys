@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.Map.Entry;
+
 import javax.naming.AuthenticationException;
 import javax.naming.CommunicationException;
 import javax.naming.Context;
@@ -82,6 +84,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.redisson.Redisson;
 import org.redisson.api.RBucket;
+import org.redisson.api.RMap;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -160,6 +163,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.websocket.ParticipantServer;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -11280,7 +11284,13 @@ public class BaseController  extends BaseFunction{
 				
 			}
 		}
-				
+		
+		if(redisEn)
+		{
+			//clear redis cache
+			clearRedisCache();
+		}
+		
 		getAndSetDBInfoFromFile(JDBCSettingPath);
 		Log.info("docSysInit() DB_TYPE:" + DB_TYPE + " DB_URL:" + DB_URL);
 				
@@ -11338,9 +11348,6 @@ public class BaseController  extends BaseFunction{
 				//start DataBase auto backup thread
 				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
 				
-				//clear redis cache
-				clearRedisCache();
-				
 				return "ok";
 			}
 		}
@@ -11366,9 +11373,223 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void clearRedisCache() {
-		//clear local server related or not dedicated server doclocks/reposlocks/remoteStorageLocks
+		RMap<Object, Object> clusterServersMap = redisClient.getMap("clusterServersMap");
+		clusterServersMap.remove(serverUrl);
+		
+		String targetServerUrl = serverUrl;
+		if(clusterServersMap.size() == 0)
+		{
+			targetServerUrl = null;
+			Log.debug("clearRedisCache() clusterServersMap is empty, do clean all redis data");
+		}
+		
+		clearAllReposLocksMap(targetServerUrl);
+		clearAllReposDocLocksMap(targetServerUrl);
+		clearAllRemoteStorageLocksMap(targetServerUrl);
+		clearAllOfficeData(targetServerUrl);
+		clusterServersMap.put(serverUrl, serverUrl);
+		return;
+	}
 
-		//clear local server related or not dedicated server office data		
+	private void clearAllOfficeData(String targetServerUrl) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void clearAllRemoteStorageLocksMap(String targetServerUrl) {
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
+		if(targetServerUrl == null)
+		{
+			remoteStorageLocksMap.clear();
+			return;
+		}
+		
+		//遍历reposLocksMap, and unlock the locks locked by serverUrl
+		List<RemoteStorageLock> deleteList = new ArrayList<RemoteStorageLock>();
+    	try {
+	        if (remoteStorageLocksMap != null) {
+				Iterator<Entry<Object, Object>> iterator = remoteStorageLocksMap.entrySet().iterator();
+		        while (iterator.hasNext()) 
+		        {
+		        	Entry<Object, Object> entry = iterator.next();
+		            if(entry != null)
+		        	{
+		            	RemoteStorageLock lock = (RemoteStorageLock) entry.getValue();
+		            	Integer curState = lock.state;
+	            		Log.debug("clearAllRemoteStorageLocksMap() lock[" + lock.name + "] state:" + curState);
+		            	if(curState == 0)
+		            	{
+		            		deleteList.add(lock);
+		            	}
+		            	else
+		            	{
+		            		if(lock.server == null || lock.server.equals(targetServerUrl))
+		            		{
+		            			deleteList.add(lock);
+		            		}
+		            	}
+		        	}
+		        }
+	        }	        
+	        
+	        //remove the reposLocks
+	        for(int i=0; i<deleteList.size(); i++)
+	        {
+	        	RemoteStorageLock remoteStorageLock = deleteList.get(i);
+	        	remoteStorageLocksMap.remove(remoteStorageLock.name);
+	        }
+        } catch (Exception e) {
+            errorLog(e);
+        }
+	}
+
+	private void clearAllReposLocksMap(String targetServerUrl) {
+		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
+		if(targetServerUrl == null)
+		{
+			reposLocksMap.clear();
+			return;
+		}
+		
+		//遍历reposLocksMap, and unlock the locks locked by serverUrl
+		List<DocLock> deleteList = new ArrayList<DocLock>();
+    	try {
+	        if (reposLocksMap != null) {
+				Iterator<Entry<Object, Object>> iterator = reposLocksMap.entrySet().iterator();
+		        while (iterator.hasNext()) 
+		        {
+		        	Entry<Object, Object> entry = iterator.next();
+		            if(entry != null)
+		        	{
+		            	DocLock lock = (DocLock) entry.getValue();
+		            	Integer curState = lock.getState();
+	            		Log.debug("clearReposDocLocksMap() lock[" + lock.lockId + "] state:" + curState);
+		            	if(curState == 0)
+		            	{
+		            		deleteList.add(lock);
+		            	}
+		            	else
+		            	{
+		            		if(lock.server[DocLock.LOCK_STATE_FORCE] == null || lock.server[DocLock.LOCK_STATE_FORCE].equals(targetServerUrl))
+		            		{
+		            			deleteList.add(lock);
+		            		}
+		            	}
+		        	}
+		        }
+	        }	        
+	        
+	        //remove the reposLocks
+	        for(int i=0; i<deleteList.size(); i++)
+	        {
+	        	DocLock reposLock = deleteList.get(i);
+	        	reposLocksMap.remove(reposLock.getVid());
+	        }
+        } catch (Exception e) {
+            errorLog(e);
+        }
+	}
+	
+
+	private void clearAllReposDocLocksMap(String targetServerUrl) {
+		try {
+			List <Repos> list = reposService.getAllReposList();
+			if(list == null)
+			{
+				Log.debug("clearAllReposDocLocksMap there is no repos");
+				return;
+			}
+			
+			for(int i=0; i<list.size(); i++)
+			{
+				Repos repos = list.get(i);
+				Log.debug("\n++++++++++ clearAllReposDocLocksMap Start for repos [" + repos.getId() + " " + repos.getName() + "] ++++++++++");
+				
+				clearReposDocLocksMap(repos, targetServerUrl);
+				
+				Log.debug("------------ clearAllReposDocLocksMap End for repos [" + repos.getId() + " " + repos.getName() + "] -----------\n");
+				
+			}
+	    } catch (Exception e) {
+	        Log.info("initReposExtentionConfigEx 异常");
+	        Log.info(e);
+		}	
+	}
+
+	private void clearReposDocLocksMap(Repos repos, String targetServerUrl) {
+		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + repos.getId());
+		if(targetServerUrl == null)
+		{
+			reposDocLocskMap.clear();
+			return;
+		}
+		
+		//遍历reposDocLocskMap, and unlock the locks locked by serverUrl
+		List<DocLock> updateList = new ArrayList<DocLock>();
+    	try {
+	        if (reposDocLocskMap != null) {
+				Iterator<Entry<Object, Object>> iterator = reposDocLocskMap.entrySet().iterator();
+		        while (iterator.hasNext()) 
+		        {
+		        	Entry<Object, Object> entry = iterator.next();
+		            if(entry != null)
+		        	{
+		            	DocLock lock = (DocLock) entry.getValue();
+		            	Integer curState = lock.getState();
+		            	boolean needUpdate = false;
+	            		Log.debug("clearReposDocLocksMap() lock[" + lock.lockId + "] state:" + curState);
+		            	if(curState == 0)
+		            	{
+		            		needUpdate = true;
+		            	}
+		            	else
+		            	{
+		            		if(lock.server[DocLock.LOCK_STATE_FORCE] == null || lock.server[DocLock.LOCK_STATE_FORCE].equals(targetServerUrl))
+		            		{
+		            			curState = curState & DocLock.LOCK_STATE_FORCE;
+		            			lock.setState(curState);
+		            			needUpdate = true;
+		            		}
+		            		
+		            		if(lock.server[DocLock.LOCK_STATE_NORMAL] == null || lock.server[DocLock.LOCK_STATE_NORMAL].equals(targetServerUrl))
+		            		{
+		            			curState = curState & DocLock.LOCK_STATE_NORMAL;
+		            			lock.setState(curState);
+		            			needUpdate = true;
+		            		}
+		            		
+		            		if(lock.server[DocLock.LOCK_STATE_COEDIT] == null || lock.server[DocLock.LOCK_STATE_COEDIT].equals(targetServerUrl))
+		            		{
+		            			curState = curState & DocLock.LOCK_STATE_COEDIT;
+		            			lock.setState(curState);
+		            			needUpdate = true;
+		            		}
+		            	}
+		            	
+		            	if(needUpdate)
+		            	{
+		            		updateList.add(lock);
+		            	}
+		        	}
+		        }
+		        
+		        //update the reposDocLocks
+		        for(int i=0; i<updateList.size(); i++)
+		        {
+		        	DocLock docLock = updateList.get(i);
+		        	if(docLock.getState() == 0)
+		        	{
+			        	reposDocLocskMap.remove(docLock.lockId);		        		
+		        	}
+		        	else
+		        	{
+		        		reposDocLocskMap.put(docLock.lockId, docLock);
+		        	}
+		        }
+	        }	        	        
+        } catch (Exception e) {
+            errorLog(e);
+        }
 	}
 
 	private Integer getOfficeType(String officeEditorApi) {
@@ -20446,6 +20667,7 @@ public class BaseController  extends BaseFunction{
 				curLock.locker = accessUser.getName();
 				curLock.lockTime = new Date().getTime() + lockDuration;
 				curLock.synclock = new SyncLock();
+				curLock.server = serverUrl;
 				addRemoteStorageLock(remoteStorageName, curLock);
 				remoteStorageLock = curLock;
 			}
@@ -20459,6 +20681,7 @@ public class BaseController  extends BaseFunction{
 					curLock.lockBy = accessUser.getId();
 					curLock.locker = accessUser.getName();
 					curLock.lockTime = new Date().getTime() + lockDuration;
+					curLock.server = serverUrl;
 					remoteStorageLock = curLock;
 					updateRemoteStorageLock(remoteStorageName, curLock);
 				}

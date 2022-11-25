@@ -1052,12 +1052,14 @@ public class BaseFunction{
 		if(reposLock == null)
 		{
 			reposLock = new DocLock();
+			reposLock.lockId = repos.getId() + "";
 			reposLock.setVid(repos.getId());
 			reposLock.setState(lockState);
 			reposLock.locker[lockType] = login_user.getName();
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
 			reposLock.createTime[lockType] = currentTime;
+			reposLock.server[lockType] = serverUrl;
 			addReposLock(repos, reposLock);			
 		}
 		else
@@ -1067,6 +1069,7 @@ public class BaseFunction{
 			reposLock.locker[lockType] = login_user.getName();
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
+			reposLock.server[lockType] = serverUrl;
 			updateReposLock(repos, reposLock);
 		}
 		
@@ -1215,6 +1218,7 @@ public class BaseFunction{
 			Log.debug("lockDoc() docLock is null");
 			docLock = new DocLock();
 			//设置基本信息
+			docLock.lockId = getDocLockId(doc);
 			docLock.setVid(doc.getVid());
 			docLock.setPid(doc.getPid());			
 			docLock.setDocId(doc.getDocId());
@@ -1229,6 +1233,7 @@ public class BaseFunction{
 			Long currentTime = new Date().getTime();
 			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime
 			docLock.createTime[lockType] = currentTime;	//Set createTime
+			docLock.server[lockType] = serverUrl;
 			addDocLock(doc, docLock);
 			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
@@ -1241,6 +1246,7 @@ public class BaseFunction{
 			docLock.locker[lockType] = login_user.getName();
 			docLock.lockBy[lockType] = login_user.getId();
 			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime		
+			docLock.server[lockType] = serverUrl;
 			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
