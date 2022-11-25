@@ -11443,10 +11443,13 @@ public class BaseController  extends BaseFunction{
 			for(int i=0; i<list.size(); i++)
 			{
 				Repos repos = list.get(i);
-				Log.debug("\n************* initReposExtentionConfigEx Start for repos:" + repos.getId() + " " + repos.getName() + " *******");
+				Log.debug("\n++++++++++ initReposExtentionConfigEx Start for repos [" + repos.getId() + " " + repos.getName() + "] ++++++++++");
 				
 				ReposData reposData = initReposData(repos);
 				initReposExtentionConfigEx(repos, reposData);
+				
+				Log.debug("------------ initReposExtentionConfigEx End for repos [" + repos.getId() + " " + repos.getName() + "] -----------\n");
+				
 			}
 	    } catch (Exception e) {
 	        Log.info("initReposExtentionConfigEx 异常");
@@ -11455,43 +11458,57 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void initReposExtentionConfigEx(Repos repos, ReposData reposData) {
-		// TODO Auto-generated method stub
+		Log.debug("++++++++++ initReposExtentionConfigEx() clusterDeployCheck Start ++++++");
 		if(clusterDeployCheck(repos, reposData) == false)
 		{
 			reposData.disabled = "集群检测失败，请检查该仓库的存储路径是否符合集群条件！";					
+			Log.debug("----------- initReposExtentionConfigEx() clusterDeployCheck Failed ----");
 			return;
 		}
+		Log.debug("----------- initReposExtentionConfigEx() clusterDeployCheck Success ----");
 		
 		repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
 				
 		/*** Init ReposExtConfig Start ***/
-		//Init RemoteStorageConfig
+		//Init RemoteStorageConfig		
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposRemoteStorageConfigEx Start +++++");
 		initReposRemoteStorageConfigEx(repos, repos.getRemoteStorage());
+		Log.debug("----------- initReposExtentionConfigEx() initReposRemoteStorageConfigEx End ------");
 		
 		//Init RemoteServerConifg
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposRemoteServerConfigEx Start +++++");
 		String remoteServer = getReposRemoteServer(repos);
 		repos.remoteServer = remoteServer;
 		initReposRemoteServerConfigEx(repos, remoteServer);
+		Log.debug("----------- initReposExtentionConfigEx() initReposRemoteServerConfigEx End ------");
 		
 		//Init ReposAutoBackupConfig
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposAutoBackupConfigEx Start +++++");
 		String autoBackup = getReposAutoBackup(repos);
 		repos.setAutoBackup(autoBackup);
 		initReposAutoBackupConfigEx(repos, autoBackup);
-		
+		Log.debug("----------- initReposExtentionConfigEx() initReposAutoBackupConfigEx End ------");
+				
 		//Init ReposTextSearchConfig
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposTextSearchConfigEx Start +++++");
 		String textSearch = getReposTextSearch(repos);
 		repos.setTextSearch(textSearch);
 		initReposTextSearchConfigEx(repos, textSearch);					
+		Log.debug("----------- initReposExtentionConfigEx() initReposTextSearchConfigEx End ------");
 		
 		//Init ReposVersionIgnoreConfig
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposVersionIgnoreConfigEx Start +++++");
 		initReposVersionIgnoreConfigEx(repos);
+		Log.debug("----------- initReposExtentionConfigEx() initReposVersionIgnoreConfigEx End ------");
 		
 		//Init ReposEncryptConfig
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposEncryptConfigEx Start +++++");
 		initReposEncryptConfigEx(repos);
-		
+		Log.debug("----------- initReposExtentionConfigEx() initReposEncryptConfigEx End ------");
 		/*** Init ReposExtConfig End ***/
 		
 		/*** Init Repos related Async Tasks Start ***/
+		Log.debug("+++++++++++ initReposExtentionConfigEx() init repos related Async Tasks Start +++++++++");		
 		//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
 		reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
 		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
@@ -11509,9 +11526,8 @@ public class BaseController  extends BaseFunction{
 		{
 			addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
 		}
+		Log.debug("------------ initReposExtentionConfigEx() init repos related Async Tasks End ---------");		
 		/*** Init Repos related Async Tasks End ***/
-		
-		Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");		
 	}
 
 	private boolean clusterDeployCheck(Repos repos, ReposData reposData) {
