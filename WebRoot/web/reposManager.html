@@ -941,7 +941,7 @@ function isRemoteBackupEnabled(reposInfo)
 {		
 	console.log("isRemoteBackupEnabled reposInfo:", reposInfo);
 
-	if(reposInfo.backupConfig == null || reposInfo.backupConfig.remoteBackupConfig == undefined)
+	if(reposInfo.autoBackupConfig == null || reposInfo.autoBackupConfig.remoteBackupConfig == undefined)
    	{
 		return false;
    	}
@@ -1068,7 +1068,7 @@ function isLocalBackupEnabled(reposInfo)
 {		
 	console.log("isLocalBackupEnabled reposInfo:", reposInfo);
 
-	if(reposInfo.backupConfig == null || reposInfo.backupConfig.localBackupConfig == undefined)
+	if(reposInfo.autoBackupConfig == null || reposInfo.autoBackupConfig.localBackupConfig == undefined)
    	{
 		return false;
    	}
