@@ -11338,6 +11338,9 @@ public class BaseController  extends BaseFunction{
 				//start DataBase auto backup thread
 				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
 				
+				//clear redis cache
+				clearRedisCache();
+				
 				return "ok";
 			}
 		}
@@ -11362,6 +11365,12 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
+	private void clearRedisCache() {
+		//clear local server related or not dedicated server doclocks/reposlocks/remoteStorageLocks
+
+		//clear local server related or not dedicated server office data		
+	}
+
 	private Integer getOfficeType(String officeEditorApi) {
 		if(officeEditorApi == null || officeEditorApi.isEmpty())
 		{
