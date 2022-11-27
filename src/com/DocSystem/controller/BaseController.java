@@ -11288,12 +11288,6 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		if(redisEn)
-		{
-			//clear redis cache
-			clearRedisCache();
-		}
-		
 		getAndSetDBInfoFromFile(JDBCSettingPath);
 		Log.info("docSysInit() DB_TYPE:" + DB_TYPE + " DB_URL:" + DB_URL);
 				
@@ -11346,6 +11340,12 @@ public class BaseController  extends BaseFunction{
 				FileUtil.copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
 				Log.info("docSysInit() updateVersion done");
 				
+				if(redisEn)
+				{
+					//clear redis cache
+					clearRedisCache();
+				}
+				
 				initReposExtentionConfigEx();
 				
 				//start DataBase auto backup thread
@@ -11386,16 +11386,14 @@ public class BaseController  extends BaseFunction{
 			Log.debug("clearRedisCache() clusterServersMap is empty, do clean all redis data");
 		}
 		
-		clearAllReposLocksMap(targetServerUrl);
-		clearAllReposDocLocksMap(targetServerUrl);
 		clearAllRemoteStorageLocksMap(targetServerUrl);
-		clearAllOfficeData(targetServerUrl);
+		clearAllReposRedisData(targetServerUrl);
+		clearAllOfficeRedisData(targetServerUrl);
 		clusterServersMap.put(serverUrl, serverUrl);
 		return;
 	}
 
-	private void clearAllOfficeData(String targetServerUrl) {
-		// TODO Auto-generated method stub
+	private void clearAllOfficeRedisData(String targetServerUrl) {
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
@@ -11453,10 +11451,11 @@ public class BaseController  extends BaseFunction{
         }
 	}
 
-	private void clearAllReposLocksMap(String targetServerUrl) {
+	private void clearReposLocksMap(String targetServerUrl) {
 		RMap<Object, Object> reposLocksMap = redisClient.getMap("reposLocksMap");
 		if(targetServerUrl == null)
 		{
+			Log.info("clearReposLocksMap() clear whole map");
 			reposLocksMap.clear();
 			return;
 		}
@@ -11494,6 +11493,7 @@ public class BaseController  extends BaseFunction{
 	        {
 	        	DocLock reposLock = deleteList.get(i);
 	        	reposLocksMap.remove(reposLock.getVid());
+	        	Log.info("clearReposLocksMap() clear reposLock:" + reposLock.getVid());
 	        }
         } catch (Exception e) {
             errorLog(e);
@@ -11501,23 +11501,31 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private void clearAllReposDocLocksMap(String targetServerUrl) {
+	private void clearAllReposRedisData(String targetServerUrl) {
+		//clear ReposLocksMap
+		clearReposLocksMap(targetServerUrl);
+		
+		//clear Repos RedisData one by one
 		try {
 			List <Repos> list = reposService.getAllReposList();
 			if(list == null)
 			{
-				Log.debug("clearAllReposDocLocksMap there is no repos");
+				Log.debug("clearAllReposRedisData there is no repos");
 				return;
 			}
 			
 			for(int i=0; i<list.size(); i++)
 			{
 				Repos repos = list.get(i);
-				Log.debug("\n++++++++++ clearAllReposDocLocksMap Start for repos [" + repos.getId() + " " + repos.getName() + "] ++++++++++");
+				Log.debug("\n++++++++++ clearAllReposRedisData Start for repos [" + repos.getId() + " " + repos.getName() + "] ++++++++++");
 				
+				//clear ReposDocLocksMap
 				clearReposDocLocksMap(repos, targetServerUrl);
 				
-				Log.debug("------------ clearAllReposDocLocksMap End for repos [" + repos.getId() + " " + repos.getName() + "] -----------\n");
+				//clearReposExtentionConfigRedisData
+				clearReposExtentionConfigRedisData(repos, targetServerUrl);
+				
+				Log.debug("------------ clearAllReposRedisData End for repos [" + repos.getId() + " " + repos.getName() + "] -----------\n");
 				
 			}
 	    } catch (Exception e) {
@@ -11526,10 +11534,35 @@ public class BaseController  extends BaseFunction{
 		}	
 	}
 
+	private void clearReposExtentionConfigRedisData(Repos repos, String targetServerUrl) {
+		if(targetServerUrl == null)
+		{
+			Log.info("clearReposExtentionConfigRedisData() for repos [" + repos.getId() + " " + repos.getName() + "]");
+			//delete reposExtConfigDigest and configs
+			RBucket<Object> reposExtConfigDigest = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
+			reposExtConfigDigest.delete();
+			
+			RMap<Object, Object> reposRemoteStorageHashMap = redisClient.getMap("reposRemoteStorageHashMap");
+			reposRemoteStorageHashMap.remove(repos.getId());
+			RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
+			reposRemoteServerHashMap.remove(repos.getId());
+			RMap<Object, Object> reposBackupConfigHashMap = redisClient.getMap("reposBackupConfigHashMap");
+			reposBackupConfigHashMap.remove(repos.getId());
+			RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
+			reposTextSearchConfigHashMap.remove(repos.getId());
+			RMap<Object, Object> reposVersionIgnoreConfigHashMap = redisClient.getMap("reposVersionIgnoreConfigHashMap");
+			reposVersionIgnoreConfigHashMap.remove(repos.getId());
+			RMap<Object, Object> reposEncryptConfigHashMap = redisClient.getMap("reposEncryptConfigHashMap");
+			reposEncryptConfigHashMap.remove(repos.getId());
+			
+		}
+	}
+
 	private void clearReposDocLocksMap(Repos repos, String targetServerUrl) {
 		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + repos.getId());
 		if(targetServerUrl == null)
 		{
+			Log.info("clearReposDocLocksMap() for repos [" + repos.getId() + " " + repos.getName() + "]");
 			reposDocLocskMap.clear();
 			return;
 		}
@@ -11589,11 +11622,13 @@ public class BaseController  extends BaseFunction{
 		        	DocLock docLock = updateList.get(i);
 		        	if(docLock.getState() == 0)
 		        	{
-			        	reposDocLocskMap.remove(docLock.lockId);		        		
+			        	reposDocLocskMap.remove(docLock.lockId);	
+			        	Log.info("clearReposLocksMap() remove docLock:" + docLock.lockId);
 		        	}
 		        	else
 		        	{
 		        		reposDocLocskMap.put(docLock.lockId, docLock);
+			        	Log.info("clearReposLocksMap() update docLock:" + docLock.lockId + " to state:" + docLock.getState());
 		        	}
 		        }
 	        }	        	        
