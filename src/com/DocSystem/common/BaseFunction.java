@@ -535,6 +535,7 @@ public class BaseFunction{
 		{
 			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
 			bucket.set(config);
+			Log.printObject("setReposExtConfigDigest() config:", config);
 		}
 	}
 
@@ -2464,7 +2465,7 @@ public class BaseFunction{
 		}
 	}
 	
-	protected static void initReposRemoteStorageConfigEx(Repos repos, String remoteStorage)
+	protected static void initReposRemoteStorageConfigEx(Repos repos, String remoteStorage, boolean updateRedis)
 	{
 		if(isFSM(repos) == false)
 		{
@@ -2486,7 +2487,7 @@ public class BaseFunction{
 		}
 				
 		//set digest to redis
-		if(redisEn && repos.reposExtConfigDigest == null)
+		if(updateRedis)
 		{
 			if(repos.remoteStorageConfig == null)
 			{
@@ -3125,7 +3126,7 @@ public class BaseFunction{
 		}
 	}
 	
-	protected static void initReposRemoteServerConfigEx(Repos repos, String remoteStorage)
+	protected static void initReposRemoteServerConfigEx(Repos repos, String remoteStorage, boolean updateRedis)
 	{
 		if(isFSM(repos))
 		{
@@ -3154,7 +3155,7 @@ public class BaseFunction{
 			reposRemoteServerHashMap.put(repos.getId(), remote);
 		}
 		
-		if(redisEn && repos.reposExtConfigDigest == null)
+		if(updateRedis)
 		{
 			if(remote == null)
 			{
@@ -3214,7 +3215,7 @@ public class BaseFunction{
 		Log.debug("------- initReposAutoBackupConfig 自动备份配置初始化完成 -------");
 	}
 	
-	protected void initReposAutoBackupConfigEx(Repos repos, String autoBackup)
+	protected void initReposAutoBackupConfigEx(Repos repos, String autoBackup, boolean updateRedis)
 	{
 		Log.debug("+++++++ initReposAutoBackupConfigEx() for repos [" + repos.getName() + "] autoBackup: " + autoBackup);
 		
@@ -3242,7 +3243,7 @@ public class BaseFunction{
 			reposBackupConfigHashMap.put(repos.getId(), config);	
 		}
 		
-		if(redisEn && repos.reposExtConfigDigest == null)
+		if(updateRedis)
 		{
 			if(config == null)
 			{
@@ -3270,7 +3271,7 @@ public class BaseFunction{
 	
 		if(repos.autoBackupConfig == null || repos.autoBackupConfig.remoteBackupConfig == null)
 		{
-			Log.debug("checkAndSetRemoteBackupIgnored() localBackupConfig is null");	
+			Log.debug("checkAndSetRemoteBackupIgnored() remoteBackupConfig is null");	
 			return;			
 		}
 		
@@ -3395,7 +3396,7 @@ public class BaseFunction{
 		}
 	}
 	
-	protected void initReposTextSearchConfigEx(Repos repos, String config) {
+	protected void initReposTextSearchConfigEx(Repos repos, String config, boolean updateRedis) {
 		Log.debug("initReposTextSearchConfigEx() config:" + config);
 
 		TextSearchConfig textSearchConfig = parseTextSearchConfig(repos, config);
@@ -3414,7 +3415,7 @@ public class BaseFunction{
 			reposTextSearchConfigHashMap.put(repos.getId(), textSearchConfig);
 		}
 		
-		if(redisEn && repos.reposExtConfigDigest == null)
+		if(updateRedis)
 		{
 			if(textSearchConfig == null)
 			{
@@ -3588,7 +3589,7 @@ public class BaseFunction{
 		setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
 	}
 	
-	protected void initReposVersionIgnoreConfigEx(Repos repos) {		
+	protected void initReposVersionIgnoreConfigEx(Repos repos, boolean updateRedis) {		
 		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
 		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
 		
@@ -3598,7 +3599,7 @@ public class BaseFunction{
 		
 		reposVersionIgnoreConfigHashMap.put(repos.getId(), repos.versionIgnoreConfig);	
 		
-		if(redisEn && repos.reposExtConfigDigest == null)
+		if(updateRedis)
 		{
 			setReposVersionIgnoreConfig(repos, versionIgnoreConfig);
 		}
@@ -3661,7 +3662,7 @@ public class BaseFunction{
 		}
 	}
 	
-	protected void initReposEncryptConfigEx(Repos repos) {		
+	protected void initReposEncryptConfigEx(Repos repos, boolean updateRedis) {		
 		EncryptConfig config = parseReposEncryptConfig(repos);
 		repos.encryptConfig = config;
 		if(config == null)
@@ -3673,7 +3674,7 @@ public class BaseFunction{
 			reposEncryptConfigHashMap.put(repos.getId(), config);
 		}
 		
-		if(redisEn && repos.reposExtConfigDigest == null)
+		if(updateRedis)
 		{
 			if(config == null)
 			{

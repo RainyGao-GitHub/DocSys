@@ -11366,6 +11366,12 @@ public class BaseController  extends BaseFunction{
 		
 		if(ret.equals("ok"))
 		{
+			if(redisEn)
+			{
+				//clear redis cache
+				clearRedisCache();
+			}
+			
 			initReposExtentionConfigEx();
 			
 			//start DataBase auto backup thread
@@ -11376,6 +11382,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void clearRedisCache() {
+		Log.info("clearRedisCache()");
 		RMap<Object, Object> clusterServersMap = redisClient.getMap("clusterServersMap");
 		clusterServersMap.remove(serverUrl);
 		
@@ -11743,42 +11750,45 @@ public class BaseController  extends BaseFunction{
 		Log.debug("----------- initReposExtentionConfigEx() clusterDeployCheck Success ----");
 		
 		repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
+		Log.printObject("initReposExtentionConfigEx() reposExtConfigDigest:", repos.reposExtConfigDigest);
+
 				
 		/*** Init ReposExtConfig Start ***/
+		boolean updateRedis = redisEn && repos.reposExtConfigDigest == null;
 		//Init RemoteStorageConfig		
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposRemoteStorageConfigEx Start +++++");
-		initReposRemoteStorageConfigEx(repos, repos.getRemoteStorage());
+		initReposRemoteStorageConfigEx(repos, repos.getRemoteStorage(), updateRedis);
 		Log.debug("----------- initReposExtentionConfigEx() initReposRemoteStorageConfigEx End ------");
 		
 		//Init RemoteServerConifg
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposRemoteServerConfigEx Start +++++");
 		String remoteServer = getReposRemoteServer(repos);
 		repos.remoteServer = remoteServer;
-		initReposRemoteServerConfigEx(repos, remoteServer);
+		initReposRemoteServerConfigEx(repos, remoteServer, updateRedis);
 		Log.debug("----------- initReposExtentionConfigEx() initReposRemoteServerConfigEx End ------");
 		
 		//Init ReposAutoBackupConfig
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposAutoBackupConfigEx Start +++++");
 		String autoBackup = getReposAutoBackup(repos);
 		repos.setAutoBackup(autoBackup);
-		initReposAutoBackupConfigEx(repos, autoBackup);
+		initReposAutoBackupConfigEx(repos, autoBackup, updateRedis);
 		Log.debug("----------- initReposExtentionConfigEx() initReposAutoBackupConfigEx End ------");
 				
 		//Init ReposTextSearchConfig
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposTextSearchConfigEx Start +++++");
 		String textSearch = getReposTextSearch(repos);
 		repos.setTextSearch(textSearch);
-		initReposTextSearchConfigEx(repos, textSearch);					
+		initReposTextSearchConfigEx(repos, textSearch, updateRedis);					
 		Log.debug("----------- initReposExtentionConfigEx() initReposTextSearchConfigEx End ------");
 		
 		//Init ReposVersionIgnoreConfig
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposVersionIgnoreConfigEx Start +++++");
-		initReposVersionIgnoreConfigEx(repos);
+		initReposVersionIgnoreConfigEx(repos, updateRedis);
 		Log.debug("----------- initReposExtentionConfigEx() initReposVersionIgnoreConfigEx End ------");
 		
 		//Init ReposEncryptConfig
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposEncryptConfigEx Start +++++");
-		initReposEncryptConfigEx(repos);
+		initReposEncryptConfigEx(repos, updateRedis);
 		Log.debug("----------- initReposExtentionConfigEx() initReposEncryptConfigEx End ------");
 		/*** Init ReposExtConfig End ***/
 		
@@ -11886,6 +11896,7 @@ public class BaseController  extends BaseFunction{
 				initReposData(repos);
 
 				repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
+				Log.printObject("initReposExtentionConfig() reposExtConfigDigest:", repos.reposExtConfigDigest);
 						
 				/*** Init ReposExtConfig Start ***/
 				//Init RemoteStorageConfig
@@ -15624,7 +15635,8 @@ public class BaseController  extends BaseFunction{
 		{
 			//从redis中获取仓库扩展配置摘要信息,用于确定remoteStorage/remoteServer/autoBackup/textSearch/versionIgnore/encrypt的配置是否有更新
 			repos.reposExtConfigDigest = getReposExtConfigDigest(repos);
-
+			Log.printObject("getReposEx() reposExtConfigDigest:", repos.reposExtConfigDigest);
+			
 			ReposData reposData = getReposData(repos);
 			repos.disabled = reposData.disabled;
 			repos.isBusy = reposData.isBusy;
