@@ -11396,8 +11396,37 @@ public class BaseController  extends BaseFunction{
 		clearAllRemoteStorageLocksMap(targetServerUrl);
 		clearAllReposRedisData(targetServerUrl);
 		clearAllOfficeRedisData(targetServerUrl);
-		clusterServersMap.put(serverUrl, serverUrl);
+		clusterServersMap.put(serverUrl, new Date().getTime());
+		
+		addClusterHeartBeatDelayTask();
 		return;
+	}
+
+	private void addClusterHeartBeatDelayTask() {
+		Log.debug("addClusterHeartBeatDelayTask() add beating delay task at " + DateFormat.dateFormat(new Date()));
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+	                        Long beatTime = new Date().getTime();
+	                        Log.info("\n******** ClusterHeartBeatDelayTask beatTime [" + beatTime + "]");
+	                        
+	                        RMap<Object, Object> clusterServersMap = redisClient.getMap("clusterServersMap");
+	                        clusterServersMap.put(serverUrl, beatTime);
+	                        
+	                        addClusterHeartBeatDelayTask();                      
+                        	Log.info("******** ClusterHeartBeatDelayTask 执行结束\n");		                        
+                        } catch(Exception e) {
+                        	Log.info("******** ClusterHeartBeatDelayTask 执行异常\n");
+                        	Log.info(e);                        	
+                        }
+                        
+                    }
+                },
+                3600,	//beat per hour(3600 秒)
+                TimeUnit.SECONDS);
 	}
 
 	private void clearAllOfficeRedisData(String targetServerUrl) {
