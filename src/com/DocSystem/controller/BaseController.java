@@ -11425,7 +11425,7 @@ public class BaseController  extends BaseFunction{
                         
                     }
                 },
-                3600,	//beat per hour(3600 秒)
+                600,	//beat per 10 minutes(600 seconds)
                 TimeUnit.SECONDS);
 	}
 
