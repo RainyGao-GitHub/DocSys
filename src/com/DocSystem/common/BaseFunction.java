@@ -1337,7 +1337,7 @@ public class BaseFunction{
 	}
 	
 	private void addDocLockRedis(Doc doc, DocLock docLock) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		reposDocLocskMap.put(getDocLockId(doc), docLock);
 	}
 	
