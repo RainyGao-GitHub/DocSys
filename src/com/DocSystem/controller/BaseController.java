@@ -21036,7 +21036,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -21048,7 +21048,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -21071,7 +21071,7 @@ public class BaseController  extends BaseFunction{
 			task.targetName = tmpCheckoutName;
 			
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");		
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);		
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -21082,7 +21082,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "空目录无法下载";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;		
@@ -21111,7 +21111,7 @@ public class BaseController  extends BaseFunction{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 
 				//删除临时目录
 				FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -21124,7 +21124,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 2; //Success
 			task.info = "目录压缩成功";
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -21141,7 +21141,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "目录压缩失败";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);		
@@ -21154,7 +21154,7 @@ public class BaseController  extends BaseFunction{
 		task.status = 2; //Success
 		task.info = "目录压缩成功";
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
 
 		//删除临时目录
 		FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);	
@@ -21205,7 +21205,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -21218,7 +21218,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或者授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -21244,7 +21244,7 @@ public class BaseController  extends BaseFunction{
 			task.targetName = tmpCheckoutName;
 			
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");		
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);		
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -21255,7 +21255,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "空目录无法下载";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;		
@@ -21287,7 +21287,7 @@ public class BaseController  extends BaseFunction{
 				task.info = "目录压缩失败";
 				Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩失败");
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 
 				//删除临时目录
 				FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -21301,7 +21301,7 @@ public class BaseController  extends BaseFunction{
 			task.info = "目录压缩成功";
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩成功");
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -21320,7 +21320,7 @@ public class BaseController  extends BaseFunction{
 			task.info = "目录压缩失败";
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩失败");
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);		
@@ -21334,7 +21334,7 @@ public class BaseController  extends BaseFunction{
 		task.info = "目录压缩成功";
 		Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩成功");
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
 
 		//删除临时目录
 		FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);	
@@ -21370,7 +21370,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "目录压缩失败";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 			
 			if(task.deleteInput)
 			{
@@ -21385,7 +21385,7 @@ public class BaseController  extends BaseFunction{
 		task.status = 2; //Success
 		task.info = "目录压缩成功";
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
 		if(task.deleteInput)
 		{
 			FileUtil.delDir(task.inputPath + task.inputName);
@@ -21432,7 +21432,7 @@ public class BaseController  extends BaseFunction{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");								
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
 				//删除临时解密目录
 				FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
 				//延时删除任务和压缩文件
@@ -21443,7 +21443,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 2; //Success
 			task.info = "目录压缩成功";
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
 			//删除临时解密目录
 			FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
 			//延时删除任务和压缩文件
@@ -21458,7 +21458,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "目录压缩失败";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, "");				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);				
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -21467,7 +21467,7 @@ public class BaseController  extends BaseFunction{
 		task.status = 2; //Success
 		task.info = "目录压缩成功";
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, "");			
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);			
 		//延时删除任务和压缩文件
 		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);			
 	}
