@@ -21890,4 +21890,29 @@ public class BaseController  extends BaseFunction{
                 deleteDelayTime,
                 TimeUnit.SECONDS);
 	}
+	
+	protected String buildSystemLogDetailContent(ReturnAjax rt) {
+		if(rt == null)
+		{
+			return "";
+		}
+		
+		String logDetail = "";
+		if(rt.getMsgInfo() != null)
+		{
+			logDetail = "[info]:[" + rt.getMsgInfo() + "]<br>";
+		}
+		
+		if(rt.getWarningMsg() != null)
+		{
+			logDetail = logDetail + "[warn]:[" + rt.getWarningMsg() + "]<br>";
+		}
+		
+		if(rt.getDebugLog() != null)
+		{
+			logDetail = logDetail + "[debug]:[" + rt.getDebugLog() + "]";
+		}
+		
+		return null;
+	}
 }
