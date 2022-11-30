@@ -2082,7 +2082,7 @@ public class DocController extends BaseController{
 		res.put("message", "upload success!");
 		writeJson(res,response);
 		
-		addSystemLog(request, null, "uploadMarkdownPic", "uploadMarkdownPic", "上传备注图片", "成功",  repos, curDoc, null, buildSystemLogDetailContent(rt));			
+		addSystemLog(request, null, "uploadMarkdownPic", "uploadMarkdownPic", "上传备注图片", "成功",  repos, curDoc, null, "");			
 	}
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
