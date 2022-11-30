@@ -124,6 +124,32 @@ public class Log {
 		}
 	}
 	
+	public static void infoHead(String content) {
+		if(isLogEnable(info, allowGeneral))
+		{
+			String timeStamp = DateFormat.dateTimeFormat(new Date());
+			System.out.println("\n" + timeStamp + " " + content);
+
+			if(logFile != null)
+			{
+				toFile("\n" + timeStamp + " " + content + "\n", logFile);
+			}
+		}
+	}
+	
+	public static void infoTail(String content) {
+		if(isLogEnable(info, allowGeneral))
+		{
+			String timeStamp = DateFormat.dateTimeFormat(new Date());
+			System.out.println(timeStamp + " " + content + "\n");
+
+			if(logFile != null)
+			{
+				toFile(timeStamp + " " + content + "\n\n", logFile);
+			}
+		}
+	}
+	
 	public static void info(Exception e) {
 		if(isLogEnable(info, allowGeneral))
 		{
@@ -241,6 +267,14 @@ public class Log {
 
 	public static void infoForOffice(String content) {
 		info("OFFICE: " + content);
+	}
+	
+	public static void infoForOfficeHead(String content) {
+		infoHead("OFFICE: " + content);
+	}
+
+	public static void infoForOfficeTail(String content) {
+		infoTail("OFFICE: " + content);
 	}
 	
 	public static void printByte(byte data) {
