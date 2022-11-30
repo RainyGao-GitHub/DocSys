@@ -1374,7 +1374,7 @@ public class BaseFunction{
 	}
 	
 	private void deleteDocLockRedis(Doc doc) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		reposDocLocskMap.remove(getDocLockId(doc));
 	}
 
@@ -1403,9 +1403,9 @@ public class BaseFunction{
 	}
 
 	public static DocLock getDocLockRedis(Doc doc) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		String docLockId = getDocLockId(doc);
-		return (DocLock) reposDocLocskMap.get(docLockId);
+		return reposDocLocskMap.get(docLockId);
 	}
 	
 	private boolean isReposDocLocksMapEmpty(Doc doc) {
@@ -1429,7 +1429,7 @@ public class BaseFunction{
 	}
 	
 	private boolean isReposDocLocksMapEmptyRedis(Doc doc) {
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap-" + doc.getVid());
+		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap-" + doc.getVid());
 		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
 			return true;
@@ -1752,7 +1752,7 @@ public class BaseFunction{
 	{
 		Log.printObject("isSubDocLockedRedis() doc:", doc);
 
-		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
+		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
 			return false;
@@ -1761,14 +1761,14 @@ public class BaseFunction{
 		String parentDocPath = doc.getName().isEmpty()? "" :doc.getPath() + doc.getName() + "/";
 		//遍历所有docLocks
         Log.debug("isSubDocLockedRedis() reposDocLocskMap size:" + reposDocLocskMap.size());
-		Iterator<Entry<Object, Object>> iterator = reposDocLocskMap.entrySet().iterator();
+		Iterator<Entry<String, DocLock>> iterator = reposDocLocskMap.entrySet().iterator();
     	while (iterator.hasNext()) 
         {
-        	Entry<Object, Object> entry = iterator.next();
+        	Entry<String, DocLock> entry = iterator.next();
             if(entry != null)
         	{
             	Log.debug("isSubDocLockedRedis reposDocLocskMap entry:" + entry.getKey());
-            	DocLock docLock = (DocLock) entry.getValue();
+            	DocLock docLock = entry.getValue();
     			if(isSudDocLock(docLock, parentDocPath))
     			{
     				//检查所有的锁
