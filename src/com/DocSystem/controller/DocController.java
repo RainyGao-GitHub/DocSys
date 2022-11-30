@@ -190,10 +190,10 @@ public class DocController extends BaseController{
 		if(ret == false)
 		{
 			Log.debug("add() add Doc Failed");
-			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, "");
+			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功",  repos, doc, null, "");
+		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 		executeCommonActionList(actionList, rt);
 	}
 
@@ -303,10 +303,10 @@ public class DocController extends BaseController{
 		if(ret == false)
 		{
 			Log.debug("addDocRS addDoc Failed");
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, "");
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "成功",  repos, doc, null, "");
+		addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 		executeCommonActionList(actionList, rt);
 	}
 	
@@ -500,11 +500,11 @@ public class DocController extends BaseController{
 		
 		if(ret != null)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", "成功",  repos, doc, null, "");
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, "");
+		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 	
 	
@@ -578,11 +578,11 @@ public class DocController extends BaseController{
 		
 		if(ret != null)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", "成功",  repos, doc, null, "");
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, "");
+		addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 
 	/****************   rename a Document ******************/
@@ -670,11 +670,11 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", "成功", repos, srcDoc, dstDoc, "");		
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", "成功", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));		
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, dstDoc, "");			
+		addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
 	}
 	
 	/****************   move a Document ******************/
@@ -845,12 +845,12 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", "成功",  repos, srcDoc, dstDoc, "");
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", "成功",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			Log.debug("copyDoc executeCommonActionList");			
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, "");
+		addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 	}
 	
 	/****************   copy/move/rename a Document ******************/
@@ -967,11 +967,11 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", "成功",  repos, srcDoc, dstDoc, "");
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", "成功",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, "");
+		addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 	}
 	
 	/****************   execute a Document ******************/
@@ -1675,7 +1675,7 @@ public class DocController extends BaseController{
 					deletePreviewFile(doc);
 				}
 			}
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 
 			if(ret == true)
 			{
@@ -1968,7 +1968,7 @@ public class DocController extends BaseController{
 					deletePreviewFile(doc);
 				}
 			}
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 
 			if(ret == true)
 			{
@@ -2082,7 +2082,7 @@ public class DocController extends BaseController{
 		res.put("message", "upload success!");
 		writeJson(res,response);
 		
-		addSystemLog(request, null, "uploadMarkdownPic", "uploadMarkdownPic", "上传备注图片", "成功",  repos, curDoc, null, "");			
+		addSystemLog(request, null, "uploadMarkdownPic", "uploadMarkdownPic", "上传备注图片", "成功",  repos, curDoc, null, buildSystemLogDetailContent(rt));			
 	}
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
@@ -2164,7 +2164,7 @@ public class DocController extends BaseController{
 			
 			writeJson(rt, response);
 	
-			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "成功",  repos, doc, null, "");			
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));			
 
 			if(ret)
 			{
@@ -2308,11 +2308,11 @@ public class DocController extends BaseController{
 		//下载的是文件或者需要在downloadDoc阶段下载的目录
 		if(rt.getStatus().equals("ok"))
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, "");				
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 	}
 	
@@ -4193,7 +4193,7 @@ public class DocController extends BaseController{
 		rt.setData(doc);
 		writeJson(rt, response);	
 
-		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "解锁文件", "成功", repos, doc, null, "");	
+		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "解锁文件", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
 	private boolean isForceUnlockAllow(Doc doc, Integer lockType, User accessUser) {
@@ -4887,11 +4887,11 @@ public class DocController extends BaseController{
 		if(setLocalBackupIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("本地自动备份忽略设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "失败", repos, doc, null, "");				
+			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "成功", repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -5086,11 +5086,11 @@ public class DocController extends BaseController{
 		if(setRemoteBackupIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("远程自动备份忽略设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "失败", repos, doc, null, "");				
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "成功", repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -5285,11 +5285,11 @@ public class DocController extends BaseController{
 		if(setTextSearchIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("全文搜索忽略设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "失败", repos, doc, null, "");				
+			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "成功", repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -5488,11 +5488,11 @@ public class DocController extends BaseController{
 		if(setVersionIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("版本管理设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "失败", repos, doc, null, "");				
+			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "成功", repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -5725,7 +5725,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setDocPwd", "setDocPwd", "设置文件访问密码", "成功", repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "setDocPwd", "setDocPwd", "设置文件访问密码", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -6024,7 +6024,7 @@ public class DocController extends BaseController{
 		if(reposService.addDocShare(docShare) == 0)
 		{
 			docSysErrorLog("创建文件分享失败！", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "失败", repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		else
 		{
@@ -6033,7 +6033,7 @@ public class DocController extends BaseController{
 			rt.setData(docShare);
 			rt.setDataEx(IpAddress);
 			
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "成功", repos, doc, null, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocShare", "addDocShare", "分享文件", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 		
