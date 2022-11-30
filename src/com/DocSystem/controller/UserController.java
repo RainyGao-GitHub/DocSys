@@ -308,7 +308,7 @@ public class UserController extends BaseController {
 		}
 		userService.addUser(user);
 		
-		addSystemLog(request, user, "register", "register", "用户注册","成功", null, null, null, "");
+		addSystemLog(request, user, "register", "register", "用户注册","成功", null, null, null, buildSystemLogDetailContent(rt));
 
 		user.setPwd("");	//密码不要返回回去
 		rt.setData(user);
@@ -410,7 +410,7 @@ public class UserController extends BaseController {
 		}
 		userService.addUser(user);
 		
-		addSystemLog(request, user, "registerEx", "registerEx", "用户注册","成功", null, null, null, "");
+		addSystemLog(request, user, "registerEx", "registerEx", "用户注册","成功", null, null, null, buildSystemLogDetailContent(rt));
 
 		user.setPwd("");	//密码不要返回回去
 		rt.setData(user);
