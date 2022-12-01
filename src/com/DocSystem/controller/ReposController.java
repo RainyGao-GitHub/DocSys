@@ -60,7 +60,7 @@ public class ReposController extends BaseController{
 	/****************** get DocSysConfig **************/
 	@RequestMapping("/getDocSysConfig.do")
 	public void getDocSysConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		Log.info("****************** getDocSysConfig.do ***********************");
+		Log.infoHead("****************** getDocSysConfig.do ***********************");
 		ReturnAjax rt = new ReturnAjax();		
 		
 		JSONObject config = new JSONObject();
@@ -72,7 +72,7 @@ public class ReposController extends BaseController{
 	/****************** get Repository List **************/
 	@RequestMapping("/getReposList.do")
 	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		Log.info("****************** getReposList.do ***********************");
+		Log.infoHead("****************** getReposList.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = getLoginUser(session, request, response, rt);
@@ -98,7 +98,7 @@ public class ReposController extends BaseController{
 
 	@RequestMapping("/getManagerReposList.do")
 	public void getManagerReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		Log.info("****************** getManagerReposList.do ***********************");
+		Log.infoHead("****************** getManagerReposList.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -131,7 +131,7 @@ public class ReposController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 
-		Log.info("****************** getRepos.do ***********************");
+		Log.infoHead("****************** getRepos.do ***********************");
 		Log.debug("getRepos vid: " + vid + " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -172,7 +172,7 @@ public class ReposController extends BaseController{
 			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
-		Log.info("****************** addRepos.do ***********************");
+		Log.infoHead("****************** addRepos.do ***********************");
 		Log.debug("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  
 				+ " realDocPath: " + realDocPath 
 				+ " remoteServer: " + remoteServer 
@@ -434,7 +434,7 @@ public class ReposController extends BaseController{
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		Log.info("****************** deleteRepos.do ***********************");
+		Log.infoHead("****************** deleteRepos.do ***********************");
 		Log.debug("deleteRepos vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -509,7 +509,7 @@ public class ReposController extends BaseController{
 	/****************   user triggered Repository Auto Backup ******************/
 	@RequestMapping("/reposAutoBackup.do")
 	public void reposAutoBackup(Integer reposId, Integer type, Integer fullBackup, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		Log.info("****************** reposAutoBackup.do ***********************");
+		Log.infoHead("****************** reposAutoBackup.do ***********************");
 		Log.debug("reposAutoBackup() reposId: " + reposId + " type:" + type);
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -593,7 +593,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/queryReposAutoBackupTask.do")
 	public void queryReposAutoBackupTask(String taskId, Integer reposId, Integer type, Integer fullBackup, HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
-		Log.info("************** queryReposAutoBackupTask.do ****************");
+		Log.infoHead("************** queryReposAutoBackupTask.do ****************");
 		Log.info("queryReposAutoBackupTask taskId:" + taskId + " reposId:" + reposId + " type:" + type + " fullBackup:" + fullBackup);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -680,7 +680,7 @@ public class ReposController extends BaseController{
 	/****************   backup a Repository ******************/
 	@RequestMapping("/backupRepos.do")
 	public void backupRepos(Integer reposId, String backupStorePath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		Log.info("****************** backupRepos.do ***********************");
+		Log.infoHead("****************** backupRepos.do ***********************");
 		Log.debug("backupRepos() reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -804,7 +804,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/queryReposFullBackupTask.do")
 	public void queryReposFullBackupTask(String taskId, HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
-		Log.info("************** queryReposFullBackupTask.do ****************");
+		Log.infoHead("************** queryReposFullBackupTask.do ****************");
 		Log.info("queryReposFullBackupTask taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -866,7 +866,7 @@ public class ReposController extends BaseController{
 			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** updateReposInfo.do ***********************");
+		Log.infoHead("****************** updateReposInfo.do ***********************");
 		Log.debug("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path 
 				+ " realDocPath:" + realDocPath 
 				+ " remoteServer:" + remoteServer 
@@ -1148,7 +1148,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/remoteStorageTest.do")
 	public void remoteStorageTest(String config, String type, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** remoteServerTest.do ***********************");
+		Log.infoHead("****************** remoteServerTest.do ***********************");
 		Log.debug("remoteServerTest config:" + config + " type:" + type);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -1260,7 +1260,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/clearReposCache.do")
 	public void clearReposCache(Integer reposId, String path,String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** clearReposCache.do ***********************");
+		Log.infoHead("****************** clearReposCache.do ***********************");
 		Log.debug("clearReposCache reposId:" + reposId + " path: " + path + " name: " + name);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -1317,7 +1317,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/clearAllReposCache.do")
 	public void clearAllReposCache(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** clearAllReposCache.do ***********************");
+		Log.infoHead("****************** clearAllReposCache.do ***********************");
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1378,7 +1378,7 @@ public class ReposController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getReposInitMenu.do ***********************");
+		Log.infoHead("****************** getReposInitMenu.do ***********************");
 		Log.debug("getReposInitMenu reposId: " + reposId + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1528,7 +1528,7 @@ public class ReposController extends BaseController{
 			Integer needLockState,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getSubDocList.do ***********************");
+		Log.infoHead("****************** getSubDocList.do ***********************");
 		Log.debug("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type + " shareId:" + shareId + " sort:" + sort + " needLockState:" +  needLockState);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1697,7 +1697,7 @@ public class ReposController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getSubDocListRS.do ***********************");
+		Log.infoHead("****************** getSubDocListRS.do ***********************");
 		Log.debug("getSubDocListRS reposId: " + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1815,7 +1815,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,Long docId, Long pid, String path, String name, Integer level, Integer type, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){		
-		Log.info("****************** getReposManagerMenu.do ***********************");
+		Log.infoHead("****************** getReposManagerMenu.do ***********************");
 		Log.debug("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1895,7 +1895,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposAllUsers.do")
 	public void getReposAllUsers(String searchWord, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getReposAllUsers.do ***********************");
+		Log.infoHead("****************** getReposAllUsers.do ***********************");
 		Log.debug("getReposAllUsers searchWord:" + searchWord + " reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1960,7 +1960,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposAllGroups.do")
 	public void getReposAllGroups(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getReposAllGroups.do ***********************");
+		Log.infoHead("****************** getReposAllGroups.do ***********************");
 		Log.debug("getReposAllGroups reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1984,7 +1984,7 @@ public class ReposController extends BaseController{
 	public void getDocAuthList(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getDocAuthList.do ***********************");
+		Log.infoHead("****************** getDocAuthList.do ***********************");
 		Log.debug("getDocAuthList reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -2104,7 +2104,7 @@ public class ReposController extends BaseController{
 			Integer downloadEn, Long uploadSize, Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** configReposAuth.do ***********************");
+		Log.infoHead("****************** configReposAuth.do ***********************");
 		Log.debug("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin 
 				+ " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn 
 				+ " downloadEn:"+ downloadEn + " uploadSize:"+ uploadSize + " heritable:" + heritable);
@@ -2215,7 +2215,7 @@ public class ReposController extends BaseController{
 	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** deleteReposAuth.do ***********************");
+		Log.infoHead("****************** deleteReposAuth.do ***********************");
 		Log.debug("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -2276,7 +2276,7 @@ public class ReposController extends BaseController{
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer downloadEn, Long uploadSize, Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** configDocAuth.do ***********************");
+		Log.infoHead("****************** configDocAuth.do ***********************");
 		Log.debug("configDocAuth reposId:" + reposId + " userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " path:" + path + " name:" + name + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:" + downloadEn + " uploadSize:" + uploadSize + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -2428,7 +2428,7 @@ public class ReposController extends BaseController{
 	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** deleteDocAuth.do ***********************");		
+		Log.infoHead("****************** deleteDocAuth.do ***********************");		
 		Log.debug("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
