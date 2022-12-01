@@ -2887,7 +2887,7 @@
 	
 	function formatSystemLogContent(node)
     {
-		//console.log("formatSystemLogContent event:" + node.event);
+		console.log("formatSystemLogContent content:" + node.content);
 		switch(node.event)
 		{
 		case "addRepos":
@@ -2945,19 +2945,19 @@
 			node.formatedContent = "设置文件访问密码:" + node.reposName + "::" + node.path + node.name;
 			break;
 		case "downloadHistoryDocPrepare":
-			node.formatedContent = "下载历史文件:" + node.reposName + "::" + node.path + node.name + " " + node.content;
+			node.formatedContent = "下载历史文件:" + node.reposName + "::" + node.path + node.name;
 			break;
 		case "revertDocHistory":
-			node.formatedContent = "恢复文件历史版本:" + node.reposName + "::" + node.path + node.name + " " + node.content;
+			node.formatedContent = "恢复文件历史版本:" + node.reposName + "::" + node.path + node.name;
 			break;
 		case "addDocShare":
 			node.formatedContent = "新建文件分享:" + node.reposName + "::" + node.path + node.name;
 			break;
 		case "updateDocShare":
-			node.formatedContent = "修改文件分享:" + node.content;
+			node.formatedContent = "修改文件分享";
 			break;
 		case "deleteDocShare":
-			node.formatedContent = "删除文件分享:" + node.content;
+			node.formatedContent = "删除文件分享";
 			break;
 		case "configDocAuth":
 			node.formatedContent = "设置文件权限:" + node.reposName + "::" + node.path + node.name;
@@ -2966,21 +2966,21 @@
 			node.formatedContent = "删除文件权限:" + node.reposName + "::" + node.path + node.name;
 			break;
 		case "login":
-			node.formatedContent = "登录系统" + node.content;
+			node.formatedContent = "登录系统";
 			break;
 		case "logout":
-			node.formatedContent = "退出登录" + node.content;
+			node.formatedContent = "退出登录";
 			break;
 		case "register":
-			node.formatedContent = "用户注册" + node.content;
+			node.formatedContent = "用户注册";
 			break;
 		default:
-			node.formatedContent = node.content;
-			return;
+			node.formatedContent = "未知操作";
+			break;
 		}
 		if(node.content)
 		{
-			node.formatedContent = node.formatedContent + "<br/>" + node.content;
+			node.formatedContent = node.formatedContent + " " + node.content;
 		}
     }
 	
