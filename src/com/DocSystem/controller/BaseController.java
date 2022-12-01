@@ -21900,12 +21900,12 @@ public class BaseController  extends BaseFunction{
 		String logDetail = "";
 		if(rt.getMsgInfo() != null)
 		{
-			logDetail = "[info]:[" + rt.getMsgInfo() + "]<br/>";
+			logDetail = "[info]:[" + rt.getMsgInfo() + "] ";
 		}
 		
 		if(rt.getWarningMsg() != null)
 		{
-			logDetail = logDetail + "[warn]:[" + rt.getWarningMsg() + "]<br/>";
+			logDetail = logDetail + "[warn]:[" + rt.getWarningMsg() + "] ";
 		}
 		
 		if(rt.getDebugLog() != null)
@@ -21913,6 +21913,7 @@ public class BaseController  extends BaseFunction{
 			logDetail = logDetail + "[debug]:[" + rt.getDebugLog() + "]";
 		}
 		
+		Log.debug("buildSystemLogDetailContent() logDetail:" + logDetail);
 		return logDetail;
 	}
 }

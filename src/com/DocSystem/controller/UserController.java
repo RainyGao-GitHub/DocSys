@@ -63,7 +63,7 @@ public class UserController extends BaseController {
 				writeJson(rt, response);
 				User tmp_user = new User();
 				tmp_user.setName(userName);
-				addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, "");
+				addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;
 			}
 		} catch (Exception e) {
@@ -92,7 +92,7 @@ public class UserController extends BaseController {
 		}
 
 		//Feeback to page
-		addSystemLog(request, loginUser, "login", "login", "登录","成功", null, null, null, "");
+		addSystemLog(request, loginUser, "login", "login", "登录","成功", null, null, null, buildSystemLogDetailContent(rt));
 		
 		rt.setMsgInfo("登录成功！");
 		rt.setData(loginUser);	//将数据库取出的用户信息返回至前台
@@ -180,7 +180,7 @@ public class UserController extends BaseController {
 		
 		rt.setMsgInfo("您已成功退出登陆。");
 
-		addSystemLog(request, loginUser, "logout", "logout", "退出登录","成功", null, null, null, "");
+		addSystemLog(request, loginUser, "logout", "logout", "退出登录","成功", null, null, null, buildSystemLogDetailContent(rt));
 
 		writeJson(rt, response);	
 	}
