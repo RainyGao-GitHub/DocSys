@@ -60,7 +60,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/docSysInit.do")
 	public void docSysInit(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** docSysInit.do ***********************");
+		Log.infoHead("****************** docSysInit.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -102,7 +102,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getBannerConfig.do")
 	public void getBannerConfig(String serverIP, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getBannerConfig.do ***********************");
+		Log.infoHead("****************** getBannerConfig.do ***********************");
 
 		Log.debug("getBannerConfig() serverIP:" + serverIP);
 		collectDocSysInstallationInfo(serverIP, request);
@@ -145,7 +145,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemEmailConfig.do")
 	public void getSystemEmailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getSystemEmailConfig.do ***********************");
+		Log.infoHead("****************** getSystemEmailConfig.do ***********************");
 
 		Log.debug("getSystemEmailConfig()");
 		ReturnAjax rt = new ReturnAjax();
@@ -184,7 +184,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/setSystemEmailConfig.do")
 	public void setSystemEmailConfig(String authCode,String host, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** setSystemEmailConfig.do ***********************");
+		Log.infoHead("****************** setSystemEmailConfig.do ***********************");
 		
 		Log.debug("setSystemEmailConfig() host:" + host + " email:" + email + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
@@ -259,7 +259,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemSmsConfig.do")
 	public void getSystemSmsConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getSystemSmsConfig.do ***********************");
+		Log.infoHead("****************** getSystemSmsConfig.do ***********************");
 
 		Log.debug("getSystemSmsConfig()");
 		ReturnAjax rt = new ReturnAjax();
@@ -300,7 +300,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/setSystemSmsConfig.do")
 	public void setSystemSmsConfig(String authCode,String server, String apikey, String tplid, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** setSystemSmsConfig.do ***********************");
+		Log.infoHead("****************** setSystemSmsConfig.do ***********************");
 		
 		Log.debug("setSystemSmsConfig() server:" + server + " apikey:" + apikey + " tplid:" + tplid);
 		ReturnAjax rt = new ReturnAjax();
@@ -364,7 +364,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemDbConfig.do")
 	public void getSystemDbConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getSystemDbConfig.do ***********************");
+		Log.infoHead("****************** getSystemDbConfig.do ***********************");
 
 		Log.debug("getSystemDbConfig()");
 		ReturnAjax rt = new ReturnAjax();
@@ -411,7 +411,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/setSystemDBConfig.do")
 	public void setSystemDBConfig(String authCode, String type, String url, String user, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** setSystemDBConfig.do ***********************");
+		Log.infoHead("****************** setSystemDBConfig.do ***********************");
 
 		Log.debug("setSystemDBConfig() type:"  + type + " url:" + url + " user:" + user  + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
@@ -523,7 +523,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/testDatabase.do")
 	public void testDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** testDatabase.do ***********************");
+		Log.infoHead("****************** testDatabase.do ***********************");
 
 		Log.debug("testDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
@@ -545,7 +545,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/deleteDatabase.do")
 	public void deleteDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		Log.info("****************** deleteDatabase.do ***********************");
+		Log.infoHead("****************** deleteDatabase.do ***********************");
 
 		Log.debug("deleteDatabase()");
 		ReturnAjax rt = new ReturnAjax();
@@ -600,7 +600,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/resetDatabase.do")
 	public void resetDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		Log.info("****************** resetDatabase.do ***********************");
+		Log.infoHead("****************** resetDatabase.do ***********************");
 
 		Log.debug("resetDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 
@@ -659,7 +659,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/exportDBData.do")
 	public void exportDBData(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		Log.info("****************** exportDBData.do ***********************");
+		Log.infoHead("****************** exportDBData.do ***********************");
 
 		Log.debug("exportDBData()");
 		ReturnAjax rt = new ReturnAjax();
@@ -707,7 +707,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/importDBData.do")
 	public void importDBData(MultipartFile uploadFile, String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		Log.info("****************** importDBData.do ***********************");
+		Log.infoHead("****************** importDBData.do ***********************");
 
 		Log.debug("importDBData()");
 		ReturnAjax rt = new ReturnAjax();
@@ -756,7 +756,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemInfo.do")
 	public void getSystemInfo(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getSystemInfo.do ***********************");
+		Log.infoHead("****************** getSystemInfo.do ***********************");
 
 		Log.debug("getSystemInfo()");
 		ReturnAjax rt = new ReturnAjax();
@@ -808,7 +808,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getSystemLicenses.do")
 	public void getSystemLicenses(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getSystemLicenses.do ***********************");
+		Log.infoHead("****************** getSystemLicenses.do ***********************");
 		
 		Log.debug("getSystemLicenses()");
 		ReturnAjax rt = new ReturnAjax();
@@ -846,7 +846,7 @@ public class ManageController extends BaseController{
 	public void cleanSystemLocks(String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** cleanSystemLocks.do ***********************");
+		Log.infoHead("****************** cleanSystemLocks.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -900,7 +900,7 @@ public class ManageController extends BaseController{
 	public void disableSystem(String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** disableSystem.do ***********************");
+		Log.infoHead("****************** disableSystem.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -919,7 +919,7 @@ public class ManageController extends BaseController{
 	public void enableSystem(String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** enableSystem.do ***********************");
+		Log.infoHead("****************** enableSystem.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -938,7 +938,7 @@ public class ManageController extends BaseController{
 	public void disableSystem(Integer reposId, String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** disableRepos.do reposId:" + reposId +  " ***********************");
+		Log.infoHead("****************** disableRepos.do reposId:" + reposId +  " ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -957,7 +957,7 @@ public class ManageController extends BaseController{
 	public void enableRepos(Integer reposId, String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** enableRepos.do reposId:" + reposId +" ***********************");
+		Log.infoHead("****************** enableRepos.do reposId:" + reposId +" ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -991,7 +991,7 @@ public class ManageController extends BaseController{
 			
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** setSystemInfo.do ***********************");
+		Log.infoHead("****************** setSystemInfo.do ***********************");
 
 		Log.debug("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome 
 				+ " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
@@ -1169,7 +1169,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/testRedis.do")
 	public void testRedis(String redisUrl, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** redisUrl.do ***********************");
+		Log.infoHead("****************** redisUrl.do ***********************");
 
 		Log.debug("testRedis() redisUrl:" + redisUrl);
 		ReturnAjax rt = new ReturnAjax();
@@ -1240,7 +1240,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/ldapTest.do")
 	public void testLDAP(String ldapConfig, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** ldapTest.do ***********************");
+		Log.infoHead("****************** ldapTest.do ***********************");
 
 		Log.debug("ldapTest() ldapConfig:" + ldapConfig);
 		ReturnAjax rt = new ReturnAjax();
@@ -1356,7 +1356,7 @@ public class ManageController extends BaseController{
 	public void upgradeSystem(MultipartFile uploadFile, String authCode, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		Log.info("****************** upgradeSystem.do ***********************");
+		Log.infoHead("****************** upgradeSystem.do ***********************");
 
 		Log.debug("upgradeSystem()");
 		ReturnAjax rt = new ReturnAjax();
@@ -1415,7 +1415,7 @@ public class ManageController extends BaseController{
 	public void restartServer(String authCode, String tomcatPath, String javaHome,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		Log.info("****************** restartServer.do ***********************");
+		Log.infoHead("****************** restartServer.do ***********************");
 
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -1438,7 +1438,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getUserList.do")
 	public void getUserList(String userName, Integer pageIndex, Integer pageSize, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getUserList.do ***********************");
+		Log.infoHead("****************** getUserList.do ***********************");
 
 		Log.debug("getUserList() searchWord:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		ReturnAjax rt = new ReturnAjax();
@@ -1471,7 +1471,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addFirstAdminUser")
 	public void addFirstAdminUser(User user, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** addFirstAdminUser.do ***********************");
+		Log.infoHead("****************** addFirstAdminUser.do ***********************");
 
 		Log.debug("addFirstAdminUser");
 		ReturnAjax rt = new ReturnAjax();
@@ -1526,7 +1526,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addUser")
 	public void addUser(User user, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** addUser.do ***********************");
+		Log.infoHead("****************** addUser.do ***********************");
 
 		Log.debug("addUser");
 		ReturnAjax rt = new ReturnAjax();
@@ -1605,7 +1605,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="editUser")
 	public void editUser(User user, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** editUser.do ***********************");
+		Log.infoHead("****************** editUser.do ***********************");
 
 		Log.printObject("editUser inputUser:", user);
 		
@@ -1729,7 +1729,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="resetPwd")
 	public void resetPwd(User user, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** resetPwd.do ***********************");
+		Log.infoHead("****************** resetPwd.do ***********************");
 
 		Log.debug("resetPwd");
 		ReturnAjax rt = new ReturnAjax();
@@ -1805,7 +1805,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="delUser")
 	public void delUser(Integer userId, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** delUser.do ***********************");
+		Log.infoHead("****************** delUser.do ***********************");
 
 		Log.debug("delUser " + userId);
 		
@@ -1898,7 +1898,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getReposList.do")
 	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getReposList.do ***********************");
+		Log.infoHead("****************** getReposList.do ***********************");
 
 		Log.debug("getReposList()");
 		ReturnAjax rt = new ReturnAjax();
@@ -1942,7 +1942,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getReposAllUsers.do")
 	public void getReposAllUsers(String searchWord, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getReposAllUsers.do ***********************");
+		Log.infoHead("****************** getReposAllUsers.do ***********************");
 		
 		Log.debug("getReposAllUsers reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
@@ -1994,7 +1994,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getGroupList.do")
 	public void getGroupList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getGroupList.do ***********************");
+		Log.infoHead("****************** getGroupList.do ***********************");
 		
 		Log.debug("getGroupList()");
 		ReturnAjax rt = new ReturnAjax();
@@ -2028,7 +2028,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addGroup")
 	public void addGroup(UserGroup group, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** addGroup.do ***********************");
+		Log.infoHead("****************** addGroup.do ***********************");
 
 		Log.debug("addGroup");
 		String name = group.getName();
@@ -2101,7 +2101,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="delGroup")
 	public void delGroup(Integer id, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** delGroup.do ***********************");
+		Log.infoHead("****************** delGroup.do ***********************");
 
 		Log.debug("delGroup " + id);
 		
@@ -2150,7 +2150,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="editGroup")
 	public void editGroup(UserGroup group, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** editGroup.do ***********************");
+		Log.infoHead("****************** editGroup.do ***********************");
 
 		Log.debug("editGroup");
 
@@ -2198,7 +2198,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getGroupAllUsers.do")
 	public void getGroupAllUsers(String searchWord, Integer groupId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.info("****************** getGroupAllUsers.do ***********************");
+		Log.infoHead("****************** getGroupAllUsers.do ***********************");
 
 		Log.debug("getGroupAllUsers searchWord:" + searchWord + " groupId: " + groupId);
 		ReturnAjax rt = new ReturnAjax();
@@ -2248,7 +2248,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="addGroupMember")
 	public void addGroupMember(Integer groupId,Integer userId, HttpSession session,HttpServletResponse response)
 	{
-		Log.info("****************** addGroupMember.do ***********************");
+		Log.infoHead("****************** addGroupMember.do ***********************");
 
 		Log.debug("addGroupMember groupId:" + groupId + " userId:" + userId);
 		
@@ -2319,7 +2319,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="delGroupMember")
 	public void delGroupMember(Integer id, HttpSession session,HttpServletResponse response)
 	{
-		Log.debug("delGroupMember " + id);
+		Log.infoHead("delGroupMember " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -2349,7 +2349,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="getSystemLog")
 	public void getSystemLog(String fileName,HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
 
-		Log.info("****************** getSystemLog.do ***********************");
+		Log.infoHead("****************** getSystemLog.do ***********************");
 
 		Log.debug("getSystemLog: " + fileName);
 		ReturnAjax rt = new ReturnAjax();
@@ -2388,7 +2388,7 @@ public class ManageController extends BaseController{
 	@RequestMapping(value="downloadLogFile")
 	public void downloadLogFile(HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
 
-		Log.info("****************** downloadLogFile.do ***********************");
+		Log.infoHead("****************** downloadLogFile.do ***********************");
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -2442,8 +2442,8 @@ public class ManageController extends BaseController{
 	
 	//cleanLogFile
 	@RequestMapping("/cleanLogFile.do")
-	public void deleteLicenseKeyPair(String authCode, HttpSession session, HttpServletRequest request, HttpServletResponse response){
-		System.out.println("*********** cleanLogFile *******************");
+	public void cleanLogFile(String authCode, HttpSession session, HttpServletRequest request, HttpServletResponse response){
+		Log.infoHead("*********** cleanLogFile *******************");
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
