@@ -1675,13 +1675,13 @@ public class DocController extends BaseController{
 					deletePreviewFile(doc);
 				}
 			}
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 
 			if(ret == true)
 			{
 				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "uploadDoc");
 				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "uploadDoc");
 			}
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		else
