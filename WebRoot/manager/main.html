@@ -2976,7 +2976,11 @@
 			break;
 		default:
 			node.formatedContent = node.content;
-			break;
+			return;
+		}
+		if(node.content)
+		{
+			node.formatedContent = node.formatedContent + "<br/>" + node.content;
 		}
     }
 	
