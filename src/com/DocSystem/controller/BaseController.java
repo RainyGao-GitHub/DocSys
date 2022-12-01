@@ -9916,20 +9916,24 @@ public class BaseController  extends BaseFunction{
 
 		String lockInfo = "svnDocCommit() reposData.syncLockForSvnCommit";
 		String lockName = "reposData.syncLockForSvnCommit" + repos.getId();
+		Date date1 = new Date();
 		synchronized(reposData.syncLockForSvnCommit)
 		{
 			redisSyncLockEx(lockName, lockInfo);
 			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
-				return null;
+				Log.debug("svnDocCommit() verReposInit Failed");
 			}
-
-			revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-
+			else
+			{
+				revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			}
+			
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
 		}
+		Date date2 = new Date();
+		Log.debug("svnDocCommit() 版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms\n");
 		return revision;
 	}
 	
@@ -9970,6 +9974,8 @@ public class BaseController  extends BaseFunction{
 		
 		ReposData reposData = getReposData(repos);
 
+		Date date1 = new Date();
+
 		String lockInfo = "gitDocCommit() reposData.syncLockForGitCommit";
 		String lockName = "reposData.syncLockForGitCommit-" + repos.getId();
 		synchronized(reposData.syncLockForGitCommit)
@@ -9978,21 +9984,25 @@ public class BaseController  extends BaseFunction{
 			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
-				return null;
+				Log.debug("gitDocCommit() verReposInit Failed");
 			}
-		
-			if(verReposUtil.checkAndClearnBranch(true) == false)
+			else
 			{
-				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
-				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
-				return null;
+				if(verReposUtil.checkAndClearnBranch(true) == false)
+				{
+					Log.debug("gitDocCommit() master branch is dirty and failed to clean");
+				}
+				else
+				{
+					revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+				}
 			}
-		
-			revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-
+			
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 		}
+		
+		Date date2 = new Date();
+		Log.debug("svnDocCommit() 版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms\n");
 		return revision;
 	}
 	
@@ -20671,6 +20681,8 @@ public class BaseController  extends BaseFunction{
 			Log.info("doPushToRemoteStorage() lockRemoteStorage [" + remote.remoteStorageIndexLib + "] failed");
 			return false;
 		}
+		
+		Date date1 = new Date();
     	
 		if(remoteDoc == null || remoteDoc.getType() == null || remoteDoc.getType() == 0)
 		{
@@ -20710,6 +20722,9 @@ public class BaseController  extends BaseFunction{
 		Log.info("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "] ret:" + ret);
 
 		unlockRemoteStorage(remote, accessUser, doc);
+		
+		Date date2 = new Date();
+		Log.debug("doPushToRemoteStorage() [" +  remote.remoteStorageIndexLib + "] 远程推送耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 		return ret;	
 	}
 	
