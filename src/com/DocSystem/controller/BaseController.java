@@ -13096,12 +13096,12 @@ public class BaseController  extends BaseFunction{
 	
 	protected ReposData getReposData(Repos repos) {
 		ReposData reposData = reposDataHashMap.get(repos.getId());
-		//TODO: 注意：reposData可能为空，这里不做判断是为了保证系统性能
-		//TODO: 理论上是不会为空的，只有在仓库是直接从数据库导入产生时才会有这种情况
-		//TODO: 因此需要在数据库导入成功后，对仓库进行一次重新初始化
-		if(redisEn)
+		if(reposData != null)
 		{
-			reposData.isBusy = getReposIsBusyRedis(repos.getId());
+			if(redisEn)
+			{
+				reposData.isBusy = getReposIsBusyRedis(repos.getId());
+			}
 		}
 		return reposData;
 	}
@@ -15667,30 +15667,37 @@ public class BaseController  extends BaseFunction{
 			Log.printObject("getReposEx() reposExtConfigDigest:", repos.reposExtConfigDigest);
 			
 			ReposData reposData = getReposData(repos);
-			repos.disabled = reposData.disabled;
-			repos.isBusy = reposData.isBusy;
-			
-			
-			if(isFSM(repos))
+			if(reposData == null)
 			{
-				repos.remoteStorageConfig = getReposRemoteStorageConfig(repos);
-				repos.autoBackupConfig = getReposBackupConfig(repos);
+				reposData = initReposData(repos);
+				initReposExtentionConfigEx(repos, reposData);
 			}
 			else
 			{
-				repos.remoteServerConfig = getReposRemoteServerConfig(repos);
-				repos.setVerCtrl(0);
+				if(isFSM(repos))
+				{
+					repos.remoteStorageConfig = getReposRemoteStorageConfig(repos);
+					repos.autoBackupConfig = getReposBackupConfig(repos);
+				}
+				else
+				{
+					repos.remoteServerConfig = getReposRemoteServerConfig(repos);
+					repos.setVerCtrl(0);
+				}
+				
+				repos.textSearchConfig = getReposTextSearchConfig(repos);
+				repos.versionIgnoreConfig = getReposVersionIgnoreConfig(repos);			
+				repos.encryptType = 0;
+				EncryptConfig encryptConfig = getReposEncryptConfig(repos);
+				if(encryptConfig != null && encryptConfig.type != null)
+				{
+					repos.encryptType = encryptConfig.type;
+				}			
 			}
 			
-			repos.textSearchConfig = getReposTextSearchConfig(repos);
-			repos.versionIgnoreConfig = getReposVersionIgnoreConfig(repos);			
-			repos.encryptType = 0;
-			EncryptConfig encryptConfig = getReposEncryptConfig(repos);
-			if(encryptConfig != null && encryptConfig.type != null)
-			{
-				repos.encryptType = encryptConfig.type;
-			}			
-			
+			//common configs
+			repos.disabled = reposData.disabled;
+			repos.isBusy = reposData.isBusy;
 			repos.isBussiness = systemLicenseInfo.hasLicense;
 			repos.officeType = officeType;
 		}
