@@ -7261,7 +7261,12 @@ public class BaseController  extends BaseFunction{
 		{
 		case VIRTURALDOC: //VDoc
 			Log.debug("executeFSAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return executeLocalActionForVDoc(action, 2, rt);
+			if(executeLocalActionForVDoc(action, 2, rt) == false)
+			{
+				return false;				
+			}
+			//TODO: commit virtual root folder
+			return true;
 		default:
 			break; 
 		}
