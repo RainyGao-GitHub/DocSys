@@ -254,7 +254,7 @@ public class BaseFunction{
 	protected static void redisSyncLock(String lockName, String lockInfo) {
 		if(redisEn)
 		{
-			Log.debug("+++++++++++ redisSyncLock() " + lockInfo + " lock ++++++");
+			Log.debug("+++++++++++ redisSyncLock() [" + lockName + "] " + lockInfo + " lock ++++++");
 			RLock lock = redisClient.getLock(lockName);
 			lock.lock();
 		}
@@ -263,7 +263,7 @@ public class BaseFunction{
 	protected static void redisSyncUnlock(String lockName, String lockInfo) {
 		if(redisEn)
 		{
-			Log.debug("---------- redisSyncUnlock() " + lockInfo + " unlock -------");	
+			Log.debug("---------- redisSyncUnlock() [" + lockName + "]" + lockInfo + " unlock -------");	
 			RLock lock = redisClient.getLock(lockName);
 			lock.unlock();
 		}
