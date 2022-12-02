@@ -28,4 +28,6 @@ public class RemoteStorageLock  implements Serializable {
     public SyncLock synclock = null;
 
 	public String server;
+
+	public Long createTime;
 }
