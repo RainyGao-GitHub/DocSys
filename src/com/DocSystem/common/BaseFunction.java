@@ -2281,7 +2281,7 @@ public class BaseFunction{
 		remoteBackupConfig.weekDay5 = remoteBackupObj.getInteger("weekDay5");
 		remoteBackupConfig.weekDay6 = remoteBackupObj.getInteger("weekDay6");
 		remoteBackupConfig.weekDay7 = remoteBackupObj.getInteger("weekDay7");
-		remoteBackupConfig.indexLibBase = Path.getDataStorePath(OSType)  + "RemoteBackup/" + repos.getId() + "/";
+		remoteBackupConfig.indexLibBase = Path.getReposIndexLibPath(repos)  + "RemoteBackup/";
 
 		RemoteStorageConfig remote = parseRemoteStorageConfig(repos, remoteStorageStr, "RemoteBackup");
 		remoteBackupConfig.remoteStorageConfig = remote;
@@ -2365,7 +2365,7 @@ public class BaseFunction{
 		localBackupConfig.weekDay5 = localBackupObj.getInteger("weekDay5");
 		localBackupConfig.weekDay6 = localBackupObj.getInteger("weekDay6");
 		localBackupConfig.weekDay7 = localBackupObj.getInteger("weekDay7");
-		localBackupConfig.indexLibBase = Path.getDataStorePath(OSType) + "LocalBackup/" + repos.getId() + "/";
+		localBackupConfig.indexLibBase = Path.getReposIndexLibPath(repos) + "LocalBackup/";
 		
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "file";
@@ -2485,7 +2485,7 @@ public class BaseFunction{
 		else
 		{
 			//设置索引库位置
-			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
+			remote.remoteStorageIndexLib = Path.getReposIndexLibPath(repos) + "RemoteStorage/Doc";
 	
 			setReposRemoteStorageConfig(repos, remote);
 		}
@@ -2508,7 +2508,7 @@ public class BaseFunction{
 		else
 		{
 			//设置索引库位置
-			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteStorage/" + repos.getId() + "/Doc";
+			remote.remoteStorageIndexLib = Path.getReposIndexLibPath(repos) + "RemoteStorage/Doc";
 			reposRemoteStorageHashMap.put(repos.getId(), remote);
 		}
 				
@@ -3147,7 +3147,7 @@ public class BaseFunction{
 		else
 		{	
 			//设置索引库位置
-			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
+			remote.remoteStorageIndexLib = Path.getReposIndexLibPath(repos)  + "RemoteServer/Doc";
 			setReposRemoteServerConfig(repos, remote);
 		}
 	}
@@ -3177,7 +3177,7 @@ public class BaseFunction{
 		else
 		{
 			//设置索引库位置
-			remote.remoteStorageIndexLib = Path.getDataStorePath(OSType) + "RemoteServer/" + repos.getId() + "/Doc";
+			remote.remoteStorageIndexLib = Path.getReposIndexLibPath(repos) + "RemoteServer/Doc";
 			reposRemoteServerHashMap.put(repos.getId(), remote);
 		}
 		
