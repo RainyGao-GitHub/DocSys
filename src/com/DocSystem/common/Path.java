@@ -417,6 +417,11 @@ public class Path {
 		return path + repos.getId() + "/";
 	}
 
+	public static String getReposIndexLibPath(Repos repos) {
+		String path = repos.getPath();
+		return path + "IndexLib/" + repos.getId() + "/";
+	}
+	
 	//获取仓库的实文件的本地存储根路径
 	public static String getReposRealPath(Repos repos)
 	{
