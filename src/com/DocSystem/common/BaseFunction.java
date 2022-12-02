@@ -1264,7 +1264,7 @@ public class BaseFunction{
 	
 	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag, ReturnAjax rt) 
 	{	
-		Log.debug("checkDocLocked() repos:" + doc.getVid() + " doc:" + doc.getPath() + doc.getName() + " lockType:" + lockType + " user:" + login_user.getId() + "_" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
+		Log.debug("checkDocLocked() repos:" + doc.getVid() + " doc:" + doc.getPath() + doc.getName() + " lockType:" + lockType + " user:[" + login_user.getId() + "] [" + login_user.getName() + "] subDocCheckFlag:" + subDocCheckFlag);
 		
 		if(isReposDocLocksMapEmpty(doc) == true)
 		{
@@ -1287,7 +1287,6 @@ public class BaseFunction{
 			return true;
 		}
 		
-		//备注文件是平面结构，不需要检查父节点和子节点
 		switch(lockType)
 		{
 		case DocLock.LOCK_TYPE_FORCE:
@@ -1308,6 +1307,10 @@ public class BaseFunction{
 					return true;
 				}
 			}
+			break;
+		default:
+			//协同编辑也不需要检查上级目录和子目录
+			//备注文件是平面结构，不需要检查父节点和子节点
 			break;
 		}
 		
@@ -1432,7 +1435,7 @@ public class BaseFunction{
 	}
 	
 	private boolean isReposDocLocksMapEmptyRedis(Doc doc) {
-		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap-" + doc.getVid());
+		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
 		if(reposDocLocskMap == null || reposDocLocskMap.size() == 0)
 		{
 			return true;
@@ -1541,6 +1544,8 @@ public class BaseFunction{
 			docLock.setState(curLockState & (~lockState)); //锁已过期，删除锁			
 			return false;
 		}
+		
+		//FocreLock即使是自己锁定的也不可以解锁
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
 		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
@@ -1569,7 +1574,14 @@ public class BaseFunction{
 			return false;
 		}
 		
-		if(docLock.lockBy[lockType] == login_user.getId())
+		Integer lockBy = docLock.lockBy[lockType];
+		if(lockBy == null)
+		{
+			Log.debug("isDocLocked() lockBy is null");
+			return false;
+		}
+		
+		if(lockBy.equals(login_user.getId()))
 		{
 			return false;
 		}
@@ -1583,16 +1595,22 @@ public class BaseFunction{
 		return true;	
 	}
 
-	public static boolean isLockOutOfDate(long lockTime) {
+	public static boolean isLockOutOfDate(Long lockTime) {
+		if(lockTime == null)
+		{
+			Log.debug("isLockOutOfDate() lockTime is null");
+			return true;
+		}
+		
 		//check if the lock was out of date
 		long curTime = new Date().getTime();
-		//Log.debug("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);
 		if(curTime < lockTime)	//
 		{
 			return false;
 		}
 
 		//Lock 自动失效
+		Log.debug("isLockOutOfDate() lock expired curTime:"+curTime+" lockTime:"+lockTime);
 		return true;
 	}
 
