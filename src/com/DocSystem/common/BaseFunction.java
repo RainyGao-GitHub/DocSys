@@ -1232,8 +1232,8 @@ public class BaseFunction{
 			docLock.locker[lockType] = login_user.getName();
 			docLock.lockBy[lockType] = login_user.getId();
 			Long currentTime = new Date().getTime();
-			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime
 			docLock.createTime[lockType] = currentTime;	//Set createTime
+			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime
 			docLock.server[lockType] = serverUrl;
 			addDocLock(doc, docLock);
 			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
@@ -1246,8 +1246,11 @@ public class BaseFunction{
 			docLock.setState(curLockState | getLockState(lockType));
 			docLock.locker[lockType] = login_user.getName();
 			docLock.lockBy[lockType] = login_user.getId();
-			docLock.lockTime[lockType] = new Date().getTime() + lockDuration;	//Set lockTime		
+			Long currentTime = new Date().getTime();
+			docLock.createTime[lockType] = currentTime;	//Set createTime
+			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime		
 			docLock.server[lockType] = serverUrl;
+			updateDocLock(doc, docLock);
 			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
@@ -1333,12 +1336,12 @@ public class BaseFunction{
 			reposDocLocskMap = new ConcurrentHashMap<String, DocLock>();
 			docLocksMap.put(doc.getVid(), reposDocLocskMap);
 		}
-		reposDocLocskMap.put(getDocLockId(doc), docLock);
+		reposDocLocskMap.put(docLock.lockId, docLock);
 	}
 	
 	private void addDocLockRedis(Doc doc, DocLock docLock) {
 		RMap<String, DocLock> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
-		reposDocLocskMap.put(getDocLockId(doc), docLock);
+		reposDocLocskMap.put(docLock.lockId, docLock);
 	}
 	
 	private void updateDocLock(Doc doc, DocLock docLock) {
@@ -1350,7 +1353,7 @@ public class BaseFunction{
 	
 	private void updateDocLockRedis(Doc doc, DocLock docLock) {
 		RMap<Object, Object> reposDocLocskMap = redisClient.getMap("reposDocLocskMap" + doc.getVid());
-		reposDocLocskMap.put(getDocLockId(doc), docLock);
+		reposDocLocskMap.put(docLock.lockId, docLock);
 	}
 	
 	protected void deleteDocLock(Doc doc) {
