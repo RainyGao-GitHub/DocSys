@@ -192,7 +192,7 @@ public class LuceneUtil2   extends BaseFunction
 		        
 		        //Log.debug("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
 				Date date2 = new Date();
-		        Log.debug("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+		        Log.debug("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
 
 		        ret = true;
 			} catch (Exception e) {				
@@ -422,7 +422,7 @@ public class LuceneUtil2   extends BaseFunction
 		        analyzer = null;
 		         
 		        Date date2 = new Date();
-		        Log.debug("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+		        Log.debug("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
 		     
 		        ret =  true;
 			
@@ -477,7 +477,7 @@ public class LuceneUtil2   extends BaseFunction
 		        directory = null;
 		        
 		        Date date2 = new Date();
-		        Log.debug("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+		        Log.debug("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
 
 		        ret = true;
 			} catch (Exception e) {
@@ -540,7 +540,7 @@ public class LuceneUtil2   extends BaseFunction
 				        directory = null;
 				        
 				        Date date2 = new Date();
-				        Log.debug("删除子目录索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+				        Log.debug("删除子目录索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
 					} catch (Exception e) {
 						Log.info("deleteIndexEx() 异常");
 						e.printStackTrace();
