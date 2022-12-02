@@ -9875,13 +9875,13 @@ public class BaseController  extends BaseFunction{
 	
 	protected String verReposDocCommitEx(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{	
-		Log.debug("verReposDocCommit() for doc:[" + doc.getPath() + doc.getName() + "]");
+		Log.debug("verReposDocCommitEx() for doc:[" + doc.getPath() + doc.getName() + "]");
 
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
 		
-		Log.debug("verReposDocCommit verCtrl:"+verCtrl);
+		Log.debug("verReposDocCommitEx() verCtrl:"+verCtrl);
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
@@ -9908,14 +9908,15 @@ public class BaseController  extends BaseFunction{
 	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList)
 	{			
 		boolean isRealDoc = doc.getIsRealDoc();
-		
+
 		SVNUtil verReposUtil = new SVNUtil();		
 		String revision = null;
 		
 		ReposData reposData = getReposData(repos);
-
+		
 		String lockInfo = "svnDocCommit() reposData.syncLockForSvnCommit";
 		String lockName = "reposData.syncLockForSvnCommit" + repos.getId();
+
 		Date date1 = new Date();
 		synchronized(reposData.syncLockForSvnCommit)
 		{
@@ -9933,7 +9934,8 @@ public class BaseController  extends BaseFunction{
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
 		}
 		Date date2 = new Date();
-		Log.debug("svnDocCommit() 版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms\n");
+		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms svnDocCommit() for [" +doc.getPath() + doc.getName()+ "] \n");
+
 		return revision;
 	}
 	
@@ -9946,22 +9948,27 @@ public class BaseController  extends BaseFunction{
 		
 		ReposData reposData = getReposData(repos);
 
-		String lockInfo = "svnDocCommit() reposData.syncLockForSvnCommit";
+		String lockInfo = "svnDocCommitEx() reposData.syncLockForSvnCommit";
 		String lockName = "reposData.syncLockForSvnCommit" + repos.getId();
+		
+		Date date1 = new Date();
 		synchronized(reposData.syncLockForSvnCommit)
 		{
 			redisSyncLockEx(lockName, lockInfo);
 			
 			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 			{
-				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
-				return null;
+				Log.debug("svnDocCommitEx() verReposInit Failed");
 			}
-
-			revision = verReposUtil.doAutoCommitEx(repos, doc, commitMsg,commitUser,modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
-
+			else
+			{
+				revision = verReposUtil.doAutoCommitEx(repos, doc, commitMsg,commitUser,modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+			}
+			
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
 		}
+		Date date2 = new Date();
+		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms svnDocCommitEx() for [" +doc.getPath() + doc.getName()+ "] \n");
 		return revision;
 	}
 	
@@ -10000,9 +10007,9 @@ public class BaseController  extends BaseFunction{
 			
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 		}
-		
 		Date date2 = new Date();
-		Log.debug("svnDocCommit() 版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms\n");
+		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms gitDocCommit() for [" +doc.getPath() + doc.getName()+ "] \n");
+
 		return revision;
 	}
 	
@@ -10015,8 +10022,10 @@ public class BaseController  extends BaseFunction{
 		
 		ReposData reposData = getReposData(repos);
 
-		String lockInfo = "gitDocCommit() reposData.syncLockForGitCommit";
+		String lockInfo = "gitDocCommitEx() reposData.syncLockForGitCommit";
 		String lockName = "reposData.syncLockForGitCommit-" + repos.getId();
+		
+		Date date1 = new Date();
 		synchronized(reposData.syncLockForGitCommit)
 		{
 			redisSyncLockEx(lockName, lockInfo);
@@ -10029,7 +10038,7 @@ public class BaseController  extends BaseFunction{
 		
 			if(verReposUtil.checkAndClearnBranch(true) == false)
 			{
-				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
+				Log.debug("gitDocCommitEx() master branch is dirty and failed to clean");
 				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 				return null;
 			}
@@ -10038,6 +10047,9 @@ public class BaseController  extends BaseFunction{
 
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 		}
+		Date date2 = new Date();
+		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms gitDocCommitEx() for [" +doc.getPath() + doc.getName()+ "] \n");		
+		
 		return revision;
 	}
 	
@@ -20724,35 +20736,27 @@ public class BaseController  extends BaseFunction{
 		unlockRemoteStorage(remote, accessUser, doc);
 		
 		Date date2 = new Date();
-		Log.debug("doPushToRemoteStorage() [" +  remote.remoteStorageIndexLib + "] 远程推送耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+		Log.debug("远程推送耗时：" + (date2.getTime() - date1.getTime()) + "ms doPushToRemoteStorage() [" +  remote.remoteStorageIndexLib + "] \n");
 		return ret;	
 	}
 	
 	//这是一个阻塞函数，只有在获取到锁才会退出
 	private boolean lockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) {
 		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
-		int count = 0;
-		for(;;)
+		int retrySleepTime = 60*1000;	//60 seconds
+		int retryCount = 120;	//120次（最多等待2小时）
+		
+		RemoteStorageLock remoteStorageLock = lockRemoteStorage(remote.remoteStorageIndexLib, 2*60*60*1000, accessUser, doc, synclock, retryCount, retrySleepTime);
+		if(remoteStorageLock != null)
 		{
-			RemoteStorageLock remoteStorageLock = lockRemoteStorage(remote.remoteStorageIndexLib, 2*60*60*1000, accessUser, doc, synclock);
-			if(remoteStorageLock != null)
-			{
-				Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
-				return true;
-			}
-			
-			if(count > 10)
-			{
-				Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock failed with max retries:" + count + " for [" + doc.getPath() + doc.getName() + "]");
-				return false;
-			}
-
-			count ++;
-			Log.debug("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock tried:" + count + " for [" + doc.getPath() + doc.getName() + "]");
+			Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
+			return true;
 		}
+		
+		return false;
 	}
 	
-	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock) 
+	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock, int retryCount, int retrySleepTime) 
 	{
 		Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Start");
 
@@ -20760,80 +20764,97 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageLock curLock = null;
 		String lockInfo = "lockRemoteStorage() synclock:" + remoteStorageName;
 		String lockName = "remoteStorageSyncLock" + remoteStorageName;
-		synchronized(synclock)
+		
+		int count = 0;
+		for(;;)
 		{
-			redisSyncLockEx(lockName ,lockInfo);
-			
-			curLock = getRemoteStorageLock(remoteStorageName);
-			if(curLock == null)
+			synchronized(synclock)
 			{
-				Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
-				curLock = new RemoteStorageLock();
-				curLock.state = 1;
-				curLock.name = remoteStorageName;
-				curLock.lockBy = accessUser.getId();
-				curLock.locker = accessUser.getName();
-				curLock.lockTime = new Date().getTime() + lockDuration;
-				curLock.synclock = new SyncLock();
-				curLock.server = serverUrl;
-				addRemoteStorageLock(remoteStorageName, curLock);
-				remoteStorageLock = curLock;
-			}
-			else
-			{
-				//check if it is locked
-				if(curLock.state == 0)
+				redisSyncLockEx(lockName ,lockInfo);
+				
+				curLock = getRemoteStorageLock(remoteStorageName);
+				if(curLock == null)
 				{
 					Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
+					curLock = new RemoteStorageLock();
 					curLock.state = 1;
+					curLock.name = remoteStorageName;
 					curLock.lockBy = accessUser.getId();
 					curLock.locker = accessUser.getName();
-					curLock.lockTime = new Date().getTime() + lockDuration;
+					curLock.createTime = new Date().getTime();
+					curLock.lockTime = curLock.createTime + lockDuration;
+					curLock.synclock = new SyncLock();
 					curLock.server = serverUrl;
+					addRemoteStorageLock(remoteStorageName, curLock);
 					remoteStorageLock = curLock;
-					updateRemoteStorageLock(remoteStorageName, curLock);
 				}
 				else
 				{
-					long curTime = new Date().getTime();
-					if(curLock.lockTime < curTime)
+					//check if it is locked
+					if(curLock.state == 0)
 					{
-						Log.info("lockRemoteStorage() remoteStorageLock [" + curLock.name + "] is expired");
+						Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
 						curLock.state = 1;
 						curLock.lockBy = accessUser.getId();
 						curLock.locker = accessUser.getName();
-						curLock.lockTime = new Date().getTime() + lockDuration;
+						curLock.createTime = new Date().getTime();
+						curLock.lockTime = curLock.createTime + lockDuration;
+						curLock.server = serverUrl;
 						remoteStorageLock = curLock;
 						updateRemoteStorageLock(remoteStorageName, curLock);
 					}
 					else
 					{
-						Log.debug("lockRemoteStorage() " + remoteStorageName + " was locked by " + curLock.locker + " state:" + curLock.state);
+						long curTime = new Date().getTime();
+						if(curLock.lockTime < curTime)
+						{
+							Log.info("lockRemoteStorage() remoteStorageLock [" + curLock.name + "] is expired");
+							curLock.state = 1;
+							curLock.lockBy = accessUser.getId();
+							curLock.locker = accessUser.getName();
+							curLock.createTime = new Date().getTime();
+							curLock.lockTime = curLock.createTime + lockDuration;
+							remoteStorageLock = curLock;
+							updateRemoteStorageLock(remoteStorageName, curLock);
+						}
+						else
+						{
+							Log.debug("lockRemoteStorage() " + remoteStorageName + " was locked by " + curLock.locker + " state:" + curLock.state);
+							long lockedTime = new Date().getTime() - curLock.createTime;
+							Log.debug("[" + remoteStorageName + "] 已被 [" + curLock.locker + "] 锁定了 " + lockedTime  + " ms \n");
+						}
 					}
 				}
+				
+				redisSyncUnlockEx(lockName, lockInfo, synclock);
+			}
+		
+			if(remoteStorageLock != null) 
+			{
+				Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
+				return remoteStorageLock;
 			}
 			
-			redisSyncUnlockEx(lockName, lockInfo, synclock);
-		}
-		
-		if(remoteStorageLock == null) 
-		{
 			//wait for wake up or timeout
-			Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] lock failed" + " for [" + doc.getPath() + doc.getName() + "], sleep");
+			count++;
+			if(count >= retryCount)
+			{
+				Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] lock failed with max retries:" + retryCount + " for [" + doc.getPath() + doc.getName() + "]");
+				break;
+			}
+			
+			Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] lock failed " + count + " times for [" + doc.getPath() + doc.getName() + "] , sleep " + retrySleepTime + " ms and try again");
+			
 			synchronized(curLock.synclock)
 			{
 				try {
-					curLock.synclock.wait(2*60*60*100);
+					curLock.synclock.wait(retrySleepTime);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
 		}
-		else
-		{
-			Log.info("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
-		}
-		return remoteStorageLock;
+		return null;
 	}
 
 
