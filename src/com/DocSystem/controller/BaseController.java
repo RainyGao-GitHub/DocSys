@@ -6689,15 +6689,12 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(localEntry.lastModified());
 		doc.setLatestEditTime(localEntry.lastModified());
 
-    	Date date1 = new Date();
-		if(reposService.addDoc(doc) == 0)
+    	if(reposService.addDoc(doc) == 0)
 		{
 			Log.debug("dbAddDoc() addDoc to db failed");		
 			return false;
 		}
-    	Date date2 = new Date();
-        Log.debug("增加文件节点耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-		
+    	
 		if(addSubDocs)
 		{
 			List<Doc> subDocList = docSysGetDocList(repos, doc, false);			
@@ -20736,7 +20733,7 @@ public class BaseController  extends BaseFunction{
 		unlockRemoteStorage(remote, accessUser, doc);
 		
 		Date date2 = new Date();
-		Log.debug("远程推送耗时：" + (date2.getTime() - date1.getTime()) + "ms doPushToRemoteStorage() [" +  remote.remoteStorageIndexLib + "] \n");
+		Log.debug("远程推送耗时：" + (date2.getTime() - date1.getTime()) + "ms doPushToRemoteStorage() [" +  remote.remoteStorageIndexLib + "] for [" + doc.getPath() + doc.getName() + "]\n");
 		return ret;	
 	}
 	
