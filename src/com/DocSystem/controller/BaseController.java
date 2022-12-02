@@ -4023,31 +4023,8 @@ public class BaseController  extends BaseFunction{
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
 	{	
-		Log.debug("BuildMultiActionListForDocDelete() for doc:[" + doc.getPath() + doc.getName() + "]");
-		if(deleteSubDocs == true)
-		{
-			List<Doc> subDocList = docSysGetDocList(repos, doc, false);
-			if(subDocList != null)
-			{
-				for(int i=0; i<subDocList.size(); i++)
-				{
-					Doc subDoc = subDocList.get(i);
-					BuildMultiActionListForDocDelete(actionList, repos, subDoc, commitMsg, commitUser, deleteSubDocs);
-				}
-			}
-		}	
-
-		//Insert index delete action for RDoc Name
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.DOCNAME, null, null, false);
-		//Insert index delete action for RDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.REALDOC, null, null, false);
-
-		//Insert delete action for VDoc
-		//CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.DELETE, DocType.VIRTURALDOC, null);
-		//Insert delete action for VDoc verRepos 
-		//CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.DELETE, DocType.VIRTURALDOC,, null);
-		//Insert delete action for VDoc Index
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX,  Action.DELETE, DocType.VIRTURALDOC, null, null, false);
+		//Insert index delete action for All( DocName / RDoc /VDoc )
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.ALL, null, null, false);
 	}
 
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
@@ -4074,28 +4051,19 @@ public class BaseController  extends BaseFunction{
 		String dstLocalEntryPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName(); 
 		File dstLocalEntry = new File(dstLocalEntryPath);
 		if(dstLocalEntry.exists())
-		{		
-			//ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
-			//ActionType 1:add 2:delete 3:update 4:move 5:copy
-		    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+		{								
+			//Doc的VirtualDoc的移动或复制操作（目录的话会移动或复制其子目录的VirtualDoc，操作完后会统一提交所以VirtualDoc的改变）
+			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VFS, actionId, DocType.VIRTURALDOC, null, null, true);
 			
-			//Insert IndexAction For RealDoc Name Copy or Move (对于目录则会进行递归)
-			if(isMove)
+			//Insert IndexAction For Copy or Move
+			if(isMove)  //UPDATE all index (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null, true);
+				CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
 			}
-			else	//对于copy操作则新增对该docName的索引
+			else	//ADD all index for (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.DOCNAME, null, null, true);				
+				CommonAction.insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
 			}
-			
-			//Insert IndexAction For RealDoc Copy or Move (对于目录则会进行递归)
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, true);
-			//Copy VDoc (包括VDoc VerRepos and Index)
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.FS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null, true);
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VERREPOS, com.DocSystem.common.CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null, true);
-			//Copy or Move VDoc (包括VDoc VerRepos and Index)
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null, null, true);
 		}	
 	}
 		
@@ -4162,6 +4130,9 @@ public class BaseController  extends BaseFunction{
 			break;
 		case AUTOSYNCUP: //AutoSyncUp
 			ret = executeSyncUpAction(action, rt);
+			break;
+		case VFS:
+			ret = executeVFSAction(action, rt);
 			break;
 		default:
 			break;
@@ -4713,7 +4684,39 @@ public class BaseController  extends BaseFunction{
 		}
 		return false;
 	}
-
+	
+	private boolean deleteAllIndexForDoc(Repos repos, Doc doc) 
+	{
+		if(doc.getDocId() == 0)
+		{
+			deleteDocNameIndexLib(repos);
+			deleteRDocIndexLib(repos);
+			deleteVDocIndexLib(repos);
+		}
+		else
+		{
+			deleteAllIndexForDoc(repos, doc, 2);
+		}
+		return true;
+	}
+	
+	private boolean updateAllIndexForDoc(Repos repos, Doc doc, ReturnAjax rt) 
+	{
+		if(doc.getDocId() == 0)
+		{
+			deleteDocNameIndexLib(repos);
+			deleteRDocIndexLib(repos);
+			deleteVDocIndexLib(repos);
+			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+		}
+		else
+		{
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+		}
+		return true;
+	}
+	
 	private void deleteAllIndexForDoc(Repos repos, Doc doc, int deleteFlag) 
 	{
 		deleteIndexForDocName(repos, doc, deleteFlag);
@@ -7137,8 +7140,31 @@ public class BaseController  extends BaseFunction{
 		case VIRTURALDOC: //VDoc
 			Log.debug("executeIndexAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return executeIndexActionForVDoc(action, rt);
+		case ALL:
+			return executeIndexActionForAll(action, rt);
 		default:
 			break;
+		}
+		return false;
+	}
+	
+	private boolean executeIndexActionForAll(CommonAction action, ReturnAjax rt) 
+	{
+		Repos repos = action.getRepos();
+		Doc doc = action.getDoc();
+		
+		switch(action.getAction())
+		{
+		case ADD:
+			return buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+		case DELETE:
+			return deleteAllIndexForDoc(repos, doc);
+		case UPDATE:
+			deleteAllIndexForDoc(repos, doc);
+			Doc newDoc = action.getNewDoc();
+			return buildIndexForDoc(repos, newDoc, null, null, rt, 2, true);
+		default:
+			break;			
 		}
 		return false;
 	}
@@ -7221,7 +7247,21 @@ public class BaseController  extends BaseFunction{
 			return executeLocalActionForRDoc(action, rt);
 		case VIRTURALDOC: //VDoc
 			Log.debug("executeFSAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return executeLocalActionForVDoc(action, rt);
+			return executeLocalActionForVDoc(action, 0, rt);
+		default:
+			break; 
+		}
+		return false;
+	}
+	
+	private boolean executeVFSAction(CommonAction action, ReturnAjax rt) {
+		Log.printObject("executeVFSAction() action:",action);
+		Doc doc = action.getDoc();
+		switch(action.getDocType())
+		{
+		case VIRTURALDOC: //VDoc
+			Log.debug("executeFSAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			return executeLocalActionForVDoc(action, 2, rt);
 		default:
 			break; 
 		}
@@ -7257,7 +7297,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean executeLocalActionForVDoc(CommonAction action, ReturnAjax rt)
+	private boolean executeLocalActionForVDoc(CommonAction action, int subDocFlag, ReturnAjax rt)
 	{	
 		Doc doc = action.getDoc();
 		Doc newDoc = action.getNewDoc();
@@ -7273,9 +7313,9 @@ public class BaseController  extends BaseFunction{
 		case UPDATE: //Update Doc
 			return saveVirtualDocContent(repos, doc, rt);
 		case MOVE: //Move Doc
-			return moveVirtualDoc(repos, doc, newDoc, rt);
+			return moveVirtualDoc(repos, doc, newDoc, subDocFlag, rt);
 		case COPY: //Copy Doc
-			return copyVirtualDoc(repos, doc, newDoc, rt);
+			return copyVirtualDoc(repos, doc, newDoc, subDocFlag, rt);
 		default:
 			break;
 		}
@@ -9587,7 +9627,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean moveVirtualDoc(Repos repos, Doc doc,Doc newDoc, ReturnAjax rt) 
+	protected boolean moveVirtualDoc(Repos repos, Doc doc,Doc newDoc, int subDocFlag, ReturnAjax rt) 
 	{
 		String reposVPath = Path.getReposVirtualPath(repos);
 		
@@ -9600,10 +9640,30 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed", rt);
 			return false;
 		}
+		
+		if(subDocFlag == 2 && doc.getType() == 2)
+		{
+			moveVirtualDocForSubDocs(repos, doc, newDoc, subDocFlag, rt);
+		}
+		
 		return true;
 	}
 	
-	protected boolean copyVirtualDoc(Repos repos, Doc doc,Doc newDoc, ReturnAjax rt) 
+	private void moveVirtualDocForSubDocs(Repos repos, Doc doc, Doc newDoc, int subDocFlag, ReturnAjax rt) {
+		List<Doc> list = getLocalEntryList(repos, newDoc);
+		if(list.size() > 0)
+		{
+			String subDocParentPath = getSubDocParentPath(doc);
+			for(int i=0; i<list.size(); i++)
+	        {
+				Doc dstSubDoc = list.get(i);
+	        	Doc srcSubDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, dstSubDoc.getName(), dstSubDoc.getLevel(), dstSubDoc.getType(), doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), dstSubDoc.getSize(), "");
+	        	moveVirtualDoc(repos, srcSubDoc, dstSubDoc, subDocFlag, rt);
+	        }
+		}
+	}
+
+	protected boolean copyVirtualDoc(Repos repos, Doc doc,Doc newDoc, int subDocFlag, ReturnAjax rt) 
 	{
 		String reposVPath = Path.getReposVirtualPath(repos);
 		
@@ -9618,7 +9678,28 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("copyVirtualDoc() FileUtil.copyDir " + srcDocFullVPath +  " to " + dstDocFullVPath + " Failed", rt);
 			return false;
 		}
+		
+		
+		if(subDocFlag == 2 && doc.getType() == 2)
+		{
+			copyVirtualDocForSubDocs(repos, doc, newDoc, subDocFlag, rt);
+		}
+		
 		return true;
+	}
+	
+	private void copyVirtualDocForSubDocs(Repos repos, Doc doc, Doc newDoc, int subDocFlag, ReturnAjax rt) {
+		List<Doc> list = getLocalEntryList(repos, newDoc);
+		if(list.size() > 0)
+		{
+			String subDocParentPath = getSubDocParentPath(doc);
+			for(int i=0; i<list.size(); i++)
+	        {
+				Doc dstSubDoc = list.get(i);
+	        	Doc srcSubDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, dstSubDoc.getName(), dstSubDoc.getLevel(), dstSubDoc.getType(), doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), dstSubDoc.getSize(), "");
+	        	copyVirtualDoc(repos, srcSubDoc, dstSubDoc, subDocFlag, rt);
+	        }
+		}
 	}
 	
 	//删除预览文件

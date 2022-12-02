@@ -4,6 +4,7 @@ public enum DocType {
 	UNDEFINED,
 	REALDOC,
 	VIRTURALDOC,
-	DOCNAME;
+	DOCNAME,
+	ALL;
 }
 
