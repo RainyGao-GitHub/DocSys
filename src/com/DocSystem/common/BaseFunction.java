@@ -1014,21 +1014,21 @@ public class BaseFunction{
 		{	
 			redisSyncLockEx(lockName, lockInfo);
 			
-			reposLock = lockRepos(repos, lockType, lockDuration, login_user, rt, false); 
+			reposLock = doLockRepos(repos, lockType, lockDuration, login_user, rt, false, lockInfo); 
 			
 			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
 		return reposLock;
 	}	
 	
-	protected DocLock lockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) {
-		Log.debug("lockRepos() Repos:" + repos.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
+	protected DocLock doLockRepos(Repos repos, Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag, String info) {
+		Log.debug("doLockRepos() Repos:]" + repos.getName() + "] lockType:" + lockType + " login_user:]" + login_user.getName() + "] docLockCheckFlag:" + docLockCheckFlag);
 
 		//仓库锁使用了和DocLock相同的数据结构，因此借用了docLock的接口
 		DocLock reposLock = getReposLock(repos);
 		if(reposLock != null && isDocLocked(reposLock, lockType, login_user,rt))
 		{
-			Log.debug("lockRepos() Repos " + repos.getName() +" was locked");
+			Log.debug("doLockRepos() Repos [" + repos.getName() +"] was locked");
 			return null;
 		}
 		
@@ -1061,6 +1061,7 @@ public class BaseFunction{
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
 			reposLock.createTime[lockType] = currentTime;
 			reposLock.server[lockType] = serverUrl;
+			reposLock.info[lockType] = info;
 			addReposLock(repos, reposLock);			
 		}
 		else
@@ -1071,10 +1072,11 @@ public class BaseFunction{
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
 			reposLock.server[lockType] = serverUrl;
+			reposLock.info[lockType] = info;
 			updateReposLock(repos, reposLock);
 		}
 		
-		Log.debug("lockRepos() " + repos.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+		Log.debug("doLockRepos() [" + repos.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
 		return reposLock;
 	}
 	
@@ -1196,7 +1198,7 @@ public class BaseFunction{
     		redisSyncLockEx(lockName, lockInfo);
     		
 			//LockDoc
-			docLock = lockDoc(doc, lockType,  lockDuration, accessUser, rt, false);
+			docLock = doLockDoc(doc, lockType,  lockDuration, accessUser, rt, false, lockInfo);
 			
 			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
@@ -1204,8 +1206,8 @@ public class BaseFunction{
 	}
 
 	//TODO: 文件锁定接口需要支持集群部署时服务器之间操作的原子性
-	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
-		Log.debug("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
+	protected DocLock doLockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag, String info) {
+		Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] lockType:" + lockType + " login_user[" + login_user.getName() + "] subDocCheckFlag:" + subDocCheckFlag);
 
 		if(checkDocLocked(doc, lockType, login_user, subDocCheckFlag, rt))
 		{
@@ -1216,7 +1218,7 @@ public class BaseFunction{
 		DocLock docLock = getDocLock(doc);
 		if(docLock == null)
 		{
-			Log.debug("lockDoc() docLock is null");
+			Log.debug("doLockDoc() docLock is null");
 			docLock = new DocLock();
 			//设置基本信息
 			docLock.lockId = getDocLockId(doc);
@@ -1235,13 +1237,14 @@ public class BaseFunction{
 			docLock.createTime[lockType] = currentTime;	//Set createTime
 			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime
 			docLock.server[lockType] = serverUrl;
+			docLock.info[lockType] = info;
 			addDocLock(doc, docLock);
-			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
 		else
 		{
-			Log.printObject("lockDoc() docLock:", docLock);
+			Log.printObject("doLockDoc() docLock:", docLock);
 			int curLockState = docLock.getState();
 			docLock.setState(curLockState | getLockState(lockType));
 			docLock.locker[lockType] = login_user.getName();
@@ -1250,8 +1253,9 @@ public class BaseFunction{
 			docLock.createTime[lockType] = currentTime;	//Set createTime
 			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime		
 			docLock.server[lockType] = serverUrl;
+			docLock.info[lockType] = info;
 			updateDocLock(doc, docLock);
-			Log.debug("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
+			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
 	}
@@ -1264,7 +1268,7 @@ public class BaseFunction{
 	
 	protected boolean checkDocLocked(Doc doc, Integer lockType, User login_user, boolean subDocCheckFlag, ReturnAjax rt) 
 	{	
-		Log.debug("checkDocLocked() repos:" + doc.getVid() + " doc:" + doc.getPath() + doc.getName() + " lockType:" + lockType + " user:[" + login_user.getId() + "] [" + login_user.getName() + "] subDocCheckFlag:" + subDocCheckFlag);
+		Log.debug("checkDocLocked() [" + doc.getVid() + "] [" + doc.getPath() + doc.getName() + "] lockType:" + lockType + " user:[" + login_user.getId() + "] [" + login_user.getName() + "] subDocCheckFlag:" + subDocCheckFlag);
 		
 		if(isReposDocLocksMapEmpty(doc) == true)
 		{
@@ -1283,7 +1287,7 @@ public class BaseFunction{
 		
 		if(isDocLocked(docLock, lockType, login_user,rt ))
 		{
-			Log.debug("lockDoc() Doc " + doc.getPath() + doc.getName() +" was locked");
+			Log.debug("lockDoc() Doc [" + doc.getPath() + doc.getName() +"] was locked");
 			return true;
 		}
 		
@@ -1294,7 +1298,7 @@ public class BaseFunction{
 			//检查其父节点是否强制锁定
 			if(isParentDocLocked(doc,login_user,rt))
 			{
-				Log.debug("lockDoc() Parent Doc of " + doc.getPath() + doc.getName() +" was locked！");				
+				Log.debug("lockDoc() Parent Doc of [" + doc.getPath() + doc.getName() +"] was locked！");				
 				return true;
 			}
 			
@@ -1303,7 +1307,7 @@ public class BaseFunction{
 			{
 				if(isSubDocLocked(doc,login_user, rt) == true)
 				{
-					Log.debug("lockDoc() subDoc of " + doc.getPath() + doc.getName() +" was locked！");
+					Log.debug("lockDoc() subDoc of [" + doc.getPath() + doc.getName() +"] was locked！");
 					return true;
 				}
 			}
@@ -1551,7 +1555,7 @@ public class BaseFunction{
 		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
 		
 		long curTime = new Date().getTime();
-		Log.debug("isDocForceLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 强制锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!");
+		Log.debug("isDocForceLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 强制锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info + "]");
 
 		return true;	
 	}
