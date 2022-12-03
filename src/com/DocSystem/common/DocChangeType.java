@@ -1,7 +1,7 @@
 package com.DocSystem.common;
 
 public enum DocChangeType {
-	UNDEFINED,
+	NOCHANGE,
 	LOCALADD,
 	LOCALDELETE,
 	LOCALCHANGE,
@@ -12,5 +12,5 @@ public enum DocChangeType {
 	REMOTECHANGE,
 	REMOTEFILETODIR,
 	REMOTEDIRTOFILE,
-	NOCHANGE;
+	UNDEFINED;
 }
