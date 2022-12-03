@@ -258,7 +258,7 @@ public class ReposController extends BaseController{
 		repos.setTextSearch(textSearch);
 		
 		//以下这段代码是为了避免有用户同时发起addRepos(前端快速点击添加操作也会引起该行为)，导致两个仓库的文件存储路径信息相同
-		String lockInfo = "addRepos() syncLockForRepos";
+		String lockInfo = "addRepos() syncLockForRepos [" + repos.getName() + "]";
 		String lockName = "syncLockForRepos";
 		synchronized(syncLockForRepos)
 		{
