@@ -30,4 +30,6 @@ public class RemoteStorageLock  implements Serializable {
 	public String server;
 
 	public Long createTime;
+
+	public String info;	//lock info for debug
 }

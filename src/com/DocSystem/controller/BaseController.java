@@ -20774,7 +20774,8 @@ public class BaseController  extends BaseFunction{
 		Doc	remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);			
 		
-		if(lockRemoteStorage(remote, accessUser, doc) == false)
+		String lockInfo = "doPushToRemoteStorage [" + doc.getPath() + doc.getName()+ "] at repos[" + repos.getName() + "] remote protocol: [" + remote.protocol + "]";
+		if(lockRemoteStorage(remote, accessUser, doc, lockInfo) == false)
 		{
 			Log.info("doPushToRemoteStorage() lockRemoteStorage [" + remote.remoteStorageIndexLib + "] failed");
 			return false;
@@ -20827,12 +20828,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//这是一个阻塞函数，只有在获取到锁才会退出
-	private boolean lockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) {
+	private boolean lockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc, String lockInfo) {
 		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
 		int retrySleepTime = 60*1000;	//60 seconds
 		int retryCount = 120;	//120次（最多等待2小时）
 		
-		RemoteStorageLock remoteStorageLock = lockRemoteStorage(remote.remoteStorageIndexLib, 2*60*60*1000, accessUser, doc, synclock, retryCount, retrySleepTime);
+		RemoteStorageLock remoteStorageLock = lockRemoteStorage(remote.remoteStorageIndexLib, 2*60*60*1000, accessUser, doc, synclock, lockInfo, retryCount, retrySleepTime);
 		if(remoteStorageLock != null)
 		{
 			Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
@@ -20842,7 +20843,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock, int retryCount, int retrySleepTime) 
+	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock, String lockInfo2, int retryCount, int retrySleepTime) 
 	{
 		Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Start");
 
@@ -20871,6 +20872,7 @@ public class BaseController  extends BaseFunction{
 					curLock.lockTime = curLock.createTime + lockDuration;
 					curLock.synclock = new SyncLock();
 					curLock.server = serverUrl;
+					curLock.info = lockInfo;
 					addRemoteStorageLock(remoteStorageName, curLock);
 					remoteStorageLock = curLock;
 				}
@@ -20886,6 +20888,7 @@ public class BaseController  extends BaseFunction{
 						curLock.createTime = new Date().getTime();
 						curLock.lockTime = curLock.createTime + lockDuration;
 						curLock.server = serverUrl;
+						curLock.info = lockInfo;
 						remoteStorageLock = curLock;
 						updateRemoteStorageLock(remoteStorageName, curLock);
 					}
@@ -20907,7 +20910,7 @@ public class BaseController  extends BaseFunction{
 						{
 							Log.debug("lockRemoteStorage() " + remoteStorageName + " was locked by " + curLock.locker + " state:" + curLock.state);
 							long lockedTime = new Date().getTime() - curLock.createTime;
-							Log.debug("[" + remoteStorageName + "] 已被 [" + curLock.locker + "] 锁定了 " + lockedTime  + " ms \n");
+							Log.debug("[" + remoteStorageName + "] 已被 [" + curLock.locker + "] 锁定了 " + lockedTime  + " ms, " + curLock.info + "\n");
 						}
 					}
 				}
