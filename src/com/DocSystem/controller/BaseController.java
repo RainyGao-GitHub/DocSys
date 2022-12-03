@@ -4022,7 +4022,9 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
-	{	
+	{
+		//注意：删除操作的VirtualDoc是不删除的
+		
 		//Insert index delete action for All( DocName / RDoc /VDoc )
 		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.ALL, null, null, false);
 	}
@@ -4052,7 +4054,8 @@ public class BaseController  extends BaseFunction{
 		File dstLocalEntry = new File(dstLocalEntryPath);
 		if(dstLocalEntry.exists())
 		{								
-			//Doc的VirtualDoc的移动或复制操作（目录的话会移动或复制其子目录的VirtualDoc，操作完后会统一提交所以VirtualDoc的改变）
+			//Doc的VirtualDoc的移动或复制操作（目录的话会移动或复制其子目录的VirtualDoc）
+			//注意：copy和move操作的VirtualDoc是不进行版本提交的
 			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VFS, actionId, DocType.VIRTURALDOC, null, null, true);
 			
 			//Insert IndexAction For Copy or Move
@@ -7260,7 +7263,7 @@ public class BaseController  extends BaseFunction{
 		switch(action.getDocType())
 		{
 		case VIRTURALDOC: //VDoc
-			Log.debug("executeFSAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			Log.debug("executeVFSAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			if(executeLocalActionForVDoc(action, 2, rt) == false)
 			{
 				return false;				
