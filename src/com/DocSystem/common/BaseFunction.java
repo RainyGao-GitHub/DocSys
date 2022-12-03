@@ -1841,13 +1841,13 @@ public class BaseFunction{
 		if(newLockState == 0)
 		{
 			deleteDocLock(doc);
-			Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName());
+			Log.debug("unlockDoc() success:[" + doc.getPath() + doc.getName() + "] newLockState:" + newLockState);
 			return true;
 		}
 		
 		curDocLock.setState(newLockState);
 		updateDocLock(doc, curDocLock);
-		Log.debug("unlockDoc() success:" + doc.getPath() + doc.getName() + " newLockState:" + newLockState);
+		Log.debug("unlockDoc() success:[" + doc.getPath() + doc.getName() + "] newLockState:" + newLockState);
 		return true;
 	}
 	

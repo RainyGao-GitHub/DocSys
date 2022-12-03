@@ -3952,9 +3952,6 @@ public class BaseController  extends BaseFunction{
 		}
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 
-		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
-		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
-		
 		String revision = null;
 		if(isFSM(repos))
 		{
@@ -3988,6 +3985,9 @@ public class BaseController  extends BaseFunction{
 				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 			}
 		}
+		
+		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
+		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
 		
 		unlockDoc(doc, lockType, login_user);
 		
