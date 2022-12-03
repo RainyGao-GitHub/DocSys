@@ -4078,7 +4078,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		int size = actionList.size();
-		Log.debug("executeCommonActionList size:" + size);
+		Log.debug("\n*********** executeCommonActionList()  size:" + size + " ********");
 		
 		int count = 0;
 
@@ -12090,7 +12090,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("********* realTimeRemoteStoragPush() ***********");
+		Log.debug("\n********* realTimeRemoteStoragPush() ***********");
 		
 		boolean ret = false;
 		
@@ -12146,7 +12146,7 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
 	{
-		Log.debug("********* realTimeBackup() ***********");
+		Log.debug("\n********* realTimeBackup() ***********");
 
 		ReposBackupConfig backupConfig = repos.autoBackupConfig;
 		if(backupConfig == null)
@@ -12161,7 +12161,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
-		Log.debug("********* realTimeRemoteBackup()");
+		Log.debug("********* realTimeRemoteBackup() ***********");
 
 		boolean ret = false;
 		
