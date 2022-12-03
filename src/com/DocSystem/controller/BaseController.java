@@ -3610,7 +3610,7 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "addDoc_FSM() syncLock";
+		String lockInfo = "addDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
 		
 		if(docLock == null)
@@ -3725,7 +3725,7 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "addDocEx_FSM() syncLock";
+		String lockInfo = "addDocEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		//LockDoc
 		docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
 		
@@ -3930,7 +3930,7 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "deleteDoc_FSM() syncLock";
+		String lockInfo = "deleteDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, lockInfo);	//lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
@@ -3940,9 +3940,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Log.info("deleteDoc_FSM() " + docId + " " + doc.getPath() + doc.getName() + " Lock OK");		
-
-		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
-		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
 		
 		//get RealDoc Full ParentPath
 		if(deleteRealDoc(repos,doc,rt) == false)
@@ -3954,6 +3951,9 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
+
+		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
+		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
 		
 		String revision = null;
 		if(isFSM(repos))
@@ -5144,7 +5144,7 @@ public class BaseController  extends BaseFunction{
 		//LockDoc
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "syncupLocalChanges_FSM() syncLock";
+		String lockInfo = "syncupLocalChanges_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
 		
 		if(docLock == null)
@@ -5224,13 +5224,13 @@ public class BaseController  extends BaseFunction{
 		//LockDoc
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "syncupLocalChanges_FSM() syncLock";
+		String lockInfo = "syncupLocalChangesEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
 		
 		if(docLock == null)
 		{
-			docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
-			Log.info("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+			docSysDebugLog("syncupLocalChangesEx_FSM() Failed to lock Doc: " + doc.getName(), rt);
+			Log.info("syncupLocalChangesEx_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 			return false;
 		}
 		
@@ -5238,7 +5238,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposDocCommitEx(repos, false, doc, commitMsg, commitUser, rt, true, localChangesRootPath, subDocSyncupFlag, commitActionList);
 		if(revision == null)
 		{
-			Log.info("syncupLocalChanges_FSM() 本地改动Commit失败:" + revision);
+			Log.info("syncupLocalChangesEx_FSM() 本地改动Commit失败:" + revision);
 			unlockDoc(doc, lockType, login_user);
 			return false;
 		}
@@ -5253,7 +5253,7 @@ public class BaseController  extends BaseFunction{
 				if(commitAction.getResult())
 				{
 					Doc commitDoc = commitActionList.get(i).getDoc();
-					Log.printObject("syncupLocalChanges_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
+					Log.printObject("syncupLocalChangesEx_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
 					//需要根据commitAction的行为来决定相应的操作
 					commitDoc.setRevision(revision);
 					commitDoc.setLatestEditorName(login_user.getName());
@@ -5267,7 +5267,7 @@ public class BaseController  extends BaseFunction{
 		//将localChanges中的版本号更新为文件的最新版本
 		updateLocalChangesRevisionEx(repos, doc, localChangesRootPath);
 		
-		Log.info("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
+		Log.info("syncupLocalChangesEx_FSM() 本地改动更新完成:" + revision);
 		unlockDoc(doc, lockType, login_user);
 		
 		return true;	
@@ -5363,7 +5363,7 @@ public class BaseController  extends BaseFunction{
 			//LockDoc
 			DocLock docLock = null;
 			int lockType = DocLock.LOCK_TYPE_FORCE;
-			String lockInfo = "syncupForDocChange() syncLock";
+			String lockInfo = "syncupForDocChange() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
 			
 			if(docLock == null)
@@ -6905,9 +6905,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
-		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser, false);
-
 		return true;
 	}
 	
@@ -7412,7 +7409,7 @@ public class BaseController  extends BaseFunction{
 	{	
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "updateDoc_FSM() syncLock";
+		String lockInfo = "updateDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
@@ -7496,7 +7493,7 @@ public class BaseController  extends BaseFunction{
 	{	
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "updateDocEx_FSM() syncLock";
+		String lockInfo = "updateDocEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
@@ -7582,15 +7579,16 @@ public class BaseController  extends BaseFunction{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "moveDoc_FSM() syncLock";
+		String lockInfo = "moveDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
 		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo);
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
 			return false;
 		}
-			
-		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo);
+
+		String lockInfo2 = "moveDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo2);
 		if(dstDocLock == null)
 		{
 			docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);		
@@ -7669,7 +7667,7 @@ public class BaseController  extends BaseFunction{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "copyDoc_FSM() syncLock";
+		String lockInfo = "copyDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
 		//Try to lock the srcDoc
 		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
 		if(srcDocLock == null)
@@ -7677,8 +7675,9 @@ public class BaseController  extends BaseFunction{
 			Log.debug("copyDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed");
 			return false;
 		}
-			
-		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
+		
+		String lockInfo2 = "copyDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo2);
 		if(dstDocLock == null)
 		{
 			Log.debug("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");				
@@ -7750,7 +7749,7 @@ public class BaseController  extends BaseFunction{
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "updateRealDocContent() syncLock";
+		String lockInfo = "updateRealDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
 		
 		if(docLock == null)
@@ -7826,7 +7825,7 @@ public class BaseController  extends BaseFunction{
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_VFORCE;
-		String lockInfo = "updateVirualDocContent() syncLock";
+		String lockInfo = "updateVirualDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
 		
 		if(docLock == null)
@@ -20843,7 +20842,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock, String lockInfo2, int retryCount, int retrySleepTime) 
+	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock, String info, int retryCount, int retrySleepTime) 
 	{
 		Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Start");
 
@@ -20872,7 +20871,7 @@ public class BaseController  extends BaseFunction{
 					curLock.lockTime = curLock.createTime + lockDuration;
 					curLock.synclock = new SyncLock();
 					curLock.server = serverUrl;
-					curLock.info = lockInfo;
+					curLock.info = info;
 					addRemoteStorageLock(remoteStorageName, curLock);
 					remoteStorageLock = curLock;
 				}
@@ -20888,7 +20887,7 @@ public class BaseController  extends BaseFunction{
 						curLock.createTime = new Date().getTime();
 						curLock.lockTime = curLock.createTime + lockDuration;
 						curLock.server = serverUrl;
-						curLock.info = lockInfo;
+						curLock.info = info;
 						remoteStorageLock = curLock;
 						updateRemoteStorageLock(remoteStorageName, curLock);
 					}
@@ -20903,6 +20902,8 @@ public class BaseController  extends BaseFunction{
 							curLock.locker = accessUser.getName();
 							curLock.createTime = new Date().getTime();
 							curLock.lockTime = curLock.createTime + lockDuration;
+							curLock.server = serverUrl;
+							curLock.info = info;
 							remoteStorageLock = curLock;
 							updateRemoteStorageLock(remoteStorageName, curLock);
 						}
@@ -20910,7 +20911,7 @@ public class BaseController  extends BaseFunction{
 						{
 							Log.debug("lockRemoteStorage() " + remoteStorageName + " was locked by " + curLock.locker + " state:" + curLock.state);
 							long lockedTime = new Date().getTime() - curLock.createTime;
-							Log.debug("[" + remoteStorageName + "] 已被 [" + curLock.locker + "] 锁定了 " + lockedTime  + " ms, " + curLock.info + "\n");
+							Log.debug("[" + remoteStorageName + "] 已被 [" + curLock.locker + "] 锁定了 " + lockedTime  + " ms [" + curLock.info + "]\n");
 						}
 					}
 				}
