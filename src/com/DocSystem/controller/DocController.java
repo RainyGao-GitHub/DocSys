@@ -179,12 +179,6 @@ public class DocController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, actionList); 
 		
-		if(ret == true && isFSM(repos))
-		{
-			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "addDoc");
-			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "addDoc");
-		}
-		
 		writeJson(rt, response);
 		
 		if(ret == false)
@@ -291,13 +285,7 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, actionList); 
-		if(ret == true && isFSM(repos))
-		{
-			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "addDocRS");
-			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "addDocRS");
-		}
-		
+		boolean ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret == false)
@@ -490,12 +478,6 @@ public class DocController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		
-		if(ret != null && isFSM(repos))
-		{
-			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "deleteDoc");
-			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "deleteDoc");
-		}
-		
 		writeJson(rt, response);
 		
 		if(ret != null)
@@ -660,11 +642,6 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-		if(ret == true && isFSM(repos))
-		{
-			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "renameDoc");
-			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "renameDoc");
-		}
 		
 		writeJson(rt, response);
 		
@@ -752,12 +729,6 @@ public class DocController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		
 		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-
-		if(ret == true && isFSM(repos))
-		{
-			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "moveDoc");
-			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "moveDoc");
-		}
 		
 		writeJson(rt, response);
 		
@@ -833,13 +804,6 @@ public class DocController extends BaseController{
 		Log.debug("copyDoc do copyDoc");
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-		if(ret == true || isFSM(repos))
-		{
-			Log.debug("copyDoc realTimeRemoteStoragePush");			
-			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
-			Log.debug("copyDoc realTimeBackup");			
-			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
-		}
 		
 		writeJson(rt, response);
 		
@@ -957,11 +921,6 @@ public class DocController extends BaseController{
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-		if(ret == true || isFSM(repos))
-		{
-			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
-			realTimeBackup(repos, srcDoc, dstDoc, reposAccess, commitMsg, rt, "copyDoc");
-		}
 		
 		writeJson(rt, response);
 		
@@ -1377,11 +1336,6 @@ public class DocController extends BaseController{
 					}
 				}
 				
-				if(ret == true)
-				{
-					realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "checkChunkUploaded");
-					realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "checkChunkUploaded");
-				}	
 				return;
 			}
 		}
@@ -1450,10 +1404,6 @@ public class DocController extends BaseController{
 			{
 				executeCommonActionList(actionList, rt);
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				
-				//实时远程推送与实时备份
-				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
-				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
 			}	
 			return;
 		}
@@ -1467,11 +1417,7 @@ public class DocController extends BaseController{
 		{
 			executeCommonActionList(actionList, rt);
 			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-			deletePreviewFile(doc);
-			
-			//实时远程推送与实时备份
-			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
-			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "combineChunks");
+			deletePreviewFile(doc);			
 		}
 		
 	}
@@ -1676,11 +1622,6 @@ public class DocController extends BaseController{
 				}
 			}
 
-			if(ret == true)
-			{
-				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "uploadDoc");
-				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "uploadDoc");
-			}
 			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
@@ -1969,12 +1910,6 @@ public class DocController extends BaseController{
 				}
 			}
 			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
-
-			if(ret == true)
-			{
-				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "uploadDocRS");
-				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "uploadDocRS");
-			}
 			return;
 		}
 		else
@@ -2156,11 +2091,6 @@ public class DocController extends BaseController{
 				commitMsg = "更新 " + path + name;
 			}
 			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-			if(ret == true)
-			{
-				realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "updateDocContent");
-				realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "updateDocContent");
-			}
 			
 			writeJson(rt, response);
 	
@@ -2477,7 +2407,21 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
+		DocLock docLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
+		String lockInfo = "remoteStorageCheckOut() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		docLock = lockDoc(doc, lockType, 2*60*60*1000, accessUser, rt, true,lockInfo);	//lock 2 Hours 2*60*60*1000
+		
+		if(docLock == null)
+		{
+			docSysDebugLog("remoteStorageCheckOut() Failed to lock Doc: " + doc.getDocId(), rt);
+			return false;
+		}
+		
 		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, force, rt);
+
+		unlockDoc(doc, lockType,  accessUser);
+		
 		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
 		if(pullResult == null)
 		{
@@ -4827,11 +4771,6 @@ public class DocController extends BaseController{
 		}
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
-		if(isRealDoc == true && isFSM(repos))
-		{
-			realTimeRemoteStoragePush(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
-			realTimeBackup(repos, doc, null, reposAccess, commitMsg, rt, "revertDocHistory");
-		}
 		
 		writeJson(rt, response);
 		
