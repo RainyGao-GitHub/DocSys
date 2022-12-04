@@ -21075,7 +21075,7 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		if(remote.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		if(remote.ignoreHashMap != null && remote.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
 		{
 			Log.debug("isRemotePushEnabled() RemotePush was ignored for [/" + doc.getPath() + doc.getName() + "]");
 			return 0;
