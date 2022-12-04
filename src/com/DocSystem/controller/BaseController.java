@@ -17883,22 +17883,22 @@ public class BaseController  extends BaseFunction{
 		switch(realLocalChangeType)
 		{
 		case LOCALADD:
-			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地新增, 推送");
+			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 本地新增, 推送");
 			ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 			break;
 		case LOCALCHANGE:
-			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地改动, 推送");
+			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 本地改动, 推送");
 			ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 		case LOCALDELETE:
-			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地删除, 推送");
+			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 本地删除, 推送");
 			ret = remoteStoragePushEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);					
 			break;
 		case LOCALDIRTOFILE:
-			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地目录->文件, 推送");
+			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 本地目录->文件, 推送");
 			ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);					
 			break;
 		case LOCALFILETODIR:
-			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 远程改动, 本地文件->目录, 推送");
+			Log.debug("doPushEntryToRemoteStorage " +doc.getPath() + doc.getName()+ " 本地文件->目录, 推送");
 			ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 			break;
 		case NOCHANGE:
