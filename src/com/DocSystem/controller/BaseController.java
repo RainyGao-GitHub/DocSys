@@ -3534,7 +3534,10 @@ public class BaseController  extends BaseFunction{
 					dbUpdateDoc(repos, successDoc, true);
 					dbCheckAddUpdateParentDoc(repos, successDoc, null, null);
 				}
-			}
+
+				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "revertDocHistory");
+				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "revertDocHistory");
+			}			
 		}
 		else
 		{
@@ -3686,6 +3689,9 @@ public class BaseController  extends BaseFunction{
 			{
 				rt.setDataEx(addedParentDocList);
 			}
+			
+			realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+			realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 		}
 		else
 		{
@@ -3975,6 +3981,9 @@ public class BaseController  extends BaseFunction{
 				//异步推送远程版本仓库：Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
+			
+			realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
+			realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
 		}
 		else
 		{
@@ -4447,15 +4456,30 @@ public class BaseController  extends BaseFunction{
 		    	Channel channel = ChannelFactory.getByChannelName("businessChannel");
 				if(channel != null)
 		        {	
-					if(remote.autoPush != null && remote.autoPush == 1)
+					
+					DocLock docLock = null;
+					int lockType = DocLock.LOCK_TYPE_FORCE;
+					String lockInfo = "syncupForDocChange() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+			    	docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, lockInfo);	//lock 2 Hours 2*60*60*1000
+					
+					if(docLock == null)
 					{
-						Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
-						channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, 4, rt);
-					}					
-					if(remote.autoPull != null && remote.autoPull == 1)
+						docSysDebugLog("remoteStoragePush() Failed to lock Doc: " + doc.getDocId(), rt);
+					}
+					else
 					{
-						Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
-						channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, rt);
+						if(remote.autoPush != null && remote.autoPush == 1)
+						{
+							Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
+							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, 4, rt);
+						}					
+						if(remote.autoPull != null && remote.autoPull == 1)
+						{
+							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
+							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, rt);
+						}
+						
+						unlockDoc(doc, lockType,  login_user);
 					}
 				}
 			}
@@ -7470,12 +7494,12 @@ public class BaseController  extends BaseFunction{
 				}
 				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
 				
-				if(isFSM(repos))
-				{
-					//Insert Push Action
-					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
-				}
+				//Insert Push Action
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
+			
+			realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+			realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 		}
 		else
 		{
@@ -7487,8 +7511,6 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 		}
-		
-
 		
 		//Build DocUpdate action
 		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
@@ -7634,6 +7656,9 @@ public class BaseController  extends BaseFunction{
 				}
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
+			
+			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+			realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
 		}
 		else
 		{
@@ -7728,6 +7753,9 @@ public class BaseController  extends BaseFunction{
 				}
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
+			
+			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+			realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
 		}
 		else
 		{
@@ -7816,6 +7844,9 @@ public class BaseController  extends BaseFunction{
 					//Insert Push Action
 					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 				}
+					
+				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
 			}
 			else
 			{
@@ -12101,8 +12132,8 @@ public class BaseController  extends BaseFunction{
 	        Log.info(e);
 		}
 	}
-
-	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+	
+	protected boolean realTimeRemoteStoragePush(Repos repos, Doc doc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("\n********* realTimeRemoteStoragPush() ***********");
 		
 		boolean ret = false;
@@ -12130,18 +12161,18 @@ public class BaseController  extends BaseFunction{
 		switch(action)
 		{
 		case "copyDoc":
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt) == true)
+			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
 			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			}
 			break;
 		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt) == true)
+			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
 			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			}
 			break;
 		//case "addDoc":
@@ -12151,13 +12182,13 @@ public class BaseController  extends BaseFunction{
 		//case "uploadDocRS":
 		//case "revertDocHistory":
 		default:
-			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		}			
 		return ret;
 	}
 
-	protected boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) 
+	protected boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt, String action) 
 	{
 		Log.debug("\n********* realTimeBackup() ***********");
 
@@ -12168,12 +12199,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 				
-		realTimeLocalBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
-		realTimeRemoteBackup(repos, doc, dstDoc, reposAccess, commitMsg, rt, action);
+		realTimeLocalBackup(repos, doc, dstDoc, accessUser, commitMsg, rt, action);
+		realTimeRemoteBackup(repos, doc, dstDoc, accessUser, commitMsg, rt, action);
 		return true;
 	}
 
-	private boolean realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+	private boolean realTimeRemoteBackup(Repos repos, Doc doc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("********* realTimeRemoteBackup() ***********");
 
 		boolean ret = false;
@@ -12223,18 +12254,18 @@ public class BaseController  extends BaseFunction{
 		switch(action)
 		{
 		case "copyDoc":
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType,  rt) == true)
+			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt) == true)
 			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType,  rt);
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
 			}
 			break;
 		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType,  rt) == true)
+			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt) == true)
 			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType,  rt);
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
 			}
 			break;
 		//case "addDoc":
@@ -12243,16 +12274,16 @@ public class BaseController  extends BaseFunction{
 		//case "uploadDoc":
 		//case "uploadDocRS":
 		//case "revertDocHistory":
-		//	channel.remoteStoragePush(repos, doc, reposAccess.getAccessUser(), commitMsg, true, true, true, rt);
+		//	channel.remoteStoragePush(repos, doc, accessUser, commitMsg, true, true, true, rt);
 		//	break;
 		default:
-			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		}	
 		return ret;
 	}
 
-	private boolean realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, ReposAccess reposAccess, String commitMsg, ReturnAjax rt, String action) {
+	private boolean realTimeLocalBackup(Repos repos, Doc doc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt, String action) {
 		Log.debug("********* realTimeLocalBackup() ****************");
 
 		boolean ret = false;
@@ -12301,18 +12332,18 @@ public class BaseController  extends BaseFunction{
 		switch(action)
 		{
 		case "copyDoc":
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt) == true)
+			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
 			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			}
 			break;
 		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt) == true)
+			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
 			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			}
 			break;
 		//case "addDoc":
@@ -12322,7 +12353,7 @@ public class BaseController  extends BaseFunction{
 		//case "uploadDocRS":
 		//case "revertDocHistory":
 		default:
-			ret = channel.remoteStoragePush(remote, repos, doc, reposAccess.getAccessUser(), commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		}			
 		return ret;
@@ -12699,27 +12730,41 @@ public class BaseController  extends BaseFunction{
 	                        lastestBackupTask.status = 1; //backup is running
 	                        lastestBackupTask.info = "本地自动备份中...";                      
 	                        Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	                        
-	        				if(redisEn)
-        					{	
-	        					//TODO: 检查该任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
-		        				String uniqueTaskId = "ReposLocalBackupTask" + repos.getId();
+        					
+	                        //LockDoc
+	                        DocLock docLock = null;
+        					int lockType = DocLock.LOCK_TYPE_FORCE;
+        			    	String lockInfo = "LocalBackupDelayTask() syncLock [" + rootDoc.getPath() + rootDoc.getName() + "] at repos[" + repos.getName() + "]";    	
+        			    	docLock = lockDoc(rootDoc, lockType, 2*60*60*1000, systemUser,rt,true,lockInfo);	//lock 2 Hours 2*60*60*1000
+        					if(docLock == null)
+        					{
+        						docSysDebugLog("LocalBackupDelayTask() Failed to lock Doc: " + rootDoc.getDocId(), rt);
+        						rt.setError("LockDocFailed");
+        					}
+        					else
+        					{
 	        					
-		        				JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
-		        				if(uniqueTask != null)
-		        				{
+		        				if(redisEn)
+	        					{	
+		        					//TODO: 检查该任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+			        				String uniqueTaskId = "ReposLocalBackupTask" + repos.getId();
 		        					
+			        				JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
+			        				if(uniqueTask != null)
+			        				{
+			        					//执行仓库本地备份
+			        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+			        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
+			        				}
+	        					}
+		        				else
+		        				{
 		        					//执行仓库本地备份
 		        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
-			                              					
-		        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
 		        				}
+	        					unlockDoc(rootDoc, lockType,  systemUser);
         					}
-	        				else
-	        				{
-	        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
-	        				}
-	        				
+        					
 	                        //将自己从任务备份任务表中删除
 	                        lastestBackupTask.stopFlag = true;
 	                        if(rt.getStatus().equals("ok"))
@@ -12869,24 +12914,36 @@ public class BaseController  extends BaseFunction{
 	                        lastestBackupTask.status = 1;
 	                        lastestBackupTask.info = "异地自动备份中...";                      
 	                    	Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
-	                        
-	        				if(redisEn)
-        					{	
-	        					//TODO: 检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
-		        				String uniqueTaskId = "ReposRemoteBackupTask" + repos.getId();
-	        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
-		        				if(uniqueTask != null)
-		        				{			        				
-			        				channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
-			                              					
-		        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
-		        				}
+	                        //LockDoc
+	                        DocLock docLock = null;
+        					int lockType = DocLock.LOCK_TYPE_FORCE;
+        			    	String lockInfo = "RemoteBackupDelayTask() syncLock [" + rootDoc.getPath() + rootDoc.getName() + "] at repos[" + repos.getName() + "]";    	
+        			    	docLock = lockDoc(rootDoc, lockType, 2*60*60*1000, systemUser,rt,true,lockInfo);	//lock 2 Hours 2*60*60*1000
+        					if(docLock == null)
+        					{
+        						docSysDebugLog("RemoteBackupDelayTask() Failed to lock Doc: " + rootDoc.getDocId(), rt);
+        						rt.setError("LockDocFailed");
         					}
-	        				else
-	        				{
-		                    	channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
-	        				}
-	        				
+        					else
+        					{
+		        				if(redisEn)
+	        					{	
+		        					//TODO: 检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+			        				String uniqueTaskId = "ReposRemoteBackupTask" + repos.getId();
+		        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
+			        				if(uniqueTask != null)
+			        				{			        				
+				        				channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+				            			stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
+			        				}
+	        					}
+		        				else
+		        				{
+			                    	channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+		        				}
+		        				unlockDoc(rootDoc, lockType,  systemUser);
+        					}
+        					
 	                        //将自己从任务备份任务表中删除
 	                        lastestBackupTask.stopFlag = true;
 	                        if(rt.getStatus().equals("ok"))
