@@ -12161,19 +12161,18 @@ public class BaseController  extends BaseFunction{
 		switch(action)
 		{
 		case "copyDoc":
+			Log.info("********* realTimeRemoteStoragPush() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			}
+			Log.info("********* realTimeRemoteStoragPush() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			}
+			Log.info("********* realTimeRemoteStoragPush() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -12182,6 +12181,7 @@ public class BaseController  extends BaseFunction{
 		//case "uploadDocRS":
 		//case "revertDocHistory":
 		default:
+			Log.info("********* realTimeRemoteStoragPush() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		}			
@@ -12254,19 +12254,18 @@ public class BaseController  extends BaseFunction{
 		switch(action)
 		{
 		case "copyDoc":
+			Log.info("********* realTimeRemoteBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
-			}
+			Log.info("********* realTimeRemoteBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
 			break;
 		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
-			}
+			Log.info("********* realTimeRemoteBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -12277,6 +12276,7 @@ public class BaseController  extends BaseFunction{
 		//	channel.remoteStoragePush(repos, doc, accessUser, commitMsg, true, true, true, rt);
 		//	break;
 		default:
+			Log.info("********* realTimeRemoteBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		}	
@@ -12332,19 +12332,18 @@ public class BaseController  extends BaseFunction{
 		switch(action)
 		{
 		case "copyDoc":
+			Log.info("********* realTimeLocalBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "moveDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			}
+			Log.info("********* realTimeLocalBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		case "renameDoc":
-			if(channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt) == true)
-			{
-				ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			}
+			Log.info("********* realTimeLocalBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -12353,6 +12352,7 @@ public class BaseController  extends BaseFunction{
 		//case "uploadDocRS":
 		//case "revertDocHistory":
 		default:
+			Log.info("********* realTimeLocalBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
 			break;
 		}			
