@@ -35,10 +35,12 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
+import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
+import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SyncupTask;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
@@ -965,6 +967,9 @@ public class ReposController extends BaseController{
 		
 		if(autoBackup != null)
 		{
+			//Save Old autoBackupConfig
+			ReposBackupConfig oldAutoBackupConfig = reposInfo.autoBackupConfig;
+			
 			setReposAutoBackup(reposInfo, autoBackup);
 			initReposAutoBackupConfig(reposInfo, autoBackup);
 			if(reposInfo.autoBackupConfig != null)
@@ -972,6 +977,9 @@ public class ReposController extends BaseController{
 				addDelayTaskForLocalBackup(reposInfo, reposInfo.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始自动备份
 				addDelayTaskForRemoteBackup(reposInfo, reposInfo.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始自动备份
 			}
+			
+			//Check and clear old backup indexLib
+			checkAndClearOldBackupIndexLib(reposInfo, oldAutoBackupConfig, reposInfo.autoBackupConfig);
 		}
 		
 		//设置全文搜索
@@ -1080,6 +1088,97 @@ public class ReposController extends BaseController{
 			addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步
 		}
 		setReposIsBusy(reposId, false);
+	}
+
+	private void checkAndClearOldBackupIndexLib(Repos reposInfo, ReposBackupConfig oldAutoBackupConfig,
+			ReposBackupConfig newAutoBackupConfig) {
+		boolean clearLocalBackupIndexLib = false;
+		boolean clearRemoteBackupIndexLib = false;
+		if(oldAutoBackupConfig == null && newAutoBackupConfig == null)
+		{
+			clearLocalBackupIndexLib = true;
+			clearRemoteBackupIndexLib = true;
+		}
+		else
+		{
+			if(isBackupConfigChanged(oldAutoBackupConfig.localBackupConfig, newAutoBackupConfig.localBackupConfig))
+			{
+				clearLocalBackupIndexLib = true;
+				Log.debug("checkAndClearOldBackupIndexLib() localBackupConfig changed:");
+				Log.printObject("checkAndClearOldBackupIndexLib() oldLocalBackupConfig:", oldAutoBackupConfig.localBackupConfig);				
+				Log.printObject("checkAndClearOldBackupIndexLib() newLocalBackupConfig:", newAutoBackupConfig.localBackupConfig);				
+			}
+			
+			if(isBackupConfigChanged(oldAutoBackupConfig.remoteBackupConfig, newAutoBackupConfig.remoteBackupConfig))
+			{
+				clearRemoteBackupIndexLib = true;
+				Log.debug("checkAndClearOldBackupIndexLib() remoteBackupConfig changed:");
+				Log.printObject("checkAndClearOldBackupIndexLib() oldRemoteBackupConfig:", oldAutoBackupConfig.remoteBackupConfig);				
+				Log.printObject("checkAndClearOldBackupIndexLib() newRemoteBackupConfig:", newAutoBackupConfig.remoteBackupConfig);				
+			}
+		}
+		
+		if(clearLocalBackupIndexLib)
+		{
+			FileUtil.delFileOrDir(oldAutoBackupConfig.localBackupConfig.indexLibBase);
+		}
+		
+		if(clearRemoteBackupIndexLib)
+		{
+			FileUtil.delFileOrDir(oldAutoBackupConfig.remoteBackupConfig.indexLibBase);			
+		}
+	}
+
+	private boolean isBackupConfigChanged(BackupConfig oldBackupConfig, BackupConfig newBackupConfig) {
+		//TODO: 这个Null判断的逻辑不够严谨，所以只是用于进行是否清空indexLib
+		if(oldBackupConfig == null || newBackupConfig == null)
+		{
+			return true;
+		}
+		
+		if(oldBackupConfig.remoteStorageConfig == null || newBackupConfig.remoteStorageConfig == null)
+		{
+			return true;
+		}
+		
+		if(oldBackupConfig.remoteStorageConfig.protocol.equals(newBackupConfig.remoteStorageConfig.protocol) == false)
+		{
+			Log.debug("isBackupConfigChanged() protocol changed: [" + oldBackupConfig.remoteStorageConfig.protocol + "] [" + newBackupConfig.remoteStorageConfig.protocol + "]");
+			return true;
+		}
+		
+		if(oldBackupConfig.remoteStorageConfig.rootPath.equals(newBackupConfig.remoteStorageConfig.rootPath) == false)
+		{
+			Log.debug("isBackupConfigChanged() rootPath changed: [" + oldBackupConfig.remoteStorageConfig.rootPath + "] [" + newBackupConfig.remoteStorageConfig.rootPath + "]");
+			return true;
+		}
+		
+		switch(oldBackupConfig.remoteStorageConfig.protocol)
+		{
+		case "file":
+			return !oldBackupConfig.remoteStorageConfig.FILE.localRootPath.equals(newBackupConfig.remoteStorageConfig.FILE.localRootPath);
+		case "sftp":
+			return (!oldBackupConfig.remoteStorageConfig.SFTP.host.equals(newBackupConfig.remoteStorageConfig.SFTP.host) ||
+					!oldBackupConfig.remoteStorageConfig.SFTP.port.equals(newBackupConfig.remoteStorageConfig.SFTP.port));
+		case "ftp":
+			return (!oldBackupConfig.remoteStorageConfig.FTP.host.equals(newBackupConfig.remoteStorageConfig.FTP.host) ||
+					!oldBackupConfig.remoteStorageConfig.FTP.port.equals(newBackupConfig.remoteStorageConfig.FTP.port));
+		case "smb":
+			return (!oldBackupConfig.remoteStorageConfig.SMB.host.equals(newBackupConfig.remoteStorageConfig.SMB.host) ||
+					!oldBackupConfig.remoteStorageConfig.SMB.port.equals(newBackupConfig.remoteStorageConfig.SMB.port));
+		case "mxsdoc":
+			return !oldBackupConfig.remoteStorageConfig.MXSDOC.url.equals(newBackupConfig.remoteStorageConfig.MXSDOC.url);
+		case "svn":
+			return !oldBackupConfig.remoteStorageConfig.SVN.url.equals(newBackupConfig.remoteStorageConfig.SVN.url);
+		case "git":
+			return (!oldBackupConfig.remoteStorageConfig.GIT.url.equals(newBackupConfig.remoteStorageConfig.GIT.url) || 
+					!oldBackupConfig.remoteStorageConfig.GIT.localVerReposPath.equals(newBackupConfig.remoteStorageConfig.GIT.localVerReposPath));
+		default:
+			Log.debug("isBackupConfigChanged() unknown remoteStorage protocol:" + oldBackupConfig.remoteStorageConfig.protocol);
+			break;
+		}
+		
+		return false;
 	}
 
 	private boolean isReposVerCtrlChanged(Repos newReposInfo, Repos reposInfo) {
