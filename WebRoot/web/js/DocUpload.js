@@ -1971,7 +1971,7 @@
 				}
 				
 				//启动超时定式器
-				var timeOut = SubContext.size + 60000; //基础超时时间1分钟，文件越大超时时间越长
+				var timeOut = SubContext.size + 300000; //基础超时时间5分钟，文件越大超时时间越长
 				if(timeOut > 144000000) //40小时
 				{
 					timeOut = 144000000;
