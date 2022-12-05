@@ -20864,7 +20864,7 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageLock remoteStorageLock = lockRemoteStorage(remote.remoteStorageIndexLib, 2*60*60*1000, accessUser, doc, synclock, lockInfo, retryCount, retrySleepTime);
 		if(remoteStorageLock != null)
 		{
-			Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
+			//Log.info("lockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] lock success for [" + doc.getPath() + doc.getName() + "]");
 			return true;
 		}
 		
@@ -20890,7 +20890,7 @@ public class BaseController  extends BaseFunction{
 				curLock = getRemoteStorageLock(remoteStorageName);
 				if(curLock == null)
 				{
-					Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
+					//Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
 					curLock = new RemoteStorageLock();
 					curLock.state = 1;
 					curLock.name = remoteStorageName;
@@ -20909,7 +20909,7 @@ public class BaseController  extends BaseFunction{
 					//check if it is locked
 					if(curLock.state == 0)
 					{
-						Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
+						//Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] not locked");
 						curLock.state = 1;
 						curLock.lockBy = accessUser.getId();
 						curLock.locker = accessUser.getName();
