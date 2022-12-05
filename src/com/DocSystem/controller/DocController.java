@@ -5929,6 +5929,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
 		DocShare docShare = new DocShare();
 		docShare.setVid(doc.getVid());
 		docShare.setReposName(repos.getName());
