@@ -1993,10 +1993,13 @@
 
 		if(historyType == 0)
 		{
-			if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+			if(gReposInfo.type != 5)	//前置仓库不检查
 			{
-				showErrorMessage("该仓库未开通版本管理，请联系管理员！");
-				return;
+				if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+				{
+					showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+					return;
+				}
 			}
 		}
 		
