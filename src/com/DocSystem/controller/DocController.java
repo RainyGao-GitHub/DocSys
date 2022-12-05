@@ -469,6 +469,12 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
+		
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
 
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
@@ -630,6 +636,12 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
+		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
 		Doc dstDoc = buildBasicDoc(reposId, null, pid, reposPath, path, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
@@ -715,6 +727,12 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
+		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
@@ -798,6 +816,12 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);			
+			return;
+		}
+		
+		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
+		{
+			writeJson(rt, response);	
 			return;
 		}
 
@@ -2209,6 +2233,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
 		if(downloadType != null && downloadType == 2)
 		{
 			downloadVDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), rt);
@@ -2245,7 +2275,7 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 	}
-	
+
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
 		if(isFSM(repos) == false)
@@ -3431,19 +3461,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String pwd = getDocPwd(repos, doc);
-		if(pwd != null && !pwd.isEmpty())
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
-			//Do check the sharePwd
-			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
-			{
-				docSysErrorLog("访问密码错误！", rt);
-				rt.setMsgData("1"); //访问密码错误或未提供
-				rt.setData(doc);
-				writeJson(rt, response);
-				return;
-			}
+			writeJson(rt, response);	
+			return;
 		}
 		
 		Doc dbDoc = fsGetDoc(repos, doc);
@@ -3575,19 +3596,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String pwd = getDocPwd(repos, doc);
-		if(pwd != null && !pwd.isEmpty())
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
-			//Do check the sharePwd
-			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
-			{
-				docSysErrorLog("访问密码错误！", rt);
-				rt.setMsgData("1"); //访问密码错误或未提供
-				rt.setData(doc);
-				writeJson(rt, response);
-				return;
-			}
+			writeJson(rt, response);	
+			return;
 		}
 		
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
@@ -3685,19 +3697,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String pwd = getDocPwd(repos, doc);
-		if(pwd != null && !pwd.isEmpty())
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
-			//Do check the sharePwd
-			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
-			{
-				docSysErrorLog("访问密码错误！", rt);
-				rt.setMsgData("1"); //访问密码错误或未提供
-				rt.setData(doc);
-				writeJson(rt, response);
-				return;
-			}
+			writeJson(rt, response);	
+			return;
 		}
 		
 		downloadDocPrepare_FSM(repos, doc, reposAccess, false, rt);

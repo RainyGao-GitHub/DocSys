@@ -1120,12 +1120,18 @@ public class ReposController extends BaseController{
 		
 		if(clearLocalBackupIndexLib)
 		{
-			FileUtil.delFileOrDir(oldAutoBackupConfig.localBackupConfig.indexLibBase);
+			if(oldAutoBackupConfig.localBackupConfig != null && oldAutoBackupConfig.localBackupConfig.indexLibBase != null && oldAutoBackupConfig.localBackupConfig.indexLibBase.isEmpty() == false)
+			{
+				FileUtil.delFileOrDir(oldAutoBackupConfig.localBackupConfig.indexLibBase);
+			}
 		}
 		
 		if(clearRemoteBackupIndexLib)
 		{
-			FileUtil.delFileOrDir(oldAutoBackupConfig.remoteBackupConfig.indexLibBase);			
+			if(oldAutoBackupConfig.remoteBackupConfig != null && oldAutoBackupConfig.remoteBackupConfig.indexLibBase != null && oldAutoBackupConfig.remoteBackupConfig.indexLibBase.isEmpty() == false)
+			{
+				FileUtil.delFileOrDir(oldAutoBackupConfig.remoteBackupConfig.indexLibBase);
+			}
 		}
 	}
 
@@ -1520,19 +1526,10 @@ public class ReposController extends BaseController{
 		//不对文件分享的根目录进行密码检查(用户只有在输入了密码后才能分享根目录)
 		if(shareId == null)
 		{
-			String pwd = getDocPwd(repos, rootDoc);
-			if(pwd != null && !pwd.isEmpty())
+			if(checkUserAccessPwd(repos, rootDoc, session, rt) == false)
 			{
-				//Do check the sharePwd
-				String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + rootDoc.getDocId());
-				if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
-				{
-					docSysErrorLog("访问密码错误！", rt);
-					rt.setMsgData("1"); //访问密码错误或未提供
-					rt.setData(rootDoc);
-					writeJson(rt, response);
-					return;
-				}
+				writeJson(rt, response);	
+				return;
 			}
 		}
 		
@@ -1575,19 +1572,10 @@ public class ReposController extends BaseController{
 			else
 			{
 				//Log.printObject("getReposInitMenu() doc:", doc);
-				String pwd = getDocPwd(repos, doc);
-				if(pwd != null && !pwd.isEmpty())
+				if(checkUserAccessPwd(repos, doc, session, rt) == false)
 				{
-					//Do check the sharePwd
-					String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-					if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
-					{
-						docSysErrorLog("访问密码错误！", rt);
-						rt.setMsgData("1"); //访问密码错误或未提供
-						rt.setData(doc);
-						writeJson(rt, response);
-						return;
-					}
+					writeJson(rt, response);	
+					return;
 				}
 			}
 		}
@@ -1692,19 +1680,10 @@ public class ReposController extends BaseController{
 			doc = buildBasicDoc(repos.getId(), docId, null, reposPath, path, name, null,2, true, localRootPath, localVRootPath, null, null);
 		}
 		
-		Integer reposId = repos.getId();
-		String pwd = getDocPwd(repos, doc);
-		if(pwd != null && !pwd.isEmpty())
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
-			//Do check the sharePwd
-			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
-			{
-				docSysErrorLog("访问密码错误！", rt);
-				rt.setMsgData("1"); //访问密码错误或未提供
-				writeJson(rt, response);
-				return;
-			}
+			writeJson(rt, response);	
+			return;
 		}
 		
 		Doc tmpDoc = docSysGetDoc(repos, doc, true);
