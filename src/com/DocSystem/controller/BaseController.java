@@ -84,12 +84,10 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.redisson.Redisson;
 import org.redisson.api.RBucket;
-import org.redisson.api.RList;
 import org.redisson.api.RMap;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.socket.WebSocketSession;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tukaani.xz.XZInputStream;
@@ -166,7 +164,6 @@ import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.websocket.OfficeUser;
-import com.DocSystem.websocket.ParticipantServer;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -11534,21 +11531,70 @@ public class BaseController  extends BaseFunction{
 	
 	private void clearRedisCache() {
 		Log.info("clearRedisCache()");
-		RMap<Object, Object> clusterServersMap = redisClient.getMap("clusterServersMap");
-		clusterServersMap.remove(serverUrl);
 		
-		String targetServerUrl = serverUrl;
+		//Go throuhg clusterServersMap
+	    List<String> deleteList = new ArrayList<String>();
+	    RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+	    
+	    Iterator<Entry<String, Long>> iterator = clusterServersMap.entrySet().iterator();
+	    long curTime = new Date().getTime();
+	    while (iterator.hasNext()) 
+	    {
+	    	Entry<String, Long> entry = iterator.next();
+	        if(entry != null)
+	        {   
+	        	String clusterServerUrl = entry.getKey();
+	    		Log.info("clearRedisCache() clusterServer [" + clusterServerUrl + "]");
+	            
+	        	if(clusterServerUrl.equals(serverUrl))
+	        	{
+	        		deleteList.add(clusterServerUrl);
+	        	}
+	        	else
+	        	{
+	        		Long beatTime = entry.getValue();
+	        		if(beatTime == null)
+	            	{
+	            		Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " beatTime is null");
+	            		deleteList.add(clusterServerUrl);
+	            	}
+	        		else
+	        		{
+		            	if((curTime - beatTime) > 30*60*1000)	//heart beating have stopped for 30 minutes
+		            	{
+		            		Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " heart beating have stopped " + (curTime - beatTime)/1000 + " minutes");
+		            		deleteList.add(clusterServerUrl);			            	
+		            	}
+	        		}
+	        	}
+	        }
+	    }
+	    
+	    for(int i=0; i< deleteList.size(); i++)
+	    {
+	    	clusterServersMap.remove(deleteList.get(i));
+	    }
+		
 		if(clusterServersMap.size() == 0)
 		{
-			targetServerUrl = null;
 			Log.debug("clearRedisCache() clusterServersMap is empty, do clean all redis data");
+			clearAllRemoteStorageLocksMap(null);
+			clearAllReposRedisData(null);
+			clearAllOfficeRedisData(null);
+		}
+		else
+		{
+		    for(int i=0; i< deleteList.size(); i++)
+		    {
+		    	String deleteServerUrl = deleteList.get(i);
+				Log.debug("clearRedisCache() clear redis cache for clusterServer [" + deleteServerUrl + "]");
+				clearAllRemoteStorageLocksMap(deleteServerUrl);
+				clearAllReposRedisData(deleteServerUrl);
+				clearAllOfficeRedisData(deleteServerUrl);
+		    }
 		}
 		
-		clearAllRemoteStorageLocksMap(targetServerUrl);
-		clearAllReposRedisData(targetServerUrl);
-		clearAllOfficeRedisData(targetServerUrl);
 		clusterServersMap.put(serverUrl, new Date().getTime());
-		
 		addClusterHeartBeatDelayTask();
 		return;
 	}
