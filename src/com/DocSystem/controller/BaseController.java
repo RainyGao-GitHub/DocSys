@@ -163,7 +163,6 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
-import com.DocSystem.websocket.OfficeUser;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -4724,23 +4723,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean updateAllIndexForDoc(Repos repos, Doc doc, ReturnAjax rt) 
-	{
-		if(doc.getDocId() == 0)
-		{
-			deleteDocNameIndexLib(repos);
-			deleteRDocIndexLib(repos);
-			deleteVDocIndexLib(repos);
-			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
-		}
-		else
-		{
-			deleteAllIndexForDoc(repos, doc, 2);
-			buildIndexForDoc(repos, doc, null, null, rt, 2, true);
-		}
-		return true;
-	}
-	
 	private void deleteAllIndexForDoc(Repos repos, Doc doc, int deleteFlag) 
 	{
 		deleteIndexForDocName(repos, doc, deleteFlag);
@@ -5782,23 +5764,6 @@ public class BaseController  extends BaseFunction{
 			File node = new File(scanOption.remoteChangesRootPath + doc.getPath() + doc.getName());
 			node.mkdirs();
 		}	
-	}
-
-	private boolean isRemoteChangedCase(DocChangeType docChangeType) {
-		boolean ret = false;
-		switch(docChangeType)
-		{
-		case REMOTEADD:	//remoteAdd
-		case REMOTEDELETE:	//remoteDelete
-		case REMOTECHANGE:	//remoteFileChanged
-		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
-		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
-			ret = true;
-			break;
-		default:
-			break;
-		}
-		return ret;
 	}
 
 	private boolean isDocInVerRepos(Repos repos, Doc doc, String commitId) {
@@ -7299,7 +7264,8 @@ public class BaseController  extends BaseFunction{
 			{
 				return false;				
 			}
-			//TODO: commit virtual root folder
+			
+			//注意: virtualDoc在copy和move的时候不commit 
 			return true;
 		default:
 			break; 
@@ -18223,7 +18189,7 @@ public class BaseController  extends BaseFunction{
 		//注意：remoteHashMap是必须获取的，即使是localChangeOnly也需要remoteDoc来确定真实的提交类型
 		HashMap<String, Doc>  remoteHashMap = getRemoteStorageEntryHashMap(session, remote, repos, doc, null);
 		
-		//TODO: 目前的推送有个问题，已删除的文件因为不在localList中，因此永远都是无法删除的（解决方法就是遍历一次dbDocList将不再localList中的文件都删除）
+		//TODO: 目前的推送有个问题，已删除的文件因为不在localList中，因此永远都是无法删除的（解决方法就是遍历一次dbDocList将不在localList中的文件都删除）
 		for(int i=0; i<localList.size(); i++)
 		{
 			Doc subLocalDoc  = localList.get(i);
