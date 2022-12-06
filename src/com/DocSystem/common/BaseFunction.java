@@ -4666,7 +4666,7 @@ public class BaseFunction{
         		indexWriter.close();
         	}
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			errorLog(e1);
 		}
 		
 		if(directory != null)
