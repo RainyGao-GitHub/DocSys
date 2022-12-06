@@ -11544,10 +11544,10 @@ public class BaseController  extends BaseFunction{
 		if(clusterServersMap.size() == 0)
 		{
 			Log.debug("clearRedisCache() clusterServersMap is empty, do clean all redis data");
-			redisSyncUnlock("uniqueTaskMapSyncLock", "clearRedisCache()");
-			redisSyncUnlock("syncLockForRepos", "clearRedisCache()");
-			redisSyncUnlock("syncLockForSystemLog", "clearRedisCache()");
-			redisSyncUnlock("syncLock", "clearRedisCache()");
+			//redisSyncUnlock("uniqueTaskMapSyncLock", "clearRedisCache()");
+			//redisSyncUnlock("syncLockForRepos", "clearRedisCache()");
+			//redisSyncUnlock("syncLockForSystemLog", "clearRedisCache()");
+			//redisSyncUnlock("syncLock", "clearRedisCache()");
 			clearAllRemoteStorageLocksMap(null);
 			clearAllReposRedisData(null);
 			clearAllOfficeRedisData(null);
@@ -11643,7 +11643,7 @@ public class BaseController  extends BaseFunction{
 	        {
 	        	RemoteStorageLock remoteStorageLock = deleteList.get(i);
 	        	remoteStorageLocksMap.remove(remoteStorageLock.name);
-	        	redisSyncUnlock("remoteStorageSyncLock" + remoteStorageLock.name, "clearAllRemoteStorageLocksMap()");
+	        	//redisSyncUnlock("remoteStorageSyncLock" + remoteStorageLock.name, "clearAllRemoteStorageLocksMap()");
 	        }
         } catch (Exception e) {
             errorLog(e);
@@ -11724,10 +11724,11 @@ public class BaseController  extends BaseFunction{
 				//clearReposExtentionConfigRedisData
 				clearReposExtentionConfigRedisData(repos, targetServerUrl);
 				
-				if(targetServerUrl == null)
-				{
-					clearReposRedisSyncLocks(repos);
-				}
+				//syncLock can not unlock by other thread, so we should set timeout when do lock
+				//if(targetServerUrl == null)
+				//{
+				//	clearReposRedisSyncLocks(repos);
+				//}
 				
 				Log.debug("------------ clearAllReposRedisData End for repos [" + repos.getId() + " " + repos.getName() + "] -----------\n");
 				
