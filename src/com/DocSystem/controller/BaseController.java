@@ -10110,7 +10110,7 @@ public class BaseController  extends BaseFunction{
 		Date date1 = new Date();
 
 		String lockInfo = "gitDocCommit() reposData.syncLockForGitCommit";
-		String lockName = "reposData.syncLockForGitCommit-" + repos.getId();
+		String lockName = "reposData.syncLockForGitCommit" + repos.getId();
 		synchronized(reposData.syncLockForGitCommit)
 		{
 			redisSyncLockEx(lockName, lockInfo);
@@ -10149,7 +10149,7 @@ public class BaseController  extends BaseFunction{
 		ReposData reposData = getReposData(repos);
 
 		String lockInfo = "gitDocCommitEx() reposData.syncLockForGitCommit";
-		String lockName = "reposData.syncLockForGitCommit-" + repos.getId();
+		String lockName = "reposData.syncLockForGitCommit" + repos.getId();
 		
 		Date date1 = new Date();
 		synchronized(reposData.syncLockForGitCommit)
@@ -11578,6 +11578,10 @@ public class BaseController  extends BaseFunction{
 		if(clusterServersMap.size() == 0)
 		{
 			Log.debug("clearRedisCache() clusterServersMap is empty, do clean all redis data");
+			redisSyncUnlock("uniqueTaskMapSyncLock", "clearRedisCache()");
+			redisSyncUnlock("syncLockForRepos", "clearRedisCache()");
+			redisSyncUnlock("syncLockForSystemLog", "clearRedisCache()");
+			redisSyncUnlock("syncLock", "clearRedisCache()");
 			clearAllRemoteStorageLocksMap(null);
 			clearAllReposRedisData(null);
 			clearAllOfficeRedisData(null);
@@ -11638,14 +11642,8 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void clearAllRemoteStorageLocksMap(String targetServerUrl) {
-		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
-		if(targetServerUrl == null)
-		{
-			remoteStorageLocksMap.clear();
-			return;
-		}
-		
 		//遍历reposLocksMap, and unlock the locks locked by serverUrl
+		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
 		List<RemoteStorageLock> deleteList = new ArrayList<RemoteStorageLock>();
     	try {
 	        if (remoteStorageLocksMap != null) {
@@ -11664,7 +11662,8 @@ public class BaseController  extends BaseFunction{
 		            	}
 		            	else
 		            	{
-		            		if(lock.server == null || lock.server.equals(targetServerUrl))
+		            		
+		            		if(targetServerUrl == null || lock.server == null || lock.server.equals(targetServerUrl))
 		            		{
 		            			deleteList.add(lock);
 		            		}
@@ -11673,11 +11672,12 @@ public class BaseController  extends BaseFunction{
 		        }
 	        }	        
 	        
-	        //remove the reposLocks
+	        //remove the remoteStorageLock
 	        for(int i=0; i<deleteList.size(); i++)
 	        {
 	        	RemoteStorageLock remoteStorageLock = deleteList.get(i);
 	        	remoteStorageLocksMap.remove(remoteStorageLock.name);
+	        	redisSyncUnlock("remoteStorageSyncLock" + remoteStorageLock.name, "clearAllRemoteStorageLocksMap()");
 	        }
         } catch (Exception e) {
             errorLog(e);
@@ -11758,6 +11758,11 @@ public class BaseController  extends BaseFunction{
 				//clearReposExtentionConfigRedisData
 				clearReposExtentionConfigRedisData(repos, targetServerUrl);
 				
+				if(targetServerUrl == null)
+				{
+					clearReposRedisSyncLocks(repos);
+				}
+				
 				Log.debug("------------ clearAllReposRedisData End for repos [" + repos.getId() + " " + repos.getName() + "] -----------\n");
 				
 			}
@@ -11765,6 +11770,62 @@ public class BaseController  extends BaseFunction{
 	        Log.info("initReposExtentionConfigEx 异常");
 	        Log.info(e);
 		}	
+	}
+
+	private void clearReposRedisSyncLocks(Repos repos) {
+		//clear reposExtConfigSyncLock
+		String lockInfo = "clearReposRedisSyncLocks for repos [" + repos.getId() + " " + repos.getName() + "]";
+
+		//clear clusterDeployCheck SyncLock
+		String lockName = "clusterDeployCheck" + repos.getId();
+		redisSyncUnlock(lockName, lockInfo);
+
+		lockName = "reposExtConfigSyncLock" + repos.getId();
+		redisSyncUnlock(lockName, lockInfo);	
+				
+		//clear syncLockForGitCommit
+		lockName = "reposData.syncLockForGitCommit" + repos.getId();
+		redisSyncUnlock(lockName, lockInfo);
+		
+		//clear syncLockForGitCommit
+		lockName = "reposData.syncLockForSvnCommit" + repos.getId();
+		redisSyncUnlock(lockName, lockInfo);
+		
+		//clear repos related indexLibSyncLocks
+		lockName = "indexLibSyncLock" + getIndexLibPath(repos, 0);	//indexLib for docName
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" + getIndexLibPath(repos, 1);	//indexLib for realDoc
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" + getIndexLibPath(repos, 2);	//indexLib for virtualDoc
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "RemoteStorage/Doc";		//RemoteStorage
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos)  + "RemoteServer/Doc";		//RemoteServer
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "LocalBackup/Doc";				//LocalBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "LocalBackup/Doc-RealTime";		//LocalBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "LocalBackup/VDoc";				//LocalBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "LocalBackup/VDoc-RealTime";	//LocalBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "RemoteBackup/Doc";				//RemoteBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "RemoteBackup/Doc-RealTime";	//RemoteBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "RemoteBackup/VDoc";			//RemoteBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "RemoteBackup/VDoc-RealTime";	//RemoteBackup
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "PushRepos/ReposRoot";				//PushRepos
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos)  + "PushRepos/ReposRealDoc";			//PushRepos
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "PushRepos/ReposRealDocVerRepos";	//PushRepos
+		redisSyncUnlock(lockName, lockInfo);
+		lockName = "indexLibSyncLock" +  Path.getReposIndexLibPath(repos) + "PushRepos/ReposVirtualDocVerRepos";//PushRepos
+		redisSyncUnlock(lockName, lockInfo);
 	}
 
 	private void clearReposExtentionConfigRedisData(Repos repos, String targetServerUrl) {
@@ -12047,7 +12108,9 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		redisSyncLock("clusterDeployCheck" + repos.getId(), repos.getId() + " " + repos.getName() + " Cluster Deploy Check ");
+		String lockName = "clusterDeployCheck" + repos.getId();
+		String lockInfo = "[" + repos.getId() + " " + repos.getName() + "] Cluster Deploy Check";
+		redisSyncLock(lockName, lockInfo);
 		
 		boolean ret = false;
 		RBucket<Object> bucket = redisClient.getBucket("clusterDeployCheckSum" + repos.getId());
@@ -12075,7 +12138,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		redisSyncUnlock("clusterDeployCheck" + repos.getId(), repos.getId() + " " + repos.getName() + " Cluster Deploy Check ");
+		redisSyncUnlock(lockName, lockInfo);
 
 		Log.debug("clusterDeployCheck() check result:" + ret);
 		return ret;
