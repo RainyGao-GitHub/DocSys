@@ -1458,20 +1458,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);		
 	}
 
-	private void rebuildReposAllDocIndex(Repos repos) {
-		//Delete All Index Lib
-		deleteDocNameIndexLib(repos);
-		deleteRDocIndexLib(repos);
-		deleteVDocIndexLib(repos);
-		
-		//Build All Index For RootDoc
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildRootDoc(repos, localRootPath, localVRootPath);
-		ReturnAjax rt = new ReturnAjax();
-		buildIndexForDoc(repos, doc, null, null, rt, 2, true);		
-	}
-
 	private boolean clearReposFileCache(Repos repos, ReturnAjax rt) {
 		String reposTmpPath = Path.getReposTmpPath(repos);
 		return FileUtil.clearDir(reposTmpPath);
