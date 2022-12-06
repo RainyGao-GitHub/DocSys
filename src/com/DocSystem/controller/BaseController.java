@@ -211,7 +211,7 @@ public class BaseController  extends BaseFunction{
 			if(redisUrl == null || redisUrl.isEmpty())
 			{
 				redisEn = false;
-				Log.error("initRedis() redisUrl not configured");
+				errorLog("initRedis() redisUrl not configured");
 				return;
 			}
 			
@@ -2560,7 +2560,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			encStr = URLEncoder.encode(str, "utf-8");
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			errorLog(e);
 		}
 		return encStr;
 	}
@@ -2576,7 +2576,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			str = URLDecoder.decode(encStr, "utf-8");
 		} catch (UnsupportedEncodingException e) {
-			Log.error(e);
+			errorLog(e);
 		}
 		return str;
 	}
@@ -21080,7 +21080,7 @@ public class BaseController  extends BaseFunction{
 				try {
 					curLock.synclock.wait(retrySleepTime);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					errorLog(e);
 				}
 			}
 		}
@@ -21870,7 +21870,7 @@ public class BaseController  extends BaseFunction{
 			copyAuthedFilesForDownload(rootFile, repos, doc, curDocAuth, docAuthHashMap, doc.getLocalRootPath() + doc.getPath() + doc.getName(), targetPath + targetName);	        
     	} catch(Exception e) {
     		Log.error("copyAuthedFilesForDownload() 拷贝异常");
-    		Log.error(e);
+    		errorLog(e);
     	}
     	return ret;
     }
@@ -21960,7 +21960,7 @@ public class BaseController  extends BaseFunction{
 	        }
     	} catch(Exception e) {
     		Log.error("compressAuthedFilesWithZip() 压缩异常");
-    		Log.error(e);
+    		errorLog(e);
     	}
     	return ret;
     }
