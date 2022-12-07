@@ -991,7 +991,7 @@ public class ManageController extends BaseController{
 			Integer maxThreadCount,
 			Integer redisEn,
 			String redisUrl,
-			
+			String clusterServerUrl,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** setSystemInfo.do ***********************");
@@ -1004,7 +1004,7 @@ public class ManageController extends BaseController{
 				+ " salesDataStorePath:" + salesDataStorePath 
 				+ " maxThreadCount:" + maxThreadCount 
 				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel + " logFile:" + logFile
-				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl);
+				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
@@ -1140,7 +1140,16 @@ public class ManageController extends BaseController{
 		if(redisEn != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "redisEn", redisEn+"");
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "redisUrl", redisUrl);			
+		}
+		
+		if(redisUrl != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "redisUrl", redisUrl);
+		}
+		
+		if(clusterServerUrl != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "serverUrl", clusterServerUrl);
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
