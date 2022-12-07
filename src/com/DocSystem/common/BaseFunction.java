@@ -137,9 +137,6 @@ public class BaseFunction{
 	//服务器IP和MAC
     protected static String serverIP = null;
     protected static String serverMAC = null;
-	
-    //serverUrl(http://serverIP:port)集群时用于服务器之间通信
-    protected static String serverUrl = null;
 	    
 	//分享代理服务线程（一个服务器只允许启动一个）
 	protected static ProxyThread proxyThread = null;
@@ -161,7 +158,11 @@ public class BaseFunction{
 
 	public static boolean redisEn = false;
     public static RedissonClient redisClient = null;
-
+    public static boolean globalClusterDeployCheckResult = false;
+    public static String globalClusterDeployCheckResultInfo = "";
+    //serverUrl(http://serverIP:port)集群时用于服务器之间通信
+    protected static String serverUrl = null;
+	
     //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
     //接口访问授权码HashMap
   	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();

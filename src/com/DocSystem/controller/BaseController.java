@@ -198,7 +198,9 @@ public class BaseController  extends BaseFunction{
 		initRedis();
     }
     
-	protected static void initRedis() {
+	protected static boolean initRedis() {
+		boolean preRedisEn = redisEn;
+		
 		//初始化调试等级
 		Log.debug("initRedis()");
 		int isRedisEn = getRedisEn();
@@ -211,22 +213,29 @@ public class BaseController  extends BaseFunction{
 			{
 				redisEn = false;
 				errorLog("initRedis() redisUrl not configured");
-				return;
 			}
-			
-	        Config config = new Config();
-	        config.useSingleServer().setAddress(redisUrl);
-	        redisClient = Redisson.create(config);
-	        if(redisClient == null)
-	        {
-	        	redisEn = false;
-	        	Log.error("initRedis() failed to connect to redisServer:" + redisUrl);				
-	        }
-	        else
-	        {
-	        	redisEn = true;
-	        }
+			else
+			{
+		        Config config = new Config();
+		        config.useSingleServer().setAddress(redisUrl);
+		        redisClient = Redisson.create(config);
+		        if(redisClient == null)
+		        {
+		        	redisEn = false;
+		        	Log.error("initRedis() failed to connect to redisServer:" + redisUrl);				
+		        }
+		        else
+		        {
+		        	redisEn = true;
+		        }
+			}
 		}
+		else
+		{
+			redisEn = false;
+		}
+		
+		return preRedisEn != redisEn;
 	}
 
 	private static void initLogLevel() {
@@ -11458,6 +11467,12 @@ public class BaseController  extends BaseFunction{
 				{
 					//clear redis cache
 					clearRedisCache();
+					if(clusterDeployCheckGlobal() == true)
+					{
+						RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+						clusterServersMap.put(serverUrl, new Date().getTime());
+						addClusterHeartBeatDelayTask();
+					}
 				}
 				
 				initReposExtentionConfigEx();
@@ -11484,6 +11499,12 @@ public class BaseController  extends BaseFunction{
 			{
 				//clear redis cache
 				clearRedisCache();
+				if(clusterDeployCheckGlobal() == true)
+				{
+					RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+					clusterServersMap.put(serverUrl, new Date().getTime());
+					addClusterHeartBeatDelayTask();
+				}
 			}
 			
 			initReposExtentionConfigEx();
@@ -11493,6 +11514,23 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return ret;
+	}
+	
+	protected void restartClusterServer() {
+		Log.info("restartClusterServer() [" + serverUrl+ "]");
+		if(redisEn)
+		{
+			//clear redis cache
+			clearRedisCache();
+			if(clusterDeployCheckGlobal() == true)
+			{
+				RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+				clusterServersMap.put(serverUrl, new Date().getTime());
+				addClusterHeartBeatDelayTask();
+			}
+		}
+
+		initReposExtentionConfigEx();
 	}
 	
 	private void clearRedisCache() {
@@ -11512,26 +11550,20 @@ public class BaseController  extends BaseFunction{
 	        	String clusterServerUrl = entry.getKey();
 	    		Log.info("clearRedisCache() clusterServer [" + clusterServerUrl + "]");
 	            
-	        	if(clusterServerUrl.equals(serverUrl))
-	        	{
-	        		deleteList.add(clusterServerUrl);
-	        	}
+	        	Long beatTime = entry.getValue();
+	        	if(beatTime == null)
+	            {
+	            	Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " beatTime is null");
+	            	deleteList.add(clusterServerUrl);
+	            }
 	        	else
 	        	{
-	        		Long beatTime = entry.getValue();
-	        		if(beatTime == null)
-	            	{
-	            		Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " beatTime is null");
-	            		deleteList.add(clusterServerUrl);
-	            	}
-	        		else
-	        		{
-		            	if((curTime - beatTime) > 30*60*1000)	//heart beating have stopped for 30 minutes
-		            	{
-		            		Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " heart beating have stopped " + (curTime - beatTime)/1000 + " minutes");
-		            		deleteList.add(clusterServerUrl);			            	
-		            	}
-	        		}
+		            if((curTime - beatTime) > 30*60*1000)	//heart beating have stopped for 30 minutes
+		            {
+		            	Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " heart beating have stopped " + (curTime - beatTime)/1000 + " minutes");
+		            	deleteList.add(clusterServerUrl);			            	
+		            
+		            }
 	        	}
 	        }
 	    }
@@ -11544,10 +11576,7 @@ public class BaseController  extends BaseFunction{
 		if(clusterServersMap.size() == 0)
 		{
 			Log.debug("clearRedisCache() clusterServersMap is empty, do clean all redis data");
-			//redisSyncUnlock("uniqueTaskMapSyncLock", "clearRedisCache()");
-			//redisSyncUnlock("syncLockForRepos", "clearRedisCache()");
-			//redisSyncUnlock("syncLockForSystemLog", "clearRedisCache()");
-			//redisSyncUnlock("syncLock", "clearRedisCache()");
+			clearGlobalRedisData();
 			clearAllRemoteStorageLocksMap(null);
 			clearAllReposRedisData(null);
 			clearAllOfficeRedisData(null);
@@ -11564,8 +11593,6 @@ public class BaseController  extends BaseFunction{
 		    }
 		}
 		
-		clusterServersMap.put(serverUrl, new Date().getTime());
-		addClusterHeartBeatDelayTask();
 		return;
 	}
 
@@ -11579,11 +11606,19 @@ public class BaseController  extends BaseFunction{
                         try {
 	                        Long beatTime = new Date().getTime();
 	                        Log.info("\n******** ClusterHeartBeatDelayTask beatTime [" + beatTime + "]");
-	                        
-	                        RMap<Object, Object> clusterServersMap = redisClient.getMap("clusterServersMap");
-	                        clusterServersMap.put(serverUrl, beatTime);
-	                        
-	                        addClusterHeartBeatDelayTask();                      
+	                       
+	                        if(redisEn == false)
+	                        {
+	                        	Log.info("[" + serverUrl + "] 已退出集群，清理自己集群数据");
+	                        	//TODO: 清理当前占用的redisData		                        
+	                        }
+	                        else
+	                        {
+		                        RMap<Object, Object> clusterServersMap = redisClient.getMap("clusterServersMap");
+		                        clusterServersMap.put(serverUrl, beatTime);
+		                        
+		                        addClusterHeartBeatDelayTask();                    
+	                        }
                         	Log.info("******** ClusterHeartBeatDelayTask 执行结束\n");		                        
                         } catch(Exception e) {
                         	Log.info("******** ClusterHeartBeatDelayTask 执行异常\n");
@@ -11993,11 +12028,104 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+	private void clearGlobalRedisData() {
+		RBucket<String> buket = redisClient.getBucket("DB_URL");
+		buket.delete();
+
+		buket = redisClient.getBucket("OfficeEditor");
+		buket.delete();
+	}
+	
+	private boolean clusterDeployCheckGlobal() {
+		boolean ret = false;
+		
+		String lockName = "clusterDeployCheckGlobal";
+		String lockInfo = "Cluster Deploy Check Global";
+
+		try {
+			redisSyncLock(lockName, lockInfo);
+			
+			if(clusterDeployCheckGlobal_DuplicateCheck() == false)
+			{
+				redisSyncUnlock(lockName, lockInfo);
+				return false;
+			}
+			
+			//Check DB URL
+			if(clusterDeployCheckGlobal_ConfigCheck("DB_URL", DB_URL) == false)
+			{
+				redisSyncUnlock(lockName, lockInfo);				
+				return false;
+			}
+			
+			//Check OfficeEditor
+			if(clusterDeployCheckGlobal_ConfigCheck("OfficeEditor", officeEditorApi))
+			{
+				redisSyncUnlock(lockName, lockInfo);				
+				return false;
+			}
+			
+			globalClusterDeployCheckResult = true;
+			ret = true;			
+	    } catch (Exception e) {
+	        Log.info("clusterDeployCheckGlobal 异常");
+	        Log.info(e);
+		}
+		
+		redisSyncUnlock(lockName, lockInfo);		
+		return ret;
+	}
+	
+	private boolean clusterDeployCheckGlobal_DuplicateCheck() {
+		RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+		if(clusterServersMap.get(serverUrl) == null)
+		{
+			return true;
+		}
+		
+		globalClusterDeployCheckResult = false;
+	    globalClusterDeployCheckResultInfo = "集群检测失败: [" + serverUrl + "] 已在集群列表中";
+	    return false;
+	}
+    
+	private boolean clusterDeployCheckGlobal_ConfigCheck(String configName, String localValue) {
+		RBucket<String> buket = redisClient.getBucket(configName);
+		String redisValue = buket.get();
+		if(redisValue == null)
+		{
+			if(localValue == null)
+			{
+				buket.set("");
+			}
+			else
+			{
+				buket.set(localValue);
+			}
+			return true;
+		}
+
+		if(localValue == null)
+		{
+			if(redisValue.isEmpty())
+			{
+				return true;
+			}
+
+			globalClusterDeployCheckResult = false;
+		    globalClusterDeployCheckResultInfo = "集群检测失败:[" + configName + "] 配置不一致 [" + localValue + "] [" + redisValue + "]";
+		    return false;
+		}
+
+		globalClusterDeployCheckResult = false;
+	    globalClusterDeployCheckResultInfo = "集群检测失败:[" + configName + "] 配置不一致 [" + localValue + "] [" + redisValue + "]";
+		return redisValue.equals(localValue);
+	}
+
 	private void initReposExtentionConfigEx(Repos repos, ReposData reposData) {
 		Log.debug("++++++++++ initReposExtentionConfigEx() clusterDeployCheck Start ++++++");
 		if(clusterDeployCheck(repos, reposData) == false)
 		{
-			reposData.disabled = "集群检测失败，请检查该仓库的存储路径是否符合集群条件！";					
+			//reposData.disabled = "集群检测失败，请检查该仓库的存储路径是否符合集群条件！";					
 			Log.debug("----------- initReposExtentionConfigEx() clusterDeployCheck Failed ----");
 			return;
 		}
@@ -12075,9 +12203,11 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		//TODO:Check DB Server
-		//if DB Server in redis is null then do set the DB Server
-		//else check if DB Server is same
+		if(globalClusterDeployCheckResult == false)
+		{
+			reposData.disabled = globalClusterDeployCheckResultInfo;
+			return false;
+		}
 		
 		String lockName = "clusterDeployCheck" + repos.getId();
 		String lockInfo = "[" + repos.getId() + " " + repos.getName() + "] Cluster Deploy Check";
@@ -12100,6 +12230,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("clusterDeployCheck() remoteCheckSum:" + checkSum + " localCheckSum:" + localCheckSum);
 			if(localCheckSum == null || !localCheckSum.equals(checkSum))
 			{
+				reposData.disabled = "集群检测失败，仓库的存储路径不一致";
 				Log.info("clusterDeployCheck() " + repos.getId() + " " + repos.getName() + " cluster deploy check failed: remoteCheckSum:" + checkSum + " localCheckSum:" + localCheckSum);
 				ret = false;
 			}
