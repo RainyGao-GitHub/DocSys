@@ -161,7 +161,7 @@ public class BaseFunction{
     public static boolean globalClusterDeployCheckResult = false;
     public static String globalClusterDeployCheckResultInfo = "";
     //serverUrl(http://serverIP:port)集群时用于服务器之间通信
-    protected static String serverUrl = null;
+    protected static String clusterServerUrl = null;
 	
     //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
     //接口访问授权码HashMap
@@ -226,7 +226,7 @@ public class BaseFunction{
     	initOfficeLicenseInfo();
     	initLdapConfig();
 		serverHost = getServerHost();
-		serverUrl = getServerUrl();
+		clusterServerUrl = getClusterServerUrl();
 
 		initSystemUsers();
 	}
@@ -1061,7 +1061,7 @@ public class BaseFunction{
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
 			reposLock.createTime[lockType] = currentTime;
-			reposLock.server[lockType] = serverUrl;
+			reposLock.server[lockType] = clusterServerUrl;
 			reposLock.info[lockType] = info;
 			addReposLock(repos, reposLock);			
 		}
@@ -1072,7 +1072,7 @@ public class BaseFunction{
 			reposLock.locker[lockType] = login_user.getName();
 			reposLock.lockBy[lockType] = login_user.getId();
 			reposLock.lockTime[lockType] = lockTime;	//Set lockTime
-			reposLock.server[lockType] = serverUrl;
+			reposLock.server[lockType] = clusterServerUrl;
 			reposLock.info[lockType] = info;
 			updateReposLock(repos, reposLock);
 		}
@@ -1237,7 +1237,7 @@ public class BaseFunction{
 			Long currentTime = new Date().getTime();
 			docLock.createTime[lockType] = currentTime;	//Set createTime
 			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime
-			docLock.server[lockType] = serverUrl;
+			docLock.server[lockType] = clusterServerUrl;
 			docLock.info[lockType] = info;
 			addDocLock(doc, docLock);
 			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
@@ -1253,7 +1253,7 @@ public class BaseFunction{
 			Long currentTime = new Date().getTime();
 			docLock.createTime[lockType] = currentTime;	//Set createTime
 			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime		
-			docLock.server[lockType] = serverUrl;
+			docLock.server[lockType] = clusterServerUrl;
 			docLock.info[lockType] = info;
 			updateDocLock(doc, docLock);
 			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
@@ -1958,8 +1958,8 @@ public class BaseFunction{
 	}
 	
 	//集群时使用
-	protected static String getServerUrl() {
-		Log.debug("getServerUrl() ");
+	protected static String getClusterServerUrl() {
+		Log.debug("getClusterServerUrl() ");
 		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "serverUrl");
 		if(value != null)
 		{

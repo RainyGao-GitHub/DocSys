@@ -779,6 +779,7 @@ public class ManageController extends BaseController{
 		Integer maxThreadCount = getMaxThreadCount();
 		Integer redisEn = getRedisEn();
 		String redisUrl = getRedisUrl();
+		String clusterInfo = getClusterInfo();
 
 		JSONObject config = getSystemInfo();
 		config.put("docSysType", docSysType);
@@ -793,7 +794,9 @@ public class ManageController extends BaseController{
 		config.put("maxThreadCount", maxThreadCount);	
 		config.put("systemDisabled", systemDisabled);
 		config.put("redisEn", redisEn);
-		config.put("redisUrl", redisUrl);		
+		config.put("redisUrl", redisUrl);
+		config.put("clusterServerUrl", clusterServerUrl);
+		config.put("clusterInfo", clusterInfo);
 		
 		if(docSysType < 1)
 		{
