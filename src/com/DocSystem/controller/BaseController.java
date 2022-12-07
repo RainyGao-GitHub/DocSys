@@ -208,6 +208,8 @@ public class BaseController  extends BaseFunction{
 
 		if(isRedisEn == 1)
 		{
+			clusterServerUrl = getClusterServerUrl();
+			
 			String redisUrl = getRedisUrl();
 			if(redisUrl == null || redisUrl.isEmpty())
 			{
