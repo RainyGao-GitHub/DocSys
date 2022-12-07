@@ -1162,10 +1162,13 @@ public class ManageController extends BaseController{
 		
 		if(redisEn != null)
 		{
-			initRedis();
+			if(initRedis())	//redisEn changed
+			{
+				restartClusterServer();
+			}
 		}
 	}
-	
+
 	@RequestMapping("/testRedis.do")
 	public void testRedis(String redisUrl, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
