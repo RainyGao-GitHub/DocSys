@@ -11583,6 +11583,9 @@ public class BaseController  extends BaseFunction{
 	private void clearRedisCache() {
 		Log.info("clearRedisCache()");
 		
+		//注意: 没有把当前clusterServerUrl直接加到deadList的原因，在于用户可能把clusterServerUrl设置错了，所以不能直接删除
+		//只能清除已经明确死亡的服务器，换句话说，重新加入集群需要30分钟之后（当然可以考虑缩短集群心跳间隔）
+		
 		//Go throuhg clusterServersMap
 	    List<String> deleteList = new ArrayList<String>();
 	    RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
@@ -12077,6 +12080,9 @@ public class BaseController  extends BaseFunction{
 		RBucket<String> buket = redisClient.getBucket("DB_URL");
 		buket.delete();
 
+		buket = redisClient.getBucket("ldapConfig");
+		buket.delete();
+		
 		buket = redisClient.getBucket("OfficeEditor");
 		buket.delete();
 	}
@@ -12097,6 +12103,14 @@ public class BaseController  extends BaseFunction{
 			
 			//Check DB URL
 			if(clusterDeployCheckGlobal_ConfigCheck("DB_URL", DB_URL) == false)
+			{
+				redisSyncUnlock(lockName, lockInfo);				
+				return false;
+			}
+			
+			//Check LDAP
+			String ldapConfig = getLdapConfig();
+			if(clusterDeployCheckGlobal_ConfigCheck("ldapConfig", ldapConfig) == false)
 			{
 				redisSyncUnlock(lockName, lockInfo);				
 				return false;
