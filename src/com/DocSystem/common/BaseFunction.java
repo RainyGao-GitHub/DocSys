@@ -4490,7 +4490,7 @@ public class BaseFunction{
 	protected static String getClusterServerUrl() {
 		Log.debug("getClusterServerUrl() ");
 		//String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "serverUrl");
-		String value = ReadProperties.read("docSysConfig.properties", "redisUrl");
+		String value = ReadProperties.read("docSysConfig.properties", "serverUrl");
 		if(value != null)
 		{
 			return value;

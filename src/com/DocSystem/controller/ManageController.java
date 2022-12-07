@@ -779,6 +779,7 @@ public class ManageController extends BaseController{
 		Integer maxThreadCount = getMaxThreadCount();
 		Integer redisEn = getRedisEn();
 		String redisUrl = getRedisUrl();
+		String clusterServerUrl = getClusterServerUrl();
 		String clusterInfo = getClusterInfo();
 
 		JSONObject config = getSystemInfo();
