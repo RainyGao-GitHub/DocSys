@@ -162,7 +162,10 @@ public class BaseFunction{
     public static String globalClusterDeployCheckResultInfo = "";
     //serverUrl(http://serverIP:port)集群时用于服务器之间通信
     protected static String clusterServerUrl = null;
-	
+    public static int clusterHeartBeatInterval = 300; //300秒(5分钟)，心跳间隔
+    public static int clusterHeartBeatStopTime = 3*clusterHeartBeatInterval*1000;	//3次心跳
+    
+    
     //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
     //接口访问授权码HashMap
   	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();

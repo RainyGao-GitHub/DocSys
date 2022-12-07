@@ -11563,7 +11563,7 @@ public class BaseController  extends BaseFunction{
 	            }
 	        	else
 	        	{
-		            if((curTime - beatTime) > 30*60*1000)	//heart beating have stopped for 30 minutes
+		            if((curTime - beatTime) > clusterHeartBeatStopTime)	//heart beating have stopped for 30 minutes
 		            {
 		            	Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " heart beating have stopped " + (curTime - beatTime)/1000 + " minutes");
 		            	clusterInfo += "[" + clusterServerUrl + "] 已停止，上次激活时间 [" + DateFormat.dateTimeFormat(new Date(beatTime)) + "]\n";
@@ -11608,7 +11608,7 @@ public class BaseController  extends BaseFunction{
 	            }
 	        	else
 	        	{
-		            if((curTime - beatTime) > 30*60*1000)	//heart beating have stopped for 30 minutes
+		            if((curTime - beatTime) > clusterHeartBeatStopTime)	//heart beating have stopped for 30 minutes
 		            {
 		            	Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " heart beating have stopped " + (curTime - beatTime)/1000 + " minutes");
 		            	deleteList.add(clusterServerUrl);			            	
@@ -11675,7 +11675,7 @@ public class BaseController  extends BaseFunction{
                         
                     }
                 },
-                600,	//beat per 10 minutes(600 seconds)
+        		clusterHeartBeatInterval,	//beat per 10 minutes(600 seconds)
                 TimeUnit.SECONDS);
 	}
 
