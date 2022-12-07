@@ -12075,6 +12075,10 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
+		//TODO:Check DB Server
+		//if DB Server in redis is null then do set the DB Server
+		//else check if DB Server is same
+		
 		String lockName = "clusterDeployCheck" + repos.getId();
 		String lockInfo = "[" + repos.getId() + " " + repos.getName() + "] Cluster Deploy Check";
 		redisSyncLock(lockName, lockInfo);
