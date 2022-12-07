@@ -1959,18 +1959,6 @@ public class BaseFunction{
 			applySystemLdapConfig(value);
 		}		
 	}
-	
-	//集群时使用
-	protected static String getClusterServerUrl() {
-		Log.debug("getClusterServerUrl() ");
-		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "serverUrl");
-		if(value != null)
-		{
-			return value;
-		}
-		
-		return "http://localhost:8100";
-	}
 		
 	protected static void applySystemLdapConfig(String ldapConfig) {
 		//UPdate系统ldapConfig
@@ -4497,6 +4485,18 @@ public class BaseFunction{
         }
 
 		return null;
+	}
+	
+	protected static String getClusterServerUrl() {
+		Log.debug("getClusterServerUrl() ");
+		//String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "serverUrl");
+		String value = ReadProperties.read("docSysConfig.properties", "redisUrl");
+		if(value != null)
+		{
+			return value;
+		}
+		
+		return "http://localhost:8100";
 	}
 
 	protected static Integer getRedisEn() {
