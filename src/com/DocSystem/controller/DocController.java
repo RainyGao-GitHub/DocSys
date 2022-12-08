@@ -158,6 +158,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 
@@ -168,6 +169,8 @@ public class DocController extends BaseController{
 			rt.setMsgData(1);
 			rt.setData(tmpDoc);
 			writeJson(rt, response);
+			
+			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -265,6 +268,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 
@@ -276,6 +280,7 @@ public class DocController extends BaseController{
 			rt.setMsgData(1);
 			rt.setData(tmpDoc);
 			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -467,12 +472,14 @@ public class DocController extends BaseController{
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
 		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 
@@ -515,23 +522,33 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
+		
 		//delete file from server directory
 		if(reposId == null)
 		{
 			if(remoteDirectory == null)
 			{
-				Log.debug("deleteDocRS remoteDirectory is null");
+				docSysDebugLog("deleteDocRS remoteDirectory is null", rt);
 				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
+				addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
 			if(FileUtil.delFileOrDir(remoteDirectory + path + name) == false)
 			{
-				Log.debug("deleteDocRS() " + remoteDirectory + path + name + "删除失败！");
-				rt.setError("删除失败");
+				docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除失败！", rt);
+				rt.setError("删除失败");				
+				writeJson(rt, response);
+				addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", null, null, null, buildSystemLogDetailContent(rt));
+				return;
 			}
-			writeJson(rt, response);			
+			
+			writeJson(rt, response);	
+			
+			docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除成功！", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","成功", null, null, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 		
@@ -547,10 +564,10 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 
@@ -620,12 +637,14 @@ public class DocController extends BaseController{
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 	
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -639,6 +658,7 @@ public class DocController extends BaseController{
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -648,7 +668,10 @@ public class DocController extends BaseController{
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
-			writeJson(rt, response);			
+
+			writeJson(rt, response);
+			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
@@ -705,7 +728,8 @@ public class DocController extends BaseController{
 		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, reposPath, srcPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), srcParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 
@@ -713,6 +737,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -730,6 +755,8 @@ public class DocController extends BaseController{
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));	
+
 			return;
 		}
 		
@@ -739,7 +766,9 @@ public class DocController extends BaseController{
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
-			writeJson(rt, response);			
+			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
+
 			return;
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
@@ -752,11 +781,11 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "成功", repos, srcDoc, dstDoc, "");	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "成功", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
 			executeCommonActionList(actionList, rt);
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, dstDoc, "");	
+		addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
 	}
 
 	/****************   move a Document ******************/
@@ -795,6 +824,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -815,13 +845,15 @@ public class DocController extends BaseController{
 		if(srcDoc == null || srcDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
-			writeJson(rt, response);			
+			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			return;
 		}
 
@@ -864,15 +896,17 @@ public class DocController extends BaseController{
 		{
 			move = true;
 		}			
-	
+
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		//move file
 		if(reposId == null)
 		{
 			if(remoteDirectory == null)
 			{
-				Log.debug("copyDocRS remoteDirectory is null");
+				docSysDebugLog("copyDocRS remoteDirectory is null", rt);
 				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
+				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
@@ -880,19 +914,29 @@ public class DocController extends BaseController{
 			{
 				if(FileUtil.moveFileOrDir(remoteDirectory + srcPath, srcName, remoteDirectory + dstPath, dstName, false) == false)
 				{
-					Log.debug("copyDocRS() move " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！");
+					docSysDebugLog("copyDocRS() move " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！", rt);
 					rt.setError("移动失败");
+					writeJson(rt, response);			
+					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  null, null, null, buildSystemLogDetailContent(rt));
+					return;
 				}				
 			}
 			else
 			{
 				if(FileUtil.copyFileOrDir(remoteDirectory + srcPath + srcName, remoteDirectory + dstPath + dstName, false) == false)
 				{
-					Log.debug("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！");
+					docSysDebugLog("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！", rt);
 					rt.setError("复制失败");
+					writeJson(rt, response);			
+					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  null, null, null, buildSystemLogDetailContent(rt));
+					return;
 				}
 			}
-			writeJson(rt, response);			
+			
+			writeJson(rt, response);
+			
+			docSysDebugLog("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "成功！", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","成功",  null, null, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 		
@@ -908,10 +952,10 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc dstParentDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
-		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -939,7 +983,8 @@ public class DocController extends BaseController{
 		if(srcDoc == null || srcDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
-			writeJson(rt, response);			
+			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -1627,34 +1672,41 @@ public class DocController extends BaseController{
 
 				if(ret == true)
 				{
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 					executeCommonActionList(actionList, rt);
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				}					
+				}
+				else
+				{
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
+				}
+				return;
+			}
+			
+			//updateDoc
+			ret = updateDoc(repos, doc, 
+					uploadFile,  
+					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+		
+			writeJson(rt, response);	
+	
+			if(ret == true)
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
+				executeCommonActionList(actionList, rt);
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				deletePreviewFile(doc);
 			}
 			else
 			{
-				ret = updateDoc(repos, doc, 
-						uploadFile,  
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
-			
-				writeJson(rt, response);	
-				if(ret == true)
-				{
-					executeCommonActionList(actionList, rt);
-					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					deletePreviewFile(doc);
-				}
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));										
 			}
-
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
-		else
-		{
-			docSysErrorLog("文件上传失败！", rt);
-		}
+		
+		docSysErrorLog("文件上传失败！", rt);
 		writeJson(rt, response);
-		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, "");	
+		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
 	private String getMaxUploadSize(Long uploadSize) {
@@ -1709,7 +1761,9 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
+
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
+
 		//upload to server directory
 		if(reposId == null)
 		{
@@ -1728,9 +1782,11 @@ public class DocController extends BaseController{
 				String fileChunkName = name + "_" + chunkIndex;
 				if(FileUtil.saveFile(uploadFile, chunkTmpPath, fileChunkName) == null)
 				{
-					Log.debug("uploadDocRS 分片文件 " + fileChunkName +  " 暂存失败!");
-					rt.setError("分片文件 " + fileChunkName +  " 暂存失败!");
+					docSysDebugLog("uploadDocRS 分片文件 " + fileChunkName +  " 暂存失败!", rt);
+					docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 					writeJson(rt, response);
+					
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 					return;
 				}
 				
@@ -1747,10 +1803,20 @@ public class DocController extends BaseController{
 			{
 				if(FileUtil.saveFile(uploadFile, remoteDirectory + path, name) == null)
 				{
-					Log.debug("uploadDocRS 文件 " + name +  " 保存失败!");
-					rt.setError("文件 " + name +  " 保存失败!");
+					docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
+					docSysErrorLog("文件 " + name +  " 保存失败!", rt);
+				
+					writeJson(rt, response);
+					
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+					return;
 				}
+
+				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
+
 				writeJson(rt, response);
+				
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 			
@@ -1763,10 +1829,18 @@ public class DocController extends BaseController{
 				}
 				if(FileUtil.moveFileOrDir(chunkTmpPath, name + "_0", localParentPath, name, true) == false)
 				{
-					Log.debug("uploadDocRS 文件 " + name +  " 保存失败!");
-					rt.setError("文件 " + name +  " 保存失败!");
+					docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
+					docSysErrorLog("文件 " + name +  " 保存失败!", rt);
+
+					writeJson(rt, response);
+
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+					return;
 				}
+
 				writeJson(rt, response);
+				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 			
@@ -1776,10 +1850,18 @@ public class DocController extends BaseController{
 			//Verify the size and FileCheckSum
 			if(false == checkFileSizeAndCheckSum(localParentPath,name, size, checkSum))
 			{
-				Log.debug("uploadDocRS 文件校验失败");
-				rt.setError("文件校验失败");
+				docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验失败", rt);
+				docSysErrorLog("文件校验失败", rt);
+				
+				writeJson(rt, response);
+
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
 			}
+			
 			writeJson(rt, response);
+			docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验成功", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));				
 			return;			
 		}
 		
@@ -1804,7 +1886,6 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
 		
 		//Check Edit Right
-		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
 		{
@@ -1883,6 +1964,7 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 			
@@ -1915,33 +1997,41 @@ public class DocController extends BaseController{
 
 				if(ret == true)
 				{
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 					executeCommonActionList(actionList, rt);
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				}					
+				}
+				else
+				{
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
+				}
+				return;
+			}
+
+			//updateDoc
+			ret = updateDoc(repos, doc, 
+					uploadFile,  
+					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+		
+			writeJson(rt, response);	
+			if(ret == true)
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
+				executeCommonActionList(actionList, rt);
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				deletePreviewFile(doc);
 			}
 			else
 			{
-				ret = updateDoc(repos, doc, 
-						uploadFile,  
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
-			
-				writeJson(rt, response);	
-				if(ret == true)
-				{
-					executeCommonActionList(actionList, rt);
-					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					deletePreviewFile(doc);
-				}
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
 			}
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
-		else
-		{
-			docSysErrorLog("文件上传失败！", rt);
-		}
+		
+		
+		docSysErrorLog("文件上传失败！", rt);
 		writeJson(rt, response);
-		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, "");	
+		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
 	
@@ -2081,6 +2171,7 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -2092,7 +2183,8 @@ public class DocController extends BaseController{
 		//检查用户是否有权限编辑文件
 		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -2107,6 +2199,8 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog(name + " 不是文本文件，禁止修改！", rt);
 				writeJson(rt, response);
+				
+				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
 				return;
 			}
 			
@@ -2118,30 +2212,36 @@ public class DocController extends BaseController{
 			
 			writeJson(rt, response);
 	
-			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));			
-
 			if(ret)
 			{
+				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));			
 				deleteTmpRealDocContent(repos, doc, reposAccess.getAccessUser());
 				executeCommonActionList(actionList, rt);
-			}			
+			}
+			else
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
+			}
+			return;
+		}
+		
+		//修改备注
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "更新 " + path + name + " 备注";
+		}
+		ret = updateVirualDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		writeJson(rt, response);
+
+		if(ret)
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));			
+			deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
+			executeCommonActionList(actionList, rt);
 		}
 		else
 		{
-			if(commitMsg == null || commitMsg.isEmpty())
-			{
-				commitMsg = "更新 " + path + name + " 备注";
-			}
-			ret = updateVirualDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-			writeJson(rt, response);
-
-			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", "成功",  repos, doc, null, "");			
-
-			if(ret)
-			{
-				deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
-				executeCommonActionList(actionList, rt);
-			}
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
 		}
 	}
 	
@@ -2424,16 +2524,16 @@ public class DocController extends BaseController{
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
-			Log.debug("remoteStorageCheckOut() remote is null");
 			docSysErrorLog("远程存储未设置！", rt);
+			docSysDebugLog("remoteStorageCheckOut() remote is null", rt);
 			return false;
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 		{
-			Log.debug("remoteStorageCheckOut() channel is null");
 			docSysErrorLog("开源版不支持远程存储！", rt);			
+			docSysDebugLog("remoteStorageCheckOut() businessChannel is null, 开源版不支持远程存储", rt);
 			return false;
 		}
 		
@@ -2444,7 +2544,7 @@ public class DocController extends BaseController{
 		
 		if(docLock == null)
 		{
-			docSysDebugLog("remoteStorageCheckOut() Failed to lock Doc: " + doc.getDocId(), rt);
+			docSysDebugLog("remoteStorageCheckOut() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return false;
 		}
 		
@@ -2455,8 +2555,8 @@ public class DocController extends BaseController{
 		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
 		if(pullResult == null)
 		{
-			Log.debug("remoteStorageCheckOut() 远程拉取失败");
 			docSysErrorLog("文件远程下载失败！", rt);			
+			docSysDebugLog("remoteStorageCheckOut() remoteStoragePull [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return false;			
 		}	
 		
@@ -4029,8 +4129,10 @@ public class DocController extends BaseController{
 		
 		if(docLock == null)
 		{
-			Log.debug("lockDoc() Failed to lock Doc: " + doc.getName());
+			docSysDebugLog("lockDoc() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);			
 			writeJson(rt, response);
+			
+			addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 		
@@ -4038,7 +4140,7 @@ public class DocController extends BaseController{
 		rt.setData(doc);
 		writeJson(rt, response);	
 		
-		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件", "成功", repos, doc, null, "");	
+		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
 	/****************   SyncLock.unlock a Doc ******************/
