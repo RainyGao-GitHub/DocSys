@@ -478,10 +478,13 @@
     	if(redisEn == 0)
     	{
     		$("#redisUrl").attr('disabled',true);
+    		$("#clusterServerUrl").attr('disabled',true);
     	}
     	else
     	{	
     		$("#redisUrl").attr('disabled',false);
+    		$("#clusterServerUrl").attr('disabled',false);
+
     		var redisUrl = $("#redisUrl").val();
     		if(redisUrl == undefined || redisUrl == "")
     		{
@@ -1369,6 +1372,7 @@
 		if(systemInfo.redisEn == 1)
     	{
     		$("#redisUrl").attr('disabled',false);
+    		$("#clusterServerUrl").attr('disabled',false);
     	}
 	}
 	
@@ -1407,6 +1411,8 @@
 		$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
 		$("#logFile").val(systemInfo.logFile);
 		$("#redisUrl").val(systemInfo.redisUrl);
+		$("#clusterServerUrl").val(systemInfo.clusterServerUrl);
+		
 		if(systemInfo.outputToFileEn == 1)
 		{
 			$("#outputToFileEn").prop("checked", true);
@@ -1450,7 +1456,7 @@
 		$("#logFile").attr('disabled',true);
 		$("#redisEn").attr('disabled',true);
 		$("#redisUrl").attr('disabled',true);
-		
+		$("#clusterServerUrl").attr('disabled',true);
 		
 		var tomcatPath = $("#tomcatPath").val();
 		var javaHome = $("#javaHome").val();
@@ -1471,9 +1477,11 @@
     	}
     	var redisEn = $("#redisEn").is(':checked')? 1: 0;
     	var redisUrl = "";
+    	var clusterServerUrl = "";
     	if(redisEn == 1)
     	{
     		redisUrl =  $("#redisUrl").val();
+    		clusterServerUrl =  $("#clusterServerUrl").val();
     	}
     	
 		updateSystemInfo(tomcatPath, 
@@ -1490,7 +1498,8 @@
 				logFile,
 				maxThreadCount,
 				redisEn,
-				redisUrl);
+				redisUrl,
+				clusterServerUrl);
 	}
 	
 	function updateSystemInfo(tomcatPath, 
@@ -1507,7 +1516,8 @@
 			logFile,
 			maxThreadCount,
 			redisEn,
-			redisUrl)
+			redisUrl,
+			clusterServerUrl)
 	{
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
@@ -1528,6 +1538,7 @@
 	        	maxThreadCount: maxThreadCount,
 	        	redisEn: redisEn,
 	        	redisUrl: redisUrl,
+	        	clusterServerUrl: clusterServerUrl,
 	        },
 	        success : function (ret) {
 	        	console.log("setSystemInfo ret:",ret);
@@ -1548,6 +1559,7 @@
 	        		systemInfo.ouputToFileEn = ouputToFileEn;
 	        		systemInfo.redisEn = redisEn;
 	        		systemInfo.redisUrl = redisUrl;
+	        		systemInfo.clusterServerUrl = clusterServerUrl;
 	        		showErrorMessage("更新成功！");
 	            }
 	            else 
@@ -1584,6 +1596,7 @@
 	        			$("#redisEn").prop("checked",false);			
 	        		}
 	        		$("#redisUrl").val(systemInfo.redisUrl);
+	        		$("#clusterServerUrl").val(systemInfo.clusterServerUrl);
 	            }
 	        },
 	        error : function () {
@@ -1618,6 +1631,7 @@
         			$("#redisEn").prop("checked",false);			
         		}
         		$("#redisUrl").val(systemInfo.redisUrl);
+        		$("#clusterServerUrl").val(systemInfo.clusterServerUrl);
 	        }
 	    });
 	}
@@ -1749,17 +1763,19 @@
 	    });
 	}
 	
-	function testRedis()
+	function testCluster()
 	{
 		var redisUrl = $("#redisUrl").val();
-		console.log("testRedis() redisUrl:" + redisUrl);
+		var clusterServerUrl = $("#clusterServerUrl").val();
+		console.log("testCluster() redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
 		
 		$.ajax({
-	        url : "/DocSystem/Manage/testRedis.do",
+	        url : "/DocSystem/Manage/testCluster.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
 	        	redisUrl: redisUrl,
+	        	clusterServerUrl: clusterServerUrl,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
