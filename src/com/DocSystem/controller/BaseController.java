@@ -199,22 +199,35 @@ public class BaseController  extends BaseFunction{
     }
     
 	protected static boolean initRedis() {
-		boolean preRedisEn = redisEn;
+		Log.debug("initRedis() redisEn:" + redisEn);
 		
-		//初始化调试等级
-		Log.debug("initRedis()");
+		boolean preRedisEn = redisEn;
+		String preClusterServerUrl = clusterServerUrl;
+		String preRedisUrl = redisUrl;
+
 		int isRedisEn = getRedisEn();
 		Log.debug("initRedis() isRedisEn:" + isRedisEn);
-
+			
 		if(isRedisEn == 1)
 		{
 			clusterServerUrl = getClusterServerUrl();
-			
-			String redisUrl = getRedisUrl();
+			if(clusterServerUrl == null || clusterServerUrl.isEmpty())
+			{
+				errorLog("initRedis() clusterServerUrl not configured");
+				redisEn = false;
+				globalClusterDeployCheckResult = false;
+			    globalClusterDeployCheckResultInfo = "集群失败: 集群服务器地址未设置";
+			    return false;
+			}
+				
+			redisUrl = getRedisUrl();
 			if(redisUrl == null || redisUrl.isEmpty())
 			{
 				redisEn = false;
 				errorLog("initRedis() redisUrl not configured");
+				globalClusterDeployCheckResult = false;
+			    globalClusterDeployCheckResultInfo = "集群失败: Redis服务器地址未设置";
+				return false;
 			}
 			else
 			{
@@ -224,7 +237,10 @@ public class BaseController  extends BaseFunction{
 		        if(redisClient == null)
 		        {
 		        	redisEn = false;
-		        	Log.error("initRedis() failed to connect to redisServer:" + redisUrl);				
+		        	Log.error("initRedis() failed to connect to redisServer:" + redisUrl);
+					globalClusterDeployCheckResult = false;
+				    globalClusterDeployCheckResultInfo = "集群失败: Redis服务器连接失败";
+				    return false;
 		        }
 		        else
 		        {
@@ -237,7 +253,31 @@ public class BaseController  extends BaseFunction{
 			redisEn = false;
 		}
 		
-		return preRedisEn != redisEn;
+		//check if needRestartClusterServer
+		if(redisEn)
+		{		
+			if(preRedisEn != redisEn)
+			{
+				//needRestartClusterServer
+				Log.info("initRedis() redisEn changed form [" + preRedisEn + "] to [" + redisEn + "]");
+				return true;
+			}
+			
+			if(preRedisUrl == null || !preRedisUrl.equals(redisUrl))
+			{
+				Log.info("initRedis() redisUrl changed form [" + preRedisUrl + "] to [" + redisUrl + "]");
+				return true;
+			}
+				
+			if(preClusterServerUrl == null || !preClusterServerUrl.equals(clusterServerUrl))
+			{
+				Log.info("initRedis() clusterServerUrl changed form [" + preClusterServerUrl + "] to [" + clusterServerUrl + "]");
+				return true;
+			}
+		}
+		
+		//注意从集群转到非集群不需要重新初始化
+		return false;
 	}
 
 	private static void initLogLevel() {
@@ -11469,7 +11509,7 @@ public class BaseController  extends BaseFunction{
 				{
 					//clear redis cache
 					clearRedisCache();
-					if(clusterDeployCheckGlobal() == true)
+					if(clusterDeployCheckGlobal(force) == true)
 					{
 						RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 						clusterServersMap.put(clusterServerUrl, new Date().getTime());
@@ -11501,7 +11541,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//clear redis cache
 				clearRedisCache();
-				if(clusterDeployCheckGlobal() == true)
+				if(clusterDeployCheckGlobal(force) == true)
 				{
 					RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 					clusterServersMap.put(clusterServerUrl, new Date().getTime());
@@ -11524,7 +11564,7 @@ public class BaseController  extends BaseFunction{
 		{
 			//clear redis cache
 			clearRedisCache();
-			if(clusterDeployCheckGlobal() == true)
+			if(clusterDeployCheckGlobal(true) == true)
 			{
 				RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 				clusterServersMap.put(clusterServerUrl, new Date().getTime());
@@ -12089,7 +12129,7 @@ public class BaseController  extends BaseFunction{
 		buket.delete();
 	}
 	
-	private boolean clusterDeployCheckGlobal() {
+	private boolean clusterDeployCheckGlobal(boolean clusterServerCheckEn) {
 		boolean ret = false;
 		
 		String lockName = "clusterDeployCheckGlobal";
@@ -12125,6 +12165,17 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
+			//clusterServerCheckEn参数是为了避免系统没启动完成，无法进行回环测试
+			//TODO: 当然这里留下了一个漏洞:serverUrl设置错误时直接重启可以跳过回环测试
+			if(clusterServerCheckEn)
+			{
+				if(clusterDeployCheckGlobal_ClusterServerCheck() == false)
+				{
+					redisSyncUnlock(lockName, lockInfo);				
+					return false;
+				}
+			}
+			
 			globalClusterDeployCheckResult = true;
 			ret = true;			
 	    } catch (Exception e) {
@@ -12136,6 +12187,53 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
+	private boolean clusterDeployCheckGlobal_ClusterServerCheck() {
+		//TODO: Send Test Http Request to clusterServerUrl
+		//If the request come back that means this serverUrl is for myself, else it is a error serverUrl
+		if(clusterServerUrl == null || clusterServerUrl.isEmpty())
+		{
+			globalClusterDeployCheckResult = false;
+		    globalClusterDeployCheckResultInfo = "集群检测失败: 集群服务器地址未设置";
+			return false;
+		}
+		
+		if(clusterServerLoopbackTest(clusterServerUrl) == false)
+		{
+			globalClusterDeployCheckResult = false;
+		    globalClusterDeployCheckResultInfo = "集群检测失败: 集群服务器 [" + clusterServerUrl + "] 回环测试失败";
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public static boolean clusterServerLoopbackTest(String serverUrl) {
+		Log.info("clusterServerLoopbackTest() current clusterServerLoopbackMsg [" + clusterServerLoopbackMsg + "]");
+
+		String loopbackMsg = new Date().getTime() +"";
+		Log.info("clusterServerLoopbackTest() send [" + loopbackMsg + "] to serverUrl:" + serverUrl);
+		
+		String authCode = getDocSysInitAuthCode();
+		
+		boolean result = false;
+        try {
+    		String requestUrl = serverUrl + "/DocSystem/Manage/clusterServerLoopbackTest.do";
+    		Log.debug("clusterServerLoopbackTest() requestUrl:" + requestUrl);
+    		HashMap<String, String> reqParams = new HashMap<String, String>();
+    		reqParams.put("msg", loopbackMsg);
+    		reqParams.put("authCode", authCode);
+    		postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
+    		Log.info("clusterServerLoopbackTest() latest clusterServerLoopbackMsg [" + clusterServerLoopbackMsg + "]");
+    		if(clusterServerLoopbackMsg != null && clusterServerLoopbackMsg.equals(loopbackMsg))
+    		{
+    			result = true;
+    		}
+        } catch (Exception e) {
+            errorLog(e);
+        }
+        return result;		
+	}
+
 	private boolean clusterDeployCheckGlobal_DuplicateCheck() {
 		RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 		if(clusterServersMap.get(clusterServerUrl) == null)
