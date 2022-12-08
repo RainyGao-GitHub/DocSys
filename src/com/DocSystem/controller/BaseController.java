@@ -3683,7 +3683,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(docLock == null)
 		{
-			Log.debug("addDoc_FSM() lockDoc " + doc.getName() + " Failed!");
+			docSysDebugLog("addDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 			return false;
 		}
 		
@@ -3693,7 +3693,7 @@ public class BaseController  extends BaseFunction{
 		if(localEntry.exists())
 		{	
 			unlockDoc(doc, lockType, login_user);
-			docSysDebugLog("addDoc_FSM() " +localDocPath + "　已存在！", rt);
+			docSysDebugLog("addDoc_FSM() [" + doc.getPath() + doc.getName() +  "]　已存在！", rt);
 		}
 		
 		//addDoc接口用uploadFile以及chunkNum同时为空来判定是新建文件或上传了空文件
@@ -3704,9 +3704,8 @@ public class BaseController  extends BaseFunction{
 			if(createRealDoc(repos, doc, rt) == false)
 			{	
 				unlockDoc(doc, lockType, login_user);
-				String MsgInfo = "createRealDoc " + doc.getName() +" Failed";
-				rt.setError(MsgInfo);
-				Log.debug("addDoc_FSM() createRealDoc Failed");
+				docSysErrorLog("createRealDoc " + doc.getName() +" Failed", rt);
+				docSysDebugLog("addDoc_FSM() createRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				return false;
 			}
 		}
@@ -3715,9 +3714,8 @@ public class BaseController  extends BaseFunction{
 			if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
 				unlockDoc(doc, lockType, login_user);
-				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
-				rt.setError(MsgInfo);
-				Log.debug("addDoc_FSM() updateRealDoc Failed");
+				docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
+				docSysDebugLog("addDoc_FSM() updateRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				return false;
 			}
 		}
@@ -3732,7 +3730,7 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 			if(revision == null)
 			{
-				docSysWarningLog("verReposDocCommit Failed", rt);
+				docSysDebugLog("addDoc_FSM() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 			}
 			else
 			{
@@ -3740,7 +3738,7 @@ public class BaseController  extends BaseFunction{
 				doc.setRevision(revision);
 				if(dbAddDoc(repos, doc, false, false) == false)
 				{	
-					docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+					docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				}
 				
 				//Insert Push Action
@@ -3763,7 +3761,7 @@ public class BaseController  extends BaseFunction{
 			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
-				Log.debug("addDoc_FSM() remoteServerDocCommit Failed");
+				docSysDebugLog("addDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 				return false;
 			}
@@ -3802,7 +3800,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(docLock == null)
 		{
-			Log.debug("addDocEx_FSM() lockDoc " + doc.getName() + " Failed!");
+			docSysDebugLog("addDocEx_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 			return false;
 		}
 		
@@ -3812,7 +3810,7 @@ public class BaseController  extends BaseFunction{
 		if(localEntry.exists())
 		{	
 			unlockDoc(doc, lockType, login_user);
-			docSysDebugLog("addDocEx_FSM() " +localDocPath + "　已存在！", rt);
+			docSysDebugLog("addDocEx_FSM() [" +localDocPath + "]　已存在！", rt);
 		}
 		
 		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
@@ -3822,9 +3820,8 @@ public class BaseController  extends BaseFunction{
 			if(createRealDoc(repos, doc, rt) == false)
 			{	
 				unlockDoc(doc, lockType, login_user);
-				String MsgInfo = "createRealDoc " + doc.getName() +" Failed";
-				rt.setError(MsgInfo);
-				Log.debug("addDocEx_FSM() createRealDoc Failed");
+				docSysErrorLog("createRealDoc " + doc.getName() +" Failed", rt);
+				docSysDebugLog("addDocEx_FSM() createRealDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 				return false;
 			}
 		}
@@ -3833,9 +3830,8 @@ public class BaseController  extends BaseFunction{
 			if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
 				unlockDoc(doc, lockType, login_user);
-				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
-				rt.setError(MsgInfo);
-				Log.debug("addDocEx_FSM() updateRealDoc Failed");
+				docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
+				docSysDebugLog("addDocEx_FSM() updateRealDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 				return false;
 			}
 		}
@@ -3850,7 +3846,7 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 			if(revision == null)
 			{
-				docSysWarningLog("verReposDocCommit Failed", rt);
+				docSysDebugLog("addDocEx_FSM() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			}
 			else
 			{
@@ -3858,7 +3854,7 @@ public class BaseController  extends BaseFunction{
 				doc.setRevision(revision);
 				if(dbAddDoc(repos, doc, false, false) == false)
 				{	
-					docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+					docSysDebugLog("addDocEx_FSM() dbAddDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				}
 				
 				//Insert Push Action
@@ -3870,7 +3866,7 @@ public class BaseController  extends BaseFunction{
 			if(remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
-				docSysWarningLog("addDocEx_FSM remoteServerDocCommit Failed", rt);
+				docSysDebugLog("addDocEx_FSM() remoteServerDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 				return false;
 			}			
@@ -4006,7 +4002,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(docLock == null)
 		{
-			docSysDebugLog("deleteDoc_FSM() Failed to lock Doc: " + docId, rt);
+			docSysDebugLog("deleteDoc_FSM() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return null;			
 		}
 		
@@ -4016,9 +4012,9 @@ public class BaseController  extends BaseFunction{
 		if(deleteRealDoc(repos,doc,rt) == false)
 		{
 			unlockDoc(doc, lockType, login_user);
-			
-			docSysDebugLog("deleteDoc_FSM() deleteRealDoc Failed", rt);
+
 			docSysErrorLog(doc.getName() + " 删除失败！", rt);
+			docSysDebugLog("deleteDoc_FSM() deleteRealDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return null;
 		}
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
@@ -4029,8 +4025,8 @@ public class BaseController  extends BaseFunction{
 			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 			if(revision == null)
 			{
-				docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
 				docSysWarningLog("verReposRealDocDelete Failed", rt);
+				docSysDebugLog("deleteDoc_FSM() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			}
 			else
 			{
@@ -4038,6 +4034,7 @@ public class BaseController  extends BaseFunction{
 				if(dbDeleteDocEx(actionList, repos, doc, commitMsg, commitUser, true) == false)
 				{	
 					docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
+					docSysDebugLog("deleteDoc_FSM() dbDeleteDocEx [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				}
 				
 				//delete操作需要自动增加ParentDoc???
@@ -4055,7 +4052,7 @@ public class BaseController  extends BaseFunction{
 			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);
 			if(revision == null)
 			{
-				Log.debug("deleteDoc_FSM() remoteServerDocCommit Failed");
+				docSysDebugLog("deleteDoc_FSM() remoteServerDocCommit [" + doc.getPath() + doc.getName() + "]Failed", rt);
 				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
 			}
 		}
@@ -7650,7 +7647,7 @@ public class BaseController  extends BaseFunction{
 		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo);
 		if(srcDocLock == null)
 		{
-			docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
+			docSysDebugLog("moveDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
 			return false;
 		}
 
@@ -7658,8 +7655,8 @@ public class BaseController  extends BaseFunction{
 		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo2);
 		if(dstDocLock == null)
 		{
-			docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);		
 			unlockDoc(srcDoc, lockType, login_user);
+			docSysDebugLog("moveDoc_FSM() lock dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return false;
 		}
 		
@@ -7669,6 +7666,7 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(dstDoc, lockType, login_user);
 
 			docSysErrorLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
+			docSysDebugLog("moveDoc_FSM() moveRealDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return false;
 		}
 		
@@ -7678,6 +7676,7 @@ public class BaseController  extends BaseFunction{
 			if(revision == null)
 			{
 				docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
+				docSysDebugLog("moveDoc_FSM() verReposRealDocMove srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			}
 			else
 			{
@@ -7685,6 +7684,7 @@ public class BaseController  extends BaseFunction{
 				if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
 				{
 					docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
+					docSysDebugLog("moveDoc_FSM() dbMoveDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 				}
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
@@ -7696,7 +7696,8 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, true) == null)
 			{
-				rt.setError("远程推送失败！");
+				docSysErrorLog("远程推送失败！", rt);
+				docSysDebugLog("moveDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 				return false;
 			}
 		}
@@ -7742,7 +7743,7 @@ public class BaseController  extends BaseFunction{
 		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
 		if(srcDocLock == null)
 		{
-			Log.debug("copyDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed");
+			docSysDebugLog("copyDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
 			return false;
 		}
 		
@@ -7750,8 +7751,8 @@ public class BaseController  extends BaseFunction{
 		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo2);
 		if(dstDocLock == null)
 		{
-			Log.debug("copyDoc_FSM() lock dstcDoc " + dstDoc.getName() + " Failed");				
 			unlockDoc(srcDoc, lockType, login_user);				
+			docSysDebugLog("copyDoc_FSM() lock dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return false;
 		}
 						
@@ -7762,8 +7763,8 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(srcDoc, lockType, login_user);
 			unlockDoc(dstDoc, lockType, login_user);
 
-			Log.debug("copyDoc_FSM() copy " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败");
-			rt.setError("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed");
+			docSysErrorLog("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed", rt);
+			docSysDebugLog("copyDoc_FSM() copy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return false;
 		}
 		
@@ -7774,14 +7775,14 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 			if(revision == null)
 			{
-				docSysWarningLog("copyDoc_FSM() verReposRealDocCopy failed", rt);
+				docSysDebugLog("copyDoc_FSM() verReposRealDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			}
 			else
 			{
 				dstDoc.setRevision(revision);
 				if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
 				{
-					docSysWarningLog("copyDoc_FSM() dbCopyDoc failed", rt);			
+					docSysDebugLog("copyDoc_FSM() dbCopyDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 				}
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
@@ -7796,9 +7797,9 @@ public class BaseController  extends BaseFunction{
 			{
 				unlockDoc(srcDoc, lockType, login_user);
 				unlockDoc(dstDoc, lockType, login_user);
-	
-				Log.debug("文件复制失败！");
-				rt.setError("远程推送失败！");
+
+				docSysErrorLog("远程推送失败！", rt);
+				docSysDebugLog("copyDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 				return false;
 			}
 		}
@@ -9884,7 +9885,7 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageConfig remote = repos.remoteServerConfig;
 		if(remote == null)
 		{
-			Log.debug("remoteServerDocCommit() repos.remoteServerConfig 未设置");
+			docSysDebugLog("remoteServerDocCommit() repos.remoteServerConfig 未设置", rt);
 			rt.setError("文件服务器设置错误！");
 			return null;
 		}
@@ -9936,7 +9937,7 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageConfig remote = repos.remoteServerConfig;
 		if(remote == null)
 		{
-			Log.debug("remoteServerDocCopy() repos.remoteServerConfig 未设置");
+			docSysDebugLog("remoteServerDocCopy() repos.remoteServerConfig 未设置", rt);
 			rt.setError("文件服务器设置错误！");
 			return null;
 		}
@@ -12546,14 +12547,14 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null || remote.autoPush == null || remote.autoPush != 1)
 		{
-			Log.debug("realTimeRemoteStoragPush() remoteStorageConfig autoPush not configured");			
+			docSysDebugLog("realTimeRemoteStoragPush() remoteStorageConfig autoPush not configured", rt);			
 			return false;
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
-			Log.debug("realTimeRemoteStoragPush 非商业版本不支持远程存储");
+			docSysDebugLog("realTimeRemoteStoragPush 非商业版本不支持远程存储", rt);
 			return false;
 	    }
 		
@@ -12600,7 +12601,7 @@ public class BaseController  extends BaseFunction{
 		ReposBackupConfig backupConfig = repos.autoBackupConfig;
 		if(backupConfig == null)
 		{
-			Log.debug("realTimeBackup() backupConfig not configured");			
+			docSysDebugLog("realTimeBackup() backupConfig not configured", rt);			
 			return false;
 		}
 				
@@ -12617,21 +12618,21 @@ public class BaseController  extends BaseFunction{
 		BackupConfig remoteBackupConfig = repos.autoBackupConfig.remoteBackupConfig;
 		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackup == null || remoteBackupConfig.realTimeBackup == 0)
 		{
-			Log.debug("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured");			
+			docSysDebugLog("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured", rt);			
 			return false;
 		}
 		
 		RemoteStorageConfig remote = remoteBackupConfig.remoteStorageConfig;
 		if(remote == null)
 		{
-			Log.debug("realTimeRemoteBackup() remoteStorageConfig not configured");			
+			docSysDebugLog("realTimeRemoteBackup() remoteStorageConfig not configured", rt);			
 			return false;
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
-			Log.debug("realTimeRemoteBackup 非商业版本不支持远程备份");
+			docSysDebugLog("realTimeRemoteBackup 非商业版本不支持远程备份", rt);
 			return false;
 	    }
 		
@@ -12696,21 +12697,21 @@ public class BaseController  extends BaseFunction{
 		BackupConfig localBackupConfig = repos.autoBackupConfig.localBackupConfig;
 		if(localBackupConfig == null || localBackupConfig.realTimeBackup == null || localBackupConfig.realTimeBackup == 0)
 		{
-			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			
+			docSysDebugLog("realTimeLocalBackup() localBackupConfig realTimeBackup not configured", rt);			
 			return false;
 		}
 		
 		RemoteStorageConfig remote = localBackupConfig.remoteStorageConfig;
 		if(remote == null)
 		{
-			Log.debug("realTimeLocalBackup() remoteStorageConfig not configured");			
+			docSysDebugLog("realTimeLocalBackup() remoteStorageConfig not configured", rt);			
 			return false;
 		}
 		
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
-			Log.debug("realTimeLocalBackup 非商业版本不支持本地备份");
+			docSysDebugLog("realTimeLocalBackup 非商业版本不支持本地备份", rt);
 			return false;
 	    }
 		
@@ -21139,7 +21140,8 @@ public class BaseController  extends BaseFunction{
 		}
 
 		ret = doPullEntryFromRemoteStorage(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, subEntryPullFlag, force, pullResult);
-		
+		docSysDebugLog("doPullFromRemoteStorage() doPullEntryFromRemoteStorage [" + doc.getPath() + doc.getName() + "] return [" + ret + "] total[" + pullResult.totalCount + "] success[" + pullResult.successCount + "] failed["  + pullResult.failCount + "]", rt);
+
 		rt.setDataEx(pullResult);
 		return ret;
 	}
@@ -21188,8 +21190,8 @@ public class BaseController  extends BaseFunction{
 	    }
 		if(doc.isRemotePushEnabled == 0)
 		{
-    		Log.info("doPushToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored for RemotePush");
-			return false;
+			docSysDebugLog("doPushToRemoteStorage() [" + doc.getPath() + doc.getName() + "] was ignored for RemotePush", rt);
+    		return false;
 		}
 		
 		boolean ret = false;
@@ -21212,7 +21214,7 @@ public class BaseController  extends BaseFunction{
 		String lockInfo = "doPushToRemoteStorage [" + doc.getPath() + doc.getName()+ "] at repos[" + repos.getName() + "] remote protocol: [" + remote.protocol + "]";
 		if(lockRemoteStorage(remote, accessUser, doc, lockInfo) == false)
 		{
-			Log.info("doPushToRemoteStorage() lockRemoteStorage [" + remote.remoteStorageIndexLib + "] failed");
+			docSysDebugLog("doPushToRemoteStorage() lockRemoteStorage [" + remote.remoteStorageIndexLib + "] failed", rt);
 			return false;
 		}
 		
@@ -21249,8 +21251,10 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				pushResult.revision = "";
-			}
+			}			
 		}
+		
+		docSysDebugLog("doPushToRemoteStorage() doPushEntryToRemoteStorage [" + doc.getPath() + doc.getName() + "] return [" + ret + "] total[" + pushResult.totalCount + "] success[" + pushResult.successCount + "] failed["  + pushResult.failCount + "]", rt);
 
 		rt.setDataEx(pushResult);
 		Log.info("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "] ret:" + ret);
