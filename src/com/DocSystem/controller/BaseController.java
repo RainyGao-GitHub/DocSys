@@ -11608,9 +11608,13 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Go throuhg clusterServersMap
+		if(globalClusterDeployCheckResult == false)
+		{
+			return "[" + clusterServerUrl + "] 集群失败:" + globalClusterDeployCheckResultInfo + "\n";
+		}
+		
 		String clusterInfo = "";
-	    RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
-	    
+		RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 	    Iterator<Entry<String, Long>> iterator = clusterServersMap.entrySet().iterator();
 	    long curTime = new Date().getTime();
 	    while (iterator.hasNext()) 
