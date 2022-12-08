@@ -135,7 +135,7 @@ public class DocController extends BaseController{
 		Log.info("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
 		Log.debug("addDoc default charset:" + Charset.defaultCharset());
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -450,7 +450,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** deleteDoc [" + path + name + "] ****************");
 		Log.info("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -600,7 +600,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** renameDoc [" + path + name + "] ****************");
 		Log.info("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName+ " shareId:" + shareId);
 
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		if(name == null || "".equals(name))
 		{
@@ -708,7 +708,7 @@ public class DocController extends BaseController{
 			dstPath = "";
 		}
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, srcPath, srcName, true, rt);
 		if(reposAccess == null)
 		{
@@ -798,7 +798,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** copyDoc [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
 		Log.info("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		Log.debug("copyDoc check reposAccess");
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, srcPath, srcName, true, rt);
 		if(reposAccess == null)
