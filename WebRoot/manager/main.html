@@ -1397,6 +1397,8 @@
 		$("#outputToFileEn").attr('disabled',true);
 		$("#logFile").attr('disabled',true);
 		$("#redisEn").attr('disabled',true);
+		$("#redisUrl").attr('disabled',true);
+		$("#clusterServerUrl").attr('disabled',true);
 		
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#javaHome").val(systemInfo.javaHome);
@@ -1421,7 +1423,7 @@
 		{
 			$("#outputToFileEn").prop("checked", false);			
 		}
-		if(systemInfo.redisEnd == 1)
+		if(systemInfo.redisEn == 1)
 		{
 			$("#redisEn").prop("checked", true);
 		}
