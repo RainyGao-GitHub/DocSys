@@ -140,7 +140,7 @@
 	                    <td>
 			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>启用</div>
 	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="请填写redis服务器地址,例如：redis://localhost:6379" disabled="disabled">			            		                    
-	                    	<input type="text" class="form-control" id="clusterServerUrl" value="{{value.clusterServerUrl}}" placeholder="请填写当前服务器地址,例如：http://localhost:8100" disabled="disabled">			            		                    
+	                    	<input type="text" class="form-control" id="clusterServerUrl" value="{{value.clusterServerUrl}}" placeholder="请填写集群服务器地址,例如：http://localhost:8100" disabled="disabled">			            		                    
 							<textarea class="form-control" id="clusterInfo" disabled="disabled">{{value.clusterInfo}}</textarea>
 			            </td>
 	                    <td class="edit">
