@@ -1201,12 +1201,12 @@ public class ManageController extends BaseController{
 		}
 	}
 
-	@RequestMapping("/testRedis.do")
-	public void testRedis(String redisUrl, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	@RequestMapping("/testCluster.do")
+	public void testCluster(String redisUrl, String clusterServerUrl, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** redisUrl.do ***********************");
 
-		Log.debug("testRedis() redisUrl:" + redisUrl);
+		Log.debug("testRedis() redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
 		ReturnAjax rt = new ReturnAjax();
 		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -1217,21 +1217,29 @@ public class ManageController extends BaseController{
 		String testResult = "1. 配置检查<br/>";
 		if(redisUrl == null || redisUrl.isEmpty())
 		{
-			testResult += "配置内容为空<br/>";
+			testResult += "Redis服务器地址为空<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;
+		}
+		if(clusterServerUrl == null || clusterServerUrl.isEmpty())
+		{
+			testResult += "集群服务器地址为空<br/>";
 			rt.setError(testResult);
 			writeJson(rt, response);		
 			return;
 		}	
 		testResult += "配置正常<br/><br/>";
 		
-		testResult += "2. 连接服务器测试<br/>";
+		testResult += "2. Redis服务器测试<br/>";
+		testResult += "2.1 连接服务器测试<br/>";
 		//注册RedissonClient对象
         Config config = new Config();
         config.useSingleServer().setAddress(redisUrl);
         RedissonClient redissonClient = Redisson.create(config);
         testResult += "连接成功<br/><br/>";
 		
-        testResult += "3. Lock测试<br/>";
+        testResult += "2.2 Lock测试<br/>";
 		//Get Lock
 		Log.debug("testRedis() " + Thread.currentThread().getId() + " getLock(my-lock)");
 		RLock lock = redissonClient.getLock("my-lock");
@@ -1239,7 +1247,7 @@ public class ManageController extends BaseController{
         lock.lock();
         testResult += "加锁成功<br/><br/>";
         
-		testResult += "4. Map测试<br/>";
+		testResult += "2.3 Map测试<br/>";
 		boolean isSuccess = true;
         try {
             Log.debug("testRedis() " + Thread.currentThread().getId() + " 执行业务.... ");
@@ -1266,6 +1274,16 @@ public class ManageController extends BaseController{
         else
         {
         	testResult += "Map测试失败<br/><br/>";
+        }
+        
+        testResult += "3. 集群服务器测试<br/>";
+        if(clusterServerLoopbackTest(clusterServerUrl) == false)
+        {
+        	testResult += "回环测试失败<br/><br/>";        	
+        }
+        else
+        {
+        	testResult += "回环测试成功<br/><br/>";        	        	
         }
         
 		rt.setMsgInfo(testResult);				
