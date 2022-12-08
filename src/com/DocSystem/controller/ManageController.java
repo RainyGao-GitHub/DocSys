@@ -520,6 +520,25 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	@RequestMapping("/clusterServerLoopbackTest.do")
+	public void clusterServerLoopbackTest(String authCode, String msg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** clusterServerLoopbackTest.do ***********************");
+
+		Log.debug("clusterServerLoopbackTest() msg:" + msg);
+		
+		ReturnAjax rt = new ReturnAjax();
+		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		clusterServerLoopbackMsg = msg;
+		
+		writeJson(rt, response);
+	}
+	
 	@RequestMapping("/testDatabase.do")
 	public void testDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
