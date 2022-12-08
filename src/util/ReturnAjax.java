@@ -56,7 +56,7 @@ public class ReturnAjax {
 		
 		if(debugLog != null)
 		{
-			this.debugLog =  debugLog + "\n" + this.msgInfo;
+			this.debugLog =  debugLog + "\n" + this.debugLog;
 		}
 	}
 	
@@ -86,7 +86,7 @@ public class ReturnAjax {
 		
 		if(warningMsg != null)
 		{
-			this.warningMsg += "\n" + warningMsg;
+			this.debugLog =  warningMsg + "\n" + this.warningMsg;
 		}
 	}
 	
