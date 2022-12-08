@@ -157,11 +157,14 @@ public class BaseFunction{
     protected static User systemUser = new User();
 
 	public static boolean redisEn = false;
-    public static RedissonClient redisClient = null;
+	public static String redisUrl = null;
+	public static RedissonClient redisClient = null;
     public static boolean globalClusterDeployCheckResult = false;
     public static String globalClusterDeployCheckResultInfo = "";
     //serverUrl(http://serverIP:port)集群时用于服务器之间通信
     protected static String clusterServerUrl = null;
+    protected static String clusterServerLoopbackMsg = null;	//用于集群的回环自检
+    
     public static int clusterHeartBeatInterval = 300; //300秒(5分钟)，心跳间隔
     public static int clusterHeartBeatStopTime = 3*clusterHeartBeatInterval*1000;	//3次心跳
     
