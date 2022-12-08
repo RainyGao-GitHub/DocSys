@@ -525,11 +525,13 @@ public class ManageController extends BaseController{
 	{
 		Log.infoHead("****************** clusterServerLoopbackTest.do ***********************");
 
-		Log.debug("clusterServerLoopbackTest() msg:" + msg);
+		Log.debug("clusterServerLoopbackTest() msg:[" + msg + "] authCode:[" + authCode + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		if(checkAuthCode(authCode, "clusterServerLoopbackTest") == false)
 		{
+			Log.debug("clusterServerLoopbackTest checkAuthCode return false");
+			rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
 			return;
 		}
