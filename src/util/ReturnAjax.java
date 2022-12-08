@@ -17,7 +17,15 @@ public class ReturnAjax {
 	private Object data;	//用于存储返回结果
 	private Object dataEx;	//用于存储返回结果
 	private String debugLog = null; //用于向前台传递更详细调试
-		
+	public Long startTime = null;
+	
+	public ReturnAjax() {
+	}
+
+	public ReturnAjax(long time) {
+		startTime = time;
+	}
+
 	/**
 	 * 设置默认错误信息
 	 */
