@@ -445,17 +445,14 @@ public class BaseFunction{
 	}
 		
 	protected static void deleteAuthCode(String authCode) {
+		deleteAuthCodeLocal(authCode);
 		if(redisEn)
 		{
 			deleteAuthCodeRedis(authCode);
 		}
-		else
-		{
-			deleteAuthCodeLocal(authCode);
-		}
 	}
 
-	private static void deleteAuthCodeLocal(String authCode) {
+	protected static void deleteAuthCodeLocal(String authCode) {
 		authCodeMap.remove(authCode);
 	}
 
@@ -465,14 +462,19 @@ public class BaseFunction{
 	}
 	
 	protected AuthCode getAuthCode(String authCode) {
+		//先尝试从本地获取
+		AuthCode code = getAuthCodeLocal(authCode);
+		if(code != null)
+		{
+			return code;
+		}
+		
 		if(redisEn)
 		{
 			return getAuthCodeRedis(authCode);
 		}
-		else
-		{
-			return getAuthCodeLocal(authCode);
-		}
+		
+		return null;
 	}
 
 	private AuthCode getAuthCodeLocal(String authCode) {
@@ -4840,7 +4842,7 @@ public class BaseFunction{
             	for (Entry<String, String> entry : params.entrySet()) {
             		String name = entry.getKey();
             		String value = entry.getValue();
-            		Log.debug("postFileStreamAndJsonObj " + name  + " = " + value);            		
+            		Log.debug("postFileStreamAndJsonObj [" + name  + "] = [" + value + "]");         		
 
             		StringBuilder sb = new StringBuilder();            		
     	            //添加form属性
@@ -4855,6 +4857,17 @@ public class BaseFunction{
     	            out.write(sb.toString().getBytes("utf-8"));
     	            out.write("\r\n".getBytes("utf-8"));
             	}
+            	
+            	//TODO:添加paddingKey是因为有个Bug,最后一个参数会加上换行符号,修复后记得删除
+        		StringBuilder paddingSB = new StringBuilder();            		
+        		paddingSB.append("--"); 
+        		paddingSB.append(boundary);
+        		paddingSB.append("\r\n");
+        		paddingSB.append("Content-Disposition: form-data; name=\"paddingKey\"");
+        		paddingSB.append("\r\n\r\n");
+        		paddingSB.append("paddingValue");
+	            out.write(paddingSB.toString().getBytes("utf-8"));
+	            out.write("\r\n".getBytes("utf-8"));
             }
             
             //add File

@@ -414,18 +414,36 @@ public class BaseController  extends BaseFunction{
 	protected boolean checkAuthCode(String code, String expUsage) {
 		Log.debug("checkAuthCode() authCode:" + code);
 		AuthCode authCode = getAuthCode(code);
-		if(authCode == null || authCode.getUsage() == null || authCode.getExpTime() == null || authCode.getRemainCount() == null)
+		if(authCode == null)
 		{
-			Log.debug("checkAuthCode() 无效授权码");
+			Log.debug("checkAuthCode() 无效授权码: authCode for [" + code + "] is null");
 			return false;
 		}
-		
+
+		if(authCode.getUsage() == null)
+		{
+			Log.debug("checkAuthCode() 无效授权码: authCode usage is null");
+			return false;
+		}
+
+		if(authCode.getExpTime() == null || authCode.getRemainCount() == null)
+		{
+			Log.debug("checkAuthCode() 无效授权码: authCode expireTime is null");
+			return false;
+		}
+
+		if(authCode.getRemainCount() == null)
+		{
+			Log.debug("checkAuthCode() 无效授权码: authCode remainCount is null");
+			return false;
+		}
+
 		if(expUsage != null)
 		{
 			Log.debug("checkAuthCode() usage:" + authCode.getUsage() + " expUsage:" + expUsage);				
 			if(!expUsage.equals(authCode.getUsage()))
 			{
-				Log.debug("checkAuthCode() usage not matched");				
+				Log.debug("checkAuthCode() auhtCode usage not matched");				
 				return false;
 			}			
 		}
@@ -11578,9 +11596,15 @@ public class BaseController  extends BaseFunction{
 	protected String getClusterInfo() {
 		Log.info("getClusterInfo()");
 		
-		if(redisEn == false)
+		Integer isRedisEn = getRedisEn();
+		if(isRedisEn == 0)
 		{
 			return "集群未开启";
+		}
+		
+		if(redisEn == false)
+		{
+			return "集群失败:" + globalClusterDeployCheckResultInfo;
 		}
 		
 		//Go throuhg clusterServersMap
@@ -12211,9 +12235,9 @@ public class BaseController  extends BaseFunction{
 		Log.info("clusterServerLoopbackTest() current clusterServerLoopbackMsg [" + clusterServerLoopbackMsg + "]");
 
 		String loopbackMsg = new Date().getTime() +"";
-		Log.info("clusterServerLoopbackTest() send [" + loopbackMsg + "] to serverUrl:" + serverUrl);
+		String authCode = generateAuthCodeLocal("clusterServerLoopbackTest", 5*CONST_MINUTE, 3, null).getCode();
 		
-		String authCode = getDocSysInitAuthCode();
+		Log.info("clusterServerLoopbackTest() msg [" + loopbackMsg + "] authCode:[" + authCode + "]");
 		
 		boolean result = false;
         try {
@@ -12231,6 +12255,9 @@ public class BaseController  extends BaseFunction{
         } catch (Exception e) {
             errorLog(e);
         }
+        
+        deleteAuthCodeLocal(authCode);
+        
         return result;		
 	}
 
