@@ -1151,20 +1151,20 @@ public class ManageController extends BaseController{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "SalesDataStorePath", salesDataStorePath);
 		}
 		
-		if(ldapConfig != null && !ldapConfig.isEmpty())
+		if(ldapConfig != null)
 		{
-			if(docSysType == constants.DocSys_Professional_Edition)
+			if(!ldapConfig.isEmpty())
 			{
-				docSysErrorLog("专业版不支持LDAP登录认证，请购买企业版证书！", rt);
+				if(docSysType == constants.DocSys_Professional_Edition)
+				{
+					docSysErrorLog("专业版不支持LDAP登录认证，请购买企业版证书！", rt);
+				}
+				else if(docSysType == constants.DocSys_Personal_Edition)
+				{
+					docSysErrorLog("个人版不支持LDAP登录认证，请购买企业版证书！", rt);
+				}
 			}
-			else if(docSysType == constants.DocSys_Personal_Edition)
-			{
-				docSysErrorLog("个人版不支持LDAP登录认证，请购买企业版证书！", rt);
-			}
-			else
-			{
-				ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
-			}
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
 		}
 		
 		if(maxThreadCount != null)
