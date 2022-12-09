@@ -42,6 +42,7 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
+import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.controller.BaseController;
@@ -62,7 +63,8 @@ public class ManageController extends BaseController{
 	{
 		Log.infoHead("****************** docSysInit.do ***********************");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -149,7 +151,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("getSystemEmailConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -188,7 +191,8 @@ public class ManageController extends BaseController{
 		
 		Log.debug("setSystemEmailConfig() host:" + host + " email:" + email + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -263,7 +267,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("getSystemSmsConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -304,7 +309,8 @@ public class ManageController extends BaseController{
 		
 		Log.debug("setSystemSmsConfig() server:" + server + " apikey:" + apikey + " tplid:" + tplid);
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -368,7 +374,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("getSystemDbConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			rt.setData("invalidAuthCode");
 			writeJson(rt, response);			
@@ -415,7 +422,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("setSystemDBConfig() type:"  + type + " url:" + url + " user:" + user  + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -528,7 +536,8 @@ public class ManageController extends BaseController{
 		Log.debug("clusterServerLoopbackTest() msg:[" + msg + "] authCode:[" + authCode + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(checkAuthCode(authCode, "clusterServerLoopbackTest") == false)
+		AuthCode auth = checkAuthCode(authCode, "clusterServerLoopbackTest");
+		if(auth == null)
 		{
 			Log.debug("clusterServerLoopbackTest checkAuthCode return false");
 			rt.setError("无效授权码或授权码已过期！");
@@ -548,7 +557,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("testDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -570,7 +580,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("deleteDatabase()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
 		{
 			writeJson(rt, response);			
 			return;
@@ -626,7 +637,8 @@ public class ManageController extends BaseController{
 		Log.debug("resetDatabase() type:" + type + " url:" + url + " user:" + user + " pwd:" + pwd);
 
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);		
+		if(accessUser == null)		
 		{
 			writeJson(rt, response);			
 			return;
@@ -684,7 +696,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("exportDBData()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -732,7 +745,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("importDBData()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -781,7 +795,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("getSystemInfo()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -837,7 +852,8 @@ public class ManageController extends BaseController{
 		
 		Log.debug("getSystemLicenses()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -874,7 +890,8 @@ public class ManageController extends BaseController{
 		Log.infoHead("****************** cleanSystemLocks.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -928,7 +945,8 @@ public class ManageController extends BaseController{
 		Log.infoHead("****************** disableSystem.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -947,7 +965,8 @@ public class ManageController extends BaseController{
 		Log.infoHead("****************** enableSystem.do ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -966,7 +985,8 @@ public class ManageController extends BaseController{
 		Log.infoHead("****************** disableRepos.do reposId:" + reposId +  " ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -985,7 +1005,8 @@ public class ManageController extends BaseController{
 		Log.infoHead("****************** enableRepos.do reposId:" + reposId +" ***********************");
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -1028,14 +1049,30 @@ public class ManageController extends BaseController{
 				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel + " logFile:" + logFile
 				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
 		
-		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
 		}
 		
-		if(tomcatPath == null && openOfficePath == null && javaHome == null && ldapConfig == null)
+		if(tomcatPath == null && 
+			javaHome == null &&
+			openOfficePath == null &&
+			officeEditorApi == null &&
+			defaultReposStorePath == null &&
+			systemLogStorePath == null &&
+			indexDBStorePath == null &&
+			salesDataStorePath == null &&
+			ldapConfig == null &&
+			logLevel == null &&
+			logFile == null &&
+			maxThreadCount == null &&
+			redisEn == null &&
+			redisUrl == null &&
+			clusterServerUrl == null)	
 		{
 			docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
@@ -1119,16 +1156,15 @@ public class ManageController extends BaseController{
 			if(docSysType == constants.DocSys_Professional_Edition)
 			{
 				docSysErrorLog("专业版不支持LDAP登录认证，请购买企业版证书！", rt);
-				writeJson(rt, response);
-				return;
 			}
 			else if(docSysType == constants.DocSys_Personal_Edition)
 			{
 				docSysErrorLog("个人版不支持LDAP登录认证，请购买企业版证书！", rt);
-				writeJson(rt, response);
-				return;
 			}
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
+			else
+			{
+				ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
+			}
 		}
 		
 		if(maxThreadCount != null)
@@ -1176,9 +1212,10 @@ public class ManageController extends BaseController{
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
 		{
-			Log.debug("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			docSysDebugLog("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName, rt);
 			docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置","失败",  null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 				
@@ -1194,13 +1231,13 @@ public class ManageController extends BaseController{
 			initDocSysDataPath();
 		}
 		
-		if(redisEn != null)
+		//initRedis() 返回true表示集群相关的参数有改动，则调用restartClusterServer
+		if(initRedis())
 		{
-			if(initRedis())	//redisEn changed
-			{
-				restartClusterServer();
-			}
+			restartClusterServer();
 		}
+		
+		addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置","成功",  null, null, null, buildSystemLogDetailContent(rt));
 	}
 
 	@RequestMapping("/testCluster.do")
@@ -1210,7 +1247,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("testRedis() redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
@@ -1299,7 +1337,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("ldapTest() ldapConfig:" + ldapConfig);
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
 		{
 			writeJson(rt, response);			
 			return;
@@ -1415,7 +1454,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("upgradeSystem()");
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
 		{
 			writeJson(rt, response);			
 			return;
@@ -1473,7 +1513,8 @@ public class ManageController extends BaseController{
 		Log.infoHead("****************** restartServer.do ***********************");
 
 		ReturnAjax rt = new ReturnAjax();
-		if(superAdminAccessCheck(authCode, "docSysInit", session, rt) == false)
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
 		{
 			writeJson(rt, response);			
 			return;
@@ -1497,7 +1538,8 @@ public class ManageController extends BaseController{
 
 		Log.debug("getUserList() searchWord:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		ReturnAjax rt = new ReturnAjax();
-		if(adminAccessCheck(null, null, session, rt) == false)
+		User accessUser = adminAccessCheck(null, null, session, rt);
+		if(accessUser == null)
 		{
 			writeJson(rt, response);			
 			return;
