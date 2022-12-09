@@ -42,6 +42,10 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 支持用户管理、用户组管理、仓库管理、系统管理
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105813_e858feb3_1558129.png "docsys_管理后台1.png")
 
+### 集群部署
+支持热插拔式集群，服务器可随时加入或退出集群，支持参数一致性检测，无需人工检查
+![输入图片说明](WebRoot/web/images/cluster.png.png)
+
 # 系统安装与升级
 ### 一、系统安装
 #### 1、下载[一键安装包](https://github.com/RainyGao-GitHub/DocSys/releases)
