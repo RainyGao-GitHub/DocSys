@@ -53,6 +53,7 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
+import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
@@ -166,10 +167,13 @@ public class DocController extends BaseController{
 		if(tmpDoc != null && tmpDoc.getType() != 0)
 		{
 			docSysErrorLog(doc.getName() + " 已存在", rt);
+
 			rt.setMsgData(1);
 			rt.setData(tmpDoc);
+			
 			writeJson(rt, response);
 			
+			docSysDebugLog("addDoc() add doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
@@ -186,12 +190,12 @@ public class DocController extends BaseController{
 		
 		if(ret == false)
 		{
-			Log.debug("add() add Doc Failed");
+			docSysDebugLog("addDoc() add doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 		executeCommonActionList(actionList, rt);
+		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
@@ -205,30 +209,39 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(checkAuthCode(authCode, null) == null)
+		AuthCode auth = checkAuthCode(authCode, null);
+		if(auth == null)
 		{
 			Log.debug("addDocRS checkAuthCode return false");
 			rt.setError("无效授权码或授权码已过期！");
-			writeJson(rt, response);			
+			writeJson(rt, response);
+			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
+			addSystemLog(request, null, "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
+		
+		ReposAccess reposAccess = auth.getReposAccess();
 		
 		//add Doc on Server Directory
 		if(reposId == null)
 		{
 			if(remoteDirectory == null)
 			{
-				Log.debug("addDocRS remoteDirectory is null");
 				rt.setError("服务器路径不能为空！");
-				writeJson(rt, response);			
+				writeJson(rt, response);
+
+				docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed: remoteDirectory is null", rt);
+				addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
 			if(type == null)
 			{
-				Log.debug("addDocRS type is null");
 				rt.setError("文件类型不能为空！");
-				writeJson(rt, response);			
+				writeJson(rt, response);	
+				
+				docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed: type is null", rt);
+				addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;			
 			}
 			
@@ -236,19 +249,26 @@ public class DocController extends BaseController{
 			{
 				if(false == FileUtil.createDir(remoteDirectory + path + name))
 				{
-					Log.debug("addDocRS() 目录 " +remoteDirectory + path + name + " 创建失败！");
+					docSysDebugLog("addDocRS() 目录 " +remoteDirectory + path + name + " 创建失败！", rt);
 					rt.setError("新增目录失败");
+					writeJson(rt, response);
+					addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
+					return;
 				}				
 			}
 			else
 			{
 				if(false == FileUtil.createFile(remoteDirectory + path, name))
 				{
-					Log.debug("addDocRS() 文件 " + remoteDirectory + path + name + "创建失败！");
+					docSysDebugLog("addDocRS() 文件 " + remoteDirectory + path + name + "创建失败！", rt);
 					rt.setError("新建文件失败");
+					writeJson(rt, response);
+					addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
+					return;
 				}
 			}
 			writeJson(rt, response);	
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "成功", null, null, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 		
@@ -256,6 +276,9 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
+			writeJson(rt, response);
+			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
@@ -266,10 +289,10 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, type, true,localRootPath,localVRootPath, 0L, "");
 
-		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
+			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
@@ -277,11 +300,12 @@ public class DocController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, doc, false);
 		if(tmpDoc != null && tmpDoc.getType() != 0)
 		{
-			Log.debug("addDocRS 文件:" + doc.getPath() + doc.getName() + " 已存在");
 			rt.setError("文件已存在");
 			rt.setMsgData(1);
 			rt.setData(tmpDoc);
 			writeJson(rt, response);
+
+			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed: 文件已存在", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
@@ -297,7 +321,7 @@ public class DocController extends BaseController{
 		
 		if(ret == false)
 		{
-			Log.debug("addDocRS addDoc Failed");
+			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
