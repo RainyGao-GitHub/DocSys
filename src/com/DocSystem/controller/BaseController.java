@@ -21360,7 +21360,7 @@ public class BaseController  extends BaseFunction{
 			}			
 		}
 		
-		docSysDebugLog("doPushToRemoteStorage() doPushEntryToRemoteStorage [" + doc.getPath() + doc.getName() + "] return [" + ret + "] total[" + pushResult.totalCount + "] success[" + pushResult.successCount + "] failed["  + pushResult.failCount + "]", rt);
+		docSysDebugLog("doPushToRemoteStorage() doPushEntryToRemoteStorage [" + doc.getPath() + doc.getName() + "] to server [" + getRemotePushServerInfo(remote) + "] return [" + ret + "] total[" + pushResult.totalCount + "] success[" + pushResult.successCount + "] failed["  + pushResult.failCount + "]", rt);
 
 		rt.setDataEx(pushResult);
 		Log.info("doPushToRemoteStorage() doc:[" +  doc.getPath() + doc.getName() + "] ret:" + ret);
@@ -21372,6 +21372,37 @@ public class BaseController  extends BaseFunction{
 		return ret;	
 	}
 	
+	private String getRemotePushServerInfo(RemoteStorageConfig remote) {
+		String serverInfo = "[" + remote.protocol + "]";
+		switch(remote.protocol)
+		{
+		case "file":
+			serverInfo += remote.FILE.localRootPath + remote.rootPath;
+			break;
+		case "sftp":
+			serverInfo += remote.SFTP.host + ":" + remote.SFTP.port + remote.rootPath;
+			break;
+		case "ftp":
+			serverInfo += remote.FTP.host + ":" + remote.FTP.port + remote.rootPath;
+			break;
+		case "smb":
+			serverInfo += remote.SMB.host + ":" + remote.SMB.port + remote.rootPath;
+			break;
+		case "mxsdoc":
+			serverInfo += remote.MXSDOC.url + remote.rootPath;
+			break;
+		case "svn":
+			serverInfo += remote.SVN.url + remote.rootPath;
+			break;
+		case "git":
+			serverInfo += remote.GIT.url + remote.rootPath;
+			break;
+		default:
+			break;
+		}		
+		return serverInfo;
+	}
+
 	//这是一个阻塞函数，只有在获取到锁才会退出
 	private boolean lockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc, String lockInfo) {
 		Object synclock = getRemoteStorageSyncLock(remote.remoteStorageIndexLib);
