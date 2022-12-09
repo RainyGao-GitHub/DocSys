@@ -205,7 +205,7 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(checkAuthCode(authCode, null) == false)
+		if(checkAuthCode(authCode, null) == null)
 		{
 			Log.debug("addDocRS checkAuthCode return false");
 			rt.setError("无效授权码或授权码已过期！");
@@ -258,6 +258,8 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		repos.disableRemoteAction = true;
 		
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -515,7 +517,7 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		
 		
-		if(checkAuthCode(authCode, null) == false)
+		if(checkAuthCode(authCode, null) == null)
 		{
 			rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
@@ -558,6 +560,8 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		repos.disableRemoteAction = true;
 		
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -884,7 +888,7 @@ public class DocController extends BaseController{
 		Log.info("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " srcName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(checkAuthCode(authCode, null) == false)
+		if(checkAuthCode(authCode, null) == null)
 		{
 			rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
@@ -945,6 +949,8 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		repos.disableRemoteAction = true;
 		
 		//检查用户是否有目标目录权限新增文件
 		String reposPath = Path.getReposPath(repos);
@@ -1755,7 +1761,7 @@ public class DocController extends BaseController{
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " authCode:" + authCode + " commitMsg:" + commitMsg);
 		ReturnAjax rt = new ReturnAjax();
 
-		if(checkAuthCode(authCode, null) == false)
+		if(checkAuthCode(authCode, null) == null)
 		{
 			rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
@@ -1870,6 +1876,8 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		repos.disableRemoteAction = true;
 		
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 		String reposPath = Path.getReposPath(repos);
@@ -2693,7 +2701,7 @@ public class DocController extends BaseController{
 		
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == false)
+			if(checkAuthCode(authCode, null) == null)
 			{
 				rt.setError("无效授权码或授权码已过期！");
 				writeJson(rt, response);			
@@ -2829,7 +2837,7 @@ public class DocController extends BaseController{
 	
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == false)
+			if(checkAuthCode(authCode, null) == null)
 			{
 				rt.setError("无效授权码或授权码已过期！");
 				writeJson(rt, response);			
@@ -2912,7 +2920,7 @@ public class DocController extends BaseController{
 	
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == false)
+			if(checkAuthCode(authCode, null) == null)
 			{
 				rt.setError("无效授权码或授权码已过期！");
 				writeJson(rt, response);			
@@ -3656,7 +3664,7 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(checkAuthCode(authCode, null) == false)
+		if(checkAuthCode(authCode, null) == null)
 		{
 			rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
@@ -3724,7 +3732,7 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(checkAuthCode(authCode, null) == false)
+		if(checkAuthCode(authCode, null) == null)
 		{
 			rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
@@ -4066,7 +4074,7 @@ public class DocController extends BaseController{
 		ReposAccess reposAccess = null;
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == false)
+			if(checkAuthCode(authCode, null) == null)
 			{
 				Log.debug("lockDoc checkAuthCode Failed");
 				rt.setError("无效授权码");
@@ -4158,7 +4166,7 @@ public class DocController extends BaseController{
 		ReposAccess reposAccess = null;
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == false)
+			if(checkAuthCode(authCode, null) == null)
 			{
 				Log.debug("lockDoc checkAuthCode Failed");
 				rt.setError("无效授权码");

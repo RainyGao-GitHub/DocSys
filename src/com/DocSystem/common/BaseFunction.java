@@ -164,7 +164,11 @@ public class BaseFunction{
     //serverUrl(http://serverIP:port)集群时用于服务器之间通信
     protected static String clusterServerUrl = null;
     protected static String clusterServerLoopbackMsg = null;	//用于集群的回环自检
-    
+	//用于检测集群相关的配置是否发生了变化（在initRedis接口中使用）
+    protected static String clusterDbUrl = null;
+    protected static String clusterLdapConfig = null;
+    protected static String clusterOfficeEditor = null;
+
     public static int clusterHeartBeatInterval = 300; //300秒(5分钟)，心跳间隔
     public static int clusterHeartBeatStopTime = 3*clusterHeartBeatInterval*1000;	//3次心跳
     
@@ -4445,7 +4449,7 @@ public class BaseFunction{
     }
     
     //获取LDAP设置
-	protected String getLdapConfig() {
+	protected static String getLdapConfig() {
     	String ldapConfig = null;
     	ldapConfig = ReadProperties.read("docSysConfig.properties", "ldapConfig");
         if(ldapConfig != null && !ldapConfig.isEmpty())

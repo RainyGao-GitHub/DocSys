@@ -202,81 +202,104 @@ public class BaseController  extends BaseFunction{
 		Log.debug("initRedis() redisEn:" + redisEn);
 		
 		boolean preRedisEn = redisEn;
-		String preClusterServerUrl = clusterServerUrl;
 		String preRedisUrl = redisUrl;
-
+		String preClusterServerUrl = clusterServerUrl;
+		String preClusterDBUrl = clusterDbUrl;
+		String preClusterLdapConfig = clusterLdapConfig;
+		String preClusterOfficeEditor = clusterOfficeEditor;
+		
 		int isRedisEn = getRedisEn();
 		Log.debug("initRedis() isRedisEn:" + isRedisEn);
-			
-		if(isRedisEn == 1)
-		{
-			clusterServerUrl = getClusterServerUrl();
-			if(clusterServerUrl == null || clusterServerUrl.isEmpty())
-			{
-				errorLog("initRedis() clusterServerUrl not configured");
-				redisEn = false;
-				globalClusterDeployCheckResult = false;
-			    globalClusterDeployCheckResultInfo = "集群失败: 集群服务器地址未设置";
-			    return false;
-			}
-				
-			redisUrl = getRedisUrl();
-			if(redisUrl == null || redisUrl.isEmpty())
-			{
-				redisEn = false;
-				errorLog("initRedis() redisUrl not configured");
-				globalClusterDeployCheckResult = false;
-			    globalClusterDeployCheckResultInfo = "集群失败: Redis服务器地址未设置";
-				return false;
-			}
-			else
-			{
-		        Config config = new Config();
-		        config.useSingleServer().setAddress(redisUrl);
-		        redisClient = Redisson.create(config);
-		        if(redisClient == null)
-		        {
-		        	redisEn = false;
-		        	Log.error("initRedis() failed to connect to redisServer:" + redisUrl);
-					globalClusterDeployCheckResult = false;
-				    globalClusterDeployCheckResultInfo = "集群失败: Redis服务器连接失败";
-				    return false;
-		        }
-		        else
-		        {
-		        	redisEn = true;
-		        }
-			}
-		}
-		else
+		
+		if(isRedisEn == 0)
 		{
 			redisEn = false;
+			return preRedisEn != redisEn;
 		}
 		
-		//check if needRestartClusterServer
-		if(redisEn)
-		{		
-			if(preRedisEn != redisEn)
-			{
-				//needRestartClusterServer
-				Log.info("initRedis() redisEn changed form [" + preRedisEn + "] to [" + redisEn + "]");
-				return true;
-			}
-			
-			if(preRedisUrl == null || !preRedisUrl.equals(redisUrl))
-			{
-				Log.info("initRedis() redisUrl changed form [" + preRedisUrl + "] to [" + redisUrl + "]");
-				return true;
-			}
-				
-			if(preClusterServerUrl == null || !preClusterServerUrl.equals(clusterServerUrl))
-			{
-				Log.info("initRedis() clusterServerUrl changed form [" + preClusterServerUrl + "] to [" + clusterServerUrl + "]");
-				return true;
-			}
+		//集群配置使能
+		//1. Redis服务器设置检查
+		redisUrl = getRedisUrl();
+		if(redisUrl == null || redisUrl.isEmpty())
+		{
+			redisEn = false;
+			errorLog("initRedis() redisUrl not configured");
+			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckResultInfo = "集群失败: Redis服务器地址未设置";
+		    return false;
+		}
+
+		//2. 集群服务器地址检查
+		clusterServerUrl = getClusterServerUrl();
+		if(clusterServerUrl == null || clusterServerUrl.isEmpty())
+		{
+			errorLog("initRedis() clusterServerUrl not configured");
+			redisEn = false;
+			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckResultInfo = "集群失败: 集群服务器地址未设置";
+			return false;
 		}
 		
-		//注意从集群转到非集群不需要重新初始化
+		Config config = new Config();
+		config.useSingleServer().setAddress(redisUrl);
+		redisClient = Redisson.create(config);
+		if(redisClient == null)
+		{
+			redisEn = false;
+		    Log.error("initRedis() failed to connect to redisServer:" + redisUrl);
+			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckResultInfo = "集群失败: Redis服务器连接失败";
+			return false;
+		}
+		     
+		redisEn = true;
+		if(preRedisEn != redisEn)
+		{
+			//needRestartClusterServer
+			Log.info("initRedis() redisEn changed form [" + preRedisEn + "] to [" + redisEn + "]");
+			return true;
+		}
+		
+		clusterDbUrl = ReadProperties.getValue("jdbc.properties", "db.url");
+		clusterOfficeEditor = Path.getOfficeEditorApi();
+		clusterLdapConfig = getLdapConfig();		
+		if(isClusterConfigChanged("redisUrl", preRedisUrl, redisUrl) ||
+				isClusterConfigChanged("clusterServerUrl", preClusterServerUrl, clusterServerUrl) ||
+				isClusterConfigChanged("DB_URL", preClusterDBUrl, clusterDbUrl) || 
+				isClusterConfigChanged("OfficeEditor", preClusterOfficeEditor, clusterOfficeEditor) || 
+				isClusterConfigChanged("LdapConfig", preClusterLdapConfig, clusterLdapConfig))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
+	static boolean isClusterConfigChanged(String configName, String preValue, String newValue)
+	{
+		if(preValue == null || preValue.isEmpty())
+		{
+			if(newValue == null || newValue.isEmpty())
+			{
+				return false;
+			}
+			Log.info("isClusterConfigChanged() [" + configName + "] changed from [" + preValue + "] to [" + newValue + "]");
+			return true;
+		}
+		
+		//preValue is not null/empty
+		if(newValue == null || newValue.isEmpty())
+		{
+			Log.info("isClusterConfigChanged() [" + configName + "] changed from [" + preValue + "] to [" + newValue + "]");
+			return true;
+		}
+		
+		//both is not empty
+		if(newValue.equals(preValue) == false)
+		{
+			Log.info("isClusterConfigChanged() [" + configName + "] changed from [" + preValue + "] to [" + newValue + "]");
+			return true;
+		}
 		return false;
 	}
 
@@ -411,31 +434,31 @@ public class BaseController  extends BaseFunction{
 		docSysInitAuthCode = authCode.getCode();
 	}
 	
-	protected boolean checkAuthCode(String code, String expUsage) {
+	protected AuthCode checkAuthCode(String code, String expUsage) {
 		Log.debug("checkAuthCode() authCode:" + code);
 		AuthCode authCode = getAuthCode(code);
 		if(authCode == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode for [" + code + "] is null");
-			return false;
+			return null;
 		}
 
 		if(authCode.getUsage() == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode usage is null");
-			return false;
+			return null;
 		}
 
 		if(authCode.getExpTime() == null || authCode.getRemainCount() == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode expireTime is null");
-			return false;
+			return null;
 		}
 
 		if(authCode.getRemainCount() == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode remainCount is null");
-			return false;
+			return null;
 		}
 
 		if(expUsage != null)
@@ -444,7 +467,7 @@ public class BaseController  extends BaseFunction{
 			if(!expUsage.equals(authCode.getUsage()))
 			{
 				Log.debug("checkAuthCode() auhtCode usage not matched");				
-				return false;
+				return null;
 			}			
 		}
 		
@@ -454,7 +477,7 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.debug("checkAuthCode() 授权码使用次数为0");
 			deleteAuthCode(code);
-			return false;	
+			return null;	
 		}
 		
 		long curTime = new Date().getTime();
@@ -462,49 +485,50 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.debug("checkAuthCode() 授权码已过期");
 			deleteAuthCode(code);
-			return false;			
+			return null;			
 		}
 		
 		//update the remainCount
 		authCode.setRemainCount(remainCount-1);				
-		return true;
+		return authCode;
 	}
 	
 	/****************************** DocSys manage 页面权限检查接口  **********************************************/
-	protected boolean superAdminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
+	protected User superAdminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
 		return mamageAccessCheck(authCode, expUsage, 2, session, rt);
 	}
-	protected boolean adminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
+	protected User adminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
 		return mamageAccessCheck(authCode, expUsage, 1, session, rt);
 	}
 
 	
 	//role: 0 普通用户、1 管理员、2超级管理员
-	protected boolean mamageAccessCheck(String authCode, String expUsage, int role, HttpSession session, ReturnAjax rt) {
+	protected User mamageAccessCheck(String authCode, String expUsage, int role, HttpSession session, ReturnAjax rt) {
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, expUsage) == true)
+			AuthCode authCodeData = checkAuthCode(authCode, expUsage);
+			if(authCodeData == null)
 			{
-				return true;
+				docSysErrorLog("无效授权码或授权码已过期！", rt);
+				return null;
 			}
-			docSysErrorLog("无效授权码或授权码已过期！", rt);
-			return false;
+			return authCodeData.getReposAccess().getAccessUser();
 		}
 		
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
-			return false;
+			return null;
 		}
 				
 		if(login_user.getType() < role)
 		{
 			docSysErrorLog("您无权进行此操作，请联系系统管理员！", rt);
-			return false;
+			return null;
 		}
 		
-		return true;
+		return login_user;
 		
 	}
 	
@@ -3753,16 +3777,29 @@ public class BaseController  extends BaseFunction{
 				rt.setDataEx(addedParentDocList);
 			}
 			
-			realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
-			realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{
+				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+			}
 		}
 		else
 		{
-			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction)
+			{
+				if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
+				{
+					unlockDoc(doc, lockType, login_user);
+					docSysDebugLog("addDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
+					return false;
+				}
+			}
+			else
 			{
 				unlockDoc(doc, lockType, login_user);
-				docSysDebugLog("addDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
+				docSysDebugLog("addDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
+				docSysErrorLog("远程推送失败", rt); 
 				return false;
 			}
 		}
@@ -4044,16 +4081,31 @@ public class BaseController  extends BaseFunction{
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
-			realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
-			realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{
+				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
+				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
+			}
 		}
 		else
 		{
-			revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);
-			if(revision == null)
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{	
+				revision = remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);
+				if(revision == null)
+				{
+					unlockDoc(doc, lockType, login_user);
+					docSysDebugLog("deleteDoc_FSM() remoteServerDocCommit [" + doc.getPath() + doc.getName() + "]Failed", rt);
+					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
+					return null;
+				}
+			}
+			else
 			{
-				docSysDebugLog("deleteDoc_FSM() remoteServerDocCommit [" + doc.getPath() + doc.getName() + "]Failed", rt);
-				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
+				unlockDoc(doc, lockType, login_user);
+				docSysDebugLog("deleteDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
+				docSysErrorLog("远程推送失败", rt);
+				return null;
 			}
 		}
 		
@@ -7527,16 +7579,29 @@ public class BaseController  extends BaseFunction{
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
-			realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
-			realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{	
+				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+			}
 		}
 		else
 		{
-			if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{	
+				if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+				{
+					unlockDoc(doc, lockType, login_user);
+					docSysDebugLog("updateDoc_FSM() remoteServerDocCommit Failed", rt);
+					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
+					return false;
+				}
+			}
+			else
 			{
 				unlockDoc(doc, lockType, login_user);
-				Log.info("updateDoc_FSM() remoteServerDocCommit Failed");
-				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
+				docSysDebugLog("updateDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
+				docSysErrorLog("远程推送失败", rt);
 				return false;
 			}
 		}
@@ -7689,15 +7754,31 @@ public class BaseController  extends BaseFunction{
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
 			
-			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
-			realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{
+				realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+				realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+			}
 		}
 		else
 		{
-			if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, true) == null)
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{	
+				if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, true) == null)
+				{
+					unlockDoc(srcDoc, lockType, login_user);
+					unlockDoc(dstDoc, lockType, login_user);
+					docSysErrorLog("远程推送失败！", rt);
+					docSysDebugLog("moveDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
+					return false;
+				}
+			}
+			else
 			{
+				unlockDoc(srcDoc, lockType, login_user);
+				unlockDoc(dstDoc, lockType, login_user);
 				docSysErrorLog("远程推送失败！", rt);
-				docSysDebugLog("moveDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
+				docSysDebugLog("moveDoc_FSM() remoteServerDocCopy Failed: RemoteActionDisabled", rt);
 				return false;
 			}
 		}
@@ -7787,23 +7868,36 @@ public class BaseController  extends BaseFunction{
 				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
 			}
 			
-			realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
-			realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{
+				realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+				realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+			}
 		}
 		else
 		{
-			Log.debug("copyDoc_FSM() remoteServerDocCopy");		
-			if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, false) == null)
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{	
+				Log.debug("copyDoc_FSM() remoteServerDocCopy");		
+				if(remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, false) == null)
+				{
+					unlockDoc(srcDoc, lockType, login_user);
+					unlockDoc(dstDoc, lockType, login_user);
+	
+					docSysErrorLog("远程推送失败！", rt);
+					docSysDebugLog("copyDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
+					return false;
+				}
+			}
+			else
 			{
 				unlockDoc(srcDoc, lockType, login_user);
 				unlockDoc(dstDoc, lockType, login_user);
-
 				docSysErrorLog("远程推送失败！", rt);
-				docSysDebugLog("copyDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
+				docSysDebugLog("copyDoc_FSM() remoteServerDocCopy Failed: RemoteActionDisabled", rt);
 				return false;
 			}
 		}
-		
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		Log.debug("copyDoc_FSM() BuildMultiActionListForDocCopy");		
@@ -7878,15 +7972,27 @@ public class BaseController  extends BaseFunction{
 					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 				}
 					
-				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
-				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+				{	
+					realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+					realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+				}
 			}
 			else
 			{
-				if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+				{	
+					if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+					{
+						docSysDebugLog("updateRealDocContent_FSM() remoteServerDocCommit Failed", rt);
+						docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
+						return false;
+					}
+				}
+				else
 				{
-					Log.info("updateRealDocContent_FSM() remoteServerDocCommit Failed");
-					//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
+					docSysDebugLog("updateRealDocContent_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
+					docSysErrorLog("远程推送失败", rt);
 					return false;
 				}
 			}
