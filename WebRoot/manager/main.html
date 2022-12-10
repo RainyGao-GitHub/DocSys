@@ -2909,91 +2909,91 @@
 		switch(node.event)
 		{
 		case "addRepos":
-			node.formatedContent = "[新建仓库 " + node.event + "] [" + node.reposName + "]";
+			node.formatedContent = "[" + node.event + " 新建仓库] [" + node.reposName + "]";
 			break;
 		case "deleteRepos":
-			node.formatedContent = "[删除仓库 " + node.event + "] [" + node.reposName + "]";
+			node.formatedContent = "[" + node.event + " 删除仓库] [" + node.reposName + "]";
 			break;
 		case "updateReposInfo":
-			node.formatedContent = "[修改仓库 " + node.event + "] [" + node.reposName + "]";
+			node.formatedContent = "[" + node.event + " 修改仓库] [" + node.reposName + "]";
 			break;
 		case "configReposAuth":
-			node.formatedContent = "[设置仓库权限 " + node.event + "] [" + node.reposName + "]";
+			node.formatedContent = "[" + node.event + " 设置仓库权限] [" + node.reposName + "]";
 			break;
 		case "deleteReposAuth":
-			node.formatedContent = "[删除仓库权限 " + node.event + "] [" + node.reposName + "]";
+			node.formatedContent = "[" + node.event + " 删除仓库权限] [" + node.reposName + "]";
 			break;
 		case "addDoc":
-			node.formatedContent = "[新增文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 新增文件] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "deleteDoc":
-			node.formatedContent = "[删除文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[删除文件] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "uploadDoc":
-			node.formatedContent = "[上传文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[上传文件] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "downloadDocPrepare":
-			node.formatedContent = "[下载文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[下载文件] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "downloadDoc":
-			node.formatedContent = "[下载文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[下载文件] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "copyDoc":
-			node.formatedContent = "[复制文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "]";
+			node.formatedContent = "[复制文件] [" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
 			break;
 		case "moveDoc":
-			node.formatedContent = "[移动文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "]";
+			node.formatedContent = "[" + node.event + " 移动文件] [" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
 			break;
 		case "renameDoc":
-			node.formatedContent = "[重命名文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "] 为 [" + node.newPath + node.newName + "]";
+			node.formatedContent = "[" + node.event + " 重命名文件] [" + node.path + node.name + "] 为 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
 			break;
 		case "updateDocContent":
-			node.formatedContent = "[" + node.action + " " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "] 为 [" + node.newPath + node.newName + "]";
+			node.formatedContent = "[" + node.event + " " + node.action + "] [" + node.path + node.name + "] 为 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
 			break;
 		case "uploadMarkdownPic":
-			node.formatedContent = "[上传备注图片 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 上传备注图片] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;	
 		case "lockDoc":
-			node.formatedContent = "[" + node.action + " " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " " + node.action + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "unlockDoc":
-			node.formatedContent = "[解锁文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 解锁文件] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "setDocPwd":
-			node.formatedContent = "[设置文件访问密码 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 设置文件访问密码] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "downloadHistoryDocPrepare":
-			node.formatedContent = "[下载历史文件 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 下载历史文件] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "revertDocHistory":
-			node.formatedContent = "[恢复文件历史版本 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 恢复文件历史版本] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "addDocShare":
-			node.formatedContent = "[新建文件分享 " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 新建文件分享] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "updateDocShare":
-			node.formatedContent = "[修改文件分享  " + node.event + "] ";
+			node.formatedContent = "[" + node.event + " 修改文件分享 ] ";
 			break;
 		case "deleteDocShare":
-			node.formatedContent = "[删除文件分享  " + node.event + "] ";
+			node.formatedContent = "[" + node.event + " 删除文件分享 ] ";
 			break;
 		case "configDocAuth":
-			node.formatedContent = "[设置文件权限  " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 设置文件权限 ] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "deleteDocAuth":
-			node.formatedContent = "[删除文件权限  " + node.event + "] " + node.reposName + "::[" + node.path + node.name + "]";
+			node.formatedContent = "[" + node.event + " 删除文件权限 ] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "login":
-			node.formatedContent = "[登录系统  " + node.event + "] ";
+			node.formatedContent = "[" + node.event + " 登录系统 ] ";
 			break;
 		case "logout":
-			node.formatedContent = "[退出登录  " + node.event + "] ";
+			node.formatedContent = "[" + node.event + " 退出登录 ] ";
 			break;
 		case "register":
-			node.formatedContent = "[用户注册  " + node.event + "] ";
+			node.formatedContent = "[" + node.event + " 用户注册 ] ";
 			break;
 		default:
-			node.formatedContent = "[" + node.action + " " + node.event + "] ";
+			node.formatedContent = "[" + node.event + " " + node.action + "] ";
 			break;
 		}
 		if(node.content)
