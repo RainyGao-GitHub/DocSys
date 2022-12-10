@@ -22633,7 +22633,7 @@ public class BaseController  extends BaseFunction{
 		String logDetail = "";
 		if(rt.startTime != null)
 		{
-			logDetail += "开始时间 [" + DateFormat.dateTimeFormat(new Date(rt.startTime)) + "], 耗时 [" + (new Date().getTime() - rt.startTime) + "] ms ";
+			logDetail += "开始时间 [" + DateFormat.dateTimeFormat(new Date(rt.startTime)) + "], 耗时 [" + (new Date().getTime() - rt.startTime) + "ms] ";
 		}
 		
 		if(rt.getMsgInfo() != null)
