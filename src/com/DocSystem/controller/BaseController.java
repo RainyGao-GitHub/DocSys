@@ -12653,7 +12653,7 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null || remote.autoPush == null || remote.autoPush != 1)
 		{
-			docSysDebugLog("realTimeRemoteStoragPush() remoteStorageConfig autoPush not configured", rt);			
+			Log.debug("realTimeRemoteStoragPush() remoteStorageConfig autoPush not configured");			
 			return false;
 		}
 		
@@ -12707,7 +12707,7 @@ public class BaseController  extends BaseFunction{
 		ReposBackupConfig backupConfig = repos.autoBackupConfig;
 		if(backupConfig == null)
 		{
-			docSysDebugLog("realTimeBackup() backupConfig not configured", rt);			
+			Log.debug("realTimeBackup() backupConfig not configured");			
 			return false;
 		}
 				
@@ -12724,14 +12724,14 @@ public class BaseController  extends BaseFunction{
 		BackupConfig remoteBackupConfig = repos.autoBackupConfig.remoteBackupConfig;
 		if(remoteBackupConfig == null || remoteBackupConfig.realTimeBackup == null || remoteBackupConfig.realTimeBackup == 0)
 		{
-			docSysDebugLog("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured", rt);			
+			Log.debug("realTimeRemoteBackup() remoteBackupConfig realTimeBackup not configured");			
 			return false;
 		}
 		
 		RemoteStorageConfig remote = remoteBackupConfig.remoteStorageConfig;
 		if(remote == null)
 		{
-			docSysDebugLog("realTimeRemoteBackup() remoteStorageConfig not configured", rt);			
+			Log.debug("realTimeRemoteBackup() remoteStorageConfig not configured");			
 			return false;
 		}
 		
@@ -12803,14 +12803,14 @@ public class BaseController  extends BaseFunction{
 		BackupConfig localBackupConfig = repos.autoBackupConfig.localBackupConfig;
 		if(localBackupConfig == null || localBackupConfig.realTimeBackup == null || localBackupConfig.realTimeBackup == 0)
 		{
-			docSysDebugLog("realTimeLocalBackup() localBackupConfig realTimeBackup not configured", rt);			
+			Log.debug("realTimeLocalBackup() localBackupConfig realTimeBackup not configured");			
 			return false;
 		}
 		
 		RemoteStorageConfig remote = localBackupConfig.remoteStorageConfig;
 		if(remote == null)
 		{
-			docSysDebugLog("realTimeLocalBackup() remoteStorageConfig not configured", rt);			
+			Log.debug("realTimeLocalBackup() remoteStorageConfig not configured");			
 			return false;
 		}
 		
