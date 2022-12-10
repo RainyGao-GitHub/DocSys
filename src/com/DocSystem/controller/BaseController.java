@@ -17342,6 +17342,12 @@ public class BaseController  extends BaseFunction{
 			byte buf[] = new byte[2048]; 
 	        ZipEntry entry = (ZipEntry)entries.nextElement(); 
 	        String filename = entry.getName(); 
+	        if(filename.startsWith("../"))
+	        {
+	        	Log.info("unZip() virus inject risk for file: [" + filename + "]");
+	        	continue;
+	        }
+	        
 	        boolean ismkdir = false; 
 	        if(filename.lastIndexOf("/") != -1){ //检查此文件是否带有文件夹 
 	         ismkdir = true; 
