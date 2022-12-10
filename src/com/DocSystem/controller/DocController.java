@@ -431,6 +431,8 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
+			docSysDebugLog("refreshDoc() [" + path + name + "] reposCheck Failed", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -454,9 +456,16 @@ public class DocController extends BaseController{
 			{
 				addDocToSyncUpList(actionList, repos, doc, Action.SYNC, reposAccess.getAccessUser(), commitMsg, true);
 			}
+			writeJson(rt, response);
+		}
+		else
+		{
+			writeJson(rt, response);
+
+			docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "] was force locked", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 		}
 		
-		writeJson(rt, response);
 		
 		new Thread(new Runnable() {
 			public void run() {
