@@ -12937,10 +12937,14 @@ public class BaseController  extends BaseFunction{
 	                		Date date = new Date();
 	                		String backUpTime = DateFormat.dateTimeFormat2(date);
 	                		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
+
+	                		ReturnAjax rt = new ReturnAjax(date.getTime());	                		
 	                		boolean ret = backupDatabase(backUpPath, DB_TYPE, DB_URL, DB_USER, DB_PASS, true);
 	                        if(ret == false)
 	                        {
-	                        	Log.info("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行失败\n");		                        
+								docSysDebugLog("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行失败", rt);		                       
+		                		addSystemLog(serverIP, systemUser, "DBBackup", "DBBackup", "数据库自动备份", "失败",  null, null, null, buildSystemLogDetailContent(rt));
+
 	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
 	                        	addDelayTaskForDBBackup(5, null);                      
 	                        	//注意: 数据库自动备份失败就等待下一次备份，不重试
@@ -12949,7 +12953,9 @@ public class BaseController  extends BaseFunction{
 	                        }
 	                        else
 	                        {
-		                        Log.info("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行成功\n");
+	                        	docSysDebugLog("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行成功", rt);
+		                		addSystemLog(serverIP, systemUser, "DBBackup", "DBBackup", "数据库自动备份", "成功",  null, null, null, buildSystemLogDetailContent(rt));
+
 	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
 	                        	addDelayTaskForDBBackup(5, null);                      
 	                        }
@@ -13032,7 +13038,7 @@ public class BaseController  extends BaseFunction{
 	                			return;
 	                        }
 	                        	                        
-	                        ReturnAjax rt = new ReturnAjax();
+	                        ReturnAjax rt = new ReturnAjax(new Date().getTime());
 	                        
 	        				//启动自动同步
 	        				List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
@@ -13059,6 +13065,8 @@ public class BaseController  extends BaseFunction{
 	        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
 	        					executeUniqueCommonActionList(actionList, rt);	        					
 	        				}
+	        				
+    						addSystemLog(serverIP, systemUser, "ReposAutoSyncup", "ReposAutoSyncup", "仓库自动同步", "完成",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	        				
 	                        //将自己从任务备份任务表中删除
 	                        latestSyncupTask.remove(createTime);
@@ -13200,6 +13208,7 @@ public class BaseController  extends BaseFunction{
                     @Override
                     public void run() {
                         try {
+                        	
 	                        Log.info("******** LocalBackupDelayTask [" + taskId + "] for repos:" + reposId);
 	                        
 	                		//线程中读取数据库有些时候会报错，因此直接只更新配置相关部分的内容
@@ -13215,8 +13224,8 @@ public class BaseController  extends BaseFunction{
 	                        ConcurrentHashMap<String, BackupTask> latestBackupTaskHashMap = reposLocalBackupTaskHashMap.get(reposId);
 	                        if(latestBackupTaskHashMap == null)
 	                        {
-		                        Log.info("LocalBackupDelayTask latestBackupTaskHashMap is null for repos:" + reposId);	                        	
-	                        	return;
+		                        Log.info("LocalBackupDelayTask latestBackupTaskHashMap is null for repos:" + reposId);	   
+								return;
 	                        }
 	                        
 	                        BackupTask lastestBackupTask = latestBackupTaskHashMap.get(taskId);
@@ -13234,11 +13243,12 @@ public class BaseController  extends BaseFunction{
 	                			return;
 	                        }
 	                        	                        
-	                        ReturnAjax rt = new ReturnAjax();
+	                        ReturnAjax rt = new ReturnAjax(new Date().getTime());
 	                        String localRootPath = Path.getReposRealPath(latestReposInfo);
 	                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
 	                        
 	                        //DocUtil在系统初始化时，似乎还不能被调用，但又不是每次都发生
+	                        //原因分析：报错是因为tomcat被重启了，但是原来的线程还没有关闭，所以实际上是之前的线程的报错
 	                        lastestBackupTask.status = 1; //backup is running
 	                        lastestBackupTask.info = "本地自动备份中...";                      
 	                        Doc rootDoc = buildRootDoc(latestReposInfo, localRootPath, localVRootPath);
@@ -13250,8 +13260,9 @@ public class BaseController  extends BaseFunction{
         			    	docLock = lockDoc(rootDoc, lockType, 2*60*60*1000, systemUser,rt,true,lockInfo);	//lock 2 Hours 2*60*60*1000
         					if(docLock == null)
         					{
-        						docSysDebugLog("LocalBackupDelayTask() Failed to lock Doc: " + rootDoc.getDocId(), rt);
+        						docSysDebugLog("LocalBackupDelayTask() lock doc [" + rootDoc.getPath() + rootDoc.getName() + "] Failed", rt);
         						rt.setError("LockDocFailed");
+        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
         					}
         					else
         					{
@@ -13283,12 +13294,15 @@ public class BaseController  extends BaseFunction{
 	                        {
 	                        	lastestBackupTask.status = 2;
 	                        	lastestBackupTask.info = "本地备份成功";
+        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", "成功",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        else
 	                        {
 	                        	lastestBackupTask.status = 3;
 	                        	lastestBackupTask.info = "本地备份失败:" + rt.getMsgInfo();
+        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
+	                        
 	                        addDelayTaskForReposLocalBackupTaskDelete(lastestBackupTask, 600L); //10分钟后删除任务
 	                        
 	                        String msgInfo = (String) rt.getMsgInfo();
@@ -13435,6 +13449,7 @@ public class BaseController  extends BaseFunction{
         					{
         						docSysDebugLog("RemoteBackupDelayTask() Failed to lock Doc: " + rootDoc.getDocId(), rt);
         						rt.setError("LockDocFailed");
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
         					}
         					else
         					{
@@ -13462,11 +13477,13 @@ public class BaseController  extends BaseFunction{
 	                        {
 	                        	lastestBackupTask.status = 2;
 	                        	lastestBackupTask.info = "异地自动备份成功";
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        else
 	                        {
 	                        	lastestBackupTask.status = 3;
 	                        	lastestBackupTask.info = "异地自动备份失败:" + rt.getMsgInfo();
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "成功",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        addDelayTaskForReposRemoteBackupTaskDelete(lastestBackupTask, 600L); //10分钟后删除任务
 	                        
