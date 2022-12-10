@@ -446,26 +446,25 @@ public class DocController extends BaseController{
 			commitMsg = "同步 " + doc.getPath() + doc.getName();
 		}
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		if(false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
-		{
-			if(force != null && force == 1)
-			{
-				addDocToSyncUpList(actionList, repos, doc, Action.SYNCFORCE, reposAccess.getAccessUser(), commitMsg, true);
-			}
-			else
-			{
-				addDocToSyncUpList(actionList, repos, doc, Action.SYNC, reposAccess.getAccessUser(), commitMsg, true);
-			}
-			writeJson(rt, response);
-		}
-		else
+		if(checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
 		{
 			writeJson(rt, response);
 
 			docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "] was force locked", rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
 		}
-		
+
+		//doc was not force locked
+		if(force != null && force == 1)
+		{
+			addDocToSyncUpList(actionList, repos, doc, Action.SYNCFORCE, reposAccess.getAccessUser(), commitMsg, true);
+		}
+		else
+		{
+			addDocToSyncUpList(actionList, repos, doc, Action.SYNC, reposAccess.getAccessUser(), commitMsg, true);
+		}
+		writeJson(rt, response);
 		
 		new Thread(new Runnable() {
 			public void run() {
@@ -473,6 +472,9 @@ public class DocController extends BaseController{
 				executeUniqueCommonActionList(actionList, rt);
 			}
 		}).start();
+		
+		docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "]", rt);
+		addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 	
 	/****************   delete a Document ******************/
