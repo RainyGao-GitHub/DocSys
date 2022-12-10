@@ -207,7 +207,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** addDocRS [" + path + name + "] ****************");
 		Log.info("addDocRS reposId:" + reposId + " remoteDirectory:[" + remoteDirectory + "] path:[" + path + "] name:" + name  + " type:" + type + " content:" + " authCode:" + authCode);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		AuthCode auth = checkAuthCode(authCode, null);
 		if(auth == null)
@@ -420,7 +420,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** refreshDoc [" + path + name + "] ****************");
 		Log.info("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -549,7 +549,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** deleteDocRS [" + path + name + "] ****************");
 		Log.info("deleteDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name + " authCode:" + authCode);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		
 		if(checkAuthCode(authCode, null) == null)
@@ -922,7 +922,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** copyDocRS [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
 		Log.info("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " srcName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		if(checkAuthCode(authCode, null) == null)
 		{
 			rt.setError("无效授权码或授权码已过期！");
@@ -1349,7 +1349,7 @@ public class DocController extends BaseController{
 		Log.info("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 			
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
@@ -1429,7 +1429,12 @@ public class DocController extends BaseController{
 					{
 						executeCommonActionList(actionList, rt);
 						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 					}					
+					else
+					{
+						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));
+					}
 				}
 				else
 				{
@@ -1443,6 +1448,11 @@ public class DocController extends BaseController{
 						executeCommonActionList(actionList, rt);
 						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 						deletePreviewFile(doc);
+						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
+					}
+					else
+					{
+						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
 					}
 				}
 				
@@ -1514,7 +1524,12 @@ public class DocController extends BaseController{
 			{
 				executeCommonActionList(actionList, rt);
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-			}	
+				addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));						
+			}
+			else
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
+			}
 			return;
 		}
 
@@ -1527,7 +1542,12 @@ public class DocController extends BaseController{
 		{
 			executeCommonActionList(actionList, rt);
 			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-			deletePreviewFile(doc);			
+			deletePreviewFile(doc);		
+			addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));						
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
 		}
 		
 	}
@@ -1565,7 +1585,7 @@ public class DocController extends BaseController{
 		Log.info("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
 							+ " shareId:" + shareId + " commitMsg:" + commitMsg);
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
@@ -1713,9 +1733,9 @@ public class DocController extends BaseController{
 
 				if(ret == true)
 				{
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 					executeCommonActionList(actionList, rt);
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+					addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 				}
 				else
 				{
@@ -1733,10 +1753,10 @@ public class DocController extends BaseController{
 	
 			if(ret == true)
 			{
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
 				executeCommonActionList(actionList, rt);
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 				deletePreviewFile(doc);
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));					
 			}
 			else
 			{
@@ -1794,7 +1814,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** uploadDocRS [" + path + name + "] ****************");
 		Log.info("uploadDocRS  reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " name:" + name  + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " authCode:" + authCode + " commitMsg:" + commitMsg);
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
 		if(checkAuthCode(authCode, null) == null)
 		{
@@ -2190,7 +2210,7 @@ public class DocController extends BaseController{
 		//Log.debug("updateDocContent content:[" + content + "]");
 		//Log.debug("content size: " + content.length());
 			
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -2299,7 +2319,7 @@ public class DocController extends BaseController{
 		Log.info("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		//Log.debug("tmpSaveVirtualDocContent content:[" + content + "]");
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -2325,7 +2345,9 @@ public class DocController extends BaseController{
 		{
 			if(saveTmpRealDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
-				docSysErrorLog("saveVirtualDocContent Error!", rt);
+				docSysErrorLog("saveRealDocContent Error!", rt);
+				docSysDebugLog("tmpSaveVirtualDocContent() saveTmpRealDocContent [" + doc.getPath() + doc.getName() + "]", rt);
+				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "文件修改临时保存", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
 			}			
 		}
 		else
@@ -2333,6 +2355,8 @@ public class DocController extends BaseController{
 			if(saveTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
 				docSysErrorLog("saveVirtualDocContent Error!", rt);
+				docSysDebugLog("tmpSaveVirtualDocContent() saveTmpRealDocContent [" + doc.getPath() + doc.getName() + "]", rt);
+				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "备注修改临时保存", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
 			}
 		}
 		writeJson(rt, response);
@@ -2348,7 +2372,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** downloadDocPrepare [" + path + name + "] ****************");
 		Log.info("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
@@ -2372,13 +2396,15 @@ public class DocController extends BaseController{
 		//检查用户是否有权限下载文件
 		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
 		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -4672,7 +4698,7 @@ public class DocController extends BaseController{
 		Log.info("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
 
 		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -4806,11 +4832,14 @@ public class DocController extends BaseController{
 		
 		if(docLock == null)
 		{
-			docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
 			writeJson(rt, response);
+			
+			docSysDebugLog("revertDocHistory() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 
+		String revertResult = null;
 		if(isRealDoc)
 		{
 			if(isFSM(repos) == false)
@@ -4826,6 +4855,9 @@ public class DocController extends BaseController{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
+
+					docSysDebugLog("revertDocHistory() fsGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;				
 				}
 	
@@ -4835,6 +4867,9 @@ public class DocController extends BaseController{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
+					
+					docSysDebugLog("revertDocHistory() verReposGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;				
 				}
 				
@@ -4854,6 +4889,9 @@ public class DocController extends BaseController{
 					Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
+
+					docSysDebugLog("revertDocHistory() syncupScanForDoc_FSM [" + doc.getPath() + doc.getName() + "] Failed", rt);
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;
 				}
 				
@@ -4867,7 +4905,11 @@ public class DocController extends BaseController{
 						
 						String localChangeInfo = buildChangeReminderInfo(localChanges);
 						docSysErrorLog(localChangeInfo, rt);
+						
 						writeJson(rt, response);
+						
+						docSysDebugLog("revertDocHistory() doSyncupForDocChange [" + doc.getPath() + doc.getName() + "] Failed", rt);
+						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 						return;
 		        	}
 				}
@@ -4889,16 +4931,19 @@ public class DocController extends BaseController{
 					{
 						if(commitId.equals(remoteEntry.getRevision()))
 						{
-							Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
+							docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision(), rt);
 							docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
 							unlockDoc(doc, lockType, reposAccess.getAccessUser());
 							writeJson(rt, response);
+							
+							addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 							return;
 						}
 					}
 				}	
-			}	
-			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
+			}
+			
+			revertResult  = revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
 		}	
 		else
 		{
@@ -4908,21 +4953,30 @@ public class DocController extends BaseController{
 				String latestCommitId = verReposGetLatestRevision(repos, false, vDoc);
 				if(latestCommitId != null && latestCommitId.equals(commitId))
 				{
-					Log.debug("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
+					docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId, rt);
 					docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
+
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;				
 				}
 			}
-			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
+			revertResult = revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
 		}
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		
 		writeJson(rt, response);
 		
-		addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, "历史版本:" + commitId);	
+		if(revertResult == null)
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+		}
 	}
 
 	/****************   set  LocalBackup Ignore ******************/
