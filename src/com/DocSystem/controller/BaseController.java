@@ -609,12 +609,28 @@ public class BaseController  extends BaseFunction{
 			Log.debug("docSysGetDocListWithChangeType remote is null");
 			return localList;
 		}
+		
+		//强制自动推送的话,不需要考虑远程节点
+		if(remote.autoPush == 1 && remote.autoPushForce == 1)
+		{
+			Log.debug("docSysGetDocListWithChangeType remote autoPushForce is true");			
+			return localList;
+		}
+		
 		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote, null);
 		if(remoteList == null)
 		{
 			Log.debug("docSysGetDocListWithChangeType remoteList is null");
 			return localList;
 		}
+		
+		//强制自动拉取的话,远程列表非空的情况下需要考虑本地节点
+		if(remote.autoPull == 1 && remote.autoPullForce == 1)
+		{
+			Log.debug("docSysGetDocListWithChangeType remote autoPullForce is true");			
+			return remoteList;
+		}
+
 		Log.printObject("docSysGetDocListWithChangeType remoteList:", remoteList);
 		return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
 	}
