@@ -590,10 +590,12 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		if(isFSM(repos))
 		{
-			if(remoteStorageEn)
-			{
-				return docSysGetDocListWithChangeType(repos, doc);
-			}
+			//TODO:用户更关心本地真实存在的文件，远程存储的文件用户自己会去确认，因此没有必要获取远程的文件列表
+			//除非以后有显示文件的本地和远程区别的需求
+			//if(remoteStorageEn)
+			//{
+			//	return docSysGetDocListWithChangeType(repos, doc);
+			//}
 			return getLocalEntryList(repos, doc);
 		}
 		
@@ -610,13 +612,6 @@ public class BaseController  extends BaseFunction{
 			return localList;
 		}
 		
-		//强制自动推送的话,不需要考虑远程节点
-		if(remote.autoPush == 1 && remote.autoPushForce == 1)
-		{
-			Log.debug("docSysGetDocListWithChangeType remote autoPushForce is true");			
-			return localList;
-		}
-		
 		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote, null);
 		if(remoteList == null)
 		{
@@ -624,13 +619,6 @@ public class BaseController  extends BaseFunction{
 			return localList;
 		}
 		
-		//强制自动拉取的话,远程列表非空的情况下需要考虑本地节点
-		if(remote.autoPull == 1 && remote.autoPullForce == 1)
-		{
-			Log.debug("docSysGetDocListWithChangeType remote autoPullForce is true");			
-			return remoteList;
-		}
-
 		Log.printObject("docSysGetDocListWithChangeType remoteList:", remoteList);
 		return combineLocalListWithRemoteList(repos, doc, localList, remoteList);
 	}
@@ -6576,10 +6564,11 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		if(isFSM(repos))
 		{	
-			if(remoteStorageEn)
-			{
-				return docSysGetDocWithChangeType(repos, doc);
-			}
+			//TODO: no need to get remoteDoc
+			//if(remoteStorageEn)
+			//{
+			//	return docSysGetDocWithChangeType(repos, doc);
+			//}
 			return fsGetDoc(repos, doc);
 		}
 		
