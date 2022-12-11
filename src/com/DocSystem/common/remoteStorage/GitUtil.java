@@ -49,6 +49,8 @@ import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.util.FS;
+
 import com.DocSystem.common.DocUtil;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
@@ -58,6 +60,8 @@ import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
@@ -86,7 +90,8 @@ public class GitUtil {
 	 * @param localVerReposPath 
      */
     public GitUtil(String username, String password, String privateKey, String url, String localVerReposPath, Integer isRemote) {
-        this.user = username;
+        Log.debug("GitUtil() username[" + username + "] password[" + password + "] privateKey[" + privateKey+ "] url[" + url + "] localVerReposPath[" + localVerReposPath + "]");
+    	this.user = username;
         this.pwd = password;
         this.repositoryURL = url;
         this.localVerReposPath = localVerReposPath;
@@ -121,14 +126,12 @@ public class GitUtil {
 			            }); 					  
 				  }
 				  
-				  //TODO:指定privateKey路径会提示密钥错误
-				  //@Override
-				  //protected JSch createDefaultJSch( FS fs ) throws JSchException {
-				  //  JSch defaultJSch = super.createDefaultJSch( fs );
-				  //  //defaultJSch.addIdentity( "/path/to/private_key" );
-				  //  defaultJSch.addIdentity(privateKey);
-				  //  return defaultJSch;
-				  //}
+				 @Override
+				 protected JSch createDefaultJSch( FS fs ) throws JSchException {
+				    JSch defaultJSch = super.createDefaultJSch( fs );
+				    defaultJSch.addIdentity(privateKey);	//指定密钥的位置
+				    return defaultJSch;
+				 }
 			};
 			
 			transportConfigCallback = new TransportConfigCallback() {
