@@ -4591,12 +4591,23 @@ public class BaseController  extends BaseFunction{
 						if(remote.autoPush != null && remote.autoPush == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
-							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, remote.autoPushForce == 1, 4, rt);
-						}					
+							int pushType = 1; //localAdd Only
+							if(remote.autoPushForce == 1)
+							{
+								pushType = 4;
+							}
+							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, rt);
+						}				
+						
 						if(remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
-							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, remote.autoPullForce == 1, rt);
+							int pullType = 1; //remoteChanged and localNotChanged
+							if(remote.autoPullForce == 1)
+							{
+								pullType = 3;
+							}
+							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
 						}
 						
 						unlockDoc(doc, lockType,  login_user);
@@ -10414,7 +10425,7 @@ public class BaseController  extends BaseFunction{
         		session.indexUpdateEn = false;
         	}
         	
-        	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, force, rt );
+        	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, 3, rt );
         	doRemoteStorageLogout(session);
         }
         
@@ -12678,24 +12689,27 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		boolean force = remote.autoPushForce == 1;
-		int pushType = 4;
+		int pushType = 1; //localAddOnly
+		if(remote.autoPushForce == 1)
+		{
+			pushType = 4;
+		}
 		
 		switch(action)
 		{
 		case "copyDoc":
 			Log.info("********* realTimeRemoteStoragPush() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeRemoteStoragPush() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeRemoteStoragPush() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -12705,7 +12719,7 @@ public class BaseController  extends BaseFunction{
 		//case "revertDocHistory":
 		default:
 			Log.info("********* realTimeRemoteStoragPush() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		}			
 		return ret;
@@ -12768,10 +12782,10 @@ public class BaseController  extends BaseFunction{
 		//push Options
 		boolean recurcive = true;
 		boolean force = true;
-		int pushType = 1;
+		int pushType = 3;	//localChanged and do not check remote change
 		if(remote.isVerRepos)
 		{
-			pushType = 4;
+			pushType = 4;	//local Changed or remoteChanged
 		}
 
 		
@@ -12779,17 +12793,17 @@ public class BaseController  extends BaseFunction{
 		{
 		case "copyDoc":
 			Log.info("********* realTimeRemoteBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeRemoteBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeRemoteBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType,  rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType,  rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -12801,7 +12815,7 @@ public class BaseController  extends BaseFunction{
 		//	break;
 		default:
 			Log.info("********* realTimeRemoteBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		}	
 		return ret;
@@ -12847,28 +12861,27 @@ public class BaseController  extends BaseFunction{
 			
 		//push options
 		boolean recurcive = true;
-		boolean force = true;
-		int pushType = 1;
+		int pushType = 2;	//localChangeOnly
 		if(remote.isVerRepos)
 		{
-			pushType = 4;
+			pushType = 4;	//localChanged or remoteChanged
 		}
 		
 		switch(action)
 		{
 		case "copyDoc":
 			Log.info("********* realTimeLocalBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeLocalBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeLocalBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -12878,7 +12891,7 @@ public class BaseController  extends BaseFunction{
 		//case "revertDocHistory":
 		default:
 			Log.info("********* realTimeLocalBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, force, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
 		}			
 		return ret;
@@ -18421,7 +18434,15 @@ public class BaseController  extends BaseFunction{
 		DocChangeType realLocalChangeType = DocChangeType.NOCHANGE;
 		switch(pushType)
 		{
-		case 1:	//localChangeOnly
+		case 1:	//push LocalAddOnly
+			localChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
+			if(localChangeType == DocChangeType.LOCALADD)
+			{
+				realLocalChangeType = localChangeType;
+				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] pushLocalAddOnly");
+			}	
+			break;
+		case 2:	//localChangeOnly Force 
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
 
 			//get realLocalChangeType
@@ -18431,7 +18452,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "]");
 			}
 			break;
-		case 2: //localChangeOnly and treatRevisionNullAsLocalChange
+		case 3: //localChangeOnly and treatRevisionNullAsLocalChange
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
 			if(localChangeType != DocChangeType.NOCHANGE)
 			{
@@ -18447,14 +18468,6 @@ public class BaseController  extends BaseFunction{
 					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] treatRevisionNullAsLocalChange");
 				}
 			}
-			break;
-		case 3:	//push LocalAddOnly
-			localChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
-			if(localChangeType == DocChangeType.LOCALADD)
-			{
-				realLocalChangeType = localChangeType;
-				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] pushLocalAddOnly");
-			}	
 			break;
 		case 4: //Force Push localChanged Doc or remote Changed 
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);				
@@ -21200,8 +21213,8 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
-	protected boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, boolean force, ReturnAjax rt) {
-		Log.info(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "] commitId:" + commitId + " recurcive:" + recurcive + " force:" + force);
+	protected boolean doPullFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, boolean recurcive, int pullType, ReturnAjax rt) {
+		Log.info(" doPullFromRemoteStorage [" + doc.getPath() + doc.getName() + "] commitId:" + commitId + " recurcive:" + recurcive + " pullType:" + pullType);
 		
 		boolean ret = false;
 		DocPullResult pullResult = new DocPullResult();
@@ -21218,12 +21231,6 @@ public class BaseController  extends BaseFunction{
 		if(recurcive)
 		{
 			subEntryPullFlag = 2;
-		}
-		
-		int pullType = 1;
-		if(force)
-		{
-			pullType = 3;
 		}
 		
 		try {
