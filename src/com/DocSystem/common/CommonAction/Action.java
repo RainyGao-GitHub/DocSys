@@ -8,7 +8,8 @@ public enum Action {
 	MOVE,
 	COPY,
 	PUSH,
-	SYNC, //同步版本仓库、刷新索引（包括子目录）
-	SYNCFORCE, //同步版本仓库、刷新索引（包括子目录）
-	SYNCVerRepos; //同步版本仓库
+	SYNC_ALL, 				//同步远程存储、版本仓库、刷新索引（包括子目录）
+	SYNC_ALL_FORCE, 		//同步远程存储、版本仓库、刷新索引（包括子目录）
+	SYNC_VerRepos, 			//只同步版本仓库
+	SYNC_VerReposAndIndex; 	//只同步版本仓库和索引（远程拉取时调用）	
 }

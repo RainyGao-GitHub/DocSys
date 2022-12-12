@@ -458,11 +458,11 @@ public class DocController extends BaseController{
 		//doc was not force locked
 		if(force != null && force == 1)
 		{
-			addDocToSyncUpList(actionList, repos, doc, Action.SYNCFORCE, reposAccess.getAccessUser(), commitMsg, true);
+			addDocToSyncUpList(actionList, repos, doc, Action.SYNC_ALL_FORCE, reposAccess.getAccessUser(), commitMsg, true);
 		}
 		else
 		{
-			addDocToSyncUpList(actionList, repos, doc, Action.SYNC, reposAccess.getAccessUser(), commitMsg, true);
+			addDocToSyncUpList(actionList, repos, doc, Action.SYNC_ALL, reposAccess.getAccessUser(), commitMsg, true);
 		}
 		writeJson(rt, response);
 		
