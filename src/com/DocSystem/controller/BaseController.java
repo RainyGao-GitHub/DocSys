@@ -20248,7 +20248,7 @@ public class BaseController  extends BaseFunction{
         	{
         		fileRemotePath += doc.getName() + "/";
         	}
-        	//Log.debug("getRemoteStorageEntryListForGit fileRemotePath:" + fileRemotePath);
+        	Log.debug("getRemoteStorageEntryListForGit fileRemotePath:" + fileRemotePath);
             
 			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
 			//Log.printObject("list:", list);
@@ -20264,7 +20264,7 @@ public class BaseController  extends BaseFunction{
 					}
 		    	
 					String subEntryName = treeWalk.getNameString(); 
-					Log.debug("getRemoteStorageEntryListForGit subEntryName:" + subEntryName);
+					//Log.debug("getRemoteStorageEntryListForGit subEntryName:" + subEntryName);
 					
 					Doc subDoc = new Doc();
 					subDoc.setVid(repos.getId());
