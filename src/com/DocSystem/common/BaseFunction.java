@@ -1294,13 +1294,13 @@ public class BaseFunction{
 		//协同编辑只需要检查当前和父节点是否强制锁定即可
 		if(login_user.getId().equals(coEditUser.getId()))
 		{
-			Log.debug("checkDocLocked() is coEditUser");
+			docSysDebugLog("checkDocLocked() accessUser [" + login_user.getName() + "] is coEditUser", rt);
 			return (isDocForceLocked(docLock, DocLock.LOCK_TYPE_FORCE, DocLock.LOCK_STATE_FORCE, login_user, rt) || isParentDocForceLocked(doc,login_user,rt));
 		}
 		
 		if(isDocLocked(docLock, lockType, login_user,rt ))
 		{
-			Log.debug("lockDoc() Doc [" + doc.getPath() + doc.getName() +"] was locked");
+			docSysDebugLog("lockDoc() Doc [" + doc.getPath() + doc.getName() +"] was locked", rt);
 			return true;
 		}
 		
@@ -1311,7 +1311,7 @@ public class BaseFunction{
 			//检查其父节点是否强制锁定
 			if(isParentDocLocked(doc,login_user,rt))
 			{
-				Log.debug("lockDoc() Parent Doc of [" + doc.getPath() + doc.getName() +"] was locked！");				
+				docSysDebugLog("lockDoc() Parent Doc of [" + doc.getPath() + doc.getName() +"] was locked！", rt);				
 				return true;
 			}
 			
@@ -1320,7 +1320,7 @@ public class BaseFunction{
 			{
 				if(isSubDocLocked(doc,login_user, rt) == true)
 				{
-					Log.debug("lockDoc() subDoc of [" + doc.getPath() + doc.getName() +"] was locked！");
+					docSysDebugLog("lockDoc() subDoc of [" + doc.getPath() + doc.getName() +"] was locked！", rt);
 					return true;
 				}
 			}
@@ -1568,8 +1568,8 @@ public class BaseFunction{
 		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
 		
 		long curTime = new Date().getTime();
-		Log.debug("isDocForceLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 强制锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info + "]");
-
+		
+		docSysDebugLog("isDocForceLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 强制锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info + "]", rt);
 		return true;	
 	}
 	
@@ -1607,7 +1607,7 @@ public class BaseFunction{
 		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
 
 		long curTime = new Date().getTime();
-		Log.debug("isDocLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info + "]");
+		docSysDebugLog("isDocLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info + "]", rt);
 
 		return true;	
 	}
