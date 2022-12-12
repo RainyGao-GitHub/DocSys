@@ -20248,7 +20248,7 @@ public class BaseController  extends BaseFunction{
         	{
         		fileRemotePath += doc.getName() + "/";
         	}
-        	Log.debug("getRemoteStorageEntryListForGit fileRemotePath:" + fileRemotePath);
+        	//Log.debug("getRemoteStorageEntryListForGit fileRemotePath:" + fileRemotePath);
             
 			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
 			//Log.printObject("list:", list);
