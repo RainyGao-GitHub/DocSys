@@ -18275,7 +18275,7 @@ public class BaseController  extends BaseFunction{
 		DocChangeType realRemoteChangeType = DocChangeType.NOCHANGE;
 		switch(pullType)
 		{
-		case 1:	//remote add and local not changed
+		case 1:	//remote add and local not changed (只拉取远程新增，但本地没有改动的)
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
 			if(localChangeType == DocChangeType.NOCHANGE)
 			{
@@ -18286,7 +18286,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			break;
-		case 2:	//remote changed and local not changed
+		case 2:	//remote changed and local not changed（只拉取远程改动，但本地没改动的文件）
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
 			if(localChangeType == DocChangeType.NOCHANGE)
 			{
@@ -18298,6 +18298,18 @@ public class BaseController  extends BaseFunction{
 			if(remoteChangeType != DocChangeType.NOCHANGE)
 			{
 				realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+			}
+			break;
+		case 4: //remote changed force pull except remote delte
+			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+			if(remoteChangeType != DocChangeType.NOCHANGE)
+			{
+				remoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+			}
+			//except remote add
+			if(remoteChangeType != DocChangeType.REMOTEADD)
+			{
+				realRemoteChangeType = remoteChangeType;
 			}
 			break;
 		}
