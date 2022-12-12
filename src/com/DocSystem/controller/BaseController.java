@@ -4479,7 +4479,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean doSyncupForDocChange(Repos repos, Doc doc, User user, String commitMsg, boolean recurcive) {
 		CommonAction action = new CommonAction();
 		action.setType(ActionType.AUTOSYNCUP);		
-		action.setAction(Action.UNDEFINED);	//只同步有改动的文件
+		action.setAction(Action.SYNC_VerReposAndIndex);	//只同步版本仓库并更新Index
 		action.setDocType( DocType.REALDOC);
 		action.setRepos(repos);
 		action.setDoc(doc);
@@ -4548,14 +4548,16 @@ public class BaseController  extends BaseFunction{
 		boolean syncLocalChangeOnly = true;
 		switch(action.getAction())
 		{
-		case SYNC:			
-		case SYNCFORCE:
+		case SYNC_ALL:			
+		case SYNC_ALL_FORCE:
 			subDocSyncupFlag = 2;
 			syncLocalChangeOnly = false;
 			break;
-		case SYNCVerRepos:
+		case SYNC_VerRepos:
+		case SYNC_VerReposAndIndex:
 			subDocSyncupFlag = 2;
 			syncLocalChangeOnly = false;
+			remoteStorageEnable = false; //禁用远程推送和拉取
 			break;
 		case UNDEFINED:
 			break;
@@ -4762,7 +4764,7 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case SYNCFORCE:
+		case SYNC_ALL_FORCE:
 			Log.info("**************************** checkAndUpdateIndex() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
@@ -4789,8 +4791,10 @@ public class BaseController  extends BaseFunction{
 			}
 			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			break;
-		case SYNC:	    //只同步有改动的文件	
-		case UNDEFINED:	//只同步有改动的文件
+		case SYNC_ALL:	   
+		case SYNC_VerReposAndIndex: 
+		case UNDEFINED:	
+			//只同步有改动的文件	
 			if(scanOption.localChangesRootPath == null)
 			{
 				if(localChanges.size() > 0 || remoteChanges.size() > 0)
@@ -4813,7 +4817,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			break;
-		case SYNCVerRepos:	//只同步版本仓库
+		case SYNC_VerRepos:	//只同步版本仓库
 			break;
 		default:	//未知同步类型
 			break;
@@ -13059,7 +13063,7 @@ public class BaseController  extends BaseFunction{
 		        				if(uniqueTask != null)
 		        				{
 		        					//执行仓库同步
-		        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
+		        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNC_VerRepos, null, "定时自动同步", true);
 		        					executeUniqueCommonActionList(actionList, rt);
 			                              					
 		        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
@@ -13067,7 +13071,7 @@ public class BaseController  extends BaseFunction{
         					}
 	        				else
 	        				{
-	        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNCVerRepos, null, "定时自动同步", true);
+	        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNC_VerRepos, null, "定时自动同步", true);
 	        					executeUniqueCommonActionList(actionList, rt);	        					
 	        				}
 	        				
