@@ -789,7 +789,10 @@ public class BaseController  extends BaseFunction{
 	
 	protected HashMap<String, Doc> getLocalEntryHashMap(Repos repos, Doc doc) 
 	{
-    	try {
+        //Go through the subEntries
+    	HashMap <String, Doc> subEntryHashMap =  new HashMap<String, Doc>();
+
+		try {
     		String reposPath = Path.getReposPath(repos);
 			String localRootPath = Path.getReposRealPath(repos);
 			String localVRootPath = Path.getReposVirtualPath(repos);
@@ -804,22 +807,19 @@ public class BaseController  extends BaseFunction{
 	    	if(false == dir.exists())
 	    	{
 	    		//Log.debug("getLocalEntryList() " + doc.getPath() + docName + " 不存在！");
-	    		return null;
+	    		return subEntryHashMap;
 	    	}
 	    	
 	    	if(dir.isFile())
 	    	{
 	    		//Log.debug("getLocalEntryList() " + doc.getPath() + docName + " 不是目录！");
-	    		return null;
+	    		return subEntryHashMap;
 	    	}
 	
 			String subDocParentPath = getSubDocParentPath(doc);
 			
 			Integer subDocLevel = getSubDocLevel(doc);
-	    	
-	        //Go through the subEntries
-	    	HashMap <String, Doc> subEntryHashMap =  new HashMap<String, Doc>();
-	    	
+	    		    	
 	    	File[] localFileList = dir.listFiles();
 	    	for(int i=0;i<localFileList.length;i++)
 	    	{
@@ -843,12 +843,12 @@ public class BaseController  extends BaseFunction{
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryHashMap.put(subDoc.getName(), subDoc);
 	    	}
-	    	return subEntryHashMap;
     	}catch(Exception e){
     		Log.debug("getLocalEntryHashMap() Excepiton for " + doc.getDocId() + " " + doc.getPath() + doc.getName());    		
     		Log.info(e);
-    		return null;
     	}
+		
+		return subEntryHashMap;
 	}
 
 	protected static Integer getSubDocLevel(Doc doc) {
