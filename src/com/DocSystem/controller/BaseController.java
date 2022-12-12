@@ -13482,13 +13482,13 @@ public class BaseController  extends BaseFunction{
 	                        {
 	                        	lastestBackupTask.status = 2;
 	                        	lastestBackupTask.info = "异地自动备份成功";
-        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "成功",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        else
 	                        {
 	                        	lastestBackupTask.status = 3;
 	                        	lastestBackupTask.info = "异地自动备份失败:" + rt.getMsgInfo();
-        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "成功",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        addDelayTaskForReposRemoteBackupTaskDelete(lastestBackupTask, 600L); //10分钟后删除任务
 	                        
