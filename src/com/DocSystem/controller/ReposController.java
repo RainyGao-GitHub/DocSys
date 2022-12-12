@@ -183,7 +183,7 @@ public class ReposController extends BaseController{
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
 				+ "textSearch:" + textSearch + " autoBackup:" + autoBackup);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
@@ -270,8 +270,10 @@ public class ReposController extends BaseController{
 			if(checkReposInfoForAdd(repos, rt) == false)
 			{
 				redisSyncUnlockEx(lockName, lockInfo, syncLockForRepos);
-				Log.debug("checkReposInfoForAdd() failed");
-				writeJson(rt, response);		
+				docSysDebugLog("addRepos() checkReposInfoForAdd [" + repos.getName() + "] Failed", rt);
+				writeJson(rt, response);
+				
+				addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));
 				return;			
 			}
 			
@@ -280,6 +282,9 @@ public class ReposController extends BaseController{
 				redisSyncUnlockEx(lockName, lockInfo, syncLockForRepos);
 				rt.setError("新增仓库记录失败");
 				writeJson(rt, response);		
+
+				docSysDebugLog("addRepos() reposService.addRepos [" + repos.getName() + "] Failed", rt);
+				addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));
 				return;
 			}
 			Integer reposId = repos.getId();
@@ -297,7 +302,10 @@ public class ReposController extends BaseController{
 		if(reposLock == null)
 		{
 			rt.setError("锁定仓库失败！");
-			writeJson(rt, response);		
+			writeJson(rt, response);	
+			
+			docSysDebugLog("addRepos() lockRepos [" + repos.getName() + "] Failed", rt);
+			addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;				
 		}
 		
@@ -310,6 +318,9 @@ public class ReposController extends BaseController{
 			deleteRepos(repos);			
 			writeJson(rt, response);
 			setReposIsBusy(repos.getId(), false);
+			
+			docSysDebugLog("addRepos() createReposLocalDir [" + repos.getName() + "] Failed", rt);
+			addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -319,6 +330,9 @@ public class ReposController extends BaseController{
 			deleteRepos(repos);
 			writeJson(rt, response);	
 			setReposIsBusy(repos.getId(), false);
+
+			docSysDebugLog("addRepos() initVerRepos for real doc [" + repos.getName() + "] Failed", rt);
+			addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 
@@ -328,6 +342,9 @@ public class ReposController extends BaseController{
 			deleteRepos(repos);
 			writeJson(rt, response);	
 			setReposIsBusy(repos.getId(), false);
+	
+			docSysDebugLog("addRepos() initVerRepos for virtual doc [" + repos.getName() + "] Failed", rt);
+			addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 
@@ -438,7 +455,7 @@ public class ReposController extends BaseController{
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.infoHead("****************** deleteRepos.do ***********************");
 		Log.debug("deleteRepos vid: " + vid);
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
@@ -471,32 +488,35 @@ public class ReposController extends BaseController{
 			rt.setError("仓库删除失败！");
 			writeJson(rt, response);
 			setReposIsBusy(repos.getId(), false);			
+
+			docSysDebugLog("deleteRepos() reposService.deleteRepos [" + repos.getName() + "] Failed", rt);
+			addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
-		else
-		{
-			//Delete related doc auth Setting
-			DocAuth docAuth = new DocAuth();
-			docAuth.setReposId(vid);			
-			reposService.deleteDocAuthSelective(docAuth);
+		
+		
+		//DB delete success
+		//Delete related doc auth Setting
+		DocAuth docAuth = new DocAuth();
+		docAuth.setReposId(vid);			
+		reposService.deleteDocAuthSelective(docAuth);
 
-			//Delete related repos auth Setting
-			ReposAuth reposAuth = new ReposAuth();
-			reposAuth.setReposId(vid);			
-			reposService.deleteReposAuthSelective(reposAuth);
+		//Delete related repos auth Setting
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setReposId(vid);			
+		reposService.deleteReposAuthSelective(reposAuth);
 
-			//Delete Repos LocalDir
-			deleteReposLocalDir(repos);
-			
-			//Delete Repos LocalVerRepos
-			deleteLocalVerRepos(repos, true);
-			deleteLocalVerRepos(repos, false);
-			
-			//Delete IndexLib
-	    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,0));
-			LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,1));
-	    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
-		}
+		//Delete Repos LocalDir
+		deleteReposLocalDir(repos);
+		
+		//Delete Repos LocalVerRepos
+		deleteLocalVerRepos(repos, true);
+		deleteLocalVerRepos(repos, false);
+		
+		//Delete IndexLib
+    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,0));
+		LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,1));
+    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
 		
 		deleteReposRemoteStorageConfig(repos);
 
@@ -513,12 +533,12 @@ public class ReposController extends BaseController{
 	public void reposAutoBackup(Integer reposId, Integer type, Integer fullBackup, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.infoHead("****************** reposAutoBackup.do ***********************");
 		Log.debug("reposAutoBackup() reposId: " + reposId + " type:" + type);
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		if(reposId == null || type == null)
 		{
 			rt.setError("参数错误, reposId:" + reposId + " type:" + type);			
-			writeJson(rt, response);			
+			writeJson(rt, response);				
 			return;				
 		}
 		
@@ -583,12 +603,15 @@ public class ReposController extends BaseController{
 			Log.info("reposAutoBackup() 仓库自动备份任务创建失败");
 			rt.setError("仓库自动备份任务创建失败");				
 			writeJson(rt, response);	
+			
+			addSystemLog(request, login_user, "reposAutoBackup", "reposAutoBackup", "创建仓库自动备份任务", "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}	
 
 		rt.setData(reposAutoBackupTask);
 		rt.setMsgData(5);	//备份中...
 		writeJson(rt, response);	
+		addSystemLog(request, login_user, "reposAutoBackup", "reposAutoBackup", "创建仓库自动备份任务", "成功", repos, null, null, buildSystemLogDetailContent(rt));
 	}
 	
 	/**************** queryReposAutoBackupTask ******************/
@@ -684,7 +707,7 @@ public class ReposController extends BaseController{
 	public void backupRepos(Integer reposId, String backupStorePath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.infoHead("****************** backupRepos.do ***********************");
 		Log.debug("backupRepos() reposId: " + reposId);
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, "", "", true, rt);
 		if(reposAccess == null)
@@ -718,6 +741,8 @@ public class ReposController extends BaseController{
 		{
 			Log.info("backupRepos() 仓库全量备份任务创建失败");
 			writeJson(rt, response);	
+			
+			addSystemLog(request, login_user, "backupRepos", "backupRepos", "创建仓库全量备份任务", "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}	
 
@@ -725,6 +750,8 @@ public class ReposController extends BaseController{
 		rt.setData(reposFullBackupTask);
 		rt.setMsgData(5);	//备份中...
 		writeJson(rt, response);	
+
+		addSystemLog(request, login_user, "backupRepos", "backupRepos", "创建仓库全量备份任务", "成功", repos, null, null, buildSystemLogDetailContent(rt));
 		
 		//启动备份线程
 		new Thread(new Runnable() {
@@ -732,6 +759,7 @@ public class ReposController extends BaseController{
 			Integer reposId = repos.getId();
 			public void run() {
 				Log.debug("backupRepos() executeReposFullBackupTask in new thread");
+				//executeReposFullBackupTask会负责写系统日志
 				executeReposFullBackupTask(task);
 				setReposIsBusy(reposId, false);
 			}
@@ -877,7 +905,7 @@ public class ReposController extends BaseController{
 				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
 				+ " textSearch:" + textSearch);
 		
-		ReturnAjax rt = new ReturnAjax();
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
@@ -1000,10 +1028,13 @@ public class ReposController extends BaseController{
 		//Update ReposInfo
 		if(reposService.updateRepos(newReposInfo) == 0)
 		{
-			Log.debug("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
+			docSysDebugLog("updateReposInfo() reposService.updateRepos [" + reposInfo.getName() + "] Failed", rt);	//这个其实还不是特别严重，只要重新设置一次即可
+
 			rt.setError("仓库信息更新失败！");
 			writeJson(rt, response);
 			setReposIsBusy(reposId, false);
+			
+			addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","失败", reposInfo, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -1013,6 +1044,9 @@ public class ReposController extends BaseController{
 			Log.debug("仓库目录修改失败");
 			writeJson(rt, response);	
 			setReposIsBusy(reposId, false);
+			
+			docSysDebugLog("updateReposInfo() ChangeReposPath [" + reposInfo.getName() + "] Failed", rt);
+			addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","失败", reposInfo, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -1022,6 +1056,9 @@ public class ReposController extends BaseController{
 			Log.debug("仓库RealDoc目录修改失败");
 			writeJson(rt, response);	
 			setReposIsBusy(reposId, false);
+			
+			docSysDebugLog("updateReposInfo() ChangeReposRealDocPath [" + reposInfo.getName() + "] Failed", rt);
+			addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","失败", reposInfo, null, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -1032,6 +1069,9 @@ public class ReposController extends BaseController{
 			rt.setError("仓库 " + reposId + " 不存在！");
 			writeJson(rt, response);	
 			setReposIsBusy(reposId, false);
+			
+			docSysDebugLog("updateReposInfo() getReposEx [" + reposId + "] Failed", rt);
+			addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","失败", reposInfo, null, null, buildSystemLogDetailContent(rt));						
 			return;
 		}
 		
@@ -1044,6 +1084,9 @@ public class ReposController extends BaseController{
 				rt.setError("版本仓库初始化失败！");
 				writeJson(rt, response);	
 				setReposIsBusy(reposId, false);
+
+				docSysDebugLog("updateReposInfo() initVerRepos for real doc [" + repos.getName() + "] Failed", rt);
+				addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));						
 				return;
 			}
 		}
@@ -1057,12 +1100,14 @@ public class ReposController extends BaseController{
 				rt.setError("版本仓库初始化失败！");
 				writeJson(rt, response);	
 				setReposIsBusy(reposId, false);
+				
+				docSysDebugLog("updateReposInfo() initVerRepos for virtual doc [" + repos.getName() + "] Failed", rt);
+				addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","失败", repos, null, null, buildSystemLogDetailContent(rt));						
 				return;
 			}
 		}
 		
 		writeJson(rt, response);
-		addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","成功", repos, null, null, buildSystemLogDetailContent(rt));
 		
 		//如果RealDoc版本仓库的类型变化，那么必须删除所有的doc记录并重新同步
 		if(isReposVerCtrlChanged(newReposInfo, reposInfo))
@@ -1088,6 +1133,8 @@ public class ReposController extends BaseController{
 			addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步
 		}
 		setReposIsBusy(reposId, false);
+		
+		addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库","成功", repos, null, null, buildSystemLogDetailContent(rt));		
 	}
 
 	private void checkAndClearOldBackupIndexLib(Repos reposInfo, ReposBackupConfig oldAutoBackupConfig,
@@ -1944,11 +1991,14 @@ public class ReposController extends BaseController{
 			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, null, docAuthHashMap, rt);
 		}
 		
+		//清除errorStaus, 管理后台这里不要让前台报错, 避免因为无法获取远程的列表导致无法进行仓库配置修改
+		rt.setStatus("ok");
+		
 		//合并列表
 		if(docList == null)
 		{
 			docList = new ArrayList<Doc>();
-		}
+		}	
 		
 		docList.add(rootDoc);
 		rt.setData(docList);
