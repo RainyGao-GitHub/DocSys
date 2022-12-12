@@ -12666,6 +12666,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		docSysDebugLog("远程存储实时推送", rt);
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
@@ -12674,6 +12675,7 @@ public class BaseController  extends BaseFunction{
 	    }
 		
 		Log.info("********* realTimeRemoteStoragPush() [" + doc.getPath() + doc.getName() + "] ***********");
+		
 		//push Options
 		boolean recurcive = true;
 		boolean force = remote.autoPushForce == 1;
@@ -12744,6 +12746,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		docSysDebugLog("仓库实时异地自动备份", rt);
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
@@ -12823,6 +12826,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		docSysDebugLog("仓库实时本地自动备份", rt);
 		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
