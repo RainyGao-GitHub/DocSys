@@ -13438,7 +13438,7 @@ public class BaseController  extends BaseFunction{
 	                			return;
 	                        }
 	                        
-	                        ReturnAjax rt = new ReturnAjax();
+	                        ReturnAjax rt = new ReturnAjax(new Date().getTime());
 	                        String localRootPath = Path.getReposRealPath(latestReposInfo);
 	                        String localVRootPath = Path.getReposVirtualPath(latestReposInfo);
 	                        
