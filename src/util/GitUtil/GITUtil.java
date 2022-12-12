@@ -2944,21 +2944,24 @@ public class GITUtil  extends BaseController{
 
     	Log.debug("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
 		File[] list = parentDir.listFiles();
-        for(int i=0;i<list.length;i++)
-        {
-        	File localSubEntry = list[i];
-        	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-        	Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
-        	
-        	if(isIgnoreNeed(repos, subDoc) == true)
-        	{
-        		Log.debug("scanForSubDocCommit() " + subDoc.getPath() + subDoc.getName() + " was ignored");
-        		continue;  		
-        	}
-        	
-            scheduleForCommitEx(actionList, repos, subDoc, modifyEnable, isSubAction, localSubEntry, subDocCommitFlag);
-        }
+		if(list != null)
+		{
+	        for(int i=0;i<list.length;i++)
+	        {
+	        	File localSubEntry = list[i];
+	        	int subDocType = localSubEntry.isFile()? 1: 2;
+	        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
+	        	Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+	        	
+	        	if(isIgnoreNeed(repos, subDoc) == true)
+	        	{
+	        		Log.debug("scanForSubDocCommit() " + subDoc.getPath() + subDoc.getName() + " was ignored");
+	        		continue;  		
+	        	}
+	        	
+	            scheduleForCommitEx(actionList, repos, subDoc, modifyEnable, isSubAction, localSubEntry, subDocCommitFlag);
+	        }
+		}
 	}
 
 	private String doAutoCommitParent(Repos repos, Doc doc, String commitMsg,String commitUser, boolean modifyEnable, List<CommitAction> commitActionList)
