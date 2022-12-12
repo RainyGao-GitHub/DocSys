@@ -103,7 +103,7 @@ public class BaseFunction{
 	protected static final long CONST_DAY = 24*CONST_HOUR;
 	protected static final long CONST_MONTH = 30*CONST_DAY;
 	protected static final long CONST_YEAR = 12*CONST_MONTH;
-
+	
 	//应用路径
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;

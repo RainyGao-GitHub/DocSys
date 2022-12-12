@@ -2617,7 +2617,12 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, force, rt);
+		int pullType = 2;
+		if(force)
+		{
+			pullType = 4;
+		}
+		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, pullType, rt);
 
 		unlockDoc(doc, lockType,  accessUser);
 		
