@@ -1632,7 +1632,7 @@ public class GITUtil  extends BaseController{
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
 		
-		Log.debug("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
+		Log.debug("doAutoCommitEx()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
 		if(commitActionList == null)
 		{
@@ -1651,7 +1651,7 @@ public class GITUtil  extends BaseController{
 		//LocalEntry does not exist
 		if(!localEntry.exists())	//Delete Commit
 		{
-			Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
+			Log.debug("doAutoCommitEx() localEntry " + localRootPath + entryPath + " not exists");
 			Integer type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
@@ -1662,7 +1662,7 @@ public class GITUtil  extends BaseController{
 
 		    if(type == 0)
 		    {
-				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
+				Log.debug("doAutoCommitEx() remoteEnry " + entryPath + " not exists");
 		        return getLatestRevision(doc);
 		    }
 		}
@@ -1672,7 +1672,7 @@ public class GITUtil  extends BaseController{
 			Integer type = checkPath(doc.getPath(), null);
 			if(type == null)
 			{
-				Log.debug("doAutoCommit() checkPath for " + doc.getPath() + " 异常");
+				Log.debug("doAutoCommitEx() checkPath for " + doc.getPath() + " 异常");
 				return null;
 			}
 	
@@ -1681,7 +1681,7 @@ public class GITUtil  extends BaseController{
 			{					
 				if(!doc.getPath().isEmpty())
 				{
-					Log.debug("doAutoCommit() parent entry " + doc.getPath() + " not exists, do commit parent");
+					Log.debug("doAutoCommitEx() parent entry " + doc.getPath() + " not exists, do commit parent");
 					return doAutoCommitParent(repos, doc, commitMsg, commitUser, modifyEnable, commitActionList);
 				}
 			}	
@@ -1689,7 +1689,7 @@ public class GITUtil  extends BaseController{
 			//LocalEntry is File
 			if(localEntry.isFile())
 			{
-				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
+				Log.debug("doAutoCommitEx() localEntry " + localRootPath + entryPath + " is File");
 					
 			    type = checkPath(entryPath, null);
 			    if(type == null)
@@ -1698,26 +1698,26 @@ public class GITUtil  extends BaseController{
 			    }
 			    if(type == 0)
 			    {
-	        		Log.debug("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+	        		Log.debug("doAutoCommitEx() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 	    			CommitAction.insertAddFileAction(commitActionList,doc,false, true);
 			    }
 			    else if(type != 1)
 			    {
-			    	Log.debug("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			    	Log.debug("doAutoCommitEx() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 		    		CommitAction.insertDeleteAction(commitActionList,doc, true);
 	    			CommitAction.insertAddFileAction(commitActionList,doc,false, true);
 			    }
 			    else
 			    {
 		    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
-		    		Log.debug("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		    		Log.debug("doAutoCommitEx() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 		            CommitAction.insertModifyAction(commitActionList,doc, true);
 			    }
 			}
 			else
 			{
 				//LocalEntry is Directory
-				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				Log.debug("doAutoCommitEx() localEntry " + localRootPath + entryPath + " is Directory");
 				File file = new File(localChangesRootPath, doc.getPath() + doc.getName());
 				scheduleForCommitEx(commitActionList, repos, doc, modifyEnable, false, file, subDocCommitFlag);
 			}
@@ -1725,7 +1725,7 @@ public class GITUtil  extends BaseController{
 		
 		if(commitActionList == null || commitActionList.size() ==0)
 		{
-		    Log.debug("doAutoCommmit() There is nothing to commit");
+		    Log.debug("doAutoCommitEx() There is nothing to commit");
 		    return getLatestReposRevision();
 		}
 		
@@ -1733,14 +1733,14 @@ public class GITUtil  extends BaseController{
 		try {
 			git = Git.open(new File(wcDir));
 		} catch (Exception e) {
-			Log.info("doAutoCommit() Failed to open wcDir:" + wcDir);
+			Log.info("doAutoCommitEx() Failed to open wcDir:" + wcDir);
 			Log.info(e);
 			return null;
 		}
 		
 	    if(executeCommitActionList(git,commitActionList,true) == false)
 	    {
-	    	Log.debug("doAutoCommit() executeCommitActionList Failed");
+	    	Log.debug("doAutoCommitEx() executeCommitActionList Failed");
 	    	git.close();
 	        return null;
 	    }
@@ -2745,7 +2745,7 @@ public class GITUtil  extends BaseController{
     	
     	if(isIgnoreNeed(repos, doc) == true)
     	{
-    		Log.debug("scheduleForCommit() " + doc.getPath() + doc.getName() + " was ignored");
+    		Log.debug("scheduleForCommitEx() " + doc.getPath() + doc.getName() + " was ignored");
     		return;    		
     	}
  	
@@ -2756,7 +2756,7 @@ public class GITUtil  extends BaseController{
 		Integer type = checkPath(entryPath, null);
     	if(type == null)
     	{
-    		Log.debug("scheduleForCommit() checkPath 异常!");
+    		Log.debug("scheduleForCommitEx() checkPath 异常!");
 			return;
 		}
     	
@@ -2790,7 +2790,7 @@ public class GITUtil  extends BaseController{
 	            return;
     		}
     		
-    		Log.debug("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+    		Log.debug("scheduleForCommitEx() insert " + entryPath + " to actionList for Modify" );
             CommitAction.insertModifyAction(actionList,doc, true);
             return;
     	case 2:
@@ -2904,7 +2904,7 @@ public class GITUtil  extends BaseController{
 			int subDocCommitFlag) {
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
-		Log.debug("scanForSubDocCommit()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		Log.debug("scanForSubDocCommitEx()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -2918,7 +2918,7 @@ public class GITUtil  extends BaseController{
 		String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = getSubDocLevel(doc);
 
-    	Log.debug("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
+    	Log.debug("scanForSubDocCommitEx() go through local subDocs under:" + subDocParentPath);
 		File[] list = parentDir.listFiles();
 		if(list != null)
 		{
@@ -2927,11 +2927,11 @@ public class GITUtil  extends BaseController{
 	        	File localSubEntry = list[i];
 	        	int subDocType = localSubEntry.isFile()? 1: 2;
 	        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-	        	Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+	        	Log.debug("scanForSubDocCommitEx() local subDoc:" + subDoc.getName());
 	        	
 	        	if(isIgnoreNeed(repos, subDoc) == true)
 	        	{
-	        		Log.debug("scanForSubDocCommit() " + subDoc.getPath() + subDoc.getName() + " was ignored");
+	        		Log.debug("scanForSubDocCommitEx() " + subDoc.getPath() + subDoc.getName() + " was ignored");
 	        		continue;  		
 	        	}
 	        	
