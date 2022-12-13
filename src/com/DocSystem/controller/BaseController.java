@@ -18174,7 +18174,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		boolean ret = false;		
-		DocChangeType remoteChangeType = getRemoteChangeTypeForPull(dbDoc, localDoc, remoteDoc, pullType);
+		DocChangeType remoteChangeType = getRemoteChangeTypeForPull(doc, dbDoc, localDoc, remoteDoc, pullType);
 		Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " remoteChangeType:" + remoteChangeType);
 		
 		if(remoteChangeType == DocChangeType.REMOTEADD)
@@ -18235,7 +18235,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		boolean ret = false;
-		DocChangeType remoteChangeType = getRemoteChangeTypeForPull(dbDoc, localDoc, remoteDoc, pullType);
+		DocChangeType remoteChangeType = getRemoteChangeTypeForPull(doc, dbDoc, localDoc, remoteDoc, pullType);
 		Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " remoteChangeType:" + remoteChangeType);
 		
 		switch(remoteChangeType)	
@@ -18285,57 +18285,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return ret;		
-	}
-	
-
-	private DocChangeType getRemoteChangeTypeForPull(Doc dbDoc, Doc localDoc, Doc remoteDoc, int pullType) {
-
-		DocChangeType localChangeType = DocChangeType.NOCHANGE;
-		DocChangeType remoteChangeType = DocChangeType.NOCHANGE;
-		
-		DocChangeType realRemoteChangeType = DocChangeType.NOCHANGE;
-		switch(pullType)
-		{
-		case 1:	//remote add and local not changed (只拉取远程新增，但本地没有改动的)
-			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
-			if(localChangeType == DocChangeType.NOCHANGE)
-			{
-				remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
-				if(remoteChangeType == DocChangeType.REMOTEADD)
-				{
-					realRemoteChangeType = DocChangeType.REMOTEADD;
-				}
-			}
-			break;
-		case 2:	//remote changed and local not changed（只拉取远程改动，但本地没改动的文件）
-			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
-			if(localChangeType == DocChangeType.NOCHANGE)
-			{
-				realRemoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
-			}
-			break;
-		case 3:	//remote changed force pull
-			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
-			if(remoteChangeType != DocChangeType.NOCHANGE)
-			{
-				realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
-			}
-			break;
-		case 4: //remote changed force pull except remote delte
-			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
-			if(remoteChangeType != DocChangeType.NOCHANGE)
-			{
-				remoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
-			}
-			//except remote add
-			if(remoteChangeType != DocChangeType.REMOTEADD)
-			{
-				realRemoteChangeType = remoteChangeType;
-			}
-			break;
-		}
-		
-		return realRemoteChangeType;
 	}
 
 	protected boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, 
@@ -18491,6 +18440,74 @@ public class BaseController  extends BaseFunction{
 			break;
 		}
 		return realLocalChangeType;
+	}
+	
+
+	private DocChangeType getRemoteChangeTypeForPull(Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc, int pullType) {
+
+		DocChangeType localChangeType = DocChangeType.NOCHANGE;
+		DocChangeType remoteChangeType = DocChangeType.NOCHANGE;
+		DocChangeType realRemoteChangeType = DocChangeType.NOCHANGE;
+		
+		switch(pullType)
+		{
+		case 1:	//remoteAdded and localNoChange : autoPull
+			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+			if(remoteChangeType == DocChangeType.REMOTEADD)
+			{
+				localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+				if(localChangeType == DocChangeType.NOCHANGE)
+				{
+					realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+					Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");
+				}
+			}
+			
+			break;
+		case 2:	//remoteChanged and localNoChange : manualPull
+			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+			if(remoteChangeType != DocChangeType.NOCHANGE)
+			{
+				localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+				if(localChangeType == DocChangeType.NOCHANGE)
+				{
+					realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+					Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");
+				}
+			}
+			break;
+		case 3: //remoteChanged or localChanged : autoPullForce/manualPullForce
+			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+			if(remoteChangeType != DocChangeType.NOCHANGE)
+			{
+				realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+				Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[notChecked]");
+			}
+			else
+			{
+				localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+				if(localChangeType != DocChangeType.NOCHANGE)
+				{
+					realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+					Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");
+				}				
+			}
+			break;
+		case 4:	//remoteChanged and localNotCheck : remoteServerCheckOut to repos folder
+			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+			if(remoteChangeType != DocChangeType.NOCHANGE)
+			{
+				realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+				Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[notChecked]");					
+			}
+			break;
+		case 5: //pull force : remoteServerCheckOut to tmp folder
+			realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+			Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[notChecked] " + " localChangeType[notChecked]");
+			break;
+		}
+		
+		return realRemoteChangeType;
 	}
 
 	private boolean doPullSubEntriesFromRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId, Integer subEntryPullFlag, int pullType, DocPullResult pullResult) {
