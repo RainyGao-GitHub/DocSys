@@ -4591,10 +4591,10 @@ public class BaseController  extends BaseFunction{
 						if(remote.autoPush != null && remote.autoPush == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
-							int pushType = 1; //localAdd Only
+							int pushType = 1; //localAdded and remoteNoChange
 							if(remote.autoPushForce == 1)
 							{
-								pushType = 4;
+								pushType = 3; //localChanged or remoteChanged
 							}
 							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, rt);
 						}				
@@ -12689,10 +12689,10 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = 1; //localAddOnly
+		int pushType = 1; //localAdded and remoteNoChanged
 		if(remote.autoPushForce == 1)
 		{
-			pushType = 4;
+			pushType = 3; //localChanged or remoteChanged
 		}
 		
 		switch(action)
@@ -12781,11 +12781,10 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		boolean force = true;
-		int pushType = 3;	//localChanged and do not check remote change
+		int pushType = 4;	//localChanged and remoteNoCheck
 		if(remote.isVerRepos)
 		{
-			pushType = 4;	//local Changed or remoteChanged
+			pushType = 3;	//localChanged or remoteChanged
 		}
 
 		
@@ -12861,10 +12860,10 @@ public class BaseController  extends BaseFunction{
 			
 		//push options
 		boolean recurcive = true;
-		int pushType = 2;	//localChangeOnly
+		int pushType = 4;	//localChanged and remoteNoCheck 
 		if(remote.isVerRepos)
 		{
-			pushType = 4;	//localChanged or remoteChanged
+			pushType = 3;	//localChanged or remoteChanged
 		}
 		
 		switch(action)
