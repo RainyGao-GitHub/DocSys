@@ -4602,7 +4602,7 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 		Log.info("syncupForDocChange() 同步版本管理");
 		ScanOption scanOption = new ScanOption();
-		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange
+		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange, remoteNotChecked
 		scanOption.scanTime = new Date().getTime();
 		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-localChanges-" + scanOption.scanTime + "/";
 		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-remoteChanges-" + scanOption.scanTime + "/";
@@ -5705,44 +5705,9 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		DocChangeType docChangeType = DocChangeType.UNDEFINED;
-		switch(scanOption.scanType)
-		{
-		case 1: //syncLocalChangeOnly
-			docChangeType = getLocalDocChangeType(dbDoc, localEntry);
-			break;
-		case 2: //syncLocalChangeOnly
-			docChangeType = getLocalDocChangeType(dbDoc, localEntry);
-			//treatRevisionNullAsLocalChange
-			if(docChangeType == DocChangeType.NOCHANGE)
-			{
-				if(dbDoc != null && (dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty()))
-				{
-					docChangeType = DocChangeType.LOCALCHANGE;
-				}
-			}
-			break;
-		case 3: //标准模式
-			docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
-			break;
-		case 4:
-			docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
-			//treatRemoteChangesAsLocalChange
-			switch(docChangeType)
-			{
-			case REMOTEADD:	//remoteAdd
-			case REMOTEDELETE:	//remoteDelete
-			case REMOTECHANGE:	//remoteFileChanged
-			case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
-			case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
-				docChangeType = getLocalDocChangeTypeWithRemoteDoc(localEntry, remoteEntry);
-				break;
-			default:
-				break;
-			}
-			break;
-		}
-		
+		DocChangeType docChangeType = getDocChangeTypeForVerRepos(doc, dbDoc, localEntry, remoteEntry, scanOption.scanType);
+
+		//TODO:理论上不会出现remoteChnaged的情况
 		switch(docChangeType)
 		{
 		case LOCALADD:	//localAdd
@@ -5800,7 +5765,7 @@ public class BaseController  extends BaseFunction{
 			//Log.debug("syncupScanForDoc_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		case NOCHANGE:		//no change
-			if(dbDoc != null && dbDoc.getType() == 2)
+			if(localEntry != null && localEntry.getType() == 2)
 			{
 				return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag, scanOption);
 			}
@@ -5809,6 +5774,77 @@ public class BaseController  extends BaseFunction{
 			break;
 		}		
 		return false;
+	}
+
+	
+	private DocChangeType getDocChangeTypeForVerRepos(Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, int scanType) {
+		
+		DocChangeType localChangeType = DocChangeType.NOCHANGE;	
+		DocChangeType remoteChangeType = DocChangeType.NOCHANGE;
+		DocChangeType realChangeType = DocChangeType.NOCHANGE;
+
+		switch(scanType)
+		{
+		case 1: //localChanged and remoteNotChecked
+			localChangeType = getLocalDocChangeType(dbDoc, localEntry);
+			realChangeType = localChangeType;
+			Log.debug("getDocChangeTypeForVerRepos [" +doc.getPath() + doc.getName()+ "] realChangeType[" + realChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[NotChecked]");
+			break;
+		case 2: //localChanged or dbDocRevisionIsNullAsLocalChanged and remoteNotChecked
+			localChangeType = getLocalDocChangeType(dbDoc, localEntry);
+			if(localChangeType != DocChangeType.NOCHANGE)
+			{
+				realChangeType = localChangeType;
+				Log.debug("getDocChangeTypeForVerRepos [" +doc.getPath() + doc.getName()+ "] realChangeType[" + realChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[NotChecked]");				
+			}
+			else
+			{
+				//treatRevisionNullAsLocalChange
+				if(dbDoc != null && (dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty()))
+				{
+					realChangeType = DocChangeType.LOCALCHANGE;
+					Log.debug("getDocChangeTypeForVerRepos [" +doc.getPath() + doc.getName()+ "] realChangeType[" + realChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[NotChecked]");									
+				}
+			}
+			break;
+		case 3: //localChanged or remoteChanged
+			localChangeType = getLocalDocChangeType(dbDoc, localEntry);
+			if(localChangeType != DocChangeType.NOCHANGE)
+			{
+				realChangeType = getLocalDocChangeTypeWithRemoteDoc(localEntry, remoteEntry);
+				Log.debug("getDocChangeTypeForVerRepos [" +doc.getPath() + doc.getName()+ "] realChangeType[" + realChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[NotChecked]");								
+			}
+			else
+			{
+				remoteChangeType = getRemoteDocChangeType(dbDoc, remoteEntry);
+				if(remoteChangeType != DocChangeType.NOCHANGE)
+				{
+					realChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteEntry, localEntry);
+					Log.debug("getDocChangeTypeForVerRepos [" +doc.getPath() + doc.getName()+ "] realChangeType[" + realChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");								
+				}
+			}
+			break;
+		case 4: //localChanged or remoteChangedAsLocalChanged
+			localChangeType = getLocalDocChangeType(dbDoc, localEntry);
+			if(localChangeType != DocChangeType.NOCHANGE)
+			{
+				realChangeType = getLocalDocChangeTypeWithRemoteDoc(localEntry, remoteEntry);
+				Log.debug("getDocChangeTypeForVerRepos [" +doc.getPath() + doc.getName()+ "] realChangeType[" + realChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[NotChecked]");								
+			}
+			else
+			{
+				remoteChangeType = getRemoteDocChangeType(dbDoc, remoteEntry);
+				if(remoteChangeType != DocChangeType.NOCHANGE)
+				{
+					realChangeType = getLocalDocChangeTypeWithRemoteDoc(localEntry, remoteEntry);
+					Log.debug("getDocChangeTypeForVerRepos [" +doc.getPath() + doc.getName()+ "] realChangeType[" + realChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");								
+				}
+			}
+			break;
+		default:
+				break;
+		}
+		return realChangeType;
 	}
 
 	private boolean isVersionIgnored(Repos repos, Doc doc, boolean parentCheck) {
@@ -6144,7 +6180,7 @@ public class BaseController  extends BaseFunction{
 		return DocChangeType.UNDEFINED;
 	}
 	
-	protected DocChangeType getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
+	protected DocChangeType getDocChangeType_FSM(Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
 	{	
 		Log.debug("getDocChangeType_FSM [" +doc.getPath() + doc.getName()+ "]");
 		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localEntry);
