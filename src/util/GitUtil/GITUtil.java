@@ -1506,29 +1506,17 @@ public class GITUtil  extends BaseController{
 		    {
 		    	return null;
 		    }
-		    
+
+    		CommitAction.insertDeleteAction(commitActionList,doc, true);
+
 		    if(type == 0)
 		    {
 				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
 		        return getLatestRevision(doc);
 		    }
-
-    		CommitAction.insertDeleteAction(commitActionList,doc, true);
 		}
 		else
-		{		
-	    	File localParentDir = new File(localRootPath+doc.getPath());
-			if(!localParentDir.exists())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
-				return null;
-			}
-			if(!localParentDir.isDirectory())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
-				return null;
-			}
-			
+		{					
 			//If remote parentPath not exists, need to set the autoCommit entry to parentPath
 			Integer type = checkPath(doc.getPath(), null);
 			if(type == null)
@@ -1669,29 +1657,17 @@ public class GITUtil  extends BaseController{
 		    {
 		    	return null;
 		    }
-		    
+
+    		CommitAction.insertDeleteAction(commitActionList,doc, true);
+
 		    if(type == 0)
 		    {
 				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
 		        return getLatestRevision(doc);
 		    }
-
-    		CommitAction.insertDeleteAction(commitActionList,doc, true);
 		}
 		else
-		{		
-	    	File localParentDir = new File(localRootPath+doc.getPath());
-			if(!localParentDir.exists())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
-				return null;
-			}
-			if(!localParentDir.isDirectory())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
-				return null;
-			}
-			
+		{					
 			//If remote parentPath not exists, need to set the autoCommit entry to parentPath
 			Integer type = checkPath(doc.getPath(), null);
 			if(type == null)
