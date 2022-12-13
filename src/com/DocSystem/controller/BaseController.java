@@ -4602,10 +4602,10 @@ public class BaseController  extends BaseFunction{
 						if(remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
-							int pullType = 1; //remoteChanged and localNotChanged
+							int pullType = 1; //remoteAdded and localNoChange
 							if(remote.autoPullForce == 1)
 							{
-								pullType = 3;
+								pullType = 3;	//remoteChanged or localChanged
 							}
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
 						}
