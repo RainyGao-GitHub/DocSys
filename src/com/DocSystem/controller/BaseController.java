@@ -722,7 +722,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//注意：该接口调用前doc的localRootPath和LocalVRootPath必须正确设置
-	protected List<Doc> getLocalEntryList(Repos repos, Doc doc) 
+	protected static List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
 		//Log.debug("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
@@ -3717,6 +3717,11 @@ public class BaseController  extends BaseFunction{
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
+		//add dbDoc
+		if(dbAddDoc(repos, doc, false, false) == false)
+		{	
+			docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+		}
 		
 		if(isFSM(repos))
 		{
@@ -3727,23 +3732,12 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+				//updateVerReposDBEntry
 				doc.setRevision(revision);
-				if(dbAddDoc(repos, doc, false, false) == false)
-				{	
-					docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-				}
+				updateVerReposDBEntry(repos, doc, false);
 				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
-			
-			//检查dbParentDoc是否已添加
-			List <Doc> addedParentDocList = new ArrayList<Doc>();
-			dbCheckAddUpdateParentDoc(repos, doc, addedParentDocList, actionList);
-			if(addedParentDocList.size() > 0)
-			{
-				rt.setDataEx(addedParentDocList);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -3783,6 +3777,114 @@ public class BaseController  extends BaseFunction{
 		docSysDebugLog("新增成功", rt); 
 		
 		return true;
+	}
+	
+	//******************* 版本仓库参考节点接口 *********************************
+	//VerRepos DB Interfaces
+	protected static List<Doc> getVerReposDBEntryList(Repos repos, Doc doc) {
+		Log.debug("getVerReposDBEntryList for doc:[" + doc.getPath() + doc.getName() + "]");
+
+		String indexLib = getIndexLibPathForVerReposDoc(repos);
+
+		//查询数据库
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setPid(doc.getDocId());
+		
+		//子目录下的文件个数可能很多，但一万个应该是比较夸张了
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib, 10000);
+		return list;
+	}
+
+	protected static HashMap<String,Doc> getVerReposDBHashMap(Repos repos, Doc doc) {
+		//查询数据库
+		List<Doc> list = getVerReposDBEntryList(repos, doc);
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();
+		if(list != null)
+		{
+			docHashMap = new HashMap<String, Doc>();
+			for(int i=0; i<list.size(); i++)
+			{
+				Doc subDoc = list.get(i);
+				docHashMap.put(subDoc.getName(), subDoc);
+			}
+		}
+		return docHashMap;
+	}
+	
+	protected static Doc getVerReposDBEntry(Repos repos, Doc doc, boolean dupCheck) {
+		String indexLib = getIndexLibPathForVerReposDoc(repos);
+				
+		//查询数据库
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setDocId(doc.getDocId());
+		
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib, 100);
+		if(list == null || list.size() == 0)
+		{
+			return null;
+		}
+		
+		if(dupCheck)
+		{
+			if(list.size() > 1)
+			{
+				Log.debug("getVerReposDBEntry() 数据库存在多个DOC记录(" + doc.getName() + ")，自动清理"); 
+				for(int i=0; i <list.size(); i++)
+				{
+					//delete Doc directly
+					LuceneUtil2.deleteDoc(list.get(i), indexLib);
+				}
+				return null;
+			}
+		}
+	
+		return list.get(0);
+	}
+	
+	protected static boolean addVerReposDBEntry(Repos repos, Doc doc,  boolean addSubDocs) {
+		String indexLib = getIndexLibPathForVerReposDoc(repos);
+		Log.debug("addVerReposDBEntry doc [" + doc.getPath() + doc.getName() + "]");
+		return addVerReposDBEntry(indexLib, repos, doc, addSubDocs);
+	}
+
+	protected static boolean updateVerReposDBEntry(Repos repos, Doc doc, boolean addSubDocs) {
+		String indexLib = getIndexLibPathForVerReposDoc(repos);
+		Log.debug("updateVerReposDBEntry doc[" + doc.getPath() + doc.getName() + "]");		
+		LuceneUtil2.deleteIndexEx(doc, indexLib, 2);
+		return addVerReposDBEntry(indexLib, repos, doc, addSubDocs);
+	}
+	
+	protected static boolean deleteVerReposDBEntry(Repos repos, Doc doc) {
+		String indexLib = getIndexLibPathForVerReposDoc(repos);
+		Log.debug("deleteVerReposDBEntry doc[" + doc.getPath() + doc.getName() + "]");			
+		return LuceneUtil2.deleteIndexEx(doc, indexLib, 2);
+	}
+	
+	protected static boolean addVerReposDBEntry(String indexLib, Repos repos, Doc doc, boolean addSubDocs) {
+		File file = new File(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		doc.setSize(file.length());
+		doc.setLatestEditTime(file.lastModified());
+		doc.setCreateTime(file.lastModified());
+		boolean ret = LuceneUtil2.addIndex(doc, null, indexLib);
+
+		if(addSubDocs && file.isDirectory())
+		{
+			List<Doc> subDocList = getLocalEntryList(repos, doc);			
+			if(subDocList != null)
+			{
+				for(int i=0; i<subDocList.size(); i++)
+				{
+					Doc subDoc = subDocList.get(i);
+					subDoc.setCreator(doc.getCreator());
+					subDoc.setLatestEditor(doc.getLatestEditor());
+					subDoc.setRevision(doc.getRevision());
+					addVerReposDBEntry(indexLib, repos, subDoc, addSubDocs);
+				}
+			}
+		}
+		return ret;
 	}
 
 	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
@@ -3846,6 +3948,10 @@ public class BaseController  extends BaseFunction{
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
+		if(dbAddDoc(repos, doc, false, false) == false)
+		{	
+			docSysDebugLog("addDocEx_FSM() dbAddDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
+		}
 		
 		if(isFSM(repos))
 		{
@@ -3856,12 +3962,8 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
 				doc.setRevision(revision);
-				if(dbAddDoc(repos, doc, false, false) == false)
-				{	
-					docSysDebugLog("addDocEx_FSM() dbAddDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
-				}
+				updateVerReposDBEntry(repos, doc, false);
 				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -3878,14 +3980,6 @@ public class BaseController  extends BaseFunction{
 			}			
 		}
 		
-		//检查dbParentDoc是否已添加
-		List <Doc> addedParentDocList = new ArrayList<Doc>();
-		dbCheckAddUpdateParentDoc(repos, doc, addedParentDocList, actionList);
-		if(addedParentDocList.size() > 0)
-		{
-			rt.setDataEx(addedParentDocList);
-		}
-				
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
@@ -4023,8 +4117,15 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("deleteDoc_FSM() deleteRealDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return null;
 		}
+		
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
-
+		
+		if(dbDeleteDocEx(actionList, repos, doc, commitMsg, commitUser, true) == false)
+		{	
+			docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
+			docSysDebugLog("deleteDoc_FSM() dbDeleteDocEx [" + doc.getPath() + doc.getName() + "] Failed", rt);
+		}
+		
 		String revision = null;
 		if(isFSM(repos))
 		{
@@ -4036,15 +4137,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				//Delete DataBase Record and Build AsynActions For delete 
-				if(dbDeleteDocEx(actionList, repos, doc, commitMsg, commitUser, true) == false)
-				{	
-					docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
-					docSysDebugLog("deleteDoc_FSM() dbDeleteDocEx [" + doc.getPath() + doc.getName() + "] Failed", rt);
-				}
-				
-				//delete操作需要自动增加ParentDoc???
-				//dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+				deleteVerReposDBEntry(repos, doc);
 				
 				//异步推送远程版本仓库：Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -4654,7 +4747,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		Doc dbDoc = dbGetDoc(repos, doc, false);
+		Doc dbDoc = getVerReposDBEntry(repos, doc, false);
 		
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag, scanOption);
 
@@ -5279,7 +5372,7 @@ public class BaseController  extends BaseFunction{
 		}
 		//推送到远程仓库
 		verReposPullPush(repos, true, rt);
-		
+
 		if(commitActionList.size() > 0)
 		{
 			for(int i=0; i<commitActionList.size(); i++)
@@ -5288,19 +5381,16 @@ public class BaseController  extends BaseFunction{
 				if(commitAction.getResult())
 				{
 					Doc commitDoc = commitActionList.get(i).getDoc();
-					Log.printObject("syncupLocalChanges_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
+					Log.printObject("syncupLocalChanges_FSM() updateVerReposDBEntry commitDoc: ", commitDoc);						
 					//需要根据commitAction的行为来决定相应的操作
 					commitDoc.setRevision(revision);
-					commitDoc.setLatestEditorName(login_user.getName());
-					dbUpdateDoc(repos, commitDoc, true);				
-					dbCheckAddUpdateParentDoc(repos, commitDoc, null, null);
+					updateVerReposDBEntry(repos, commitDoc, false);
 				}
 			}			
-			dbUpdateDocRevision(repos, doc, revision);
 		}
 		
-		//将localChanges中的版本号更新为文件的最新版本
-		updateLocalChangesRevision(repos, localChanges);
+		//TODO: 将localChanges中的版本号更新为文件的最新版本,理论上只需要更新在commitActionList中的文件
+		//updateLocalChangesRevision(repos, localChanges, revision);
 		
 		Log.info("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
 		unlockDoc(doc, lockType, login_user);
@@ -5309,16 +5399,15 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private void updateLocalChangesRevision(Repos repos, HashMap<Long, DocChange> localChanges) {
+	private void updateLocalChangesRevision(Repos repos, HashMap<Long, DocChange> localChanges, String revision) {
 		if(localChanges != null)
 		{
 			for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet())
 			{
 				DocChange docChange = entry.getValue();
 				Doc localChangeDoc = docChange.getDoc();
-				String latestRevison = verReposGetLatestRevision(repos, true, localChangeDoc);
-				localChangeDoc.setRevision(latestRevison);
-				dbUpdateDoc(repos, localChangeDoc, true);
+				localChangeDoc.setRevision(revision);
+				updateVerReposDBEntry(repos, localChangeDoc, false);
 			}
 		}
 	}
@@ -5371,16 +5460,13 @@ public class BaseController  extends BaseFunction{
 					Log.printObject("syncupLocalChangesEx_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
 					//需要根据commitAction的行为来决定相应的操作
 					commitDoc.setRevision(revision);
-					commitDoc.setLatestEditorName(login_user.getName());
-					dbUpdateDoc(repos, commitDoc, true);				
-					dbCheckAddUpdateParentDoc(repos, commitDoc, null, null);
+					updateVerReposDBEntry(repos, commitDoc, false);				
 				}
 			}			
-			dbUpdateDocRevision(repos, doc, revision);
 		}
 		
-		//将localChanges中的版本号更新为文件的最新版本
-		updateLocalChangesRevisionEx(repos, doc, localChangesRootPath);
+		//TODO: 将localChanges中的版本号更新为文件的最新版本, 理论上只需要更新在commitActionList中的Items
+		//updateLocalChangesRevisionEx(repos, doc, localChangesRootPath, revision);
 		
 		Log.info("syncupLocalChangesEx_FSM() 本地改动更新完成:" + revision);
 		unlockDoc(doc, lockType, login_user);
@@ -5388,12 +5474,12 @@ public class BaseController  extends BaseFunction{
 		return true;	
 	}
 
-	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, String localChangesRootPath) {
+	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, String localChangesRootPath, String revision) {
 		File file = new File(localChangesRootPath + doc.getPath() + doc.getName());
-		updateLocalChangesRevisionEx(repos, doc, file);
+		updateLocalChangesRevisionEx(repos, doc, file, revision);
 	}
 	
-	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, File file) {
+	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, File file, String revision) {
 		if(doc.getDocId() != 0)
 		{
 			Doc localDoc = fsGetDoc(repos, doc);
@@ -5407,36 +5493,30 @@ public class BaseController  extends BaseFunction{
 			{
 				//这次commit是一个删除操作
 				Log.debug("updateLocalChangesRevisionEx() localDoc was deleted:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
-				dbDeleteDoc(repos, doc, true);
+				deleteVerReposDBEntry(repos, doc);
 				return;
 			}
 		
-			String latestRevison = verReposGetLatestRevision(repos, true, localDoc);
-			localDoc.setRevision(latestRevison);
+			localDoc.setRevision(revision);
 		
-			Doc dbDoc = dbGetDoc(repos, doc, false);
+			Doc dbDoc = getVerReposDBEntry(repos, doc, false);
 			if(dbDoc == null)
 			{
 				Log.debug("updateLocalChangesRevisionEx() localDoc was added:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-				dbAddDoc(repos, localDoc, true, true);
+				addVerReposDBEntry(repos, localDoc, false);
 				return;
 			}
 		
 			if(dbDoc.getType() != localDoc.getType())
 			{
 				Log.debug("updateLocalChangesRevisionEx() docType was changed:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-				if(dbDeleteDoc(repos, dbDoc, true) == false)
-				{
-					Log.debug("updateLocalChangesRevisionEx() failed to delete dbDoc:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-					return;
-				}
-				dbAddDoc(repos, localDoc, true, false);
+				updateVerReposDBEntry(repos, dbDoc, false);
 				return;
 			}
 			
 			if(localDoc.getType() != 2)
 			{
-				dbUpdateDoc(repos, localDoc, false);
+				updateVerReposDBEntry(repos, localDoc, false);
 				return;
 			}
 		}
@@ -5453,7 +5533,7 @@ public class BaseController  extends BaseFunction{
 		{
 			File subEntry = list[i];
 			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
-			updateLocalChangesRevisionEx(repos, subDoc, subEntry);
+			updateLocalChangesRevisionEx(repos, subDoc, subEntry, revision);
 		}
 	}
 
@@ -6261,7 +6341,7 @@ public class BaseController  extends BaseFunction{
         	return false;
     	}
 
-		List<Doc> dbDocList = getDBEntryList(repos, doc);
+		List<Doc> dbDocList = getVerReposDBEntryList(repos, doc);
 		//Log.printObject("syncupScanForSubDocs_FSM() dbEntryList:", dbDocList);
 
 		//注意: 如果仓库没有版本仓库则不需要远程同步
@@ -7586,7 +7666,11 @@ public class BaseController  extends BaseFunction{
 		//Get latestEditTime
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
-
+		if(dbUpdateDoc(repos, doc, true) == false)
+		{
+			docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
+		}
+		
 		//需要将文件Commit到版本仓库上去
 		if(isFSM(repos))
 		{
@@ -7600,11 +7684,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//updateDoc Info
 				doc.setRevision(revision);
-				if(dbUpdateDoc(repos, doc, true) == false)
-				{
-					docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
-				}
-				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+				updateVerReposDBEntry(repos, doc, false);
 				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -7681,7 +7761,11 @@ public class BaseController  extends BaseFunction{
 		//Get latestEditTime
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
-	
+		if(dbUpdateDoc(repos, doc, true) == false)
+		{
+			docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
+		}
+		
 		if(isFSM(repos))
 		{
 			//需要将文件Commit到版本仓库上去
@@ -7695,11 +7779,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//updateDoc Info
 				doc.setRevision(revision);
-				if(dbUpdateDoc(repos, doc, true) == false)
-				{
-					docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
-				}
-				dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+				updateVerReposDBEntry(repos, doc, false);
 				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
@@ -7766,6 +7846,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
+		{
+			docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
+			docSysDebugLog("moveDoc_FSM() dbMoveDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
+		}
+		
 		if(isFSM(repos))
 		{
 			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
@@ -7776,13 +7862,9 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
+				deleteVerReposDBEntry(repos, srcDoc);
 				dstDoc.setRevision(revision);
-				if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
-				{
-					docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
-					docSysDebugLog("moveDoc_FSM() dbMoveDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-				}
-				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
+				updateVerReposDBEntry(repos, dstDoc, true);				
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -7880,6 +7962,11 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
+		{
+			docSysDebugLog("copyDoc_FSM() dbCopyDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
+		}
+		
 		if(isFSM(repos))
 		{
 			Log.debug("copyDoc_FSM() verReposDocCopy");		
@@ -7892,11 +7979,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				dstDoc.setRevision(revision);
-				if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
-				{
-					docSysDebugLog("copyDoc_FSM() dbCopyDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-				}
-				dbCheckAddUpdateParentDoc(repos, dstDoc, null, actionList);
+				updateVerReposDBEntry(repos, dstDoc, true);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -7979,7 +8062,11 @@ public class BaseController  extends BaseFunction{
 			//Get latestEditTime
 			Doc fsDoc = fsGetDoc(repos, doc);
 			doc.setLatestEditTime(fsDoc.getLatestEditTime());
-
+			if(dbUpdateDoc(repos, doc, true) == false)
+			{
+				docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
+			}
+			
 			if(isFSM(repos))
 			{
 				//需要将文件Commit到版本仓库上去
@@ -7993,12 +8080,8 @@ public class BaseController  extends BaseFunction{
 				{
 					//updateDoc Info
 					doc.setRevision(revision);
-					doc.setContent(null); //实体文件的内容不能放入数据库
-					if(dbUpdateDoc(repos, doc, true) == false)
-					{
-						docSysWarningLog("updateRealDocContent_FSM() updateDocInfo Failed", rt);
-					}
-					dbCheckAddUpdateParentDoc(repos, doc, null, actionList);
+					updateVerReposDBEntry(repos, doc, false);
+					
 					//Insert Push Action
 					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 				}
