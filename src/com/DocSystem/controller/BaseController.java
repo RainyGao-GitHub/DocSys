@@ -3731,11 +3731,7 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("addDoc_FSM() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 			}
 			else
-			{
-				//updateVerReposDBEntry
-				doc.setRevision(revision);
-				updateVerReposDBEntry(repos, doc, false);
-				
+			{				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
@@ -3961,10 +3957,7 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("addDocEx_FSM() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			}
 			else
-			{
-				doc.setRevision(revision);
-				updateVerReposDBEntry(repos, doc, false);
-				
+			{				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
@@ -4137,8 +4130,6 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				deleteVerReposDBEntry(repos, doc);
-				
 				//异步推送远程版本仓库：Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
@@ -5446,27 +5437,9 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(doc, lockType, login_user);
 			return false;
 		}
+		
 		//推送到远程仓库
 		verReposPullPush(repos, true, rt);
-		
-		if(commitActionList.size() > 0)
-		{
-			for(int i=0; i<commitActionList.size(); i++)
-			{
-				CommitAction commitAction = commitActionList.get(i);
-				if(commitAction.getResult())
-				{
-					Doc commitDoc = commitActionList.get(i).getDoc();
-					Log.printObject("syncupLocalChangesEx_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
-					//需要根据commitAction的行为来决定相应的操作
-					commitDoc.setRevision(revision);
-					updateVerReposDBEntry(repos, commitDoc, false);				
-				}
-			}			
-		}
-		
-		//TODO: 将localChanges中的版本号更新为文件的最新版本, 理论上只需要更新在commitActionList中的Items
-		//updateLocalChangesRevisionEx(repos, doc, localChangesRootPath, revision);
 		
 		Log.info("syncupLocalChangesEx_FSM() 本地改动更新完成:" + revision);
 		unlockDoc(doc, lockType, login_user);
@@ -7682,10 +7655,6 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				//updateDoc Info
-				doc.setRevision(revision);
-				updateVerReposDBEntry(repos, doc, false);
-				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
@@ -7777,10 +7746,6 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				//updateDoc Info
-				doc.setRevision(revision);
-				updateVerReposDBEntry(repos, doc, false);
-				
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
@@ -8078,10 +8043,6 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					//updateDoc Info
-					doc.setRevision(revision);
-					updateVerReposDBEntry(repos, doc, false);
-					
 					//Insert Push Action
 					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 				}
@@ -10209,52 +10170,29 @@ public class BaseController  extends BaseFunction{
 		int verCtrl = getVerCtrl(repos, doc);
 		
 		Log.debug("verReposDocCommit verCtrl:"+verCtrl);
+		if(commitActionList == null)
+		{
+			commitActionList = new ArrayList<CommitAction>();
+		}
+
+		String revision = null;
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
-			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			revision = svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+			revision = gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		}
 		
-		//对于没有版本管理的仓库，需要认为所有的LocalChanges都会commit成功
-		if(localChanges != null)
+		if(revision != null && doc.getIsRealDoc())
 		{
-			if(commitActionList == null)
-			{
-				commitActionList = new ArrayList<CommitAction>();
-			}
-	        for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) {
-	            DocChange val = entry.getValue();
-	            CommitType commitType = CommitType.UNDEFINED;
-				switch(val.getType())
-	            {
-	            case LOCALADD:
-	            	commitType  = CommitType.ADD;
-	            	break;
-	            case LOCALDELETE:
-	            	commitType = CommitType.DELETE;
-	            	break;
-	            case LOCALCHANGE:
-	            	commitType = CommitType.MODIFY;
-	            	break;
-	            case LOCALFILETODIR:
-	            	commitType = CommitType.FILETODIR;
-	            	break;
-	            case LOCALDIRTOFILE:
-	            	commitType = CommitType.DIRTOFILE;
-	            	break;
-				default:
-					continue;
-	            }
-	            CommitAction.insertAction(commitActionList, val.getDoc(), commitType, verCtrl==2);
-	        }
+			updateVerReposDbEntry(repos, commitActionList, revision);
 		}
-		return "";
+		return revision;
 	}
-	
+		
 	protected String verReposDocCommitEx(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{	
 		Log.debug("verReposDocCommitEx() for doc:[" + doc.getPath() + doc.getName() + "]");
@@ -10262,20 +10200,54 @@ public class BaseController  extends BaseFunction{
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
-		
 		Log.debug("verReposDocCommitEx() verCtrl:"+verCtrl);
+
+		if(commitActionList == null)
+		{
+			commitActionList = new ArrayList<CommitAction>();
+		}
+
+		String revision = null;
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
-			return svnDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+			revision = svnDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+			revision = gitDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
 		}
 		
-		//对于没有版本管理的仓库，需要认为所有的LocalChanges都会commit成功
-		return "";
+		if(revision != null && doc.getIsRealDoc())
+		{
+			updateVerReposDbEntry(repos, commitActionList, revision);
+		}
+		return revision;
+	}
+	
+	private static void updateVerReposDbEntry(Repos repos, List<CommitAction> actionList, String revision) 
+	{
+		for(int i=0; i<actionList.size(); i++)
+		{
+			CommitAction action = actionList.get(i);
+			Doc doc = action.getDoc();
+			doc.setRevision(revision);
+			
+			switch(action.getAction())
+    		{
+    		case ADD:	//add
+    			addVerReposDBEntry(repos, doc, false);    			
+    			break;
+    		case DELETE: //delete
+    			deleteVerReposDBEntry(repos, doc);
+    			break;
+    		case MODIFY: //modify
+    			updateVerReposDBEntry(repos, doc, false);
+    			break;
+			default:
+				break;
+    		}
+		}
 	}
 	
 	private int getVerCtrl(Repos repos, Doc doc) {
