@@ -4476,10 +4476,10 @@ public class BaseController  extends BaseFunction{
 		return syncupForDocChange(action, true, rt);
 	}
 	
-	protected boolean doSyncupForDocChange(Repos repos, Doc doc, User user, String commitMsg, boolean recurcive) {
+	protected boolean doSyncupForDocChange(Repos repos, Doc doc, User user, String commitMsg, boolean recurcive, Action actionType) {
 		CommonAction action = new CommonAction();
 		action.setType(ActionType.AUTOSYNCUP);		
-		action.setAction(Action.SYNC_VerReposAndIndex);	//只同步版本仓库并更新Index
+		action.setAction(actionType);	//只同步版本仓库并更新Index
 		action.setDocType( DocType.REALDOC);
 		action.setRepos(repos);
 		action.setDoc(doc);
@@ -4544,21 +4544,29 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//set syncup options for RemoteStorage / VersionRepos / IndexLib 
+		boolean remoteStoragePullEnable = true;
+		boolean remoteStoragePushEnable = true;
+		
 		Integer subDocSyncupFlag = 1;
 		boolean syncLocalChangeOnly = true;
 		switch(action.getAction())
 		{
 		case SYNC_ALL:			
 		case SYNC_ALL_FORCE:
+		case SYNC_AUTO:			//仓库定时同步	
 			subDocSyncupFlag = 2;
 			syncLocalChangeOnly = false;
 			break;
-		case SYNC_VerRepos:
-		case SYNC_VerReposAndIndex:
+		case SYNC_AfterRevertHistory:
 			subDocSyncupFlag = 2;
 			syncLocalChangeOnly = false;
-			remoteStorageEnable = false; //禁用远程推送和拉取
-			break;
+			remoteStoragePullEnable = false; //禁用远程拉取			
+			break;	
+		case SYNC_AfterRemoteStoragePull:
+			subDocSyncupFlag = 2;
+			syncLocalChangeOnly = false;
+			remoteStoragePushEnable = false; //禁用远程推送		
+			remoteStoragePullEnable = false; //禁用远程拉取			
 		case UNDEFINED:
 			break;
 		default:
@@ -4567,7 +4575,7 @@ public class BaseController  extends BaseFunction{
 		
 		Log.info("syncupForDocChange() [" + doc.getPath() + doc.getName() + "] subDocSyncupFlag:" + subDocSyncupFlag + " syncLocalChangeOnly:" + syncLocalChangeOnly);
 		
-		if(remoteStorageEnable)
+		if(remoteStorageEnable && (remoteStoragePullEnable || remoteStoragePushEnable))
 		{
 			//远程存储自动拉取/推送
 			RemoteStorageConfig remote = repos.remoteStorageConfig;
@@ -4588,7 +4596,7 @@ public class BaseController  extends BaseFunction{
 					}
 					else
 					{
-						if(remote.autoPush != null && remote.autoPush == 1)
+						if(remoteStoragePushEnable && remote.autoPush != null && remote.autoPush == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
 							int pushType = 1; //localAdded and remoteNoChange
@@ -4599,7 +4607,7 @@ public class BaseController  extends BaseFunction{
 							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, rt);
 						}				
 						
-						if(remote.autoPull != null && remote.autoPull == 1)
+						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
 							int pullType = 1; //remoteAdded and localNoChange
@@ -4803,9 +4811,10 @@ public class BaseController  extends BaseFunction{
 			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			break;
 		case SYNC_ALL:	   
-		case SYNC_VerReposAndIndex: 
 		case UNDEFINED:	
-			//只同步有改动的文件	
+		case SYNC_AfterRevertHistory:
+		case SYNC_AfterRemoteStoragePull:
+			//只更新有改动的文件的索引	
 			if(scanOption.localChangesRootPath == null)
 			{
 				if(localChanges.size() > 0 || remoteChanges.size() > 0)
@@ -4828,7 +4837,8 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			break;
-		case SYNC_VerRepos:	//只同步版本仓库
+		case SYNC_AUTO:
+			//不更新索引
 			break;
 		default:	//未知同步类型
 			break;
@@ -13079,7 +13089,7 @@ public class BaseController  extends BaseFunction{
 		        				if(uniqueTask != null)
 		        				{
 		        					//执行仓库同步
-		        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNC_VerRepos, null, "定时自动同步", true);
+		        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNC_AUTO, null, "定时自动同步", true);
 		        					executeUniqueCommonActionList(actionList, rt);
 			                              					
 		        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
@@ -13087,7 +13097,7 @@ public class BaseController  extends BaseFunction{
         					}
 	        				else
 	        				{
-	        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNC_VerRepos, null, "定时自动同步", true);
+	        					addDocToSyncUpList(actionList, latestReposInfo, rootDoc, Action.SYNC_AUTO, null, "定时自动同步", true);
 	        					executeUniqueCommonActionList(actionList, rt);	        					
 	        				}
 	        				

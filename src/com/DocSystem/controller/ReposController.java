@@ -1121,7 +1121,7 @@ public class ReposController extends BaseController{
 				String localRootPath = Path.getReposRealPath(repos);
 				String localVRootPath = Path.getReposVirtualPath(repos);			
 				Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, reposPath, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
-				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNC_VerRepos, login_user, "自动同步：版本仓库类型变更 " + reposInfo.getVerCtrl() + ":" + newReposInfo.getVerCtrl(), true);
+				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNC_AUTO, login_user, "自动同步：版本仓库类型变更 " + reposInfo.getVerCtrl() + ":" + newReposInfo.getVerCtrl(), true);
 				executeUniqueCommonActionList(actionList, rt);
 			}
 			else

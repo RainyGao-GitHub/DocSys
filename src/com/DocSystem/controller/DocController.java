@@ -4917,7 +4917,7 @@ public class DocController extends BaseController{
 				if(isLocalChanged(localChanges, scanOption))
 				{
 					Log.info("revertDocHistory() 本地有改动！");
-					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true) == false)
+					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true, Action.SYNC_AfterRevertHistory) == false)
 		        	{	
 						unlockDoc(doc, lockType, reposAccess.getAccessUser());
 						
