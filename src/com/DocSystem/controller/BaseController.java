@@ -3582,7 +3582,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			successDocList = remoteServerCheckOut(repos, doc, null, null, null, commitId, true, true, downloadList);
+			successDocList = remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, downloadList);
 		}
 		
 		if(successDocList == null || successDocList.size() == 0)
@@ -10383,7 +10383,7 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.checkPath(entryPath, commitId);
 	}
 
-	protected List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) {
+	protected List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String localParentPath, String targetName, String commitId, int pullType, HashMap<String,String> downloadList) {
 		
 		Log.debug("remoteServerCheckOut()");
 		
@@ -10425,7 +10425,7 @@ public class BaseController  extends BaseFunction{
         		session.indexUpdateEn = false;
         	}
         	
-        	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, 3, rt );
+        	doPullFromRemoteStorage(session, remote, repos, tmpDoc, commitId, true, pullType, rt );
         	doRemoteStorageLogout(session);
         }
         
