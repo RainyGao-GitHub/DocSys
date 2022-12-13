@@ -18434,47 +18434,36 @@ public class BaseController  extends BaseFunction{
 		DocChangeType realLocalChangeType = DocChangeType.NOCHANGE;
 		switch(pushType)
 		{
-		case 1:	//push LocalAddOnly
-			localChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
+		case 1:	//LocalAdded and remoteNoChange : autoPush
+			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
 			if(localChangeType == DocChangeType.LOCALADD)
 			{
-				realLocalChangeType = localChangeType;
-				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] pushLocalAddOnly");
+				remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+				if(remoteChangeType == DocChangeType.NOCHANGE)
+				{
+					realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
+					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");
+				}
 			}	
 			break;
-		case 2:	//localChangeOnly Force 
-			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
-
-			//get realLocalChangeType
-			if(localChangeType != DocChangeType.NOCHANGE)
-			{
-				realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
-				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "]");
-			}
-			break;
-		case 3: //localChangeOnly and treatRevisionNullAsLocalChange
+		case 2:	//localChanged and rmoteNoChange : manualPush 
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
 			if(localChangeType != DocChangeType.NOCHANGE)
 			{
-				realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
-				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "]");
-			}
-			else	//no local Change
-			{
-				if(dbDoc != null && (dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty()))
+				remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+				if(remoteChangeType == DocChangeType.NOCHANGE)
 				{
-					//treatRevisionNullAsLocalChange
 					realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
-					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] treatRevisionNullAsLocalChange");
+					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");
 				}
 			}
 			break;
-		case 4: //Force Push localChanged Doc or remote Changed 
-			localChangeType = getLocalDocChangeType(dbDoc, localDoc);				
+		case 3: //localChanged or remoteChanged : autoPushForce / manualPushForce / autoBackupWithVerRepos
+			localChangeType = getLocalDocChangeType(dbDoc, localDoc);	
 			if(localChangeType != DocChangeType.NOCHANGE)
 			{
 				realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);				
-				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "]");
+				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[notChecked]");
 			}
 			else
 			{
@@ -18483,9 +18472,22 @@ public class BaseController  extends BaseFunction{
 				if(remoteChangeType != DocChangeType.NOCHANGE)
 				{
 					realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
-					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] remoteChangeType[" + remoteChangeType + "] localChangeType[" + localChangeType + "] treatRemoteChangesAsLocalChange");
+					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");
 				}
 			}
+			break;
+		case 4:	//localChanged and do not check remoteDoc : autoBackupWithNewFolder  
+			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+			//get realLocalChangeType
+			if(localChangeType != DocChangeType.NOCHANGE)
+			{
+				realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
+				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[notChecked]");
+			}
+			break;
+		case 5: //push Force no any check
+			realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
+			Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[notChecked] " + " remoteChangeType[notChecked]");
 			break;
 		}
 		return realLocalChangeType;
