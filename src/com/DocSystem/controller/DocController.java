@@ -4896,7 +4896,7 @@ public class DocController extends BaseController{
 				HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 				ScanOption scanOption = new ScanOption();
-				scanOption.scanType = 2;
+				scanOption.scanType = 2; //localChanged or dbDocRevisionIsNullAsLocalChange, remoteNotChecked
 				scanOption.scanTime = new Date().getTime();
 				scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + scanOption.scanTime + "/";
 				scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-remoteChanges-" + scanOption.scanTime + "/";
@@ -4916,20 +4916,28 @@ public class DocController extends BaseController{
 				
 				if(isLocalChanged(localChanges, scanOption))
 				{
+					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					Log.info("revertDocHistory() 本地有改动！");
-					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true, Action.SYNC_AUTO) == false)
-		        	{	
-						unlockDoc(doc, lockType, reposAccess.getAccessUser());
-						
-						String localChangeInfo = buildChangeReminderInfo(localChanges);
-						docSysErrorLog(localChangeInfo, rt);
-						
-						writeJson(rt, response);
-						
-						docSysDebugLog("revertDocHistory() doSyncupForDocChange [" + doc.getPath() + doc.getName() + "] Failed", rt);
-						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
-						return;
-		        	}
+					docSysErrorLog("本地有文件改动", rt);
+					writeJson(rt, response);
+					
+					docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+					return;
+					
+//					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true, Action.SYNC_AUTO) == false)
+//		        	{	
+//						unlockDoc(doc, lockType, reposAccess.getAccessUser());
+//						
+//						String localChangeInfo = buildChangeReminderInfo(localChanges);
+//						docSysErrorLog(localChangeInfo, rt);
+//						
+//						writeJson(rt, response);
+//						
+//						docSysDebugLog("revertDocHistory() doSyncupForDocChange [" + doc.getPath() + doc.getName() + "] Failed", rt);
+//						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+//						return;
+//		        	}
 				}
 				
 				if(isRemoteChanged(remoteChanges, scanOption))
