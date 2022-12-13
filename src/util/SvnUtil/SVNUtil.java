@@ -608,7 +608,8 @@ public class SVNUtil  extends BaseController{
 		if(isVersionIgnored(repos, doc, true))
 	    {
 	    	Log.debug("doAutoCommmit() version was ignored for:" + doc.getPath() + doc.getName());
-	        return getLatestReposRevision();
+	    	//版本被忽略的节点不需要更新节点信息，因此不需要加入到commitList中
+	    	return getLatestReposRevision();
 	    }
 		
 		String entryPath = doc.getPath() + doc.getName();			
@@ -622,31 +623,19 @@ public class SVNUtil  extends BaseController{
 		    if(type == null)
 		    {
 		    	return null;
-		    }
+		    }		    
+		    
+		    Log.debug("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			CommitAction.insertDeleteAction(commitActionList,doc, false);
 		    
 		    if(type == 0)
 		    {
 				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
 		        return getLatestReposRevision();
 		    }
-		    
-		    Log.debug("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			CommitAction.insertDeleteAction(commitActionList,doc, false);
 		}
 		else
-		{
-	    	File localParentDir = new File(localRootPath+doc.getPath());
-			if(!localParentDir.exists())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
-				return null;
-			}
-			if(!localParentDir.isDirectory())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
-				return null;
-			}
-			
+		{	
 			//If remote parentPath not exists, need to set the autoCommit entry to parentPath
 			Integer type = checkPath(doc.getPath(), null);
 			if(type == null)
@@ -762,7 +751,8 @@ public class SVNUtil  extends BaseController{
 		if(isVersionIgnored(repos, doc, true))
 	    {
 	    	Log.debug("doAutoCommmit() version was ignored for:" + doc.getPath() + doc.getName());
-	        return getLatestReposRevision();
+	    	//版本被忽略的文件，扫描的时候不会被检查，因此不需要加到commitList中
+	    	return getLatestReposRevision();
 	    }
 		
 		String entryPath = doc.getPath() + doc.getName();			
@@ -777,30 +767,18 @@ public class SVNUtil  extends BaseController{
 		    {
 		    	return null;
 		    }
-		    
+
+		    Log.debug("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			CommitAction.insertDeleteAction(commitActionList,doc, false);
+
 		    if(type == 0)
 		    {
 				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
 		        return getLatestReposRevision();
 		    }
-		    
-		    Log.debug("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			CommitAction.insertDeleteAction(commitActionList,doc, false);
 		}
 		else
-		{
-	    	File localParentDir = new File(localRootPath+doc.getPath());
-			if(!localParentDir.exists())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
-				return null;
-			}
-			if(!localParentDir.isDirectory())
-			{
-				Log.debug("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
-				return null;
-			}
-			
+		{	
 			//If remote parentPath not exists, need to set the autoCommit entry to parentPath
 			Integer type = checkPath(doc.getPath(), null);
 			if(type == null)
