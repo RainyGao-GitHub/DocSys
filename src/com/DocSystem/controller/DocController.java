@@ -2469,9 +2469,19 @@ public class DocController extends BaseController{
 			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			if(remoteStorageEn)
 			{
-			    if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, 3, rt) == true)
+				RemoteStorageConfig remote = repos.remoteStorageConfig;
+				if(remote != null)
 				{
-					localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
+					int pullType = 1;
+					if(remote.autoPullForce == 1)
+					{
+						pullType = 3;
+					}
+				
+				    if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, pullType, rt) == true)
+					{
+						localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
+					}
 				}
 			}
 			
@@ -3238,9 +3248,18 @@ public class DocController extends BaseController{
 					if(localEntry.getType() == 0)
 					{
 						Log.debug("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在，从远程存储拉取");
-						if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, 3, rt) == true)
+						RemoteStorageConfig remote = repos.remoteStorageConfig;
+						if(remote != null)
 						{
-							localEntry = fsGetDoc(repos, doc); //重新读取文件信息
+							int pullType = 1;
+							if(remote.autoPullForce == 1)
+							{
+								pullType = 3;
+							}
+							if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, pullType, rt) == true)
+							{
+								localEntry = fsGetDoc(repos, doc); //重新读取文件信息
+							}
 						}
 					}		
 				}
@@ -6850,10 +6869,20 @@ public class DocController extends BaseController{
 			if(isFSM(repos))
 			{
 				Log.debug("getZipInitMenu() rootDoc " +rootDoc.getPath() + rootDoc.getName() + " 不存在，从远程存储拉取");
-				if(remoteStorageCheckOut(repos, rootDoc, reposAccess.getAccessUser(), null, true, 3, rt) == true)
+				
+				RemoteStorageConfig remote = repos.remoteStorageConfig;
+				if(remote != null)
 				{
-					localEntry = fsGetDoc(repos, rootDoc); //重新读取文件信息
-				}		
+					int pullType = 1;
+					if(remote.autoPullForce == 1)
+					{
+						pullType = 3;
+					}
+					if(remoteStorageCheckOut(repos, rootDoc, reposAccess.getAccessUser(), null, true, pullType, rt) == true)
+					{
+						localEntry = fsGetDoc(repos, rootDoc); //重新读取文件信息
+					}		
+				}
 			}
 			else
 			{
