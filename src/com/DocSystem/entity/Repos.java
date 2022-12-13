@@ -94,6 +94,7 @@ public class Repos {
 	public Integer encryptType;
 	public EncryptConfig encryptConfig;
 	public Boolean disableRemoteAction;	//用于禁用远程操作（在远程接口中设置成true）
+	public String verReposIndexLib;	//版本仓库的indexLib
 	
     public Integer getId() {
         return id;

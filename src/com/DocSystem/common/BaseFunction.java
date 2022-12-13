@@ -4003,7 +4003,7 @@ public class BaseFunction{
 		return doc;
 	}
 	
-	protected String getSubDocParentPath(Doc doc) {
+	protected static String getSubDocParentPath(Doc doc) {
 		if(doc.getName().isEmpty())
 		{
 			return doc.getPath();
@@ -4726,7 +4726,10 @@ public class BaseFunction{
 			//remote.remoteStorageIndexLib = getDBStorePath() + "RemoteStorage/" + repos.getId() + "/Doc";
 		}
 		return remote.remoteStorageIndexLib;
-
+	}
+	
+	protected static String getIndexLibPathForVerReposDoc(Repos repos) {
+		return Path.getReposIndexLibPath(repos) + "VerRepos/Doc";
 	}
 	
 	protected static String getRequestIpAddress(HttpServletRequest request) {
