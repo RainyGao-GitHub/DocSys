@@ -3238,13 +3238,7 @@ public class DocController extends BaseController{
 					if(localEntry.getType() == 0)
 					{
 						Log.debug("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在，从远程存储拉取");
-						RemoteStorageConfig remote = repos.remoteStorageConfig;
-						int pullType = 1;
-						if(remote.autoPullForce == 1)
-						{
-							pullType = 3;
-						}
-						if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, pullType, rt) == true)
+						if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, 3, rt) == true)
 						{
 							localEntry = fsGetDoc(repos, doc); //重新读取文件信息
 						}
