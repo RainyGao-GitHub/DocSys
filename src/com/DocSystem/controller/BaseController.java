@@ -3560,8 +3560,6 @@ public class BaseController  extends BaseFunction{
     	return value;
 	}
 	
-	/********************************** Functions For Application Layer 
-	 * @param downloadList ****************************************/
 	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
 	{			
 		if(commitMsg == null)
@@ -3591,46 +3589,13 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		Log.printObject("revertDocHistory checkOut successDocList:", successDocList);
+		//Log.printObject("revertDocHistory checkOut successDocList:", successDocList);
 		
 		//Do commit to verRepos		
 		String revision = null;
 		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
-			revision = verReposDocCommitEx(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
-			if(revision == null)
-			{			
-				docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
-				return null;
-			}
-			Log.info("revertDocHistory()  verReposDocCommit return revision:" + revision);
-			
-			//推送至远程仓库
-			verReposPullPush(repos, doc.getIsRealDoc(), rt);
-			
-			if(doc.getIsRealDoc())
-			{
-				//Force update docInfo
-				//get changeItemList
-				List<ChangedItem> changItemList = verReposGetHistoryDetail(repos, false, doc, revision);
-				HashMap<String, ChangedItem> changItemHashMap = convertChangeItemListToHashMap(changItemList);
-						
-				//Log.printObject("revertDocHistory() successDocList:", successDocList);
-				for(int i=0; i< successDocList.size(); i++)
-				{
-					Doc successDoc = successDocList.get(i);
-					Log.debug("revertDocHistory() " + successDoc.getDocId() + " [" + successDoc.getPath() + successDoc.getName() + "] 恢复成功");
-					String realRevision = getRealRevision(repos, successDoc, changItemHashMap, revision);
-					successDoc.setRevision(realRevision);
-					successDoc.setCreator(login_user.getId());
-					successDoc.setLatestEditor(login_user.getId());
-					dbUpdateDoc(repos, successDoc, true);
-					dbCheckAddUpdateParentDoc(repos, successDoc, null, null);
-				}
-
-				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "revertDocHistory");
-				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "revertDocHistory");
-			}			
+			doSyncupForDocChange(repos, doc,  login_user, commitMsg, true, Action.SYNC_AfterRevertHistory);
 		}
 		else
 		{
