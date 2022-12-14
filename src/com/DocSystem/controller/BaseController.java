@@ -3725,7 +3725,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFSM(repos))
 		{
-			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
+			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, null, 2, null);
 			if(revision == null)
 			{
 				docSysDebugLog("addDoc_FSM() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -3951,7 +3951,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFSM(repos))
 		{
-			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
+			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, null, 2, null);
 			if(revision == null)
 			{
 				docSysDebugLog("addDocEx_FSM() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
@@ -4122,7 +4122,7 @@ public class BaseController  extends BaseFunction{
 		String revision = null;
 		if(isFSM(repos))
 		{
-			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, null, 2, null);
 			if(revision == null)
 			{
 				docSysWarningLog("verReposRealDocDelete Failed", rt);
@@ -4682,8 +4682,6 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		//文件管理系统
-		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
-		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 		Log.info("syncupForDocChange() 同步版本管理");
 		ScanOption scanOption = new ScanOption();
 		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange, remoteNotChecked
@@ -4691,10 +4689,10 @@ public class BaseController  extends BaseFunction{
 		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-localChanges-" + scanOption.scanTime + "/";
 		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-remoteChanges-" + scanOption.scanTime + "/";
 		
-		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, login_user, rt); 
+		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, subDocSyncupFlag, scanOption, login_user, rt); 
 
 		Log.info("syncupForDocChange() 刷新文件索引");
-		checkAndUpdateIndex(repos, doc, action, localChanges, remoteChanges, subDocSyncupFlag, scanOption, rt);
+		checkAndUpdateIndex(repos, doc, action, subDocSyncupFlag, scanOption, rt);
 
 		Log.info("syncupForDocChange() clean tmp files");
 		cleanSyncUpTmpFiles(scanOption);
@@ -4716,7 +4714,7 @@ public class BaseController  extends BaseFunction{
 
 	}
 
-	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, 
+	private boolean syncUpLocalWithVerRepos(Repos repos, Doc doc, CommonAction action,
 			Integer subDocSyncupFlag, ScanOption scanOption,
 			User login_user, ReturnAjax rt) {
 		//对本地文件和版本仓库进行同步
@@ -4743,7 +4741,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, subDocSyncupFlag, scanOption);
 
 		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
-		if(isRemoteChanged(remoteChanges, scanOption) == false)
+		if(isRemoteChanged(scanOption) == false)
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程没有改动");
 		}
@@ -4751,17 +4749,10 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程有改动，同步到本地");
 			//Do Remote SyncUp			
-			if(scanOption.remoteChangesRootPath == null)
-			{
-				syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
-			}
-			else
-			{
-				syncupRemoteChangesEx_FSM(repos, login_user, doc, scanOption.remoteChangesRootPath, rt);				
-			}
+			syncupRemoteChangesEx_FSM(repos, login_user, doc, scanOption.remoteChangesRootPath, rt);				
 		}
 		
-		if(isLocalChanged(localChanges, scanOption) == false)
+		if(isLocalChanged(scanOption) == false)
 		{
 			Log.info("syncUpLocalWithVerRepos() 本地没有改动");
 			return true;
@@ -4773,56 +4764,46 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(scanOption.localChangesRootPath == null)
-		{
-			return syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
-		}
-		else
-		{
-			return syncupLocalChangesEx_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, scanOption.localChangesRootPath, subDocSyncupFlag, rt);			
-		}
-	}
-	
-	
-	protected boolean isLocalChanged(HashMap<Long, DocChange> localChanges, ScanOption scanOption) {
-		if(scanOption.localChangesRootPath == null)
-		{
-			Log.debug("isLocalChanged() localChanges size:" + localChanges.size());		
-			return localChanges.size() > 0;
-		}
-		
-		Log.debug("isLocalChanged() scanOption.localChangesRootPath:" + scanOption.localChangesRootPath);
-		File dir = new File(scanOption.localChangesRootPath);
-		if(dir.exists() == false)
-		{
-			Log.debug("isLocalChanged() no localChanges:" + scanOption.localChangesRootPath + " not exists");		
-			return false;
-		}
-		
-		Log.debug("isLocalChanged() localChanges count:" + dir.listFiles().length + " under " + scanOption.localChangesRootPath);		
-		return dir.listFiles().length > 0;
-	}
-	
-	protected boolean isRemoteChanged(HashMap<Long, DocChange> remoteChanges, ScanOption scanOption) {
-		if(scanOption.remoteChangesRootPath == null)
-		{
-			Log.debug("isRemoteChanged() remoteChanges size:" + remoteChanges.size());		
-			return remoteChanges.size() > 0;
-		}
-		
-		//Log.debug("isRemoteChanged() scanOption.remoteChangesRootPath:" + scanOption.remoteChangesRootPath);
-		File dir = new File(scanOption.remoteChangesRootPath);
-		if(dir.exists() == false)
-		{
-			Log.debug("isRemoteChanged() no remoteChanges:" + scanOption.remoteChangesRootPath + " not exists");		
-			return false;
-		}
-
-		Log.debug("isRemoteChanged() remoteChanges count:" + dir.listFiles().length + " under " + scanOption.remoteChangesRootPath);		
-		return dir.listFiles().length > 0;
+		return syncupLocalChangesEx_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, scanOption.localChangesRootPath, subDocSyncupFlag, rt);			
 	}
 
-	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, HashMap<Long, DocChange> localChanges, HashMap<Long, DocChange> remoteChanges, Integer subDocSyncupFlag, ScanOption scanOption, ReturnAjax rt) {
+	protected boolean isLocalChanged(ScanOption scanOption) {
+		if(scanOption.localChangesRootPath != null)
+		{
+			Log.debug("isLocalChanged() scanOption.localChangesRootPath:" + scanOption.localChangesRootPath);
+			File dir = new File(scanOption.localChangesRootPath);
+			if(dir.exists() == false)
+			{
+				Log.debug("isLocalChanged() no localChanges:" + scanOption.localChangesRootPath + " not exists");		
+				return false;
+			}
+			
+			Log.debug("isLocalChanged() localChanges count:" + dir.listFiles().length + " under " + scanOption.localChangesRootPath);		
+			return dir.listFiles().length > 0;
+		}
+		
+		return false;
+	}
+	
+	protected boolean isRemoteChanged(ScanOption scanOption) {
+		if(scanOption.remoteChangesRootPath != null)
+		{
+			Log.debug("isRemoteChanged() scanOption.remoteChangesRootPath:" + scanOption.remoteChangesRootPath);
+			File dir = new File(scanOption.remoteChangesRootPath);
+			if(dir.exists() == false)
+			{
+				Log.debug("isRemoteChanged() no remoteChanges:" + scanOption.remoteChangesRootPath + " not exists");		
+				return false;
+			}
+
+			Log.debug("isRemoteChanged() remoteChanges count:" + dir.listFiles().length + " under " + scanOption.remoteChangesRootPath);		
+			return dir.listFiles().length > 0;
+		}
+		
+		return false;
+	}
+
+	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, ScanOption scanOption, ReturnAjax rt) {
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == null)
 		{
@@ -4864,26 +4845,9 @@ public class BaseController  extends BaseFunction{
 		case SYNC_AfterRevertHistory:
 		case SYNC_AfterRemoteStoragePull:
 			//只更新有改动的文件的索引	
-			if(scanOption.localChangesRootPath == null)
+			if(isLocalChanged(scanOption))
 			{
-				if(localChanges.size() > 0 || remoteChanges.size() > 0)
-				{
-					Log.info("**************************** checkAndUpdateIndex() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-					if(docDetect(repos, doc))
-					{	
-						HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
-						Log.info("checkAndUpdateIndex() rebuildIndexForDoc");					
-						rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
-					}
-					Log.info("**************************** checkAndUpdateIndex() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-				}
-			}
-			else
-			{
-				if(isLocalChanged(localChanges, scanOption))
-				{
-					rebuildIndexForDocEx(repos, doc, scanOption.localChangesRootPath, rt);	
-				}
+				rebuildIndexForDocEx(repos, doc, scanOption.localChangesRootPath, rt);	
 			}
 			break;
 		case SYNC_AUTO:
@@ -5227,15 +5191,6 @@ public class BaseController  extends BaseFunction{
 		}
 		return false;
 	}
-
-	private boolean syncupRemoteChanges_FSM(Repos repos, User login_user, HashMap<Long, DocChange> remoteChanges, ReturnAjax rt) 
-	{
-		for(DocChange docChange: remoteChanges.values())
-	    {
-			syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-	    }
-		return true;
-	}
 	
 	private boolean syncupRemoteChangesEx_FSM(Repos repos, User login_user, Doc doc, String remoteChangesRootPath, ReturnAjax rt) 
 	{
@@ -5326,82 +5281,6 @@ public class BaseController  extends BaseFunction{
 			syncUpRemoteChangeEx_FSM(repos, subDoc, subEntry, login_user, rt);
 		}
 	}
-
-	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, Integer subDocSyncupFlag, ReturnAjax rt) 
-	{
-		//本地有改动需要提交
-		Log.info("syncupLocalChanges_FSM() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
-		if(commitMsg == null)
-		{
-			commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
-		}
-		if(commitUser == null)
-		{
-			commitUser = login_user.getName();
-		}
-		
-		//LockDoc
-		DocLock docLock = null;
-		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "syncupLocalChanges_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
-		
-		if(docLock == null)
-		{
-			docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
-			Log.info("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
-			return false;
-		}
-		
-		List<CommitAction> commitActionList = new ArrayList<CommitAction>();
-		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, localChanges, subDocSyncupFlag, commitActionList);
-		if(revision == null)
-		{
-			Log.info("syncupLocalChanges_FSM() 本地改动Commit失败:" + revision);
-			unlockDoc(doc, lockType, login_user);
-			return false;
-		}
-		//推送到远程仓库
-		verReposPullPush(repos, true, rt);
-
-		if(commitActionList.size() > 0)
-		{
-			for(int i=0; i<commitActionList.size(); i++)
-			{
-				CommitAction commitAction = commitActionList.get(i);
-				if(commitAction.getResult())
-				{
-					Doc commitDoc = commitActionList.get(i).getDoc();
-					Log.printObject("syncupLocalChanges_FSM() updateVerReposDBEntry commitDoc: ", commitDoc);						
-					//需要根据commitAction的行为来决定相应的操作
-					commitDoc.setRevision(revision);
-					updateVerReposDBEntry(repos, commitDoc, false);
-				}
-			}			
-		}
-		
-		//TODO: 将localChanges中的版本号更新为文件的最新版本,理论上只需要更新在commitActionList中的文件
-		//updateLocalChangesRevision(repos, localChanges, revision);
-		
-		Log.info("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
-		unlockDoc(doc, lockType, login_user);
-		
-		return true;	
-	}
-	
-
-	private void updateLocalChangesRevision(Repos repos, HashMap<Long, DocChange> localChanges, String revision) {
-		if(localChanges != null)
-		{
-			for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet())
-			{
-				DocChange docChange = entry.getValue();
-				Doc localChangeDoc = docChange.getDoc();
-				localChangeDoc.setRevision(revision);
-				updateVerReposDBEntry(repos, localChangeDoc, false);
-			}
-		}
-	}
 	
 	private boolean syncupLocalChangesEx_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, String localChangesRootPath, Integer subDocSyncupFlag, ReturnAjax rt) 
 	{
@@ -5430,7 +5309,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		List<CommitAction> commitActionList = new ArrayList<CommitAction>();
-		String revision = verReposDocCommitEx(repos, false, doc, commitMsg, commitUser, rt, true, localChangesRootPath, subDocSyncupFlag, commitActionList);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, subDocSyncupFlag, commitActionList);
 		if(revision == null)
 		{
 			Log.info("syncupLocalChangesEx_FSM() 本地改动Commit失败:" + revision);
@@ -5445,69 +5324,6 @@ public class BaseController  extends BaseFunction{
 		unlockDoc(doc, lockType, login_user);
 		
 		return true;	
-	}
-
-	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, String localChangesRootPath, String revision) {
-		File file = new File(localChangesRootPath + doc.getPath() + doc.getName());
-		updateLocalChangesRevisionEx(repos, doc, file, revision);
-	}
-	
-	private void updateLocalChangesRevisionEx(Repos repos, Doc doc, File file, String revision) {
-		if(doc.getDocId() != 0)
-		{
-			Doc localDoc = fsGetDoc(repos, doc);
-			if(localDoc == null)
-			{
-				Log.info("updateLocalChangesRevisionEx() localDoc is null:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
-				return;
-			}
-		
-			if(localDoc.getType() == 0)
-			{
-				//这次commit是一个删除操作
-				Log.debug("updateLocalChangesRevisionEx() localDoc was deleted:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
-				deleteVerReposDBEntry(repos, doc);
-				return;
-			}
-		
-			localDoc.setRevision(revision);
-		
-			Doc dbDoc = getVerReposDBEntry(repos, doc, false);
-			if(dbDoc == null)
-			{
-				Log.debug("updateLocalChangesRevisionEx() localDoc was added:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-				addVerReposDBEntry(repos, localDoc, false);
-				return;
-			}
-		
-			if(dbDoc.getType() != localDoc.getType())
-			{
-				Log.debug("updateLocalChangesRevisionEx() docType was changed:" + localDoc.getDocId() + " " + localDoc.getPath() + localDoc.getName()); 
-				updateVerReposDBEntry(repos, dbDoc, false);
-				return;
-			}
-			
-			if(localDoc.getType() != 2)
-			{
-				updateVerReposDBEntry(repos, localDoc, false);
-				return;
-			}
-		}
-
-		//update subDocs
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = doc.getLocalRootPath();
-		String localVRootPath = doc.getLocalVRootPath();
-		String subDocParentPath = getSubDocParentPath(doc);
-		Integer subDocLevel = getSubDocLevel(doc);
-
-		File[] list = file.listFiles();
-		for(int i=0; i<list.length; i++)
-		{
-			File subEntry = list[i];
-			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
-			updateLocalChangesRevisionEx(repos, subDoc, subEntry, revision);
-		}
 	}
 
 	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
@@ -5941,11 +5757,6 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void insertLocalChange(Doc doc, DocChange localChange, ScanOption scanOption) {
-		if(scanOption.localChanges != null)
-		{
-			scanOption.localChanges.put(doc.getDocId(), localChange);
-		}
-		
 		if(scanOption.localChangesRootPath != null)
 		{
 			File node = new File(scanOption.localChangesRootPath + doc.getPath() + doc.getName());
@@ -5954,11 +5765,6 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void insertRemoteChange(Doc doc, DocChange remoteChange, ScanOption scanOption) {
-		if(scanOption.remoteChanges != null)
-		{
-			scanOption.remoteChanges.put(doc.getDocId(), remoteChange);
-		}
-		
 		if(scanOption.remoteChangesRootPath != null)
 		{
 			File node = new File(scanOption.remoteChangesRootPath + doc.getPath() + doc.getName());
@@ -7554,7 +7360,7 @@ public class BaseController  extends BaseFunction{
 		case ADD: //add
 		case DELETE:	//delete
 		case UPDATE: //update
-			ret = verReposDocCommit(repos, false, inputDoc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2, null);
+			ret = verReposDocCommit(repos, false, inputDoc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, null);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case MOVE:	//move
@@ -7645,7 +7451,7 @@ public class BaseController  extends BaseFunction{
 		//需要将文件Commit到版本仓库上去
 		if(isFSM(repos))
 		{
-			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, null, 2, null);
 			if(revision == null)
 			{
 				docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -7736,7 +7542,7 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//需要将文件Commit到版本仓库上去
-			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
+			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, null, 2, null);
 			if(revision == null)
 			{
 				docSysDebugLog("updateDocEx_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -8033,7 +7839,7 @@ public class BaseController  extends BaseFunction{
 			if(isFSM(repos))
 			{
 				//需要将文件Commit到版本仓库上去
-				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2, null);
+				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, null, 2, null);
 				if(revision == null)
 				{
 					docSysDebugLog("updateRealDocContent_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -8102,7 +7908,7 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		Doc vDoc = buildVDoc(doc);
-		verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
+		verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null);
 
 		//Insert Push Action
 		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
@@ -8140,7 +7946,7 @@ public class BaseController  extends BaseFunction{
 			if(saveVirtualDocContent(repos, doc, rt) == true)
 			{
 				Doc vDoc = buildVDoc(doc);
-				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
+				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null);
 
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
@@ -8156,7 +7962,7 @@ public class BaseController  extends BaseFunction{
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
 				Doc vDoc = buildVDoc(doc);
-				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
+				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null);
 
 				//Insert Push Action
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
@@ -10157,48 +9963,15 @@ public class BaseController  extends BaseFunction{
         return pushResult.revision;
 	}
 
-	//localChanges : 指定需要commit的改动文件
 	//commitActionList : 改动扫描结果，非空表示该列表需要被外部使用（只用于自动同步接口）
-	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
+	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{	
 		Log.debug("verReposDocCommit() for doc:[" + doc.getPath() + doc.getName() + "]");
 
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
-		
-		Log.debug("verReposDocCommit verCtrl:"+verCtrl);
-		if(commitActionList == null)
-		{
-			commitActionList = new ArrayList<CommitAction>();
-		}
-
-		String revision = null;
-		if(verCtrl == 1)
-		{
-			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
-			revision = svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-		}
-		else if(verCtrl == 2)
-		{
-			revision = gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
-		}
-		
-		if(revision != null && doc.getIsRealDoc())
-		{
-			updateVerReposDbEntry(repos, commitActionList, revision);
-		}
-		return revision;
-	}
-		
-	protected String verReposDocCommitEx(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
-	{	
-		Log.debug("verReposDocCommitEx() for doc:[" + doc.getPath() + doc.getName() + "]");
-
-		doc = docConvert(doc, convert);
-		
-		int verCtrl = getVerCtrl(repos, doc);
-		Log.debug("verReposDocCommitEx() verCtrl:"+verCtrl);
+		Log.debug("verReposDocCommit() verCtrl:"+verCtrl);
 
 		if(commitActionList == null)
 		{
@@ -10209,11 +9982,11 @@ public class BaseController  extends BaseFunction{
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
-			revision = svnDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+			revision = svnDocCommit(repos, doc, commitMsg, commitUser, rt, localChangesRootPath, subDocCommitFlag, commitActionList);
 		}
 		else if(verCtrl == 2)
 		{
-			revision = gitDocCommitEx(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
+			revision = gitDocCommit(repos, doc, commitMsg, commitUser, rt, localChangesRootPath, subDocCommitFlag, commitActionList);
 		}
 		
 		if(revision != null && doc.getIsRealDoc())
@@ -10257,7 +10030,7 @@ public class BaseController  extends BaseFunction{
 		return verCtrl;
 	}
 
-	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList)
+	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList)
 	{			
 		boolean isRealDoc = doc.getIsRealDoc();
 
@@ -10280,7 +10053,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+				revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser, localChangesRootPath, subDocCommitFlag, commitActionList);
 			}
 			
 			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
@@ -10291,40 +10064,7 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
-	protected String svnDocCommitEx(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList)
-	{			
-		boolean isRealDoc = doc.getIsRealDoc();
-		
-		SVNUtil verReposUtil = new SVNUtil();		
-		String revision = null;
-		
-		ReposData reposData = getReposData(repos);
-
-		String lockInfo = "svnDocCommitEx() reposData.syncLockForSvnCommit";
-		String lockName = "reposData.syncLockForSvnCommit" + repos.getId();
-		
-		Date date1 = new Date();
-		synchronized(reposData.syncLockForSvnCommit)
-		{
-			redisSyncLockEx(lockName, lockInfo);
-			
-			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
-			{
-				Log.debug("svnDocCommitEx() verReposInit Failed");
-			}
-			else
-			{
-				revision = verReposUtil.doAutoCommitEx(repos, doc, commitMsg,commitUser,modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
-			}
-			
-			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
-		}
-		Date date2 = new Date();
-		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms svnDocCommitEx() for [" +doc.getPath() + doc.getName()+ "] \n");
-		return revision;
-	}
-	
-	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
+	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -10353,7 +10093,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
+					revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser, localChangesRootPath, subDocCommitFlag, commitActionList);
 				}
 			}
 			
@@ -10362,46 +10102,6 @@ public class BaseController  extends BaseFunction{
 		Date date2 = new Date();
 		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms gitDocCommit() for [" +doc.getPath() + doc.getName()+ "] \n");
 
-		return revision;
-	}
-	
-	protected String gitDocCommitEx(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
-	{
-		boolean isRealDoc = doc.getIsRealDoc();
-		
-		GITUtil verReposUtil = new GITUtil();
-		String revision = null;
-		
-		ReposData reposData = getReposData(repos);
-
-		String lockInfo = "gitDocCommitEx() reposData.syncLockForGitCommit";
-		String lockName = "reposData.syncLockForGitCommit" + repos.getId();
-		
-		Date date1 = new Date();
-		synchronized(reposData.syncLockForGitCommit)
-		{
-			redisSyncLockEx(lockName, lockInfo);
-			
-			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
-			{
-				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
-				return null;
-			}
-		
-			if(verReposUtil.checkAndClearnBranch(true) == false)
-			{
-				Log.debug("gitDocCommitEx() master branch is dirty and failed to clean");
-				redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
-				return null;
-			}
-		
-			revision =  verReposUtil.doAutoCommitEx(repos, doc, commitMsg,commitUser,modifyEnable, localChangesRootPath, subDocCommitFlag, commitActionList);
-
-			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
-		}
-		Date date2 = new Date();
-		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms gitDocCommitEx() for [" +doc.getPath() + doc.getName()+ "] \n");		
-		
 		return revision;
 	}
 	
