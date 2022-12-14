@@ -4901,7 +4901,7 @@ public class DocController extends BaseController{
 				scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + scanOption.scanTime + "/";
 				scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-remoteChanges-" + scanOption.scanTime + "/";
 				
-				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2, scanOption) == false)
+				if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, 2, scanOption) == false)
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
 					Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
@@ -4940,31 +4940,18 @@ public class DocController extends BaseController{
 //		        	}
 				}
 				
-				if(isRemoteChanged(remoteChanges, scanOption))
+				//判断是否为最新版本
+				if(localEntry.getType() != 0)
 				{
-					Log.info("revertDocHistory() 远程有改动！");
-					//远程有改动才需要恢复
-					//String remoteChangeInfo = buildChangeReminderInfo(remoteChanges);				
-					//docSysErrorLog(remoteChangeInfo,rt);
-					//unlockDoc(doc, lockType, reposAccess.getAccessUser());
-					//writeJson(rt, response);
-					//return;
-				}
-				else
-				{
-					//只有扫描且本地和远程都没有改动，才判断是否为最新版本
-					if(localEntry.getType() != 0)
+					if(commitId.equals(remoteEntry.getRevision()))
 					{
-						if(commitId.equals(remoteEntry.getRevision()))
-						{
-							docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision(), rt);
-							docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-							unlockDoc(doc, lockType, reposAccess.getAccessUser());
-							writeJson(rt, response);
+						docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision(), rt);
+						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+						unlockDoc(doc, lockType, reposAccess.getAccessUser());
+						writeJson(rt, response);
 							
-							addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
-							return;
-						}
+						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+						return;
 					}
 				}	
 			}
