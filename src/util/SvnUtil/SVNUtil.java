@@ -1338,6 +1338,8 @@ public class SVNUtil  extends BaseController{
     	//本地存在
     	int localEntryType = localEntry.isDirectory()? 2:1;
     	doc.setType(localEntryType);
+    	doc.setSize(localEntry.length());
+    	doc.setLatestEditTime(localEntry.lastModified());    
     	switch(localEntryType)
     	{
     	case 1:	//文件
