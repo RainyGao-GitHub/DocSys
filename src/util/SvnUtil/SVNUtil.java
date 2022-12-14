@@ -598,7 +598,7 @@ public class SVNUtil  extends BaseController{
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
 		
-		Log.debug("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
+		Log.debug("doAutoCommit() [" + doc.getPath() + doc.getName() +"] localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
 		if(commitActionList == null)
 		{
@@ -607,7 +607,7 @@ public class SVNUtil  extends BaseController{
 		
 		if(isVersionIgnored(repos, doc, true))
 	    {
-	    	Log.debug("doAutoCommmit() version was ignored for:" + doc.getPath() + doc.getName());
+	    	Log.debug("doAutoCommmit() [" + doc.getPath() + doc.getName() + "] version was ignored");
 	    	//版本被忽略的节点不需要更新节点信息，因此不需要加入到commitList中
 	    	return getLatestReposRevision();
 	    }
@@ -618,19 +618,19 @@ public class SVNUtil  extends BaseController{
 		//LocalEntry does not exist
 		if(!localEntry.exists())	//Delete Commit
 		{
-			Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
+			Log.debug("doAutoCommit() localEntry [" + localRootPath + entryPath + "] not exists");
 			Integer type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
 		    	return null;
 		    }		    
 		    
-		    Log.debug("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		    Log.debug("doAutoCommit() 删除 [" + doc.getPath() + doc.getName() + "]");
 			CommitAction.insertDeleteAction(commitActionList,doc, false);
 		    
 		    if(type == 0)
 		    {
-				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
+				Log.debug("doAutoCommit() remoteEnry [" + entryPath + "] not exists");
 		        return getLatestReposRevision();
 		    }
 		}
@@ -648,6 +648,7 @@ public class SVNUtil  extends BaseController{
 			{
 				if(!doc.getPath().isEmpty())
 				{
+					Log.debug("doAutoCommit() remoteParentEntry [" + doc.getPath() + "] not exists, do commit parent");
 					return doAutoCommitParent(repos, doc, commitMsg, commitUser, modifyEnable, commitActionList);
 				}
 			}	
@@ -655,7 +656,7 @@ public class SVNUtil  extends BaseController{
 			//LocalEntry is File
 			if(localEntry.isFile())
 			{
-				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
+				Log.debug("doAutoCommit() localEntry [" + localRootPath + entryPath + "] is File");
 					
 			    type = checkPath(entryPath, null);
 			    if(type == null)
@@ -664,44 +665,28 @@ public class SVNUtil  extends BaseController{
 			    }
 			    if(type == 0)
 			    {
-					Log.debug("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					Log.debug("doAutoCommit() 新增文件 [" + doc.getPath() + doc.getName() + "]");
 					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else if(type != 1)
 			    {
-					Log.debug("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					Log.debug("doAutoCommit() 文件类型变更(目录->文件) [" + doc.getPath() + doc.getName() + "]");
 			    	CommitAction.insertDeleteAction(commitActionList,doc, false);
 					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else
 			    {
-		    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
-		    		if(localChanges == null) //文件内容改变	
-		    		{
-			            if(modifyEnable)
-			            {
-		            		Log.debug("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		            		CommitAction.insertModifyAction(commitActionList,doc, false);
-		            	}
-		    		}
-		    		else
-		    		{
-		    			DocChange docChange = localChanges.get(doc.getDocId());
-		    			if(docChange != null)
-		    			{
-		    				if(docChange.getType() == DocChangeType.LOCALCHANGE)	//要保证commitAction也是修改才commit,因为可能是add
-		    				{
-			            		Log.debug("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			            		CommitAction.insertModifyAction(commitActionList,doc, false);
-		    				}
-		    			}
-		    		}
+			    	if(isDocInChangedList(doc, localChanges, null, modifyEnable))
+			    	{
+	            		Log.debug("doAutoCommit() 文件内容变更 [" + doc.getPath() + doc.getName() + "]");
+	            		CommitAction.insertModifyAction(commitActionList, doc, false);
+			    	}
 			    }
 			}
 			else
 			{
 				//LocalEntry is Directory
-				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				Log.debug("doAutoCommit() [" + localRootPath + entryPath + "] is Directory");
 				scheduleForCommit(commitActionList, repos, doc, modifyEnable, false, localChanges, subDocCommitFlag);
 			}
 		}
@@ -735,13 +720,13 @@ public class SVNUtil  extends BaseController{
 	    Log.debug("doAutoCommit() commit success: " + commitInfo);
 	    return commitInfo.getNewRevision()+"";
 	}
-	
+
 	public String doAutoCommitEx(Repos repos, Doc doc, String commitMsg,String commitUser, boolean modifyEnable, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList){
 		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
 		
-		Log.debug("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
+		Log.debug("doAutoCommitEx() [" + doc.getPath() + doc.getName() +"] localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
 		if(commitActionList == null)
 		{
@@ -750,7 +735,7 @@ public class SVNUtil  extends BaseController{
 		
 		if(isVersionIgnored(repos, doc, true))
 	    {
-	    	Log.debug("doAutoCommmit() version was ignored for:" + doc.getPath() + doc.getName());
+	    	Log.debug("doAutoCommitEx() [" + doc.getPath() + doc.getName() + " version was ignored");
 	    	//版本被忽略的文件，扫描的时候不会被检查，因此不需要加到commitList中
 	    	return getLatestReposRevision();
 	    }
@@ -761,19 +746,19 @@ public class SVNUtil  extends BaseController{
 		//LocalEntry does not exist
 		if(!localEntry.exists())	//Delete Commit
 		{
-			Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
+			Log.debug("doAutoCommitEx() localEntry [" + localRootPath + entryPath + "] not exists");
 			Integer type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
 		    	return null;
 		    }
 
-		    Log.debug("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		    Log.debug("doAutoCommitEx() 删除 [" + doc.getPath() + doc.getName() + "]");
 			CommitAction.insertDeleteAction(commitActionList,doc, false);
 
 		    if(type == 0)
 		    {
-				Log.debug("doAutoCommit() remoteEnry " + entryPath + " not exists");
+				Log.debug("doAutoCommitEx() remoteEnry [" + entryPath + "] not exists");
 		        return getLatestReposRevision();
 		    }
 		}
@@ -791,6 +776,7 @@ public class SVNUtil  extends BaseController{
 			{
 				if(!doc.getPath().isEmpty())
 				{
+					Log.debug("doAutoCommitEx() remoteParentEntry [" + doc.getPath() + "] not exists, do commit parent");
 					return doAutoCommitParent(repos, doc, commitMsg, commitUser, modifyEnable, commitActionList);
 				}
 			}	
@@ -798,7 +784,7 @@ public class SVNUtil  extends BaseController{
 			//LocalEntry is File
 			if(localEntry.isFile())
 			{
-				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
+				Log.debug("doAutoCommitEx() localEntry [" + localRootPath + entryPath + "] is File");
 					
 			    type = checkPath(entryPath, null);
 			    if(type == null)
@@ -807,25 +793,28 @@ public class SVNUtil  extends BaseController{
 			    }
 			    if(type == 0)
 			    {
-					Log.debug("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					Log.debug("doAutoCommitEx() 新增文件 [" + doc.getPath() + doc.getName() + "]");
 					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else if(type != 1)
 			    {
-					Log.debug("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					Log.debug("doAutoCommitEx() 文件类型变更(目录->文件) [" + doc.getPath() + doc.getName() + "]");
 			    	CommitAction.insertDeleteAction(commitActionList,doc, false);
 					CommitAction.insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else
 			    {
-			    	Log.debug("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			    	CommitAction.insertModifyAction(commitActionList,doc, false);
+			    	if(isDocInChangedList(doc, null, localChangesRootPath, modifyEnable))
+			    	{
+	            		Log.debug("doAutoCommitEx() 文件内容变更 [" + doc.getPath() + doc.getName() + "]");
+	            		CommitAction.insertModifyAction(commitActionList, doc, false);
+			    	}
 		    	}
 			}
 			else
 			{
 				//LocalEntry is Directory
-				Log.debug("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				Log.debug("doAutoCommitEx() [" + localRootPath + entryPath + "] is Directory");
 				File file = new File(localChangesRootPath, doc.getPath() + doc.getName());
 				scheduleForCommitEx(commitActionList, repos, doc, modifyEnable, false, file, subDocCommitFlag);
 			}
@@ -833,20 +822,20 @@ public class SVNUtil  extends BaseController{
 		
 	    if(commitActionList == null || commitActionList.size() ==0)
 	    {
-	    	Log.debug("doAutoCommmit() There is nothing to commit");
+	    	Log.debug("doAutoCommitEx() There is nothing to commit");
 	        return getLatestReposRevision();
 	    }
 	    
 	    ISVNEditor editor = getCommitEditor(commitMsg);
 	    if(editor == null)
 	    {
-	    	Log.debug("doAutoCommit() getCommitEditor Failed");
+	    	Log.debug("doAutoCommitEx() getCommitEditor Failed");
 	        return null;
 	    }
 	        
 	    if(executeCommitActionList(editor,commitActionList,true) == false)
 	    {
-	    	Log.debug("doAutoCommit() executeCommitActionList Failed");
+	    	Log.debug("doAutoCommitEx() executeCommitActionList Failed");
 	    	abortEdit(editor);
 	        return null;
 	    }
@@ -854,12 +843,52 @@ public class SVNUtil  extends BaseController{
 	    SVNCommitInfo commitInfo = commit(editor);
 	    if(commitInfo == null)
 	    {
-	    	Log.debug("doAutoCommit() commit failed: " + commitInfo);
+	    	Log.debug("doAutoCommitEx() commit failed: " + commitInfo);
 	        return null;
 	    }
-	    Log.debug("doAutoCommit() commit success: " + commitInfo);
+	    Log.debug("doAutoCommitEx() commit success: " + commitInfo);
 	    return commitInfo.getNewRevision()+"";
 	}
+	
+	private boolean isDocInChangedList(Doc doc, HashMap<Long, DocChange> localChanges, String localChangesRootPath, boolean modifyEnable) {
+		if(localChanges != null)
+		{
+			DocChange docChange = localChanges.get(doc.getDocId());
+			if(docChange == null)
+			{
+				return false;
+			}
+			
+			if(docChange.getType() == DocChangeType.LOCALCHANGE)
+			{
+            	Log.debug("isDocInChangedList() [" + doc.getPath() + doc.getName() + "] in localChanges");
+            	return true;
+			}
+			
+			return false;
+		}
+		
+		if(localChangesRootPath != null) //文件内容改变	
+		{
+			File file = new File(localChangesRootPath + doc.getPath() + doc.getName());
+			if(file.exists())
+			{
+            	Log.debug("isDocInChangedList() [" + doc.getPath() + doc.getName() + "] exists under localChangesRootPath");				
+				return true;
+			}
+			
+			return false;
+		}
+		
+		if(modifyEnable == true)
+		{
+			Log.debug("isDocInChangedList() [" + doc.getPath() + doc.getName() + "] modifyEnable is true");
+			return true;
+		}
+		
+		return false;
+	}
+
 
 	private boolean isVersionIgnored(Repos repos, Doc doc, boolean parentCheck) {
 		if(repos.versionIgnoreConfig.versionIgnoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
