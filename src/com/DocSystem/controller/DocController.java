@@ -4893,8 +4893,6 @@ public class DocController extends BaseController{
 				
 				Doc dbDoc = dbGetDoc(repos, doc, false);
 				
-				HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
-				HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 				ScanOption scanOption = new ScanOption();
 				scanOption.scanType = 2; //localChanged or dbDocRevisionIsNullAsLocalChange, remoteNotChecked
 				scanOption.scanTime = new Date().getTime();
@@ -4914,7 +4912,7 @@ public class DocController extends BaseController{
 				}
 				
 				
-				if(isLocalChanged(localChanges, scanOption))
+				if(isLocalChanged(scanOption))
 				{
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					Log.info("revertDocHistory() 本地有改动！");
