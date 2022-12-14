@@ -89,11 +89,8 @@ public class CommitAction{
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
 	public static void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
-		if(isGit && doc.getName().equals(".git"))
-		{
-			return;
-		}
 		//printObject("insertAddFileAction:", doc);
+		Log.debug("insertAddFileAction() [" + doc.getPath() + doc.getName() + "]");
 		
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.ADD);
@@ -104,12 +101,8 @@ public class CommitAction{
     
 	public static void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction, boolean isGit) 
 	{
-		if(isGit && doc.getName().equals(".git"))
-		{
-			return;
-		}
 		//printObject("insertAddDirAction:", doc);
-		Log.debug("insertAddDirAction() " + doc.getPath() + doc.getName());
+		Log.debug("insertAddDirAction() [" + doc.getPath() + doc.getName() + "]");
 
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File dir = new File(localParentPath, doc.getName());
@@ -160,14 +153,8 @@ public class CommitAction{
 	}
 	
 	public static void insertDeleteAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
-		if(isGit && doc.getName().equals(".git"))
-		{
-			return;
-		}
-
 		//printObject("insertDeleteAction:", doc);
-		
-		Log.debug("insertDeleteAction() " + doc.getPath() + doc.getName());
+		Log.debug("insertDeleteAction() [" + doc.getPath() + doc.getName() + "]");
 
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.DELETE);
@@ -176,13 +163,8 @@ public class CommitAction{
 	}
     
 	public static void insertModifyAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
-		if(isGit && doc.getName().equals(".git"))
-		{
-			return;
-		}
-
 		//printObject("insertModifyAction:", doc);
-		Log.debug("insertModifyAction() " + doc.getPath() + doc.getName());
+		Log.debug("insertModifyAction() [" + doc.getPath() + doc.getName() + "]");
 
 		CommitAction action = new CommitAction();
     	action.setAction(CommitType.MODIFY);
@@ -191,13 +173,8 @@ public class CommitAction{
 	}
 	
 	public static void insertAction(List<CommitAction> actionList, Doc doc, CommitType actionType, boolean isGit) {
-		if(isGit && doc.getName().equals(".git"))
-		{
-			return;
-		}
-
 		//printObject("insertAction:", doc);
-		Log.debug("insertAction() actionType:" + actionType + " doc:" + doc.getPath() + doc.getName());
+		Log.debug("insertAction() actionType:" + actionType + " doc [" + doc.getPath() + doc.getName() + "]");
 
 		CommitAction action = new CommitAction();
     	action.setAction(actionType);
