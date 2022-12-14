@@ -1705,7 +1705,7 @@ public class GITUtil  extends BaseController{
 			else
 			{
 				//LocalEntry is Directory
-				Log.debug("doAutoCommitEx() localEntry " + localRootPath + entryPath + " is Directory");
+				Log.debug("doAutoCommitEx() localEntry [" + localRootPath + entryPath + "] is Directory");
 				File file = new File(localChangesRootPath, doc.getPath() + doc.getName());
 				scheduleForCommitEx(commitActionList, repos, doc, modifyEnable, false, file, subDocCommitFlag);
 			}
@@ -2772,7 +2772,7 @@ public class GITUtil  extends BaseController{
     	
     	if(isIgnoreNeed(repos, doc) == true)
     	{
-    		Log.debug("scheduleForCommitEx() " + doc.getPath() + doc.getName() + " was ignored");
+    		Log.debug("scheduleForCommitEx() [" + doc.getPath() + doc.getName() + "] was ignored");
     		return;    		
     	}
  	
@@ -2783,7 +2783,7 @@ public class GITUtil  extends BaseController{
 		Integer type = checkPath(entryPath, null);
     	if(type == null)
     	{
-    		Log.debug("scheduleForCommitEx() checkPath 异常!");
+    		Log.debug("scheduleForCommitEx() checkPath [" + entryPath + "] 异常!");
 			return;
 		}
     	
@@ -2817,7 +2817,7 @@ public class GITUtil  extends BaseController{
 	            return;
     		}
     		
-    		Log.debug("scheduleForCommitEx() insert " + entryPath + " to actionList for Modify" );
+    		Log.debug("scheduleForCommitEx() insert [" + entryPath + "] to actionList for Modify" );
             CommitAction.insertModifyAction(actionList,doc, true);
             return;
     	case 2:
@@ -2859,7 +2859,7 @@ public class GITUtil  extends BaseController{
 			int subDocCommitFlag) {
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
-		Log.debug("scanForSubDocCommit()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		Log.debug("scanForSubDocCommit()  [" + doc.getPath() + doc.getName() + "] localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -2877,7 +2877,7 @@ public class GITUtil  extends BaseController{
 		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
-		Log.debug("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
+		Log.debug("scanForSubDocCommit() 扫描版本仓库目录 [" + subDocParentPath + "]");
 		TreeWalk treeWalk = getSubEntries(subDocParentPath, null);
 		if(treeWalk != null)
 		{
@@ -2886,7 +2886,7 @@ public class GITUtil  extends BaseController{
 				{
 					int subDocType = getEntryType(treeWalk.getFileMode());
 				    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-		        	Log.debug("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
+		        	Log.debug("scanForSubDocCommit() verReposSubEntry [" + subDoc.getPath() + subDoc.getName() + "]");
 
 				    docHashMap.put(subDoc.getName(), subDoc);
 				    scheduleForCommit(actionList, repos, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
@@ -2898,7 +2898,7 @@ public class GITUtil  extends BaseController{
 		}
 		
         //Go Through localSubDocs
-		Log.debug("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
+		Log.debug("scanForSubDocCommit() 扫描本地目录 [" + subDocParentPath + "]");
         File dir = new File(localRootPath  + subDocParentPath);
         File[] tmp=dir.listFiles();
         for(int i=0;i<tmp.length;i++)
@@ -2906,10 +2906,10 @@ public class GITUtil  extends BaseController{
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
         	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-        	Log.debug("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+        	Log.debug("scanForSubDocCommit() localSubEntry [" + subDoc.getPath() + subDoc.getName() + "]");
         	if(isIgnoreNeed(repos, subDoc) == true)
         	{
-        		Log.debug("scanForSubDocCommit() " + subDoc.getPath() + subDoc.getName() + " was ignored");
+        		Log.debug("scanForSubDocCommit() [" + subDoc.getPath() + subDoc.getName() + "] version was ignored");
         		continue;  		  		
         	}          	
         	
@@ -2931,7 +2931,7 @@ public class GITUtil  extends BaseController{
 			int subDocCommitFlag) {
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
-		Log.debug("scanForSubDocCommitEx()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		Log.debug("scanForSubDocCommitEx()  [" + doc.getPath() + doc.getName() + "] localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -2945,7 +2945,7 @@ public class GITUtil  extends BaseController{
 		String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = getSubDocLevel(doc);
 
-    	Log.debug("scanForSubDocCommitEx() go through local subDocs under:" + subDocParentPath);
+    	Log.debug("scanForSubDocCommitEx() 扫描本地目录 [" + subDocParentPath + "]");
 		File[] list = parentDir.listFiles();
 		if(list != null)
 		{
@@ -2954,11 +2954,11 @@ public class GITUtil  extends BaseController{
 	        	File localSubEntry = list[i];
 	        	int subDocType = localSubEntry.isFile()? 1: 2;
 	        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-	        	Log.debug("scanForSubDocCommitEx() local subDoc:" + subDoc.getName());
+	        	Log.debug("scanForSubDocCommitEx() localSubEntry [" + subDoc.getPath() + subDoc.getName() + "]");
 	        	
 	        	if(isIgnoreNeed(repos, subDoc) == true)
 	        	{
-	        		Log.debug("scanForSubDocCommitEx() " + subDoc.getPath() + subDoc.getName() + " was ignored");
+	        		Log.debug("scanForSubDocCommitEx() [" + subDoc.getPath() + subDoc.getName() + "] version was ignored");
 	        		continue;  		
 	        	}
 	        	
