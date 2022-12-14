@@ -2698,6 +2698,9 @@ public class GITUtil  extends BaseController{
     	
     	//本地存在
     	int localEntryType = localEntry.isDirectory()? 2:1;
+    	doc.setType(localEntryType);
+    	doc.setSize(localEntry.length());
+    	doc.setLatestEditTime(localEntry.lastModified());    	
     	switch(localEntryType)
     	{
     	case 1:	//文件
@@ -2801,6 +2804,9 @@ public class GITUtil  extends BaseController{
     	
     	//本地存在
     	int localEntryType = localEntry.isDirectory()? 2:1;
+    	doc.setType(localEntryType);
+    	doc.setSize(localEntry.length());
+    	doc.setLatestEditTime(localEntry.lastModified());
     	switch(localEntryType)
     	{
     	case 1:	//文件
@@ -2859,7 +2865,7 @@ public class GITUtil  extends BaseController{
 			int subDocCommitFlag) {
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
-		Log.debug("scanForSubDocCommit()  [" + doc.getPath() + doc.getName() + "] localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		Log.debug("scanForSubDocCommit() [" + doc.getPath() + doc.getName() + "] localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -2931,7 +2937,7 @@ public class GITUtil  extends BaseController{
 			int subDocCommitFlag) {
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
-		Log.debug("scanForSubDocCommitEx()  [" + doc.getPath() + doc.getName() + "] localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		Log.debug("scanForSubDocCommitEx() [" + doc.getPath() + doc.getName() + "] localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -2952,15 +2958,8 @@ public class GITUtil  extends BaseController{
 	        for(int i=0;i<list.length;i++)
 	        {
 	        	File localSubEntry = list[i];
-	        	int subDocType = localSubEntry.isFile()? 1: 2;
-	        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
+	        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, null, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
 	        	Log.debug("scanForSubDocCommitEx() localSubEntry [" + subDoc.getPath() + subDoc.getName() + "]");
-	        	
-	        	if(isIgnoreNeed(repos, subDoc) == true)
-	        	{
-	        		Log.debug("scanForSubDocCommitEx() [" + subDoc.getPath() + subDoc.getName() + "] version was ignored");
-	        		continue;  		
-	        	}
 	        	
 	            scheduleForCommitEx(actionList, repos, subDoc, modifyEnable, isSubAction, localSubEntry, subDocCommitFlag);
 	        }
