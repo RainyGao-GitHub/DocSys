@@ -155,6 +155,7 @@ public class LuceneUtil2   extends BaseFunction
     {	
     	Log.debug("addIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
     	//Log.debug("addIndex() content:" + content);
+    	Date date1 = new Date();
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -171,7 +172,6 @@ public class LuceneUtil2   extends BaseFunction
     		redisSyncLockEx(lockName, lockInfo);
 			
     		try {
-		    	Date date1 = new Date();
 		    	analyzer = new IKAnalyzer();
 		    	directory = FSDirectory.open(new File(indexLib));
 	
@@ -191,9 +191,6 @@ public class LuceneUtil2   extends BaseFunction
 		        analyzer = null;
 		        
 		        //Log.debug("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
-				Date date2 = new Date();
-		        Log.debug("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
-
 		        ret = true;
 			} catch (Exception e) {				
 		        Log.debug("addIndex() 异常");
@@ -204,7 +201,9 @@ public class LuceneUtil2   extends BaseFunction
     		
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
     	}
-    	
+
+		Date date2 = new Date();
+        Log.debug("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
     	return ret;
     }
 
@@ -387,6 +386,7 @@ public class LuceneUtil2   extends BaseFunction
     {
     	Log.debug("updateIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
     	//Log.debug("updateIndex() content:" + content);
+    	Date date1 = new Date();
     
     	Analyzer analyzer = null;
     	Directory directory = null;
@@ -401,7 +401,6 @@ public class LuceneUtil2   extends BaseFunction
     		redisSyncLockEx(lockName, lockInfo);
 			
 			try {
-		    	Date date1 = new Date();
 		        analyzer = new IKAnalyzer();
 	    		File file = new File(indexLib);
 		        directory = FSDirectory.open(file);
@@ -421,11 +420,7 @@ public class LuceneUtil2   extends BaseFunction
 		        analyzer.close();
 		        analyzer = null;
 		         
-		        Date date2 = new Date();
-		        Log.debug("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
-		     
-		        ret =  true;
-			
+		        ret =  true;			
 			} catch (IOException e) {
 				Log.debug("updateIndex() 异常");
 				e.printStackTrace();
@@ -435,6 +430,9 @@ public class LuceneUtil2   extends BaseFunction
 			
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
 		}
+    	
+        Date date2 = new Date();
+        Log.debug("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
     	return ret;
     }
     
@@ -448,6 +446,8 @@ public class LuceneUtil2   extends BaseFunction
     public static boolean deleteIndex(Doc doc, String indexLib)
     {
     	Log.debug("deleteIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
+		Date date1 = new Date();
+
     	Analyzer analyzer = null;
     	Directory directory = null;
     	IndexWriter indexWriter = null;
@@ -461,7 +461,6 @@ public class LuceneUtil2   extends BaseFunction
 			redisSyncLockEx(lockName, lockInfo);
 			
 			try {
-				Date date1 = new Date();
 				directory = FSDirectory.open(new File(indexLib));
 			
 		        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
@@ -476,9 +475,6 @@ public class LuceneUtil2   extends BaseFunction
 		        directory.close();
 		        directory = null;
 		        
-		        Date date2 = new Date();
-		        Log.debug("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
-
 		        ret = true;
 			} catch (Exception e) {
 				Log.info("deleteIndex() 异常");
@@ -489,6 +485,9 @@ public class LuceneUtil2   extends BaseFunction
 			
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
     	}
+    	
+        Date date2 = new Date();
+        Log.debug("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
     	return ret;
     }  
     
@@ -502,7 +501,9 @@ public class LuceneUtil2   extends BaseFunction
     public static boolean deleteIndexEx(Doc doc, String indexLib, int deleteFlag)
     {
     	Log.debug("deleteIndexEx() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	    	
-    	boolean ret = deleteIndex(doc, indexLib);
+		Date date1 = new Date();
+		
+		boolean ret = deleteIndex(doc, indexLib);
     	if(ret == true)
     	{
     		if(deleteFlag == 2)	//删除该路径下的所有doc的索引
@@ -520,7 +521,6 @@ public class LuceneUtil2   extends BaseFunction
 					redisSyncLockEx(lockName, lockInfo);
 					
 					try {
-						Date date1 = new Date();
 						directory = FSDirectory.open(new File(indexLib));
 					
 				        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
@@ -539,8 +539,6 @@ public class LuceneUtil2   extends BaseFunction
 				        directory.close();
 				        directory = null;
 				        
-				        Date date2 = new Date();
-				        Log.debug("删除子目录索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
 					} catch (Exception e) {
 						Log.info("deleteIndexEx() 异常");
 						e.printStackTrace();
@@ -552,6 +550,9 @@ public class LuceneUtil2   extends BaseFunction
 		    	}
 	    	}
     	}
+    	
+        Date date2 = new Date();
+        Log.debug("删除子目录索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
     	return ret;
     } 
 
