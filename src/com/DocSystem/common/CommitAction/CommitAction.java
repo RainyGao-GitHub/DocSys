@@ -88,7 +88,7 @@ public class CommitAction{
 	
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
-	public static void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
+	public static void insertAddEntryAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
 		//printObject("insertAddFileAction:", doc);
 		Log.debug("insertAddFileAction() [" + doc.getPath() + doc.getName() + "]");
 		
@@ -140,7 +140,7 @@ public class CommitAction{
 	    	}
 	    	else
 	    	{
-	    		insertAddFileAction(subActionList,subDoc,true, isGit);
+	    		insertAddEntryAction(subActionList,subDoc,true, isGit);
 	    	}
 	 	}
 		
@@ -168,16 +168,6 @@ public class CommitAction{
 
 		CommitAction action = new CommitAction();
     	action.setAction(CommitType.MODIFY);
-    	action.setDoc(doc);
-    	actionList.add(action);	
-	}
-	
-	public static void insertAction(List<CommitAction> actionList, Doc doc, CommitType actionType, boolean isGit) {
-		//printObject("insertAction:", doc);
-		Log.debug("insertAction() actionType:" + actionType + " doc [" + doc.getPath() + doc.getName() + "]");
-
-		CommitAction action = new CommitAction();
-    	action.setAction(actionType);
     	action.setDoc(doc);
     	actionList.add(action);	
 	}
