@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -51,8 +49,6 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
-import com.DocSystem.common.DocChange;
-import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.FileUtil;
@@ -344,10 +340,8 @@ public class GITUtil  extends BaseController{
 
 	static long convertCommitTime(int commitTime) 
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String timestampString=String.valueOf(commitTime);
         Long timestamp = Long.parseLong(timestampString) * 1000;
-        String date = formatter.format(new Date(timestamp));
         return timestamp;
 	}
 	
@@ -1098,7 +1092,6 @@ public class GITUtil  extends BaseController{
 					}					
 				}
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				Log.info(e);
 			}
 		  

@@ -33,8 +33,6 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
-import com.DocSystem.common.DocChange;
-import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
@@ -2008,7 +2006,6 @@ public class SVNUtil  extends BaseController{
 			try {
 				revision = repository.getLatestRevision();
 			} catch (SVNException e) {
-				// TODO Auto-generated catch block
 				Log.info(e);
 				return null;
 			}
