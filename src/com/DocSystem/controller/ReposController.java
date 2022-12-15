@@ -1167,7 +1167,7 @@ public class ReposController extends BaseController{
 		
 		if(clearLocalBackupIndexLib)
 		{
-			if(oldAutoBackupConfig.localBackupConfig != null && oldAutoBackupConfig.localBackupConfig.indexLibBase != null && oldAutoBackupConfig.localBackupConfig.indexLibBase.isEmpty() == false)
+			if(oldAutoBackupConfig != null && oldAutoBackupConfig.localBackupConfig != null && oldAutoBackupConfig.localBackupConfig.indexLibBase != null && oldAutoBackupConfig.localBackupConfig.indexLibBase.isEmpty() == false)
 			{
 				FileUtil.delFileOrDir(oldAutoBackupConfig.localBackupConfig.indexLibBase);
 			}
@@ -1175,7 +1175,7 @@ public class ReposController extends BaseController{
 		
 		if(clearRemoteBackupIndexLib)
 		{
-			if(oldAutoBackupConfig.remoteBackupConfig != null && oldAutoBackupConfig.remoteBackupConfig.indexLibBase != null && oldAutoBackupConfig.remoteBackupConfig.indexLibBase.isEmpty() == false)
+			if(oldAutoBackupConfig != null && oldAutoBackupConfig.remoteBackupConfig != null && oldAutoBackupConfig.remoteBackupConfig.indexLibBase != null && oldAutoBackupConfig.remoteBackupConfig.indexLibBase.isEmpty() == false)
 			{
 				FileUtil.delFileOrDir(oldAutoBackupConfig.remoteBackupConfig.indexLibBase);
 			}
