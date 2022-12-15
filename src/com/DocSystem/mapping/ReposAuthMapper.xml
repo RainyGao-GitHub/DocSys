@@ -341,19 +341,19 @@
       where 1 = 1
       and (
         <if test="name != null">
-      		user.NAME like '%${name}%'
+      		user.NAME like #{name}
       	</if>
       	<if test="realName != null">
-        	or user.REAL_NAME like '%${realName}%'
+        	or user.REAL_NAME like #{realName}
       	</if>
       	<if test="nickName != null">
-        	or user.NICK_NAME like '%${nickName}%'
+        	or user.NICK_NAME like #{nickName}
       	</if>
       	<if test="email != null">
-        	or user.EMAIL like '%${email}%'
+        	or user.EMAIL like #{email}
       	</if>
       	<if test="tel != null">
-        	or user.TEL like '%${tel}%'
+        	or user.TEL like #{tel}
       	</if>
       	)  
       	ORDER BY user.NAME ASC, user.CREATE_TIME DESC
