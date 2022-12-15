@@ -5922,7 +5922,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteEntry == null || remoteEntry.getType() == null || remoteEntry.getType() == 0)
 			{
-				Log.debug("getRemoteDocChangeType " + DocChangeType.NOCHANGE); 
+				//Log.debug("getRemoteDocChangeType " + DocChangeType.NOCHANGE); 
 				return DocChangeType.NOCHANGE;				
 			}	
 			
@@ -5958,7 +5958,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTECHANGE); 
 				return DocChangeType.REMOTECHANGE;
 			}			
-			Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -5970,7 +5970,7 @@ public class BaseController  extends BaseFunction{
 				Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTEFILETODIR); 
 				return DocChangeType.REMOTEFILETODIR;
 			}
-			Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -6035,34 +6035,6 @@ public class BaseController  extends BaseFunction{
 		
 		//未知文件类型(remoteEntry.type !=1/2)
 		Log.debug("getRemoteDocChangeTypeWithLocalDoc " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.UNDEFINED); 
-		return DocChangeType.UNDEFINED;
-	}
-	
-	protected DocChangeType getDocChangeType_FSM(Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
-	{	
-		Log.debug("getDocChangeType_FSM [" +doc.getPath() + doc.getName()+ "]");
-		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, localEntry);
-		DocChangeType remoteChangeType = getRemoteDocChangeType(dbDoc, remoteEntry);
-		Log.debug("getDocChangeType_FSM " +doc.getPath() + doc.getName()+ " localChangeType:" + localChangeType + " remoteChangeType:" + remoteChangeType);
-		
-		switch(localChangeType)
-		{
-		case NOCHANGE:	//本地没有改动
-			return remoteChangeType;
-		case LOCALADD:
-		case LOCALDIRTOFILE:
-		case LOCALFILETODIR:
-		case LOCALCHANGE:
-			return localChangeType;
-		case LOCALDELETE:
-			if(remoteChangeType == DocChangeType.NOCHANGE || remoteChangeType == DocChangeType.REMOTEDELETE)
-			{
-				return DocChangeType.LOCALDELETE;
-			}
-			return remoteChangeType;
-		default:
-			break;
-		}				
 		return DocChangeType.UNDEFINED;
 	}
 
@@ -17486,7 +17458,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	public static Doc remoteStorageGetEntry(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, String commitId) {
-		Log.debug("remoteStorageGetEntry() [" + doc.getPath() + doc.getName() + "]");
+		//Log.debug("remoteStorageGetEntry() [" + doc.getPath() + doc.getName() + "]");
 		Doc remoteDoc = null;
         
 		if(session == null) 
@@ -18053,10 +18025,10 @@ public class BaseController  extends BaseFunction{
 	protected boolean doPushEntryToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, Doc dbDoc, Doc localDoc, Doc remoteDoc,User accessUser, Integer subEntryPushFlag, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, int pushType) {
 		
-		Log.printObject("doPushEntryToRemoteStorage() doc:", doc);		
-		Log.printObject("doPushEntryToRemoteStorage() localDoc:", localDoc);
-		Log.printObject("doPushEntryToRemoteStorage() dbDoc:", dbDoc);
-		Log.printObject("doPushEntryToRemoteStorage() remoteDoc:", remoteDoc);
+		//Log.printObject("doPushEntryToRemoteStorage() doc:", doc);		
+		//Log.printObject("doPushEntryToRemoteStorage() localDoc:", localDoc);
+		//Log.printObject("doPushEntryToRemoteStorage() dbDoc:", dbDoc);
+		//Log.printObject("doPushEntryToRemoteStorage() remoteDoc:", remoteDoc);
 				
 		//ignore check
 		if(doc.isRemotePushEnabled == null)
@@ -20823,7 +20795,7 @@ public class BaseController  extends BaseFunction{
         
         if(doc.getDocId() == 0)	//rootDoc
         {
-        	Log.debug("getRemoteStorageEntryForGit it is rootDoc");
+        	//Log.debug("getRemoteStorageEntryForGit it is rootDoc");
 			remoteDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(),  doc.getReposPath(), doc.getPath(), "", doc.getLevel(), 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), doc.getSize(), "", doc.offsetPath);
 	    	remoteDoc.setRevision(commitId);
 	    	if(doc.offsetPath != null && doc.offsetPath.isEmpty() == false)
@@ -20840,7 +20812,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
         
-        Log.debug("getRemoteStorageEntryForGit doc:" + doc.getPath() + doc.getName());
+        //Log.debug("getRemoteStorageEntryForGit doc:" + doc.getPath() + doc.getName());
 		try {
 			
         	String remoteEntryPath = doc.offsetPath + doc.getPath() + doc.getName();        	        	
@@ -21088,14 +21060,14 @@ public class BaseController  extends BaseFunction{
 		pushResult.actionList = new ArrayList<CommitAction>();
 		
 		Doc localDoc = fsGetDoc(repos, doc);
-		Log.printObject("doPushToRemoteStorage() localDoc:", localDoc);
+		//Log.printObject("doPushToRemoteStorage() localDoc:", localDoc);
 		
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
-		Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
+		//Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
 		
 		//TODO: 如果doc.offsetPath非空的话，那么远程根目录实际上并不是真正的根目录（此时是需要检查节点是否存在的）
 		Doc	remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
-		Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);			
+		//Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);			
 		
 		String lockInfo = "doPushToRemoteStorage [" + doc.getPath() + doc.getName()+ "] at repos[" + repos.getName() + "] remote protocol: [" + remote.protocol + "]";
 		if(lockRemoteStorage(remote, accessUser, doc, lockInfo) == false)
@@ -21201,7 +21173,7 @@ public class BaseController  extends BaseFunction{
 	
 	private RemoteStorageLock lockRemoteStorage(String remoteStorageName, long lockDuration, User accessUser, Doc doc, Object synclock, String info, int retryCount, int retrySleepTime) 
 	{
-		Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Start");
+		//Log.debug("lockRemoteStorage() remoteStorageLock [" + remoteStorageName + "] Start");
 
 		RemoteStorageLock remoteStorageLock = null;
 		RemoteStorageLock curLock = null;
