@@ -957,7 +957,11 @@ public class UserController extends BaseController {
 		}  
 		Log.debug("getUserImg fileName:" + fileName);
 		
-		//String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+		if(fileName.contains(".."))
+		{
+			Log.info("getUserImg fileName contains relative path [" + fileName + "]");
+			return;
+		}
 		 
 		//解决空格问题
 		response.setHeader("content-disposition", "attachment;filename=\"" + fileName +"\"");
