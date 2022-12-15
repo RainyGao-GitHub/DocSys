@@ -4620,6 +4620,7 @@ public class BaseFunction{
 
 		boolean ret = false;
 		
+		Date date1 = new Date();
 		String lockInfo = "addSystemLog() syncLockForSystemLog";
 		String lockName = "syncLockForSystemLog";
 		synchronized(syncLockForSystemLog)
@@ -4630,6 +4631,9 @@ public class BaseFunction{
 
 			redisSyncUnlockEx(lockName, lockInfo, syncLockForSystemLog);
 		}
+		
+		Date date2 = new Date();
+        Log.debug("addSystemLog() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 		return ret;
     }
 	
@@ -4642,7 +4646,6 @@ public class BaseFunction{
 		IndexWriter indexWriter = null;
     	
 		try {
-	    	Date date1 = new Date();
 	    	analyzer = new IKAnalyzer();
 	    	directory = FSDirectory.open(new File(indexLib));
 
@@ -4659,10 +4662,7 @@ public class BaseFunction{
 	        directory.close();
 	        directory = null;
 	        analyzer.close();
-	        analyzer = null;
-	        
-			Date date2 = new Date();
-	        Log.debug("addSystemLogIndex() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        analyzer = null;	        
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
