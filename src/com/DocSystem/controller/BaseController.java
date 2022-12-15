@@ -3602,6 +3602,7 @@ public class BaseController  extends BaseFunction{
 				{
 					verReposPullPush(repos, true, rt);
 				}
+				FileUtil.delDir(localChangesRootPath);
 			}
 		}
 		else
@@ -4637,7 +4638,7 @@ public class BaseController  extends BaseFunction{
 		return realDocSyncResult;
 	}
 	
-	private void cleanSyncUpTmpFiles(ScanOption scanOption) {
+	protected void cleanSyncUpTmpFiles(ScanOption scanOption) {
 		if(scanOption.localChangesRootPath != null)
 		{
 			FileUtil.delDir(scanOption.localChangesRootPath);
