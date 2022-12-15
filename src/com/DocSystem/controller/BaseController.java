@@ -3559,7 +3559,7 @@ public class BaseController  extends BaseFunction{
     	return value;
 	}
 	
-	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
+	protected boolean revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
 	{			
 		if(commitMsg == null)
 		{
@@ -3584,8 +3584,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(successDocList == null || successDocList.size() == 0)
 		{
-			docSysErrorLog("未找到需要恢复的文件！",rt);
-			return null;
+			docSysDebugLog("未找到需要恢复的文件！",rt);
+			return true;
 		}
 		
 		//Log.printObject("revertDocHistory checkOut successDocList:", successDocList);
@@ -3607,11 +3607,16 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			revision = remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2);
+			if(revision == null)
+			{
+				return false;
+			}
 		}		
-		return revision;
+		
+		return true;
 	}
 	
-	private boolean convertRevertedDocListToLocalChanges(List<Doc> revertedDocList, String localChangesRootPath) {
+	protected boolean convertRevertedDocListToLocalChanges(List<Doc> revertedDocList, String localChangesRootPath) {
 		for(int i=0; i< revertedDocList.size(); i++)
 		{
 			Doc doc = revertedDocList.get(i);
