@@ -3594,7 +3594,15 @@ public class BaseController  extends BaseFunction{
 		String revision = null;
 		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
-			doSyncupForDocChange(repos, doc,  login_user, commitMsg, true, Action.SYNC_AfterRevertHistory);
+			String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + new Date().getTime() + "/";
+			if(convertRevertedDocListToLocalChanges(successDocList, localChangesRootPath))
+			{
+				revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
+				if(revision != null)
+				{
+					verReposPullPush(repos, true, rt);
+				}
+			}
 		}
 		else
 		{
@@ -3603,6 +3611,16 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
+	private boolean convertRevertedDocListToLocalChanges(List<Doc> revertedDocList, String localChangesRootPath) {
+		for(int i=0; i< revertedDocList.size(); i++)
+		{
+			Doc doc = revertedDocList.get(i);
+			File changedNode = new File(localChangesRootPath + doc.getPath() + doc.getName());
+			changedNode.mkdirs();
+		}
+		return true;
+	}
+
 	protected HashMap<String, ChangedItem> convertChangeItemListToHashMap(List<ChangedItem> changItemList) {
 		HashMap<String, ChangedItem> hashMap = new HashMap<String, ChangedItem>();
 		if(changItemList == null)

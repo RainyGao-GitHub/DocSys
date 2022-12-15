@@ -4915,26 +4915,24 @@ public class DocController extends BaseController{
 				{
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					Log.info("revertDocHistory() 本地有改动！");
-					docSysErrorLog("本地有文件改动", rt);
-					writeJson(rt, response);
 					
-					docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);
-					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
-					return;
-					
-//					if(doSyncupForDocChange(repos, doc,  reposAccess.getAccessUser(), commitMsg, true, Action.SYNC_AUTO) == false)
-//		        	{	
-//						unlockDoc(doc, lockType, reposAccess.getAccessUser());
-//						
-//						String localChangeInfo = buildChangeReminderInfo(localChanges);
-//						docSysErrorLog(localChangeInfo, rt);
-//						
-//						writeJson(rt, response);
-//						
-//						docSysDebugLog("revertDocHistory() doSyncupForDocChange [" + doc.getPath() + doc.getName() + "] Failed", rt);
-//						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
-//						return;
-//		        	}
+					docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);					
+					String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, scanOption.localChangesRootPath, 2, null, null);
+					if(revision == null)
+					{
+						unlockDoc(doc, lockType, reposAccess.getAccessUser());
+						docSysErrorLog("本地文件有改动", rt);
+						writeJson(rt, response);						
+		
+						docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
+						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+						return;
+					}
+					else
+					{
+						//如果版本仓库是远程仓库，则推送到远程仓库
+						verReposPullPush(repos, true, rt);
+					}
 				}
 				
 				//判断是否为最新版本
