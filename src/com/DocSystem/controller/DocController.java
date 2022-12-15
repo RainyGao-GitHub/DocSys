@@ -4856,7 +4856,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		String revertResult = null;
+		boolean revertResult = false;
 		if(isRealDoc)
 		{
 			if(isFSM(repos) == false)
@@ -4977,13 +4977,13 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		if(revertResult == null)
+		if(revertResult)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 	}
 
