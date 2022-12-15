@@ -4653,18 +4653,7 @@ public class BaseController  extends BaseFunction{
 		
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, subDocSyncupFlag, scanOption);
 
-		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);
-		if(isRemoteChanged(scanOption) == false)
-		{
-			Log.info("syncUpLocalWithVerRepos() 远程没有改动");
-		}
-		else
-		{
-			Log.info("syncUpLocalWithVerRepos() 远程有改动，同步到本地");
-			//Do Remote SyncUp			
-			syncupRemoteChangesEx_FSM(repos, login_user, doc, scanOption.remoteChangesRootPath, rt);				
-		}
-		
+		Log.info("syncUpLocalWithVerRepos() syncupScanForDoc_FSM ret:" + ret);		
 		if(isLocalChanged(scanOption) == false)
 		{
 			Log.info("syncUpLocalWithVerRepos() 本地没有改动");
@@ -4919,97 +4908,7 @@ public class BaseController  extends BaseFunction{
 			rebuildIndexForDocEx(repos, subDoc, subFile, rt);
 		}
 	}
-	
-	private boolean syncupRemoteChangesEx_FSM(Repos repos, User login_user, Doc doc, String remoteChangesRootPath, ReturnAjax rt) 
-	{
-		File file = new File(remoteChangesRootPath + doc.getPath() + doc.getName());
-		syncUpRemoteChangeEx_FSM(repos, doc, file, login_user, rt);
-		return true;
-	}
-
-	private void syncUpRemoteChangeEx_FSM(Repos repos, Doc doc, File file, User login_user, ReturnAjax rt) {
-		if(doc.getDocId() != 0)
-		{
-    		Doc localDoc = fsGetDoc(repos, doc);
-			Doc remoteDoc = verReposGetDoc(repos, doc, null);
-			DocChange docChange = new DocChange();
-			
-			//localDoc not exists
-			if(localDoc == null || localDoc.getType() == 0)
-			{
-				if(remoteDoc == null || remoteDoc.getType() == 0)
-				{
-					//There is no change
-					return;
-				}
-				
-				docChange.setType(DocChangeType.REMOTEADD);
-				docChange.setDoc(remoteDoc);
-				docChange.setLocalEntry(localDoc);
-				docChange.setRemoteEntry(remoteDoc);
-				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				return;
-			}
-			
-			//localDoc exists
-			if(remoteDoc == null || remoteDoc.getType() == 0)
-			{
-				docChange.setType(DocChangeType.REMOTEDELETE);
-				docChange.setDoc(localDoc);
-				docChange.setLocalEntry(localDoc);
-				docChange.setRemoteEntry(remoteDoc);
-				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				return;			
-			}
-			
-			//localDoc is File and remoteDoc exists 
-			if(localDoc.getType() == 1)
-			{
-				if(remoteDoc.getType() == 1)
-				{
-					docChange.setType(DocChangeType.REMOTECHANGE);
-					docChange.setDoc(localDoc);
-					docChange.setLocalEntry(localDoc);
-					docChange.setRemoteEntry(remoteDoc);
-					syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-					return;
-				}
-				
-				docChange.setType(DocChangeType.REMOTEFILETODIR);
-				docChange.setDoc(localDoc);
-				docChange.setLocalEntry(localDoc);
-				docChange.setRemoteEntry(remoteDoc);
-				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				return;
-			}
-			
-			//localDoc is Folder and remoteDoc is File
-			if(remoteDoc.getType() == 1)
-			{
-				docChange.setType(DocChangeType.REMOTEDIRTOFILE);
-				docChange.setDoc(localDoc);
-				docChange.setLocalEntry(localDoc);
-				docChange.setRemoteEntry(remoteDoc);
-				syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
-				return;
-			}
-		}
 		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = doc.getLocalRootPath();
-		String localVRootPath = doc.getLocalVRootPath();
-		String subDocParentPath = getSubDocParentPath(doc);
-		Integer subDocLevel = getSubDocLevel(doc);
-
-		File[] list = file.listFiles();
-		for(int i=0; i<list.length; i++)
-		{
-			File subEntry = list[i];
-			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subEntry.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
-			syncUpRemoteChangeEx_FSM(repos, subDoc, subEntry, login_user, rt);
-		}
-	}
-	
 	private boolean syncupLocalChangesEx_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, String localChangesRootPath, Integer subDocSyncupFlag, ReturnAjax rt) 
 	{
 		//本地有改动需要提交
@@ -5940,87 +5839,6 @@ public class BaseController  extends BaseFunction{
 	    		docHashMap .put(doc.getDocId(), doc);
 	    }
 		return docHashMap;
-	}
-
-	private boolean syncUpRemoteChange_FSM(Repos repos, DocChange docChange, User login_user, ReturnAjax rt) 
-	{	
-		Doc doc = docChange.getDoc();
-		Doc remoteEntry = docChange.getRemoteEntry();
-		DocChangeType docChangeType = docChange.getType();
-		
-		String localParentPath = null;
-		List<Doc> successDocList = null;
-		
-		switch(docChangeType)
-		{
-		case REMOTEADD:		//Remote Added
-			Log.debug("syncUpRemoteChange_FSM() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
-			localParentPath = Path.getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, false, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
-			if(successDocList != null)
-			{
-				dbAddDoc(repos, remoteEntry, true, false);
-				return true;
-			}
-			return false;
-		case REMOTEDELETE: //Remote Deleted
-			Log.debug("syncUpRemoteChange_FSM() remote deleted: " + doc.getPath()+doc.getName());
-			if(repos.getVerCtrl() == 1 || doc.getType() == 1) 
-			{
-				if(deleteRealDoc(repos, doc, rt) == true)
-				{
-					dbDeleteDoc(repos, doc,true);
-				}
-				return true;
-			}
-			
-			if(doc.getType() == 2)	//对于GIT仓库无法区分空目录，因此只删除子目录
-			{
-				Log.debug("syncUpRemoteChange_FSM() Git仓库无法识别空目录，因此只删除子目录: " + doc.getPath()+doc.getName());
-				deleteSubDoc(repos, doc, rt);			
-			}	
-			return true;
-		case REMOTECHANGE: //Remote File Changed
-			Log.debug("syncUpRemoteChange_FSM() remote Changed: " + doc.getPath()+doc.getName());
-			
-			localParentPath = Path.getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, false, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
-			if(successDocList != null)
-			{
-				//SuccessDocList中的doc包括了revision信息
-				for(int i=0; i<successDocList.size(); i++)
-				{
-					dbUpdateDoc(repos, successDocList.get(i), true);
-				}
-				return true;
-			}
-			return false;
-		case REMOTEFILETODIR: //Remote Type Changed
-		case REMOTEDIRTOFILE:
-			Log.debug("syncUpRemoteChange_FSM() remote Type Changed: " + doc.getPath()+doc.getName());
-			if(deleteRealDoc(repos, doc, rt) == true)
-			{
-				dbDeleteDoc(repos, doc,true);
-				
-				//checkOut
-				localParentPath = Path.getReposRealPath(repos) + remoteEntry.getPath();
-				successDocList = verReposCheckOut(repos, false, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
-				if(successDocList != null)
-				{
-					dbAddDoc(repos, remoteEntry, true, false);
-					return true;						
-				}
-				return false;						
-			}
-			else
-			{
-				return false;
-			}
-		default:
-			break;
-
-		}
-		return false;
 	}
 
 	private boolean deleteSubDoc(Repos repos, Doc doc, ReturnAjax rt) {
