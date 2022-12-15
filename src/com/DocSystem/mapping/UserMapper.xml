@@ -355,19 +355,19 @@
   	from user
   	where 1 = 1 and (
   	  <if test="name != null">
-      	NAME like '%${name}%'
+      	NAME like #{name}
       </if>
       <if test="realName != null">
-        or REAL_NAME like '%${realName}%'
+        or REAL_NAME like #{realName}
       </if>
       <if test="nickName != null">
-        or NICK_NAME like '%${nickName}%'
+        or NICK_NAME like #{nickName}
       </if>
       <if test="email != null">
-        or EMAIL like '%${email}%'
+        or EMAIL like #{email}
       </if>
       <if test="tel != null">
-        or TEL like '%${tel}%'
+        or TEL like #{tel}
       </if>
       )
   </select>
@@ -378,19 +378,19 @@
     from user
     where 1 = 1 and (
   	  <if test="name != null">
-      	NAME like '%${name}%'
+      	NAME like #{name}
       </if>
       <if test="realName != null">
-        or REAL_NAME like '%${realName}%'
+        or REAL_NAME like #{realName}
       </if>
       <if test="nickName != null">
-        or NICK_NAME like '%${nickName}%'
+        or NICK_NAME like #{nickName}
       </if>
       <if test="email != null">
-        or EMAIL like '%${email}%'
+        or EMAIL like #{email}
       </if>
       <if test="tel != null">
-        or TEL like '%${tel}%'
+        or TEL like #{tel}
       </if>
       )  
       ORDER BY NAME ASC, CREATE_TIME DESC
