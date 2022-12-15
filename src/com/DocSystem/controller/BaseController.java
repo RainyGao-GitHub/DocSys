@@ -119,7 +119,6 @@ import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommitAction.CommitAction;
-import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -590,7 +589,7 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		if(isFSM(repos))
 		{
-			//TODO:用户更关心本地真实存在的文件，远程存储的文件用户自己会去确认，因此没有必要获取远程的文件列表
+			//用户更关心本地真实存在的文件，远程存储的文件用户自己会去确认，因此没有必要获取远程的文件列表
 			//除非以后有显示文件的本地和远程区别的需求
 			//if(remoteStorageEn)
 			//{
@@ -603,7 +602,7 @@ public class BaseController  extends BaseFunction{
 		return getRemoteServerEntryList(repos, doc);
 	}
 	
-	private List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
+	protected List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
 		List<Doc> localList = getLocalEntryList(repos, doc);
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
@@ -3604,7 +3603,7 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
-	private HashMap<String, ChangedItem> convertChangeItemListToHashMap(List<ChangedItem> changItemList) {
+	protected HashMap<String, ChangedItem> convertChangeItemListToHashMap(List<ChangedItem> changItemList) {
 		HashMap<String, ChangedItem> hashMap = new HashMap<String, ChangedItem>();
 		if(changItemList == null)
 		{
@@ -3618,7 +3617,7 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 
-	private String getRealRevision(Repos repos, Doc successDoc, HashMap<String, ChangedItem> changItemHashMap, String revision) {
+	protected String getRealRevision(Repos repos, Doc successDoc, HashMap<String, ChangedItem> changItemHashMap, String revision) {
 		if(changItemHashMap.get(successDoc.getPath() + successDoc.getName()) == null)
 		{
 			return verReposGetLatestRevision(repos, false, successDoc);
@@ -3983,92 +3982,6 @@ public class BaseController  extends BaseFunction{
 		docSysDebugLog("新增成功", rt); 
 		
 		return true;
-	}
-
-	private boolean dbUpdateDocRevision(Repos repos, Doc doc, String revision) {
-		Log.debug("dbUpdateDocRevision " + revision + " doc " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "]");
-
-		Doc dbDoc = dbGetDoc(repos, doc, false);
-		if(dbDoc == null)
-		{
-			Log.debug("dbUpdateDocRevision dbDoc " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "] 不存在");
-			doc.setRevision(revision);
-			return dbAddDoc(repos,doc, false, false);
-		}
-		
-		if(dbDoc.getRevision() == null || !dbDoc.getRevision().equals(revision))
-		{
-			dbDoc.setRevision(revision);
-			if(dbUpdateDoc(repos, dbDoc, false) == false)
-			{
-				Log.debug("dbUpdateDocRevision 更新节点版本号失败: " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "]");	
-				return false;
-			}
-			return true;
-		}
-		
-		return true;
-	}
-	
-	//该接口用于更新父节点的信息: 仓库有commit成功的操作时必须调用
-	private void dbCheckAddUpdateParentDoc(Repos repos, Doc doc, List<Doc> parentDocList, List<CommonAction> actionList) 
-	{
-		if(isFSM(repos) == false)
-		{
-			return;
-		}		
-		
-		Log.debug("checkAddUpdateParentDoc " + doc.getDocId() + " " +doc.getPath() + doc.getName());
-		
-		if(doc.getDocId() == 0)
-		{
-			return;
-		}
-		
-		Log.debug("checkAddUpdateParentDoc pid:" + doc.getPid());
-		
-		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), 0L, "");
-		parentDoc.setRevision(doc.getRevision());
-
-		Log.printObject("checkAddUpdateParentDoc parentDoc:", parentDoc);
-		
-		Doc dbParentDoc = dbGetDoc(repos, parentDoc, false);
-		if(dbParentDoc == null)
-		{
-			if(parentDocList == null)
-			{
-				parentDocList = new ArrayList<Doc>();
-			}
-
-			if(dbAddDoc(repos, parentDoc, false, false) == true)
-			{
-				Log.debug("checkAddUpdateParentDoc 新增目录: " + parentDoc.getDocId() + " " + parentDoc.getPath() + parentDoc.getName());
-				
-				//Insert Index Add Action For addedParentDoc
-				if(actionList != null)	//异步方式添加Index
-				{
-					CommonAction.insertCommonAction(actionList, repos, parentDoc, null, null, null, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null, false);
-				}
-				else //直接添加Index
-				{
-					addIndexForDocName(repos, parentDoc);
-				}	
-
-				parentDocList.add(0,parentDoc);	//always add to the top
-				dbCheckAddUpdateParentDoc(repos, parentDoc, parentDocList, actionList);
-			}
-		}
-		else
-		{
-			if(dbParentDoc.getRevision() == null || !dbParentDoc.getRevision().equals(doc.getRevision()))
-			{
-				parentDoc.setId(dbParentDoc.getId());
-				if(dbUpdateDoc(repos, parentDoc, false) == false)
-				{
-					Log.debug("checkAddUpdateParentDoc 更新父节点版本号失败: " + parentDoc.getDocId() + " " + parentDoc.getPath() + parentDoc.getName());	
-				}
-			}
-		}
 	}
 
 	//底层deleteDoc接口
@@ -4940,121 +4853,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean rebuildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
-			HashMap<Long, DocChange> localChanges, HashMap<Long, Doc> doneList, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
-	{	
-		//Log.debug("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag + " force:" + force);
-		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
-		{
-			if(isDocInDoneList(doc, doneList))
-			{
-				return true;
-			}
-			
-			Doc localDoc = docSysGetDoc(repos, doc, false);
-			Doc indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
-			if(localDoc == null || localDoc.getType() == 0) //文件不存在则删除索引
-			{
-				//文件已被删除
-				if(indexDoc == null)
-				{
-					Log.debug("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件不存在，索引不存在");					
-				}
-				else
-				{
-					Log.debug("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件不存在，索引存在，删除索引");
-					deleteAllIndexForDoc(repos, doc, 2);
-				}
-			}
-			else	//文件存在
-			{
-				//update the size and editTime
-				doc.setType(localDoc.getType());
-				doc.setSize(localDoc.getSize());
-				doc.setLatestEditTime(localDoc.getLatestEditTime());
-
-				if(indexDoc == null)	//索引不存在则添加索引
-				{
-					Log.debug("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件存在，索引不存在，添加索引");
-					addIndexForDocName(repos, doc);
-					addIndexForRDoc(repos, doc);
-					addIndexForVDoc(repos, doc);
-					subDocSyncupFlag = 2;	//如果index不存在则强制修改索引递归标记
-				}
-				else if(force || isDocChanged(localDoc, indexDoc))
-				{
-					Log.debug("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件变更，更新索引");
-					deleteAllIndexForDoc(repos, doc, 1);								
-					addIndexForDocName(repos, doc);
-					addIndexForRDoc(repos, doc);
-					addIndexForVDoc(repos, doc);
-				}
-			}
-			addToDoneList(doc, doneList);
-			
-			if(localDoc.getType() != null && localDoc.getType() == 1)
-			{
-				//Log.debug("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 是文件！");
-				return true;
-			}
-			
-		}
-		
-		//子目录不递归
-		if(subDocSyncupFlag == 0)
-		{
-			//不递归的情况下只处理index不存在的清空
-			if(localChanges != null)
-			{
-				//遍历localChanges，对LocalAdd进行建Index操作
-				for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) 
-				{
-					DocChange docChange = entry.getValue();
-					Doc localChangeDoc = docChange.getDoc();
-					rebuildIndexForDoc(repos,localChangeDoc, null, null, doneList, rt, subDocSyncupFlag, force);
-				}
-			}
-			if(remoteChanges != null)
-			{
-				//遍历remoteChanges，对LocalAdd进行建Index操作
-				for (HashMap.Entry<Long, DocChange> entry : remoteChanges.entrySet()) 
-				{
-					DocChange docChange = entry.getValue();
-					Doc remoteChangeDoc = docChange.getDoc();
-					rebuildIndexForDoc(repos,remoteChangeDoc, null, null, doneList, rt, subDocSyncupFlag, force);
-				}
-			}	
-			return true;
-		}
-
-		//子目录递归不继承
-		if(subDocSyncupFlag == 1)
-		{
-			subDocSyncupFlag = 0;
-		}
-		
-		//check if realDocTextSearchEnabled
-		if(doc.isRealDocTextSearchEnabled == null)	//未知状态
-		{
-			doc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, doc, null);
-		}
-				
-		List<Doc> entryList = docSysGetDocList(repos, doc, false);
-		if(entryList == null)
-    	{
-    		Log.debug("refreshIndexForDoc() localEntryList 获取异常:");
-        	return false;
-    	}
-    	
-    	for(int i=0; i< entryList.size(); i++)
-    	{
-    		Doc subDoc = entryList.get(i);
-    		subDoc.isRealDocTextSearchEnabled = isRealDocTextSearchEnabled(repos, subDoc, doc);
-    		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, force);
-    	}
-		return true;
-	}
-	
 	private void rebuildIndexForDocEx(Repos repos, Doc doc, String localChangesRootPath, ReturnAjax rt) {
 		File file = new File(localChangesRootPath + doc.getPath() + doc.getName());
 		rebuildIndexForDocEx(repos, doc, file, rt);
@@ -5120,76 +4918,6 @@ public class BaseController  extends BaseFunction{
 			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subFile.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
 			rebuildIndexForDocEx(repos, subDoc, subFile, rt);
 		}
-	}
-
-	private boolean isDocChanged(Doc localDoc, Doc indexDoc) {
-		if(localDoc == null || indexDoc == null)
-		{
-			return false;
-		}
-		
-		if(localDoc.getType() == null || localDoc.getSize() == null || localDoc.getLatestEditTime() == null)
-		{
-			//无效localDoc信息
-			return false;
-		}
-		
-		if(localDoc.getType() != 1)
-		{
-			//只有文件才检查是否改动
-			return false;
-		}
-		
-		if(indexDoc.getType() == null || indexDoc.getSize() == null || indexDoc.getLatestEditTime() == null)
-		{
-			//index信息无效
-			return true;
-		}
-		
-		
-		if(indexDoc.getType() != localDoc.getType() || !indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))
-		{
-			//文件有改动
-			return true;
-		}
-		
-		return false;
-	}
-
-	private void addToDoneList(Doc doc, HashMap<Long, Doc> doneList) {
-		if(doneList == null)
-		{
-			return;
-		}
-		
-		doneList.put(doc.getDocId(), doc);
-	}
-
-	private boolean isDocInDoneList(Doc doc, HashMap<Long, Doc> doneList) {
-		if(doneList == null)
-		{
-			return true;
-		}
-		
-		if(doneList.get(doc.getDocId()) != null)
-		{
-			return true;	
-		}
-		return false;
-	}
-
-	private boolean isDocInChangeList(Doc doc, HashMap<Long, DocChange> docChanges) 
-	{
-		if(docChanges == null)
-		{
-			return true;
-		}
-		
-		if(docChanges.get(doc.getDocId()) != null)
-		{
-			return true;	
-		}
-		return false;
 	}
 	
 	private boolean syncupRemoteChangesEx_FSM(Repos repos, User login_user, Doc doc, String remoteChangesRootPath, ReturnAjax rt) 
@@ -5574,7 +5302,7 @@ public class BaseController  extends BaseFunction{
 		
 		DocChangeType docChangeType = getDocChangeTypeForVerRepos(doc, dbDoc, localEntry, remoteEntry, scanOption.scanType);
 
-		//TODO:理论上不会出现remoteChnaged的情况
+		//理论上不会出现remoteChnaged的情况
 		switch(docChangeType)
 		{
 		case LOCALADD:	//localAdd
@@ -6418,7 +6146,9 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		if(isFSM(repos))
 		{	
-			//TODO: no need to get remoteDoc
+			//用户更关心本地真实存在的文件，远程存储的文件用户自己会去确认，因此没有必要获取远程的文件
+			//除非以后有显示文件的本地和远程区别的需求
+			//no need to get remoteDoc
 			//if(remoteStorageEn)
 			//{
 			//	return docSysGetDocWithChangeType(repos, doc);
@@ -11763,7 +11493,8 @@ public class BaseController  extends BaseFunction{
 		}	
 	}
 
-	private void clearReposRedisSyncLocks(Repos repos) {
+	//注意：该接口不能使用, redisLock不能被其他线程unlock
+	protected void clearReposRedisSyncLocks(Repos repos) {
 		//clear reposExtConfigSyncLock
 		String lockInfo = "clearReposRedisSyncLocks for repos [" + repos.getId() + " " + repos.getName() + "]";
 
@@ -12087,7 +11818,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean clusterDeployCheckGlobal_ClusterServerCheck() {
-		//TODO: Send Test Http Request to clusterServerUrl
+		//Send Test Http Request to clusterServerUrl
 		//If the request come back that means this serverUrl is for myself, else it is a error serverUrl
 		if(clusterServerUrl == null || clusterServerUrl.isEmpty())
 		{
@@ -12817,7 +12548,7 @@ public class BaseController  extends BaseFunction{
 
 	        				if(redisEn)
         					{	
-	        					//TODO: 检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+	        					//检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
 		        				String uniqueTaskId = "ReposAutoSyncupTask" + repos.getId();
 	        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
 		        				if(uniqueTask != null)
@@ -13038,7 +12769,7 @@ public class BaseController  extends BaseFunction{
 	        					
 		        				if(redisEn)
 	        					{	
-		        					//TODO: 检查该任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+		        					//检查该任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
 			        				String uniqueTaskId = "ReposLocalBackupTask" + repos.getId();
 		        					
 			        				JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
@@ -13075,7 +12806,7 @@ public class BaseController  extends BaseFunction{
 	                        addDelayTaskForReposLocalBackupTaskDelete(lastestBackupTask, 600L); //10分钟后删除任务
 	                        
 	                        String msgInfo = (String) rt.getMsgInfo();
-	                        if(msgInfo != null && msgInfo.equals("LockDocFailed"))  //TODO: 目前只考虑锁定失败的情况
+	                        if(msgInfo != null && msgInfo.equals("LockDocFailed"))  //只考虑锁定失败的情况
 	                        {
 	                        	Log.info("******** LocalBackupDelayTask [" + taskId + "] for repos:" + reposId + " 执行失败\n");		                        
 	                        	Log.info("******** LocalBackupDelayTask repos is busy, start backup 5 minuts later\n");
@@ -13224,7 +12955,7 @@ public class BaseController  extends BaseFunction{
         					{
 		        				if(redisEn)
 	        					{	
-		        					//TODO: 检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
+		        					//检查任务是否已经正在被其他服务器执行或执行过了，如果已经被其他服务器添加过了则不需要添加
 			        				String uniqueTaskId = "ReposRemoteBackupTask" + repos.getId();
 		        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
 			        				if(uniqueTask != null)
@@ -13257,7 +12988,7 @@ public class BaseController  extends BaseFunction{
 	                        addDelayTaskForReposRemoteBackupTaskDelete(lastestBackupTask, 600L); //10分钟后删除任务
 	                        
 	                        String msgInfo = (String) rt.getMsgInfo();
-	                        if(msgInfo != null && msgInfo.equals("LockDocFailed")) //TODO: 目前只考虑锁定失败的情况
+	                        if(msgInfo != null && msgInfo.equals("LockDocFailed")) //只考虑锁定失败的情况
 	                        {
 	                        	Log.info("******** RemoteBackupDelayTask [" + taskId + "] for repos:" + reposId + " 执行失败\n");
 		                        
@@ -17609,8 +17340,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		Log.debug("updateRemoteStorageDBEntry doc:" + doc.getPath() + doc.getName());		
-		//TODO : updateIndex接口存在问题，无法更新成功，因此还是需要先删除再添加
-		//return LuceneUtil2.updateIndex(doc, null, indexLib);
 		LuceneUtil2.deleteIndexEx(doc, indexLib, 2);
 		return LuceneUtil2.addIndex(doc, null, indexLib);
 	}
@@ -18376,7 +18105,6 @@ public class BaseController  extends BaseFunction{
 		//注意：remoteHashMap是必须获取的，即使是localChangeOnly也需要remoteDoc来确定真实的提交类型
 		HashMap<String, Doc>  remoteHashMap = getRemoteStorageEntryHashMap(session, remote, repos, doc, null);
 		
-		//TODO: 目前的推送有个问题，已删除的文件因为不在localList中，因此永远都是无法删除的（解决方法就是遍历一次dbDocList将不在localList中的文件都删除）
 		for(int i=0; i<localList.size(); i++)
 		{
 			Doc subLocalDoc  = localList.get(i);
@@ -21073,7 +20801,7 @@ public class BaseController  extends BaseFunction{
 		Doc dbDoc = getRemoteStorageDBEntry(repos, doc, false, remote);
 		//Log.printObject("doPushToRemoteStorage() dbDoc:", dbDoc);
 		
-		//TODO: 如果doc.offsetPath非空的话，那么远程根目录实际上并不是真正的根目录（此时是需要检查节点是否存在的）
+		//如果doc.offsetPath非空的话，那么远程根目录实际上并不是真正的根目录（此时是需要检查节点是否存在的）
 		Doc	remoteDoc = remoteStorageGetEntry(session, remote, repos, doc, null); 
 		//Log.printObject("doPushToRemoteStorage() remoteDoc:", remoteDoc);			
 		

@@ -39,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.tukaani.xz.XZInputStream;
 
 import com.DocSystem.common.Base64Util;
-import com.DocSystem.common.DocChange;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
@@ -281,7 +280,7 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
-		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 		
 		String reposPath = Path.getReposPath(repos);
@@ -595,7 +594,7 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 		
 		String reposPath = Path.getReposPath(repos);
@@ -984,7 +983,7 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 		
 		//检查用户是否有目标目录权限新增文件
@@ -1931,7 +1930,7 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		//TODO: 禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 		
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
@@ -6931,7 +6930,7 @@ public class DocController extends BaseController{
 		List <Doc> subDocList = null;
 		if(FileUtil.isCompressFile(name) == false)
 		{
-			//TODO: 目前压缩文件的目录是一次性获取的，理论上不存在需要再获取子目录的问题，所以下面这段代码暂不执行，以避免出现套娃现象
+			//目前压缩文件的目录是一次性获取的，理论上不存在需要再获取子目录的问题，所以下面这段代码暂不执行，以避免出现套娃现象
 			//String relativePath = getZipRelativePath(path, rootDoc.getPath() + rootDoc.getName() + "/");
 			//Log.debug("getZipSubDocList relativePath: " + relativePath);
 			//subDocList = getZipSubDocList(repos, tempRootDoc, tempRootDoc.getPath(), tempRootDoc.getName(), rt);
@@ -7360,7 +7359,7 @@ public class DocController extends BaseController{
 		return subDocList;
 	}
 
-	private List<Doc> getSubDocListFor7z(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+	protected List<Doc> getSubDocListFor7z(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		Log.debug("getSubDocListFor7z() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
 		Log.debug("getSubDocListFor7z() zipFilePath:" + zipFilePath);
@@ -7588,7 +7587,7 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
+	protected List<Doc> getSubDocListForZip(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		Log.debug("getSubDocListForZip() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		List <Doc> subDocList = getSubDocListForZip(repos, rootDoc, path, name, "gbk", true, rt);
         if(subDocList == null)
