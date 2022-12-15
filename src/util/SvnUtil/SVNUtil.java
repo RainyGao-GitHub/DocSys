@@ -349,53 +349,56 @@ public class SVNUtil  extends BaseController{
             return null;
         }
         
-        Iterator<SVNLogEntry> entries = logEntries.iterator();    
-        long oldestRevision = 0;	//用于控制maxLogNum
-        while(entries.hasNext()) {
-            /*
-             * gets a next SVNLogEntry
-             */
-            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-            long revision = logEntry.getRevision();
-            
-            String commitId = "" + revision;
-            String commitUser = logEntry.getAuthor(); //提交者
-            String commitMessage= logEntry.getMessage();
-            long commitTime = 0;
-            if(logEntry.getDate() != null)
-            {
-            	commitTime = logEntry.getDate().getTime();  
-            }
-            
-//            Log.debug("revision:"+revision);
-//            Log.debug("commitId:"+commitId);
-//            Log.debug("commitUser:"+commitUser);
-//            Log.debug("commitMessage:"+commitMessage);
-//            Log.debug("commitName:"+commitUser);
-//            Log.debug("commitTime:"+commitTime);
-            
-            LogEntry log = new LogEntry();
-            log.setRevision(revision);
-            log.setCommitId(commitId);
-            log.setCommitUser(commitUser);
-            log.setCommitMsg(commitMessage);
-            log.setCommitTime(commitTime);
-            
-            logList.add(0,log);	//add to the top
-        }
-        
-        int nextMaxLogNum = maxLogNum - logList.size();
-        if(nextMaxLogNum <= 0)
+        if(logEntries != null)
         {
-        	return logList;
-        }
-        
-        //Try to get logEntry for deleted 
-        if(oldestRevision > 0)
-        {
-        	long nextEndRevision = oldestRevision - 1;
-        	List<LogEntry> nextLogList = getLogEntryList(entryPath, startRevision, nextEndRevision, nextMaxLogNum);        	
-        	logList.addAll(nextLogList);
+	        Iterator<SVNLogEntry> entries = logEntries.iterator();    
+	        long oldestRevision = 0;	//用于控制maxLogNum
+	        while(entries.hasNext()) {
+	            /*
+	             * gets a next SVNLogEntry
+	             */
+	            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+	            long revision = logEntry.getRevision();
+	            
+	            String commitId = "" + revision;
+	            String commitUser = logEntry.getAuthor(); //提交者
+	            String commitMessage= logEntry.getMessage();
+	            long commitTime = 0;
+	            if(logEntry.getDate() != null)
+	            {
+	            	commitTime = logEntry.getDate().getTime();  
+	            }
+	            
+	//            Log.debug("revision:"+revision);
+	//            Log.debug("commitId:"+commitId);
+	//            Log.debug("commitUser:"+commitUser);
+	//            Log.debug("commitMessage:"+commitMessage);
+	//            Log.debug("commitName:"+commitUser);
+	//            Log.debug("commitTime:"+commitTime);
+	            
+	            LogEntry log = new LogEntry();
+	            log.setRevision(revision);
+	            log.setCommitId(commitId);
+	            log.setCommitUser(commitUser);
+	            log.setCommitMsg(commitMessage);
+	            log.setCommitTime(commitTime);
+	            
+	            logList.add(0,log);	//add to the top
+	        }
+	        
+	        int nextMaxLogNum = maxLogNum - logList.size();
+	        if(nextMaxLogNum <= 0)
+	        {
+	        	return logList;
+	        }
+	        
+	        //Try to get logEntry for deleted 
+	        if(oldestRevision > 0)
+	        {
+	        	long nextEndRevision = oldestRevision - 1;
+	        	List<LogEntry> nextLogList = getLogEntryList(entryPath, startRevision, nextEndRevision, nextMaxLogNum);        	
+	        	logList.addAll(nextLogList);
+	        }
         }
         return logList;
 	}
@@ -421,6 +424,11 @@ public class SVNUtil  extends BaseController{
         } catch (SVNException svne) {
             Log.debug("getHistoryDetail() 获取日志异常：" + svne.getMessage());
             return null;
+        }
+        
+        if(logEntries == null)
+        {
+        	return null;
         }
         
         for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {

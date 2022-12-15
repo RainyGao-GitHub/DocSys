@@ -173,7 +173,7 @@ public class BaseFunction{
     public static int clusterHeartBeatStopTime = 3*clusterHeartBeatInterval*1000;	//3次心跳
     
     
-    //TODO: 以下的全局HashMap, 集群部署时，需要存储在redis中
+    //以下的全局HashMap, 集群部署时，需要存储在redis中
     //接口访问授权码HashMap
   	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
     
@@ -910,7 +910,7 @@ public class BaseFunction{
 		updateReposExtConfigDigest(repos, ReposExtConfigDigest.VersionIgnoreConfig, config.checkSum);	
 	}
 	
-	private void deleteReposVersionIgnoreConfig(Repos repos) 
+	protected void deleteReposVersionIgnoreConfig(Repos repos) 
 	{
 		reposVersionIgnoreConfigHashMap.remove(repos.getId());
 		if(redisEn)
@@ -1218,7 +1218,7 @@ public class BaseFunction{
 		return docLock;
 	}
 
-	//TODO: 文件锁定接口需要支持集群部署时服务器之间操作的原子性
+	//文件锁定接口需要支持集群部署时服务器之间操作的原子性
 	protected DocLock doLockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag, String info) {
 		Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] lockType:" + lockType + " login_user[" + login_user.getName() + "] subDocCheckFlag:" + subDocCheckFlag);
 
