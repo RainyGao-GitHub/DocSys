@@ -4910,7 +4910,6 @@ public class DocController extends BaseController{
 					return;
 				}
 				
-				
 				if(isLocalChanged(scanOption))
 				{
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
@@ -4934,6 +4933,8 @@ public class DocController extends BaseController{
 						verReposPullPush(repos, true, rt);
 					}
 				}
+				
+				cleanSyncUpTmpFiles(scanOption);
 				
 				//判断是否为最新版本
 				if(localEntry.getType() != 0)
