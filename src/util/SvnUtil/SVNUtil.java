@@ -593,13 +593,19 @@ public class SVNUtil  extends BaseController{
 	//modifyEnable: 表示是否commit已经存在的文件
 	//localRefRootPath是存放参考文件的根目录，如果对应文件存在且modifyEnable=true的话，则增量commit
 	//subDocCommitFalg: 0:不Commit 1:Commit但不继承 2:Commit所有文件
-	public String doAutoCommit(Repos repos, Doc doc, String commitMsg,String commitUser, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList){
+	public String doAutoCommit(Repos repos, Doc doc, String commitMsg,String commitUser, String localChangesRootPath, int subDocCommitFlag, 
+			List<CommitAction> commitActionList, List<CommitAction> commitActionListFake){
 		
 		Log.debug("doAutoCommit() [" + doc.getPath() + doc.getName() +"] commitMsg:" + commitMsg + " localChangesRootPath:" + localChangesRootPath);
     	
 		if(commitActionList == null)
 		{
 			commitActionList = new ArrayList<CommitAction>();
+		}
+		
+		if(commitActionListFake == null)
+		{
+			commitActionListFake = new ArrayList<CommitAction>();
 		}
 		
 		if(isVersionIgnored(repos, doc, true))
@@ -627,12 +633,12 @@ public class SVNUtil  extends BaseController{
 				if(!doc.getPath().isEmpty())
 				{
 					Log.debug("doAutoCommit() remoteParentEntry [" + doc.getPath() + "] not exists, do commit parent");
-					return doAutoCommitParent(repos, doc, commitMsg, commitUser, commitActionList);
+					return doAutoCommitParent(repos, doc, commitMsg, commitUser, commitActionList, commitActionListFake);
 				}
 			}			
 		}
 		
-		scheduleForCommit(commitActionList, repos, doc, false, localChangesRootPath, subDocCommitFlag);
+		scheduleForCommit(commitActionList, commitActionListFake, repos, doc, false, localChangesRootPath, subDocCommitFlag);
 		
 	    if(commitActionList == null || commitActionList.size() ==0)
 	    {
@@ -735,7 +741,8 @@ public class SVNUtil  extends BaseController{
 		}	
 	}
 
-	private String doAutoCommitParent(Repos repos, Doc doc, String commitMsg,String commitUser, List<CommitAction> commitActionList)
+	private String doAutoCommitParent(Repos repos, Doc doc, String commitMsg,String commitUser, 
+			List<CommitAction> commitActionList, List<CommitAction> commitActionListFake)
     {
     	String parentPath = doc.getPath();
         Log.debug("doAutoCommitParent() parentPath:" + parentPath);
@@ -766,7 +773,7 @@ public class SVNUtil  extends BaseController{
 	    		if(type == 0)
 	    		{
 	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null,  doc.getReposPath(), path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    			return doAutoCommit(repos, tempDoc, commitMsg, commitUser, null, 2, commitActionList);
+	    			return doAutoCommit(repos, tempDoc, commitMsg, commitUser, null, 2, commitActionList, commitActionListFake);
 	    		}
 	    		path = path + name + "/";  		
 	    	}
@@ -977,11 +984,12 @@ public class SVNUtil  extends BaseController{
     	}
 	}
 
-	public void scheduleForCommit(List<CommitAction> actionList, Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag)
+	public void scheduleForCommit(List<CommitAction> actionList, List<CommitAction> actionListFake, 
+			Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag)
 	{	
     	if(doc.getName().isEmpty())
     	{
-    		scanForSubDocCommit(actionList, repos, doc, isSubAction, localChangesRootPath, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, localChangesRootPath, subDocCommitFlag);
     		return;
     	}
     	
@@ -1014,11 +1022,12 @@ public class SVNUtil  extends BaseController{
     	{
     		if(remoteEntryType == 0)
     		{
-    			//TODO: 已同步, 但不加入commitActionList可能会导致一次改动扫描结果不正确
+    			//Add to fakeActionList
+        		CommitAction.insertDeleteAction(actionListFake, doc, false);    			
     			return;
     		}
     		//Log.debug("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    		CommitAction.insertDeleteAction(actionList,doc, false);
+    		CommitAction.insertDeleteAction(actionList, doc, false);
     		return;
     	}
     	
@@ -1033,40 +1042,43 @@ public class SVNUtil  extends BaseController{
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
         		//Log.debug("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, false);
+    			CommitAction.insertAddFileAction(actionList, doc, isSubAction, false);
 	            return;
     		}
     		
     		if(remoteEntryType != 1)	//文件类型改变
     		{
         		//Log.debug("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			CommitAction.insertDeleteAction(actionList,doc, false);
-    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, false);
+    			CommitAction.insertDeleteAction(actionList, doc, false);
+    			CommitAction.insertAddFileAction(actionList, doc, isSubAction, false);
 	            return;
     		}
     		
     		//Log.debug("scheduleForCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-            CommitAction.insertModifyAction(actionList,doc, false);
+            CommitAction.insertModifyAction(actionList, doc, false);
     		break;
     	case 2:
     		if(remoteEntryType == 0) 	//新增目录
 	    	{
         		//Log.debug("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			//Add Dir
-    			CommitAction.insertAddDirAction(actionList,doc,isSubAction, false);
+    			CommitAction.insertAddDirAction(actionList, doc, isSubAction, false);
 	            return;
     		}
     		
     		if(remoteEntryType != 2)	//文件类型改变
     		{
     			//Log.debug("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			CommitAction.insertDeleteAction(actionList,doc, false);
-	        	CommitAction.insertAddDirAction(actionList,doc, isSubAction, false);
+    			CommitAction.insertDeleteAction(actionList, doc, false);
+	        	CommitAction.insertAddDirAction(actionList, doc, isSubAction, false);
 	            return;
     		}
     		
+    		//Add to fakeActionList
+			CommitAction.insertAddDirAction(actionListFake, doc, isSubAction, false);
+
     		//If currentDoc was in changedList then subDocs must in changedList, so set localChangesRootPath to null
-    		scanForSubDocCommit(actionList, repos, doc, isSubAction, null, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, null, subDocCommitFlag);
     		break;
     	}
     	return;   	
@@ -1087,9 +1099,8 @@ public class SVNUtil  extends BaseController{
 		return false;
 	}
 
-	private void scanForSubDocCommit(List<CommitAction> actionList, Repos repos, Doc doc,
-			boolean isSubAction,
-			String localChangesRootPath, int subDocCommitFlag) 
+	private void scanForSubDocCommit(List<CommitAction> actionList, List<CommitAction> actionListFake,
+			Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag) 
 	{
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -1121,7 +1132,7 @@ public class SVNUtil  extends BaseController{
 	        {
 	        	File localSubEntry = list[i];
 	        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, null, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-	        	scheduleForCommit(actionList, repos, subDoc, isSubAction, localChangesRootPath, subDocCommitFlag);
+	        	scheduleForCommit(actionList, actionListFake, repos, subDoc, isSubAction, localChangesRootPath, subDocCommitFlag);
 	        }
         }
 	}
