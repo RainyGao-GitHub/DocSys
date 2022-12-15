@@ -1515,10 +1515,8 @@ public class GITUtil  extends BaseController{
 			}	
 		}
 				
-		if(isDocInChangedList(doc, localChangesRootPath)) //文件内容改变	
-		{
-			scheduleForCommit(commitActionList, repos, doc, false, localChangesRootPath, subDocCommitFlag);
-		}
+
+		scheduleForCommit(commitActionList, repos, doc, false, localChangesRootPath, subDocCommitFlag);
 		
 		if(commitActionList == null || commitActionList.size() ==0)
 		{
@@ -2441,8 +2439,8 @@ public class GITUtil  extends BaseController{
 		return true;
 	}
   	
-	private void scheduleForCommit(List<CommitAction> actionList, Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag) {
-		
+	private void scheduleForCommit(List<CommitAction> actionList, Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag) 
+	{
     	if(doc.getName().isEmpty())
     	{
     		scanForSubDocCommit(actionList, repos, doc, isSubAction, localChangesRootPath, subDocCommitFlag);
@@ -2454,6 +2452,12 @@ public class GITUtil  extends BaseController{
     		Log.debug("scheduleForCommit() [" + doc.getPath() + doc.getName() + "] version was ignored");
     		return;    		
     	}
+    	
+		if(isDocInChangedList(doc, localChangesRootPath))
+		{
+    		Log.debug("scheduleForCommit() [" + doc.getPath() + doc.getName() + "] was not in ChangedList");
+			return;
+		}
  	
 		String localRootPath = doc.getLocalRootPath();
     	String entryPath = doc.getPath() + doc.getName();
@@ -2517,7 +2521,8 @@ public class GITUtil  extends BaseController{
 	            return;
     		}
     		
-    		scanForSubDocCommit(actionList, repos, doc, isSubAction, localChangesRootPath, subDocCommitFlag);
+    		//If currentDoc was in changedList then subDocs must in changedList, so set localChangesRootPath to null
+    		scanForSubDocCommit(actionList, repos, doc, isSubAction, null, subDocCommitFlag);
     		break;
     	}
     	return; 
