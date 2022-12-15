@@ -1042,7 +1042,7 @@ public class SVNUtil  extends BaseController{
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
         		//Log.debug("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			CommitAction.insertAddFileAction(actionList, doc, isSubAction, false);
+    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction, false);
 	            return;
     		}
     		
@@ -1050,7 +1050,7 @@ public class SVNUtil  extends BaseController{
     		{
         		//Log.debug("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			CommitAction.insertDeleteAction(actionList, doc, false);
-    			CommitAction.insertAddFileAction(actionList, doc, isSubAction, false);
+    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction, false);
 	            return;
     		}
     		
@@ -1074,8 +1074,8 @@ public class SVNUtil  extends BaseController{
 	            return;
     		}
     		
-    		//Add to fakeActionList
-			CommitAction.insertAddDirAction(actionListFake, doc, isSubAction, false);
+    		//Add to fakeActionList (can not use insertAddDirAction it will add subDocs to actionList)
+			CommitAction.insertAddEntryAction(actionListFake, doc, isSubAction, false);
 
     		//If currentDoc was in changedList then subDocs must in changedList, so set localChangesRootPath to null
     		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, null, subDocCommitFlag);
@@ -1248,7 +1248,7 @@ public class SVNUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			CommitAction.insertAddFileAction(commitActionList, dstDoc,false, false);
+			CommitAction.insertAddEntryAction(commitActionList, dstDoc,false, false);
 		}
 		else
 		{

@@ -1659,7 +1659,7 @@ public class GITUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			CommitAction.insertAddFileAction(commitActionList, dstDoc,false, true);
+			CommitAction.insertAddEntryAction(commitActionList, dstDoc,false, true);
 		}
 		else
 		{
@@ -2503,14 +2503,14 @@ public class GITUtil  extends BaseController{
     	case 1:	//文件
     		if(type == 0) 	//新增文件
 	    	{
-    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, true);
+    			CommitAction.insertAddEntryAction(actionList,doc,isSubAction, true);
 	            return;
     		}
     		
     		if(type != 1)	//文件类型改变
     		{
     			CommitAction.insertDeleteAction(actionList, doc, true);
-    			CommitAction.insertAddFileAction(actionList, doc, isSubAction, true);
+    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction, true);
 	            return;
     		}
     		
@@ -2531,8 +2531,8 @@ public class GITUtil  extends BaseController{
 	            return;
     		}
 
-    		//add to fakeActionList
-    		CommitAction.insertAddDirAction(actionListFake, doc, isSubAction, true);    		
+    		//add to fakeActionList (can not use insertAddDirAction it will add subDocs to actionList)
+    		CommitAction.insertAddEntryAction(actionListFake, doc, isSubAction, true);    		
 
     		//If currentDoc was in changedList then subDocs must in changedList, so set localChangesRootPath to null
     		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, null, subDocCommitFlag);
