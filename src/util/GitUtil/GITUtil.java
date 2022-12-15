@@ -2453,7 +2453,7 @@ public class GITUtil  extends BaseController{
     		return;    		
     	}
     	
-		if(isDocInChangedList(doc, localChangesRootPath))
+		if(isDocInChangedList(doc, localChangesRootPath) == false)
 		{
     		Log.debug("scheduleForCommit() [" + doc.getPath() + doc.getName() + "] was not in ChangedList");
 			return;

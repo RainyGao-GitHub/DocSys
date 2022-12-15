@@ -918,7 +918,7 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		QueryCondition condition = conditions.get(i);
     		String field = condition.getField();
-    		Log.debug("buildBooleanQueryWithConditions field:" + field + " fieldType:" + condition.getFieldType());
+    		//Log.debug("buildBooleanQueryWithConditions field:" + field + " fieldType:" + condition.getFieldType());
     		Object value = condition.getValue();
     		Object endValue = condition.getEndValue();
     		Occur occurType = condition.getOccurType();
@@ -1488,7 +1488,7 @@ public class LuceneUtil2   extends BaseFunction
     //在IndexLib中根据doc进行搜索
 	public static List<Doc> getDocList(Repos repos, Doc doc, String indexLib, Integer maxCount)
 	{		
-		Log.debug("getDocList() for doc vid:" + doc.getVid() + " docId:" + doc.getDocId() + " pid:" + doc.getPid() + " indexLib:" + indexLib);
+		//Log.debug("getDocList() for doc vid:" + doc.getVid() + " docId:" + doc.getDocId() + " pid:" + doc.getPid() + " indexLib:" + indexLib);
 		return multiQueryForDoc(repos, doc, indexLib, maxCount);
 	}
 	
