@@ -1475,14 +1475,22 @@ public class GITUtil  extends BaseController{
         }
 		return null;
 	}
-
-	public String doAutoCommit(Repos repos, Doc doc, String commitMsg,String commitUser, String localChangesRootPath, int subDocCommitFlag, List<CommitAction> commitActionList) 
+	
+	
+	public String doAutoCommit(Repos repos, Doc doc, String commitMsg,String commitUser, String localChangesRootPath, int subDocCommitFlag, 
+			List<CommitAction> commitActionList,
+			List<CommitAction> commitActionListFake) 
 	{		
 		Log.debug("doAutoCommit() [" + doc.getPath() + doc.getName() + "] commitMsg:" + commitMsg);
     	
 		if(commitActionList == null)
 		{
 			commitActionList = new ArrayList<CommitAction>();
+		}
+		
+		if(commitActionListFake == null)
+		{
+			commitActionListFake = new ArrayList<CommitAction>();
 		}
 		
 		if(isVersionIgnored(repos, doc, true))
@@ -1510,13 +1518,13 @@ public class GITUtil  extends BaseController{
 				if(!doc.getPath().isEmpty())
 				{
 					Log.debug("doAutoCommit() remoteParentEntry [" + doc.getPath() + "] not exists, do commit parent");
-					return doAutoCommitParent(repos, doc, commitMsg, commitUser, commitActionList);
+					return doAutoCommitParent(repos, doc, commitMsg, commitUser, commitActionList, commitActionListFake);
 				}
 			}	
 		}
 				
 
-		scheduleForCommit(commitActionList, repos, doc, false, localChangesRootPath, subDocCommitFlag);
+		scheduleForCommit(commitActionList, commitActionListFake, repos, doc, false, localChangesRootPath, subDocCommitFlag);
 		
 		if(commitActionList == null || commitActionList.size() ==0)
 		{
@@ -2439,11 +2447,12 @@ public class GITUtil  extends BaseController{
 		return true;
 	}
   	
-	private void scheduleForCommit(List<CommitAction> actionList, Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag) 
+	private void scheduleForCommit(List<CommitAction> actionList, List<CommitAction> actionListFake, 
+			Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag) 
 	{
     	if(doc.getName().isEmpty())
     	{
-    		scanForSubDocCommit(actionList, repos, doc, isSubAction, localChangesRootPath, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, localChangesRootPath, subDocCommitFlag);
     		return;
     	}
     	
@@ -2476,7 +2485,8 @@ public class GITUtil  extends BaseController{
     	{
     		if(type == 0)
     		{
-    			//已同步
+    			//Addd to fakeActionList
+        		CommitAction.insertDeleteAction(actionListFake, doc, true);
     			return;
     		}
     		CommitAction.insertDeleteAction(actionList,doc, true);
@@ -2499,30 +2509,33 @@ public class GITUtil  extends BaseController{
     		
     		if(type != 1)	//文件类型改变
     		{
-    			CommitAction.insertDeleteAction(actionList,doc, true);
-    			CommitAction.insertAddFileAction(actionList,doc,isSubAction, true);
+    			CommitAction.insertDeleteAction(actionList, doc, true);
+    			CommitAction.insertAddFileAction(actionList, doc, isSubAction, true);
 	            return;
     		}
     		
-    		CommitAction.insertModifyAction(actionList,doc, true);
+    		CommitAction.insertModifyAction(actionList, doc, true);
     		break;
     	case 2:
     		if(type == 0) 	//新增目录
 	    	{
     			//Add Dir
-    			CommitAction.insertAddDirAction(actionList,doc,isSubAction, true);
+    			CommitAction.insertAddDirAction(actionList, doc, isSubAction, true);
 	            return;
     		}
     		
     		if(type != 2)	//文件类型改变
     		{
-    			CommitAction.insertDeleteAction(actionList,doc, true);
-	        	CommitAction.insertAddDirAction(actionList,doc, isSubAction, true);
+    			CommitAction.insertDeleteAction(actionList, doc, true);
+	        	CommitAction.insertAddDirAction(actionList, doc, isSubAction, true);
 	            return;
     		}
-    		
+
+    		//add to fakeActionList
+    		CommitAction.insertAddDirAction(actionListFake, doc, isSubAction, true);    		
+
     		//If currentDoc was in changedList then subDocs must in changedList, so set localChangesRootPath to null
-    		scanForSubDocCommit(actionList, repos, doc, isSubAction, null, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, null, subDocCommitFlag);
     		break;
     	}
     	return; 
@@ -2542,10 +2555,8 @@ public class GITUtil  extends BaseController{
     	return false;
 	}
 
-	private void scanForSubDocCommit(List<CommitAction> actionList, Repos repos, Doc doc,
-			boolean isSubAction, 
-			String localChangesRootPath,
-			int subDocCommitFlag) 
+	private void scanForSubDocCommit(List<CommitAction> actionList, List<CommitAction> actionListFake, 
+			Repos repos, Doc doc, boolean isSubAction, String localChangesRootPath, int subDocCommitFlag) 
 	{		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -2577,12 +2588,12 @@ public class GITUtil  extends BaseController{
 	        {
 	        	File localSubEntry = list[i];
 	        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, localSubEntry.getName(), subDocLevel, null, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-	        	scheduleForCommit(actionList, repos, subDoc, isSubAction, localChangesRootPath, subDocCommitFlag);
+	        	scheduleForCommit(actionList, actionListFake, repos, subDoc, isSubAction, localChangesRootPath, subDocCommitFlag);
 	        }
         }
 	}
 
-	private String doAutoCommitParent(Repos repos, Doc doc, String commitMsg,String commitUser, List<CommitAction> commitActionList)
+	private String doAutoCommitParent(Repos repos, Doc doc, String commitMsg,String commitUser, List<CommitAction> commitActionList, List<CommitAction> commitActionListFake)
     {
     	String parentPath = doc.getPath();
         Log.debug("doAutoCommitParent() parentPath:" + parentPath);
@@ -2647,7 +2658,7 @@ public class GITUtil  extends BaseController{
 	    		if(type == 0)
 	    		{
 	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, doc.getReposPath(), path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    			return doAutoCommit(repos, tempDoc, commitMsg, commitUser, null, 2, commitActionList);
+	    			return doAutoCommit(repos, tempDoc, commitMsg, commitUser, null, 2, commitActionList, commitActionListFake);
 	    		}
 	    		path = path + name + "/";  		
 	    	}
