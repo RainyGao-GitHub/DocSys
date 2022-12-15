@@ -68,7 +68,6 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.Log;
-import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
@@ -382,6 +381,7 @@ public class LuceneUtil2   extends BaseFunction
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
+	//注意该接口似乎无法很好的工作，因此建议使用delete + add来代替
     public static boolean updateIndex(Doc doc, String content, String indexLib)
     {
     	Log.debug("updateIndex() docId:"+ doc.getDocId() + " pid:" + doc.getPid() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
@@ -995,7 +995,7 @@ public class LuceneUtil2   extends BaseFunction
 		return query;
 	}
 	
-    private static void combineSubSearchResults(List<HashMap<String, HitDoc>> subSearcResults,
+    protected static void combineSubSearchResults(List<HashMap<String, HitDoc>> subSearcResults,
 			HashMap<String, HitDoc> searchResult) {
     	for(HitDoc hitDoc: subSearcResults.get(0).values())
         {
