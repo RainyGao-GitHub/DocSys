@@ -4759,21 +4759,29 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean isLocalChanged(ScanOption scanOption) {
-		if(scanOption.localChangesRootPath != null)
+		if(scanOption == null)
 		{
-			Log.debug("isLocalChanged() scanOption.localChangesRootPath:" + scanOption.localChangesRootPath);
-			File dir = new File(scanOption.localChangesRootPath);
-			if(dir.exists() == false)
-			{
-				Log.debug("isLocalChanged() no localChanges:" + scanOption.localChangesRootPath + " not exists");		
-				return false;
-			}
-			
-			Log.debug("isLocalChanged() localChanges count:" + dir.listFiles().length + " under " + scanOption.localChangesRootPath);		
-			return dir.listFiles().length > 0;
+			return false;
 		}
 		
-		return false;
+		return isLocalChanged(scanOption.localChangesRootPath);
+	}
+	
+	protected boolean isLocalChanged(String localChangesRootPath) {
+		if(localChangesRootPath == null)
+		{
+			return false;
+		}
+		Log.debug("isLocalChanged() localChangesRootPath:" + localChangesRootPath);
+		File dir = new File(localChangesRootPath);
+		if(dir.exists() == false)
+		{
+			Log.debug("isLocalChanged() no localChanges:" + localChangesRootPath + " not exists");		
+			return false;
+		}
+		
+		Log.debug("isLocalChanged() localChanges count:" + dir.listFiles().length + " under " + localChangesRootPath);		
+		return dir.listFiles().length > 0;
 	}
 	
 	protected boolean isRemoteChanged(ScanOption scanOption) {
