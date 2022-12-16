@@ -11,10 +11,7 @@ public enum Action {
 	SYNC_ALL, 					//同步版本仓库、同步远程存储、强行刷新SearchIndex
 	SYNC_ALL_FORCE, 			//同步版本仓库，同步远程存储、强行刷新SearchIndex
 	SYNC_AUTO, 					//同步版本仓库、同步远程存储（会更新文件索引）
-	SYNC_AfterRevertHistory,    //以后不用了
-	SYNC_AfterRemoteStoragePull,//以后不用了  
 	SYNC_VerRepos,				//同步版本仓库（只是为了弥补文件操作版本提交失败的情况）
 	SYNC_RemoteStorage,			//同步远程存储（自动拉取）
-	SYNC_NotDefined;
-
+	SYNC_SearchIndex;
 }
