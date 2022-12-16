@@ -2615,6 +2615,8 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
+		boolean ret = false;
+		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "remoteStorageCheckOut() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
@@ -2627,19 +2629,28 @@ public class DocController extends BaseController{
 		}
 		
 		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, pullType, rt);
+		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
+	    if(pullResult != null && pullResult.successCount > 0)
+	    {
+	    	ret = true;
+	    	
+			String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/remoteStoragePull-localChanges-" + new Date().getTime() + "/";
+			if(convertRevertedDocListToLocalChanges(pullResult.successDocList, localChangesRootPath))
+			{
+				String commitUser = accessUser.getName();
+				String commitMsg = "远程存储自动拉取 ";
+				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
+				if(revision != null)
+				{
+					verReposPullPush(repos, true, rt);
+				}
+				FileUtil.delDir(localChangesRootPath);
+			}
+		}	
 
 		unlockDoc(doc, lockType,  accessUser);
 		
-		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
-		if(pullResult == null)
-		{
-			docSysErrorLog("文件远程下载失败！", rt);			
-			docSysDebugLog("remoteStorageCheckOut() remoteStoragePull [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			return false;			
-		}	
-		
-		return true;
-		
+		return ret;		
 	}
 	
 	private Doc getDownloadDocInfoForOffice(Repos repos, Doc doc) {
