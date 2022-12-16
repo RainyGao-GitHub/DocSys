@@ -3604,6 +3604,10 @@ public class BaseController  extends BaseFunction{
 				}
 				FileUtil.delDir(localChangesRootPath);
 			}
+			//TODO: need to make sure there is no changes will be detected
+			
+			//TODO: need update searchIndex
+			
 		}
 		else
 		{
