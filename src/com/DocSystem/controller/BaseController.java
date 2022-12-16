@@ -5368,7 +5368,7 @@ public class BaseController  extends BaseFunction{
 			}
 			break;
 		default:
-				break;
+			break;
 		}
 		return realChangeType;
 	}
@@ -17528,19 +17528,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else if(remoteChangeType == DocChangeType.NOCHANGE)
 		{
-			if(remoteDoc == null)
-			{
-				Log.debug("doPullEntryFromRemoteStorageForDownload 本地删除，远程删除，直接删除DBEntry");
-				if(dbDoc != null)
-				{
-					deleteRemoteStorageDBEntry(repos, dbDoc, remote);
-				}
-				ret = true;
-			}	
-			else
-			{
-				ret = true;
-			}
+			ret = true;
 		}
 		
 		if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
@@ -17584,19 +17572,7 @@ public class BaseController  extends BaseFunction{
 			ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 			break;
 		case NOCHANGE:
-			if(remoteDoc == null)
-			{
-				Log.debug("doPullEntryFromRemoteStorage 本地删除，远程删除，直接删除DBEntry");
-				if(dbDoc != null)
-				{
-					deleteRemoteStorageDBEntry(repos, dbDoc, remote);
-				}
-				ret = true;
-			}
-			else
-			{
-				ret = true;
-			}
+			ret = true;
 			break;
 		default:
 			break;
@@ -17662,19 +17638,7 @@ public class BaseController  extends BaseFunction{
 			ret = remoteStoragePushEntry(session, remote, repos, localDoc, dbDoc, localDoc, remoteDoc, accessUser, pushResult, localChangeType, actionList, isSubAction);
 			break;
 		case NOCHANGE:
-			if(localDoc == null)
-			{
-				Log.debug("doPushEntryToRemoteStorage 本地删除，远程删除，直接删除DBEntry");
-				if(dbDoc != null)
-				{
-					deleteRemoteStorageDBEntry(repos, dbDoc, remote);
-				}
-				ret = true;
-			}	
-			else
-			{
-				ret = true;
-			}
+			ret = true;
 			break;
 		default:
 			break;
@@ -17786,7 +17750,6 @@ public class BaseController  extends BaseFunction{
 					Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");
 				}
 			}
-			
 			break;
 		case 2:	//remoteChanged and localNoChange : manualPull
 			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
