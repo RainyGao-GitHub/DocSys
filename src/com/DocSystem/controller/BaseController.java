@@ -4529,37 +4529,117 @@ public class BaseController  extends BaseFunction{
 			login_user = systemUser;
 		}
 		
-		//set syncup options for RemoteStorage / VersionRepos / IndexLib 
-		boolean remoteStoragePullEnable = true;
-		boolean remoteStoragePushEnable = true;
-		
-		Integer subDocSyncupFlag = 1;
-		boolean syncLocalChangeOnly = true;
 		switch(action.getAction())
 		{
-		case SYNC_ALL:			
 		case SYNC_ALL_FORCE:
+			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			refreshDocSearchIndex(repos, doc, action, 2, null, rt);
+			break;
+		case SYNC_ALL:
+			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			refreshDocSearchIndex(repos, doc, action, 2, null, rt);
+			break;
 		case SYNC_AUTO:			//仓库定时同步	
-			subDocSyncupFlag = 2;
-			syncLocalChangeOnly = false;
+			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			break;
-		case SYNC_AfterRevertHistory:
-			subDocSyncupFlag = 2;
-			syncLocalChangeOnly = false;
-			remoteStoragePullEnable = false; //禁用远程拉取			
+		case SYNC_VerRepos:
+			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			break;	
-		case SYNC_AfterRemoteStoragePull:
-			subDocSyncupFlag = 2;
-			syncLocalChangeOnly = false;
-			remoteStoragePushEnable = false; //禁用远程推送		
-			remoteStoragePullEnable = false; //禁用远程拉取			
-		case UNDEFINED:
-			break;
+		case SYNC_RemoteStorage:
+			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			break;	
+		case SYNC_SearchIndex:
+			refreshDocSearchIndex(repos, doc, action, 2, null, rt);
+			break;		
 		default:
 			break;
 		}
 		
-		Log.info("syncupForDocChange() [" + doc.getPath() + doc.getName() + "] subDocSyncupFlag:" + subDocSyncupFlag + " syncLocalChangeOnly:" + syncLocalChangeOnly);
+		return true;
+	}
+	
+	private void refreshDocSearchIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, ScanOption scanOption, ReturnAjax rt) {
+		//用户手动刷新：总是会触发索引刷新操作
+		if(action.getAction() == null)
+		{
+			Log.info("**************************** checkAndUpdateIndex() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			return;
+		}	
+		
+		switch(action.getAction())
+		{
+		case SYNC_ALL_FORCE:
+		case SYNC_SearchIndex:
+			Log.info("**************************** checkAndUpdateIndex() 强制刷新 SearchIndex for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			if(docDetect(repos, doc))
+			{
+				if(doc.getDocId() == 0)
+				{
+					//Delete All Index Lib
+					Log.info("checkAndUpdateIndex() delete all index lib");
+					deleteDocNameIndexLib(repos);
+					deleteRDocIndexLib(repos);
+					deleteVDocIndexLib(repos);
+					//Build All Index For Doc
+					Log.info("checkAndUpdateIndex() buildIndexForDoc");
+					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				}
+				else
+				{
+					//deleteAllIndexUnderDoc
+					Log.info("checkAndUpdateIndex() delete all index for doc");
+					deleteAllIndexForDoc(repos, doc, 2);
+					//buildAllIndexForDoc
+					Log.info("checkAndUpdateIndex() buildIndexForDoc");
+					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				}
+			}
+			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			break;
+		case SYNC_ALL:
+		case SYNC_AUTO:
+		case SYNC_VerRepos:
+		case SYNC_RemoteStorage:
+			//只更新有改动的文件节点
+			if(isLocalChanged(scanOption))
+			{
+				rebuildIndexForDocEx(repos, doc, scanOption.localChangesRootPath, rt);
+			}
+			break;
+		default:	//未知同步类型
+			break;
+		}
+	}
+
+	private void syncUpLocalWithVerRepos(Repos repos, Doc doc, User login_user, CommonAction action, Integer subDocSyncupFlag,
+			ReturnAjax rt) 
+	{
+		if(repos.getIsRemote() == 1)
+		{
+			//Sync Up local VerRepos with remote VerRepos
+			Log.info("syncupForDocChange() 同步远程版本仓库");
+			verReposPullPush(repos, true, null);
+		}
+			
+		//文件管理系统
+		Log.info("syncupForDocChange() 同步版本管理");
+		ScanOption scanOption = new ScanOption();
+		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange, remoteNotChecked
+		scanOption.scanTime = new Date().getTime();
+		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-localChanges-" + scanOption.scanTime + "/";
+		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-remoteChanges-" + scanOption.scanTime + "/";
+		
+		syncUpLocalWithVerRepos(repos, doc, action, subDocSyncupFlag, scanOption, login_user, rt); 
+		
+		cleanSyncUpTmpFiles(scanOption);
+	}
+
+	private void syncUpLocalWithRemoteStorage(Repos repos, Doc doc, User login_user, CommonAction action, int subDocSyncupFlag,
+			boolean remoteStorageEnable, boolean remoteStoragePullEnable, boolean remoteStoragePushEnable,  
+			ReturnAjax rt) {
 		
 		if(remoteStorageEnable && (remoteStoragePullEnable || remoteStoragePushEnable))
 		{
@@ -4608,36 +4688,9 @@ public class BaseController  extends BaseFunction{
 					}
 				}
 			}
-		}		
-				
-		boolean realDocSyncResult = false;
-		if(repos.getIsRemote() == 1)
-		{
-			//Sync Up local VerRepos with remote VerRepos
-			Log.info("syncupForDocChange() 同步远程版本仓库");
-			verReposPullPush(repos, true, null);
-		}
-			
-		//文件管理系统
-		Log.info("syncupForDocChange() 同步版本管理");
-		ScanOption scanOption = new ScanOption();
-		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange, remoteNotChecked
-		scanOption.scanTime = new Date().getTime();
-		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-localChanges-" + scanOption.scanTime + "/";
-		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-remoteChanges-" + scanOption.scanTime + "/";
-		
-		realDocSyncResult = syncUpLocalWithVerRepos(repos, doc, action, subDocSyncupFlag, scanOption, login_user, rt); 
-
-		Log.info("syncupForDocChange() 刷新文件索引");
-		checkAndUpdateIndex(repos, doc, action, subDocSyncupFlag, scanOption, rt);
-
-		Log.info("syncupForDocChange() clean tmp files");
-		cleanSyncUpTmpFiles(scanOption);
-		
-		Log.info("syncupForDocChange() ************************ 结束自动同步 ****************************");
-		return realDocSyncResult;
+		}				
 	}
-	
+
 	protected void cleanSyncUpTmpFiles(ScanOption scanOption) {
 		if(scanOption.localChangesRootPath != null)
 		{
@@ -4684,12 +4737,6 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(action.getAction() == Action.UNDEFINED)
-		{
-			Log.info("syncUpLocalWithVerRepos() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
-			return true;
-		}
-		
 		return syncupLocalChangesEx_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, scanOption.localChangesRootPath, subDocSyncupFlag, rt);			
 	}
 
@@ -4727,61 +4774,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return false;
-	}
-
-	private void checkAndUpdateIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, ScanOption scanOption, ReturnAjax rt) {
-		//用户手动刷新：总是会触发索引刷新操作
-		if(action.getAction() == null)
-		{
-			Log.info("**************************** checkAndUpdateIndex() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			return;
-		}	
-		
-		switch(action.getAction())
-		{
-		case SYNC_ALL_FORCE:
-			Log.info("**************************** checkAndUpdateIndex() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			if(docDetect(repos, doc))
-			{
-				if(doc.getDocId() == 0)
-				{
-					//Delete All Index Lib
-					Log.info("checkAndUpdateIndex() delete all index lib");
-					deleteDocNameIndexLib(repos);
-					deleteRDocIndexLib(repos);
-					deleteVDocIndexLib(repos);
-					//Build All Index For Doc
-					Log.info("checkAndUpdateIndex() buildIndexForDoc");
-					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
-				}
-				else
-				{
-					//deleteAllIndexUnderDoc
-					Log.info("checkAndUpdateIndex() delete all index for doc");
-					deleteAllIndexForDoc(repos, doc, 2);
-					//buildAllIndexForDoc
-					Log.info("checkAndUpdateIndex() buildIndexForDoc");
-					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
-				}
-			}
-			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			break;
-		case SYNC_ALL:	   
-		case UNDEFINED:	
-		case SYNC_AfterRevertHistory:
-		case SYNC_AfterRemoteStoragePull:
-			//只更新有改动的文件的索引	
-			if(isLocalChanged(scanOption))
-			{
-				rebuildIndexForDocEx(repos, doc, scanOption.localChangesRootPath, rt);	
-			}
-			break;
-		case SYNC_AUTO:
-			//不更新索引
-			break;
-		default:	//未知同步类型
-			break;
-		}
 	}
 
 	private boolean docDetect(Repos repos, Doc doc) {
