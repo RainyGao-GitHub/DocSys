@@ -4681,7 +4681,25 @@ public class BaseController  extends BaseFunction{
 							{
 								pullType = 3;	//remoteChanged or localChanged
 							}
+							
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
+						    
+							DocPullResult pullResult = (DocPullResult) rt.getDataEx();
+						    if(pullResult != null && pullResult.successCount > 0)
+						    {
+								String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/remoteStoragePull-localChanges-" + new Date().getTime() + "/";
+								if(convertRevertedDocListToLocalChanges(pullResult.successDocList, localChangesRootPath))
+								{
+									String commitUser = login_user.getName();
+									String commitMsg = "远程存储自动拉取 ";
+									String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
+									if(revision != null)
+									{
+										verReposPullPush(repos, true, rt);
+									}
+									FileUtil.delDir(localChangesRootPath);
+								}
+							}							
 						}
 						
 						unlockDoc(doc, lockType,  login_user);
