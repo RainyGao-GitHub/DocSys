@@ -352,6 +352,11 @@ public class FileUtil {
 	    		Log.info("copyFile() " + dstFilePath + " exists!");
 	    		return false;
 	    	}
+	    	
+	    	if(dstFile.isDirectory())
+	    	{
+	    		dstFile.delete();
+	    	}
     	}
     	else
     	{
