@@ -2644,8 +2644,11 @@ public class DocController extends BaseController{
 				{
 					verReposPullPush(repos, true, rt);
 				}
+				//TODO: 理论上成功后，刷新时不应该检测到有文件改动才对
 				FileUtil.delDir(localChangesRootPath);
 			}
+			
+			//TODO: 需要更新successDocList的SearchIndex, 但有性能问题
 		}	
 
 		unlockDoc(doc, lockType,  accessUser);
