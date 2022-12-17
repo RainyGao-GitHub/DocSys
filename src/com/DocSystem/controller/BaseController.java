@@ -4186,7 +4186,19 @@ public class BaseController  extends BaseFunction{
 			}
 		}	
 	}
-		
+
+	public void executeCommonActionListAsync(List<CommonAction> actionList, ReturnAjax rt)
+	{
+		new Thread(new Runnable() {
+			//ReturnAjax rt = new ReturnAjax();
+			List<CommonAction> asyncActionList = actionList;
+			public void run() {
+				Log.debug("executeCommonActionListAsync() executeCommonActionList in new thread");
+				executeCommonActionList(asyncActionList, rt);
+			}
+		}).start();
+	}	
+	
 	public boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
 		if(actionList == null || actionList.size() == 0)
