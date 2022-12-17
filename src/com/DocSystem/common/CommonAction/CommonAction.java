@@ -16,6 +16,7 @@ public class CommonAction {
     private Repos repos = null;
     private Doc doc = null;
     private Doc newDoc = null;	//This is for move/copy
+	private List<Doc> docList = null; //for batch doc's action
     
     //For commitAction
     private String commitMsg = null;
@@ -91,6 +92,15 @@ public class CommonAction {
 	public Doc getNewDoc()
 	{
 		return newDoc;
+	}
+
+	public void setDocList(List<Doc> list) {
+		this.docList = list;
+	}
+	
+	public List<Doc> getDocList()
+	{
+		return docList;
 	}
 
 	//For commitAction
@@ -210,6 +220,30 @@ public class CommonAction {
 		action.setRepos(repos);
 		action.setDoc(srcDoc);
 		action.setNewDoc(dstDoc);
+		
+		action.setUser(user);
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		action.setSubActionList(subActionList);
+		action.recursion = recursion;
+		
+		actionList.add(action);
+	}
+	
+	public static void insertCommonActionEx(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, List<Doc> docList, String commitMsg,String commitUser, ActionType actionId, Action actionType, DocType docType, List<CommonAction> subActionList, User user, boolean recursion) 
+	{	
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+
+		//System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		
+		action.setRepos(repos);
+		action.setDoc(srcDoc);
+		action.setNewDoc(dstDoc);
+		action.setDocList(docList);
 		
 		action.setUser(user);
 		action.setCommitMsg(commitMsg);

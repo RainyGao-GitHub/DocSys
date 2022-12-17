@@ -4872,6 +4872,7 @@ public class DocController extends BaseController{
 		}
 
 		boolean revertResult = false;
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isRealDoc)
 		{
 			if(isFSM(repos) == false)
@@ -4967,7 +4968,7 @@ public class DocController extends BaseController{
 				}	
 			}
 			
-			revertResult  = revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
+			revertResult  = revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null, asyncActionList);
 		}	
 		else
 		{
@@ -4986,7 +4987,7 @@ public class DocController extends BaseController{
 					return;				
 				}
 			}
-			revertResult = revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
+			revertResult = revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null, null);
 		}
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
@@ -4995,6 +4996,7 @@ public class DocController extends BaseController{
 		
 		if(revertResult)
 		{
+			executeCommonActionListAsync(asyncActionList, rt);
 			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 		}
 		else

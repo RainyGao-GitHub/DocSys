@@ -3606,10 +3606,9 @@ public class BaseController  extends BaseFunction{
 				}
 				FileUtil.delDir(localChangesRootPath);
 			}
-			//TODO: need to make sure there is no changes will be detected
 			
-			//TODO: need update searchIndex
-			
+			//add successDocList to asyncActionList
+			CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
 		}
 		else
 		{
@@ -4172,13 +4171,13 @@ public class BaseController  extends BaseFunction{
 			CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VFS, actionId, DocType.VIRTURALDOC, null, null, true);
 			
 			//Insert IndexAction For Copy or Move
-			if(isMove)  //UPDATE all index (DocName /RDoc /VDoc)
+			if(isMove)  //delete all index for srcDoc and add all index for dstDoc (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.MOVE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
 			}
-			else	//ADD all index for (DocName /RDoc /VDoc)
+			else	//ADD all index for dstDoc (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
+				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.COPY, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
 			}
 		}	
 	}
@@ -4597,7 +4596,7 @@ public class BaseController  extends BaseFunction{
 					deleteVDocIndexLib(repos);
 					//Build All Index For Doc
 					Log.info("checkAndUpdateIndex() buildIndexForDoc");
-					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+					buildIndexForDoc(repos, doc, null, null, rt, 2);
 				}
 				else
 				{
@@ -4606,7 +4605,7 @@ public class BaseController  extends BaseFunction{
 					deleteAllIndexForDoc(repos, doc, 2);
 					//buildAllIndexForDoc
 					Log.info("checkAndUpdateIndex() buildIndexForDoc");
-					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+					buildIndexForDoc(repos, doc, null, null, rt, 2);
 				}
 			}
 			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
@@ -4847,33 +4846,24 @@ public class BaseController  extends BaseFunction{
 	}
 
 	public boolean buildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
-			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
-	{	
-		if(force == false)
-		{
-			//强行添加Index
-			addIndexForDocName(repos, doc);
-			addIndexForRDoc(repos, doc);
-			addIndexForVDoc(repos, doc);
-			return true;
-		}	
-		
-		//强行添加Index
+			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag) 
+	{			
+		//添加Index
 		addIndexForDocName(repos, doc);
 		addIndexForRDoc(repos, doc);
 		addIndexForVDoc(repos, doc);			
+
+		//子目录不递归
+		if(subDocSyncupFlag == 0)
+		{
+			return true;
+		}
 		
 		if(doc.getType() == null || doc.getType() != 2)
 		{
 			return true;
 		}
 		
-		//子目录不递归
-		if(subDocSyncupFlag == 0)
-		{
-			return true;
-		}
-
 		//子目录递归不继承
 		if(subDocSyncupFlag == 1)
 		{
@@ -4891,7 +4881,7 @@ public class BaseController  extends BaseFunction{
     	{
     		Doc subDoc = entryList.get(i);
     		subDoc.isRealDocTextSearchEnabled = doc.isRealDocTextSearchEnabled;
-    		buildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
+    		buildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag);
     	}
 		return true;
 	}
@@ -4924,7 +4914,7 @@ public class BaseController  extends BaseFunction{
 				//delete and rebuild all index
 				Log.debug("rebuildIndexForDocEx() indexDoc == null, do rebuild all index for doc:" + doc.getPath() + doc.getName());
 				deleteAllIndexForDoc(repos, doc, 2);
-				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
 				return;
 			}
 			
@@ -4933,7 +4923,7 @@ public class BaseController  extends BaseFunction{
 				//delete and rebuild all index
 				Log.debug("rebuildIndexForDocEx() docType changed, do rebuild all index for doc:" + doc.getPath() + doc.getName());
 				deleteAllIndexForDoc(repos, doc, 2);
-				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
 				return;
 			}
 				
@@ -4942,7 +4932,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("rebuildIndexForDocEx() doc Changed, do rebuild all index for doc:" + doc.getPath() + doc.getName());
 				deleteAllIndexForDoc(repos, doc, 2);
-				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
 				return;
 			}
 		}
@@ -6676,17 +6666,38 @@ public class BaseController  extends BaseFunction{
 	{
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
+		Doc newDoc = null;
 		
 		switch(action.getAction())
 		{
 		case ADD:
-			return buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+			return buildIndexForDoc(repos, doc, null, null, rt, 2);
 		case DELETE:
 			return deleteAllIndexForDoc(repos, doc);
 		case UPDATE:
+			if(doc != null)
+			{
+				deleteAllIndexForDoc(repos, doc);
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
+			}
+			
+			List<Doc> docList = action.getDocList();
+			if(docList != null)
+			{
+				for(int i=0; i < docList.size(); i++)
+				{
+					Doc tmpDoc = docList.get(i);
+					deleteAllIndexForDoc(repos, tmpDoc);
+					buildIndexForDoc(repos, tmpDoc, null, null, rt, 0); //update doc searchIndex, do not update its subDocs
+				}
+			}
+		case MOVE:
 			deleteAllIndexForDoc(repos, doc);
-			Doc newDoc = action.getNewDoc();
-			return buildIndexForDoc(repos, newDoc, null, null, rt, 2, true);
+			newDoc = action.getNewDoc();
+			return buildIndexForDoc(repos, newDoc, null, null, rt, 2);
+		case COPY:
+			newDoc = action.getNewDoc();
+			return buildIndexForDoc(repos, newDoc, null, null, rt, 2);
 		default:
 			break;			
 		}
