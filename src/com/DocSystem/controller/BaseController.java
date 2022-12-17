@@ -4710,6 +4710,13 @@ public class BaseController  extends BaseFunction{
 									}
 									FileUtil.delDir(localChangesRootPath);
 								}
+								
+								for(int i=0; i < pullResult.successDocList.size(); i++)
+								{
+									Doc tmpDoc = pullResult.successDocList.get(i);
+									deleteAllIndexForDoc(repos, tmpDoc);
+									buildIndexForDoc(repos, tmpDoc, null, null, rt, 0); //update doc searchIndex, do not update its subDocs
+								}
 							}							
 						}
 						
