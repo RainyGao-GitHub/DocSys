@@ -463,7 +463,11 @@ public class DocController extends BaseController{
 		{
 			addDocToSyncUpList(actionList, repos, doc, Action.SYNC_ALL, reposAccess.getAccessUser(), commitMsg, true);
 		}
+
 		writeJson(rt, response);
+		docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "]", rt);
+		addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+
 		
 		new Thread(new Runnable() {
 			public void run() {
@@ -471,9 +475,6 @@ public class DocController extends BaseController{
 				executeUniqueCommonActionList(actionList, rt);
 			}
 		}).start();
-		
-		docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "]", rt);
-		addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 	
 	/****************   delete a Document ******************/
@@ -532,7 +533,7 @@ public class DocController extends BaseController{
 		if(ret != null)
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
-			executeCommonActionList(actionList, rt);
+			executeCommonActionListAsync(actionList, rt);
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
@@ -622,7 +623,7 @@ public class DocController extends BaseController{
 		if(ret != null)
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
-			executeCommonActionList(actionList, rt);
+			executeCommonActionListAsync(actionList, rt);
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
@@ -721,7 +722,7 @@ public class DocController extends BaseController{
 		if(ret)
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", "成功", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));		
-			executeCommonActionList(actionList, rt);
+			executeCommonActionListAsync(actionList, rt);
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
@@ -820,7 +821,7 @@ public class DocController extends BaseController{
 		if(ret)
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "成功", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
-			executeCommonActionList(actionList, rt);
+			executeCommonActionListAsync(actionList, rt);
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
@@ -905,7 +906,7 @@ public class DocController extends BaseController{
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", "成功",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			Log.debug("copyDoc executeCommonActionList");			
-			executeCommonActionList(actionList, rt);
+			executeCommonActionListAsync(actionList, rt);
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
@@ -1036,7 +1037,7 @@ public class DocController extends BaseController{
 		if(ret)
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", "成功",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
-			executeCommonActionList(actionList, rt);
+			executeCommonActionListAsync(actionList, rt);
 			return;
 		}
 		addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
@@ -1234,7 +1235,7 @@ public class DocController extends BaseController{
 			docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
 			writeJson(rt, response);
 					
-			executeCommonActionList(actionList, rt);
+			executeCommonActionListAsync(actionList, rt);
 			return;
 		}
 		else
