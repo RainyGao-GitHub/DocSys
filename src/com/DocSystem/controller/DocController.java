@@ -2466,31 +2466,9 @@ public class DocController extends BaseController{
 		//本地文件不存在
 		if(localEntry.getType() == 0)
 		{
-			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			if(remoteStorageEn)
-			{
-				RemoteStorageConfig remote = repos.remoteStorageConfig;
-				if(remote != null)
-				{
-					int pullType = 1;
-					if(remote.autoPullForce == 1)
-					{
-						pullType = 3;
-					}
-				
-				    if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, pullType, rt) == true)
-					{
-						localEntry = fsGetDoc(repos, doc); 	//重新读取本地文件信息
-					}
-				}
-			}
-			
-			if(localEntry.getType() == 0)
-			{
-				Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-				docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-				return;		
-			}
+			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");			
+			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+			return;		
 		}
 		
 		//原始路径下载，禁止删除原始文件
@@ -2636,21 +2614,22 @@ public class DocController extends BaseController{
 	    	ret = true;
 	    	
 			String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/remoteStoragePull-localChanges-" + new Date().getTime() + "/";
+			String commitUser = accessUser.getName();
+			String commitMsg = "远程存储自动拉取 ";
 			if(convertRevertedDocListToLocalChanges(pullResult.successDocList, localChangesRootPath))
 			{
-				String commitUser = accessUser.getName();
-				String commitMsg = "远程存储自动拉取 ";
 				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
 				if(revision != null)
 				{
 					verReposPullPush(repos, true, rt);
 				}
-				//TODO: 理论上成功后，刷新时不应该检测到有文件改动才对
 				FileUtil.delDir(localChangesRootPath);
 			}
 			
-			//TODO: 需要更新successDocList的SearchIndex, 但有性能问题
-		}	
+			//TODO: 不需要刷新
+			//add successDocList to asyncActionList
+			//CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, pullResult.successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+	    }	
 
 		unlockDoc(doc, lockType,  accessUser);
 		
@@ -3255,29 +3234,7 @@ public class DocController extends BaseController{
 			Doc tmpDoc = doc;
 			if(commitId == null)
 			{
-				if(isFSM(repos))
-				{
-					Doc localEntry = fsGetDoc(repos, doc);
-					//只在文件不存在时才从远程存储下载
-					if(localEntry.getType() == 0)
-					{
-						Log.debug("getDocContent() Doc " +doc.getPath() + doc.getName() + " 不存在，从远程存储拉取");
-						RemoteStorageConfig remote = repos.remoteStorageConfig;
-						if(remote != null)
-						{
-							int pullType = 1;
-							if(remote.autoPullForce == 1)
-							{
-								pullType = 3;
-							}
-							if(remoteStorageCheckOut(repos, doc, reposAccess.getAccessUser(), null, true, pullType, rt) == true)
-							{
-								localEntry = fsGetDoc(repos, doc); //重新读取文件信息
-							}
-						}
-					}		
-				}
-				else
+				if(isFSM(repos) == false)
 				{
 					remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
 				}
@@ -6874,25 +6831,7 @@ public class DocController extends BaseController{
 		Doc localEntry = fsGetDoc(repos, rootDoc);
 		if(localEntry.getType() == 0)
 		{	
-			if(isFSM(repos))
-			{
-				Log.debug("getZipInitMenu() rootDoc " +rootDoc.getPath() + rootDoc.getName() + " 不存在，从远程存储拉取");
-				
-				RemoteStorageConfig remote = repos.remoteStorageConfig;
-				if(remote != null)
-				{
-					int pullType = 1;
-					if(remote.autoPullForce == 1)
-					{
-						pullType = 3;
-					}
-					if(remoteStorageCheckOut(repos, rootDoc, reposAccess.getAccessUser(), null, true, pullType, rt) == true)
-					{
-						localEntry = fsGetDoc(repos, rootDoc); //重新读取文件信息
-					}		
-				}
-			}
-			else
+			if(isFSM(repos) == false)
 			{
 				remoteServerCheckOut(repos, rootDoc, null, null, null, null, 3, null);
 			}
