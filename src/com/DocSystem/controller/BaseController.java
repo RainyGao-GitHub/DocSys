@@ -3559,7 +3559,9 @@ public class BaseController  extends BaseFunction{
     	return value;
 	}
 	
-	protected boolean revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
+	protected boolean revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
+			HashMap<String, String> downloadList,	//if not null, only files in this hashMap need to be reverted 
+			List<CommonAction> asyncActionList) 	//actions which need to execute async after this function
 	{			
 		if(commitMsg == null)
 		{
@@ -3686,7 +3688,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
 			MultipartFile uploadFile, //For upload
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
 	{
 		Log.debug("addDoc_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 		
@@ -3760,7 +3762,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{				
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -3791,7 +3793,7 @@ public class BaseController  extends BaseFunction{
 		}
 				
 		//BuildMultiActionListForDocAdd();
-		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
+		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
 		
 		unlockDoc(doc, lockType, login_user);
 		
@@ -3913,7 +3915,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
 	{
 		Log.debug("addDocEx_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 		
@@ -3986,7 +3988,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{				
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 		}
 		else
@@ -4000,8 +4002,8 @@ public class BaseController  extends BaseFunction{
 			}			
 		}
 		
-		//BuildMultiActionListForDocAdd();
-		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
+		//BuildMultiasyncActionListForDocAdd();
+		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
 		
 		unlockDoc(doc, lockType, login_user);
 		
@@ -4013,12 +4015,12 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层deleteDoc接口
-	protected String deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	protected String deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser, User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
 	{
-		return deleteDoc_FSM(repos, doc, commitMsg, commitUser, login_user,  rt, actionList);			
+		return deleteDoc_FSM(repos, doc, commitMsg, commitUser, login_user,  rt, asyncActionList);			
 	}
 
-	protected String deleteDoc_FSM(Repos repos, Doc doc,	String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	protected String deleteDoc_FSM(Repos repos, Doc doc,	String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
 	{
 		Long docId = doc.getDocId();
 		if(docId == 0)
@@ -4066,7 +4068,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				//异步推送远程版本仓库：Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -4098,7 +4100,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
-		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
+		BuildAsyncActionListForDocDelete(asyncActionList, repos, doc, commitMsg, commitUser,true);
 		
 		unlockDoc(doc, lockType, login_user);
 		
@@ -4106,12 +4108,12 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
-	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
+	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		//Insert index add action for RDoc Name
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null, false);
 		//Insert index add action for RDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null, null, false);
 
 		
 		//Insert add action for VDoc
@@ -4129,24 +4131,24 @@ public class BaseController  extends BaseFunction{
 		CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null, null, false);	//Add Index For VDoc
 		
 		//Insert add action for VDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.ADD, DocType.VIRTURALDOC, subActionList, null, false);			
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.ADD, DocType.VIRTURALDOC, subActionList, null, false);			
 	}
 
-	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
+	protected void BuildAsyncActionListForDocDelete(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
 	{
 		//注意：删除操作的VirtualDoc是不删除的
 		
 		//Insert index delete action for All( DocName / RDoc /VDoc )
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.ALL, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.ALL, null, null, false);
 	}
 
-	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
+	void BuildAsyncActionListForDocUpdate(List<CommonAction> asyncActionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index update action for RDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, false);
 	}
 	
-	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove)
+	private void BuildAsyncActionListForDocCopy(List<CommonAction> asyncActionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove)
 	{	
 		if(dstDoc.getName().isEmpty())
 		{
@@ -4167,16 +4169,16 @@ public class BaseController  extends BaseFunction{
 		{								
 			//Doc的VirtualDoc的移动或复制操作（目录的话会移动或复制其子目录的VirtualDoc）
 			//注意：copy和move操作的VirtualDoc是不进行版本提交的
-			CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VFS, actionId, DocType.VIRTURALDOC, null, null, true);
+			CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VFS, actionId, DocType.VIRTURALDOC, null, null, true);
 			
 			//Insert IndexAction For Copy or Move
 			if(isMove)  //UPDATE all index (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
 			}
 			else	//ADD all index for (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
+				CommonAction.insertCommonAction(asyncActionList, repos, dstDoc, null, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.ADD, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
 			}
 		}	
 	}
@@ -4329,7 +4331,7 @@ public class BaseController  extends BaseFunction{
 	    		dstSubDoc.setLatestEditTime(dstLocalEntry.lastModified());
 	    		
 	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcDoc.getReposPath(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
-	    		BuildMultiActionListForDocCopy(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser, isMove);
+	    		BuildAsyncActionListForDocCopy(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser, isMove);
 	    	}
 		}
 		
@@ -7008,7 +7010,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Build DocUpdate action
-		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
+		BuildAsyncActionListForDocUpdate(actionList, repos, doc, reposRPath);
 		
 		unlockDoc(doc, lockType, login_user);
 		
@@ -7083,7 +7085,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Build DocUpdate action
-		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
+		BuildAsyncActionListForDocUpdate(actionList, repos, doc, reposRPath);
 		
 		unlockDoc(doc, lockType, login_user);
 		
@@ -7178,7 +7180,7 @@ public class BaseController  extends BaseFunction{
 		
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
-		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, true);
+		BuildAsyncActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, true);
 		
 		unlockDoc(srcDoc, lockType, login_user);
 		unlockDoc(dstDoc, lockType, login_user);
@@ -7290,7 +7292,7 @@ public class BaseController  extends BaseFunction{
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		Log.debug("copyDoc_FSM() BuildMultiActionListForDocCopy");		
-		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
+		BuildAsyncActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
 
 		Log.debug("copyDoc_FSM() unlockDoc");		
 		unlockDoc(srcDoc, lockType, login_user);
@@ -7382,7 +7384,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			//Build DocUpdate action
-			BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
+			BuildAsyncActionListForDocUpdate(actionList, repos, doc, reposRPath);
 			return true;
 		}
 		return false;
