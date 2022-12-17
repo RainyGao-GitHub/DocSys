@@ -6495,7 +6495,7 @@ public class BaseController  extends BaseFunction{
 			Integer reposId, String path, String name, boolean forceCheck,
 			ReturnAjax rt) 
 	{
-		Log.debug("checkAndGetAccessInfo() reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
+		//Log.debug("checkAndGetAccessInfo() reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
 		ReposAccess reposAccess = null;
 		if(shareId != null)
 		{
@@ -6509,14 +6509,14 @@ public class BaseController  extends BaseFunction{
 			{
 				if(!reposId.equals(docShare.getVid()))
 				{
-					Log.info("checkAndGetAccessInfo() reposId not matched, reposId:" + reposId + " docShare.vid:" + docShare.getVid());
-					rt.setError("非法仓库访问");
+					docSysDebugLog("checkAndGetAccessInfo() reposId not matched, reposId:" + reposId + " docShare.vid:" + docShare.getVid(), rt);
+					docSysErrorLog("非法仓库访问", rt);
 					return null;
 				}
 			}
 			
 			//文件非法访问检查: 不能访问分享文件的上层目录或者同层的其他文件
-			Log.debug("checkAndGetAccessInfo() forceCheck:" + forceCheck);
+			//Log.debug("checkAndGetAccessInfo() forceCheck:" + forceCheck);
 			if(forceCheck) //强制检查则无论path是否为空都要检查
 			{
 				if(path == null)
@@ -6538,8 +6538,8 @@ public class BaseController  extends BaseFunction{
 				{
 					if(accessPath.indexOf(sharedPath) != 0) //分享的文件本身或者子目录才可以访问
 					{
-						Log.info("checkAndGetAccessInfo() 非法访问路径 accessPath:" + accessPath);
-						rt.setError("非法文件访问");
+						docSysDebugLog("checkAndGetAccessInfo() accessPath [" + accessPath + "] sharedPath [" + sharedPath + "]", rt);
+						docSysErrorLog("非法文件访问", rt);
 						return null;
 					}
 				}
@@ -6561,7 +6561,8 @@ public class BaseController  extends BaseFunction{
 			User login_user = getLoginUser(session, request, response, rt);
 			if(login_user == null)
 			{
-				rt.setError("用户未登录，请先登录！");
+				docSysDebugLog("checkAndGetAccessInfo() getLoginUser Failed", rt);
+				docSysErrorLog("用户未登录，请先登录！", rt);
 				return null;
 			}
 			reposAccess = new ReposAccess();
@@ -6606,47 +6607,47 @@ public class BaseController  extends BaseFunction{
 	{
 		if(docShare == null)
 		{
-			Log.debug("verifyDocShare() docShare is null");
-			rt.setError("无效文件分享");
+			docSysDebugLog("verifyDocShare() docShare is null", rt);
+			docSysErrorLog("无效文件分享", rt);
 			return false;
 		}
 		
 		if(docShare.getVid() == null)
 		{
-			Log.debug("verifyDocShare() docShare.vid is null");
-			rt.setError("无效文件分享");
+			docSysDebugLog("verifyDocShare() docShare.vid is null", rt);
+			docSysErrorLog("无效文件分享", rt);
 			deleteDocShare(docShare);
 			return false;
 		}
 		
 		if(docShare.getDocId() == null)
 		{
-			Log.debug("verifyDocShare() docShare.docId is null");
-			rt.setError("无效文件分享");
+			docSysDebugLog("verifyDocShare() docShare.docId is null", rt);
+			docSysErrorLog("无效文件分享", rt);
 			deleteDocShare(docShare);
 			return false;
 		}
 
 		if(docShare.getPath() == null)
 		{
-			Log.debug("verifyDocShare() docShare.path is null");
-			rt.setError("无效文件分享");
+			docSysDebugLog("verifyDocShare() docShare.path is null", rt);
+			docSysErrorLog("无效文件分享", rt);
 			deleteDocShare(docShare);
 			return false;
 		}
 
 		if(docShare.getName() == null)
 		{
-			Log.debug("verifyDocShare() docShare.name is null");
-			rt.setError("无效文件分享");
+			docSysDebugLog("verifyDocShare() docShare.name is null", rt);
+			docSysErrorLog("无效文件分享", rt);
 			deleteDocShare(docShare);
 			return false;
 		}
 		
 		if(docShare.getSharedBy() == null)
 		{
-			Log.debug("verifyDocShare() docShare.sharedBy is null");
-			rt.setError("无效文件分享");
+			docSysDebugLog("verifyDocShare() docShare.sharedBy is null", rt);
+			docSysErrorLog("无效文件分享", rt);
 			deleteDocShare(docShare);
 			return false;
 		}
@@ -6657,8 +6658,8 @@ public class BaseController  extends BaseFunction{
 			long curTime = new Date().getTime();
 			if(curTime > expireTime)	//
 			{
-				Log.debug("verifyDocShare() docShare is expired");
-				rt.setError("文件分享已过期");
+				docSysDebugLog("verifyDocShare() docShare is expired", rt);
+				docSysErrorLog("文件分享已过期", rt);
 				return false;
 			}
 		}		
