@@ -4053,13 +4053,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
-		
-		if(dbDeleteDocEx(actionList, repos, doc, commitMsg, commitUser, true) == false)
-		{	
-			docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
-			docSysDebugLog("deleteDoc_FSM() dbDeleteDocEx [" + doc.getPath() + doc.getName() + "] Failed", rt);
-		}
-		
+				
 		String revision = null;
 		if(isFSM(repos))
 		{
@@ -6434,61 +6428,6 @@ public class BaseController  extends BaseFunction{
 		int level = Path.getLevelByParentPath(path);
 		return Path.buildDocIdByName(level, path, name);
 	}
-
-	private boolean dbMoveDoc(Repos repos, Doc srcDoc, Doc dstDoc) 
-	{
-		if(isFSM(repos) == false)
-		{
-			return true;
-		}	
-		
-		dbDeleteDoc(repos, srcDoc,true);
-		return dbAddDoc(repos, dstDoc, true, false);
-	}
-	
-	private boolean dbCopyDoc(Repos repos, Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
-		if(isFSM(repos) == false)
-		{
-			return true;
-		}		
-		
-		return dbAddDoc(repos, dstDoc, true, false);
-	}
-	
-	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
-	{
-		if(isFSM(repos) == false)
-		{
-			return true;
-		}	
-		
-		if(deleteSubDocs)
-		{
-			Doc qSubDoc = new Doc();
-			qSubDoc.setVid(doc.getVid());
-			qSubDoc.setPath(doc.getPath() + doc.getName() + "/");
-			List<Doc> subDocList = reposService.getDocList(qSubDoc);
-			if(subDocList != null)
-			{
-				for(int i=0; i<subDocList.size(); i++)
-				{
-					Doc subDoc = subDocList.get(i);
-					dbDeleteDocEx(actionList, repos, subDoc, commitMsg, commitUser, true);
-				}
-			}
-		}
-		
-		Doc qDoc = new Doc();
-		qDoc.setVid(doc.getVid());
-		qDoc.setName(doc.getName());
-		qDoc.setPath(doc.getPath());
-		if(reposService.deleteDoc(qDoc) == 0)
-		{
-			return false;
-		}
-		
-		return true;
-	}
 	
 	public DocShare getDocShare(Integer shareId) {
 		DocShare qDocShare = new DocShare();
@@ -7193,12 +7132,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
-		{
-			docSysWarningLog("moveDoc_FSM() dbMoveDoc failed", rt);			
-			docSysDebugLog("moveDoc_FSM() dbMoveDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-		}
-		
 		if(isFSM(repos))
 		{
 			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
@@ -7307,11 +7240,6 @@ public class BaseController  extends BaseFunction{
 			docSysErrorLog("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed", rt);
 			docSysDebugLog("copyDoc_FSM() copy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return false;
-		}
-		
-		if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
-		{
-			docSysDebugLog("copyDoc_FSM() dbCopyDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 		}
 		
 		if(isFSM(repos))
