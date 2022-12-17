@@ -8121,7 +8121,7 @@ public class BaseController  extends BaseFunction{
 	protected HashMap<Long,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
 	{
 		List <DocAuth> anyUserDocAuthList = getAuthListForAnyUser(reposID);
-		Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] anyUserDocAuthList:", anyUserDocAuthList);
+		//Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] anyUserDocAuthList:", anyUserDocAuthList);
 		
 		List <DocAuth> docAuthList = null;
 		if(UserID != 0)
@@ -8130,10 +8130,10 @@ public class BaseController  extends BaseFunction{
 			docAuth.setUserId(UserID);			
 			docAuth.setReposId(reposID);
 			docAuthList = reposService.getDocAuthForUser(docAuth);
-			Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] docAuthList:", docAuthList);
+			//Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] docAuthList:", docAuthList);
 		}
 		docAuthList = appendAnyUserAuthList(docAuthList, anyUserDocAuthList);	
-		Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] combined docAuthList:", docAuthList);
+		//Log.printObject("getUserDocAuthHashMap() "+ "userID[" + UserID + "] combined docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
