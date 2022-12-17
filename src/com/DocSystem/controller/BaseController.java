@@ -9579,7 +9579,12 @@ public class BaseController  extends BaseFunction{
 			switch(action.getAction())
     		{
     		case ADD:	//add
-    			addVerReposDBEntry(repos, doc, false);    			
+    			addVerReposDBEntry(repos, doc, false);
+    			List<CommitAction> subActionList = action.getSubActionList();
+    			if(subActionList != null)
+    			{
+    				updateVerReposDbEntry(repos, subActionList, revision);
+    			}
     			break;
     		case DELETE: //delete
     			deleteVerReposDBEntry(repos, doc);
