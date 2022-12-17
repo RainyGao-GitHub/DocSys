@@ -2576,6 +2576,7 @@ public class DocController extends BaseController{
 		return task;
 	}
 	
+	//TODO: 这个函数使用需要小心，searchIndex更新有性能问题
 	private boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, int pullType, ReturnAjax rt)
 	{
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
@@ -2626,9 +2627,12 @@ public class DocController extends BaseController{
 				FileUtil.delDir(localChangesRootPath);
 			}
 			
-			//TODO: 不需要刷新
-			//add successDocList to asyncActionList
-			//CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, pullResult.successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+			for(int i=0; i < pullResult.successDocList.size(); i++)
+			{
+				Doc tmpDoc = pullResult.successDocList.get(i);
+				deleteAllIndexForDoc(repos, tmpDoc);
+				buildIndexForDoc(repos, tmpDoc, null, null, rt, 0); //update doc searchIndex, do not update its subDocs
+			}
 	    }	
 
 		unlockDoc(doc, lockType,  accessUser);

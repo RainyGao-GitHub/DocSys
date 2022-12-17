@@ -4830,7 +4830,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean deleteAllIndexForDoc(Repos repos, Doc doc) 
+	protected boolean deleteAllIndexForDoc(Repos repos, Doc doc) 
 	{
 		if(doc.getDocId() == 0)
 		{
