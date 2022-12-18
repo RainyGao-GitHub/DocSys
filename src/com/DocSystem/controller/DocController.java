@@ -183,19 +183,32 @@ public class DocController extends BaseController{
 			commitMsg = "新增 " + path + name;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, actionList); 
+
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
+		context.event = "addDoc";
+		context.subEvent = "addDoc";
+		context.eventName = "新增文件";	
+		context.repos = repos;
+		context.doc = doc;
+		//context.newDoc = dstDoc;
+		
+		int ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, context); 
 		
 		writeJson(rt, response);
 		
-		if(ret == false)
+		switch(ret)
 		{
-			docSysDebugLog("addDoc() add doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
-			return;
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
-		executeCommonActionList(actionList, rt);
-		addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
@@ -315,18 +328,33 @@ public class DocController extends BaseController{
 			commitMsg = "新增 " + path + name;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, actionList);
+		
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
+		context.event = "addDocRS";
+		context.subEvent = "addDocRS";
+		context.eventName = "新增文件";	
+		context.repos = repos;
+		context.doc = doc;
+		//context.newDoc = dstDoc;
+		
+		int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, context);
+		
 		writeJson(rt, response);
 		
-		if(ret == false)
+		switch(ret)
 		{
-			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
-			return;
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
-		executeCommonActionList(actionList, rt);
+		
 	}
 	
 	/****************   Feeback  ******************/
