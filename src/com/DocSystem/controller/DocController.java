@@ -1083,8 +1083,16 @@ public class DocController extends BaseController{
 		if(srcDoc == null || srcDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
-			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
+			writeJson(rt, response);
+			
+			if(move)
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "移动文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));				
+			}
+			else
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
+			}
 			return;
 		}
 				
@@ -1092,13 +1100,21 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "copyDocRS";
 		context.subEvent = "copyDocRS";
-		context.eventName = "复制文件";	
 		context.repos = repos;
 		context.doc = srcDoc;
 		context.newDoc = dstDoc;
 		
-		int ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
-		
+		int ret = 0;
+		if(move)
+		{
+			context.eventName = "移动文件";	
+			ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);			
+		}
+		else
+		{
+			context.eventName = "复制文件";				
+			ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+		}
 		writeJson(rt, response);
 		
 		switch(ret)
@@ -1298,11 +1314,12 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 
+		//TODO: copySameDoc是否需要修改event为copyDoc
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "checkDocInfo";
 		context.subEvent = "checkDocInfo";
-		context.eventName = "上传文件";	
+		context.eventName = "复制文件";	
 		context.repos = repos;
 		context.doc = sameDoc;
 		context.newDoc = doc;
