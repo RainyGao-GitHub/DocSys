@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.tukaani.xz.XZInputStream;
 
+import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
@@ -525,18 +526,31 @@ public class DocController extends BaseController{
 			commitMsg = "删除 " + doc.getPath() + doc.getName();
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.event = "deleteDoc";
+		context.subEvent = "deleteDoc";
+		context.action = "删除文件";	
+		context.repos = repos;
+		context.doc = doc;
+		//context.newDoc = dstDoc;
+		
+		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
 		
-		if(ret != null)
+		switch(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
-			executeCommonActionListAsync(actionList, rt);
-			return;
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 	
 	
@@ -615,18 +629,31 @@ public class DocController extends BaseController{
 			commitMsg = "删除 " + doc.getPath() + doc.getName();
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.event = "deleteDocRS";
+		context.subEvent = "deleteDocRS";
+		context.action = "删除文件";	
+		context.repos = repos;
+		context.doc = doc;
+		//context.newDoc = dstDoc;
+		
+		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
 		
-		if(ret != null)
+		switch(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
-			executeCommonActionListAsync(actionList, rt);
-			return;
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
 	}
 
 	/****************   rename a Document ******************/
@@ -692,7 +719,6 @@ public class DocController extends BaseController{
 			commitMsg = "重命名 " + path + name + " 为 " + dstName;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
@@ -715,17 +741,29 @@ public class DocController extends BaseController{
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
-		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.event = "renameDoc";
+		context.subEvent = "renameDoc";
+		context.action = "重命名文件";	
+		context.repos = repos;
+		context.doc = srcDoc;
+		context.newDoc = dstDoc;
+		int ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
 		
-		if(ret)
+		switch(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", "成功", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));		
-			executeCommonActionListAsync(actionList, rt);
-			return;
-		}
-		addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
+		}	
 	}
 	
 	/****************   move a Document ******************/
@@ -811,20 +849,31 @@ public class DocController extends BaseController{
 			return;
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
+				
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.event = "moveDoc";
+		context.subEvent = "moveDoc";
+		context.action = "移动文件";	
+		context.repos = repos;
+		context.doc = srcDoc;
+		context.newDoc = dstDoc;
 		
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		
-		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		int ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
 		
-		if(ret)
+		switch(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "成功", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
-			executeCommonActionListAsync(actionList, rt);
-			return;
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
 	}
 
 	/****************   move a Document ******************/
@@ -895,21 +944,31 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			return;
 		}
-
-		Log.debug("copyDoc do copyDoc");
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.event = "copyDoc";
+		context.subEvent = "copyDoc";
+		context.action = "复制文件";	
+		context.repos = repos;
+		context.doc = srcDoc;
+		context.newDoc = dstDoc;
+		
+		int ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
 		
-		if(ret)
+		switch(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", "成功",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
-			Log.debug("copyDoc executeCommonActionList");			
-			executeCommonActionListAsync(actionList, rt);
-			return;
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 	}
 	
 	/****************   copy/move/rename a Document ******************/
@@ -1028,19 +1087,31 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			return;
 		}
+				
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.event = "copyDocRS";
+		context.subEvent = "copyDocRS";
+		context.action = "复制文件";	
+		context.repos = repos;
+		context.doc = srcDoc;
+		context.newDoc = dstDoc;
 		
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+		int ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
 		
-		if(ret)
+		switch(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", "成功",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
-			executeCommonActionListAsync(actionList, rt);
-			return;
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
-		addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 	}
 	
 	/****************   execute a Document ******************/
@@ -1226,25 +1297,41 @@ public class DocController extends BaseController{
 			commitMsg = "上传 " + path + name;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, reposAccess.getAccessUser(),rt,actionList);
-		if(ret == true)
-		{
-			rt.setData(fsDoc);
-			rt.setMsgData("1");
-			docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
-			writeJson(rt, response);
-					
-			executeCommonActionListAsync(actionList, rt);
-			return;
-		}
-		else
+
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.event = "checkDocInfo";
+		context.subEvent = "checkDocInfo";
+		context.action = "上传文件";	
+		context.repos = repos;
+		context.doc = sameDoc;
+		context.newDoc = doc;
+		
+		int ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+		if(ret == 0)
 		{
 			rt.setStatus("ok");
 			rt.setMsgData("3");
 			docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
 			writeJson(rt, response);
 			return;
+		}
+		
+		rt.setData(fsDoc);
+		rt.setMsgData("1");
+		docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
+		writeJson(rt, response);
+				
+		switch(ret)
+		{
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
 		}
 	}
 
