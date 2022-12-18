@@ -1041,11 +1041,12 @@ var ReposConfig = (function () {
 		if(verCtrlEnable == 0)
 		{
 			MyJquery.select("repos-verCtrl", 0); //关闭verCtrl
-			MyJquery.hide("verCtrlConfigDiv"); //隐藏 高级选项
 			
-			MyJquery.hide("showVerCtrlConfig"); //隐藏(显示高级选项)提示
-			MyJquery.setValue("showVerCtrlConfig", 0);
-			MyJquery.setText("showVerCtrlConfig", "显示高级选项");
+			//we will not support advanced option again
+			//MyJquery.hide("verCtrlConfigDiv"); //隐藏 高级选项
+			//MyJquery.hide("showVerCtrlConfig"); //隐藏(显示高级选项)提示
+			//MyJquery.setValue("showVerCtrlConfig", 0);
+			//MyJquery.setText("showVerCtrlConfig", "显示高级选项");
 		}
 		else
 		{	
@@ -1053,12 +1054,12 @@ var ReposConfig = (function () {
 			{
 				MyJquery.select("repos-verCtrl", 2);
 			}
-			
-			MyJquery.hide("verCtrlConfigDiv"); //隐藏 高级选项
-			
-			MyJquery.show("showVerCtrlConfig");	//显示(显示高级选项)提示
-			MyJquery.setValue("showVerCtrlConfig", 0);
-			MyJquery.setText("showVerCtrlConfig", "显示高级选项");
+
+			//we will not support advanced option again
+			//MyJquery.hide("verCtrlConfigDiv"); //隐藏 高级选项
+			//MyJquery.show("showVerCtrlConfig");	//显示(显示高级选项)提示
+			//MyJquery.setValue("showVerCtrlConfig", 0);
+			//MyJquery.setText("showVerCtrlConfig", "显示高级选项");
 		}
 		
 		doSelectVerCtrl();
