@@ -3608,7 +3608,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//add successDocList to asyncActionList
-			CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+			CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, null, true);
 		}
 		else
 		{
@@ -3766,8 +3766,10 @@ public class BaseController  extends BaseFunction{
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
-				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
-				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "addDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "addDoc", null, login_user, false);
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 			}
 		}
 		else
@@ -4072,8 +4074,10 @@ public class BaseController  extends BaseFunction{
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
-				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
-				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "deleteDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "deleteDoc", null, login_user, false);
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
+				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
 			}
 		}
 		else
@@ -7002,8 +7006,10 @@ public class BaseController  extends BaseFunction{
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
-				realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
-				realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+				CommonAction.insertCommonActionEx(actionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(actionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 			}
 		}
 		else
@@ -7120,7 +7126,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean moveDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user,
-			ReturnAjax rt, List<CommonAction> actionList) 
+			ReturnAjax rt, List<CommonAction> asyncActionList) 
 	{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
@@ -7169,8 +7175,10 @@ public class BaseController  extends BaseFunction{
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
-				realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
-				realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "moveDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "moveDoc", null, login_user, false);
+				//realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+				//realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
 			}
 		}
 		else
@@ -7198,7 +7206,7 @@ public class BaseController  extends BaseFunction{
 		
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
-		BuildAsyncActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, true);
+		BuildAsyncActionListForDocCopy(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, true);
 		
 		unlockDoc(srcDoc, lockType, login_user);
 		unlockDoc(dstDoc, lockType, login_user);
@@ -7219,7 +7227,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean copyDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc,
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList)
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList)
 	{	
 		Log.debug("copyDoc_FSM() srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] to dstDoc [" +  dstDoc.getPath() + dstDoc.getName() + "]");
 		//Set the doc Creator and LasteEditor
@@ -7279,8 +7287,10 @@ public class BaseController  extends BaseFunction{
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
-				realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
-				realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "copyDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "copyDoc", null, login_user, false);
+				//realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+				//realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
 			}
 		}
 		else
@@ -7310,7 +7320,7 @@ public class BaseController  extends BaseFunction{
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		Log.debug("copyDoc_FSM() BuildMultiActionListForDocCopy");		
-		BuildAsyncActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
+		BuildAsyncActionListForDocCopy(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
 
 		Log.debug("copyDoc_FSM() unlockDoc");		
 		unlockDoc(srcDoc, lockType, login_user);
@@ -7344,7 +7354,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean updateRealDocContent_FSM(Repos repos, Doc doc,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
 	{
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);	
@@ -7374,11 +7384,13 @@ public class BaseController  extends BaseFunction{
 				else
 				{
 					//Insert Push Action
-					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
+					CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
 				}
 					
 				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 				{	
+					CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDocContent", null, login_user, false);
+					CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDocContent", null, login_user, false);
 					realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
 					realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
 				}
@@ -7402,7 +7414,7 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			//Build DocUpdate action
-			BuildAsyncActionListForDocUpdate(actionList, repos, doc, reposRPath);
+			BuildAsyncActionListForDocUpdate(asyncActionList, repos, doc, reposRPath);
 			return true;
 		}
 		return false;
