@@ -3657,17 +3657,17 @@ public class BaseController  extends BaseFunction{
 
 	//底层addDoc接口
 	//uploadFile: null为新建文件，否则为文件上传（新增）
-	protected boolean addDoc(Repos repos, Doc doc, 
+	protected int addDoc(Repos repos, Doc doc, 
 			MultipartFile uploadFile, //For upload
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
 	{
 		Log.debug("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 	
 		return addDoc_FSM(repos, doc,	//Add a empty file
 					uploadFile, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt, actionList);
+					commitMsg, commitUser, login_user, rt, context);
 	}
 	
 	//底层addDoc接口
@@ -3685,10 +3685,10 @@ public class BaseController  extends BaseFunction{
 					commitMsg, commitUser, login_user, rt, actionList);
 	}
 
-	protected boolean addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
+	protected int addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
 			MultipartFile uploadFile, //For upload
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
 	{
 		Log.debug("addDoc_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 		
@@ -3706,7 +3706,7 @@ public class BaseController  extends BaseFunction{
 		if(docLock == null)
 		{
 			docSysDebugLog("addDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-			return false;
+			return 0;
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3728,7 +3728,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysErrorLog("createRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDoc_FSM() createRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-				return false;
+				return 0;
 			}
 		}
 		else
@@ -3738,7 +3738,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDoc_FSM() updateRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-				return false;
+				return 0;
 			}
 		}
 		
@@ -3752,18 +3752,11 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 		}
 		
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
-			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, null, 2, null, null);
-			if(revision == null)
-			{
-				docSysDebugLog("addDoc_FSM() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-			}
-			else
-			{				
-				//Insert Push Action
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
+			//Insert VerRepos Add Action
+			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
@@ -3782,7 +3775,7 @@ public class BaseController  extends BaseFunction{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("addDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
-					return false;
+					return 0;
 				}
 			}
 			else
@@ -3790,20 +3783,28 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysDebugLog("addDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
 				docSysErrorLog("远程推送失败", rt); 
-				return false;
+				return 0;
 			}
 		}
 				
-		//BuildMultiActionListForDocAdd();
-		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
-		
-		unlockDoc(doc, lockType, login_user);
-		
 		rt.setData(doc);
 		rt.setMsgData("isNewNode");
 		docSysDebugLog("新增成功", rt); 
 		
-		return true;
+		//BuildMultiActionListForDocAdd();
+		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
+
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.docLockType = lockType;
+			context.newDocLockType = null;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
+		
+		unlockDoc(doc, lockType, login_user);
+		
+		return 1;
 	}
 	
 	//******************* 版本仓库参考节点接口 *********************************
@@ -3982,16 +3983,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFSM(repos))
 		{
-			String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, null, 2, null, null);
-			if(revision == null)
-			{
-				docSysDebugLog("addDocEx_FSM() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			}
-			else
-			{				
-				//Insert Push Action
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
+			//Insert VerRepos Add Action
+			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
 		}
 		else
 		{
@@ -4054,17 +4047,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFSM(repos))
 		{
-			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, null, 2, null, null);
-			if(revision == null)
-			{
-				docSysWarningLog("verReposRealDocDelete Failed", rt);
-				docSysDebugLog("deleteDoc_FSM() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			}
-			else
-			{
-				//异步推送远程版本仓库：Insert Push Action
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
+			//Insert VerRepos Delete Action
+			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.DELETE, DocType.REALDOC, null, login_user, false);
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
@@ -4273,12 +4257,7 @@ public class BaseController  extends BaseFunction{
 			ret = executeFSAction(action, rt);
 			break;
 		case VerRepos:
-			String revision = executeVerReposAction(action, rt);
-			if(revision != null)
-			{
-				action.getDoc().setRevision(revision);
-				ret = true;
-			}
+			ret = executeVerReposAction(action, rt);
 			break;
 		case RemoteStorage:
 			ret = executeRemoteStorageAction(action, rt);
@@ -6915,54 +6894,125 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private String executeVerReposAction(CommonAction action, ReturnAjax rt) 
+	private boolean executeVerReposAction(CommonAction action, ReturnAjax rt) 
 	{
 		Log.printObject("executeVerReposAction() action:",action);
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
+		Doc newDoc = action.getNewDoc();
 		
-		Doc inputDoc = doc;
-		Doc inputDstDoc = action.getNewDoc();
-
+		String revision = null;
 		boolean isRealDoc = true;
+
+		boolean ret = false;
+		if(action.getDocType() == DocType.REALDOC)
+		{
+			switch(action.getAction())
+			{
+			case ADD: //add
+			case DELETE:	//delete
+			case UPDATE: //update
+				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, null, null);				
+				if(revision == null)
+				{
+					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+				}
+				else
+				{
+					ret = true;
+					verReposPullPush(repos, isRealDoc, rt);
+				}
+				break;
+			case MOVE:	//move
+				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
+				if(revision == null)
+				{
+					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
+					docSysDebugLog("executeVerReposAction() verReposRealDocMove srcDoc [" + doc.getPath() + doc.getName() + "] dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
+				}
+				else
+				{
+					ret = true;
+					deleteVerReposDBEntry(repos, doc);
+					newDoc.setRevision(revision);
+					updateVerReposDBEntry(repos, newDoc, true);				
+
+					verReposPullPush(repos, isRealDoc, rt);
+				}
+				break;
+			case COPY: //copy
+				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
+				if(revision == null)
+				{
+					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
+				}
+				else
+				{
+					ret = true;
+					newDoc.setRevision(revision);
+					updateVerReposDBEntry(repos, newDoc, true);
+
+					verReposPullPush(repos, isRealDoc, rt);
+				}
+				break;
+			case PUSH: //pull
+				ret = verReposPullPush(repos, isRealDoc, rt);
+				break;
+			default:
+				break;				
+			}
+			return ret;
+		}
+		
 		if(action.getDocType() == DocType.VIRTURALDOC)
 		{
 			isRealDoc = false;
-			inputDoc = buildVDoc(doc);
-			
-			if(inputDstDoc != null)
+			Doc inputDoc = buildVDoc(doc);
+			Doc inputDstDoc = null;
+			if(newDoc != null)
 			{
-				inputDstDoc = buildVDoc(action.getNewDoc());
+				inputDstDoc = buildVDoc(newDoc);
 			}
+			
+			switch(action.getAction())
+			{
+			case ADD: //add
+			case DELETE:	//delete
+			case UPDATE: //update
+				revision = verReposDocCommit(repos, false, inputDoc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, null, null);
+				if(revision != null)
+				{
+					ret = true;
+					verReposPullPush(repos, isRealDoc, rt);
+				}
+				break;
+			case MOVE:	//move
+				revision = verReposDocMove(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
+				if(revision != null)
+				{
+					ret = true;
+					verReposPullPush(repos, isRealDoc, rt);
+				}
+				break;
+			case COPY: //copy
+				revision = verReposDocCopy(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
+				if(revision != null)
+				{
+					ret = true;
+					verReposPullPush(repos, isRealDoc, rt);
+				}
+				break;
+			case PUSH: //pull
+				ret = verReposPullPush(repos, isRealDoc, rt);
+				break;
+			default:
+				break;				
+			}
+			
+			return ret;
 		}
 		
-		String ret;
-		switch(action.getAction())
-		{
-		case ADD: //add
-		case DELETE:	//delete
-		case UPDATE: //update
-			ret = verReposDocCommit(repos, false, inputDoc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, null, null);
-			verReposPullPush(repos, isRealDoc, rt);
-			return ret;
-		case MOVE:	//move
-			ret = verReposDocMove(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
-			verReposPullPush(repos, isRealDoc, rt);
-			return ret;
-		case COPY: //copy
-			ret = verReposDocCopy(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
-			verReposPullPush(repos, isRealDoc, rt);
-			return ret;
-		case PUSH: //pull
-			if(verReposPullPush(repos, isRealDoc, rt) == false)
-			{
-				return null;
-			}
-			return "PUSHOK";
-		default:
-			break;				
-		}
-		return null;
+		return false;
 	}
 
 	//底层updateDoc接口
@@ -7033,17 +7083,8 @@ public class BaseController  extends BaseFunction{
 		//需要将文件Commit到版本仓库上去
 		if(isFSM(repos))
 		{
-			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, null, 2, null, null);
-			if(revision == null)
-			{
-				docSysDebugLog("updateDoc_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-				docSysWarningLog("verReposRealDocCommit Failed", rt);	
-			}
-			else
-			{
-				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
+			//Insert VerRepos Update Action
+			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
@@ -7125,18 +7166,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFSM(repos))
 		{
-			//需要将文件Commit到版本仓库上去
-			String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, null, 2, null, null);
-			if(revision == null)
-			{
-				docSysDebugLog("updateDocEx_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-				docSysWarningLog("verReposRealDocCommit Failed", rt);	
-			}
-			else
-			{
-				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
-			}
+			//Insert VerRepos Update Action
+			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
 		}
 		else
 		{
@@ -7433,18 +7464,8 @@ public class BaseController  extends BaseFunction{
 			
 			if(isFSM(repos))
 			{
-				//需要将文件Commit到版本仓库上去
-				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, null, 2, null, null);
-				if(revision == null)
-				{
-					docSysDebugLog("updateRealDocContent_FSM() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
-					docSysWarningLog("verReposRealDocCommit Failed", rt);	
-				}
-				else
-				{
-					//Insert Push Action
-					CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
-				}
+				//Insert VerRepos Update Action
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
 					
 				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 				{	
