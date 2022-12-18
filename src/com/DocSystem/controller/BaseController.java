@@ -1168,7 +1168,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(checkLock == false || false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
 		{
-			CommonAction.insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AUTOSYNCUP, syncType, DocType.REALDOC, null, user, false);
+			CommonAction.insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AutoSyncup, syncType, DocType.REALDOC, null, user, false);
 		}
 	}
 	
@@ -3761,7 +3761,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{				
 				//Insert Push Action
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -3987,7 +3987,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{				
 				//Insert Push Action
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 		}
 		else
@@ -4067,7 +4067,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				//异步推送远程版本仓库：Insert Push Action
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -4125,7 +4125,7 @@ public class BaseController  extends BaseFunction{
 		List<CommonAction> subActionList = new ArrayList<CommonAction>();
 		if(repos.getVerCtrl1() > 0)
 		{
-			CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.ADD, DocType.VIRTURALDOC, null, null, false); //verRepos commit
+			CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.VIRTURALDOC, null, null, false); //verRepos commit
 		}
 		CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, null, null, false);	//Add Index For VDoc
 		
@@ -4241,7 +4241,7 @@ public class BaseController  extends BaseFunction{
 		case FS:
 			ret = executeFSAction(action, rt);
 			break;
-		case VERREPOS:
+		case VerRepos:
 			String revision = executeVerReposAction(action, rt);
 			if(revision != null)
 			{
@@ -4255,7 +4255,7 @@ public class BaseController  extends BaseFunction{
 		case SearchIndex:
 			ret = executeIndexAction(action, rt);
 			break;
-		case AUTOSYNCUP: //AutoSyncUp
+		case AutoSyncup: //AutoSyncUp
 			ret = executeSyncUpAction(action, rt);
 			break;
 		case VFS:
@@ -4475,7 +4475,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean doSyncupForDocChange(Repos repos, Doc doc, User user, String commitMsg, boolean recurcive, Action actionType) {
 		CommonAction action = new CommonAction();
-		action.setType(ActionType.AUTOSYNCUP);		
+		action.setType(ActionType.AutoSyncup);		
 		action.setAction(actionType);	//只同步版本仓库并更新Index
 		action.setDocType( DocType.REALDOC);
 		action.setRepos(repos);
@@ -6997,7 +6997,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -7088,7 +7088,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
 			}
 		}
 		else
@@ -7374,7 +7374,7 @@ public class BaseController  extends BaseFunction{
 				else
 				{
 					//Insert Push Action
-					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user, false);
+					CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.REALDOC, null, login_user, false);
 				}
 					
 				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -7437,7 +7437,7 @@ public class BaseController  extends BaseFunction{
 		verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null, null);
 
 		//Insert Push Action
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 		//Insert index add action for VDoc
 		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
@@ -7475,7 +7475,7 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null, null);
 
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 				//Insert index add action for VDoc
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
@@ -7491,7 +7491,7 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null, null);
 
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 				//Insert index update action for VDoc
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, null, login_user, false);
