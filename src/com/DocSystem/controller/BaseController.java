@@ -98,6 +98,7 @@ import util.RegularUtil;
 import util.ReturnAjax;
 import util.Encrypt.MD5;
 
+import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.DocChange;
@@ -4189,11 +4190,35 @@ public class BaseController  extends BaseFunction{
 	public void executeCommonActionListAsync(List<CommonAction> actionList, ReturnAjax rt)
 	{
 		new Thread(new Runnable() {
-			//ReturnAjax rt = new ReturnAjax();
 			List<CommonAction> asyncActionList = actionList;
 			public void run() {
 				Log.debug("executeCommonActionListAsync() executeCommonActionList in new thread");
 				executeCommonActionList(asyncActionList, rt);
+			}
+		}).start();
+	}	
+	
+	public void executeCommonActionListAsyncEx(List<CommonAction> actionList, ReturnAjax rt, ActionContext context)
+	{
+		new Thread(new Runnable() {
+			List<CommonAction> asyncActionList = actionList;
+			public void run() {
+				Log.debug("executeCommonActionListAsync() executeCommonActionList in new thread");
+				
+				executeCommonActionList(asyncActionList, rt);
+				
+				//unlockDoc
+				if(context.docLockType != null)
+				{
+					unlockDoc(context.doc, context.docLockType, context.user);
+				}
+				if(context.newDocLockType != null)
+				{
+					unlockDoc(context.newDoc, context.newDocLockType, context.user);
+				}
+				
+				//write systemLog
+				addSystemLog(context.requestIP, context.user, context.event, context.subEvent, context.action, "成功", context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));
 			}
 		}).start();
 	}	
@@ -4253,6 +4278,12 @@ public class BaseController  extends BaseFunction{
 				ret = true;
 			}
 			break;
+		case RemoteStorage:
+			ret = executeRemoteStorageAction(action, rt);
+			break;
+		case AutoBackup:
+			ret = executeAutoBackupAction(action, rt);
+			break;
 		case DB:
 			ret = executeDBAction(action, rt);
 			break;			
@@ -4280,6 +4311,14 @@ public class BaseController  extends BaseFunction{
 			executeCommonActionForSubDir(action);
 		}
 		return ret;
+	}
+
+	private boolean executeAutoBackupAction(CommonAction action, ReturnAjax rt) {
+		return realTimeBackup(action.getRepos(), action.getDoc(), action.getNewDoc(), action.getUser(), action.getCommitMsg(), rt, action.actionName);
+	}
+
+	private boolean executeRemoteStorageAction(CommonAction action, ReturnAjax rt) {
+		return realTimeRemoteStoragePush(action.getRepos(), action.getDoc(), action.getNewDoc(), action.getUser(), action.getCommitMsg(), rt, action.actionName);
 	}
 
 	private boolean executeCommonActionForSubDir(CommonAction action) {
@@ -7116,17 +7155,18 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 		
-	protected boolean renameDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
-	}
-	
-
-	protected boolean moveDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
+	protected int renameDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, 
+			ReturnAjax rt, ActionContext context) {
+		return moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, context);
 	}
 
-	private boolean moveDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user,
-			ReturnAjax rt, List<CommonAction> asyncActionList) 
+	protected int moveDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, 
+			ReturnAjax rt, List<CommonAction> actionList, ActionContext context) {
+		return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, context);
+	}
+
+	private int moveDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user,
+			ReturnAjax rt, ActionContext context) 
 	{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
@@ -7136,7 +7176,7 @@ public class BaseController  extends BaseFunction{
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("moveDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
-			return false;
+			return 0;
 		}
 
 		String lockInfo2 = "moveDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
@@ -7145,7 +7185,7 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(srcDoc, lockType, login_user);
 			docSysDebugLog("moveDoc_FSM() lock dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-			return false;
+			return 0;
 		}
 		
 		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
@@ -7155,9 +7195,10 @@ public class BaseController  extends BaseFunction{
 
 			docSysErrorLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
 			docSysDebugLog("moveDoc_FSM() moveRealDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-			return false;
+			return 0;
 		}
 		
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
 			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
@@ -7191,7 +7232,7 @@ public class BaseController  extends BaseFunction{
 					unlockDoc(dstDoc, lockType, login_user);
 					docSysErrorLog("远程推送失败！", rt);
 					docSysDebugLog("moveDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-					return false;
+					return 0;
 				}
 			}
 			else
@@ -7200,22 +7241,31 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(dstDoc, lockType, login_user);
 				docSysErrorLog("远程推送失败！", rt);
 				docSysDebugLog("moveDoc_FSM() remoteServerDocCopy Failed: RemoteActionDisabled", rt);
-				return false;
+				return 0;
 			}
 		}
-		
+
+		Doc fsDoc = fsGetDoc(repos, dstDoc);
+		dstDoc.setLatestEditTime(fsDoc.getLatestEditTime());		
+		rt.setData(dstDoc);
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
 		BuildAsyncActionListForDocCopy(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, true);
 		
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.repos = repos;
+			context.doc = srcDoc;
+			context.newDoc = dstDoc;
+			context.user = login_user;
+			context.docLockType = lockType;
+			executeCommonActionListAsync(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
+		
 		unlockDoc(srcDoc, lockType, login_user);
 		unlockDoc(dstDoc, lockType, login_user);
-		
-		Doc fsDoc = fsGetDoc(repos, dstDoc);
-		dstDoc.setLatestEditTime(fsDoc.getLatestEditTime());
-		
-		rt.setData(dstDoc);
-		return true;
+		return 1;
 	}
 
 	//底层copyDoc接口
