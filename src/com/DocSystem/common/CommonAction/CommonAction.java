@@ -8,12 +8,11 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 
-public class CommonAction {
-	public String name = null;	//ActionName
-    
+public class CommonAction {    
 	private ActionType type = null; 	//1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 	private Action action = null;	//1:add 2:delete 3:update 4:move 5:copy
     private DocType docType = null; //0:DocName 1:RealDoc 2:VirtualDoc
+	public String actionName = null;	//ActionName
 
     private Repos repos = null;
     private Doc doc = null;
@@ -236,11 +235,11 @@ public class CommonAction {
 	public static void insertCommonActionEx(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, List<Doc> docList, String commitMsg,String commitUser, ActionType actionId, Action actionType, DocType docType, String actionName, List<CommonAction> subActionList, User user, boolean recursion) 
 	{	
 		CommonAction action = new CommonAction();
-		action.name = actionName;
 		action.setType(actionId);		
 		action.setAction(actionType);
 		action.setDocType(docType);
-
+		action.actionName = actionName;
+		
 		//System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 		
 		action.setRepos(repos);
