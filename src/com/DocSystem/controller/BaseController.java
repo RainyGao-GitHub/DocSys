@@ -4017,22 +4017,13 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层deleteDoc接口
-	protected String deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser, User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
+	protected int deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser, User login_user, ReturnAjax rt, ActionContext context) 
 	{
-		return deleteDoc_FSM(repos, doc, commitMsg, commitUser, login_user,  rt, asyncActionList);			
+		return deleteDoc_FSM(repos, doc, commitMsg, commitUser, login_user,  rt, context);			
 	}
 
-	protected String deleteDoc_FSM(Repos repos, Doc doc,	String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
-	{
-		Long docId = doc.getDocId();
-		if(docId == 0)
-		{
-			//由于前台是根据docId和pid来组织目录结构的，所以前台可以删除docId=0的节点，表示数据库中存在一个docId=0的非法节点，直接删除掉
-			docSysDebugLog("deleteDoc_FSM() 这是一个非法节点docId = 0", rt);
-			dbDeleteDoc(repos, doc, false);
-			return null;
-		}
-		
+	protected int deleteDoc_FSM(Repos repos, Doc doc,	String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
+	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "deleteDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
@@ -4041,10 +4032,10 @@ public class BaseController  extends BaseFunction{
 		if(docLock == null)
 		{
 			docSysDebugLog("deleteDoc_FSM() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			return null;			
+			return 0;			
 		}
 		
-		Log.info("deleteDoc_FSM() " + docId + " " + doc.getPath() + doc.getName() + " Lock OK");		
+		Log.info("deleteDoc_FSM() [" + doc.getPath() + doc.getName() + "] Lock OK");		
 		
 		//get RealDoc Full ParentPath
 		if(deleteRealDoc(repos,doc,rt) == false)
@@ -4053,12 +4044,14 @@ public class BaseController  extends BaseFunction{
 
 			docSysErrorLog(doc.getName() + " 删除失败！", rt);
 			docSysDebugLog("deleteDoc_FSM() deleteRealDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			return null;
+			return 0;
 		}
 		
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 				
 		String revision = null;
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
+		
 		if(isFSM(repos))
 		{
 			revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, null, 2, null, null);
@@ -4091,7 +4084,7 @@ public class BaseController  extends BaseFunction{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("deleteDoc_FSM() remoteServerDocCommit [" + doc.getPath() + doc.getName() + "]Failed", rt);
 					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
-					return null;
+					return 0;
 				}
 			}
 			else
@@ -4099,17 +4092,26 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysDebugLog("deleteDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
 				docSysErrorLog("远程推送失败", rt);
-				return null;
+				return 0;
 			}
 		}
 		
 		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
 		BuildAsyncActionListForDocDelete(asyncActionList, repos, doc, commitMsg, commitUser,true);
 		
+		rt.setData(doc);
+		
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.docLockType = lockType;
+			context.newDocLockType = null;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
+		
 		unlockDoc(doc, lockType, login_user);
 		
-		rt.setData(doc);
-		return revision;
+		return 1;
 	}
 	
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
@@ -4218,7 +4220,7 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//write systemLog
-				addSystemLog(context.requestIP, context.user, context.event, context.subEvent, context.action, "成功", context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));
+				addSystemLog(context.requestIP, context.user, context.event, context.subEvent, context.eventName, "成功", context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));
 			}
 		}).start();
 	}	
@@ -7161,7 +7163,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected int moveDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, 
-			ReturnAjax rt, List<CommonAction> actionList, ActionContext context) {
+			ReturnAjax rt, ActionContext context) {
 		return 	moveDoc_FSM(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, context);
 	}
 
@@ -7254,12 +7256,9 @@ public class BaseController  extends BaseFunction{
 		
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
-			context.repos = repos;
-			context.doc = srcDoc;
-			context.newDoc = dstDoc;
-			context.user = login_user;
 			context.docLockType = lockType;
-			executeCommonActionListAsync(asyncActionList, rt, context);
+			context.newDocLockType = lockType;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
 			return 2;	//异步执行后续任务
 		}
 		
@@ -7269,15 +7268,15 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层copyDoc接口
-	protected boolean copyDoc(Repos repos, Doc srcDoc, Doc dstDoc, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,List<CommonAction> actionList) 
+	protected int copyDoc(Repos repos, Doc srcDoc, Doc dstDoc, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
 	{
 		return 	copyDoc_FSM(repos, srcDoc, dstDoc,
-					commitMsg, commitUser, login_user, rt, actionList);
+					commitMsg, commitUser, login_user, rt, context);
 	}
 
-	protected boolean copyDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc,
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList)
+	protected int copyDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc,
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context)
 	{	
 		Log.debug("copyDoc_FSM() srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] to dstDoc [" +  dstDoc.getPath() + dstDoc.getName() + "]");
 		//Set the doc Creator and LasteEditor
@@ -7296,7 +7295,7 @@ public class BaseController  extends BaseFunction{
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("copyDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
-			return false;
+			return 0;
 		}
 		
 		String lockInfo2 = "copyDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
@@ -7305,7 +7304,7 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(srcDoc, lockType, login_user);				
 			docSysDebugLog("copyDoc_FSM() lock dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-			return false;
+			return 0;
 		}
 						
 		//复制文件或目录
@@ -7317,8 +7316,10 @@ public class BaseController  extends BaseFunction{
 
 			docSysErrorLog("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed", rt);
 			docSysDebugLog("copyDoc_FSM() copy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-			return false;
+			return 0;
 		}
+		
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		
 		if(isFSM(repos))
 		{
@@ -7355,7 +7356,7 @@ public class BaseController  extends BaseFunction{
 	
 					docSysErrorLog("远程推送失败！", rt);
 					docSysDebugLog("copyDoc_FSM() remoteServerDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
-					return false;
+					return 0;
 				}
 			}
 			else
@@ -7364,7 +7365,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(dstDoc, lockType, login_user);
 				docSysErrorLog("远程推送失败！", rt);
 				docSysDebugLog("copyDoc_FSM() remoteServerDocCopy Failed: RemoteActionDisabled", rt);
-				return false;
+				return 0;
 			}
 		}
 		
@@ -7372,13 +7373,21 @@ public class BaseController  extends BaseFunction{
 		Log.debug("copyDoc_FSM() BuildMultiActionListForDocCopy");		
 		BuildAsyncActionListForDocCopy(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, false);
 
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.docLockType = lockType;
+			context.newDocLockType = lockType;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
+		
 		Log.debug("copyDoc_FSM() unlockDoc");		
 		unlockDoc(srcDoc, lockType, login_user);
 		unlockDoc(dstDoc, lockType, login_user);
 		
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
-		return true;
+		return 1;
 	}
 
 	protected boolean updateRealDocContent(Repos repos, Doc doc, 

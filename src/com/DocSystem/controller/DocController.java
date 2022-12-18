@@ -531,7 +531,7 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "deleteDoc";
 		context.subEvent = "deleteDoc";
-		context.action = "删除文件";	
+		context.eventName = "删除文件";	
 		context.repos = repos;
 		context.doc = doc;
 		//context.newDoc = dstDoc;
@@ -543,10 +543,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -634,7 +634,7 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "deleteDocRS";
 		context.subEvent = "deleteDocRS";
-		context.action = "删除文件";	
+		context.eventName = "删除文件";	
 		context.repos = repos;
 		context.doc = doc;
 		//context.newDoc = dstDoc;
@@ -646,10 +646,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -745,7 +745,7 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "renameDoc";
 		context.subEvent = "renameDoc";
-		context.action = "重命名文件";	
+		context.eventName = "重命名文件";	
 		context.repos = repos;
 		context.doc = srcDoc;
 		context.newDoc = dstDoc;
@@ -756,10 +756,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -854,7 +854,7 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "moveDoc";
 		context.subEvent = "moveDoc";
-		context.action = "移动文件";	
+		context.eventName = "移动文件";	
 		context.repos = repos;
 		context.doc = srcDoc;
 		context.newDoc = dstDoc;
@@ -866,10 +866,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -949,7 +949,7 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "copyDoc";
 		context.subEvent = "copyDoc";
-		context.action = "复制文件";	
+		context.eventName = "复制文件";	
 		context.repos = repos;
 		context.doc = srcDoc;
 		context.newDoc = dstDoc;
@@ -961,10 +961,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -1092,7 +1092,7 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "copyDocRS";
 		context.subEvent = "copyDocRS";
-		context.action = "复制文件";	
+		context.eventName = "复制文件";	
 		context.repos = repos;
 		context.doc = srcDoc;
 		context.newDoc = dstDoc;
@@ -1104,10 +1104,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -1302,7 +1302,7 @@ public class DocController extends BaseController{
 		context.requestIP = getRequestIpAddress(request);
 		context.event = "checkDocInfo";
 		context.subEvent = "checkDocInfo";
-		context.action = "上传文件";	
+		context.eventName = "上传文件";	
 		context.repos = repos;
 		context.doc = sameDoc;
 		context.newDoc = doc;
@@ -1325,10 +1325,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.action, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
