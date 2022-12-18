@@ -529,6 +529,7 @@ public class DocController extends BaseController{
 		
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
 		context.event = "deleteDoc";
 		context.subEvent = "deleteDoc";
 		context.eventName = "删除文件";	
@@ -632,6 +633,7 @@ public class DocController extends BaseController{
 		
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
 		context.event = "deleteDocRS";
 		context.subEvent = "deleteDocRS";
 		context.eventName = "删除文件";	
@@ -743,6 +745,7 @@ public class DocController extends BaseController{
 		
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
 		context.event = "renameDoc";
 		context.subEvent = "renameDoc";
 		context.eventName = "重命名文件";	
@@ -852,6 +855,7 @@ public class DocController extends BaseController{
 				
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
 		context.event = "moveDoc";
 		context.subEvent = "moveDoc";
 		context.eventName = "移动文件";	
@@ -947,6 +951,7 @@ public class DocController extends BaseController{
 		
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
 		context.event = "copyDoc";
 		context.subEvent = "copyDoc";
 		context.eventName = "复制文件";	
@@ -1098,6 +1103,7 @@ public class DocController extends BaseController{
 				
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
 		context.event = "copyDocRS";
 		context.subEvent = "copyDocRS";
 		context.repos = repos;
@@ -1317,6 +1323,7 @@ public class DocController extends BaseController{
 		//TODO: copySameDoc是否需要修改event为copyDoc
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
 		context.event = "checkDocInfo";
 		context.subEvent = "checkDocInfo";
 		context.eventName = "复制文件";	
