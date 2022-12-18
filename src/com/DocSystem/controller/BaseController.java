@@ -3608,7 +3608,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//add successDocList to asyncActionList
-			CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+			CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
 		}
 		else
 		{
@@ -4110,9 +4110,9 @@ public class BaseController  extends BaseFunction{
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		//Insert index add action for RDoc Name
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.DOCNAME, null, null, false);
 		//Insert index add action for RDoc
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.REALDOC, null, null, false);
 
 		
 		//Insert add action for VDoc
@@ -4127,7 +4127,7 @@ public class BaseController  extends BaseFunction{
 		{
 			CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.ADD, DocType.VIRTURALDOC, null, null, false); //verRepos commit
 		}
-		CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null, null, false);	//Add Index For VDoc
+		CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, null, null, false);	//Add Index For VDoc
 		
 		//Insert add action for VDoc
 		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.ADD, DocType.VIRTURALDOC, subActionList, null, false);			
@@ -4138,13 +4138,13 @@ public class BaseController  extends BaseFunction{
 		//注意：删除操作的VirtualDoc是不删除的
 		
 		//Insert index delete action for All( DocName / RDoc /VDoc )
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.ALL, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.DELETE, DocType.ALL, null, null, false);
 	}
 
 	void BuildAsyncActionListForDocUpdate(List<CommonAction> asyncActionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index update action for RDoc
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, false);
 	}
 	
 	private void BuildAsyncActionListForDocCopy(List<CommonAction> asyncActionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove)
@@ -4173,11 +4173,11 @@ public class BaseController  extends BaseFunction{
 			//Insert IndexAction For Copy or Move
 			if(isMove)  //delete all index for srcDoc and add all index for dstDoc (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.MOVE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.MOVE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
 			}
 			else	//ADD all index for dstDoc (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.INDEX, com.DocSystem.common.CommonAction.Action.COPY, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
+				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.COPY, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
 			}
 		}	
 	}
@@ -4252,7 +4252,7 @@ public class BaseController  extends BaseFunction{
 		case DB:
 			ret = executeDBAction(action, rt);
 			break;			
-		case INDEX:
+		case SearchIndex:
 			ret = executeIndexAction(action, rt);
 			break;
 		case AUTOSYNCUP: //AutoSyncUp
@@ -7440,7 +7440,7 @@ public class BaseController  extends BaseFunction{
 		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 		//Insert index add action for VDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
+		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
 		return true;
 	}
 	
@@ -7478,7 +7478,7 @@ public class BaseController  extends BaseFunction{
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 				//Insert index add action for VDoc
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
 				return true;
 			}
 		}
@@ -7494,7 +7494,7 @@ public class BaseController  extends BaseFunction{
 				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
 
 				//Insert index update action for VDoc
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, null, login_user, false);
 				return true;
 			}
 		}
