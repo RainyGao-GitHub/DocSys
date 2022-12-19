@@ -3701,12 +3701,16 @@ public class BaseController  extends BaseFunction{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "addDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
-		
-		if(docLock == null)
-		{
-			docSysDebugLog("addDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-			return 0;
+
+		if(!context.isSubAction)
+		{	
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
+			
+			if(docLock == null)
+			{
+				docSysDebugLog("addDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
+				return 0;
+			}
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3725,7 +3729,10 @@ public class BaseController  extends BaseFunction{
 			//File must not exists
 			if(createRealDoc(repos, doc, rt) == false)
 			{	
-				unlockDoc(doc, lockType, login_user);
+				if(!context.isSubAction)
+				{	
+					unlockDoc(doc, lockType, login_user);
+				}
 				docSysErrorLog("createRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDoc_FSM() createRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				return 0;
@@ -3735,7 +3742,10 @@ public class BaseController  extends BaseFunction{
 		{
 			if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
-				unlockDoc(doc, lockType, login_user);
+				if(!context.isSubAction)
+				{	
+					unlockDoc(doc, lockType, login_user);
+				}
 				docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDoc_FSM() updateRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				return 0;
@@ -7073,12 +7083,16 @@ public class BaseController  extends BaseFunction{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "updateDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
+	
+		if(!context.isSubAction)
+		{	
+			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
 		
-		if(docLock == null)
-		{
-			Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
-			return 0;
+			if(docLock == null)
+			{
+				Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
+				return 0;
+			}
 		}
 		
 		//get RealDoc Full ParentPath
@@ -7087,8 +7101,11 @@ public class BaseController  extends BaseFunction{
 		//保存文件信息
 		if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
-			unlockDoc(doc, lockType, login_user);
-
+			if(!context.isSubAction)
+			{
+				unlockDoc(doc, lockType, login_user);
+			}
+			
 			Log.info("updateDoc_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return 0;
