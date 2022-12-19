@@ -3672,17 +3672,17 @@ public class BaseController  extends BaseFunction{
 	
 	//底层addDoc接口
 	//docData: null为新建文件或者是目录，否则为文件上传（新增）
-	protected boolean addDocEx(Repos repos, Doc doc, 
+	protected int addDocEx(Repos repos, Doc doc, 
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
 	{
 		Log.debug("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 	
 		return addDocEx_FSM(repos, doc,	//Add a empty file
 					docData, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt, actionList);
+					commitMsg, commitUser, login_user, rt, context);
 	}
 
 	protected int addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
@@ -3751,6 +3751,17 @@ public class BaseController  extends BaseFunction{
 		{	
 			docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 		}
+
+		rt.setData(doc);
+		rt.setMsgData("isNewNode");
+		docSysDebugLog("新增成功", rt); 
+		
+		if(context.isSubAction)
+		{
+			//写入subAction成功到actionLog文件中（收到action结束或者超时会写入到系统日志中）
+			//如果是subAction, 不需要执行异步任务以及unlockDoc(收到action结束或者超时会统一执行)
+			return 1;
+		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -3786,10 +3797,6 @@ public class BaseController  extends BaseFunction{
 				return 0;
 			}
 		}
-				
-		rt.setData(doc);
-		rt.setMsgData("isNewNode");
-		docSysDebugLog("新增成功", rt); 
 		
 		//BuildMultiActionListForDocAdd();
 		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
@@ -3915,10 +3922,10 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	protected boolean addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
+	protected int addDocEx_FSM(Repos repos, Doc doc,	//Add a empty file
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
 	{
 		Log.debug("addDocEx_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 		
@@ -3937,7 +3944,7 @@ public class BaseController  extends BaseFunction{
 		if(docLock == null)
 		{
 			docSysDebugLog("addDocEx_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-			return false;
+			return 0;
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3958,7 +3965,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysErrorLog("createRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDocEx_FSM() createRealDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-				return false;
+				return 0;
 			}
 		}
 		else
@@ -3968,7 +3975,7 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDocEx_FSM() updateRealDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-				return false;
+				return 0;
 			}
 		}
 		
@@ -3980,11 +3987,20 @@ public class BaseController  extends BaseFunction{
 		{	
 			docSysDebugLog("addDocEx_FSM() dbAddDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 		}
+		rt.setData(doc);
+		rt.setMsgData("isNewNode");
+		docSysDebugLog("新增成功", rt); 
 		
+		if(context.isSubAction)
+		{
+			return 1;
+		}
+		
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Add Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+			CommonAction.insertCommonAction(asyncActionList , repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
 		}
 		else
 		{
@@ -3993,20 +4009,24 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysDebugLog("addDocEx_FSM() remoteServerDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
-				return false;
+				return 0;
 			}			
 		}
 		
 		//BuildMultiasyncActionListForDocAdd();
 		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.docLockType = lockType;
+			context.newDocLockType = null;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
 		
 		unlockDoc(doc, lockType, login_user);
 		
-		rt.setData(doc);
-		rt.setMsgData("isNewNode");
-		docSysDebugLog("新增成功", rt); 
 		
-		return true;
+		return 0;
 	}
 
 	//底层deleteDoc接口
@@ -4041,10 +4061,15 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
-				
+		rt.setData(doc);
+		
+		if(context.isSubAction)
+		{
+			return 1;
+		}
+		
 		String revision = null;
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
-		
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Delete Action
@@ -4083,7 +4108,7 @@ public class BaseController  extends BaseFunction{
 		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
 		BuildAsyncActionListForDocDelete(asyncActionList, repos, doc, commitMsg, commitUser,true);
 		
-		rt.setData(doc);
+
 		
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
@@ -7080,6 +7105,11 @@ public class BaseController  extends BaseFunction{
 			docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
 		}
 		
+		if(context.isSubAction)
+		{
+			return 1;
+		}
+		
 		//需要将文件Commit到版本仓库上去
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -7140,22 +7170,28 @@ public class BaseController  extends BaseFunction{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "updateDocEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
-		
-		if(docLock == null)
+
+		if(!context.isSubAction)
 		{
-			Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
-			return 0;
+			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
+			if(docLock == null)
+			{
+				Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
+				return 0;
+			}
 		}
-	
+		
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);		
-	
+		
 		//保存文件信息
 		if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
-			unlockDoc(doc, lockType, login_user);
-	
+			if(!context.isSubAction)
+			{
+				unlockDoc(doc, lockType, login_user);
+			}
+			
 			Log.info("updateDocEx_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return 0;
@@ -7170,6 +7206,11 @@ public class BaseController  extends BaseFunction{
 		if(dbUpdateDoc(repos, doc, true) == false)
 		{
 			docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
+		}
+		
+		if(context.isSubAction)
+		{
+			return 1;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -7246,6 +7287,11 @@ public class BaseController  extends BaseFunction{
 			docSysErrorLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
 			docSysDebugLog("moveDoc_FSM() moveRealDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return 0;
+		}
+		
+		if(context.isSubAction)
+		{
+			return 1;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -7367,8 +7413,12 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
+		if(context.isSubAction)
+		{
+			return 1;
+		}
 		
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
 			Log.debug("copyDoc_FSM() verReposDocCopy");		
