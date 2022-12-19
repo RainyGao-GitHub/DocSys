@@ -3718,7 +3718,6 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localDocPath);
 		if(localEntry.exists())
 		{	
-			unlockDoc(doc, lockType, login_user);
 			docSysDebugLog("addDoc_FSM() [" + doc.getPath() + doc.getName() +  "]　已存在！", rt);
 		}
 		
@@ -3962,7 +3961,6 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localDocPath);
 		if(localEntry.exists())
 		{	
-			unlockDoc(doc, lockType, login_user);
 			docSysDebugLog("addDocEx_FSM() [" +localDocPath + "]　已存在！", rt);
 		}
 		
@@ -4072,11 +4070,6 @@ public class BaseController  extends BaseFunction{
 		
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		rt.setData(doc);
-		
-		if(context.isSubAction)
-		{
-			return 1;
-		}
 		
 		String revision = null;
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -7306,11 +7299,6 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		if(context.isSubAction)
-		{
-			return 1;
-		}
-		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
@@ -7428,11 +7416,6 @@ public class BaseController  extends BaseFunction{
 			docSysErrorLog("copyRealDoc copy " + srcDoc.getName() + " to " + dstDoc.getName() + "Failed", rt);
 			docSysDebugLog("copyDoc_FSM() copy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return 0;
-		}
-		
-		if(context.isSubAction)
-		{
-			return 1;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
