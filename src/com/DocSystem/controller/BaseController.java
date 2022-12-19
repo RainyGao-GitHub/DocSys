@@ -7504,6 +7504,113 @@ public class BaseController  extends BaseFunction{
 		rt.setData(dstDoc);
 		return 1;
 	}
+	
+	protected int copySameDocForUpload(Repos repos, Doc sameDoc, Doc doc,
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context)
+	{	
+		Log.debug("copySameDocForUpload() sameDoc [" + sameDoc.getPath() + sameDoc.getName() + "] to doc [" +  doc.getPath() + doc.getName() + "]");
+		//Set the doc Creator and LasteEditor
+		doc.setCreator(login_user.getId());
+		doc.setCreatorName(login_user.getName());
+		doc.setLatestEditor(login_user.getId());
+		doc.setLatestEditorName(login_user.getName());
+		
+		Log.debug("copySameDocForUpload() lockDoc");		
+		DocLock srcDocLock = null;
+		DocLock dstDocLock = null;
+		int lockType = DocLock.LOCK_TYPE_FORCE;
+		String lockInfo = "copySameDocForUpload() syncLock [" + sameDoc.getPath() + sameDoc.getName() + "] at repos[" + repos.getName() + "]";
+		//Try to lock the srcDoc
+		srcDocLock = lockDoc(sameDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
+		if(srcDocLock == null)
+		{
+			docSysDebugLog("copySameDocForUpload() lock srcDoc [" + sameDoc.getPath() + sameDoc.getName() + "] Failed", rt);
+			return 0;
+		}
+		
+		String lockInfo2 = "copySameDocForUpload() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		if(!context.isSubAction)
+		{
+			dstDocLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo2);
+			if(dstDocLock == null)
+			{
+				unlockDoc(sameDoc, lockType, login_user);				
+				docSysDebugLog("copySameDocForUpload() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
+				return 0;
+			}
+		}
+		
+		//复制文件或目录
+		Log.debug("copySameDocForUpload() copyRealDoc");		
+		if(copyRealDoc(repos, sameDoc, doc, rt) == false)
+		{
+			unlockDoc(sameDoc, lockType, login_user);
+			
+			if(!context.isSubAction)
+			{
+				unlockDoc(doc, lockType, login_user);
+			}
+			
+			docSysErrorLog("copySameDocForUpload copy " + sameDoc.getName() + " to " + doc.getName() + "Failed", rt);
+			docSysDebugLog("copySameDocForUpload() copy srcDoc [" + sameDoc.getPath() + sameDoc.getName()+ "] to dstDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
+			return 0;
+		}
+		
+		if(context.isSubAction)
+		{
+			return 1;
+		}
+		
+		//get RealDoc Full ParentPath
+		String reposRPath =  Path.getReposRealPath(repos);		
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
+		if(isFSM(repos))
+		{
+			//Insert VerRepos Update Action
+			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{	
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+			}
+		}
+		else
+		{
+			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			{	
+				if(remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+				{
+					unlockDoc(doc, lockType, login_user);
+					docSysDebugLog("copySameDocForUpload() remoteServerDocCommit Failed", rt);
+					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
+					return 0;
+				}
+			}
+			else
+			{
+				unlockDoc(doc, lockType, login_user);
+				docSysDebugLog("copySameDocForUpload() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
+				docSysErrorLog("远程推送失败", rt);
+				return 0;
+			}
+		}
+		
+		//Build DocUpdate action
+		BuildAsyncActionListForDocUpdate(asyncActionList, repos, doc, reposRPath);
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.docLockType = lockType;
+			context.newDocLockType = null;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
+		
+		return 1;
+	}
+	
 
 	protected boolean updateRealDocContent(Repos repos, Doc doc, 
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
@@ -7555,8 +7662,8 @@ public class BaseController  extends BaseFunction{
 				{	
 					CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDocContent", null, login_user, false);
 					CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDocContent", null, login_user, false);
-					realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
-					realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+					//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+					//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
 				}
 			}
 			else
