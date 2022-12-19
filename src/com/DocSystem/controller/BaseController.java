@@ -7016,34 +7016,34 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层updateDoc接口
-	public boolean updateDoc(Repos repos, Doc doc,
+	public int updateDoc(Repos repos, Doc doc,
 								MultipartFile uploadFile,
 								Integer chunkNum, Long chunkSize, String chunkParentPath, 
-								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+								String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
 	{
 		return updateDoc_FSM(repos, doc,
 					uploadFile,
 					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt, actionList);
+					commitMsg, commitUser, login_user, rt, context);
 	}
 	
 	//底层updateDoc接口
-	public boolean updateDocEx(Repos repos, Doc doc,
+	public int updateDocEx(Repos repos, Doc doc,
 								byte [] docData,
 								Integer chunkNum, Long chunkSize, String chunkParentPath, 
-								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+								String commitMsg,String commitUser,User login_user, ReturnAjax rt,  ActionContext context) 
 	{
 		return updateDocEx_FSM(repos, doc,
 					docData,
 					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt, actionList);
+					commitMsg, commitUser, login_user, rt, context);
 	}
 
-	protected boolean updateDoc_FSM(Repos repos, Doc doc,
+	protected int updateDoc_FSM(Repos repos, Doc doc,
 				MultipartFile uploadFile,
 				Integer chunkNum, Long chunkSize, String chunkParentPath, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-				List<CommonAction> actionList) 
+				 ActionContext context) 
 	{	
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
@@ -7053,7 +7053,7 @@ public class BaseController  extends BaseFunction{
 		if(docLock == null)
 		{
 			Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
-			return false;
+			return 0;
 		}
 		
 		//get RealDoc Full ParentPath
@@ -7066,7 +7066,7 @@ public class BaseController  extends BaseFunction{
 
 			Log.info("updateDoc_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
-			return false;
+			return 0;
 		}
 		
 		doc.setLatestEditor(login_user.getId());
@@ -7081,15 +7081,16 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//需要将文件Commit到版本仓库上去
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Update Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
-				CommonAction.insertCommonActionEx(actionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
-				CommonAction.insertCommonActionEx(actionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
 				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 			}
@@ -7103,7 +7104,7 @@ public class BaseController  extends BaseFunction{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("updateDoc_FSM() remoteServerDocCommit Failed", rt);
 					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
-					return false;
+					return 0;
 				}
 			}
 			else
@@ -7111,23 +7112,30 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				docSysDebugLog("updateDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
 				docSysErrorLog("远程推送失败", rt);
-				return false;
+				return 0;
 			}
 		}
 		
 		//Build DocUpdate action
-		BuildAsyncActionListForDocUpdate(actionList, repos, doc, reposRPath);
+		BuildAsyncActionListForDocUpdate(asyncActionList, repos, doc, reposRPath);
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.docLockType = lockType;
+			context.newDocLockType = null;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
 		
 		unlockDoc(doc, lockType, login_user);
 		
-		return true;
+		return 1;
 	}
 	
-	protected boolean updateDocEx_FSM(Repos repos, Doc doc,
+	protected int updateDocEx_FSM(Repos repos, Doc doc,
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-			List<CommonAction> actionList) 
+			ActionContext context) 
 	{	
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
@@ -7137,7 +7145,7 @@ public class BaseController  extends BaseFunction{
 		if(docLock == null)
 		{
 			Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
-			return false;
+			return 0;
 		}
 	
 		//get RealDoc Full ParentPath
@@ -7150,7 +7158,7 @@ public class BaseController  extends BaseFunction{
 	
 			Log.info("updateDocEx_FSM() FileUtil.saveFile " + doc.getName() +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + doc.getName());
-			return false;
+			return 0;
 		}
 		
 		doc.setLatestEditor(login_user.getId());
@@ -7164,10 +7172,11 @@ public class BaseController  extends BaseFunction{
 			docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
 		}
 		
+		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Update Action
-			CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
 		}
 		else
 		{
@@ -7176,16 +7185,24 @@ public class BaseController  extends BaseFunction{
 				unlockDoc(doc, lockType, login_user);
 				Log.info("updateDocEx_FSM() remoteServerDocCommit Failed");
 				//rt.setError("远程推送失败"); //remoteServerDocCommit already set the errorinfo
-				return false;
+				return 0;
 			}
 		}
 		
 		//Build DocUpdate action
-		BuildAsyncActionListForDocUpdate(actionList, repos, doc, reposRPath);
+		BuildAsyncActionListForDocUpdate(asyncActionList, repos, doc, reposRPath);
+		
+		if(asyncActionList != null && asyncActionList.size() > 0)
+		{
+			context.docLockType = lockType;
+			context.newDocLockType = null;
+			executeCommonActionListAsyncEx(asyncActionList, rt, context);
+			return 2;	//异步执行后续任务
+		}
 		
 		unlockDoc(doc, lockType, login_user);
 		
-		return true;
+		return 1;
 	}
 		
 	protected int renameDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, 
