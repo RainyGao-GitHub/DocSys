@@ -1540,7 +1540,6 @@ public class DocController extends BaseController{
 					commitMsg = "上传 " + path + name;
 				}
 				String commitUser = reposAccess.getAccessUser().getName();
-				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				
 				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 				String reposPath = Path.getReposPath(repos);
@@ -1557,42 +1556,61 @@ public class DocController extends BaseController{
 				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 				
 				Doc dbDoc = docSysGetDoc(repos, doc, false);
-				boolean ret = false;
+				
+				ActionContext context = new ActionContext();
+				context.requestIP = getRequestIpAddress(request);
+				context.user = reposAccess.getAccessUser();
+				context.event = "checkChunkUploaded";
+				context.subEvent = "checkChunkUploaded";
+				context.eventName = "文件上传";	
+				context.repos = repos;
+				context.doc = doc;
+				//context.newDoc = dstDoc;
+				
+				int ret = 0;
 				if(dbDoc == null || dbDoc.getType() == 0)
 				{
 					ret = addDoc(repos, doc,
 								null,
-								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 					writeJson(rt, response);
-					if(ret == true)
+
+					switch(ret)
 					{
-						executeCommonActionList(actionList, rt);
+					case 0:
+						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+						break;
+					case 1:
 						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
-					}					
-					else
-					{
-						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));
-					}
+						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+						break;
+					default:	//异步执行中（异步线程负责日志写入）
+						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+						break;
+					}				
 				}
 				else
 				{
 					ret = updateDoc(repos, doc, 
 							null,   
-							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);				
+							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);				
 				
 					writeJson(rt, response);	
-					if(ret == true)
+					switch(ret)
 					{
-						executeCommonActionList(actionList, rt);
+					case 0:
+						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+						break;
+					case 1:
 						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 						deletePreviewFile(doc);
-						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));
-					}
-					else
-					{
-						addSystemLog(request, reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
-					}
+						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+						break;
+					default:	//异步执行中（异步线程负责日志写入）
+						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+						deletePreviewFile(doc);
+						break;
+					}				
 				}
 				
 				return;
@@ -1635,7 +1653,6 @@ public class DocController extends BaseController{
 			commitMsg = "上传 " + path + name;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
 			
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 		String reposPath = Path.getReposPath(repos);
@@ -1652,43 +1669,65 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true,localRootPath, localVRootPath, size, checkSum);
 			
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
+		context.event = "combineChunks";
+		context.subEvent = "combineChunks";
+		context.eventName = "文件上传";	
+		context.repos = repos;
+		context.doc = doc;
+		//context.newDoc = dstDoc;
+		
+		int ret = 0;
 		//新增文件
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
-			boolean ret = addDoc(repos, doc,
+			ret = addDoc(repos, doc,
 							null,
-							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+
 			writeJson(rt, response);
-			if(ret == true)
+			
+			switch(ret)
 			{
-				executeCommonActionList(actionList, rt);
+			case 0:
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				break;
+			case 1:
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));						
-			}
-			else
-			{
-				addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
-			}
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				break;
+			default:	//异步执行中（异步线程负责日志写入）
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				break;
+			}				
 			return;
 		}
 
 		//更新文件
-		boolean ret = updateDoc(repos, doc, 
+		ret = updateDoc(repos, doc, 
 						null,   
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
+
 		writeJson(rt, response);	
-		if(ret == true)
-		{
-			executeCommonActionList(actionList, rt);
-			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-			deletePreviewFile(doc);		
-			addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));						
-		}
-		else
-		{
-			addSystemLog(request, reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
-		}
 		
+		switch(ret)
+		{
+		case 0:
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+			deletePreviewFile(doc);	
+			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+			deletePreviewFile(doc);	
+			break;
+		}	
 	}
 	
 	@RequestMapping("/getMaxThreadCount.do")
@@ -1770,6 +1809,7 @@ public class DocController extends BaseController{
 
 		//Check Add Right
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
@@ -1855,52 +1895,69 @@ public class DocController extends BaseController{
 		//非分片上传或LastChunk Received
 		if(uploadFile != null) 
 		{
+			ActionContext context = new ActionContext();
+			context.requestIP = getRequestIpAddress(request);
+			context.user = reposAccess.getAccessUser();
+			context.event = "uploadDoc";
+			context.subEvent = "uploadDoc";
+			context.eventName = "文件上传";	
+			context.repos = repos;
+			context.doc = doc;
+			//context.newDoc = dstDoc;
+			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "上传 " + path + name;
 			}
 			String commitUser = reposAccess.getAccessUser().getName();
 			String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
-			List<CommonAction> actionList = new ArrayList<CommonAction>();
-			boolean ret = false;
+			int ret = 0;
 			if(dbDoc == null || dbDoc.getType() == 0)
 			{
 				ret = addDoc(repos, doc, 
 						uploadFile,
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
-				writeJson(rt, response);
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 
-				if(ret == true)
+				writeJson(rt, response);
+				
+				switch(ret)
 				{
-					executeCommonActionList(actionList, rt);
+				case 0:
+					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+					break;
+				case 1:
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
-				}
-				else
-				{
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
-				}
-				return;
+					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+					break;
+				default:	//异步执行中（异步线程负责日志写入）
+					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+					break;
+				}				
+				return;				
 			}
 			
 			//updateDoc
 			ret = updateDoc(repos, doc, 
 					uploadFile,  
-					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
 		
-			writeJson(rt, response);	
-	
-			if(ret == true)
+			writeJson(rt, response);
+			
+			switch(ret)
 			{
-				executeCommonActionList(actionList, rt);
+			case 0:
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				break;
+			case 1:
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 				deletePreviewFile(doc);
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));					
-			}
-			else
-			{
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));										
-			}
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				break;
+			default:	//异步执行中（异步线程负责日志写入）
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				deletePreviewFile(doc);
+				break;
+			}				
 			return;
 		}
 		
@@ -2182,51 +2239,70 @@ public class DocController extends BaseController{
 		//非分片上传或LastChunk Received
 		if(uploadFile != null) 
 		{
+			ActionContext context = new ActionContext();
+			context.requestIP = getRequestIpAddress(request);
+			context.user = reposAccess.getAccessUser();
+			context.event = "uploadDocRS";
+			context.subEvent = "uploadDocRS";
+			context.eventName = "文件上传";	
+			context.repos = repos;
+			context.doc = doc;
+			//context.newDoc = dstDoc;
+			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "上传 " + path + name;
 			}
 			String commitUser = reposAccess.getAccessUser().getName();
 			String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
-			List<CommonAction> actionList = new ArrayList<CommonAction>();
-			boolean ret = false;
+			
+			int ret = 0;
 			if(dbDoc == null || dbDoc.getType() == 0)
 			{
 				ret = addDoc(repos, doc, 
 						uploadFile,
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+				
 				writeJson(rt, response);
 
-				if(ret == true)
+				switch(ret)
 				{
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
-					executeCommonActionList(actionList, rt);
+				case 0:
+					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+					break;
+				case 1:
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				}
-				else
-				{
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
-				}
+					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+					break;
+				default:	//异步执行中（异步线程负责日志写入）
+					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+					break;
+				}		
 				return;
 			}
 
 			//updateDoc
 			ret = updateDoc(repos, doc, 
 					uploadFile,  
-					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
 		
 			writeJson(rt, response);	
-			if(ret == true)
+			
+			switch(ret)
 			{
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
-				executeCommonActionList(actionList, rt);
+			case 0:
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				break;
+			case 1:
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 				deletePreviewFile(doc);
-			}
-			else
-			{
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
-			}
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				break;
+			default:	//异步执行中（异步线程负责日志写入）
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				deletePreviewFile(doc);
+				break;
+			}	
 			return;
 		}
 		
