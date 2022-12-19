@@ -1350,18 +1350,16 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 
-		//TODO: copySameDoc是否需要修改event为copyDoc
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
 		context.user = reposAccess.getAccessUser();
 		context.event = "checkDocInfo";
 		context.subEvent = "checkDocInfo";
-		context.eventName = "复制文件";	
+		context.eventName = "上传文件";	
 		context.repos = repos;
-		context.doc = sameDoc;
-		context.newDoc = doc;
-		
-		int ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+		context.doc = doc;
+		context.newDoc = null;
+		int ret = copySameDocForUpload(repos, sameDoc, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		if(ret == 0)
 		{
 			rt.setStatus("ok");
@@ -1378,9 +1376,6 @@ public class DocController extends BaseController{
 				
 		switch(ret)
 		{
-		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
 		case 1:
 			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
