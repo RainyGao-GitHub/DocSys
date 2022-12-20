@@ -161,6 +161,7 @@
 			Batch.num = fileNum;
 			Batch.index = 0;
 			Batch.state = 0;
+			Batch.startTime = new Date().getTime();
 			
 			//Init Content.BatchList
 			Content.BatchList = [];
@@ -298,6 +299,7 @@
       		var index = Batch.index;
       		var fileNum =  Batch.num;
 			var commitMsg=Batch.commitMsg;
+			var batchStartTime = Batch.startTime;
       		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum + "commitMsg:"+commitMsg);
       		
       		var count = 0;
@@ -325,6 +327,7 @@
     	   		   	SubContext.level = level;
         			SubContext.vid = vid;
 					SubContext.commitMsg = commitMsg;
+					SubContext.batchStartTime = batchStartTime;	//用于标记同一次上传，重传需要更新
     	   		   	
 		    		SubContext.docId = -1; //-1: 新增  
 		    		
@@ -417,6 +420,11 @@
     		//get the realParentPath
     		var realParentPath = SubContext.parentPath;
     		var realLevel = SubContext.level;
+    		
+    		//get the dirPath
+    		var dirPath = "";	//relativePath中的第一级目录就是folderPath
+    		var dirPathReady = false;   
+    		
     		var pathArray = new Array(); //定义一数组 
 			pathArray = relativePath.split("/"); //字符分割 
 			for(var i=0; i<pathArray.length-1; i++)	//最后一个是文件本身因此不需要检查
@@ -426,14 +434,21 @@
 				{
 					continue;
 				}
+				
+				if(dirPathReady == false)
+				{
+					dirPath = SubContext.parentPath + nodeName + "/";
+				}
+				
 	 			realLevel++;				
 				realParentPath = realParentPath + nodeName +"/";
 			}
-    		//console.log("getRealParentInfo() realParentPath:" + realParentPath);
+    		console.log("getRealParentInfo() realParentPath:" + realParentPath + " dirPath:" + dirPath);
 
 			SubContext.realParentPath = realParentPath;
 			SubContext.realLevel = realLevel;
 			SubContext.realParentId = -1;
+			SubContext.dirPath = dirPath;	//dirPath is not empty means that it is folder upload
 			return true;
  		}
       	
@@ -1472,6 +1487,9 @@
 					type: SubContext.type,
 					size: SubContext.size,
 	             	checkSum: SubContext.checkSum,	
+	             	//dirPath: used to mark folder upload
+	             	dirPath: SubContext.dirPath,
+	             	batchStartTime: SubContext.batchStartTime,
 	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
@@ -1543,6 +1561,7 @@
 				return;
 			}
 			
+			var reuploadTime = new Date().getTime();
 			if(false == reuploadFlag && false == isUploading)
 			{	
 				console.log("reuploadFailDocs() 启动重传");
@@ -1572,12 +1591,12 @@
 				//由于push会pop后进的id,会导致先上传还未绘制进度条的文件，因此反过来遍历
 				for(i=0; i<totalNum;i++)
 				{
-					reuploadHandler(i);
+					reuploadHandler(i, reuploadTime);
 				}
 			}
 			else
 			{
-				reuploadHandler(id);
+				reuploadHandler(id, reuploadTime);
 			}
 			
 			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
@@ -1602,7 +1621,7 @@
 			}
 		}
 		
-		function reuploadHandler(id)
+		function reuploadHandler(id, reuploadTime)
 		{
 			var SubContext = SubContextList[id];
 			
@@ -1624,6 +1643,7 @@
 				}
 			}
 			SubContext.reuploadFlag = true;
+			SubContext.batchStartTime = reuploadTime;
 			
 			//更新重传总数
 			reuploadTotalNum++;
@@ -1791,6 +1811,9 @@
 	             	chunkSize: chunk.chunkSize,
 	             	chunkHash: chunk.checkSum,
 	             	combineDisabled: 1, //后台不自动合并
+	             	//dirPath: used to mark folder upload
+	             	dirPath: SubContext.dirPath,
+	             	batchStartTime: SubContext.batchStartTime,
 	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
@@ -1844,6 +1867,9 @@
 	             	cutSize: SubContext.cutSize,
 	             	//chunkSize: chunk.chunkSize,
 	             	//chunkHash: chunk.checkSum,
+	             	//dirPath: used to mark folder upload
+	             	dirPath: SubContext.dirPath,
+	             	batchStartTime: SubContext.batchStartTime,
 	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
@@ -2143,6 +2169,9 @@
 				form.append("checkSum", SubContext.checkSum);
 				form.append("uploadFile", SubContext.file);
 				form.append("commitMsg", SubContext.commitMsg);
+             	//dirPath: used to mark folder upload
+				form.append("dirPath", SubContext.dirPath);
+				form.append("batchStartTime", SubContext.batchStartTime);
 				if(gShareId)
 				{
 					form.append("shareId", gShareId);
@@ -2162,6 +2191,9 @@
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
 				form.append("commitMsg", SubContext.commitMsg);
+             	//dirPath: used to mark folder upload
+				form.append("dirPath", SubContext.dirPath);
+				form.append("batchStartTime", SubContext.batchStartTime);
 				if(gShareId)
 				{
 					form.append("shareId", gShareId);
