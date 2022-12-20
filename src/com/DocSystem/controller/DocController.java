@@ -1248,7 +1248,8 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** checkDocInfo [" + path + name + "] ****************");
-		Log.info("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId);
+		Log.info("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId
+				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -1587,7 +1588,8 @@ public class DocController extends BaseController{
 	{		
 		Log.infoHead("************** checkChunkUploaded [" + path + name + "] ****************");
 		Log.info("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
-				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
+				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId 
+				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 			
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
@@ -1722,7 +1724,8 @@ public class DocController extends BaseController{
 	{		
 		Log.infoHead("************** combineChunks [" + path + name + "] ****************");
 		Log.info("combineChunks  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
-				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
+				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId
+				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 			
 		ReturnAjax rt = new ReturnAjax();
 
@@ -1956,7 +1959,8 @@ public class DocController extends BaseController{
 		Log.infoHead("************** uploadDoc [" + path + name + "] ****************");
 		Log.info("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
-							+ " shareId:" + shareId + " commitMsg:" + commitMsg);
+							+ " shareId:" + shareId + " commitMsg:" + commitMsg
+							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -2193,7 +2197,9 @@ public class DocController extends BaseController{
 	{
 		Log.infoHead("************** uploadDocRS [" + path + name + "] ****************");
 		Log.info("uploadDocRS  reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " name:" + name  + " size:" + size + " checkSum:" + checkSum
-							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " authCode:" + authCode + " commitMsg:" + commitMsg);
+							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " authCode:" + authCode + " commitMsg:" + commitMsg
+							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
+
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
 		if(checkAuthCode(authCode, null) == null)
