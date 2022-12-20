@@ -41,12 +41,14 @@ import org.tukaani.xz.XZInputStream;
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.ScanOption;
+import com.DocSystem.common.SyncLock;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.CommonAction.Action;
@@ -68,6 +70,7 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.DocData;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
@@ -1263,7 +1266,18 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-				
+		
+		if(dirPath != null && !dirPath.isEmpty())
+		{
+			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("checkDocInfo() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+		}
+			
 		//检查登录用户的权限
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -1381,6 +1395,73 @@ public class DocController extends BaseController{
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
 		}
+	}
+
+	private FolderUploadAction getFolderUploadAction(Repos repos, String dirPath, Long batchStartTime, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		String actionId = dirPath + batchStartTime;
+		FolderUploadAction action = gFolderUploadActionHashMap.get(dirPath + batchStartTime);
+		if(action == null)
+		{
+			//create FolderUploadAction
+			action = checkAndCreateFolderUploadAction(repos, actionId);
+
+			//lock dirPath
+			return action;
+		}
+		
+		if(action.isCriticalError)
+		{
+			docSysErrorLog("上传失败:" + action.errorInfo, rt);
+			return null;
+		}
+		return action;
+	}
+	
+	private FolderUploadAction checkAndCreateFolderUploadAction(Repos repos, String actionId) {
+		FolderUploadAction action = null;
+		synchronized(gFolderUploadActionSyncLock)
+		{
+    		String lockInfo = "checkAndCreateFolderUploadAction() gFolderUploadActionSyncLock";
+    		SyncLock.lock(lockInfo);
+			
+    		action = gFolderUploadActionHashMap.get(actionId);
+    		if(action == null)
+    		{
+				action = new FolderUploadAction();
+				action.actionId = actionId;
+				action.isCriticalError = false;
+				action.errorInfo = null;
+				action.startTime = new Date().getTime();
+				action.beatTime = action.startTime;
+				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
+				gFolderUploadActionHashMap.put(actionId, action);
+    		}
+		}	
+		return action;
+	}
+	
+	protected void removeFolderUploadAction(String actionId) {
+		synchronized(gFolderUploadActionSyncLock)
+		{
+    		String lockInfo = "removeDocData() gFolderUploadActionSyncLock";
+    		SyncLock.lock(lockInfo);
+    		
+    		gFolderUploadActionHashMap.remove(actionId);
+			SyncLock.unlock(gFolderUploadActionSyncLock, lockInfo);
+		}
+	}
+	
+	private void folderUploadActionBeat(String actionId) {
+		FolderUploadAction action = gFolderUploadActionHashMap.get(actionId);
+		folderUploadActionBeat(action);
+	}
+	
+	private void folderUploadActionBeat(FolderUploadAction action) {
+		if(action != null)
+    	{
+    		action.beatTime = new Date().getTime();
+    	}
 	}
 
 	private Repos getReposInfo(Integer reposId, DocShare docShare) {
@@ -1505,6 +1586,17 @@ public class DocController extends BaseController{
 		if(!reposCheck(repos, rt, response))
 		{
 			return;
+		}
+		
+		if(dirPath != null && !dirPath.isEmpty())
+		{
+			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("checkChunkUploaded() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
@@ -1645,6 +1737,17 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(dirPath != null && !dirPath.isEmpty())
+		{
+			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("combineChunks() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
 		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
@@ -1775,6 +1878,17 @@ public class DocController extends BaseController{
 		if(!reposCheck(repos, rt, response))
 		{
 			return;
+		}
+		
+		if(dirPath != null && !dirPath.isEmpty())
+		{
+			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("uploadDoc() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
@@ -2127,6 +2241,18 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+		
+		if(dirPath != null && !dirPath.isEmpty())
+		{
+			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("uploadDocRS() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 		
