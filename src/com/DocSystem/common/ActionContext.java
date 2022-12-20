@@ -20,7 +20,6 @@ public class ActionContext {
 	public Integer docLockType;
 	public Integer newDocLockType;
 	
-	//TODO: 主要用于目录上传
-	public boolean isSubAction = false;
-	public String actionId = null; //用于标记同一次上传，前端会告知（一般用startTime作为actionId）
+	//用于目录上传
+	public FolderUploadAction folderUploadAction;
 }
