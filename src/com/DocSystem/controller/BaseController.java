@@ -3768,8 +3768,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
-			//写入subAction成功到actionLog文件中（收到action结束或者超时会写入到系统日志中）
-			//如果是subAction, 不需要执行异步任务以及unlockDoc(收到action结束或者超时会统一执行)
+			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			return 1;
 		}
 		
@@ -4011,6 +4010,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
+			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			return 1;
 		}
 		
@@ -5496,9 +5496,13 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void insertLocalChange(Doc doc, DocChange localChange, ScanOption scanOption) {
-		if(scanOption.localChangesRootPath != null)
+		insertLocalChange(doc, scanOption.localChangesRootPath);
+	}
+	
+	private void insertLocalChange(Doc doc, String localChangesRootPath) {
+		if(localChangesRootPath != null)
 		{
-			File node = new File(scanOption.localChangesRootPath + doc.getPath() + doc.getName());
+			File node = new File(localChangesRootPath + doc.getPath() + doc.getName());
 			node.mkdirs();
 		}	
 	}
@@ -7127,6 +7131,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
+			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			return 1;
 		}
 		
@@ -7230,6 +7235,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
+			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			return 1;
 		}
 		
@@ -7551,6 +7557,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
+			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			return 1;
 		}
 		
