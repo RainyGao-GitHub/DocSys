@@ -1855,6 +1855,7 @@
 	             	//dirPath: used to mark folder upload
 	             	dirPath: SubContext.dirPath,
 	             	batchStartTime: SubContext.batchStartTime,
+	             	totalCount: getFolderUploadTotalCount(SubContext.dirPath),
 	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
@@ -1911,6 +1912,7 @@
 	             	//dirPath: used to mark folder upload
 	             	dirPath: SubContext.dirPath,
 	             	batchStartTime: SubContext.batchStartTime,
+	             	totalCount: getFolderUploadTotalCount(SubContext.dirPath),
 	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
@@ -2213,6 +2215,8 @@
              	//dirPath: used to mark folder upload
 				form.append("dirPath", SubContext.dirPath);
 				form.append("batchStartTime", SubContext.batchStartTime);
+				form.append("batchStartTime", SubContext.batchStartTime);
+				form.append("totalCount", getFolderUploadTotalCount(SubContext.dirPath));
 				if(gShareId)
 				{
 					form.append("shareId", gShareId);
@@ -2235,6 +2239,7 @@
              	//dirPath: used to mark folder upload
 				form.append("dirPath", SubContext.dirPath);
 				form.append("batchStartTime", SubContext.batchStartTime);
+				form.append("totalCount", getFolderUploadTotalCount(SubContext.dirPath));
 				if(gShareId)
 				{
 					form.append("shareId", gShareId);
