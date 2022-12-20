@@ -1267,9 +1267,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkDocInfo() folderUploadAction is null", rt);
@@ -1373,6 +1374,8 @@ public class DocController extends BaseController{
 		context.repos = repos;
 		context.doc = doc;
 		context.newDoc = null;
+		context.folderUploadAction = folderUploadAction;
+		
 		int ret = copySameDocForUpload(repos, sameDoc, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		if(ret == 0)
 		{
@@ -1589,9 +1592,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkChunkUploaded() folderUploadAction is null", rt);
@@ -1657,6 +1661,7 @@ public class DocController extends BaseController{
 				context.repos = repos;
 				context.doc = doc;
 				//context.newDoc = dstDoc;
+				context.folderUploadAction = folderUploadAction;
 				
 				int ret = 0;
 				if(dbDoc == null || dbDoc.getType() == 0)
@@ -1739,9 +1744,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("combineChunks() folderUploadAction is null", rt);
@@ -1783,6 +1789,7 @@ public class DocController extends BaseController{
 		context.repos = repos;
 		context.doc = doc;
 		//context.newDoc = dstDoc;
+		context.folderUploadAction = folderUploadAction;
 		
 		int ret = 0;
 		//新增文件
@@ -1883,9 +1890,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		FolderUploadAction folderUploadAction = null;		
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("uploadDoc() folderUploadAction is null", rt);
@@ -2021,6 +2029,7 @@ public class DocController extends BaseController{
 			context.repos = repos;
 			context.doc = doc;
 			//context.newDoc = dstDoc;
+			context.folderUploadAction = folderUploadAction;
 			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
@@ -2246,9 +2255,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			FolderUploadAction folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(repos, dirPath, batchStartTime, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("uploadDocRS() folderUploadAction is null", rt);
@@ -2379,6 +2389,7 @@ public class DocController extends BaseController{
 			context.repos = repos;
 			context.doc = doc;
 			//context.newDoc = dstDoc;
+			context.folderUploadAction = folderUploadAction;
 			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
