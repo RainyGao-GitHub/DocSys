@@ -1456,7 +1456,7 @@ public class DocController extends BaseController{
 				action.beatTime = action.startTime;
 				
 				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
-				action.uploadLocalChangedPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
+				action.localChangesRootPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
 				
 				gFolderUploadActionHashMap.put(actionId, action);
     		}
@@ -1869,9 +1869,9 @@ public class DocController extends BaseController{
 		User user = action.user;
 		String commitMsg = action.commitMsg;
 		String commitUser = action.commitUser;
-		String localChangesRootPath =  action.uploadLocalChangedPath;
+		String localChangesRootPath =  action.localChangesRootPath;
 
-		if(isLocalChanged(action.uploadLocalChangedPath) == false)
+		if(isLocalChanged(action.localChangesRootPath) == false)
 		{
 			//解锁目录
 			unlockDoc(doc, lockType, user);
