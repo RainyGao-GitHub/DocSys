@@ -2219,7 +2219,6 @@
              	//dirPath: used to mark folder upload
 				form.append("dirPath", SubContext.dirPath);
 				form.append("batchStartTime", SubContext.batchStartTime);
-				form.append("batchStartTime", SubContext.batchStartTime);
 				form.append("totalCount", getFolderUploadTotalCount(SubContext.dirPath));
 				if(gShareId)
 				{
