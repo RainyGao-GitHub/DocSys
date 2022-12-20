@@ -1612,6 +1612,8 @@
 				fileCoverConfirmSet = 0;
 				uploadErrorConfirmSet = 0;
 				uploadWarningConfirmSet = 0;
+				
+				clearFolderUploadTotalCount();
 			}
 			else
 			{
@@ -1622,8 +1624,6 @@
 			if(id == undefined)
 			{
 				$(".reuploadAllBtn").hide();
-				
-				clearFolderUploadTotalCount();
 				
 				//由于push会pop后进的id,会导致先上传还未绘制进度条的文件，因此反过来遍历
 				for(i=0; i<totalNum;i++)
