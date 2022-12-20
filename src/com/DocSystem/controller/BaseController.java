@@ -104,6 +104,7 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.MyExtractCallback;
@@ -22186,6 +22187,11 @@ public class BaseController  extends BaseFunction{
 		
 		Log.debug("buildSystemLogDetailContent() logDetail:" + logDetail);
 		return logDetail;
+	}
+	
+	protected String buildSystemLogDetailContentForFolderUpload(FolderUploadAction action) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	protected boolean checkUserAccessPwd(Repos repos, Doc doc, HttpSession session, ReturnAjax rt) {
