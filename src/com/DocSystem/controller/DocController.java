@@ -1243,7 +1243,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/checkDocInfo.do")
 	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
 			String commitMsg,
-			String dirPath,	Long batchStartTime, //for folder upload
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -1278,6 +1278,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
+			folderUploadAction.totalCount = totalCount;
 		}
 			
 		//检查登录用户的权限
@@ -1400,7 +1401,6 @@ public class DocController extends BaseController{
 			String dirPath, Long batchStartTime, 
 			ReturnAjax rt) 
 	{
-		// TODO Auto-generated method stub
 		String actionId = dirPath + batchStartTime;
 		FolderUploadAction action = gFolderUploadActionHashMap.get(dirPath + batchStartTime);
 		if(action == null)
@@ -1408,7 +1408,7 @@ public class DocController extends BaseController{
 			String reposPath = Path.getReposPath(repos);
 			String localRootPath = Path.getReposRealPath(repos);
 			String localVRootPath = Path.getReposVirtualPath(repos);
-			Doc doc = buildBasicDoc(repos.getId(), null, null, repos.getPath(), dirPath, "", null, 2, true, localRootPath, localVRootPath, 0L, "");
+			Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, dirPath, "", null, 2, true, localRootPath, localVRootPath, 0L, "");
 
 			
 			String requestIP = getRequestIpAddress(request);
@@ -1581,7 +1581,7 @@ public class DocController extends BaseController{
 	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, Integer combineDisabled,
 			String commitMsg,
-			String dirPath,	Long batchStartTime, //for folder upload
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
@@ -1622,6 +1622,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
+			folderUploadAction.totalCount = totalCount;
 		}
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
@@ -1715,7 +1716,7 @@ public class DocController extends BaseController{
 	public void combineChunks(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
 			String commitMsg,
-			String dirPath,	Long batchStartTime, //for folder upload
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
@@ -1749,6 +1750,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
+			folderUploadAction.totalCount = totalCount;
 		}
 		
 		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
@@ -1936,7 +1938,7 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
 			String commitMsg,
-			String dirPath,	Long batchStartTime, //for folder upload			
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -1970,6 +1972,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
+			folderUploadAction.totalCount = totalCount;
 		}
 		
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
@@ -2173,7 +2176,7 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
 			String commitMsg,
-			String dirPath,	Long batchStartTime, //for folder upload			
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
 			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -2309,6 +2312,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
+			folderUploadAction.totalCount = totalCount;
 		}
 		
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
