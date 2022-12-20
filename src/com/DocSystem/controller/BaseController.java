@@ -3702,7 +3702,7 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "addDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 
-		if(!context.isSubAction)
+		if(context.folderUploadAction == null)
 		{	
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
 			
@@ -3728,7 +3728,7 @@ public class BaseController  extends BaseFunction{
 			//File must not exists
 			if(createRealDoc(repos, doc, rt) == false)
 			{	
-				if(!context.isSubAction)
+				if(context.folderUploadAction == null)
 				{	
 					unlockDoc(doc, lockType, login_user);
 				}
@@ -3741,7 +3741,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
-				if(!context.isSubAction)
+				if(context.folderUploadAction == null)
 				{	
 					unlockDoc(doc, lockType, login_user);
 				}
@@ -3765,7 +3765,7 @@ public class BaseController  extends BaseFunction{
 		rt.setMsgData("isNewNode");
 		docSysDebugLog("新增成功", rt); 
 		
-		if(context.isSubAction)
+		if(context.folderUploadAction != null)
 		{
 			//写入subAction成功到actionLog文件中（收到action结束或者超时会写入到系统日志中）
 			//如果是subAction, 不需要执行异步任务以及unlockDoc(收到action结束或者超时会统一执行)
@@ -3947,13 +3947,16 @@ public class BaseController  extends BaseFunction{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "addDocEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		//LockDoc
-		docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
-		
-		if(docLock == null)
+		if(context.folderUploadAction == null)
 		{
-			docSysDebugLog("addDocEx_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-			return 0;
+			//LockDoc
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
+			
+			if(docLock == null)
+			{
+				docSysDebugLog("addDocEx_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
+				return 0;
+			}
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3970,7 +3973,10 @@ public class BaseController  extends BaseFunction{
 			//File must not exists
 			if(createRealDoc(repos, doc, rt) == false)
 			{	
-				unlockDoc(doc, lockType, login_user);
+				if(context.folderUploadAction == null)
+				{
+					unlockDoc(doc, lockType, login_user);
+				}
 				docSysErrorLog("createRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDocEx_FSM() createRealDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 				return 0;
@@ -3980,7 +3986,10 @@ public class BaseController  extends BaseFunction{
 		{
 			if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
-				unlockDoc(doc, lockType, login_user);
+				if(context.folderUploadAction == null)
+				{
+					unlockDoc(doc, lockType, login_user);
+				}
 				docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
 				docSysDebugLog("addDocEx_FSM() updateRealDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 				return 0;
@@ -3999,7 +4008,7 @@ public class BaseController  extends BaseFunction{
 		rt.setMsgData("isNewNode");
 		docSysDebugLog("新增成功", rt); 
 		
-		if(context.isSubAction)
+		if(context.folderUploadAction != null)
 		{
 			return 1;
 		}
@@ -7077,7 +7086,7 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "updateDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 	
-		if(!context.isSubAction)
+		if(context.folderUploadAction == null)
 		{	
 			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
 		
@@ -7094,7 +7103,7 @@ public class BaseController  extends BaseFunction{
 		//保存文件信息
 		if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
-			if(!context.isSubAction)
+			if(context.folderUploadAction == null)
 			{
 				unlockDoc(doc, lockType, login_user);
 			}
@@ -7115,7 +7124,7 @@ public class BaseController  extends BaseFunction{
 			docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
 		}
 		
-		if(context.isSubAction)
+		if(context.folderUploadAction != null)
 		{
 			return 1;
 		}
@@ -7181,7 +7190,7 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "updateDocEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 
-		if(!context.isSubAction)
+		if(context.folderUploadAction == null)
 		{
 			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
@@ -7197,7 +7206,7 @@ public class BaseController  extends BaseFunction{
 		//保存文件信息
 		if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
-			if(!context.isSubAction)
+			if(context.folderUploadAction == null)
 			{
 				unlockDoc(doc, lockType, login_user);
 			}
@@ -7218,7 +7227,7 @@ public class BaseController  extends BaseFunction{
 			docSysWarningLog("updateDocEx_FSM() updateDocInfo Failed", rt);
 		}
 		
-		if(context.isSubAction)
+		if(context.folderUploadAction != null)
 		{
 			return 1;
 		}
@@ -7512,7 +7521,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String lockInfo2 = "copySameDocForUpload() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		if(!context.isSubAction)
+		if(context.folderUploadAction == null)
 		{
 			dstDocLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo2);
 			if(dstDocLock == null)
@@ -7529,7 +7538,7 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(sameDoc, lockType, login_user);
 			
-			if(!context.isSubAction)
+			if(context.folderUploadAction == null)
 			{
 				unlockDoc(doc, lockType, login_user);
 			}
@@ -7539,7 +7548,7 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		if(context.isSubAction)
+		if(context.folderUploadAction != null)
 		{
 			return 1;
 		}
