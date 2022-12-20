@@ -172,7 +172,10 @@ public class BaseFunction{
     public static int clusterHeartBeatInterval = 300; //300秒(5分钟)，心跳间隔
     public static int clusterHeartBeatStopTime = 3*clusterHeartBeatInterval*1000;	//3次心跳
     
-    
+    //目录上传
+    public static ConcurrentHashMap<String, FolderUploadAction> gFolderUploadActionHashMap = new ConcurrentHashMap<String, FolderUploadAction>();
+	protected static final Object gFolderUploadActionSyncLock = new Object(); //用于保证gDocDataMap的线性存取
+
     //以下的全局HashMap, 集群部署时，需要存储在redis中
     //接口访问授权码HashMap
   	public static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();

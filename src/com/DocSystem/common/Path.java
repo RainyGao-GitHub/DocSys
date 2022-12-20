@@ -779,4 +779,9 @@ public class Path {
 		String path = getOfficeEditPath(dockey, doc) + "save/";
 		return path;
 	}
+
+	public static String getRepsFolderUploadLogPath(Repos repos, long startTime) {
+		String path = getReposPath(repos) + "tmp/FolderUpload/" + startTime + ".log";
+		return path;
+	}
 }
