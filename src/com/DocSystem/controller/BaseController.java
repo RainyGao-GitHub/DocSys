@@ -4955,7 +4955,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private void rebuildIndexForDocEx(Repos repos, Doc doc, String localChangesRootPath, ReturnAjax rt) {
+	void rebuildIndexForDocEx(Repos repos, Doc doc, String localChangesRootPath, ReturnAjax rt) {
 		File file = new File(localChangesRootPath + doc.getPath() + doc.getName());
 		rebuildIndexForDocEx(repos, doc, file, rt);
 	}
@@ -22196,9 +22196,13 @@ public class BaseController  extends BaseFunction{
 		return logDetail;
 	}
 	
-	protected String buildSystemLogDetailContentForFolderUpload(FolderUploadAction action) {
+	protected String buildSystemLogDetailContentForFolderUpload(FolderUploadAction action, ReturnAjax rt) {
 		String logDetail = "目录上传: 开始时间 [" + DateFormat.dateTimeFormat(new Date(action.startTime)) + "], 耗时 [" + (new Date().getTime() - action.startTime) + "ms] ";
-		logDetail += "共[" + action.totalCount + "]个文件, 成功[" + action.successCount + " ]个, 失败 [" + action.failCount + "]个,";
+		logDetail += "共[" + action.totalCount + "]个文件, 成功[" + action.successCount + " ]个, 失败 [" + action.failCount + "]个 ";
+		if(rt != null)
+		{
+			logDetail += buildSystemLogDetailContent(rt);
+		}
 		return logDetail;
 	}
 	
