@@ -66,6 +66,10 @@
         var reuploadStartedNum = 0;
         var reuploadList = []; //重传列表，保存的是SubContext的index
         var reuploadIndex = 0;	//This is for reupload, the index should be reuploadList[reuploadIndex]
+        var reuploadTime;
+        
+        //目录上传子元素个数统计
+        var folderUploadTotalCountMap = {};
         
         //标准Java成员操作接口
         function getUploadStatus()
@@ -453,7 +457,6 @@
 			return true;
  		}
  		
- 		var folderUploadTotalCountMap = {};
  		function increaseFolderUploadTotalCount(dirPath)
 		{
  			var count = folderUploadTotalCountMap[dirPath];
@@ -1596,7 +1599,6 @@
 				return;
 			}
 			
-			var reuploadTime = new Date().getTime();
 			if(false == reuploadFlag && false == isUploading)
 			{	
 				console.log("reuploadFailDocs() 启动重传");
@@ -1612,6 +1614,8 @@
 				fileCoverConfirmSet = 0;
 				uploadErrorConfirmSet = 0;
 				uploadWarningConfirmSet = 0;
+				
+				reuploadTime = new Date().getTime();
 				
 				clearFolderUploadTotalCount();
 			}
