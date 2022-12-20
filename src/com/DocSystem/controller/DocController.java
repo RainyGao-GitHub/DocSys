@@ -213,7 +213,6 @@ public class DocController extends BaseController{
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
 	public void addDocRS(Integer reposId, String remoteDirectory, String path, String name,  Integer type,
-			Integer isSubAction, String actionId, String dirPath,	//用于目录上传
 			String commitMsg,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
