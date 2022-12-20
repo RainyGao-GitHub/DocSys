@@ -781,7 +781,13 @@ public class Path {
 	}
 
 	public static String getRepsFolderUploadLogPath(Repos repos, long startTime) {
-		String path = getReposPath(repos) + "tmp/FolderUpload/" + startTime + ".log";
+		String path = getReposPath(repos) + "tmp/FolderUpload/" + startTime + "/upload.log";
+		return path;
+	}
+
+	public static String getRepsFolderUploadLocalChangesRootPath(Repos repos, long startTime) {
+		// TODO Auto-generated method stub
+		String path = getReposPath(repos) + "tmp/FolderUpload/" + startTime + "/localChangedEntry/";
 		return path;
 	}
 }

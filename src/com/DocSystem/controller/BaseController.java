@@ -22190,8 +22190,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected String buildSystemLogDetailContentForFolderUpload(FolderUploadAction action) {
-		// TODO Auto-generated method stub
-		return null;
+		String logDetail = "目录上传: 开始时间 [" + DateFormat.dateTimeFormat(new Date(action.startTime)) + "], 耗时 [" + (new Date().getTime() - action.startTime) + "ms] ";
+		logDetail += "共[" + action.totalCount + "]个文件, 成功[" + action.successCount + " ]个, 失败 [" + action.failCount + "]个,";
+		return logDetail;
 	}
 	
 	protected boolean checkUserAccessPwd(Repos repos, Doc doc, HttpSession session, ReturnAjax rt) {
