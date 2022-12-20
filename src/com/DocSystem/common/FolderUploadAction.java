@@ -19,7 +19,7 @@ public class FolderUploadAction {
 	public String commitUser;
 
 	public String uploadLogPath; //存放subDocs upload info，上传结束时要写入系统日志中
-	public String uploadLocalChangedPath; //上传成功的文件	
+	public String localChangesRootPath; //上传成功的文件	
 	
 	public boolean isCriticalError;
 	public String errorInfo;
