@@ -1271,7 +1271,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkDocInfo() folderUploadAction is null", rt);
@@ -1400,7 +1400,7 @@ public class DocController extends BaseController{
 			User accessUser, 
 			Repos repos, 
 			String dirPath, Long batchStartTime, 
-			ReturnAjax rt) 
+			String commitMsg, ReturnAjax rt) 
 	{
 		String actionId = dirPath + batchStartTime;
 		FolderUploadAction action = gFolderUploadActionHashMap.get(dirPath + batchStartTime);
@@ -1415,7 +1415,7 @@ public class DocController extends BaseController{
 			String requestIP = getRequestIpAddress(request);
 				
 			//create FolderUploadAction
-			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc, rt);
+			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc, commitMsg, rt);
 		}
 		
 		if(action.isCriticalError)
@@ -1426,7 +1426,7 @@ public class DocController extends BaseController{
 		return action;
 	}
 	
-	private FolderUploadAction checkAndCreateFolderUploadAction(String actionId, String requestIP, User accessUser, Repos repos, Doc doc, ReturnAjax rt) {
+	private FolderUploadAction checkAndCreateFolderUploadAction(String actionId, String requestIP, User accessUser, Repos repos, Doc doc, String commitMsg, ReturnAjax rt) {
 		FolderUploadAction action = null;
 		synchronized(gFolderUploadActionSyncLock)
 		{
@@ -1456,6 +1456,9 @@ public class DocController extends BaseController{
 				
 				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
 				action.localChangesRootPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
+				
+				action.commitMsg = commitMsg == null? "上传目录 [" + doc.getPath() + doc.getName() + "]" : commitMsg;
+				action.commitUser = accessUser.getName(); 
 				
 				gFolderUploadActionHashMap.put(actionId, action);		
 				
@@ -1622,7 +1625,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkChunkUploaded() folderUploadAction is null", rt);
@@ -1751,7 +1754,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("combineChunks() folderUploadAction is null", rt);
@@ -1985,7 +1988,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;		
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("uploadDoc() folderUploadAction is null", rt);
@@ -2327,7 +2330,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("uploadDocRS() folderUploadAction is null", rt);
