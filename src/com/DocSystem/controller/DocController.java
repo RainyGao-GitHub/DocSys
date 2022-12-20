@@ -1391,14 +1391,7 @@ public class DocController extends BaseController{
 		docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
 		writeJson(rt, response);
 				
-		switch(ret)
-		{
-		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			break;
-		}
+		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
 	}
 
 	private FolderUploadAction getFolderUploadAction(Repos repos, String dirPath, Long batchStartTime, ReturnAjax rt) {
@@ -1671,19 +1664,7 @@ public class DocController extends BaseController{
 								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 					writeJson(rt, response);
 
-					switch(ret)
-					{
-					case 0:
-						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-						break;
-					case 1:
-						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-						break;
-					default:	//异步执行中（异步线程负责日志写入）
-						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-						break;
-					}				
+					uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
 				}
 				else
 				{
@@ -1692,21 +1673,8 @@ public class DocController extends BaseController{
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);				
 				
 					writeJson(rt, response);	
-					switch(ret)
-					{
-					case 0:
-						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-						break;
-					case 1:
-						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-						deletePreviewFile(doc);
-						addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-						break;
-					default:	//异步执行中（异步线程负责日志写入）
-						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-						deletePreviewFile(doc);
-						break;
-					}				
+
+					uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
 				}
 				
 				return;
@@ -1801,19 +1769,7 @@ public class DocController extends BaseController{
 
 			writeJson(rt, response);
 			
-			switch(ret)
-			{
-			case 0:
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-				break;
-			case 1:
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-				break;
-			default:	//异步执行中（异步线程负责日志写入）
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				break;
-			}				
+			uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
 			return;
 		}
 
@@ -1824,23 +1780,53 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);	
 		
-		switch(ret)
+		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
+	}
+	
+	private void uploadAfterHandler(int uploadResult, Doc doc, String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath, ReposAccess reposAccess, ActionContext context, ReturnAjax rt) {
+		switch(uploadResult)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			if(context.folderUploadAction != null)
+			{
+				folderSubEntryUploadErrorHandler(context.requestIP, reposAccess.getAccessUser(), context);
+			}
+			else
+			{
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			}
 			break;
 		case 1:
-			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-			deletePreviewFile(doc);	
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			if(context.folderUploadAction != null)
+			{
+				folderSubEntryUploadSuccessHandler(context.requestIP, reposAccess.getAccessUser(), context);
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				deletePreviewFile(doc);
+			}
+			else
+			{
+				deleteChunks(name, chunkIndex, chunkNum,chunkParentPath);
+				deletePreviewFile(doc);
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			}
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-			deletePreviewFile(doc);	
+			deletePreviewFile(doc);
 			break;
-		}	
+		}				
 	}
-	
+
+	private void folderSubEntryUploadSuccessHandler(String requestIP, User accessUser, ActionContext context) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void folderSubEntryUploadErrorHandler(String requestIP, User accessUser, ActionContext context) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	@RequestMapping("/getMaxThreadCount.do")
 	public void getMaxThreadCount(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -2046,19 +2032,7 @@ public class DocController extends BaseController{
 
 				writeJson(rt, response);
 				
-				switch(ret)
-				{
-				case 0:
-					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-					break;
-				case 1:
-					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-					break;
-				default:	//异步执行中（异步线程负责日志写入）
-					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					break;
-				}				
+				uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
 				return;				
 			}
 			
@@ -2068,22 +2042,8 @@ public class DocController extends BaseController{
 					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
 		
 			writeJson(rt, response);
-			
-			switch(ret)
-			{
-			case 0:
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-				break;
-			case 1:
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				deletePreviewFile(doc);
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-				break;
-			default:	//异步执行中（异步线程负责日志写入）
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				deletePreviewFile(doc);
-				break;
-			}				
+
+			uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
 			return;
 		}
 		
@@ -2407,19 +2367,7 @@ public class DocController extends BaseController{
 				
 				writeJson(rt, response);
 
-				switch(ret)
-				{
-				case 0:
-					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-					break;
-				case 1:
-					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-					break;
-				default:	//异步执行中（异步线程负责日志写入）
-					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					break;
-				}		
+				uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
 				return;
 			}
 
@@ -2429,22 +2377,8 @@ public class DocController extends BaseController{
 					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
 		
 			writeJson(rt, response);	
-			
-			switch(ret)
-			{
-			case 0:
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-				break;
-			case 1:
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				deletePreviewFile(doc);
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-				break;
-			default:	//异步执行中（异步线程负责日志写入）
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				deletePreviewFile(doc);
-				break;
-			}	
+
+			uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
 			return;
 		}
 		
