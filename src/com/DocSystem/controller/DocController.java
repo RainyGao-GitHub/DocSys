@@ -1789,7 +1789,7 @@ public class DocController extends BaseController{
 		case 0:
 			if(context.folderUploadAction != null)
 			{
-				folderSubEntryUploadErrorHandler(context.requestIP, reposAccess.getAccessUser(), context);
+				folderSubEntryUploadErrorHandler(context.folderUploadAction);
 			}
 			else
 			{
@@ -1799,7 +1799,7 @@ public class DocController extends BaseController{
 		case 1:
 			if(context.folderUploadAction != null)
 			{
-				folderSubEntryUploadSuccessHandler(context.requestIP, reposAccess.getAccessUser(), context);
+				folderSubEntryUploadSuccessHandler(context.folderUploadAction);
 				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 				deletePreviewFile(doc);
 			}
@@ -1817,15 +1817,72 @@ public class DocController extends BaseController{
 		}				
 	}
 
-	private void folderSubEntryUploadSuccessHandler(String requestIP, User accessUser, ActionContext context) {
-		// TODO Auto-generated method stub
-		
+	private void folderSubEntryUploadSuccessHandler(FolderUploadAction action) {
+		action.successCount++;
+		if(isLastSubEntryForFolderUpload(action))
+		{
+			folderUploadEndHander(action);
+		}
+	}
+	
+	private void folderSubEntryUploadErrorHandler(FolderUploadAction action) {
+		action.failCount++;
+		if(isLastSubEntryForFolderUpload(action))
+		{
+			folderUploadEndHander(action);
+		}
 	}
 
-	private void folderSubEntryUploadErrorHandler(String requestIP, User accessUser, ActionContext context) {
-		// TODO Auto-generated method stub
+	private void folderUploadEndHander(FolderUploadAction action) {
+		//判断是否有改动
+		Repos repos = action.repos;
+		Doc doc = action.doc;	//目录
+		int lockType = action.docLockType;
+		User user = action.user;
+		String commitMsg = action.commitMsg;
+		String commitUser = action.commitUser;
+		String localChangesRootPath =  action.uploadLocalChangedPath;
+
+		if(isLocalChanged(action.uploadLocalChangedPath) == false)
+		{
+			//解锁目录
+			unlockDoc(doc, lockType, user);
+			//写入日志
+			addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action));						
+			FileUtil.delDir(action.uploadLogPath);
+			return;
+		}
 		
+		//提交版本
+		ReturnAjax rt = new ReturnAjax();
+		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, null, null);
+		if(revision != null)
+		{
+			verReposPullPush(repos, true, rt);
+		}
+		FileUtil.delDir(localChangesRootPath);
+		
+		//远程自动推送
+		realTimeRemoteStoragePush(repos, doc, null, user, commitMsg, rt, action.event);
+		//仓库自动备份
+		realTimeBackup(repos, doc, null, user, commitMsg, rt, action.event);
+		
+		//解锁目录
+		unlockDoc(doc, lockType, user);
+		
+		//写入日志
+		addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action));						
+		FileUtil.delDir(action.uploadLogPath);		
 	}
+
+	private boolean isLastSubEntryForFolderUpload(FolderUploadAction folderUploadAction) {
+		if(folderUploadAction.totalCount <= (folderUploadAction.successCount + folderUploadAction.failCount))
+		{
+			return true;
+		}
+		return false;
+	}
+
 
 	@RequestMapping("/getMaxThreadCount.do")
 	public void getMaxThreadCount(HttpSession session,HttpServletRequest request,HttpServletResponse response)
