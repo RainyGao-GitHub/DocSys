@@ -1394,14 +1394,27 @@ public class DocController extends BaseController{
 		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
 	}
 
-	private FolderUploadAction getFolderUploadAction(Repos repos, String dirPath, Long batchStartTime, ReturnAjax rt) {
+	private FolderUploadAction getFolderUploadAction(HttpServletRequest request, 
+			User accessUser, 
+			Repos repos, 
+			String dirPath, Long batchStartTime, 
+			ReturnAjax rt) 
+	{
 		// TODO Auto-generated method stub
 		String actionId = dirPath + batchStartTime;
 		FolderUploadAction action = gFolderUploadActionHashMap.get(dirPath + batchStartTime);
 		if(action == null)
 		{
+			String reposPath = Path.getReposPath(repos);
+			String localRootPath = Path.getReposRealPath(repos);
+			String localVRootPath = Path.getReposVirtualPath(repos);
+			Doc doc = buildBasicDoc(repos.getId(), null, null, repos.getPath(), dirPath, "", null, 2, true, localRootPath, localVRootPath, 0L, "");
+
+			
+			String requestIP = getRequestIpAddress(request);
+				
 			//create FolderUploadAction
-			action = checkAndCreateFolderUploadAction(repos, actionId);
+			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc);
 
 			//lock dirPath
 			return action;
@@ -1415,7 +1428,7 @@ public class DocController extends BaseController{
 		return action;
 	}
 	
-	private FolderUploadAction checkAndCreateFolderUploadAction(Repos repos, String actionId) {
+	private FolderUploadAction checkAndCreateFolderUploadAction(String actionId, String requestIP, User accessUser, Repos repos, Doc doc) {
 		FolderUploadAction action = null;
 		synchronized(gFolderUploadActionSyncLock)
 		{
@@ -1427,11 +1440,24 @@ public class DocController extends BaseController{
     		{
 				action = new FolderUploadAction();
 				action.actionId = actionId;
+				action.requestIP = requestIP;
+				action.user = accessUser;
+				action.repos = repos;
+				action.doc = doc;
+
+				action.event = "uploadDoc";
+				action.subEvent = "uploadDoc";
+				action.eventName = "目录上传";
+				
 				action.isCriticalError = false;
 				action.errorInfo = null;
+
 				action.startTime = new Date().getTime();
 				action.beatTime = action.startTime;
+				
 				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
+				action.uploadLocalChangedPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
+				
 				gFolderUploadActionHashMap.put(actionId, action);
     		}
 		}	
