@@ -1415,10 +1415,7 @@ public class DocController extends BaseController{
 			String requestIP = getRequestIpAddress(request);
 				
 			//create FolderUploadAction
-			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc);
-
-			//lock dirPath
-			return action;
+			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc, rt);
 		}
 		
 		if(action.isCriticalError)
@@ -1429,7 +1426,7 @@ public class DocController extends BaseController{
 		return action;
 	}
 	
-	private FolderUploadAction checkAndCreateFolderUploadAction(String actionId, String requestIP, User accessUser, Repos repos, Doc doc) {
+	private FolderUploadAction checkAndCreateFolderUploadAction(String actionId, String requestIP, User accessUser, Repos repos, Doc doc, ReturnAjax rt) {
 		FolderUploadAction action = null;
 		synchronized(gFolderUploadActionSyncLock)
 		{
@@ -1445,6 +1442,7 @@ public class DocController extends BaseController{
 				action.user = accessUser;
 				action.repos = repos;
 				action.doc = doc;
+				action.docLockType = DocLock.LOCK_TYPE_FORCE;
 
 				action.event = "uploadDoc";
 				action.subEvent = "uploadDoc";
@@ -1459,7 +1457,15 @@ public class DocController extends BaseController{
 				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
 				action.localChangesRootPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
 				
-				gFolderUploadActionHashMap.put(actionId, action);
+				gFolderUploadActionHashMap.put(actionId, action);		
+				
+				String lockInfo2 = "checkAndCreateFolderUploadAction() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+				DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, lockInfo2);
+				if(docLock == null)
+				{
+					action.isCriticalError = true;
+					action.errorInfo = rt.getMsgInfo();
+				}
     		}
 		}	
 		return action;
