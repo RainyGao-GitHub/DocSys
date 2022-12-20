@@ -1876,31 +1876,42 @@ public class DocController extends BaseController{
 			//解锁目录
 			unlockDoc(doc, lockType, user);
 			//写入日志
-			addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action));						
+			addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action, null));						
 			FileUtil.delDir(action.uploadLogPath);
 			return;
 		}
 		
-		//提交版本
-		ReturnAjax rt = new ReturnAjax();
-		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, null, null);
-		if(revision != null)
-		{
-			verReposPullPush(repos, true, rt);
-		}
-		FileUtil.delDir(localChangesRootPath);
-		
-		//远程自动推送
-		realTimeRemoteStoragePush(repos, doc, null, user, commitMsg, rt, action.event);
-		//仓库自动备份
-		realTimeBackup(repos, doc, null, user, commitMsg, rt, action.event);
-		
-		//解锁目录
-		unlockDoc(doc, lockType, user);
-		
-		//写入日志
-		addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action));						
-		FileUtil.delDir(action.uploadLogPath);		
+		//异步执行
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("folderUploadEndHander() execute in new thread");
+				
+				//提交版本
+				ReturnAjax rt = new ReturnAjax();
+				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, null, null);
+				if(revision != null)
+				{
+					verReposPullPush(repos, true, rt);
+				}
+				
+				
+				//远程自动推送
+				realTimeRemoteStoragePush(repos, doc, null, user, commitMsg, rt, action.event);
+				//仓库自动备份
+				realTimeBackup(repos, doc, null, user, commitMsg, rt, action.event);
+						
+				//解锁目录
+				unlockDoc(doc, lockType, user);
+				
+				//update searchIndex
+				rebuildIndexForDocEx(repos, doc, localChangesRootPath, rt);
+				FileUtil.delDir(localChangesRootPath);
+				
+				//写入日志
+				addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action, rt));						
+				FileUtil.delDir(action.uploadLogPath);		
+			}
+		}).start();
 	}
 
 	private boolean isLastSubEntryForFolderUpload(FolderUploadAction folderUploadAction) {
