@@ -1276,6 +1276,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			folderUploadAction.beatTime = new Date().getTime();
 		}
 			
 		//检查登录用户的权限
@@ -1597,6 +1598,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			folderUploadAction.beatTime = new Date().getTime();
 		}
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
@@ -1746,6 +1748,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			folderUploadAction.beatTime = new Date().getTime();
 		}
 		
 		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
@@ -1889,6 +1892,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			folderUploadAction.beatTime = new Date().getTime();
 		}
 		
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
@@ -2251,6 +2255,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			folderUploadAction.beatTime = new Date().getTime();
 		}
 		
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
