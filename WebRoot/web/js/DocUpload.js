@@ -449,7 +449,41 @@
 			SubContext.realLevel = realLevel;
 			SubContext.realParentId = -1;
 			SubContext.dirPath = dirPath;	//dirPath is not empty means that it is folder upload
+			increaseFolderUploadTotalCount(dirPath);
 			return true;
+ 		}
+ 		
+ 		var folderUploadTotalCountMap = {};
+ 		function increaseFolderUploadTotalCount(dirPath)
+		{
+ 			var count = folderUploadTotalCountMap[dirPath];
+ 			if(count == undefined)
+ 			{
+ 				folderUploadTotalCountMap[dirPath] = 1;
+ 			}
+ 			else
+ 			{
+ 				folderUploadTotalCountMap[dirPath] = count + 1;
+ 			}
+		}
+ 		
+ 		function clearFolderUploadTotalCount()
+		{
+ 			folderUploadTotalCountMap = {};
+		}
+ 		
+ 		function getFolderUploadTotalCount(dirPath)
+ 		{
+ 			if(dirPath && dirPath != "")
+ 			{
+ 				var count = folderUploadTotalCountMap[dirPath];
+ 				if(count == undefined)
+ 				{
+ 					return 0;
+ 				}
+ 				return count;
+ 			}
+ 			return 0;
  		}
       	
       	function getFileShowSize(fileSize)
@@ -1490,6 +1524,7 @@
 	             	//dirPath: used to mark folder upload
 	             	dirPath: SubContext.dirPath,
 	             	batchStartTime: SubContext.batchStartTime,
+	             	totalCount: getFolderUploadTotalCount(SubContext.dirPath), 
 	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
@@ -1588,6 +1623,8 @@
 			{
 				$(".reuploadAllBtn").hide();
 				
+				clearFolderUploadTotalCount();
+				
 				//由于push会pop后进的id,会导致先上传还未绘制进度条的文件，因此反过来遍历
 				for(i=0; i<totalNum;i++)
 				{
@@ -1643,7 +1680,11 @@
 				}
 			}
 			SubContext.reuploadFlag = true;
-			SubContext.batchStartTime = reuploadTime;
+			if(SubContext.dirPath && SubContext.dirPath != "")
+			{
+				SubContext.batchStartTime = reuploadTime;
+				increaseFolderUploadTotalCount(SubContext.dirPath);
+			}
 			
 			//更新重传总数
 			reuploadTotalNum++;
