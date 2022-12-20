@@ -1240,8 +1240,8 @@ public class DocController extends BaseController{
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
 	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
-			Integer isSubAction, String actionId, String dirPath,	//用于目录上传
 			String commitMsg,
+			String dirPath,	Long batchStartTime, //for folder upload
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -1477,8 +1477,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/checkChunkUploaded.do")
 	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, Integer combineDisabled,
-			Integer isSubAction, String actionId, String dirPath,	//用于目录上传
 			String commitMsg,
+			String dirPath,	Long batchStartTime, //for folder upload
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
@@ -1622,8 +1622,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/combineChunks.do")
 	public void combineChunks(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
-			Integer isSubAction, String actionId, String dirPath,	//用于目录上传
 			String commitMsg,
+			String dirPath,	Long batchStartTime, //for folder upload
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
@@ -1754,8 +1754,8 @@ public class DocController extends BaseController{
 	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
-			Integer isSubAction, String actionId, String dirPath,	//用于目录上传
 			String commitMsg,
+			String dirPath,	Long batchStartTime, //for folder upload			
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -2003,8 +2003,8 @@ public class DocController extends BaseController{
 	public void uploadDocRS(Integer reposId, String remoteDirectory, String path, String name, Long size, String checkSum,
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
-			Integer isSubAction, String actionId, String dirPath,	//用于目录上传
 			String commitMsg,
+			String dirPath,	Long batchStartTime, //for folder upload			
 			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
