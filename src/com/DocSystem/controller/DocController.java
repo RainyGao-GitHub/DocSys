@@ -2003,6 +2003,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//Build Doc
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);		
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
+		
+		//Build FolderUploadAction
 		FolderUploadAction folderUploadAction = null;		
 		if(dirPath != null && !dirPath.isEmpty())
 		{
@@ -2016,69 +2023,87 @@ public class DocController extends BaseController{
 			folderUploadAction.beatTime = new Date().getTime();
 			folderUploadAction.totalCount = totalCount;
 		}
-		
-		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
 
-		String localParentPath = localRootPath + path;
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			localParentDir.mkdirs();
-		}
-		
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
+		//Build ActionContext
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
+		context.event = "uploadDoc";
+		context.subEvent = "uploadDoc";
+		context.eventName = "文件上传";	
+		context.repos = repos;
+		context.doc = doc;
+		//context.newDoc = dstDoc;
+		context.folderUploadAction = folderUploadAction;
 		
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			docSysErrorLog("您无此操作权限，请联系管理员", rt);
 			writeJson(rt, response);
+			
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}
+
 		if(docUserAuth.getAccess() == 0)
 		{
-			rt.setError("您无权访问该目录，请联系管理员");
+			docSysErrorLog("您无权访问该目录，请联系管理员", rt);
 			writeJson(rt, response);
+			
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}
 
 		//Check Add Right
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
-		
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 			DocAuth parentDocUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask());
 			if(parentDocUserAuth == null)
 			{
-				rt.setError("您无此操作权限，请联系管理员");
+				docSysErrorLog("您无此操作权限，请联系管理员", rt);
 				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
+			
 			if(parentDocUserAuth.getAccess() == 0)
 			{
-				rt.setError("您无权访问该目录，请联系管理员");
+				docSysErrorLog("您无权访问该目录，请联系管理员", rt);
 				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			
 			if(parentDocUserAuth.getAddEn() == null || parentDocUserAuth.getAddEn() != 1)
 			{
-				rt.setError("您没有该目录的新增权限，请联系管理员");
+				docSysErrorLog("您没有该目录的新增权限，请联系管理员", rt);
 				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			
 			if(isUploadSizeExceeded(size, parentDocUserAuth.getUploadSize()))
 			{
-				Log.info("uploadDoc size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+				docSysDebugLog("uploadDoc size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+
 				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
-				rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
+				docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
 				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;							
 			}
 		}
@@ -2086,21 +2111,37 @@ public class DocController extends BaseController{
 		{
 			if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
 			{
-				rt.setError("您没有该文件的编辑权限，请联系管理员");
+				docSysErrorLog("您没有该文件的编辑权限，请联系管理员", rt);
 				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;				
 			}
 		}
 		
 		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
 		{
-			Log.info("uploadDoc size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+			docSysDebugLog("uploadDoc size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+			
 			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
-			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
+			docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
+			
 			writeJson(rt, response);
+
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;							
 		}
-		
+
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String localParentPath = localRootPath + path;
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			localParentDir.mkdirs();
+		}
+
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
 		{
@@ -2111,6 +2152,9 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			
@@ -2133,18 +2177,7 @@ public class DocController extends BaseController{
 		
 		//非分片上传或LastChunk Received
 		if(uploadFile != null) 
-		{
-			ActionContext context = new ActionContext();
-			context.requestIP = getRequestIpAddress(request);
-			context.user = reposAccess.getAccessUser();
-			context.event = "uploadDoc";
-			context.subEvent = "uploadDoc";
-			context.eventName = "文件上传";	
-			context.repos = repos;
-			context.doc = doc;
-			//context.newDoc = dstDoc;
-			context.folderUploadAction = folderUploadAction;
-			
+		{			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "上传 " + path + name;
