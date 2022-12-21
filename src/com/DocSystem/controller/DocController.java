@@ -1268,6 +1268,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//Build Doc
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
+
+		//Check and get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
@@ -1281,42 +1288,59 @@ public class DocController extends BaseController{
 			folderUploadAction.beatTime = new Date().getTime();
 			folderUploadAction.totalCount = totalCount;
 		}
-			
-		//检查登录用户的权限
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
 
+		//Build ActionContext
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
+		context.event = "checkDocInfo";
+		context.subEvent = "checkDocInfo";
+		context.eventName = "上传文件";	
+		context.repos = repos;
+		context.doc = doc;
+		context.newDoc = null;
+		context.folderUploadAction = folderUploadAction;
+
+		//检查登录用户的权限
 		Doc parentDoc = buildBasicDoc(reposId, pid, null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		DocAuth UserDocAuth = getUserDocAuth(repos, reposAccess.getAccessUser().getId(), parentDoc);
 		if(UserDocAuth == null)
 		{
 			docSysErrorLog("您无权在该目录上传文件!", rt);
 			writeJson(rt, response);
+
+			//treat as upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}
 		
 		if(isUploadSizeExceeded(size, UserDocAuth.getUploadSize()))
 		{
-			Log.info("checkDocInfo size:" + size + " UserDocAuth max uploadSize:" + UserDocAuth.getUploadSize());
+			docSysDebugLog("checkDocInfo() size:" + size + " UserDocAuth max uploadSize:" + UserDocAuth.getUploadSize(), rt);
+			
 			String maxUploadSize = getMaxUploadSize(UserDocAuth.getUploadSize());
-			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
+			docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
+			
 			writeJson(rt, response);
+
+			//treat as upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}		
 		
 		//是否可以秒传检查(文件是否已存在且校验码一致或者文件不存在但系统中存在相同校验码的文件)
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
-
 		Doc fsDoc = fsGetDoc(repos, doc);
 		if(fsDoc != null && fsDoc.getType() != 0)
 		{
 			if(fsDoc.getType() == 2)
 			{
-				Log.info("checkDocInfo " + name + " 是已存在的目录");
-				rt.setError(name + "是已存在目录！");
-				//docSysDebugLog("checkDocInfo() " + name + " 已存在，且是目录！", rt);
+				docSysErrorLog(name + "是已存在目录！", rt);
+
+				docSysDebugLog("checkDocInfo() 上传失败: [" + doc.getPath() + doc.getName() + "] 是目录", rt);
 				writeJson(rt, response);
+				
+				//treat as upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			
@@ -1325,8 +1349,13 @@ public class DocController extends BaseController{
 			{	
 				rt.setData(fsDoc);
 				rt.setMsgData("1");
+
 				docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
+				
 				writeJson(rt, response);
+
+				//treat as upload success
+				uploadAfterHandler(1, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			else
@@ -1366,17 +1395,6 @@ public class DocController extends BaseController{
 			commitMsg = "上传 " + path + name;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "checkDocInfo";
-		context.subEvent = "checkDocInfo";
-		context.eventName = "上传文件";	
-		context.repos = repos;
-		context.doc = doc;
-		context.newDoc = null;
-		context.folderUploadAction = folderUploadAction;
 		
 		int ret = copySameDocForUpload(repos, sameDoc, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		if(ret == 0)
