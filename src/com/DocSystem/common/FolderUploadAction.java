@@ -21,11 +21,13 @@ public class FolderUploadAction {
 	public String uploadLogPath; //存放subDocs upload info，上传结束时要写入系统日志中
 	public String localChangesRootPath; //上传成功的文件	
 	
-	public boolean isCriticalError;
+	public boolean isCriticalError = false;
 	public String errorInfo;
 
 	public long startTime;
 	public long beatTime;	//心跳时间（心跳停跳检测3分钟，但是checkDocInfo的大文件copy时间可能比较长，如何处理呢）
+	public long beatStopThreshold = 3*6*1000; //默认3分钟
+	public boolean beatCheckIgnore = false;
 	
 	//used for systemLog
 	public String event;
@@ -36,4 +38,6 @@ public class FolderUploadAction {
 	public int totalCount;
 	public int successCount;
 	public int failCount;
+
+	public boolean stopFlag = false;
 }
