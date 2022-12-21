@@ -2264,7 +2264,7 @@ public class DocController extends BaseController{
 
 		if(checkAuthCode(authCode, null) == null)
 		{
-			rt.setError("无效授权码或授权码已过期！");
+			docSysErrorLog("无效授权码或授权码已过期！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2377,7 +2377,17 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+				
+		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
+		repos.disableRemoteAction = true;
 		
+		//Build Doc
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
+		
+		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
@@ -2391,36 +2401,38 @@ public class DocController extends BaseController{
 			folderUploadAction.beatTime = new Date().getTime();
 			folderUploadAction.totalCount = totalCount;
 		}
-		
-		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
-		repos.disableRemoteAction = true;
-		
-		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
 
-		String localParentPath = localRootPath + path;
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			localParentDir.mkdirs();
-		}
-		
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
+		//Build ActionContext
+		ActionContext context = new ActionContext();
+		context.requestIP = getRequestIpAddress(request);
+		context.user = reposAccess.getAccessUser();
+		context.event = "uploadDocRS";
+		context.subEvent = "uploadDocRS";
+		context.eventName = "文件上传";	
+		context.repos = repos;
+		context.doc = doc;
+		context.newDoc = null;
+		context.folderUploadAction = folderUploadAction;
 		
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			docSysErrorLog("您无此操作权限，请联系管理员", rt);
 			writeJson(rt, response);
+
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}
+		
 		if(docUserAuth.getAccess() == 0)
 		{
-			rt.setError("您无权访问该目录，请联系管理员");
+			docSysErrorLog("您无权访问该文件，请联系管理员", rt);
 			writeJson(rt, response);
+
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}
 
@@ -2432,30 +2444,45 @@ public class DocController extends BaseController{
 			DocAuth parentDocUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask());
 			if(parentDocUserAuth == null)
 			{
-				rt.setError("您无此操作权限，请联系管理员");
+				docSysErrorLog("您无此操作权限，请联系管理员", rt);
 				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
+			
 			if(parentDocUserAuth.getAccess() == 0)
 			{
-				rt.setError("您无权访问该目录，请联系管理员");
+				docSysErrorLog("您无权访问该目录，请联系管理员", rt);
 				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			
 			if(parentDocUserAuth.getAddEn() == null || parentDocUserAuth.getAddEn() != 1)
 			{
-				rt.setError("您没有该目录的新增权限，请联系管理员");
+				docSysErrorLog("您没有该目录的新增权限，请联系管理员", rt);
 				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			
 			if(isUploadSizeExceeded(size, parentDocUserAuth.getUploadSize()))
 			{
-				Log.info("uploadDocRS size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+				docSysDebugLog("uploadDocRS size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+				
 				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
-				rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
+				docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
+				
 				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;							
 			}
 		}
@@ -2463,21 +2490,36 @@ public class DocController extends BaseController{
 		{
 			if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
 			{
-				rt.setError("您没有该文件的编辑权限，请联系管理员");
+				docSysErrorLog("您没有该文件的编辑权限，请联系管理员", rt);
 				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;				
 			}
 		}
 		
 		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
 		{
-			Log.info("uploadDocRS size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize());
+			docSysDebugLog("uploadDocRS size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+			
 			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
-			rt.setError("上传文件大小超限[" + maxUploadSize + "]，请联系管理员");
+			docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
 			writeJson(rt, response);
+			
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;							
 		}
-		
+
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String localParentPath = localRootPath + path;
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			localParentDir.mkdirs();
+		}
+
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
 		{
@@ -2488,7 +2530,9 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 				return;
 			}
 			
@@ -2496,25 +2540,13 @@ public class DocController extends BaseController{
 			{
 				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
 				writeJson(rt, response);
-				return;
-				
+				return;				
 			}
 		}
 		
 		//非分片上传或LastChunk Received
 		if(uploadFile != null) 
-		{
-			ActionContext context = new ActionContext();
-			context.requestIP = getRequestIpAddress(request);
-			context.user = reposAccess.getAccessUser();
-			context.event = "uploadDocRS";
-			context.subEvent = "uploadDocRS";
-			context.eventName = "文件上传";	
-			context.repos = repos;
-			context.doc = doc;
-			//context.newDoc = dstDoc;
-			context.folderUploadAction = folderUploadAction;
-			
+		{			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
 				commitMsg = "上传 " + path + name;
