@@ -1215,7 +1215,7 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
@@ -1577,7 +1577,7 @@ public class DocController extends BaseController{
 
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
@@ -1697,7 +1697,7 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
@@ -1921,7 +1921,7 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;		
-		if(dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
@@ -2289,7 +2289,7 @@ public class DocController extends BaseController{
 				
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
 			if(folderUploadAction == null)
