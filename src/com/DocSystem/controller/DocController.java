@@ -187,15 +187,8 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "addDoc";
-		context.subEvent = "addDoc";
-		context.eventName = "新增文件";	
-		context.repos = repos;
-		context.doc = doc;
-		//context.newDoc = dstDoc;
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", repos, doc, null, null);
 		
 		int ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, context); 
 		
@@ -332,15 +325,8 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "addDocRS";
-		context.subEvent = "addDocRS";
-		context.eventName = "新增文件";	
-		context.repos = repos;
-		context.doc = doc;
-		//context.newDoc = dstDoc;
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", repos, doc, null, null);
 		
 		int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, context);
 		
@@ -558,15 +544,8 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "deleteDoc";
-		context.subEvent = "deleteDoc";
-		context.eventName = "删除文件";	
-		context.repos = repos;
-		context.doc = doc;
-		//context.newDoc = dstDoc;
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", repos, doc, null, null);
 		
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -661,16 +640,9 @@ public class DocController extends BaseController{
 			commitMsg = "删除 " + doc.getPath() + doc.getName();
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "deleteDocRS";
-		context.subEvent = "deleteDocRS";
-		context.eventName = "删除文件";	
-		context.repos = repos;
-		context.doc = doc;
-		//context.newDoc = dstDoc;
+
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", repos, doc, null, null);
 		
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -774,15 +746,9 @@ public class DocController extends BaseController{
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "renameDoc";
-		context.subEvent = "renameDoc";
-		context.eventName = "重命名文件";	
-		context.repos = repos;
-		context.doc = srcDoc;
-		context.newDoc = dstDoc;
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", repos, srcDoc, dstDoc, null);
+		
 		int ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
@@ -884,15 +850,8 @@ public class DocController extends BaseController{
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
 				
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "moveDoc";
-		context.subEvent = "moveDoc";
-		context.eventName = "移动文件";	
-		context.repos = repos;
-		context.doc = srcDoc;
-		context.newDoc = dstDoc;
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", repos, srcDoc, dstDoc, null);
 		
 		int ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -980,15 +939,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "copyDoc";
-		context.subEvent = "copyDoc";
-		context.eventName = "复制文件";	
-		context.repos = repos;
-		context.doc = srcDoc;
-		context.newDoc = dstDoc;
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", repos, srcDoc, dstDoc, null);
 		
 		int ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -1131,15 +1083,9 @@ public class DocController extends BaseController{
 			}
 			return;
 		}
-				
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "copyDocRS";
-		context.subEvent = "copyDocRS";
-		context.repos = repos;
-		context.doc = srcDoc;
-		context.newDoc = dstDoc;
+
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", repos, srcDoc, dstDoc, null);
 		
 		int ret = 0;
 		if(move)
@@ -1149,7 +1095,6 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			context.eventName = "复制文件";				
 			ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		}
 		writeJson(rt, response);
@@ -1288,18 +1233,8 @@ public class DocController extends BaseController{
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
-
 		//Build ActionContext
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "checkDocInfo";
-		context.subEvent = "checkDocInfo";
-		context.eventName = "上传文件";	
-		context.repos = repos;
-		context.doc = doc;
-		context.newDoc = null;
-		context.folderUploadAction = folderUploadAction;
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkDocInfo", "checkDocInfo", "文件上传", repos, doc, null, folderUploadAction);
 
 		//检查登录用户的权限
 		Doc parentDoc = buildBasicDoc(reposId, pid, null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
@@ -1699,16 +1634,8 @@ public class DocController extends BaseController{
 				}
 				
 				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);				
-				ActionContext context = new ActionContext();
-				context.requestIP = getRequestIpAddress(request);
-				context.user = reposAccess.getAccessUser();
-				context.event = "checkChunkUploaded";
-				context.subEvent = "checkChunkUploaded";
-				context.eventName = "文件上传";	
-				context.repos = repos;
-				context.doc = doc;
-				context.newDoc = null;
-				context.folderUploadAction = folderUploadAction;
+				//Build ActionContext
+				ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", repos, doc, null, folderUploadAction);
 				
 				int ret = 0;
 				Doc dbDoc = docSysGetDoc(repos, doc, false);
@@ -1768,6 +1695,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
@@ -1781,39 +1709,30 @@ public class DocController extends BaseController{
 			folderUploadAction.beatTime = new Date().getTime();
 			folderUploadAction.totalCount = totalCount;
 		}
-		
-		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "上传 " + path + name;
-		}
-		String commitUser = reposAccess.getAccessUser().getName();
-			
-		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+					
+		//Build Doc
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-
+		String localVRootPath = Path.getReposVirtualPath(repos);	
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true,localRootPath, localVRootPath, size, checkSum);
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", repos, doc, null, folderUploadAction);
+		
+		//check and add parentDir
 		String localParentPath = localRootPath + path;
 		File localParentDir = new File(localParentPath);
 		if(false == localParentDir.exists())
 		{
 			localParentDir.mkdirs();
 		}
-			
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true,localRootPath, localVRootPath, size, checkSum);
-			
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "combineChunks";
-		context.subEvent = "combineChunks";
-		context.eventName = "文件上传";	
-		context.repos = repos;
-		context.doc = doc;
-		//context.newDoc = dstDoc;
-		context.folderUploadAction = folderUploadAction;
-		
+
+		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传 " + path + name;
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+
 		int ret = 0;
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0) //新增文件
@@ -2021,16 +1940,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "uploadDoc";
-		context.subEvent = "uploadDoc";
-		context.eventName = "文件上传";	
-		context.repos = repos;
-		context.doc = doc;
-		//context.newDoc = dstDoc;
-		context.folderUploadAction = folderUploadAction;
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "文件上传", repos, doc, null, folderUploadAction);
 		
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
@@ -2398,16 +2308,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
-		ActionContext context = new ActionContext();
-		context.requestIP = getRequestIpAddress(request);
-		context.user = reposAccess.getAccessUser();
-		context.event = "uploadDocRS";
-		context.subEvent = "uploadDocRS";
-		context.eventName = "文件上传";	
-		context.repos = repos;
-		context.doc = doc;
-		context.newDoc = null;
-		context.folderUploadAction = folderUploadAction;
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "文件上传", repos, doc, null, folderUploadAction);
 		
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
@@ -2578,8 +2479,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
-	
-	
+
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
 	public void uploadMarkdownPic(

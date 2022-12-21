@@ -22222,4 +22222,23 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
+	
+
+	protected ActionContext buildBasicActionContext(String requestIP, User accessUser, 
+			String event, String subEvent, String eventName, 
+			Repos repos, Doc doc, Doc newDoc,
+			FolderUploadAction folderUploadAction) 
+	{
+		ActionContext context = new ActionContext();
+		context.requestIP = requestIP;
+		context.user = accessUser;
+		context.event = event;
+		context.subEvent = subEvent;
+		context.eventName = eventName;	
+		context.repos = repos;
+		context.doc = doc;
+		context.newDoc = newDoc;
+		context.folderUploadAction = folderUploadAction;
+		return context;
+	}
 }
