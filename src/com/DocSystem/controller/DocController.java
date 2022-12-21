@@ -15,6 +15,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,6 +59,7 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
@@ -83,6 +87,7 @@ import net.sf.sevenzipjbinding.SevenZipException;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
+import util.DateFormat;
 import util.ReturnAjax;
 import util.FileUtil.FileUtils2;
 import util.LuceneUtil.LuceneUtil2;
@@ -1422,11 +1427,81 @@ public class DocController extends BaseController{
 					action.isCriticalError = true;
 					action.errorInfo = rt.getMsgInfo();
 				}
+				else
+				{
+					startFolderUploadActionBeatCheckThread(action);
+				}
     		}
 		}	
 		return action;
 	}
 	
+	private void startFolderUploadActionBeatCheckThread(FolderUploadAction action) 
+	{
+		String actionId = action.actionId;
+		
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("\n******** FolderUploadActionBeatCheckThread [" + actionId + "]");
+
+	                        FolderUploadAction folderUploadAction = gFolderUploadActionHashMap.get(actionId);
+	                		if(folderUploadAction == null)
+	                		{
+	                			Log.info("FolderUploadActionBeatCheckThread() there is no FolderUploadAction for [" + actionId + "]");						
+	                			return;
+	                		}
+
+	                		if(folderUploadAction.stopFlag == true)
+	                		{
+	                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped");
+	                			return;
+	                		}
+	                		
+	                		if(folderUploadAction.isCriticalError == true)
+	                		{
+	                			Log.info("FolderUploadActionBeatCheckThread() there is critical error for [" + actionId + "] " + folderUploadAction.errorInfo);
+	                			return;
+	                		}
+	                		
+	                		if(isFolderUploadActionBeatStopped(folderUploadAction))
+	                		{
+	                			folderUploadEndHander(folderUploadAction);
+	                			return;
+	                		}
+	                		
+	                		startFolderUploadActionBeatCheckThread(folderUploadAction);                      
+	                		                     
+                        	Log.info("******** FolderUploadActionBeatCheckThread [" + actionId + "] 执行结束\n");		                        
+                        } catch(Exception e) {
+                        	Log.info("******** FolderUploadActionBeatCheckThread [" + actionId + "] 执行异常\n");
+                        	Log.info(e);                        	
+                        }                        
+                    }
+
+					private boolean isFolderUploadActionBeatStopped(FolderUploadAction action) {
+						//TODO: 当有时间比较长的操作时，设置该标记，最好加上ignore的时长
+						if(action.beatCheckIgnore)	
+						{
+							return false;
+						}
+						
+						long curTime = new Date().getTime();
+						if((curTime - action.beatTime) > action.beatStopThreshold)
+						{
+							Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than 3 minutes");
+							return true;
+						}
+						return false;
+					}
+                },
+                60,	//1分钟检测一次
+                TimeUnit.SECONDS);		
+	}
+
 	protected void removeFolderUploadAction(String actionId) {
 		synchronized(gFolderUploadActionSyncLock)
 		{
@@ -1808,6 +1883,10 @@ public class DocController extends BaseController{
 	}
 
 	private void folderUploadEndHander(FolderUploadAction action) {
+		
+		//Set action to stop to avoid other thread to do the endHandler
+		action.stopFlag = true;
+		
 		//判断是否有改动
 		Repos repos = action.repos;
 		Doc doc = action.doc;	//目录
