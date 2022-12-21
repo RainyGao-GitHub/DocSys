@@ -1268,13 +1268,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//Build Doc
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
-
-		//Check and get FolderUploadAction
+		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
@@ -1288,6 +1282,12 @@ public class DocController extends BaseController{
 			folderUploadAction.beatTime = new Date().getTime();
 			folderUploadAction.totalCount = totalCount;
 		}
+		
+		//Build Doc
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 
 		//Build ActionContext
 		ActionContext context = new ActionContext();
@@ -1639,7 +1639,8 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		
+
+		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
 		{
@@ -1697,10 +1698,7 @@ public class DocController extends BaseController{
 					localParentDir.mkdirs();
 				}
 				
-				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
-				
-				Doc dbDoc = docSysGetDoc(repos, doc, false);
-				
+				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);				
 				ActionContext context = new ActionContext();
 				context.requestIP = getRequestIpAddress(request);
 				context.user = reposAccess.getAccessUser();
@@ -1709,10 +1707,11 @@ public class DocController extends BaseController{
 				context.eventName = "文件上传";	
 				context.repos = repos;
 				context.doc = doc;
-				//context.newDoc = dstDoc;
+				context.newDoc = null;
 				context.folderUploadAction = folderUploadAction;
 				
 				int ret = 0;
+				Doc dbDoc = docSysGetDoc(repos, doc, false);
 				if(dbDoc == null || dbDoc.getType() == 0)
 				{
 					ret = addDoc(repos, doc,
@@ -1804,8 +1803,6 @@ public class DocController extends BaseController{
 			
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true,localRootPath, localVRootPath, size, checkSum);
 			
-		Doc dbDoc = docSysGetDoc(repos, doc, false);
-		
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
 		context.user = reposAccess.getAccessUser();
@@ -1818,8 +1815,8 @@ public class DocController extends BaseController{
 		context.folderUploadAction = folderUploadAction;
 		
 		int ret = 0;
-		//新增文件
-		if(dbDoc == null || dbDoc.getType() == 0)
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		if(dbDoc == null || dbDoc.getType() == 0) //新增文件
 		{
 			ret = addDoc(repos, doc,
 							null,
@@ -2003,13 +2000,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//Build Doc
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);		
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
-		
-		//Build FolderUploadAction
+		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;		
 		if(dirPath != null && !dirPath.isEmpty())
 		{
@@ -2023,7 +2014,12 @@ public class DocController extends BaseController{
 			folderUploadAction.beatTime = new Date().getTime();
 			folderUploadAction.totalCount = totalCount;
 		}
-
+		
+		//Build Doc
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);		
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
@@ -2377,16 +2373,10 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-				
+						
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
-		
-		//Build Doc
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
-		
+				
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
 		if(dirPath != null && !dirPath.isEmpty())
@@ -2402,6 +2392,11 @@ public class DocController extends BaseController{
 			folderUploadAction.totalCount = totalCount;
 		}
 
+		//Build Doc
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = new ActionContext();
 		context.requestIP = getRequestIpAddress(request);
