@@ -28,7 +28,7 @@ public class FolderUploadAction {
 	
 	public long startTime;
 	public long beatTime;	//心跳时间
-	public long beatStopThreshold = 3*6*1000; //默认3分钟
+	public long beatStopThreshold = 3*60*1000; //默认3分钟
 	public int longBeatThreadCount = 0;	//长心跳线程个数（分片上传的分片组合，checkDocInfo时的copySameDoc）
 	
 	//count info
