@@ -18164,7 +18164,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i<remoteList.size(); i++)
 		{
 			Doc subRemoteDoc = remoteList.get(i);
-			Log.debug("doPullSubEntriesFromRemoteStorage subDocName:" + subRemoteDoc.getName());
+			//Log.debug("doPullSubEntriesFromRemoteStorage subDocName:" + subRemoteDoc.getName());
 			Doc subDbDoc = dbHashMap.get(subRemoteDoc.getName());
 			Doc subLocalDoc = localHashMap.get(subRemoteDoc.getName());
 			doPullEntryFromRemoteStorage(session, remote, repos, subRemoteDoc, subDbDoc, subLocalDoc, subRemoteDoc, commitId, subEntryPullFlag, pullType, pullResult);
@@ -18176,7 +18176,7 @@ public class BaseController  extends BaseFunction{
 		
 		//The entries remained in localHashMap is the docs which have been deleted on remote server
 		for (Doc subLocalDoc : localHashMap.values()) {
-			Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subLocalDoc.getPath() + subLocalDoc.getName());			
+			//Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subLocalDoc.getPath() + subLocalDoc.getName());			
 			Doc subDbDoc = localHashMap.get(subLocalDoc.getName());
 			doPullEntryFromRemoteStorage(session, remote, repos, subLocalDoc, subDbDoc, subLocalDoc, null, commitId, subEntryPullFlag, pullType, pullResult);
 		}	
@@ -18222,7 +18222,7 @@ public class BaseController  extends BaseFunction{
 		
 		//The entries remained in dbHashMap is the docs which have been deleted on remote server
 		for (Doc subLocalDoc : localHashMap.values()) {
-			Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subLocalDoc.getPath() + subLocalDoc.getName());			
+			//Log.debug("doPullSubEntriesFromRemoteStorage() delete:" + subLocalDoc.getPath() + subLocalDoc.getName());			
 			
 			DocAuth subDocAuth = getDocAuthFromHashMap(subLocalDoc.getDocId(), curDocAuth, docAuthHashMap);
 			Doc subDocDoc = dbHashMap.get(subLocalDoc.getName());
