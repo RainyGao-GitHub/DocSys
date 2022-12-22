@@ -18008,15 +18008,18 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:	//LocalAdded and remoteNoChange : autoPush
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
-			if(localChangeType == DocChangeType.LOCALADD)
+			if(localChangeType != DocChangeType.NOCHANGE)
 			{
-				remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
-				if(remoteChangeType == DocChangeType.NOCHANGE)
+				if(localChangeType == DocChangeType.LOCALADD)
 				{
-					realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
-					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");
+					remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
+					if(remoteChangeType == DocChangeType.NOCHANGE)
+					{
+						realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
+					}
 				}
-			}	
+				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");
+			}
 			break;
 		case 2:	//localChanged and rmoteNoChange : manualPush 
 			localChangeType = getLocalDocChangeType(dbDoc, localDoc);
@@ -18026,8 +18029,8 @@ public class BaseController  extends BaseFunction{
 				if(remoteChangeType == DocChangeType.NOCHANGE)
 				{
 					realLocalChangeType = getLocalDocChangeTypeWithRemoteDoc(localDoc, remoteDoc);
-					Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");
 				}
+				Log.debug("getLocalChangeTypeForPush [" +doc.getPath() + doc.getName()+ "] realLocalChangeType[" + realLocalChangeType + "] localChangeType[" + localChangeType + "] " + " remoteChangeType[" + remoteChangeType + "]");
 			}
 			break;
 		case 3: //localChanged or remoteChanged : autoPushForce / manualPushForce / autoBackupWithVerRepos
@@ -18076,14 +18079,17 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:	//remoteAdded and localNoChange : autoPull
 			remoteChangeType = getRemoteDocChangeType(dbDoc, remoteDoc);
-			if(remoteChangeType == DocChangeType.REMOTEADD)
-			{
-				localChangeType = getLocalDocChangeType(dbDoc, localDoc);
-				if(localChangeType == DocChangeType.NOCHANGE)
+			if(remoteChangeType != DocChangeType.NOCHANGE)
+			{	
+				if(remoteChangeType == DocChangeType.REMOTEADD)
 				{
-					realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
-					Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");
+					localChangeType = getLocalDocChangeType(dbDoc, localDoc);
+					if(localChangeType == DocChangeType.NOCHANGE)
+					{
+						realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
+					}
 				}
+				Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");				
 			}
 			break;
 		case 2:	//remoteChanged and localNoChange : manualPull
@@ -18094,8 +18100,8 @@ public class BaseController  extends BaseFunction{
 				if(localChangeType == DocChangeType.NOCHANGE)
 				{
 					realRemoteChangeType = getRemoteDocChangeTypeWithLocalDoc(remoteDoc, localDoc);
-					Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");
 				}
+				Log.debug("getRemoteChangeTypeForPull [" +doc.getPath() + doc.getName()+ "] realRemoteChangeType[" + realRemoteChangeType + "] remoteChangeType[" + remoteChangeType + "] " + " localChangeType[" + localChangeType + "]");				
 			}
 			break;
 		case 3: //remoteChanged or localChanged : autoPullForce/manualPullForce
