@@ -410,17 +410,18 @@
     		{
     			relativePath = file.fullPath;
     		}
-    		//console.log("getRealParentInfo() relativePath:" + relativePath);
       		
     		SubContext.relativePath = relativePath;
-    		if(!relativePath || relativePath == "")
+    		if(relativePath == undefined || relativePath == "")
     		{
  				SubContext.realParentPath = SubContext.parentPath;
  				SubContext.realParentId = SubContext.parentId;
  	 			SubContext.realLevel = SubContext.level;
  				return true;
     		}
-			
+
+    		//console.log("getRealParentInfo() relativePath:" + relativePath);
+    		
     		//get the realParentPath
     		var realParentPath = SubContext.parentPath;
     		var realLevel = SubContext.level;
@@ -441,6 +442,7 @@
 				
 				if(dirPathReady == false)
 				{
+					dirPathReady = true;
 					dirPath = SubContext.parentPath + nodeName + "/";
 				}
 				
