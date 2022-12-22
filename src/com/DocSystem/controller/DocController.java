@@ -491,11 +491,13 @@ public class DocController extends BaseController{
 
 		docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "]", rt);
 
+		String requestIP = getRequestIpAddress(request);
+
 		new Thread(new Runnable() {
 			public void run() {
 				Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
 				executeUniqueCommonActionList(actionList, rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+				addSystemLog(requestIP, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 			}
 		}).start();
 	}
