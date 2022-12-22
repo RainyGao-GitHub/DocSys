@@ -3848,7 +3848,7 @@ public class BaseController  extends BaseFunction{
 	//******************* 版本仓库参考节点接口 *********************************
 	//VerRepos DB Interfaces
 	protected static List<Doc> getVerReposDBEntryList(Repos repos, Doc doc) {
-		Log.debug("getVerReposDBEntryList for doc:[" + doc.getPath() + doc.getName() + "]");
+		//Log.debug("getVerReposDBEntryList for doc:[" + doc.getPath() + doc.getName() + "]");
 
 		String indexLib = getIndexLibPathForVerReposDoc(repos);
 
@@ -5846,7 +5846,7 @@ public class BaseController  extends BaseFunction{
 			int subDocSyncFlag, 
 			ScanOption scanOption) 
 	{
-		Log.debug("************************ syncupScanForSubDocs_FSM()  docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "] subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanOption.scanType);
+		//Log.debug("************************ syncupScanForSubDocs_FSM()  docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "] subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanOption.scanType);
 
 		//子目录不递归
 		if(subDocSyncFlag == 0)
@@ -17437,7 +17437,7 @@ public class BaseController  extends BaseFunction{
 	//******************* 远程存储 接口 *********************************
 	//Remote Storage DB Interfaces
 	protected static List<Doc> getRemoteStorageDBEntryList(Repos repos, Doc doc, RemoteStorageConfig remote) {
-		Log.debug("getRemoteStorageDBEntryList for doc:[" + doc.getPath() + doc.getName() + "]");
+		//Log.debug("getRemoteStorageDBEntryList for doc:[" + doc.getPath() + doc.getName() + "]");
 
 		String indexLib = getIndexLibPathForRemoteStorageDoc(repos, remote);
 		if(indexLib == null)
@@ -17834,31 +17834,31 @@ public class BaseController  extends BaseFunction{
 		
 		boolean ret = false;		
 		DocChangeType remoteChangeType = getRemoteChangeTypeForPull(doc, dbDoc, localDoc, remoteDoc, pullType);
-		Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " remoteChangeType:" + remoteChangeType);
+		//Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " remoteChangeType:" + remoteChangeType);
 		
 		if(remoteChangeType == DocChangeType.REMOTEADD)
 		{
-			Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地未改动，远程新增，强制拉取模式，拉取");
+			Log.debug("doPullEntryFromRemoteStorageForDownload [" +doc.getPath() + doc.getName()+ "] 远程新增，拉取");
 			ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 		}
 		else if(remoteChangeType == DocChangeType.REMOTECHANGE)
 		{
-			Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程改动, 强制拉取模式, 拉取");
+			Log.debug("doPullEntryFromRemoteStorageForDownload [" +doc.getPath() + doc.getName()+ "] 远程改动, 拉取");
 			return remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);
 		}
 		else if(remoteChangeType == DocChangeType.REMOTEDELETE)
 		{
-			Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程删除, 强制拉取模式，拉取");
+			Log.debug("doPullEntryFromRemoteStorageForDownload [" +doc.getPath() + doc.getName()+ "] 远程删除, 拉取");
 			ret = remoteStoragePullEntry(session, remote, repos, doc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 		}
 		else if(remoteChangeType == DocChangeType.REMOTEDIRTOFILE)
 		{
-			Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程目录->文件, 强制拉取模式，拉取");
+			Log.debug("doPullEntryFromRemoteStorageForDownload [" +doc.getPath() + doc.getName()+ "] 远程目录->文件, 拉取");
 			ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 		}
 		else if(remoteChangeType == DocChangeType.REMOTEFILETODIR)
 		{
-			Log.debug("doPullEntryFromRemoteStorageForDownload " +doc.getPath() + doc.getName()+ " 本地改动, 远程文件->目录, 强制拉取模式，拉取");
+			Log.debug("doPullEntryFromRemoteStorageForDownload [" +doc.getPath() + doc.getName()+ "] 远程文件->目录, 拉取");
 			ret = remoteStoragePullEntry(session, remote, repos, remoteDoc, dbDoc, localDoc, remoteDoc, commitId, pullResult, remoteChangeType);					
 		}
 		else if(remoteChangeType == DocChangeType.NOCHANGE)
@@ -17883,7 +17883,7 @@ public class BaseController  extends BaseFunction{
 		
 		boolean ret = false;
 		DocChangeType remoteChangeType = getRemoteChangeTypeForPull(doc, dbDoc, localDoc, remoteDoc, pullType);
-		Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " remoteChangeType:" + remoteChangeType);
+		//Log.debug("doPullEntryFromRemoteStorage " +doc.getPath() + doc.getName()+ " remoteChangeType:" + remoteChangeType);
 		
 		switch(remoteChangeType)	
 		{
@@ -17915,7 +17915,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(ret == true && remoteDoc != null && remoteDoc.getType() != null && remoteDoc.getType() == 2)
 		{
-			Log.debug("doPullEntryFromRemoteStorage [" +doc.getPath() + doc.getName()+ "] 拉取子目录");
+			//Log.debug("doPullEntryFromRemoteStorage [" +doc.getPath() + doc.getName()+ "] 拉取子目录");
 			doPullSubEntriesFromRemoteStorage(session, remote, repos, doc, commitId, subEntryPullFlag, pullType, pullResult);
 		}
 		
@@ -18235,7 +18235,7 @@ public class BaseController  extends BaseFunction{
 	private boolean doPushSubEntriesToRemoteStorage(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, Integer subEntryPushFlag, 
 			DocPushResult pushResult, List<CommitAction> actionList, boolean isSubAction, int pushType) 
 	{		
-		Log.info("doPushSubEntriesToRemoteStorage() doc:[" + doc.getPath() + doc.getName() + "]");
+		//Log.info("doPushSubEntriesToRemoteStorage() doc:[" + doc.getPath() + doc.getName() + "]");
 
 		//子目录不递归
 		if(subEntryPushFlag == 0)
@@ -19921,14 +19921,14 @@ public class BaseController  extends BaseFunction{
 		String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = getSubDocLevel(doc);
 		
-        Log.debug("getRemoteStorageEntryListForGit doc:[" + doc.getPath() + doc.getName() + "]");
+        //Log.debug("getRemoteStorageEntryListForGit doc:[" + doc.getPath() + doc.getName() + "]");
 		try {       	        	
         	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
         	{
         		fileRemotePath += doc.getName() + "/";
         	}
-        	Log.debug("getRemoteStorageEntryListForGit fileRemotePath:" + fileRemotePath);
+        	//Log.debug("getRemoteStorageEntryListForGit fileRemotePath:" + fileRemotePath);
             
 			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
 			//Log.printObject("list:", list);
@@ -20166,14 +20166,14 @@ public class BaseController  extends BaseFunction{
 		String subDocParentPath = getSubDocParentPath(doc);
 		int subDocLevel = getSubDocLevel(doc);
 		
-        Log.debug("getRemoteStorageEntryHashMapForGit doc:" + doc.getPath() + doc.getName());
+        //Log.debug("getRemoteStorageEntryHashMapForGit doc:" + doc.getPath() + doc.getName());
 		try {       	        	
         	String fileRemotePath = remote.rootPath  + doc.offsetPath + doc.getPath();;
         	if(doc.getName() != null && doc.getName().isEmpty() == false)
         	{
         		fileRemotePath += doc.getName() + "/";
         	}
-        	Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
+        	//Log.debug("getRemoteStorageEntryHashMapForGit fileRemotePath:" + fileRemotePath);
             
 			TreeWalk treeWalk = session.git.listFiles(fileRemotePath, commitId);
 			if(treeWalk != null)
