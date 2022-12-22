@@ -1460,20 +1460,6 @@ public class DocController extends BaseController{
 	                			Log.info("FolderUploadActionBeatCheckThread() there is no FolderUploadAction for [" + actionId + "]");						
 	                			return;
 	                		}
-
-	                		if(folderUploadAction.stopFlag == true)
-	                		{
-	                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped");
-		                		if((curTime - folderUploadAction.stopTime) > folderUploadAction.beatStopThreshold)
-		                		{
-		                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped more than [" +  folderUploadAction.beatStopThreshold + "] ms, clear action");
-		                			gFolderUploadActionHashMap.remove(actionId);
-		                			return;
-		                		}
-		                		
-	                			startFolderUploadActionBeatCheckThread(folderUploadAction);                      
-	                			return;
-	                		}
 	                		
 	                		if(folderUploadAction.isCriticalError == true)
 	                		{
@@ -1487,6 +1473,23 @@ public class DocController extends BaseController{
 		                		}
 		                		
 	                			startFolderUploadActionBeatCheckThread(folderUploadAction);
+	                			return;
+	                		}
+	                		
+	                		if(folderUploadAction.stopFlag == true)
+	                		{
+	                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped");
+	    						if(action.longBeatThreadCount <= 0)	//任务结束的后处理还没有结束	
+	    						{
+		    						if((curTime - folderUploadAction.stopTime) > folderUploadAction.beatStopThreshold)
+			                		{
+			                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped more than [" +  folderUploadAction.beatStopThreshold + "] ms, clear action");
+			                			gFolderUploadActionHashMap.remove(actionId);
+			                			return;
+			                		}
+	    						}
+	    						
+	                			startFolderUploadActionBeatCheckThread(folderUploadAction);                      
 	                			return;
 	                		}
 	                		
@@ -1943,6 +1946,9 @@ public class DocController extends BaseController{
 			public void run() {
 				Log.debug("folderUploadEndHander() execute in new thread");
 				
+				//mark as longBeat
+				action.longBeatThreadCount++;
+				
 				//提交版本
 				ReturnAjax rt = new ReturnAjax();
 				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, null, null);
@@ -1966,7 +1972,10 @@ public class DocController extends BaseController{
 				
 				//写入日志
 				addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action, rt));						
-				FileUtil.delDir(action.uploadLogPath);		
+				FileUtil.delDir(action.uploadLogPath);	
+				
+				//mark as longBeat
+				action.longBeatThreadCount--;
 			}
 		}).start();
 	}
