@@ -1230,7 +1230,10 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
-			folderUploadAction.totalCount = totalCount;
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
 		}
 		
 		//Build Doc
@@ -1682,7 +1685,11 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
-			folderUploadAction.totalCount = totalCount;
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+
 		}
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
@@ -1802,7 +1809,11 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
-			folderUploadAction.totalCount = totalCount;
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+
 		}
 					
 		//Build Doc
@@ -2031,7 +2042,11 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
-			folderUploadAction.totalCount = totalCount;
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+
 		}
 		
 		//Build Doc
@@ -2399,7 +2414,11 @@ public class DocController extends BaseController{
 				return;
 			}
 			folderUploadAction.beatTime = new Date().getTime();
-			folderUploadAction.totalCount = totalCount;
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+
 		}
 
 		//Build Doc
