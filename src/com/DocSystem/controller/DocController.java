@@ -1426,11 +1426,12 @@ public class DocController extends BaseController{
 				{
 					action.isCriticalError = true;
 					action.errorInfo = rt.getMsgInfo();
+					action.stopFlag = true;
+					action.stopTime = new Date().getTime();
 				}
-				else
-				{
-					startFolderUploadActionBeatCheckThread(action);
-				}
+				
+				//this thread is also responsible for delete action
+				startFolderUploadActionBeatCheckThread(action);
     		}
 		}	
 		return action;
@@ -1439,14 +1440,16 @@ public class DocController extends BaseController{
 	private void startFolderUploadActionBeatCheckThread(FolderUploadAction action) 
 	{
 		String actionId = action.actionId;
-		
+		Log.info("startFolderUploadActionBeatCheckThread [" + actionId + "]");
+
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.schedule(
         		new Runnable() {
                     @Override
                     public void run() {
-                        try {
-	                        Log.info("\n******** FolderUploadActionBeatCheckThread [" + actionId + "]");
+                    	try {
+                        	long curTime = new Date().getTime();
+                    		Log.info("\n******** FolderUploadActionBeatCheckThread [" + actionId + "]");
 
 	                        FolderUploadAction folderUploadAction = gFolderUploadActionHashMap.get(actionId);
 	                		if(folderUploadAction == null)
@@ -1458,16 +1461,33 @@ public class DocController extends BaseController{
 	                		if(folderUploadAction.stopFlag == true)
 	                		{
 	                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped");
+		                		if((curTime - folderUploadAction.stopTime) > folderUploadAction.beatStopThreshold)
+		                		{
+		                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped more than [" +  folderUploadAction.beatStopThreshold + "] ms, clear action");
+		                			gFolderUploadActionHashMap.remove(actionId);
+		                			return;
+		                		}
+		                		
+	                			startFolderUploadActionBeatCheckThread(folderUploadAction);                      
 	                			return;
 	                		}
 	                		
 	                		if(folderUploadAction.isCriticalError == true)
 	                		{
-	                			Log.info("FolderUploadActionBeatCheckThread() there is critical error for [" + actionId + "] " + folderUploadAction.errorInfo);
+	                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] there is critical error [" + folderUploadAction.errorInfo + "]");
+
+		                		if((curTime - folderUploadAction.stopTime) > folderUploadAction.beatStopThreshold)
+		                		{
+		                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped more than [" +  folderUploadAction.beatStopThreshold + "] ms, clear action");
+		                			gFolderUploadActionHashMap.remove(actionId);
+		                			return;
+		                		}
+		                		
+	                			startFolderUploadActionBeatCheckThread(folderUploadAction);
 	                			return;
 	                		}
 	                		
-	                		if(isFolderUploadActionBeatStopped(folderUploadAction))
+	                		if(isFolderUploadActionBeatStopped(folderUploadAction, curTime))
 	                		{
 	                			folderUploadEndHander(folderUploadAction);
 	                			return;
@@ -1482,17 +1502,17 @@ public class DocController extends BaseController{
                         }                        
                     }
 
-					private boolean isFolderUploadActionBeatStopped(FolderUploadAction action) {
-						//TODO: 当有时间比较长的操作时，设置该标记，最好加上ignore的时长
-						if(action.beatCheckIgnore)	
+					private boolean isFolderUploadActionBeatStopped(FolderUploadAction action, long curTime) {
+						//TODO: 长心跳线程，最好又超时时间配合，避免线程意外死亡影响检测
+						if(action.longBeatThreadCount > 0)	
 						{
+							Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] there is [" + action.longBeatThreadCount + "] longBeatThread");
 							return false;
 						}
 						
-						long curTime = new Date().getTime();
 						if((curTime - action.beatTime) > action.beatStopThreshold)
 						{
-							Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than 3 minutes");
+							Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than [" + action.beatStopThreshold + "] ms");
 							return true;
 						}
 						return false;
@@ -1886,6 +1906,7 @@ public class DocController extends BaseController{
 		
 		//Set action to stop to avoid other thread to do the endHandler
 		action.stopFlag = true;
+		action.stopTime = new Date().getTime();
 		
 		//判断是否有改动
 		Repos repos = action.repos;
