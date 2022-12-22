@@ -1452,7 +1452,7 @@ public class DocController extends BaseController{
                     public void run() {
                     	try {
                         	long curTime = new Date().getTime();
-                    		Log.info("\n******** FolderUploadActionBeatCheckThread [" + actionId + "]");
+                    		Log.info("******** FolderUploadActionBeatCheckThread [" + actionId + "]");
 
 	                        FolderUploadAction folderUploadAction = gFolderUploadActionHashMap.get(actionId);
 	                		if(folderUploadAction == null)
