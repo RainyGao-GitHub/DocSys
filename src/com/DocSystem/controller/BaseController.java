@@ -3724,10 +3724,22 @@ public class BaseController  extends BaseFunction{
 		
 		//addDoc接口用uploadFile以及chunkNum同时为空来判定是新建文件或上传了空文件
 		//TODO: 这个接口做的事情似乎有点太多了，后面有机会需要进行优化
+		boolean ret = false;
 		if(uploadFile == null && chunkNum == null)
 		{	
 			//File must not exists
-			if(createRealDoc(repos, doc, rt) == false)
+			if(context.folderUploadAction != null)
+			{
+				context.folderUploadAction.longBeatThreadCount++;
+				ret = createRealDoc(repos, doc, rt);
+				context.folderUploadAction.longBeatThreadCount--;						
+			}
+			else
+			{
+				ret = createRealDoc(repos, doc, rt);				
+			}
+			
+			if(ret == false)
 			{	
 				if(context.folderUploadAction == null)
 				{	
@@ -3740,7 +3752,18 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(context.folderUploadAction != null)
+			{
+				context.folderUploadAction.longBeatThreadCount++;
+				ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
+				context.folderUploadAction.longBeatThreadCount--;						
+			}
+			else
+			{
+				ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);				
+			}
+			
+			if(ret == false)
 			{	
 				if(context.folderUploadAction == null)
 				{	
@@ -3752,16 +3775,15 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		//Update the latestEditTime
+		//Update the DBEntry
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
-		//add dbDoc
 		if(dbAddDoc(repos, doc, false, false) == false)
 		{	
 			docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 		}
-
+		 
 		rt.setData(doc);
 		rt.setMsgData("isNewNode");
 		docSysDebugLog("新增成功", rt); 
@@ -3968,10 +3990,22 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//addDoc接口用uploadFile是否为空来区分新建文件还是上传文件
+		boolean ret = false;
 		if(docData == null)
 		{	
 			//File must not exists
-			if(createRealDoc(repos, doc, rt) == false)
+			if(context.folderUploadAction != null)
+			{
+				context.folderUploadAction.longBeatThreadCount++;
+				ret = createRealDoc(repos, doc, rt);
+				context.folderUploadAction.longBeatThreadCount--;						
+			}
+			else
+			{
+				ret = createRealDoc(repos, doc, rt);
+			}
+			
+			if(ret == false)
 			{	
 				if(context.folderUploadAction == null)
 				{
@@ -3984,7 +4018,18 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(context.folderUploadAction != null)
+			{
+				context.folderUploadAction.longBeatThreadCount++;
+				ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
+				context.folderUploadAction.longBeatThreadCount--;						
+			}
+			else
+			{
+				ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
+			}
+			
+			if(ret == false)
 			{	
 				if(context.folderUploadAction == null)
 				{
@@ -4004,6 +4049,8 @@ public class BaseController  extends BaseFunction{
 		{	
 			docSysDebugLog("addDocEx_FSM() dbAddDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 		}
+		
+		//set doc to response
 		rt.setData(doc);
 		rt.setMsgData("isNewNode");
 		docSysDebugLog("新增成功", rt); 
@@ -7102,11 +7149,20 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		//get RealDoc Full ParentPath
-		String reposRPath =  Path.getReposRealPath(repos);		
-
 		//保存文件信息
-		if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+		boolean ret = false;
+		if(context.folderUploadAction != null)
+		{
+			context.folderUploadAction.longBeatThreadCount++;
+			ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
+			context.folderUploadAction.longBeatThreadCount--;		
+		}
+		else
+		{
+			ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
+		}
+		
+		if(ret == false)
 		{
 			if(context.folderUploadAction == null)
 			{
@@ -7117,11 +7173,10 @@ public class BaseController  extends BaseFunction{
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return 0;
 		}
-		
+
+		//Update DBEntry
 		doc.setLatestEditor(login_user.getId());
 		doc.setLatestEditorName(login_user.getName());
-		
-		//Get latestEditTime
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		if(dbUpdateDoc(repos, doc, true) == false)
@@ -7172,6 +7227,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Build DocUpdate action
+		//get RealDoc Full ParentPath
+		String reposRPath =  Path.getReposRealPath(repos);		
 		BuildAsyncActionListForDocUpdate(asyncActionList, repos, doc, reposRPath);
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
@@ -7205,12 +7262,21 @@ public class BaseController  extends BaseFunction{
 				return 0;
 			}
 		}
-		
-		//get RealDoc Full ParentPath
-		String reposRPath =  Path.getReposRealPath(repos);		
-		
+				
 		//保存文件信息
-		if(updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt) == false)
+		boolean ret = false;
+		if(context.folderUploadAction != null)
+		{
+			context.folderUploadAction.longBeatThreadCount++;
+			ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
+			context.folderUploadAction.longBeatThreadCount--;
+		}
+		else
+		{
+			ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
+		}
+		
+		if(ret == false)
 		{
 			if(context.folderUploadAction == null)
 			{
@@ -7222,10 +7288,10 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
+		
+		//Update DBEntry
 		doc.setLatestEditor(login_user.getId());
 		doc.setLatestEditorName(login_user.getName());
-		
-		//Get latestEditTime
 		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		if(dbUpdateDoc(repos, doc, true) == false)
@@ -7257,6 +7323,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Build DocUpdate action
+		//get RealDoc Full ParentPath
+		String reposRPath =  Path.getReposRealPath(repos);		
 		BuildAsyncActionListForDocUpdate(asyncActionList, repos, doc, reposRPath);
 		
 		if(asyncActionList != null && asyncActionList.size() > 0)
@@ -7539,9 +7607,22 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
+		
 		//复制文件或目录
 		Log.debug("copySameDocForUpload() copyRealDoc");		
-		if(copyRealDoc(repos, sameDoc, doc, rt) == false)
+		boolean ret = false;
+		if(context.folderUploadAction != null)
+		{
+			context.folderUploadAction.longBeatThreadCount++;
+			ret = copyRealDoc(repos, sameDoc, doc, rt);
+			context.folderUploadAction.longBeatThreadCount--;						
+		}
+		else
+		{
+			ret = copyRealDoc(repos, sameDoc, doc, rt);
+		}
+		
+		if(ret == false)
 		{
 			unlockDoc(sameDoc, lockType, login_user);
 			
