@@ -4654,12 +4654,12 @@ public class BaseController  extends BaseFunction{
 		case SYNC_ALL_FORCE:
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
-			refreshDocSearchIndex(repos, doc, action, 2, null, rt);
+			refreshDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
 			break;
 		case SYNC_ALL:
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
-			refreshDocSearchIndex(repos, doc, action, 2, null, rt);
+			refreshDocSearchIndex(repos, doc, action, 2, false, rt);	//只刷新action.localChangesRootPath中的文件
 			break;
 		case SYNC_AUTO:			//仓库定时同步	
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
@@ -4672,7 +4672,7 @@ public class BaseController  extends BaseFunction{
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			break;	
 		case SYNC_SearchIndex:
-			refreshDocSearchIndex(repos, doc, action, 2, null, rt);
+			refreshDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
 			break;		
 		default:
 			break;
@@ -4681,56 +4681,49 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private void refreshDocSearchIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, ScanOption scanOption, ReturnAjax rt) {
+	private void refreshDocSearchIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, boolean force, ReturnAjax rt) {
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == null)
 		{
-			Log.info("**************************** checkAndUpdateIndex() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			Log.info("**************************** refreshDocSearchIndex() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			return;
 		}	
 		
-		switch(action.getAction())
+		if(force)
 		{
-		case SYNC_ALL_FORCE:
-		case SYNC_SearchIndex:
-			Log.info("**************************** checkAndUpdateIndex() 强制刷新 SearchIndex for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			Log.info("**************************** refreshDocSearchIndex() 强制刷新 SearchIndex for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(docDetect(repos, doc))
 			{
 				if(doc.getDocId() == 0)
 				{
 					//Delete All Index Lib
-					Log.info("checkAndUpdateIndex() delete all index lib");
+					Log.info("refreshDocSearchIndex() delete all index lib");
 					deleteDocNameIndexLib(repos);
 					deleteRDocIndexLib(repos);
 					deleteVDocIndexLib(repos);
 					//Build All Index For Doc
-					Log.info("checkAndUpdateIndex() buildIndexForDoc");
+					Log.info("refreshDocSearchIndex() buildIndexForDoc");
 					buildIndexForDoc(repos, doc, null, null, rt, 2);
 				}
 				else
 				{
 					//deleteAllIndexUnderDoc
-					Log.info("checkAndUpdateIndex() delete all index for doc");
+					Log.info("refreshDocSearchIndex() delete all index for doc [" + doc.getPath() + doc.getName() + "]");
 					deleteAllIndexForDoc(repos, doc, 2);
 					//buildAllIndexForDoc
-					Log.info("checkAndUpdateIndex() buildIndexForDoc");
+					Log.info("refreshDocSearchIndex() buildIndexForDoc [" + doc.getPath() + doc.getName() + "]");
 					buildIndexForDoc(repos, doc, null, null, rt, 2);
 				}
 			}
-			Log.info("**************************** checkAndUpdateIndex() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			break;
-		case SYNC_ALL:
-		case SYNC_AUTO:
-		case SYNC_VerRepos:
-		case SYNC_RemoteStorage:
-			//只更新有改动的文件节点
-			if(isLocalChanged(scanOption))
-			{
-				rebuildIndexForDocEx(repos, doc, scanOption.localChangesRootPath, rt);
-			}
-			break;
-		default:	//未知同步类型
-			break;
+			Log.info("**************************** refreshDocSearchIndex() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			return;
+		}
+		
+		
+		//只更新有改动的文件节点
+		if(isLocalChanged(action.localChangesRootPath))
+		{
+			rebuildIndexForDocEx(repos, doc, action.localChangesRootPath, rt);
 		}
 	}
 
