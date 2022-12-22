@@ -25,11 +25,14 @@ public class CommonAction {
     
     private User user = null;    
     
-    //For localAction
+    //For localFSAction
 	MultipartFile uploadFile = null;
 	private String chunkParentPath = null;
 	private Long chunkSize = null;
 	private Integer chunkNum = null;
+	
+	//For SearchIndexUpdate
+	public String localChangesRootPath = null;
 	
     //For subAction
     public boolean isSubAction = false;
