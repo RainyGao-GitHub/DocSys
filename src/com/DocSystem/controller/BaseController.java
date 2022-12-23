@@ -11035,8 +11035,6 @@ public class BaseController  extends BaseFunction{
 	{	
 		Log.info("*************** docSysInit force:" + force + " *****************");
 		Log.info("docSysInit() docSysIniPath:" + docSysIniPath);
-
-		channel = ChannelFactory.getByChannelName("businessChannel");
 		
 		if(officeEditorApi == null)
 		{
