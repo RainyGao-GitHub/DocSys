@@ -30,6 +30,10 @@ public class CommunityChannel extends BaseController implements Channel {
     public void init() {
     	Log.debug("CommunityChannel init");
         ChannelFactory.register(this);
+        if(channel == null)
+        {
+        	channel = ChannelFactory.getByChannelName("communityChannel");
+        }
     }
 
 	@Override
@@ -134,13 +138,13 @@ public class CommunityChannel extends BaseController implements Channel {
 	@Override
 	public byte[] encryptData(Repos repos, byte[] data) {
 		// TODO Auto-generated method stub
-		return null;
+		return data;
 	}
 
 	@Override
 	public byte[] decryptData(Repos repos, byte[] data) {
 		// TODO Auto-generated method stub
-		return null;
+		return data;
 	}
 
 	@Override

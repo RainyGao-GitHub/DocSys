@@ -222,7 +222,7 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();
 	
 	//businessChannel
-	protected Channel channel = null;
+	protected static Channel channel = null;
 	
 	static {
     	initOSType();
