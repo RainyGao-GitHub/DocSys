@@ -2956,7 +2956,7 @@ public class DocController extends BaseController{
 			//文件服务器前置仓库不允许远程存储
 			remoteStorageEn = false;
 			//从文件服务器拉取文件
-			remoteServerCheckOut(repos, doc, null, null, null, null, 3, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, 3, null);
 		}
 
 		Doc localEntry = fsGetDoc(repos, doc);
@@ -3091,7 +3091,6 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 		{
 			docSysErrorLog("开源版不支持远程存储！", rt);			
@@ -3145,7 +3144,6 @@ public class DocController extends BaseController{
 	}
 	
 	private Doc getDownloadDocInfoForOffice(Repos repos, Doc doc) {
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
 			Log.debug("getDownloadDocInfoForOffice 非商业版本不支持远程存储");

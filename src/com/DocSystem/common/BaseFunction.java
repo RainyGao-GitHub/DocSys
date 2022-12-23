@@ -59,6 +59,7 @@ import util.Encrypt.DES;
 import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.BackupConfig;
@@ -219,6 +220,9 @@ public class BaseFunction{
 	//数据库备份任务HashMap
 	//数据库备份任务对系统性能影响不大，而且不存在存储冲突问题，因此不考虑集群的任务唯一性问题
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();
+	
+	//businessChannel
+	protected Channel channel = null;
 	
 	static {
     	initOSType();

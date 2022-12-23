@@ -767,7 +767,6 @@ public class ReposController extends BaseController{
 	}
 	
 	private boolean executeReposFullBackupTask(ReposFullBackupTask task) {
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
 			Log.info("backupRepos 非商业版本不支持仓库全量备份");
@@ -781,7 +780,6 @@ public class ReposController extends BaseController{
 			ReposAccess reposAccess, String backupStorePath,
 			String requestIP, ReturnAjax rt) 
 	{
-		Channel channel = ChannelFactory.getByChannelName("businessChannel");
 		if(channel == null)
 	    {
 			Log.info("backupRepos 非商业版本不支持仓库全量备份");
@@ -1354,7 +1352,7 @@ public class ReposController extends BaseController{
 		Doc rootDoc = buildRootDoc(fakeRepos, localRootPath, localVRootPath);
 		
 		testResult += "2. 登录远程服务器<br/>";
-		RemoteStorageSession remoteStorageSession = doRemoteStorageLogin(fakeRepos, remote);
+		RemoteStorageSession remoteStorageSession = channel.doRemoteStorageLoginEx(fakeRepos, remote);
         if(remoteStorageSession == null)
         {
 			testResult += "第 1 次登录失败<br/>";
@@ -1362,7 +1360,7 @@ public class ReposController extends BaseController{
         	for(int i=0; i < 3; i++)
         	{
         		//Try Again
-        		remoteStorageSession = doRemoteStorageLogin(fakeRepos, remote);
+        		remoteStorageSession = channel.doRemoteStorageLoginEx(fakeRepos, remote);
         		if(remoteStorageSession != null)
         		{
         			break;
@@ -1381,8 +1379,8 @@ public class ReposController extends BaseController{
 		testResult += "登录远程服务器成功<br/><br/>";
     	
 		testResult += "3. 获取远程服务器文件列表<br/>";
-		List<Doc> list = getRemoteStorageEntryList(remoteStorageSession, remote, fakeRepos, rootDoc, null);
-		doRemoteStorageLogout(remoteStorageSession);
+		List<Doc> list = channel.getRemoteStorageEntryListEx(remoteStorageSession, remote, fakeRepos, rootDoc, null);
+		channel.doRemoteStorageLogoutEx(remoteStorageSession);
 
 		if(list == null)
 		{
