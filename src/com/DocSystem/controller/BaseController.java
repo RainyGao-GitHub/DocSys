@@ -4335,9 +4335,7 @@ public class BaseController  extends BaseFunction{
 		
 		boolean ret = false;
 		
-		Doc srcDoc = action.getDoc();
-		
-		Log.debug("executeCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		Log.debug("executeCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType());
 
 		switch(action.getType())
 		{
