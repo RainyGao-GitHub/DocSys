@@ -3742,7 +3742,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos) == false)
 				{
-					remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
+					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
 				}
 			}
 			else	//获取历史版本文件
@@ -3792,7 +3792,7 @@ public class DocController extends BaseController{
 					}
 					else
 					{
-						remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
+						channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
 					}
 				}
 				tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
@@ -3875,7 +3875,7 @@ public class DocController extends BaseController{
 		//置类型仓库需要先将文件下载到本地
 		if(isFSM(repos) == false)
 		{
-			remoteServerCheckOut(repos, doc, null, null, null, null, 3, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, 3, null);
 		}		
 	
 		String content = "";
@@ -4537,7 +4537,7 @@ public class DocController extends BaseController{
 			//前置类型仓库，需要先将文件CheckOut出来
 			if(isFSM(repos) == false)
 			{
-				remoteServerCheckOut(repos, doc, null, null, null, null, 3, null);
+				channel.remoteServerCheckOut(repos, doc, null, null, null, null, 3, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -4595,7 +4595,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
+					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
 				}
 			}
 			
@@ -4912,7 +4912,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			logList = remoteServerGetHistory(repos, inputDoc, num);
+			logList = channel.remoteServerGetHistory(repos, inputDoc, num);
 		}
 		
 		rt.setData(logList);
@@ -4973,7 +4973,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			changedItemList = remoteServerGetHistoryDetail(repos, inputDoc, commitId);
+			changedItemList = channel.remoteServerGetHistoryDetail(repos, inputDoc, commitId);
 		}
 		
 		if(changedItemList == null)
@@ -7339,7 +7339,7 @@ public class DocController extends BaseController{
 		{	
 			if(isFSM(repos) == false)
 			{
-				remoteServerCheckOut(repos, rootDoc, null, null, null, null, 3, null);
+				channel.remoteServerCheckOut(repos, rootDoc, null, null, null, null, 3, null);
 			}
 		}
 		
