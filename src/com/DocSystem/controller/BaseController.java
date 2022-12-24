@@ -5754,7 +5754,14 @@ public class BaseController  extends BaseFunction{
 				//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTEFILETODIR); 
 				return DocChangeType.REMOTEFILETODIR;
 			}
-			//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			
+			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
+			{
+				Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refRevision[] curRevision[]"); 
+				return DocChangeType.REMOTECHANGE;
+			}
+			
+			//Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.NOCHANGE); 
 			return DocChangeType.NOCHANGE;
 		}
 		
