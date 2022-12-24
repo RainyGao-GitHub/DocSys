@@ -417,7 +417,8 @@
  				SubContext.realParentPath = SubContext.parentPath;
  				SubContext.realParentId = SubContext.parentId;
  	 			SubContext.realLevel = SubContext.level;
- 				return true;
+ 				SubContext.dirPath = "";	//dirPath is empty means that it is not folder upload
+ 	 			return true;
     		}
 
     		//console.log("getRealParentInfo() relativePath:" + relativePath);
