@@ -5712,18 +5712,18 @@ public class BaseController  extends BaseFunction{
 			
 			if(remoteEntry.getType() == 1 || remoteEntry.getType() == 2)
 			{
-				//Log.debug("getRemoteDocChangeType "  + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTEADD); 
+				//Log.debug("getRemoteDocChangeType ["  + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTEADD); 
 				return DocChangeType.REMOTEADD;
 			}
 
-			Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.UNDEFINED); 
+			Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.UNDEFINED); 
 			return DocChangeType.UNDEFINED;
 		}
 		
 		//dbDoc存在，remoteEntry不存在
 		if(remoteEntry == null || remoteEntry.getType() == null || remoteEntry.getType() == 0)
 		{
-			//Log.debug("getRemoteDocChangeType " + dbDoc.getPath() + dbDoc.getName() + " " + DocChangeType.REMOTEDELETE); 
+			//Log.debug("getRemoteDocChangeType [" + dbDoc.getPath() + dbDoc.getName() + "] " + DocChangeType.REMOTEDELETE); 
 			return DocChangeType.REMOTEDELETE;
 		}
 		
@@ -5732,14 +5732,14 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc.getType() == 2)
 			{
-				//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " +  DocChangeType.REMOTEDIRTOFILE); 
+				//Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " +  DocChangeType.REMOTEDIRTOFILE); 
 				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
 			//Log.debug("getRemoteDocChangeType old revision:" + dbDoc.getRevision() + " new revision:" + remoteEntry.getRevision()); 
 			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
-				//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.REMOTECHANGE); 
+				Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refRevision[" + dbDoc.getRevision() + "] curRevision[" + remoteEntry.getRevision() + "]"); 
 				return DocChangeType.REMOTECHANGE;
 			}			
 			//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
@@ -5757,7 +5757,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
-				Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refRevision[] curRevision[]"); 
+				Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + "] " + DocChangeType.REMOTECHANGE + ": refRevision[" + dbDoc.getRevision() + "] curRevision[" + remoteEntry.getRevision() + "]"); 
 				return DocChangeType.REMOTECHANGE;
 			}
 			
