@@ -6931,6 +6931,7 @@ public class BaseController  extends BaseFunction{
 					buildIndexForDoc(repos, tmpDoc, null, null, rt, 0); //update doc searchIndex, do not update its subDocs
 				}
 			}
+			return true;
 		case MOVE:
 			deleteAllIndexForDoc(repos, doc);
 			newDoc = action.getNewDoc();
