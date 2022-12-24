@@ -1383,7 +1383,7 @@ public class DocController extends BaseController{
 		
 		if(action.isCriticalError)
 		{
-			docSysErrorLog("上传失败:" + action.errorInfo, rt);
+			//docSysErrorLog("上传失败:" + action.errorInfo, rt);
 			return null;
 		}
 		return action;
