@@ -5698,7 +5698,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected static DocChangeType getRemoteDocChangeType(Doc dbDoc, Doc remoteEntry) 
-	{						
+	{	
+		//Log.printObject("getRemoteDocChangeType dbDoc", dbDoc);
+		//Log.printObject("getRemoteDocChangeType remoteEntry", remoteEntry);
+
 		//dbDoc不存在
 		if(dbDoc == null)
 		{
