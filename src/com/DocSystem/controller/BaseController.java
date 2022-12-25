@@ -5594,7 +5594,9 @@ public class BaseController  extends BaseFunction{
 		//dbDoc存在，localEntry不存在
 		if(localEntry == null || localEntry.getType() == null || localEntry.getType() == 0)
 		{
-			//Log.debug("getLocalDocChangeType " + dbDoc.getPath() + dbDoc.getName() + " " +DocChangeType.LOCALDELETE); 
+			Log.debug("getLocalDocChangeType [" + dbDoc.getPath() + dbDoc.getName() + "] " +DocChangeType.LOCALDELETE); 
+			Log.printObject("getLocalDocChangeType dbDoc:", dbDoc); 
+			Log.printObject("getLocalDocChangeType localEntry:", localEntry); 
 			return DocChangeType.LOCALDELETE;
 		}
 		
