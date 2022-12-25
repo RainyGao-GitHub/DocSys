@@ -5740,7 +5740,7 @@ public class BaseController  extends BaseFunction{
 			//Log.debug("getRemoteDocChangeType old revision:" + dbDoc.getRevision() + " new revision:" + remoteEntry.getRevision()); 
 			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
-				Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refRevision[" + dbDoc.getRevision() + "] curRevision[" + remoteEntry.getRevision() + "]"); 
+				Log.debug("getRemoteDocChangeType file [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refRevision[" + dbDoc.getRevision() + "] curRevision[" + remoteEntry.getRevision() + "]"); 
 				return DocChangeType.REMOTECHANGE;
 			}			
 			//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
@@ -5758,7 +5758,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
 			{
-				Log.debug("getRemoteDocChangeType [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + "] " + DocChangeType.REMOTECHANGE + ": refRevision[" + dbDoc.getRevision() + "] curRevision[" + remoteEntry.getRevision() + "]"); 
+				Log.debug("getRemoteDocChangeType folder [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refRevision[" + dbDoc.getRevision() + "] curRevision[" + remoteEntry.getRevision() + "]"); 
 				return DocChangeType.REMOTECHANGE;
 			}
 			
