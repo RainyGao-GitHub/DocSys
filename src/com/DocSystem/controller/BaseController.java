@@ -5857,7 +5857,7 @@ public class BaseController  extends BaseFunction{
 			int subDocSyncFlag, 
 			ScanOption scanOption) 
 	{
-		//Log.debug("************************ syncupScanForSubDocs_FSM()  docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "] subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanOption.scanType);
+		Log.debug("************************ syncupScanForSubDocs_FSM()  docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "] subDocSyncFlag:" + subDocSyncFlag + " scanType:" + scanOption.scanType);
 
 		//子目录不递归
 		if(subDocSyncFlag == 0)
@@ -5921,13 +5921,13 @@ public class BaseController  extends BaseFunction{
 
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
-		//Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
+		Log.debug("syncupScanForSubDocs_FSM() docId [" + doc.getDocId() + "] [" + doc.getPath() + doc.getName() + "] syncupScanForDocList_FSM for remoteEntryList");
         syncupScanForDocList_FSM(verReposEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, subDocSyncFlag, scanOption);
 		
-        //Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
+        Log.debug("syncupScanForSubDocs_FSM() docId ["  + doc.getDocId() + "] ["  + doc.getPath() + doc.getName() + "] syncupScanForDocList_FSM for localEntryList");
         syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, subDocSyncFlag, scanOption);
 		
-        //Log.debug("syncupScanForSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
+        Log.debug("syncupScanForSubDocs_FSM() docId [" + doc.getDocId() + "] ["  + doc.getPath() + doc.getName() + "] syncupScanForDocList_FSM for dbDocList");
         syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, verReposDocHashMap, login_user, rt, subDocSyncFlag, scanOption);
 
 		return true;
