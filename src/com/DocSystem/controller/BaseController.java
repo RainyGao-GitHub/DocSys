@@ -4780,7 +4780,7 @@ public class BaseController  extends BaseFunction{
 							int pushType = 1; //localAdded and remoteNoChange
 							if(remote.autoPushForce == 1)
 							{
-								pushType = 3; //localChanged or remoteChanged
+								pushType = 2; //localChanged and remoteNotChanged
 							}
 							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, rt);
 						}				
@@ -4788,10 +4788,10 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
-							int pullType = 1; //remoteAdded and localNoChange
+							int pullType = 1; //remoteAdded and localNotChanged
 							if(remote.autoPullForce == 1)
 							{
-								pullType = 3;	//remoteChanged or localChanged
+								pullType = 2;	//remoteChanged and localNotChanged
 							}
 							
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
@@ -12187,10 +12187,10 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = 1; //localAdded and remoteNoChanged
+		int pushType = 1; //localAdded and remoteNotChanged
 		if(remote.autoPushForce == 1)
 		{
-			pushType = 3; //localChanged or remoteChanged
+			pushType = 2; //localChanged and remoteNotChanged
 		}
 		
 		switch(action)
