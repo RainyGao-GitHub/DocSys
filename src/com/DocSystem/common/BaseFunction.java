@@ -2967,18 +2967,11 @@ public class BaseFunction{
 		{
 			remote.autoPull = 0;
 		}
+		
 		remote.autoPullForce = config.getInteger("autoPullForce");
 		if(remote.autoPullForce == null)
 		{
 			remote.autoPullForce = 0;
-		}
-		else
-		{
-			//如果设置了强制推送，那么强制拉取将会自动失效
-			if(remote.autoPushForce != null && remote.autoPushForce == 1)
-			{
-				remote.autoPullForce = 0;				
-			}
 		}
 	}
 
