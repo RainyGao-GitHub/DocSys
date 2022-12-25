@@ -5427,6 +5427,12 @@ public class BaseController  extends BaseFunction{
 		DocChangeType remoteChangeType = DocChangeType.NOCHANGE;
 		DocChangeType realChangeType = DocChangeType.NOCHANGE;
 
+		if(dbDoc != null && dbDoc.getDocId() < 0)
+		{
+			Log.debug("getDocChangeTypeForVerRepos() docId [" + dbDoc.getDocId() + "] [" + dbDoc.getPath() + dbDoc.getName() + "] 非法dbDoc，产生原因不明，treat as null");
+			dbDoc = null;
+		}
+		
 		switch(scanType)
 		{
 		case 1: //localChanged and remoteNotChecked
