@@ -4474,7 +4474,7 @@ public class DocController extends BaseController{
 		
 		checkAndExtractEntryFromCompressDoc(repos, tempRootDoc, tmpDoc);
 		
-		String authCode = addDocDownloadAuthCode();
+		String authCode = addDocDownloadAuthCode(reposAccess, null);
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
 		if(fileLink == null)
 		{
@@ -4603,7 +4603,7 @@ public class DocController extends BaseController{
 			tmpDoc.setShareId(shareId);
 		}
 		
-		String authCode = addDocDownloadAuthCode();
+		String authCode = addDocDownloadAuthCode(reposAccess, null);
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
 		if(fileLink == null)
 		{

@@ -72,7 +72,7 @@ public class UserController extends BaseController {
 			rt.setError("用户登录异常，请检查数据库配置是否正常!");
 			rt.setData("needCheckDBSetting");
 			docSysIniState = -1;
-			addDocSysInitAuthCode();
+			addDocSysInitAuthCode(systemUser);
 			writeJson(rt, response);	
 			return;
 		}
