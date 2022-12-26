@@ -2,6 +2,8 @@ package com.DocSystem.common.entity;
 
 import java.io.Serializable;
 
+import com.DocSystem.entity.User;
+
 public class AuthCode  implements Serializable {
 	/**
 	 * 
@@ -12,6 +14,7 @@ public class AuthCode  implements Serializable {
     private Long expTime = null;	//超时时间戳
 	private Integer remainCount = 1; //默认只能使用一次
 	private ReposAccess reposAccess = null;	//用途
+	public User user;
     
 	public String getCode()
 	{
