@@ -251,6 +251,7 @@ public class BaseFunction{
 	private static void initSystemUsers() {
 		//系统用户
 		systemUser.setId(0);
+		systemUser.setType(2);	//virtual admin user
 		systemUser.setName("System");		
 		
 		//协同编辑用户
@@ -363,17 +364,17 @@ public class BaseFunction{
 	}
 	
 	//*** authCodeMap
-	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+	protected static AuthCode generateAuthCode(String usage, long duration, int maxUseCount, ReposAccess reposAccess, User user) {
 		if(redisEn)
 		{
-			return generateAuthCodeRedis(usage, duration, maxUseCount, reposAccess);
+			return generateAuthCodeRedis(usage, duration, maxUseCount, reposAccess, user);
 		}
 		else
 		{
-			return generateAuthCodeLocal(usage, duration, maxUseCount, reposAccess);
+			return generateAuthCodeLocal(usage, duration, maxUseCount, reposAccess, user);
 		}
 	}
-	protected static AuthCode generateAuthCodeLocal(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+	protected static AuthCode generateAuthCodeLocal(String usage, long duration, int maxUseCount, ReposAccess reposAccess, User user) {
 		Long curTime = new Date().getTime();
 
 		if(authCodeMap.size() > 100)
@@ -408,12 +409,13 @@ public class BaseFunction{
 		authCode.setExpTime(expTime);
 		authCode.setRemainCount(maxUseCount);
 		authCode.setReposAccess(reposAccess);
+		authCode.user = user;
 		
 		authCodeMap.put(code, authCode);
 		return authCode;
 	}
 	
-	protected static AuthCode generateAuthCodeRedis(String usage, long duration, int maxUseCount, ReposAccess reposAccess) {
+	protected static AuthCode generateAuthCodeRedis(String usage, long duration, int maxUseCount, ReposAccess reposAccess, User user) {
 		Long curTime = new Date().getTime();
 
 		RMap<Object, Object> authCodeMap = redisClient.getMap("authCodeMap");
@@ -450,6 +452,7 @@ public class BaseFunction{
 		authCode.setExpTime(expTime);
 		authCode.setRemainCount(maxUseCount);
 		authCode.setReposAccess(reposAccess);
+		authCode.user = user;
 		
 		authCodeMap.put(code, authCode);
 		return authCode;

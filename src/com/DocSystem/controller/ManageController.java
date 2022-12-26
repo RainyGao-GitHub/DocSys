@@ -523,7 +523,7 @@ public class ManageController extends BaseController{
 		}
 		
 		docSysIniState = 1; //needRestart
-		addDocSysInitAuthCode();
+		addDocSysInitAuthCode(systemUser);
 		
 		writeJson(rt, response);
 	}

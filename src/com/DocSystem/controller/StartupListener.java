@@ -61,7 +61,7 @@ public class StartupListener  extends BaseController implements ApplicationConte
 		
 		if(docSysIniState != 0)
 		{
-			ManageController.addDocSysInitAuthCode();
+			ManageController.addDocSysInitAuthCode(systemUser);
 		}
 	}
 }

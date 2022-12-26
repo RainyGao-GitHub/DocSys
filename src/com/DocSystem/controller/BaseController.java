@@ -403,17 +403,17 @@ public class BaseController  extends BaseFunction{
 	//*** AuthCode
 	protected String getAuthCodeForOfficeEditor(Doc doc, ReposAccess reposAccess) {
 		//add authCode to authCodeMap
-		AuthCode authCode = generateAuthCode("officeEditor", 1*CONST_DAY, 1000, reposAccess);
+		AuthCode authCode = generateAuthCode("officeEditor", 1*CONST_DAY, 1000, reposAccess, null);
 		return authCode.getCode();
 	}
 	
-	protected String addDocDownloadAuthCode() {
-		AuthCode authCode = generateAuthCode("docDownload", 3*CONST_DAY, 100, null);
+	protected String addDocDownloadAuthCode(ReposAccess reposAccess, User user) {
+		AuthCode authCode = generateAuthCode("docDownload", 3*CONST_DAY, 100, null, user);
 		return authCode.getCode();
 	}
 	
-	static void addDocSysInitAuthCode() {
-		AuthCode authCode = generateAuthCode("docSysInit", 7*CONST_DAY, 1000, null);
+	static void addDocSysInitAuthCode(User user) {
+		AuthCode authCode = generateAuthCode("docSysInit", 7*CONST_DAY, 1000, null, user);
 		docSysInitAuthCode = authCode.getCode();
 	}
 	
@@ -494,6 +494,10 @@ public class BaseController  extends BaseFunction{
 			{
 				docSysErrorLog("无效授权码或授权码已过期！", rt);
 				return null;
+			}
+			if(authCodeData.getReposAccess() == null)
+			{
+				return authCodeData.user;
 			}
 			return authCodeData.getReposAccess().getAccessUser();
 		}
@@ -11855,7 +11859,7 @@ public class BaseController  extends BaseFunction{
 		Log.info("clusterServerLoopbackTest() current clusterServerLoopbackMsg [" + clusterServerLoopbackMsg + "]");
 
 		String loopbackMsg = new Date().getTime() +"";
-		String authCode = generateAuthCodeLocal("clusterServerLoopbackTest", 5*CONST_MINUTE, 3, null).getCode();
+		String authCode = generateAuthCodeLocal("clusterServerLoopbackTest", 5*CONST_MINUTE, 3, null, systemUser).getCode();
 		
 		Log.info("clusterServerLoopbackTest() msg [" + loopbackMsg + "] authCode:[" + authCode + "]");
 		
