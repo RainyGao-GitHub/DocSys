@@ -1157,11 +1157,11 @@ public class ManageController extends BaseController{
 			{
 				if(docSysType == constants.DocSys_Professional_Edition)
 				{
-					docSysErrorLog("专业版不支持LDAP登录认证，请购买企业版证书！", rt);
+					docSysErrorLog("专业版不支持LDAP登录认证，请购买企业版！", rt);
 				}
 				else if(docSysType == constants.DocSys_Personal_Edition)
 				{
-					docSysErrorLog("个人版不支持LDAP登录认证，请购买企业版证书！", rt);
+					docSysErrorLog("个人版不支持LDAP登录认证，请购买企业版！", rt);
 				}
 			}
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
