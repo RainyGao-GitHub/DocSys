@@ -11824,6 +11824,9 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			
+			//TODO: ClusterServer互检测试
+			//保证服务器之间能够互相访问，向所以已集群的服务器发送joinRequest,只有当所有的request都通过才可以正式加入
+			
 			globalClusterDeployCheckResult = true;
 			ret = true;			
 	    } catch (Exception e) {
