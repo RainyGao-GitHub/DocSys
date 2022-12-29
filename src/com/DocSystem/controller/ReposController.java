@@ -1298,8 +1298,8 @@ public class ReposController extends BaseController{
 	@RequestMapping("/remoteStorageTest.do")
 	public void remoteStorageTest(String config, String type, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.infoHead("****************** remoteServerTest.do ***********************");
-		Log.debug("remoteServerTest config:" + config + " type:" + type);
+		Log.infoHead("****************** remoteStorageTest.do ***********************");
+		Log.debug("remoteStorageTest config:" + config + " type:" + type);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1328,8 +1328,8 @@ public class ReposController extends BaseController{
 			return;
 		}	
 		
-		String localTestPath = Path.getDefaultReposRootPath(OSType) + "tmp/RemoteStorageTest/" + type + "/";
-		
+		Long curTime = new Date().getTime();
+		String localTestPath = Path.getDefaultReposRootPath(OSType) + "tmp/RemoteStorageTest-" + curTime + "/" + type + "/";
 		String localVerReposPathForGit = localTestPath + "LocalGitRepos/";
 		remote = parseRemoteStorageConfig(config, localVerReposPathForGit);
 		if(remote == null)
@@ -1401,6 +1401,10 @@ public class ReposController extends BaseController{
 				break;
 			}
 		}
+		
+		//清除测试目录
+		FileUtil.delFileOrDir(localTestPath);
+		
 		rt.setData(list);
 		rt.setMsgInfo(testResult);
 		writeJson(rt, response);		
