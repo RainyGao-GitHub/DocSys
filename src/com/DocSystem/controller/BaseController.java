@@ -209,6 +209,7 @@ public class BaseController  extends BaseFunction{
 			redisEn = false;
 			errorLog("initRedis() redisUrl not configured");
 			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckState = 2;
 			globalClusterDeployCheckResultInfo = "集群失败: Redis服务器地址未设置";
 		    return false;
 		}
@@ -220,6 +221,7 @@ public class BaseController  extends BaseFunction{
 			errorLog("initRedis() clusterServerUrl not configured");
 			redisEn = false;
 			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckState = 2;
 			globalClusterDeployCheckResultInfo = "集群失败: 集群服务器地址未设置";
 			return false;
 		}
@@ -232,6 +234,7 @@ public class BaseController  extends BaseFunction{
 			redisEn = false;
 		    Log.error("initRedis() failed to connect to redisServer:" + redisUrl);
 			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckState = 2;
 			globalClusterDeployCheckResultInfo = "集群失败: Redis服务器连接失败";
 			return false;
 		}
@@ -11817,21 +11820,22 @@ public class BaseController  extends BaseFunction{
 					return false;
 				}
 				
+				globalClusterDeployCheckResult = true;				
 				globalClusterDeployCheckState = 2;
 			}
 			else
 			{
-				globalClusterDeployCheckState = 1;
-
-				//TODO: 回环测试未执行的情况下，需要保证原来的服务器是否已经在列表里
+					//TODO: 回环测试未执行的情况下，需要保证原来的服务器是否已经在列表里
 				if(clusterDeployCheckGlobal_DuplicateCheck() == false)
 				{
 					redisSyncUnlock(lockName, lockInfo);
 					return false;
 				}
+
+				globalClusterDeployCheckResult = true;
+				globalClusterDeployCheckState = 1;
 			}
 			
-			globalClusterDeployCheckResult = true;
 			ret = true;			
 	    } catch (Exception e) {
 	        Log.info("clusterDeployCheckGlobal 异常");
@@ -11848,6 +11852,7 @@ public class BaseController  extends BaseFunction{
 		if(clusterServerUrl == null || clusterServerUrl.isEmpty())
 		{
 			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckState = 2;
 		    globalClusterDeployCheckResultInfo = "集群检测失败: 集群服务器地址未设置";
 			return false;
 		}
@@ -11855,6 +11860,7 @@ public class BaseController  extends BaseFunction{
 		if(clusterServerLoopbackTest(clusterServerUrl) == false)
 		{
 			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckState = 2;
 		    globalClusterDeployCheckResultInfo = "集群检测失败: 集群服务器 [" + clusterServerUrl + "] 回环测试失败";
 			return false;
 		}
@@ -11904,6 +11910,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		globalClusterDeployCheckResult = false;
+		globalClusterDeployCheckState = 1;
 	    globalClusterDeployCheckResultInfo = "集群检测失败: [" + clusterServerUrl + "] 已在集群列表中";
 	    return false;
 	}
@@ -11932,6 +11939,7 @@ public class BaseController  extends BaseFunction{
 			}
 
 			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckState = 2;
 		    globalClusterDeployCheckResultInfo = "集群检测失败:[" + configName + "] 配置不一致 [" + localValue + "] [" + redisValue + "]";
 		    return false;
 		}
@@ -11942,6 +11950,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		globalClusterDeployCheckResult = false;
+		globalClusterDeployCheckState = 2;
 	    globalClusterDeployCheckResultInfo = "集群检测失败:[" + configName + "] 配置不一致 [" + localValue + "] [" + redisValue + "]";
 	    return false;
 	}
@@ -15964,17 +15973,18 @@ public class BaseController  extends BaseFunction{
 				if(clusterDeployCheckGlobal_ClusterServerCheck() == false)
 				{
 					globalClusterDeployCheckResult = false;
+					globalClusterDeployCheckState = 2;
 				}
 				else
 				{
 					globalClusterDeployCheckResult = true;
+					globalClusterDeployCheckState = 2;
+
 					RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 					clusterServersMap.put(clusterServerUrl, new Date().getTime());
 					addClusterHeartBeatDelayTask();
 				}
 								
-				globalClusterDeployCheckState = 2;
-				
 				//无论成功与否都需要重现初始化仓库配置
 				initReposExtentionConfigEx();
 			}
