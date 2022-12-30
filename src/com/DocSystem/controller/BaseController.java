@@ -109,6 +109,7 @@ import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
 import com.DocSystem.common.ScanOption;
+import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
@@ -11808,7 +11809,6 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//clusterServerCheckEn参数是为了避免系统没启动完成，无法进行回环测试
-			//TODO: 当然这里留下了一个漏洞:serverUrl设置错误时直接重启可以跳过回环测试
 			if(clusterServerCheckEn)
 			{
 				if(clusterDeployCheckGlobal_ClusterServerCheck() == false)
@@ -11816,16 +11816,19 @@ public class BaseController  extends BaseFunction{
 					redisSyncUnlock(lockName, lockInfo);				
 					return false;
 				}
+				
+				globalClusterDeployCheckState = 2;
 			}
-			
-			//TODO: ClusterServer互检测试
-			//保证服务器之间能够互相访问，向所以已集群的服务器发送joinRequest,只有当所有的request都通过才可以正式加入
-			
-			//TODO: 回环测试通过的话，可以不用管原来的服务器是否已经在列表里
-			if(clusterDeployCheckGlobal_DuplicateCheck() == false)
+			else
 			{
-				redisSyncUnlock(lockName, lockInfo);
-				return false;
+				globalClusterDeployCheckState = 1;
+
+				//TODO: 回环测试未执行的情况下，需要保证原来的服务器是否已经在列表里
+				if(clusterDeployCheckGlobal_DuplicateCheck() == false)
+				{
+					redisSyncUnlock(lockName, lockInfo);
+					return false;
+				}
 			}
 			
 			globalClusterDeployCheckResult = true;
@@ -11855,6 +11858,10 @@ public class BaseController  extends BaseFunction{
 		    globalClusterDeployCheckResultInfo = "集群检测失败: 集群服务器 [" + clusterServerUrl + "] 回环测试失败";
 			return false;
 		}
+		
+		
+		//TODO: ClusterServer互检测试
+		//保证服务器之间能够互相访问，向所以已集群的服务器发送joinRequest,只有当所有的request都通过才可以正式加入
 		
 		return true;
 	}
@@ -15925,6 +15932,55 @@ public class BaseController  extends BaseFunction{
 			repos.officeType = officeType;
 		}
 		return repos;
+	}
+	
+	protected JSONObject getReposExtConfigDigest(Repos repos) {
+		if(redisEn)
+		{
+			//TODO: 如果集群检测未结束，需要在这里完成后续的集群检测
+			if(globalClusterDeployCheckState == 1)
+			{
+				completeClusterDeployCheck();
+			}
+			
+			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
+			return (JSONObject) bucket.get();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	private void completeClusterDeployCheck() {
+		synchronized(gClusterDeployCheckSyncLock)
+		{
+			String lockInfo = "completeClusterDeployCheck() gClusterDeployCheckSyncLock";
+			SyncLock.lock(lockInfo );
+			
+			if(globalClusterDeployCheckState == 1)
+			{		
+				//回环测试、服务器互检
+				if(clusterDeployCheckGlobal_ClusterServerCheck() == false)
+				{
+					globalClusterDeployCheckResult = false;
+				}
+				else
+				{
+					globalClusterDeployCheckResult = true;
+					RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+					clusterServersMap.put(clusterServerUrl, new Date().getTime());
+					addClusterHeartBeatDelayTask();
+				}
+								
+				globalClusterDeployCheckState = 2;
+				
+				//无论成功与否都需要重现初始化仓库配置
+				initReposExtentionConfigEx();
+			}
+			
+			SyncLock.unlock(gClusterDeployCheckSyncLock, lockInfo);			
+		}
 	}
 
 	//注意：该接口需要返回真正的parentZipDoc
