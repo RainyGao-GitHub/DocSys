@@ -550,6 +550,50 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	@RequestMapping("/clusterServerJoinApply.do")
+	public void clusterServerJoinApply(String authCode, String serverUrl, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** clusterServerJoinApply.do ***********************");
+
+		Log.debug("clusterServerJoinApply() serverUrl:[" + serverUrl + "] authCode:[" + authCode + "]");
+		
+		ReturnAjax rt = new ReturnAjax();
+		AuthCode auth = checkAuthCode(authCode, "clusterServerJoinApply");
+		if(auth == null)
+		{
+			Log.debug("clusterServerJoinApply checkAuthCode return false");
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//TODO: send msg to serverUrl
+		
+		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/clusterServerTest.do")
+	public void clusterServerTest(String authCode, String msg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** clusterServerTest.do ***********************");
+
+		Log.debug("clusterServerTest() msg:[" + msg + "] authCode:[" + authCode + "]");
+		
+		ReturnAjax rt = new ReturnAjax();
+		AuthCode auth = checkAuthCode(authCode, "clusterServerTest");
+		if(auth == null)
+		{
+			Log.debug("clusterServerTest checkAuthCode return false");
+			rt.setError("无效授权码或授权码已过期！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//TODO: just give the response
+		
+		writeJson(rt, response);
+	}
+	
 	@RequestMapping("/testDatabase.do")
 	public void testDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
