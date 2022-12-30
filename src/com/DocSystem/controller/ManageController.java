@@ -555,23 +555,45 @@ public class ManageController extends BaseController{
 	{
 		Log.infoHead("****************** clusterServerJoinApply.do ***********************");
 
-		Log.debug("clusterServerJoinApply() serverUrl:[" + serverUrl + "] authCode:[" + authCode + "]");
+		Log.debug("clusterServerJoinApply() serverUrl:[" + serverUrl + "] gived authCode:[" + authCode + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
-		AuthCode auth = checkAuthCode(authCode, "clusterServerJoinApply");
-		if(auth == null)
-		{
-			Log.debug("clusterServerJoinApply checkAuthCode return false");
-			rt.setError("无效授权码或授权码已过期！");
-			writeJson(rt, response);			
-			return;
-		}
 		
-		//TODO: send msg to serverUrl
+		//TODO: send msg to serverUrl with gived authCode
+		String msg = "clusterServerTest-" + new Date().getTime() + " from [" + clusterServerUrl + "]";
+		if(clusterServerReachTest(serverUrl, authCode, msg) == false)
+		{
+			docSysErrorLog("clusterServerReachTest Failed", rt);
+		}
 		
 		writeJson(rt, response);
 	}
 	
+	protected boolean clusterServerReachTest(String serverUrl, String authCode, String msg) {
+		Log.info("clusterServerReachTest() msg [" + msg + "] authCode:[" + authCode + "]");
+		
+		boolean result = false;
+        try {
+    		String requestUrl = serverUrl + "/DocSystem/Manage/clusterServerTest.do";
+    		Log.debug("clusterServerLoopbackTest() requestUrl:" + requestUrl);
+    		HashMap<String, String> reqParams = new HashMap<String, String>();
+    		reqParams.put("msg", msg);
+    		reqParams.put("authCode", authCode);
+    		JSONObject ret = postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
+    		if(ret != null)
+    		{
+    			String status = ret.getString("status");
+        		if(status != null && status.equals("ok"))
+        		{
+        			result = true;
+        		}
+    		}
+        } catch (Exception e) {
+            errorLog(e);
+        }        
+        return result;		
+	}
+
 	@RequestMapping("/clusterServerTest.do")
 	public void clusterServerTest(String authCode, String msg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -589,7 +611,8 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//TODO: just give the response
+		//send msg back
+		rt.setData(msg);
 		
 		writeJson(rt, response);
 	}
