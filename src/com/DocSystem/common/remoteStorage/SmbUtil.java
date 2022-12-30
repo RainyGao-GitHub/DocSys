@@ -20,7 +20,7 @@ import jcifs.smb.SmbFileOutputStream;
 public class SmbUtil { 
     
 	private String host; 
-	private Integer port = 139; //137,138,139和445
+	//private Integer port = 139; //137,138,139和445
     private String userdomain = "";  //域账号,没有可以不填
 	private String username = ""; 
 	private String password = ""; 

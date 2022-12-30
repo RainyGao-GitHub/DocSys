@@ -2,7 +2,6 @@ package com.DocSystem.dao;
 
 import java.util.List;
 
-import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 
 public interface DocLockMapper {

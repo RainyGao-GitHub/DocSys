@@ -3,8 +3,6 @@ package com.DocSystem.dao;
 import java.util.HashMap;
 import java.util.List;
 
-import com.DocSystem.entity.DocAuth;
-import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
 
 public interface UserMapper {

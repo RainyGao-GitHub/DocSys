@@ -157,6 +157,7 @@ public class UserController extends BaseController {
 		
 		//清除session中文件密码信息  
 		List<String> docPwdList = new ArrayList<String>();
+		@SuppressWarnings("unchecked")
 		Enumeration<String> attrs = session.getAttributeNames();
 		if(attrs != null)
 		{

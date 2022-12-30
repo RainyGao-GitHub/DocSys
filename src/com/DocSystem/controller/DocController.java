@@ -56,10 +56,7 @@ import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
-import com.DocSystem.common.channels.Channel;
-import com.DocSystem.common.channels.ChannelFactory;
 import com.DocSystem.common.entity.AuthCode;
-import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
@@ -74,7 +71,6 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
-import com.DocSystem.websocket.DocData;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
@@ -87,7 +83,6 @@ import net.sf.sevenzipjbinding.SevenZipException;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchive;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
-import util.DateFormat;
 import util.ReturnAjax;
 import util.FileUtil.FileUtils2;
 import util.LuceneUtil.LuceneUtil2;
@@ -1539,7 +1534,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private void folderUploadActionBeat(String actionId) {
+	protected void folderUploadActionBeat(String actionId) {
 		FolderUploadAction action = gFolderUploadActionHashMap.get(actionId);
 		folderUploadActionBeat(action);
 	}
@@ -3081,7 +3076,7 @@ public class DocController extends BaseController{
 	}
 	
 	//TODO: 这个函数使用需要小心，searchIndex更新有性能问题
-	private boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, int pullType, ReturnAjax rt)
+	protected boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, int pullType, ReturnAjax rt)
 	{
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
