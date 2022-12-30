@@ -12,6 +12,7 @@ import javax.naming.ldap.LdapContext;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.entity.LDAPConfig;
 
+@SuppressWarnings("rawtypes")
 public class LdapJndiAction implements PrivilegedAction {
 	public LDAPConfig config  = null;
 	public LdapContext ctx = null;

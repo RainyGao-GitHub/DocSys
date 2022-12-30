@@ -1738,7 +1738,7 @@ public class FileUtil {
 		return -1;
 	}
 	
-    private static String getEncodeOfBuffer(byte[] buffer, int size) {
+    protected static String getEncodeOfBuffer(byte[] buffer, int size) {
 		// TODO Auto-generated method stub
 		int encodeDetectBufLen = 0;
 		byte [] encodeDetectBuf = null;
