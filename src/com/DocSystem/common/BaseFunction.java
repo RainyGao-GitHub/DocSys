@@ -160,6 +160,7 @@ public class BaseFunction{
 	public static boolean redisEn = false;
 	public static String redisUrl = null;
 	public static RedissonClient redisClient = null;
+	public static int globalClusterDeployCheckState = 0;	//0:未检测 1:参数检测完成 2:全部完成
     public static boolean globalClusterDeployCheckResult = false;
     public static String globalClusterDeployCheckResultInfo = "";
     //serverUrl(http://serverIP:port)集群时用于服务器之间通信
@@ -169,6 +170,7 @@ public class BaseFunction{
     protected static String clusterDbUrl = null;
     protected static String clusterLdapConfig = null;
     protected static String clusterOfficeEditor = null;
+    protected static final Object gClusterDeployCheckSyncLock = new Object(); //用于保证集群检测的唯一性
 
     public static int clusterHeartBeatInterval = 300; //300秒(5分钟)，心跳间隔
     public static int clusterHeartBeatStopTime = 3*clusterHeartBeatInterval*1000;	//3次心跳
@@ -559,18 +561,6 @@ public class BaseFunction{
 			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
 			bucket.set(config);
 			Log.printObject("setReposExtConfigDigest() config:", config);
-		}
-	}
-
-	protected JSONObject getReposExtConfigDigest(Repos repos) {
-		if(redisEn)
-		{
-			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
-			return (JSONObject) bucket.get();
-		}
-		else
-		{
-			return null;
 		}
 	}
 
