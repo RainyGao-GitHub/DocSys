@@ -7,14 +7,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.util.Vector;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 import com.DocSystem.common.Log;
-import com.jcraft.jsch.ChannelSftp.LsEntry;
 
 
 public class FtpUtil { 
@@ -103,7 +102,7 @@ public class FtpUtil {
     public boolean upload( String pathname, String fileName, InputStream input){ 
       boolean ret = false; 
       try{ 
-    	  ftpClient.setFileType(ftpClient.BINARY_FILE_TYPE); 
+    	  ftpClient.setFileType(FTP.BINARY_FILE_TYPE); 
     	  ftpClient.changeWorkingDirectory(pathname); 
     	  ftpClient.storeFile(fileName, input); 
     	  ret = true; 

@@ -6001,7 +6001,7 @@ public class BaseController  extends BaseFunction{
 		return docHashMap;
 	}
 
-	private boolean deleteSubDoc(Repos repos, Doc doc, ReturnAjax rt) {
+	protected boolean deleteSubDoc(Repos repos, Doc doc, ReturnAjax rt) {
 		List<Doc> subDocList = getLocalEntryList(repos, doc);
 		for(int i=0; i< subDocList.size(); i++)
 		{
@@ -11785,12 +11785,6 @@ public class BaseController  extends BaseFunction{
 		redisSyncLock(lockName, lockInfo);
 
 		try {			
-			if(clusterDeployCheckGlobal_DuplicateCheck() == false)
-			{
-				redisSyncUnlock(lockName, lockInfo);
-				return false;
-			}
-			
 			//Check DB URL
 			if(clusterDeployCheckGlobal_ConfigCheck("DB_URL", DB_URL) == false)
 			{
@@ -11826,6 +11820,13 @@ public class BaseController  extends BaseFunction{
 			
 			//TODO: ClusterServer互检测试
 			//保证服务器之间能够互相访问，向所以已集群的服务器发送joinRequest,只有当所有的request都通过才可以正式加入
+			
+			//TODO: 回环测试通过的话，可以不用管原来的服务器是否已经在列表里
+			if(clusterDeployCheckGlobal_DuplicateCheck() == false)
+			{
+				redisSyncUnlock(lockName, lockInfo);
+				return false;
+			}
 			
 			globalClusterDeployCheckResult = true;
 			ret = true;			
