@@ -11857,6 +11857,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		//ClusterServer自检
 		if(clusterServerLoopbackTest(clusterServerUrl) == false)
 		{
 			globalClusterDeployCheckResult = false;
@@ -11866,12 +11867,90 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		
-		//TODO: ClusterServer互检测试
-		//保证服务器之间能够互相访问，向所以已集群的服务器发送joinRequest,只有当所有的request都通过才可以正式加入
+		//ClusterServer互检测试
+		//保证服务器之间能够互相访问，向已集群的服务器发送joinApply
+		if(clusterServerCrossCheck(clusterServerUrl) == false)
+		{
+			globalClusterDeployCheckResult = false;
+			globalClusterDeployCheckState = 2;
+		    globalClusterDeployCheckResultInfo = "集群检测失败: 集群服务器 [" + clusterServerUrl + "] 互检失败";
+			return false;
+		}
 		
 		return true;
 	}
 	
+	public static boolean clusterServerCrossCheck(String serverUrl) {
+		Log.info("clusterServerCrossCheck() serverUrl:" + serverUrl);
+		
+		//pick one alive clusterServer
+		List<String> clusterServerList = getAliveClusterServerList();
+		if(clusterServerList == null || clusterServerList.size() == 0)
+		{
+			Log.info("clusterServerCrossCheck() currently there is no alive clusterServer, skip cross check");			
+			return true;
+		}
+
+		String authCode = generateAuthCodeLocal("clusterServerTest", 15*CONST_MINUTE, 3, null, systemUser).getCode();
+		Log.info("clusterServerCrossCheck() authCode:[" + authCode + "]");
+
+		boolean result = false;
+        try {
+        	for(int i=0; i<clusterServerList.size(); i++)
+        	{
+        		String clusterServer = clusterServerList.get(i);
+	    		String requestUrl = clusterServer + "/DocSystem/Manage/clusterServerJoinApply.do";
+	    		Log.debug("clusterServerCrossCheck() requestUrl:" + requestUrl);
+	    		HashMap<String, String> reqParams = new HashMap<String, String>();
+	    		reqParams.put("serverUrl", serverUrl);
+	    		reqParams.put("authCode", authCode);
+	    		JSONObject ret = postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
+	    		if(ret != null)
+	    		{
+	    			String status = ret.getString("status");
+	        		if(status != null && status.equals("ok"))
+	        		{
+	        			result = true;
+	        			break;
+	        		}
+	    		}
+        	}
+        } catch (Exception e) {
+            errorLog(e);
+        }
+        
+        deleteAuthCodeLocal(authCode);        
+        return result;		
+	}
+	
+	private static List<String> getAliveClusterServerList() {
+	    List<String> list = new ArrayList<String>();
+	    RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+	    
+	    Iterator<Entry<String, Long>> iterator = clusterServersMap.entrySet().iterator();
+	    long curTime = new Date().getTime();
+	    while (iterator.hasNext()) 
+	    {
+	    	Entry<String, Long> entry = iterator.next();
+	        if(entry != null)
+	        {   
+	        	String clusterServerUrl = entry.getKey();
+	    		Log.info("getAliveClusterServerList() clusterServer [" + clusterServerUrl + "]");
+	            
+	        	Long beatTime = entry.getValue();
+	        	if(beatTime != null)
+	            {
+		            if((curTime - beatTime) < clusterHeartBeatStopTime)	//heart beating have stopped for 30 minutes
+		            {
+			    		Log.info("getAliveClusterServerList() clusterServer [" + clusterServerUrl + "] is alive");
+		            	list.add(clusterServerUrl);			            	
+		            }
+	        	}
+	        }
+	    }		
+		return list;
+	}
+
 	public static boolean clusterServerLoopbackTest(String serverUrl) {
 		Log.info("clusterServerLoopbackTest() current clusterServerLoopbackMsg [" + clusterServerLoopbackMsg + "]");
 

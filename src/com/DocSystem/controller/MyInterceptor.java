@@ -36,6 +36,8 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Manage/docSysInit",
 		"Manage/getBannerConfig",
 		"Manage/clusterServerLoopbackTest",
+		"Manage/clusterServerJoinApply",
+		"Manage/clusterServerTest",
 		//文件分享
 		"Doc/getDocShare",
 		"Repos/getRepos",
