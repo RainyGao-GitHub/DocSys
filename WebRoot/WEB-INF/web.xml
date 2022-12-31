@@ -92,7 +92,7 @@
   
 <!-- 配置session超时时间，单位分钟 -->  
 <session-config>  
-    <session-timeout>720</session-timeout>  
+    <session-timeout>60</session-timeout>  
 </session-config>  
   
 <!-- DEFAULT PAGE -->  

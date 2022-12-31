@@ -2605,6 +2605,8 @@ public class BaseController  extends BaseFunction{
 				Log.debug("自动登录成功");
 				//Set session
 				session.setAttribute("login_user", loginUser);
+				session.setMaxInactiveInterval(24*60*60);	//24hours
+				
 				//延长cookie的有效期
 				String encUserName = URLEncode(userName);
 				addCookie(response, "dsuser", encUserName, 7*24*60*60);//一周内免登录
