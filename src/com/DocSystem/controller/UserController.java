@@ -81,6 +81,7 @@ public class UserController extends BaseController {
 		//Set session
 		Log.debug("登录成功");
 		session.setAttribute("login_user", loginUser);
+		session.setMaxInactiveInterval(24*60*60);	//24 hours
 		Log.debug("SESSION ID:" + session.getId());
 
 		//如果用户点击了保存密码则保存cookies
