@@ -397,15 +397,36 @@ public class GITUtil  extends BaseController{
 	    	logList = new ArrayList<LogEntry>();
 				
 		    Iterable<RevCommit> iterable = null;
-		    if(entryPath == null || entryPath.isEmpty())
-		    {
-		    	iterable = git.log().setMaxCount(maxLogNum).call();
-		    }
-		    else
-		    {
-		    	iterable = git.log().addPath(entryPath).setMaxCount(maxLogNum).call();
-		    }
-		    
+	    	if(endRevision == null)
+	    	{
+			    if(entryPath == null || entryPath.isEmpty())
+			    {
+		    		iterable = git.log().setMaxCount(maxLogNum).call();
+			    }
+			    else
+			    {
+			    	iterable = git.log().addPath(entryPath).setMaxCount(maxLogNum).call();
+			    }
+	    	}
+	    	else
+	    	{
+		        //Get objId for revision
+		        ObjectId objId = repository.resolve(endRevision);
+		        if(objId == null)
+		        {
+		        	Log.debug("getHistoryLogs() There is no any commit history for repository:"  + gitDir + " at revision:"+ endRevision);
+		        	return null;
+		        }
+			    if(entryPath == null || entryPath.isEmpty())
+			    {
+			        iterable = git.log().setMaxCount(maxLogNum).add(objId).call();			        
+			    }
+			    else
+			    {
+			    	iterable = git.log().addPath(entryPath).setMaxCount(maxLogNum).add(objId).call();
+			    }
+	    	}
+
 		    Iterator<RevCommit> iter=iterable.iterator();
 	        while (iter.hasNext()){
 	            RevCommit commit=iter.next();
