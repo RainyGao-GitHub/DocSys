@@ -36,7 +36,7 @@ public interface Channel {
 			String localParentPath, String targetName, String commitId, boolean force, boolean auto,
 			HashMap<String, String> downloadList);
 	List<ChangedItem> remoteServerGetHistoryDetail(Repos repos, Doc doc, String commitId);
-	List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum);
+	List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum, String commitId);
 	
 	//Repos RemoteStorage
 	List<Doc> remoteStorageGetEntryListEx(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc,

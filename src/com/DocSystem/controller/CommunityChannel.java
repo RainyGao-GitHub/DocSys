@@ -77,7 +77,7 @@ public class CommunityChannel extends BaseController implements Channel {
 	}
 
 	@Override
-	public List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum) {
+	public List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum, String commitId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
