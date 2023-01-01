@@ -9,6 +9,8 @@
 		var docPath = "";
 		var historyType = 0;
 		
+		var curCommitId = "";	//目前已加载的历史
+		
 		function historyLogsPageInit(Input_vid, Input_docId, Input_pid, Input_path, Input_name, Input_historyType)
 		{
 			console.log("historyLogsPageInit vid:" + Input_vid + " docId:" + Input_docId + " pid:" + Input_pid + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
@@ -26,6 +28,13 @@
 			}
 			showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType);	
 		}
+		
+		function loadMoreHistory()
+		{
+			console.log("loadMoreHistory() curCommitId:" + curCommitId);
+			showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType);	
+		}
+		
 		
 		function showHistoryDetail(index)
 		{
@@ -376,6 +385,116 @@
 	
 		function showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType)
 		{
+	   		console.log("showHistoryLogList  reposId:" + reposId + " docId:"+ docId + " pid:" + pid + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " curCommitId:" + curCommitId);
+	    	$.ajax({
+	             url : "/DocSystem/Doc/getDocHistory.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	                 reposId : reposId, 
+	                 docId: docId,
+	                 pid: pid,
+	            	 path : parentPath,
+	             	 name: docName,
+	             	 historyType: historyType,
+	             	 maxLogNum: 100,
+	             	 commitId: curCommitId,
+		             shareId: gShareId,
+	             },
+	             success : function (ret) {
+	             	if( "ok" == ret.status){
+	        		  	//console.log(ret.data);
+	        		  	showList(ret.data);
+	                }
+	                else
+	                {
+	                	showErrorMessage("获取历史信息失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("获取历史信息失败:服务器异常");
+	            }
+	        });
+	
+			//根据获取到的列表数据，绘制列表
+			function showList(data){
+				//console.log(data);
+				if(curCommitId == "")
+				{
+					var c = $("#historyLogs").children();
+					$(c).remove();
+				}
+				
+				if(!data || data.length==0){
+					$("#historyLogs").append("<p>暂无数据</p>");
+					return;
+				}
+				
+				if(data.length < 100)
+				{
+					$('#loadMoreHistoryBtn').hide();
+				}
+				else
+				{
+					$('#loadMoreHistoryBtn').show();
+				}	
+				
+				for(var i=0;i<data.length;i++){
+					var d = data[i];
+					var version = "V" + (data.length - i);
+					var commitId = d.commitId;
+					var commitUser = d.commitUser;
+					var commitMsg = d.commitMsg;
+					var commitTime = formatTime(d.commitTime);
+
+					curCommitId = commitId;
+					
+					var opBtn = "";
+					if(historyType == 1) //VDOC
+					{
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.viewVDocHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>查看</a>";	
+					}
+					else
+					{
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
+					}
+					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
+					var se = "<li>"
+						+"	<i class='cell commitId w10'>"
+						+"		<span class='name  breakAll'>"
+						+"			<a id='commitId"+i+"' value='" +commitId+ "' href='javascript:void(0)'>"+version+"</a>"
+						+"		</span>"
+						+"	</i>"
+						+"	<i class='cell commitMsg w30'>"
+						+"		<span class='name breakAll'>"
+						+"			<a id='commitMsg"+i+"' href='javascript:void(0)'>"+commitMsg+"</a>"
+						+"		</span>"
+						+"	</i>"
+						+"	<i class='cell commitUser w13'>"
+						+"		<span class='name'>"
+						+"			<a id='commitUser"+i+"' href='javascript:void(0)'>"+commitUser+"</a>"
+						+"		</span>"
+						+"	</i>"
+						+"	<i class='cell commitTime w10'>"
+						+"		<span class='name'>"
+						+"			<a id='commitTime"+i+"' href='javascript:void(0)'>"+commitTime+"</a>"
+						+"		</span>"
+						+"	</i>"
+						+"	<i class='cell operation w10'>"
+						+		opBtn
+						+ 		opBtn1 
+						+ 		opBtn2 
+						+"	</i>"
+						+"</li>";
+					
+					$("#historyLogs").append(se);
+				}
+			}
+		}
+		
+		function loadMoreHistoryLog(reposId, docId, pid, parentPath, docName, historyType)
+		{
 	   		console.log("showHistoryLogList  reposId:" + reposId + " docId:"+ docId + " pid:" + pid + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 	    	$.ajax({
 	             url : "/DocSystem/Doc/getDocHistory.do",
@@ -415,6 +534,15 @@
 					$("#historyLogs").append("<p>暂无数据</p>");
 					return;
 				}
+				
+				if(data.length < 100)
+				{
+					$('#loadMoreHistoryBtn').hide();
+				}
+				else
+				{
+					$('#loadMoreHistoryBtn').show();
+				}	
 				
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
@@ -473,7 +601,10 @@
 	    	historyLogsPageInit: function(vid, docId, pid, path, name, type){
 	    		historyLogsPageInit(vid, docId, pid, path, name, type);
 	        },
-
+	        
+	        loadMoreHistory: function(){
+	        	loadMoreHistory();
+	        },
 	        showHistoryDetail: function(index){
 	        	showHistoryDetail(index);
 	        },

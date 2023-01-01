@@ -9794,23 +9794,23 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/*************** DocSys verRepos操作接口 *********************/	
-	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum) 
+	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum, String commitId) 
 	{
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
-			return svnGetHistory(repos, doc, maxLogNum);
+			return svnGetHistory(repos, doc, maxLogNum, commitId);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitGetHistory(repos, doc, maxLogNum);
+			return gitGetHistory(repos, doc, maxLogNum, commitId);
 		}
 		return null;
 	}
 	
-	protected List<LogEntry> svnGetHistory(Repos repos, Doc doc, int maxLogNum) {
+	protected List<LogEntry> svnGetHistory(Repos repos, Doc doc, int maxLogNum, String commitId) {
 
 		SVNUtil svnUtil = new SVNUtil();
 		if(false == svnUtil.Init(repos, doc.getIsRealDoc(), null))
@@ -9818,17 +9818,24 @@ public class BaseController  extends BaseFunction{
 			Log.debug("svnGetHistory() svnUtil.Init Failed");
 			return null;
 		}
-		return svnUtil.getHistoryLogs(doc.getPath() + doc.getName(), 0, -1, maxLogNum);
+		
+		long endRevision = -1;
+		if(commitId != null)
+		{
+			endRevision = Long.parseLong(commitId);
+		}
+		return svnUtil.getHistoryLogs(doc.getPath() + doc.getName(), 0, endRevision, maxLogNum);
 	}
 	
-	protected List<LogEntry> gitGetHistory(Repos repos, Doc doc, int maxLogNum) {
+	protected List<LogEntry> gitGetHistory(Repos repos, Doc doc, int maxLogNum, String commitId) {
 		GITUtil gitUtil = new GITUtil();
 		if(false == gitUtil.Init(repos, doc.getIsRealDoc(), null))
 		{
 			Log.debug("gitGetHistory() gitUtil.Init Failed");
 			return null;
 		}
-		return gitUtil.getHistoryLogs(doc.getPath() + doc.getName(), null, null, maxLogNum);
+		String endRevision = commitId;
+		return gitUtil.getHistoryLogs(doc.getPath() + doc.getName(), null, endRevision, maxLogNum);
 	}
 
 	
