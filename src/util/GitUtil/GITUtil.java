@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -390,8 +391,10 @@ public class GITUtil  extends BaseController{
     		return null;
     	}
     	
+    	long start = new Date().getTime();
+    	List<LogEntry> logList = null;
     	try {
-	    	List<LogEntry> logList = new ArrayList<LogEntry>();
+	    	logList = new ArrayList<LogEntry>();
 				
 		    Iterable<RevCommit> iterable = null;
 		    if(entryPath == null || entryPath.isEmpty())
@@ -437,13 +440,15 @@ public class GITUtil  extends BaseController{
 	        }
 	        
 	        CloseRepos();
-	        return logList;
 	    } catch (Exception e) {
 			Log.info("getHistoryLogs Error");	
 			Log.info(e);
 			CloseRepos();
-			return null;
 		}
+    	
+    	long end = new Date().getTime();
+    	Log.debug("获取历史版本耗时：" + (end - start) + "ms for [" + entryPath + "]\n");    	
+    	return logList;
     }
     
     //getHistory wcDir
