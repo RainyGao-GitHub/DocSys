@@ -8,8 +8,8 @@
 		var docName = "";
 		var docPath = "";
 		var historyType = 0;
-		
 		var curCommitId = "";	//目前已加载的历史
+		var curVersion = 0;
 		
 		function historyLogsPageInit(Input_vid, Input_docId, Input_pid, Input_path, Input_name, Input_historyType)
 		{
@@ -419,17 +419,23 @@
 			//根据获取到的列表数据，绘制列表
 			function showList(data){
 				//console.log(data);
+				var startIndex = 0;
 				if(curCommitId == "")
 				{
+					startIndex = 0;
 					var c = $("#historyLogs").children();
 					$(c).remove();
+				}
+				else
+				{
+					startIndex = 1;
 				}
 				
 				if(!data || data.length==0){
 					$("#historyLogs").append("<p>暂无数据</p>");
 					return;
 				}
-				
+								
 				if(data.length < 100)
 				{
 					$('#loadMoreHistoryBtn').hide();
@@ -439,9 +445,11 @@
 					$('#loadMoreHistoryBtn').show();
 				}	
 				
-				for(var i=0;i<data.length;i++){
+				for(var i=startIndex; i<data.length; i++){
 					var d = data[i];
-					var version = "V" + (data.length - i);
+					//var version = "V" + (data.length - i);
+					var version = "V" + curVersion;
+					curVersion++;
 					var commitId = d.commitId;
 					var commitUser = d.commitUser;
 					var commitMsg = d.commitMsg;
