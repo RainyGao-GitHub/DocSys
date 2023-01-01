@@ -4859,7 +4859,7 @@ public class DocController extends BaseController{
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** getDocHistory [" + path + name + "] ****************");
-		Log.info("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType+ " shareId:" + shareId);
+		Log.info("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -4902,6 +4902,10 @@ public class DocController extends BaseController{
 		}
 		
 		List<LogEntry> logList = null;
+		if(commitId == null || commitId.isEmpty())
+		{
+			commitId = null;
+		}
 		if(isFSM(repos) || inputDoc.getIsRealDoc() == false)
 		{
 			logList = verReposGetHistory(repos, false, inputDoc, num, commitId);
