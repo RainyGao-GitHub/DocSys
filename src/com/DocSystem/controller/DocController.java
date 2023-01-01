@@ -4853,7 +4853,8 @@ public class DocController extends BaseController{
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
 	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
-			Integer historyType,Integer maxLogNum, 
+			Integer historyType,Integer maxLogNum,
+			String commitId,	//获取该commitId更早的历史
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
@@ -4903,7 +4904,7 @@ public class DocController extends BaseController{
 		List<LogEntry> logList = null;
 		if(isFSM(repos) || inputDoc.getIsRealDoc() == false)
 		{
-			logList = verReposGetHistory(repos, false, inputDoc, num);
+			logList = verReposGetHistory(repos, false, inputDoc, num, commitId);
 		}
 		else
 		{
