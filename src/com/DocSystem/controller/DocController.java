@@ -4912,7 +4912,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			logList = channel.remoteServerGetHistory(repos, inputDoc, num);
+			logList = channel.remoteServerGetHistory(repos, inputDoc, num, commitId);
 		}
 		
 		rt.setData(logList);
