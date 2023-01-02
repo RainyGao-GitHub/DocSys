@@ -208,7 +208,8 @@ var StackMdEditor = (function () {
 	 */
 	function messageHandler(event) {
 		console.log("messageHandler() msgType:" + event.data.type);
-		switch (event.data.type) {
+		switch (event.data.type) 
+		{
 			case 'ready':
 				// iframe 页面加载完成,设置当前页面为只读
 				switchEditMode(false);
@@ -260,6 +261,7 @@ var StackMdEditor = (function () {
 				}
 				break;
 			default:
+				break;
 		}
 	}
 
