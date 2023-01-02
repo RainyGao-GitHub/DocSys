@@ -85,27 +85,6 @@
 </style>
 
 <div id="textEditor">
-	<!-- <div id="textEditorToolBar" style="height:40px;">
-		<div class="editormd-toolbar" style="display: block;">
-			<div class="editormd-toolbar-container">
-				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
-					<li><a href="javascript:;" onclick="saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
-				</ul>
-				<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
-					<li id="textEditorCloseBtn" style="display:none;">
-						<a href="javascript:;" onclick="exitEdit()" title="退出编辑" unselectable="on">
-							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
-						</a>
-					</li>
-					<li id="textEditorEditBtn">
-						<a href="javascript:;" onclick="enableEdit()" title="编辑" unselectable="on">
-							<i class="fa fa-edit" name="edit" unselectable="on"></i>
-						</a>
-					</li>
-				</ul>				
-			</div>
-		</div>
-	</div> -->
 	<div class="textEditorContent" style="min-height: 600px;">
 		<div id="editor">
 			<div class="stackedit-container">
@@ -124,12 +103,13 @@ var width = getWinWidth();
 document.getElementById('textEditor').style.height = height + "px";
 document.getElementById('textEditor').style.width = width + "px";
 	
-var StackeditEditor = (function () {
+var StackMdEditor = (function () {
     var docInfo = {};
 	var docText = "";
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
 	var isReadOnly = false;
+	var editState = false;
 	
 	function PageInit(Input_doc)
 	{
@@ -141,6 +121,15 @@ var StackeditEditor = (function () {
 		
 		getDocText(docInfo, showText, showErrorMessage);	  	
   	}
+	
+	function showErrorInfo(msg)
+	{
+		bootstrapQ.msg({
+			msg : msg,
+			type : 'warning',
+			time : 5000,
+		    }); 
+	}
 	
 	function checkAndSetIsReadOnly(docInfo)
 	{
@@ -172,10 +161,9 @@ var StackeditEditor = (function () {
 		//监听iframe发来的消息
 		window.addEventListener('message', messageHandler);
 		// 设置定时0.5s后设置页面为只读
-		setTimeout(function () {
-			editState = false;
-			setStaticEditReaOnly(false);
-		},500)
+		//setTimeout(function () {
+		//	switchEditMode(false);
+		//},500)
 	}
 
 	/**
@@ -187,8 +175,7 @@ var StackeditEditor = (function () {
 		switch (event.data.type) {
 			case 'ready':
 				// iframe 页面加载完成,设置当前页面为只读
-				editState = false;
-				setStaticEditReaOnly(false);
+				switchEditMode(false);
 				break;
 			case 'fileChange':
 				if(isReadOnly == false)
@@ -313,11 +300,11 @@ var StackeditEditor = (function () {
 								time : 1000,
 					});
 				}else {
-                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
+					showErrorInfo("保存失败:"+ret.msgInfo);
                 }
             },
             error : function () {
-                bootstrapQ.alert("保存失败:服务器异常");
+            	showErrorInfo("保存失败:服务器异常");
             }
         });
     }
@@ -327,21 +314,7 @@ var StackeditEditor = (function () {
 		console.log("enableEdit()");
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			editState = false;
-			setStaticEditReaOnly(false);
-			return;
-		}
-		
-		if(docInfo.isZip && docInfo.isZip == 1)
-		{
-			editState = false;
-			setStaticEditReaOnly(false);
-			return;
-		}
-		if(docInfo.isHistory && docInfo.isHistory == 1)
-		{
-			editState = false;
-			setStaticEditReaOnly(false);
+			showErrorInfo("请选择文件!");
 			return;
 		}
 
@@ -364,21 +337,21 @@ var StackeditEditor = (function () {
 					console.log("enableEdit() ret.data",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
 
-					editState = true; //编辑器已处于编辑状态不需要切换
+					//显示工具条和退出编辑按键
+					switchEditMode(true);
 					return;
  				}
 				else
 				{
-					//锁定失败，切换编辑状态，但要避免触发exitEdit
-					editState = false;
-					setStaticEditReaOnly(false);				
+					showErrorInfo("lockDoc Error:" + ret.msgInfo);
+					switchEditMode(false);		
 					return;
 				}
 			},
 			error : function () 
 			{
-				editState = false;
-				setStaticEditReaOnly(false);				
+				showErrorInfo("lockDoc 异常");
+				switchEditMode(false);			
 				return;
 			}
 		});
@@ -389,8 +362,8 @@ var StackeditEditor = (function () {
 		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			editState = false;
-			setStaticEditReaOnly(false);
+			showErrorInfo("文件不存在");
+			switchEditMode(false);
 			return;
 		}
 		
@@ -412,24 +385,94 @@ var StackeditEditor = (function () {
 				{
 					console.log("exitEdit() ret:",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
-					editState = false;
+					switchEditMode(false);
 					return;
  				}
 				else
 				{
-					editState = true;
-					setStaticEditReaOnly(true);
+					showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
+					switchEditMode(true);
 					return;
 				}
 			},
 			error : function () 
 			{
-				editState = true;
-				setStaticEditReaOnly(true);
+				showErrorInfo("exitEdit() unlockDoc 异常");
+				switchEditMode(true);
 				return;
 			}
 		});
 	}
+	
+	function switchEditMode(edit)
+	{
+		if(edit == true)
+		{
+			//Enable Edit
+			editState = true;
+			setStaticEditReaOnly(true);
+			
+			//Start beat thread to keep 
+			startBeatThread();
+		}
+		else
+		{
+			//Disable Edit
+			editState = false;
+			setStaticEditReaOnly(false);
+		}
+	}
+	
+	function startBeatThread()
+	{
+		//启动超时定式器
+		var timeOut = 180000; //超时时间3分钟
+	    console.log("stackMdEditorForArt startBeatThread() with " + timeOut + " ms");
+	    setTimeout(function () {
+	        if(editState == true)
+	    	{
+	        	console.log("stackMdEditorForArt startBeatThread() refreshDocLock");
+	    		refreshDocLock();
+	    		startBeatThread();
+	    	}
+	    },timeOut);	
+	}
+	
+	function refreshDocLock()
+	{
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 1, //LockType: Normal Lock
+				reposId : docInfo.vid, 
+				docId : docInfo.docId,
+				path: docInfo.path,
+				name: docInfo.name,
+				docType: 1,
+	            shareId: docInfo.shareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status)
+				{
+					console.log("refreshDocLock() ret.data",ret.data);
+					return;
+				}
+				else
+				{
+					//showErrorInfo("lockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				//showErrorInfo("lockDoc 异常");
+				return;
+			}
+		});		
+	}
+	
     //开放给外部的接口
     return {
         PageInit: function(docInfo){
