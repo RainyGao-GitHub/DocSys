@@ -19,20 +19,20 @@
 		<div class="editormd-toolbar" style="display: block;">
 			<div class="editormd-toolbar-container">
 				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
-					<li><a href="javascript:;" onclick="TextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
+					<li><a href="javascript:;" onclick="AceTextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
 					<li class="divider" unselectable="on">|</li>
-					<li><a href="javascript:;" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
-					<li><a href="javascript:;" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
+					<li><a href="javascript:;" onclick="AceTextEditor.ctrlZ();" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
+					<li><a href="javascript:;" onclick="AceTextEditor.ctrlY();" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
 					<li class="divider" unselectable="on">|</li>
 				</ul>
 				<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
 					<li id="textEditorCloseBtn" style="display:none;">
-						<a href="javascript:;" onclick="TextEditor.exitEdit()" title="退出编辑" unselectable="on">
+						<a href="javascript:;" onclick="AceTextEditor.exitEdit()" title="退出编辑" unselectable="on">
 							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
 						</a>
 					</li>
 					<li id="textEditorEditBtn" style="display:none;">
-						<a href="javascript:;" onclick="TextEditor.enableEdit()" title="编辑" unselectable="on">
+						<a href="javascript:;" onclick="AceTextEditor.enableEdit()" title="编辑" unselectable="on">
 							<i class="fa fa-edit" name="edit" unselectable="on"></i>
 						</a>
 					</li>
@@ -53,15 +53,16 @@ var width = getWinWidth();
 document.getElementById('textEditor').style.height = height + "px";
 document.getElementById('textEditor').style.width = width + "px";
 
-var editor = ace.edit("editor");
-editor.setTheme("ace/theme/twilight");
-//editor.setTheme("ace/theme/chrome");
-//editor.setTheme("ace/theme/tomorrow_night");
-editor.session.setMode("ace/mode/text");
-editor.setReadOnly(true); // false to make it editable
+var AceTextEditor = (function () {
+	var editor = ace.edit("editor");
+	editor.setTheme("ace/theme/twilight");
+	//editor.setTheme("ace/theme/chrome");
+	//editor.setTheme("ace/theme/tomorrow_night");
+	editor.session.setMode("ace/mode/text");
+	editor.setReadOnly(true); // false to make it editable
+	var editState = false;
 	
-var TextEditor = (function () {
-    var docInfo = {};
+	var docInfo = {};
 	var docText = "";
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
@@ -318,6 +319,10 @@ var TextEditor = (function () {
 
 			//Enable Edit
 			editor.setReadOnly(false);
+			editState = true;
+			
+			//Start beat thread to keep 
+			startBeatThread();
 		}
 		else
 		{
@@ -332,7 +337,58 @@ var TextEditor = (function () {
 			
 			//Disable Edit
 			editor.setReadOnly(true);
+			editState = false;
 		}
+	}
+	
+	function startBeatThread()
+	{
+		//启动超时定式器
+		var timeOut = 180000; //超时时间3分钟
+	    console.log("aceEditorForArt startBeatThread() with " + timeOut + " ms");
+	    setTimeout(function () {
+	        if(editState == true)
+	    	{
+	        	console.log("aceEditorForArt startBeatThread() refreshDocLock");
+	    		refreshDocLock();
+	    		startBeatThread();
+	    	}
+	    },timeOut);	
+	}
+	
+	function refreshDocLock()
+	{
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 1, //LockType: Normal Lock
+				reposId : docInfo.vid, 
+				docId : docInfo.docId,
+				path: docInfo.path,
+				name: docInfo.name,
+				docType: 1,
+	            shareId: docInfo.shareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status)
+				{
+					console.log("refreshDocLock() ret.data",ret.data);
+					return;
+				}
+				else
+				{
+					//ace_showErrorInfo("lockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				//ace_showErrorInfo("lockDoc 异常");
+				return;
+			}
+		});		
 	}
 	
 	function checkAndSetEditBtn(docInfo)
@@ -367,6 +423,12 @@ var TextEditor = (function () {
         saveDoc: function(){
         	saveDoc();
         },
+	    ctrlZ: function(){
+	    	return ctrlZ();
+	    },
+	    ctrlY: function(){
+	    	return ctrlY();
+	    },
         enableEdit: function(){
         	enableEdit();
         },
