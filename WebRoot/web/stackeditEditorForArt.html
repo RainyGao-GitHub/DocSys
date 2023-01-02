@@ -123,7 +123,11 @@ var StackMdEditor = (function () {
 	
 	function showErrorInfo(msg)
 	{
-		bootstrapQ.alert(msg); 
+		bootstrapQ.msg({
+			msg : msg,
+			type : 'warning',
+			time : 5000,
+		    }); 
 	}
 	
 	function GetRequest() {
@@ -192,9 +196,9 @@ var StackMdEditor = (function () {
 		//监听iframe发来的消息
 		window.addEventListener('message', messageHandler);
 		// 设置定时0.5s后设置页面为只读
-		setTimeout(function () {
-			switchEditMode(false);
-		},500)
+		//setTimeout(function () {
+		//	switchEditMode(false);
+		//},500)
 	}
 
 	/**
@@ -234,7 +238,7 @@ var StackMdEditor = (function () {
 				if(event.data.flag)
 				{
 					console.log("编辑器退出入编辑状态...");
-					if(editState == false)
+					if(editState == true)
 					{
 						exitEdit();
 					}
@@ -242,7 +246,7 @@ var StackMdEditor = (function () {
 				else
 				{
 					console.log("编辑器已进入编辑状态...");
-					if(editState == true)
+					if(editState == false)
 					{
 						enableEdit();
 					}
@@ -434,12 +438,14 @@ var StackMdEditor = (function () {
 				else
 				{
 					showErrorInfo("lockDoc Error:" + ret.msgInfo);
+					switchEditMode(false);
 					return;
 				}
 			},
 			error : function ()
 			{
 				showErrorInfo("lockDoc 异常");
+				switchEditMode(false);
 				return;
 			}
 		});
@@ -479,12 +485,14 @@ var StackMdEditor = (function () {
 				else
 				{
 					showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
+					switchEditMode(true);
 					return;
 				}
 			},
 			error : function ()
 			{
 				showErrorInfo("exitEdit() unlockDoc 异常");
+				switchEditMode(true);
 				return;
 			}
 		});
@@ -494,28 +502,18 @@ var StackMdEditor = (function () {
 	{
 		if(edit == true)
 		{
-			if(editState == true)
-			{
-				return;
-			}
-			
 			//Enable Edit
 			editState = true;
-			setStaticEditReaOnly(false);
+			setStaticEditReaOnly(true);
 			
 			//Start beat thread to keep 
 			startBeatThread();
 		}
 		else
 		{
-			if(editState == false)
-			{
-				return;	
-			}
-
 			//Disable Edit
 			editState = false;
-			setStaticEditReaOnly(true);
+			setStaticEditReaOnly(false);
 		}
 	}
 	
