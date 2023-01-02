@@ -4675,16 +4675,15 @@ public class DocController extends BaseController{
 		}			
 
 		boolean subDocCheckFlag = false;
-		int lockDuration = 2*60*60*1000;	//文件编辑可以锁定两个小时
+		int lockDuration = 5*60*1000;	//用户只可以锁定10分钟，如果需要延长时间，则需要在10分钟内重新续签
 		if(lockType == DocLock.LOCK_TYPE_FORCE)	//If want to force lock, must check all subDocs not locked
 		{
 			subDocCheckFlag = true;
-			lockDuration  =  60*60*1000; //强制锁定无法解锁，因此只能锁定一个小时
 		}
 		
 		DocLock docLock = null;
 		String lockInfo = "lockDoc() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-    	docLock = lockDoc(doc, lockType, lockDuration, reposAccess.getAccessUser(), rt, subDocCheckFlag, lockInfo); //24 Hours 24*60*60*1000 = 86400,000
+    	docLock = lockDoc(doc, lockType, lockDuration, reposAccess.getAccessUser(), rt, subDocCheckFlag, lockInfo);
 		
 		if(docLock == null)
 		{
