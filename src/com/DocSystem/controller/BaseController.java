@@ -11834,15 +11834,11 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-					//TODO: 回环测试未执行的情况下，需要保证原来的服务器是否已经在列表里
-				if(clusterDeployCheckGlobal_DuplicateCheck() == false)
-				{
-					redisSyncUnlock(lockName, lockInfo);
-					return false;
-				}
-
-				globalClusterDeployCheckResult = true;
+				globalClusterDeployCheckResult = false;
 				globalClusterDeployCheckState = 1;
+			    globalClusterDeployCheckResultInfo = "集群检测未结束，请稍等...";
+				redisSyncUnlock(lockName, lockInfo);
+				return false;
 			}
 			
 			ret = true;			
@@ -11990,7 +11986,8 @@ public class BaseController  extends BaseFunction{
         return result;		
 	}
 
-	private boolean clusterDeployCheckGlobal_DuplicateCheck() {
+	//该接口本来是在无法进行回环测试时避免错误加入，有了回环测试理论上就不需要的
+	protected boolean clusterDeployCheckGlobal_DuplicateCheck() {
 		RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 		if(clusterServersMap.get(clusterServerUrl) == null)
 		{
@@ -16034,11 +16031,11 @@ public class BaseController  extends BaseFunction{
 	protected JSONObject getReposExtConfigDigest(Repos repos) {
 		if(redisEn)
 		{
-			//TODO: 如果集群检测未结束，需要在这里完成后续的集群检测
-			if(globalClusterDeployCheckState == 1)
-			{
-				completeClusterDeployCheck();
-			}
+			//TODO: 用户登录时会触发完成集群检测，是否需要在这里也进行集群检测
+			//if(globalClusterDeployCheckState == 1)
+			//{
+			//	completeClusterDeployCheck();
+			//}
 			
 			RBucket<Object> bucket = redisClient.getBucket("reposExtConfigDigest" + repos.getId());
 			return (JSONObject) bucket.get();
@@ -16049,7 +16046,18 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private void completeClusterDeployCheck() {
+	protected void completeClusterDeployCheck() {
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("completeClusterDeployCheck() doCompleteClusterDeployCheck in new thread");
+				doCompleteClusterDeployCheck();
+			}
+		}).start();
+	}
+
+	//doCompleteClusterDeployCheck 执行时间较长，因此建议新启动线程执行
+	protected void doCompleteClusterDeployCheck()
+	{	
 		synchronized(gClusterDeployCheckSyncLock)
 		{
 			String lockInfo = "completeClusterDeployCheck() gClusterDeployCheckSyncLock";

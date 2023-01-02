@@ -30,6 +30,7 @@ import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 
@@ -100,6 +101,14 @@ public class UserController extends BaseController {
 		rt.setData(loginUser);	//将数据库取出的用户信息返回至前台
 		writeJson(rt, response);	
 
+		if(redisEn)
+		{
+			if(globalClusterDeployCheckState == 1)
+			{				
+				//TODO: 如果集群检测未结束，需要在这里完成后续的集群检测
+				completeClusterDeployCheck();
+			}
+		}
 		return;
 	}
 
@@ -138,7 +147,16 @@ public class UserController extends BaseController {
 		user.docSysType = docSysType;
 		user.isSalesServer = isSalesServer;
 		rt.setData(user);	//返回用户信息
-		writeJson(rt, response);	
+		writeJson(rt, response);
+		
+		if(redisEn)
+		{
+			if(globalClusterDeployCheckState == 1)
+			{				
+				//TODO: 如果集群检测未结束，需要在这里完成后续的集群检测
+				completeClusterDeployCheck();
+			}
+		}
 	}
 	
 	//登出接口
