@@ -1993,7 +1993,7 @@ function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 		big: true,
 		mstyle: getDialogStyle(),
 		callback: function(){
-			StackeditEditor.PageInit(docInfo);
+			StackMdEditor.PageInit(docInfo);
 		},
 	});
 }
@@ -2053,7 +2053,7 @@ function showTextInDialog(docInfo, openType)
 			big: true,
 			mstyle: getDialogStyle(),
 			callback: function(){
-				TextEditor.textEditorPageInit(docInfo);
+				AceTextEditor.textEditorPageInit(docInfo);
 			},
 		});
 	}
