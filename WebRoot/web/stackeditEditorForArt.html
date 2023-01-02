@@ -203,6 +203,7 @@ var StackMdEditor = (function () {
 	 * @param event 事件对象
 	 */
 	function messageHandler(event) {
+		console.log("messageHandler() msgType:" + event.data.type);
 		switch (event.data.type) {
 			case 'ready':
 				// iframe 页面加载完成,设置当前页面为只读
@@ -233,7 +234,7 @@ var StackMdEditor = (function () {
 				if(event.data.flag)
 				{
 					console.log("编辑器退出入编辑状态...");
-					if(editState == true)
+					if(editState == false)
 					{
 						exitEdit();
 					}
@@ -241,7 +242,7 @@ var StackMdEditor = (function () {
 				else
 				{
 					console.log("编辑器已进入编辑状态...");
-					if(editState == false)
+					if(editState == true)
 					{
 						enableEdit();
 					}
@@ -493,17 +494,28 @@ var StackMdEditor = (function () {
 	{
 		if(edit == true)
 		{
+			if(editState == true)
+			{
+				return;
+			}
+			
 			//Enable Edit
-			setStaticEditReaOnly(false);
 			editState = true;
+			setStaticEditReaOnly(false);
 			
 			//Start beat thread to keep 
 			startBeatThread();
 		}
 		else
 		{
-			setStaticEditReaOnly(true);
+			if(editState == false)
+			{
+				return;	
+			}
+
+			//Disable Edit
 			editState = false;
+			setStaticEditReaOnly(true);
 		}
 	}
 	
