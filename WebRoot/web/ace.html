@@ -67,7 +67,7 @@
 	//AceTextEditor类
 	var AceTextEditor = (function () {
 
-		function ace_showErrorInfo(msg)
+		function showErrorInfo(msg)
 		{
 			bootstrapQ.msg({
 				msg : msg,
@@ -96,7 +96,7 @@
 		editor.setReadOnly(true); // false to make it editable
 		var editState = false;
 		
-		getDocText(docInfo, showText, ace_showErrorInfo);
+		getDocText(docInfo, showText, showErrorInfo);
 	  			
 		function showText(docText, tmpSavedDocText)
 		{
@@ -240,7 +240,7 @@
 			console.log("enableEdit()");
 			if(!docInfo.docId || docInfo.docId == 0)
 			{
-				ace_showErrorInfo("请选择文件!");
+				showErrorInfo("请选择文件!");
 				return;
 			}
 	
@@ -269,13 +269,13 @@
 	 				}
 					else
 					{
-						ace_showErrorInfo("lockDoc Error:" + ret.msgInfo);
+						showErrorInfo("lockDoc Error:" + ret.msgInfo);
 						return;
 					}
 				},
 				error : function () 
 				{
-					ace_showErrorInfo("lockDoc 异常");
+					showErrorInfo("lockDoc 异常");
 					return;
 				}
 			});
@@ -286,7 +286,7 @@
 			console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
 			if(!docInfo.docId || docInfo.docId == 0)
 			{
-				ace_showErrorInfo("文件不存在");
+				showErrorInfo("文件不存在");
 				switchEditMode(false);
 				return;
 			}
@@ -314,13 +314,13 @@
 	 				}
 					else
 					{
-						ace_showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
+						showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
 						return;
 					}
 				},
 				error : function () 
 				{
-					ace_showErrorInfo("exitEdit() unlockDoc 异常");
+					showErrorInfo("exitEdit() unlockDoc 异常");
 					return;
 				}
 			});
@@ -401,13 +401,13 @@
 					}
 					else
 					{
-						//ace_showErrorInfo("lockDoc Error:" + ret.msgInfo);
+						//showErrorInfo("lockDoc Error:" + ret.msgInfo);
 						return;
 					}
 				},
 				error : function () 
 				{
-					//ace_showErrorInfo("lockDoc 异常");
+					//showErrorInfo("lockDoc 异常");
 					return;
 				}
 			});		
