@@ -100,6 +100,32 @@
 	</div>
 </div>
 <script type="text/javascript">
+//页面加载完成处理函数
+$(document).ready(function() {
+	StackMdEditor.init();
+});
+
+//StackMdEditor类
+var StackMdEditor = (function () {
+
+	function init() 
+	{
+		// 初始化文档信息
+		docInfoInit();
+		// 加载文档窗口，传入文档加载成功回调函数和加载失败函数
+		console.log("stackeditEditorForArt");
+		
+		//history file or file in zip is readonly
+		checkAndSetIsReadOnly(docInfo);
+		
+		getDocText(docInfo, showText, showErrorMessage);
+	}
+	
+	function showErrorInfo(msg)
+	{
+		bootstrapQ.alert(msg); 
+	}
+	
 	function GetRequest() {
 		var url = location.search; //获取url中"?"符后的字串
 		var theRequest = {};
@@ -124,22 +150,8 @@
 	var docText = "";
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
-	var isReadOnly = false;
+	var isReadOnly = false;	//zip or history doc set it as readonly
 	var editState = false;
-	
-
-	//页面加载完成处理函数
-	$(document).ready(function() {
-		// 初始化文档信息
-		docInfoInit();
-		// 加载文档窗口，传入文档加载成功回调函数和加载失败函数
-		console.log("stackeditEditorForArt");
-		
-		//history file or file in zip is readonly
-		checkAndSetIsReadOnly(docInfo);
-		
-		getDocText(docInfo, showText, showErrorMessage);
-	});
 	
 	function checkAndSetIsReadOnly(docInfo)
 	{
@@ -181,8 +193,7 @@
 		window.addEventListener('message', messageHandler);
 		// 设置定时0.5s后设置页面为只读
 		setTimeout(function () {
-			editState = false;
-			setStaticEditReaOnly(false);
+			switchEditMode(false);
 		},500)
 	}
 
@@ -195,8 +206,7 @@
 		switch (event.data.type) {
 			case 'ready':
 				// iframe 页面加载完成,设置当前页面为只读
-				editState = false;
-				setStaticEditReaOnly(false);
+				switchEditMode(false);
 				break;
 			case 'fileChange':
 				if(isReadOnly == false)
@@ -371,11 +381,19 @@
 								time : 1000,
 					});
 				}else {
-                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
+					bootstrapQ.msg({
+						msg : "保存失败 : " + ret.msgInfo,
+						type : 'warning',
+						time : 1000,
+	        		});
                 }
             },
             error : function () {
-                bootstrapQ.alert("保存失败:服务器异常");
+            	bootstrapQ.msg({
+					msg : "保存失败: 服务器异常",
+					type : 'warning',
+					time : 1000,
+	    		});
             }
         });
     }
@@ -385,8 +403,7 @@
 		console.log("enableEdit()");
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			editState = false;
-			setStaticEditReaOnly(false);
+			showErrorInfo("请选择文件!");
 			return;
 		}
 
@@ -409,21 +426,19 @@
 					console.log("enableEdit() ret.data",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
 
-					editState = true; //编辑器已处于编辑状态不需要切换
+					//显示工具条和退出编辑按键
+					switchEditMode(true);
 					return;
  				}
 				else
 				{
-					//锁定失败，切换编辑状态，但要避免触发exitEdit
-					editState = false;
-					setStaticEditReaOnly(false);
+					showErrorInfo("lockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function ()
 			{
-				editState = false;
-				setStaticEditReaOnly(false);
+				showErrorInfo("lockDoc 异常");
 				return;
 			}
 		});
@@ -434,8 +449,8 @@
 		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
-			editState = false;
-			setStaticEditReaOnly(false);
+			showErrorInfo("文件不存在");
+			switchEditMode(false);
 			return;
 		}
 
@@ -457,22 +472,106 @@
 				{
 					console.log("exitEdit() ret:",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
-					editState = false;
+					switchEditMode(false);
 					return;
  				}
 				else
 				{
-					editState = true;
-					setStaticEditReaOnly(true);
+					showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function ()
 			{
-				editState = true;
-				setStaticEditReaOnly(true);
+				showErrorInfo("exitEdit() unlockDoc 异常");
 				return;
 			}
 		});
 	}
+	
+	function switchEditMode(edit)
+	{
+		if(edit == true)
+		{
+			//Enable Edit
+			setStaticEditReaOnly(false);
+			editState = true;
+			
+			//Start beat thread to keep 
+			startBeatThread();
+		}
+		else
+		{
+			setStaticEditReaOnly(true);
+			editState = false;
+		}
+	}
+	
+	function startBeatThread()
+	{
+		//启动超时定式器
+		var timeOut = 180000; //超时时间3分钟
+	    console.log("stackMdEditorForArt startBeatThread() with " + timeOut + " ms");
+	    setTimeout(function () {
+	        if(editState == true)
+	    	{
+	        	console.log("stackMdEditorForArt startBeatThread() refreshDocLock");
+	    		refreshDocLock();
+	    		startBeatThread();
+	    	}
+	    },timeOut);	
+	}
+	
+	function refreshDocLock()
+	{
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 1, //LockType: Normal Lock
+				reposId : docInfo.vid, 
+				docId : docInfo.docId,
+				path: docInfo.path,
+				name: docInfo.name,
+				docType: 1,
+	            shareId: docInfo.shareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status)
+				{
+					console.log("refreshDocLock() ret.data",ret.data);
+					return;
+				}
+				else
+				{
+					//showErrorInfo("lockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				//showErrorInfo("lockDoc 异常");
+				return;
+			}
+		});		
+	}
+	
+	
+	//开放给外部的调用接口
+	return {
+		init: function(){
+			init();
+	    },
+	    saveDoc: function(){
+	    	return saveDoc();
+	    },
+	    enableEdit: function(){
+	    	return enableEdit();
+	    },	    
+	    exitEdit: function(){
+	    	return exitEdit();
+	    },
+	};
+})();
 </script>
