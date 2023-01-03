@@ -1,60 +1,6 @@
-<script src="static/ace-builds/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
-<script type="text/javascript" src="js/aceEditor.js"></script>
-<script type="text/javascript" src="js/AceTextEditor.js"></script>
-<style type="text/css" media="screen">
-  body {
-      overflow: hidden;
-  }
-
-  #editor {
-      margin: 39px 0 0 0;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-  }
-</style>
-<div id="textEditor">
-	<div id="textEditorToolBar" style="height:40px;">
-		<div class="editormd-toolbar" style="display: block;">
-			<div class="editormd-toolbar-container">
-				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
-					<li><a href="javascript:;" onclick="AceTextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
-					<li class="divider" unselectable="on">|</li>
-					<li><a href="javascript:;" onclick="AceTextEditor.ctrlZ();" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
-					<li><a href="javascript:;" onclick="AceTextEditor.ctrlY();" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
-					<li class="divider" unselectable="on">|</li>
-				</ul>
-				<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
-					<li id="textEditorCloseBtn" style="display:none;">
-						<a href="javascript:;" onclick="AceTextEditor.exitEdit()" title="退出编辑" unselectable="on">
-							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
-						</a>
-					</li>
-					<li id="textEditorEditBtn" style="display:none;">
-						<a href="javascript:;" onclick="AceTextEditor.enableEdit()" title="编辑" unselectable="on">
-							<i class="fa fa-edit" name="edit" unselectable="on"></i>
-						</a>
-					</li>
-				</ul>				
-			</div>
-		</div>
-	</div>
-	<div class="textEditorContent" style="min-height: 600px;">
-		<pre id="editor">
-		</pre>
-	</div>
-</div>
-
-<script type="text/javascript">
-//获取窗口的高度并设置高度
-var height =  getWinHeight()-100;
-var width = getWinWidth();
-document.getElementById('textEditor').style.height = height + "px";
-document.getElementById('textEditor').style.width = width + "px";
-
+//AceTextEditor类
 var AceTextEditor = (function () {
+
 	var editor = ace.edit("editor");
 	editor.setTheme("ace/theme/twilight");
 	//editor.setTheme("ace/theme/chrome");
@@ -63,10 +9,13 @@ var AceTextEditor = (function () {
 	editor.setReadOnly(true); // false to make it editable
 	var editState = false;
 	
-	var docInfo = {};
-	var docText = "";
-	var tmpSavedDocText = "";
-	var isContentChanged = false;
+	function init()
+	{
+		if (!docInfo.fileSuffix) {
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		}
+		getDocText(docInfo, showText, showErrorInfo);
+	}
 	
 	function showErrorInfo(msg)
 	{
@@ -77,23 +26,43 @@ var AceTextEditor = (function () {
 		    }); 
 	}
 	
-	function textEditorPageInit(Input_doc)
-	{
-		console.log("textEditorPageInit InputDoc:", Input_doc);
-		//console.log("textEditorPageInit Input_docText:", Input_docText);
-		docInfo = Input_doc;		
-	
-		getDocText(docInfo, showText, showErrorInfo);	  	
-  	}
+	function GetRequest() {
+		var url = location.search; //获取url中"?"符后的字串
+		var theRequest = {};
+		if (url.indexOf("?") !== -1) {
+			var str = url.substr(1);
+			var strs = str.split("&");
+			for (var i = 0; i < strs.length; i++) {
+				theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+			}
+		}
+		return theRequest;
+	}
 
+	var params = GetRequest();
+	var docid = params['docid'];
+	//获取artDialog父窗口传递过来的参数
+	var artDialog2 = window.top.artDialogList['ArtDialog' + docid];
+	if (artDialog2 == null) {
+		artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
+	}
+	// 获取对话框传递过来的数据
+	var docInfo = artDialog2.config.data;
+	console.log("docInfo:", docInfo);
+
+	var docText = "";
+	var tmpSavedDocText = "";
+	var isContentChanged = false;
+			
 	function showText(docText, tmpSavedDocText)
 	{
 		checkAndSetFileShowMode(docInfo);
 		checkAndSetEditBtn(docInfo);	
 		
-		editor.setValue(docText);
+		editor.setValue(docText);	
 		editor.getSession().on('change', function(e) {
 			isContentChanged = true;
+			console.log("textChange stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
 			if(false == isCtrlZY)
 			{
 				var content = editor.getValue();
@@ -101,7 +70,7 @@ var AceTextEditor = (function () {
 			}
 		});
 	}
-
+	    
 	function ArrayStack(){
 	    var arr = [];  
 	        //压栈操作  
@@ -130,7 +99,7 @@ var AceTextEditor = (function () {
 	        return arr.toString();  
 	    }  
 	}
-
+	
 	var stackZ = new ArrayStack();
 	var stackY = new ArrayStack();
 	var isCtrlZY = false;
@@ -149,7 +118,7 @@ var AceTextEditor = (function () {
 			}
 		}
 	}
-
+	
 	//ctrl + y
 	function ctrlY()
 	{
@@ -167,85 +136,95 @@ var AceTextEditor = (function () {
 		}
 	}
 	
-    function saveDoc()
+	function saveDoc()
 	{
-    	console.log("saveDoc docInfo.docId:" + docInfo.docId);
+		console.log("saveDoc docInfo.docId:" + docInfo.docId);
 		
-    	if(isContentChanged == false)
-    	{
-    	   	console.log("saveDoc there is no change");
-    		return;
-    	}
-    	
+		if(isContentChanged == false)
+		{
+		   	console.log("saveDoc there is no change");
+			return;
+		}
+		
 		var content = editor.getValue();
 		$.ajax({
-            url : "/DocSystem/Doc/updateDocContent.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposId: docInfo.vid,
-            	docId : docInfo.docId,
-            	path: docInfo.path,
-                name: docInfo.name,
-            	content : content,
-            	docType: 1, //RealDoc
-                shareId: docInfo.shareId,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
-                    docText = content;
-                    isContentChanged = false;
-                    stackZ.clear();
-                    stackY.clear();
-                    
-                    bootstrapQ.msg({
-								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
+	        url : "/DocSystem/Doc/updateDocContent.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            reposId: docInfo.vid,
+	        	docId : docInfo.docId,
+	        	path: docInfo.path,
+	            name: docInfo.name,
+	        	content : content,
+	        	docType: 1, //RealDoc
+	            shareId: docInfo.shareId,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+	                console.log("保存成功 : " , (new Date()).toLocaleDateString());
+	                docText = content;
+	                isContentChanged = false;
+	                stackZ.clear();
+	                stackY.clear();
+	                
+	                bootstrapQ.msg({
+								msg : "保存成功 : " + (new Date()).toLocaleDateString(),
 								type : 'success',
 								time : 1000,
 					});
 				}else {
-                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
-                }
-            },
-            error : function () {
-                bootstrapQ.alert("保存失败:服务器异常");
-            }
-        });
-    }
-
-    function enableEdit()
-    {
+	                //bootstrapQ.alert("保存失败:"+ret.msgInfo);
+	                bootstrapQ.msg({
+						msg : "保存失败 : " + ret.msgInfo,
+						type : 'warning',
+						time : 1000,
+	        		});
+	           }
+	        },
+	        error : function () {
+	            //bootstrapQ.alert("保存失败:服务器异常");
+	            bootstrapQ.msg({
+					msg : "保存失败: 服务器异常",
+					type : 'warning',
+					time : 1000,
+	    		});
+	        }
+	    });
+	}
+	
+	function enableEdit()
+	{
 		console.log("enableEdit()");
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
 			showErrorInfo("请选择文件!");
 			return;
 		}
-
+	
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
 			dataType : "json",
 			data : {
-				lockType : 1, //LockType: Online Edit
+				lockType : 1, //LockType: Normal Lock
 				reposId : docInfo.vid, 
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
 				docType: 1,
-                shareId: docInfo.shareId,
+	            shareId: docInfo.shareId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status)
 				{
 					console.log("enableEdit() ret.data",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
-
+	
 					//显示工具条和退出编辑按键
 					switchEditMode(true);
 					return;
- 				}
+					}
 				else
 				{
 					showErrorInfo("lockDoc Error:" + ret.msgInfo);
@@ -258,10 +237,10 @@ var AceTextEditor = (function () {
 				return;
 			}
 		});
-    }
-    
+	}
+	
 	//退出文件编辑状态
-    function exitEdit() {   	
+	function exitEdit() {   	
 		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
@@ -277,11 +256,11 @@ var AceTextEditor = (function () {
 			data : {
 				lockType : 1, //unlock the doc
 				reposId : docInfo.vid, 
-				docId : docInfo.docId,
+	        	docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
 				docType: 1,
-                shareId: docInfo.shareId,
+	            shareId: docInfo.shareId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status)
@@ -290,7 +269,7 @@ var AceTextEditor = (function () {
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
 					switchEditMode(false);
 					return;
- 				}
+					}
 				else
 				{
 					showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
@@ -304,7 +283,7 @@ var AceTextEditor = (function () {
 			}
 		});
 	}
-
+	
 	function switchEditMode(edit)
 	{
 		if(edit == true)
@@ -317,7 +296,7 @@ var AceTextEditor = (function () {
 			
 			//隐藏编辑按键
 			$("#textEditorEditBtn").hide();
-
+	
 			//Enable Edit
 			editor.setReadOnly(false);
 			editState = true;
@@ -338,7 +317,7 @@ var AceTextEditor = (function () {
 			
 			//Disable Edit
 			editor.setReadOnly(true);
-			editState = false;
+			editState = false;			
 		}
 	}
 	
@@ -415,30 +394,25 @@ var AceTextEditor = (function () {
 		console.log("checkAndSetFileShowMode() showMode:" + showMode);
 		editor.session.setMode("ace/mode/" + showMode);
 	}
-
-    //开放给外部的接口
-    return {
-        textEditorPageInit: function(docInfo){
-        	textEditorPageInit(docInfo);
-        },
-        saveDoc: function(){
-        	saveDoc();
-        },
+	//开放给外部的调用接口
+	return {
+		init: function(){
+			init();
+	    },
+	    saveDoc: function(){
+	    	return saveDoc();
+	    },
 	    ctrlZ: function(){
 	    	return ctrlZ();
 	    },
 	    ctrlY: function(){
 	    	return ctrlY();
 	    },
-        enableEdit: function(){
-        	enableEdit();
-        },
-        exitEdit: function(){
-        	exitEdit();
-        },
-    };
+	    enableEdit: function(){
+	    	return enableEdit();
+	    },	    
+	    exitEdit: function(){
+	    	return exitEdit();
+	    },
+	};
 })();
-
-</script>
-
-
