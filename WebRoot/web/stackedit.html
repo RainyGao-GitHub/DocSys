@@ -184,6 +184,7 @@
 		 * @param event 事件对象
 		 */
 		function messageHandler(event) {
+			
 			switch (event.data.type) 
 			{
 				case 'ready':
@@ -211,20 +212,25 @@
 					}
 					break;
 				case 'changeView':
+					console.log("messageHandler() changeView flag:", event.data.flag);
 					//当文档处于编辑状态要切换只读时触发
 					if(event.data.flag) 
 					{
-						console.log("编辑器退出入编辑状态...");
 						if(editState == true)
 						{
+							console.log("编辑器退出编辑状态...");
+							//TODO: 当收到changeView消息，已经表明编辑器已经发生的状态变化，因此先修改editState成一致
+							editState = false;
 							exitEdit();
 						}
 					}
 					else
 					{
-						console.log("编辑器已进入编辑状态...");
 						if(editState == false)
 						{
+							console.log("编辑器进入编辑状态...");
+							//TODO: 当收到changeView消息，已经表明编辑器已经发生的状态变化，因此先修改editState成一致
+							editState = true;
 							enableEdit();
 						}
 					}
@@ -407,6 +413,7 @@
 					{
 						console.log("exitEdit() ret:",ret.data);
 						$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
+						
 						switchEditMode(false);
 						return;
 	 				}
@@ -428,21 +435,17 @@
 		
 		function switchEditMode(edit)
 		{
-			if(edit == true)
+			if(edit != editState)
 			{
-				//Enable Edit
-				editState = true;
-				setStaticEditReaOnly(true);
+				editState = edit;
+				setStaticEditReaOnly(edit);
 				
-				//Start beat thread to keep 
-				startBeatThread();
-			}
-			else
-			{
-				//Disable Edit
-				editState = false;
-				setStaticEditReaOnly(false);
-			}
+				if(edit == true)
+				{
+					//Start beat thread to keep 
+					startBeatThread();					
+				}
+			}			
 		}
 		
 		function startBeatThread()
