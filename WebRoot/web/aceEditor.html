@@ -48,11 +48,14 @@
 </div>
 
 <script type="text/javascript">
-//获取窗口的高度并设置高度
-var height =  getWinHeight()-100;
-var width = getWinWidth();
-document.getElementById('textEditor').style.height = height + "px";
-document.getElementById('textEditor').style.width = width + "px";
+	//获取窗口的高度并设置高度
+	var height =  getWinHeight()-100;
+	var width = getWinWidth();
+	document.getElementById('textEditor').style.height = height + "px";
+	document.getElementById('textEditor').style.width = width + "px";
+	
+	//textEditorPageInit will be called in dialog callback which was in DocSys.js
+	//AceTextEditor.textEditorPageInit(docInfo);
 </script>
 
 
