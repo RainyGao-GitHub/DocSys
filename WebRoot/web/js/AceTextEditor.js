@@ -45,7 +45,7 @@ var AceTextEditor = (function () {
 	{
 		initAceEditor();
 		
-	    var docInfo = getDocInfoFromRequestParamStr();
+	    docInfo = getDocInfoFromRequestParamStr();
 	    document.title = docInfo.name;
 	    
 	    console.log("initForNewPage() docInfo:", docInfo);
@@ -425,7 +425,10 @@ var AceTextEditor = (function () {
 			return;
 		}
 		
-		if(isEditableText(docInfo.fileSuffix) == true)
+		
+		var editable = isEditableText(docInfo.fileSuffix);
+		console.log("checkAndSetEditBtn() isEditableText:" + editable);
+		if(editable)
 		{
 			$("#textEditorEditBtn").show();
 		}
