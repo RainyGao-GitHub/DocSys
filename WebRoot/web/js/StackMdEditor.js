@@ -1,18 +1,69 @@
 //StackMdEditor类
 var StackMdEditor = (function () {
-
-	function init() 
+	var docInfo = {};
+	var docText = "";
+	var tmpSavedDocText = "";
+	var isContentChanged = false;
+	var isReadOnly = false;	//zip or history doc set it as readonly
+	//注意: editState用于标记编辑器当前的状态，如果不一致会导致切换状态时不正常
+	//要使用editState进行标记是因为编辑器的changeView很多按键都会触发，需要避免重复触发
+	var editState = true;	//编辑器的默认状态是处于编辑状态
+	
+	//For ArtDialog
+	function initForArtDialog() 
 	{
+		console.log("initForArtDialog()");
+		
+		var params = GetRequest();
+		var docid = params['docid'];
+		//获取artDialog父窗口传递过来的参数
+		var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
+		if (artDialog2 == null) {
+			artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
+		}
+		
+		docInfo = artDialog2.config.data; // 获取对话框传递过来的数据
+	
 		// 初始化文档信息
 		docInfoInit();
-		// 加载文档窗口，传入文档加载成功回调函数和加载失败函数
-		console.log("stackeditEditorForArt");
 		
 		//history file or file in zip is readonly
 		checkAndSetIsReadOnly(docInfo);
 		
-		getDocText(docInfo, showText, showErrorMessage);
+		getDocText(docInfo, showText, showErrorInfo);
 	}
+	
+	//For NewPage
+	function initForNewPage()
+	{
+		console.log("initForNewPage()");
+
+		docInfo = getDocInfoFromRequestParamStr();
+	    document.title = docInfo.name;
+	    
+	    // 初始化文档信息
+		docInfoInit();
+	    
+		//history file or file in zip is readonly
+		checkAndSetIsReadOnly(docInfo);
+		
+		getDocText(docInfo, showText, showErrorInfo);
+	}
+	
+	//For BootstrapDialog
+	function PageInit(Input_doc)
+	{
+		console.log("PageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+	    // 初始化文档信息
+		docInfoInit();
+		
+		//history file or file in zip is readonly
+		checkAndSetIsReadOnly(docInfo); 
+		
+		getDocText(docInfo, showText, showErrorInfo);
+  	}
 	
 	function showErrorInfo(msg)
 	{
@@ -35,22 +86,6 @@ var StackMdEditor = (function () {
 		}
 		return theRequest;
 	}
-	var params = GetRequest();
-	var docid = params['docid'];
-	//获取artDialog父窗口传递过来的参数
-	var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
-	if (artDialog2 == null) {
-		artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
-	}
-	// 定义成员变量
-	var docInfo = artDialog2.config.data; // 获取对话框传递过来的数据
-	var docText = "";
-	var tmpSavedDocText = "";
-	var isContentChanged = false;
-	var isReadOnly = false;	//zip or history doc set it as readonly
-	//注意: editState用于标记编辑器当前的状态，如果不一致会导致切换状态时不正常
-	//要使用editState进行标记是因为编辑器的changeView很多按键都会触发，需要避免重复触发
-	var editState = true;	//编辑器的默认状态是处于编辑状态
 	
 	function checkAndSetIsReadOnly(docInfo)
 	{
@@ -467,9 +502,15 @@ var StackMdEditor = (function () {
 	
 	//开放给外部的调用接口
 	return {
-		init: function(){
-			init();
+		initForArtDialog: function(){
+			initForArtDialog();
 	    },
+	    initForNewPage: function(){
+	    	initForNewPage();
+	    },
+	    PageInit: function(docInfo){
+        	PageInit(docInfo);
+        },
 	    saveDoc: function(){
 	    	return saveDoc();
 	    },
