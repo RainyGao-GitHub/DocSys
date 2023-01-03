@@ -1,21 +1,67 @@
 //AceTextEditor类
 var AceTextEditor = (function () {
-
+	var docInfo = {};
+	var docText = "";
+	var tmpSavedDocText = "";
+	var isContentChanged = false;
+	var editState = false;
+	
 	var editor = ace.edit("editor");
 	editor.setTheme("ace/theme/twilight");
 	//editor.setTheme("ace/theme/chrome");
 	//editor.setTheme("ace/theme/tomorrow_night");
 	editor.session.setMode("ace/mode/text");
 	editor.setReadOnly(true); // false to make it editable
-	var editState = false;
 	
-	function init()
+	//Init For ArtDialog
+	function initForArtDialog()
 	{
+		var params = GetRequest();
+		var docid = params['docid'];
+		//获取artDialog父窗口传递过来的参数
+		var artDialog2 = window.top.artDialogList['ArtDialog' + docid];
+		if (artDialog2 == null) {
+			artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
+		}
+		// 获取对话框传递过来的数据
+		docInfo = artDialog2.config.data;
+	    console.log("initForArtDialog() docInfo:", docInfo);
+
 		if (!docInfo.fileSuffix) {
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);
 		}
+		
 		getDocText(docInfo, showText, showErrorInfo);
 	}
+	
+	//Init For NewPage
+	function initForNewPage()
+	{
+	    var docInfo = getDocInfoFromRequestParamStr();
+	    document.title = docInfo.name;
+	    
+	    console.log("initForNewPage() docInfo:", docInfo);
+	    
+		if (!docInfo.fileSuffix) {
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		}
+		
+		getDocText(docInfo, showText, showErrorInfo);
+	}
+	
+	//Init For Bootstrap Dialog
+	function textEditorPageInit(Input_doc)
+	{
+		docInfo = Input_doc;		
+	
+		console.log("textEditorPageInit() docInfo:", docInfo);
+		
+		if (!docInfo.fileSuffix) {
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		}
+		
+		getDocText(docInfo, showText, showErrorInfo);	  	
+  	}
 	
 	function showErrorInfo(msg)
 	{
@@ -39,20 +85,7 @@ var AceTextEditor = (function () {
 		return theRequest;
 	}
 
-	var params = GetRequest();
-	var docid = params['docid'];
-	//获取artDialog父窗口传递过来的参数
-	var artDialog2 = window.top.artDialogList['ArtDialog' + docid];
-	if (artDialog2 == null) {
-		artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
-	}
-	// 获取对话框传递过来的数据
-	var docInfo = artDialog2.config.data;
-	console.log("docInfo:", docInfo);
 
-	var docText = "";
-	var tmpSavedDocText = "";
-	var isContentChanged = false;
 			
 	function showText(docText, tmpSavedDocText)
 	{
@@ -396,9 +429,15 @@ var AceTextEditor = (function () {
 	}
 	//开放给外部的调用接口
 	return {
-		init: function(){
-			init();
+		initForArtDialog: function(){
+			initForArtDialog();
 	    },
+		initForNewPage: function(){
+			initForNewPage();
+	    },
+        textEditorPageInit: function(docInfo){
+        	textEditorPageInit(docInfo);
+        },
 	    saveDoc: function(){
 	    	return saveDoc();
 	    },
