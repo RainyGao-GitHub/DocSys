@@ -5,17 +5,23 @@ var AceTextEditor = (function () {
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
 	var editState = false;
+	var editor = {};	
 	
-	var editor = ace.edit("editor");
-	editor.setTheme("ace/theme/twilight");
-	//editor.setTheme("ace/theme/chrome");
-	//editor.setTheme("ace/theme/tomorrow_night");
-	editor.session.setMode("ace/mode/text");
-	editor.setReadOnly(true); // false to make it editable
+	function initAceEditor()
+	{
+		editor = ace.edit("editor");
+		editor.setTheme("ace/theme/twilight");
+		//editor.setTheme("ace/theme/chrome");
+		//editor.setTheme("ace/theme/tomorrow_night");
+		editor.session.setMode("ace/mode/text");
+		editor.setReadOnly(true); // false to make it editable
+	}
 	
 	//Init For ArtDialog
 	function initForArtDialog()
 	{
+		initAceEditor();
+
 		var params = GetRequest();
 		var docid = params['docid'];
 		//获取artDialog父窗口传递过来的参数
@@ -37,6 +43,8 @@ var AceTextEditor = (function () {
 	//Init For NewPage
 	function initForNewPage()
 	{
+		initAceEditor();
+		
 	    var docInfo = getDocInfoFromRequestParamStr();
 	    document.title = docInfo.name;
 	    
@@ -52,6 +60,8 @@ var AceTextEditor = (function () {
 	//Init For Bootstrap Dialog
 	function textEditorPageInit(Input_doc)
 	{
+		initAceEditor();
+		
 		docInfo = Input_doc;		
 	
 		console.log("textEditorPageInit() docInfo:", docInfo);
