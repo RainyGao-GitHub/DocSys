@@ -3410,7 +3410,7 @@
 
 		if(node &&  node != null)
 		{
-			docId = node.id;
+			docId = node.docId;
 		    path = node.path;
 		    name = node.name;
 			//如果是文件且不是根文件则获取上层目录的文件
@@ -3446,10 +3446,8 @@
          		console.log("showDocList ret:", ret)
          		if(ret.status == "ok")
             	{
-         			if(docId)
-         			{
-	         		    DocListParentDocId = docId;
-         			}
+         			DocListParentDocId = docId;
+         			console.log("showDocList() DocListParentDocId:" + DocListParentDocId + " docId:" + docId );
          			DocList.showList(ret.data);
                 }
                 else
