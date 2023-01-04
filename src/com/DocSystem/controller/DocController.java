@@ -761,9 +761,13 @@ public class DocController extends BaseController{
 			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
+			//Update related DocShare
+			updateRelatedDocShare(repos, srcDoc, dstDoc, rt);
 			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
+			//Update related DocShare
+			updateRelatedDocShare(repos, srcDoc, dstDoc, rt);
 			break;
 		}	
 	}
@@ -865,10 +869,42 @@ public class DocController extends BaseController{
 			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
+			//Update related DocShare
+			updateRelatedDocShare(repos, srcDoc, dstDoc, rt);
 			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
+			//Update related DocShare
+			updateRelatedDocShare(repos, srcDoc, dstDoc, rt);
 			break;
+		}
+	}
+
+	private void updateRelatedDocShare(Repos repos, Doc srcDoc, Doc dstDoc, ReturnAjax rt) {
+		
+		DocShare qDocShare = new DocShare();
+		qDocShare.setPath(srcDoc.getPath());
+		qDocShare.setName(srcDoc.getName());
+		qDocShare.setDocId(srcDoc.getDocId());
+		qDocShare.setVid(repos.getId());
+		
+		List<DocShare> list = reposService.getDocShareList(qDocShare);
+		if(list != null && list.size() > 0)
+		{
+			for(int i=0; i< list.size(); i++)
+			{
+				DocShare docShare = list.get(i);
+				docShare.setPath(dstDoc.getPath());
+				docShare.setName(dstDoc.getName());
+				docShare.setDocId(dstDoc.getDocId());				
+				
+				Log.debug("updateRelatedDocShare() update DocShare [" + docShare.getId() + "] [" + qDocShare.getPath() + qDocShare.getName() + "] [" + docShare.getPath() + docShare.getName() + "]");
+					
+				if(reposService.updateDocShare(docShare) == 0)
+				{
+					docSysDebugLog("updateRelatedDocShare() update DocShare Failed [" + docShare.getId() + "] [" + qDocShare.getPath() + qDocShare.getName() + "] [" + docShare.getPath() + docShare.getName() + "]", rt);
+				}
+			}
 		}
 	}
 
