@@ -12,8 +12,6 @@ var StackMdEditor = (function () {
 	//For ArtDialog
 	function initForArtDialog() 
 	{
-		console.log("initForArtDialog()");
-		
 		var params = GetRequest();
 		var docid = params['docid'];
 		//获取artDialog父窗口传递过来的参数
@@ -27,6 +25,8 @@ var StackMdEditor = (function () {
 		// 初始化文档信息
 		docInfoInit();
 		
+		console.log("initForArtDialog() docInfo:", docInfo);
+
 		//history file or file in zip is readonly
 		checkAndSetIsReadOnly(docInfo);
 		
@@ -36,13 +36,13 @@ var StackMdEditor = (function () {
 	//For NewPage
 	function initForNewPage()
 	{
-		console.log("initForNewPage()");
-
 		docInfo = getDocInfoFromRequestParamStr();
 	    document.title = docInfo.name;
 	    
 	    // 初始化文档信息
 		docInfoInit();
+		
+		console.log("initForNewPage() docInfo:", docInfo);
 	    
 		//history file or file in zip is readonly
 		checkAndSetIsReadOnly(docInfo);
@@ -53,12 +53,13 @@ var StackMdEditor = (function () {
 	//For BootstrapDialog
 	function PageInit(Input_doc)
 	{
-		console.log("PageInit InputDoc:", Input_doc);
 		docInfo = Input_doc;
-		
+
 	    // 初始化文档信息
 		docInfoInit();
-		
+
+		console.log("PageInit() docInfo:", docInfo);
+
 		//history file or file in zip is readonly
 		checkAndSetIsReadOnly(docInfo); 
 		
@@ -169,20 +170,35 @@ var StackMdEditor = (function () {
 				//TODO: 注意除了点击编辑按键外，所有的按键点击的flag都是true（退出编辑），这样会导致逻辑错误
 				if(event.data.flag)
 				{
-					if(editState == true)
+					if(isReadOnly)
 					{
-						console.log("编辑器退出编辑状态...");
-						editState = false;
-						exitEdit();
+						console.log("readOnly: do nothing");
+					}
+					else
+					{
+						if(editState == true)
+						{
+							console.log("编辑器退出编辑状态...");
+							editState = false;
+							exitEdit();
+						}
 					}
 				}
 				else
 				{
-					if(editState == false)
+					if(isReadOnly)
 					{
-						console.log("编辑器进入编辑状态...");
-						editState = true;
-						enableEdit();
+						console.log("readOnly: switch back to readonly");
+						setStaticEditReaOnly(editState);
+					}
+					else
+					{
+						if(editState == false)
+						{
+							console.log("编辑器进入编辑状态...");
+							editState = true;
+							enableEdit();
+						}
 					}
 				}
 				break;
