@@ -264,14 +264,21 @@ public class GitUtil {
 		File wcdir = new File(wcDir);
         cloneCommand.setDirectory(wcdir);	//set the working copy dir
 		
+        Git git = null;
 		try {
-			cloneCommand.call();
+			git = cloneCommand.call();
 		} catch (Exception e) {
 			Log.debug("CloneRepos error");
 			Log.info(e);
+		}
+		
+		if(git == null)
+		{
 			return null;
 		}
         
+		git.close();
+		
         return wcDir;
 	}
 	
