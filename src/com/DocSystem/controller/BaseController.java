@@ -16165,15 +16165,21 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		boolean ret = false;
 		switch(compressFileType)
 		{
 		case "zip":
 		case "war":
-			if(extractEntryFrom7zFile(parentCompressDoc, doc) == false)
+			ret = extractEntryFromZipFile(parentCompressDoc, doc);
+			if(ret == false)
 			{
-				return extractEntryFromZipFile(parentCompressDoc, doc);
+				ret = extractEntryFrom7zFile(parentCompressDoc, doc);
+				if(ret == false)
+				{
+					ret = extractEntryFromCompressFile(parentCompressDoc, doc);
+				}				
 			}
-			return true;
+			return ret;
 		case "7z":
 			return extractEntryFrom7zFile(parentCompressDoc, doc);			
 		case "rar":
