@@ -19,6 +19,7 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -11051,6 +11052,8 @@ public class BaseController  extends BaseFunction{
 	{	
 		Log.info("*************** docSysInit force:" + force + " *****************");
 		Log.info("docSysInit() docSysIniPath:" + docSysIniPath);
+		
+		Log.info("docSysInit() system default charset [" + Charset.defaultCharset() + "]");
 		
 		if(officeEditorApi == null)
 		{
