@@ -3685,6 +3685,15 @@ public class DocController extends BaseController{
 		//根据文件类型获取文件内容或者文件链接			
 		String status = "ok";
 		String content = "";
+		
+		if(FileUtil.isFileExist(tmpDoc.getLocalRootPath() + tmpDoc.getPath() + tmpDoc.getName()) == false)
+		{
+			status="notExists";
+			content = "[" + path + name + "] 解压失败";
+			writeText(status+content, response);	
+			return;
+		}
+		
 		String fileSuffix = FileUtil.getFileSuffix(name);
 		if(FileUtil.isText(fileSuffix))
 		{
