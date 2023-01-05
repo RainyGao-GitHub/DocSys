@@ -1400,6 +1400,8 @@ public class ReposController extends BaseController{
 			}
 		}
 		
+		channel.doRemoteStorageLogoutEx(remoteStorageSession);
+		
 		//清除测试目录
 		FileUtil.delFileOrDir(localTestPath);
 		
