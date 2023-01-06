@@ -3728,17 +3728,7 @@ public class BaseController  extends BaseFunction{
 		if(uploadFile == null && chunkNum == null)
 		{	
 			//File must not exists
-			if(context.folderUploadAction != null)
-			{
-				context.folderUploadAction.longBeatThreadCount++;
-				ret = createRealDoc(repos, doc, rt);
-				context.folderUploadAction.longBeatThreadCount--;						
-			}
-			else
-			{
-				ret = createRealDoc(repos, doc, rt);				
-			}
-			
+			ret = createRealDoc(repos, doc, rt);
 			if(ret == false)
 			{	
 				if(context.folderUploadAction == null)
@@ -3754,6 +3744,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(context.folderUploadAction != null)
 			{
+				//TODO: 根据分片个数来设置长心跳的超时时间
 				context.folderUploadAction.longBeatThreadCount++;
 				ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
 				context.folderUploadAction.longBeatThreadCount--;						
@@ -3994,16 +3985,7 @@ public class BaseController  extends BaseFunction{
 		if(docData == null)
 		{	
 			//File must not exists
-			if(context.folderUploadAction != null)
-			{
-				context.folderUploadAction.longBeatThreadCount++;
-				ret = createRealDoc(repos, doc, rt);
-				context.folderUploadAction.longBeatThreadCount--;						
-			}
-			else
-			{
-				ret = createRealDoc(repos, doc, rt);
-			}
+			ret = createRealDoc(repos, doc, rt);
 			
 			if(ret == false)
 			{	
@@ -4020,6 +4002,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(context.folderUploadAction != null)
 			{
+				//TODO: 根据分片个数来设置长心跳的超时时间
 				context.folderUploadAction.longBeatThreadCount++;
 				ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
 				context.folderUploadAction.longBeatThreadCount--;						
@@ -7286,6 +7269,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		if(context.folderUploadAction != null)
 		{
+			//TODO: 根据分片个数来设置长心跳的超时时间
 			context.folderUploadAction.longBeatThreadCount++;
 			ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
 			context.folderUploadAction.longBeatThreadCount--;		
@@ -7400,6 +7384,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		if(context.folderUploadAction != null)
 		{
+			//TODO: 根据分片个数来设置长心跳的超时时间
 			context.folderUploadAction.longBeatThreadCount++;
 			ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
 			context.folderUploadAction.longBeatThreadCount--;
@@ -7746,6 +7731,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		if(context.folderUploadAction != null)
 		{
+			//TODO: 根据文件大小来设置长心跳的超时时间
 			context.folderUploadAction.longBeatThreadCount++;
 			ret = copyRealDoc(repos, sameDoc, doc, rt);
 			context.folderUploadAction.longBeatThreadCount--;						
