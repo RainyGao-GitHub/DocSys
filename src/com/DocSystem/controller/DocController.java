@@ -156,13 +156,13 @@ public class DocController extends BaseController{
 		
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
-			commitMsg = "新增 " + path + name;
+			commitMsg = "新增 [" + path + name + "]";
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", repos, doc, null, null);
-		
+		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
 		int ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, context); 
 		
 		writeJson(rt, response);
@@ -300,7 +300,7 @@ public class DocController extends BaseController{
 		
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", repos, doc, null, null);
-		
+		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
 		int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, context);
 		
 		writeJson(rt, response);
@@ -521,7 +521,8 @@ public class DocController extends BaseController{
 		
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", repos, doc, null, null);
-		
+		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
+
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
@@ -618,6 +619,7 @@ public class DocController extends BaseController{
 
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", repos, doc, null, null);
+		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
 		
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -723,6 +725,7 @@ public class DocController extends BaseController{
 		
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", repos, srcDoc, dstDoc, null);
+		context.info = "重命名 [" + srcDoc.getPath() + srcDoc.getName() + "] 为 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		
 		int ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -831,6 +834,7 @@ public class DocController extends BaseController{
 				
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", repos, srcDoc, dstDoc, null);
+		context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		
 		int ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -952,7 +956,7 @@ public class DocController extends BaseController{
 		
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", repos, srcDoc, dstDoc, null);
-		
+		context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		int ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
@@ -1102,10 +1106,12 @@ public class DocController extends BaseController{
 		if(move)
 		{
 			context.eventName = "移动文件";	
+			context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 			ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);			
 		}
 		else
 		{
+			context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 			ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		}
 		writeJson(rt, response);
@@ -1249,6 +1255,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkDocInfo", "checkDocInfo", "文件上传", repos, doc, null, folderUploadAction);
+		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
 
 		//检查登录用户的权限
 		Doc parentDoc = buildBasicDoc(reposId, pid, null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
@@ -1429,8 +1436,8 @@ public class DocController extends BaseController{
 				
 				gFolderUploadActionHashMap.put(actionId, action);		
 				
-				String lockInfo2 = "checkAndCreateFolderUploadAction() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-				DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, lockInfo2);
+				action.info = "上传目录 [" + doc.getPath() + doc.getName() + "]";
+				DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, action.info);
 				if(docLock == null)
 				{
 					action.isCriticalError = true;
@@ -1745,6 +1752,7 @@ public class DocController extends BaseController{
 				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);				
 				//Build ActionContext
 				ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", repos, doc, null, folderUploadAction);
+				context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
 				
 				int ret = 0;
 				Doc dbDoc = docSysGetDoc(repos, doc, false);
@@ -1830,7 +1838,8 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true,localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", repos, doc, null, folderUploadAction);
-		
+		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
+
 		//check and add parentDir
 		String localParentPath = localRootPath + path;
 		File localParentDir = new File(localParentPath);
@@ -2063,7 +2072,8 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "文件上传", repos, doc, null, folderUploadAction);
-		
+		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
+
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
@@ -2435,7 +2445,8 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "文件上传", repos, doc, null, folderUploadAction);
-		
+		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
+
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
@@ -4700,8 +4711,9 @@ public class DocController extends BaseController{
 		}
 		
 		DocLock docLock = null;
-		String lockInfo = "lockDoc() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-    	docLock = lockDoc(doc, lockType, lockDuration, reposAccess.getAccessUser(), rt, subDocCheckFlag, lockInfo);
+		//String lockInfo = "lockDoc() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		String lockInfo = "编辑 [" + doc.getPath() + doc.getName() + "]";
+		docLock = lockDoc(doc, lockType, lockDuration, reposAccess.getAccessUser(), rt, subDocCheckFlag, lockInfo);
 		
 		if(docLock == null)
 		{
@@ -5339,8 +5351,10 @@ public class DocController extends BaseController{
 		DocLock docLock = null;
 		
 		int lockType = isRealDoc? DocLock.LOCK_TYPE_FORCE : DocLock.LOCK_TYPE_VFORCE;
-		String lockInfo = "revertDocHistory() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-    	docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false, lockInfo);
+		//String lockInfo = "revertDocHistory() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		String lockInfo = "版本回退 [" + doc.getPath() + doc.getName() + "]";
+    	
+		docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false, lockInfo);
 		
 		if(docLock == null)
 		{

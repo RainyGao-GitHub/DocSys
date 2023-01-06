@@ -19,6 +19,7 @@ public class ActionContext {
 	public Doc newDoc;
 	public Integer docLockType;
 	public Integer newDocLockType;
+	public String info;	//用于lockDoc的备注
 	
 	//用于目录上传
 	public FolderUploadAction folderUploadAction;
