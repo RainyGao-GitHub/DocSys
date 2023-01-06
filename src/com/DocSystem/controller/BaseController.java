@@ -16115,7 +16115,7 @@ public class BaseController  extends BaseFunction{
 		{
 		case "zip":
 		case "war":
-			return getSubDocListForZip(repos, rootDoc, path, name, rt);
+			//return getSubDocListForZip(repos, rootDoc, path, name, rt);
 		case "7z":
 			//return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
 		case "rar":
@@ -16164,7 +16164,7 @@ public class BaseController  extends BaseFunction{
             {
             	ISimpleInArchiveItem entry = simpleInArchive.getArchiveItems()[i];
             	Log.debug("getSubDocListForCompressFile path:" + entry.getPath() + " size:" + entry.getSize() + " packedSize:" + entry.getPackedSize()); 
-            	//TODO: 如果senvenzip没有使用指定编码进行读取的接口的话，那么跨平台将会永远无法解决的问题
+            	//TODO: SevenZip跨平台有中文乱码Bug，目前没有找到指定charset的接口，期待新版本
             	//String entryPath = (String) inArchive.getProperty(i, PropID.PATH);
             	String entryPath = entry.getPath().replace("\\", "/");
             	Log.debug("getSubDocListForCompressFile path:" + entryPath);
