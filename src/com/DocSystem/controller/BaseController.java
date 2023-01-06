@@ -16115,7 +16115,7 @@ public class BaseController  extends BaseFunction{
 		{
 		case "zip":
 		case "war":
-			//return getSubDocListForZip(repos, rootDoc, path, name, rt);
+			return getSubDocListForZip(repos, rootDoc, path, name, rt);
 		case "7z":
 			//return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
 		case "rar":
@@ -16160,11 +16160,18 @@ public class BaseController  extends BaseFunction{
             // Getting simple interface of the archive inArchive
             ISimpleInArchive simpleInArchive = inArchive.getSimpleInterface();
             
-            for (ISimpleInArchiveItem entry : simpleInArchive.getArchiveItems()) {
-               Log.debug("getSubDocListForCompressFile path:" + entry.getPath() + " size:" + entry.getSize() + " packedSize:" + entry.getPackedSize()); 
-               String subDocPath = rootPath + entry.getPath().replace("\\", "/");
-               Doc subDoc = buildBasicDocFromCompressEntry(rootDoc, subDocPath, entry);
-               subDocList.add(subDoc);
+            for (int i = 0; i < simpleInArchive.getArchiveItems().length; i++) 
+            {
+            	ISimpleInArchiveItem entry = simpleInArchive.getArchiveItems()[i];
+            	Log.debug("getSubDocListForCompressFile path:" + entry.getPath() + " size:" + entry.getSize() + " packedSize:" + entry.getPackedSize()); 
+            	//TODO: 如果senvenzip没有使用指定编码进行读取的接口的话，那么跨平台将会永远无法解决的问题
+            	//String entryPath = (String) inArchive.getProperty(i, PropID.PATH);
+            	String entryPath = entry.getPath().replace("\\", "/");
+            	Log.debug("getSubDocListForCompressFile path:" + entryPath);
+
+            	String subDocPath = rootPath + entryPath.replace("\\", "/");
+            	Doc subDoc = buildBasicDocFromCompressEntry(rootDoc, subDocPath, entry);
+            	subDocList.add(subDoc);
             }
         } catch (Exception e) {
             errorLog("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error occurs");
@@ -16187,6 +16194,7 @@ public class BaseController  extends BaseFunction{
                 }
             }
         }
+        
 		return subDocList;
 	}
 
