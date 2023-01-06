@@ -1518,25 +1518,25 @@ public class DocController extends BaseController{
                         	Log.info(e);                        	
                         }                        
                     }
-
-					private boolean isFolderUploadActionBeatStopped(FolderUploadAction action, long curTime) {
-						//TODO: 长心跳线程，最好又超时时间配合，避免线程意外死亡影响检测
-						if(action.longBeatThreadCount > 0)	
-						{
-							Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] there is [" + action.longBeatThreadCount + "] longBeatThread");
-							return false;
-						}
-						
-						if((curTime - action.beatTime) > action.beatStopThreshold)
-						{
-							Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than [" + action.beatStopThreshold + "] ms");
-							return true;
-						}
-						return false;
-					}
                 },
                 60,	//1分钟检测一次
                 TimeUnit.SECONDS);		
+	}
+	
+	private boolean isFolderUploadActionBeatStopped(FolderUploadAction action, long curTime) {
+		//TODO: 长心跳线程，最好又超时时间配合，避免线程意外死亡影响检测
+		if(action.longBeatThreadCount > 0)	
+		{
+			Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] there is [" + action.longBeatThreadCount + "] longBeatThread");
+			return false;
+		}
+		
+		if((curTime - action.beatTime) > action.beatStopThreshold)
+		{
+			Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than [" + action.beatStopThreshold + "] ms");
+			return true;
+		}
+		return false;
 	}
 
 	protected void removeFolderUploadAction(String actionId) {
