@@ -307,6 +307,28 @@ public class Log {
 		}
 	}
 	
+	public static void printBytesEx(String head, byte[] data) {
+		if(isLogEnable(debug, allowGeneral))
+		{
+			System.out.printf(head);
+			for(int i=0; i<data.length; i++)
+			{
+				System.out.printf( "%02X ", data[i]);
+			}
+			System.out.printf("\n");
+
+			if(logFile != null)
+			{
+				toFile(head, logFile);
+				for(int i=0; i<data.length; i++)
+				{
+					toFile(String.format("%02X ", data[i]), logFile);
+				}
+				toFile("\n", logFile);
+			}
+		}
+	}
+	
 	//To print the obj by convert it to json format
 	public static void printObject(String Head,Object obj)
 	{
