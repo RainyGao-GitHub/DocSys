@@ -1565,7 +1565,7 @@ public class BaseFunction{
 		//FocreLock即使是自己锁定的也不可以解锁
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
+		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定:" + docLock.info[lockType] + "，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
 		
 		long curTime = new Date().getTime();
 		
@@ -1604,7 +1604,7 @@ public class BaseFunction{
 		}
 			
 		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]锁定，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
+		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]锁定:"+ docLock.info[lockType] +"，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
 
 		long curTime = new Date().getTime();
 		docSysDebugLog("isDocLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info[lockType] + "]", rt);

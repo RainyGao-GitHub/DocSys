@@ -18,6 +18,7 @@ public class FolderUploadAction {
 	public Repos repos;			
 	public Doc doc;				//folder doc
 	public Integer docLockType;	//docLockType
+	public String info; //用于lockDoc的备注
 
 	//Following data is for folderUpload
 	public String commitMsg;

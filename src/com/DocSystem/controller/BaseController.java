@@ -3701,6 +3701,10 @@ public class BaseController  extends BaseFunction{
 
 		if(context.folderUploadAction == null)
 		{	
+			if(context.info != null)
+			{
+				lockInfo = context.info;
+			}
 			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
 			
 			if(docLock == null)
@@ -4100,8 +4104,8 @@ public class BaseController  extends BaseFunction{
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "deleteDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, lockInfo);	//lock 2 Hours 2*60*60*1000
+		//String lockInfo = "deleteDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, context.info);	//lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
 		{
@@ -7380,11 +7384,11 @@ public class BaseController  extends BaseFunction{
 	{	
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "updateDocEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		//String lockInfo = "updateDocEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 
 		if(context.folderUploadAction == null)
 		{
-			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
+			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,context.info); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
 				Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
@@ -7485,16 +7489,16 @@ public class BaseController  extends BaseFunction{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "moveDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
-		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo);
+		//String lockInfo = "moveDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
+		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("moveDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
 			return 0;
 		}
 
-		String lockInfo2 = "moveDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
-		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,lockInfo2);
+		//String lockInfo2 = "moveDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,context.info);
 		if(dstDocLock == null)
 		{
 			unlockDoc(srcDoc, lockType, login_user);
@@ -7601,17 +7605,17 @@ public class BaseController  extends BaseFunction{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "copyDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
+		//String lockInfo = "copyDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
 		//Try to lock the srcDoc
-		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
+		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("copyDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
 			return 0;
 		}
 		
-		String lockInfo2 = "copyDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
-		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo2);
+		//String lockInfo2 = "copyDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
 		if(dstDocLock == null)
 		{
 			unlockDoc(srcDoc, lockType, login_user);				
@@ -7715,9 +7719,9 @@ public class BaseController  extends BaseFunction{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "copySameDocForUpload() syncLock [" + sameDoc.getPath() + sameDoc.getName() + "] at repos[" + repos.getName() + "]";
+		//String lockInfo = "copySameDocForUpload() syncLock [" + sameDoc.getPath() + sameDoc.getName() + "] at repos[" + repos.getName() + "]";
 		//Try to lock the srcDoc
-		srcDocLock = lockDoc(sameDoc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo);
+		srcDocLock = lockDoc(sameDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("copySameDocForUpload() lock srcDoc [" + sameDoc.getPath() + sameDoc.getName() + "] Failed", rt);
@@ -7827,7 +7831,8 @@ public class BaseController  extends BaseFunction{
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "updateRealDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		//String lockInfo = "updateRealDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		String lockInfo = "编辑保存 [" + doc.getPath() + doc.getName() + "]";		
 		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
 		
 		if(docLock == null)
@@ -7906,7 +7911,8 @@ public class BaseController  extends BaseFunction{
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_VFORCE;
-		String lockInfo = "updateVirualDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		//String lockInfo = "updateVirualDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		String lockInfo = "修改备注 [" + doc.getPath() + doc.getName() + "]";
 		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
 		
 		if(docLock == null)
