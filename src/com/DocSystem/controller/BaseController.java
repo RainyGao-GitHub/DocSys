@@ -3746,9 +3746,12 @@ public class BaseController  extends BaseFunction{
 			if(context.folderUploadAction != null)
 			{
 				//TODO: 根据分片个数来设置长心跳的超时时间
-				insertToLongBeatCheckList(context.folderUploadAction, repos, doc);
+				LongBeatCheckAction action = insertToLongBeatCheckListEx(context.folderUploadAction, repos, doc, chunkNum);
 				ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
-				removeFromLongBeatCheckList(context.folderUploadAction, repos, doc);
+				if(action != null)
+				{
+					action.stopFlag = true;
+				}
 			}
 			else
 			{
