@@ -105,6 +105,7 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.LongBeatCheckAction;
 import com.DocSystem.common.MyExtractCallback;
 import com.DocSystem.common.OS;
 import com.DocSystem.common.Path;
@@ -3745,9 +3746,9 @@ public class BaseController  extends BaseFunction{
 			if(context.folderUploadAction != null)
 			{
 				//TODO: 根据分片个数来设置长心跳的超时时间
-				context.folderUploadAction.longBeatThreadCount++;
+				insertToLongBeatCheckList(context.folderUploadAction, repos, doc);
 				ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
-				context.folderUploadAction.longBeatThreadCount--;						
+				removeFromLongBeatCheckList(context.folderUploadAction, repos, doc);
 			}
 			else
 			{
@@ -3836,6 +3837,39 @@ public class BaseController  extends BaseFunction{
 		return 1;
 	}
 	
+	private void removeFromLongBeatCheckListEx(FolderUploadAction folderUploadAction, Repos repos, Doc doc, Integer chunkNum) {
+		if(chunkNum != null && chunkNum > 1)
+		{
+			removeFromLongBeatCheckList(folderUploadAction, repos, doc);
+		}
+	}
+	
+	private void removeFromLongBeatCheckList(FolderUploadAction folderUploadAction, Repos repos, Doc doc) {
+		Log.debug("removeFromLongBeatCheckList() remove [" + doc.getPath() + doc.getName() + "] from longBeatCheckList");
+		folderUploadAction.longBeatCheckList.remove(doc.getDocId() + "");
+	}
+
+	private LongBeatCheckAction insertToLongBeatCheckListEx(FolderUploadAction folderUploadAction, Repos repos, Doc doc, Integer chunkNum) {
+		if(chunkNum != null && chunkNum > 1)
+		{
+			//TODO: 根据分片个数来设置长心跳的超时时间
+			return insertToLongBeatCheckList(folderUploadAction, repos, doc);
+		}
+		return null;
+	}
+	
+	private LongBeatCheckAction insertToLongBeatCheckList(FolderUploadAction folderUploadAction, Repos repos, Doc doc) {
+		Log.debug("insertToLongBeatCheckList() add [" + doc.getPath() + doc.getName() + "] to longBeatCheckList");
+		LongBeatCheckAction checkAction = new LongBeatCheckAction();
+		checkAction.key = doc.getDocId() + "";
+		checkAction.filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		checkAction.startTime = new Date().getTime(); 
+		checkAction.duration = CONST_HOUR;	//1 hour
+		checkAction.stopFlag = false;
+		folderUploadAction.longBeatCheckList.put(checkAction.key, checkAction);
+		return checkAction;
+	}
+
 	//******************* 版本仓库参考节点接口 *********************************
 	//VerRepos DB Interfaces
 	protected static List<Doc> getVerReposDBEntryList(Repos repos, Doc doc) {
@@ -4002,10 +4036,12 @@ public class BaseController  extends BaseFunction{
 		{
 			if(context.folderUploadAction != null)
 			{
-				//TODO: 根据分片个数来设置长心跳的超时时间
-				context.folderUploadAction.longBeatThreadCount++;
+				LongBeatCheckAction checkAction = insertToLongBeatCheckListEx(context.folderUploadAction, repos, doc, chunkNum);
 				ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
-				context.folderUploadAction.longBeatThreadCount--;						
+				if(checkAction != null)
+				{
+					checkAction.stopFlag = true;
+				}
 			}
 			else
 			{
@@ -7269,10 +7305,14 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		if(context.folderUploadAction != null)
 		{
-			//TODO: 根据分片个数来设置长心跳的超时时间
-			context.folderUploadAction.longBeatThreadCount++;
+			LongBeatCheckAction checkAction = insertToLongBeatCheckListEx(context.folderUploadAction, repos, doc, chunkNum);
+			
 			ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
-			context.folderUploadAction.longBeatThreadCount--;		
+			
+			if(checkAction != null)
+			{
+				checkAction.stopFlag = true;
+			}
 		}
 		else
 		{
@@ -7384,10 +7424,14 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		if(context.folderUploadAction != null)
 		{
-			//TODO: 根据分片个数来设置长心跳的超时时间
-			context.folderUploadAction.longBeatThreadCount++;
+			LongBeatCheckAction checkAction = insertToLongBeatCheckListEx(context.folderUploadAction, repos, doc, chunkNum);
+
 			ret = updateRealDoc(repos, doc, docData,chunkNum,chunkSize,chunkParentPath,rt);
-			context.folderUploadAction.longBeatThreadCount--;
+			
+			if(checkAction != null)
+			{
+				checkAction.stopFlag = true;
+			}
 		}
 		else
 		{
@@ -7732,9 +7776,14 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			//TODO: 根据文件大小来设置长心跳的超时时间
-			context.folderUploadAction.longBeatThreadCount++;
+			LongBeatCheckAction checkAction = insertToLongBeatCheckList(context.folderUploadAction, repos, doc);
+
 			ret = copyRealDoc(repos, sameDoc, doc, rt);
-			context.folderUploadAction.longBeatThreadCount--;						
+			
+			if(checkAction != null)
+			{
+				checkAction.stopFlag = true;
+			}
 		}
 		else
 		{

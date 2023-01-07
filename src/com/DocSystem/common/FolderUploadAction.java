@@ -1,5 +1,7 @@
 package com.DocSystem.common;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -30,8 +32,9 @@ public class FolderUploadAction {
 	public long startTime;
 	public long beatTime;	//心跳时间
 	public long beatStopThreshold = 3*60*1000; //默认3分钟
-	public int longBeatThreadCount = 0;	//长心跳线程个数（分片上传的分片组合，checkDocInfo时的copySameDoc）
 	
+	public ConcurrentHashMap<String, LongBeatCheckAction> longBeatCheckList;	//长心跳检测列表（分片上传的分片组合，checkDocInfo时的copySameDoc）
+
 	//count info
 	public int totalCount;
 	public int successCount;
