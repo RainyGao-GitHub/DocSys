@@ -8,7 +8,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.redisson.api.RMap;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +34,7 @@ import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.LongBeatCheckAction;
 import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.ScanOption;
@@ -1427,6 +1431,7 @@ public class DocController extends BaseController{
 
 				action.startTime = new Date().getTime();
 				action.beatTime = action.startTime;
+				action.longBeatCheckList = new ConcurrentHashMap<String, LongBeatCheckAction>();
 				
 				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
 				action.localChangesRootPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
@@ -1523,20 +1528,97 @@ public class DocController extends BaseController{
                 TimeUnit.SECONDS);		
 	}
 	
-	private boolean isFolderUploadActionBeatStopped(FolderUploadAction action, long curTime) {
-		//TODO: 长心跳线程，最好又超时时间配合，避免线程意外死亡影响检测
-		if(action.longBeatThreadCount > 0)	
-		{
-			Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] there is [" + action.longBeatThreadCount + "] longBeatThread");
-			return false;
-		}
-		
+	private boolean isFolderUploadActionBeatStopped(FolderUploadAction action, long curTime) {		
 		if((curTime - action.beatTime) > action.beatStopThreshold)
 		{
+			//TODO: 长心跳线程，最好又超时时间配合，避免线程意外死亡影响检测
+			if(action.longBeatCheckList.size() > 0)	
+			{
+				checkAndCleanLongBeatCheckAction(action.longBeatCheckList);
+				if(action.longBeatCheckList.size() > 0)
+				{
+					Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] there is [" + action.longBeatCheckList.size() + "] longBeatThread");
+					return false;
+				}
+				
+				return true;
+			}
+			
 			Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than [" + action.beatStopThreshold + "] ms");
 			return true;
 		}
 		return false;
+	}
+
+	private void checkAndCleanLongBeatCheckAction(ConcurrentHashMap<String, LongBeatCheckAction> longBeatCheckList) 
+	{
+		//go through actionList pick to deleteList
+		//Go throuhg clusterServersMap
+	    List<String> deleteList = new ArrayList<String>();
+	    
+	    Iterator<Entry<String, LongBeatCheckAction>> iterator = longBeatCheckList.entrySet().iterator();
+	    long curTime = new Date().getTime();
+	    while (iterator.hasNext()) 
+	    {
+	    	Entry<String, LongBeatCheckAction> entry = iterator.next();
+	        if(entry != null)
+	        {   
+	        	String key = entry.getKey();
+	    		Log.info("checkAndCleanLongBeatCheckAction() action [" + key + "]");
+	            
+	    		LongBeatCheckAction action = entry.getValue();
+	        	if(action == null)
+	            {
+	            	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " action is null");
+	            	deleteList.add(key);
+	            }
+	        	else
+	        	{
+	        		if(action.stopFlag == true)
+	        		{
+			        	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " stopFlag is true");
+			            deleteList.add(key);			            		        			
+	        		}
+	        		else if(action.filePath == null)
+	        		{
+			        	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " filePath is null");
+			            deleteList.add(key);			            		        			
+	        		}
+	        		else if((curTime - action.startTime) > action.duration)	//已超时
+			        {
+			        	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " is timeout with " + (curTime - action.startTime)/1000 + " minutes");
+			            deleteList.add(key);			            	
+			        }		
+	        		else
+	        		{
+	        			File file = new File(action.filePath);
+	        			if(file.exists() == false)
+	        			{
+	        				Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " [" + action.filePath + "] not exists");
+				            deleteList.add(key);
+	        			}
+	        			else if(action.preSize == file.length())
+	        			{
+	        				if(action.checkCount > 3)
+	        				{
+		        				Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " [" + action.filePath + "] not changed [" + action.checkCount + "] times");
+					            deleteList.add(key);	        					
+	        				}
+	        			}
+	        			else
+	        			{
+	        				action.checkCount = 0;
+	        			}
+	        		}
+	        	}
+	        }
+	    }
+	    
+	    //clear action
+	    for(int i=0; i< deleteList.size(); i++)
+	    {
+	    	longBeatCheckList.remove(deleteList.get(i));
+	    }		
 	}
 
 	protected void removeFolderUploadAction(String actionId) {
