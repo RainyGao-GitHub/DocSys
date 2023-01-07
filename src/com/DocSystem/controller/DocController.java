@@ -1540,8 +1540,6 @@ public class DocController extends BaseController{
 					Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] there is [" + action.longBeatCheckList.size() + "] longBeatThread");
 					return false;
 				}
-				
-				return true;
 			}
 			
 			Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than [" + action.beatStopThreshold + "] ms");
@@ -2012,7 +2010,6 @@ public class DocController extends BaseController{
 	}
 
 	private void folderUploadEndHander(FolderUploadAction action) {
-		
 		//Set action to stop to avoid other thread to do the endHandler
 		action.stopFlag = true;
 		action.stopTime = new Date().getTime();
@@ -2025,6 +2022,8 @@ public class DocController extends BaseController{
 		String commitMsg = action.commitMsg;
 		String commitUser = action.commitUser;
 		String localChangesRootPath =  action.localChangesRootPath;
+
+		Log.info("folderUploadEndHander() [" + doc.getPath() + doc.getName() + "]");
 
 		if(isLocalChanged(action.localChangesRootPath) == false)
 		{
