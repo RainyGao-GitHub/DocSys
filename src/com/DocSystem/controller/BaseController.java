@@ -3849,7 +3849,7 @@ public class BaseController  extends BaseFunction{
 	
 	private void removeFromLongBeatCheckList(FolderUploadAction folderUploadAction, Repos repos, Doc doc) {
 		Log.debug("removeFromLongBeatCheckList() remove [" + doc.getPath() + doc.getName() + "] from longBeatCheckList");
-		folderUploadAction.longBeatCheckList.remove(doc.getDocId() + "");
+		folderUploadAction.longBeatCheckList.remove("[" + doc.getPath() + doc.getName() + "][" + repos.getName() + "]");
 	}
 
 	private LongBeatCheckAction insertToLongBeatCheckListEx(FolderUploadAction folderUploadAction, Repos repos, Doc doc, Integer chunkNum) {
@@ -3864,7 +3864,7 @@ public class BaseController  extends BaseFunction{
 	private LongBeatCheckAction insertToLongBeatCheckList(FolderUploadAction folderUploadAction, Repos repos, Doc doc) {
 		Log.debug("insertToLongBeatCheckList() add [" + doc.getPath() + doc.getName() + "] to longBeatCheckList");
 		LongBeatCheckAction checkAction = new LongBeatCheckAction();
-		checkAction.key = doc.getDocId() + "";
+		checkAction.key = "[" + doc.getPath() + doc.getName() + "][" + repos.getName() + "]";
 		checkAction.filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
 		checkAction.startTime = new Date().getTime(); 
 		checkAction.duration = CONST_HOUR;	//1 hour
