@@ -2366,6 +2366,9 @@ public class BaseController  extends BaseFunction{
 			response.setHeader("content-disposition", disposition + ";filename=\"" + showName +"\"");			
 		}
 
+		//允许iframe中下载文件，但似乎无法工作
+		//response.setHeader("Content-Security-Policy", "sandbox allow-downloads");			
+
 		//读取要下载的文件，保存到文件输入流
 		FileInputStream in = null;
 		//创建输出流
