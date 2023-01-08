@@ -3486,7 +3486,7 @@ public class DocController extends BaseController{
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.infoHead("************** downloadDoc ****************");
-		Log.info("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
+		Log.info("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -3547,12 +3547,12 @@ public class DocController extends BaseController{
 		Log.info("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
-			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, disposition);			
 		}
 		else
 		{
 			Repos repos = getReposEx(vid);
-			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, null, null);						
+			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, null, disposition);						
 		}
 		
 		Doc doc = new Doc();
@@ -3630,12 +3630,12 @@ public class DocController extends BaseController{
 		Log.info("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);		
 		if(encryptEn == null || encryptEn == 0 || vid == null)
 		{
-			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, null);			
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, disposition);			
 		}
 		else
 		{
 			Repos repos = getReposEx(vid);
-			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, null, null);						
+			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, null, disposition);						
 		}
 		
 		Doc doc = new Doc();
