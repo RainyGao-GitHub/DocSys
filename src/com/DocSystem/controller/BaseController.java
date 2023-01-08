@@ -3839,18 +3839,6 @@ public class BaseController  extends BaseFunction{
 		
 		return 1;
 	}
-	
-	private void removeFromLongBeatCheckListEx(FolderUploadAction folderUploadAction, Repos repos, Doc doc, Integer chunkNum) {
-		if(chunkNum != null && chunkNum > 1)
-		{
-			removeFromLongBeatCheckList(folderUploadAction, repos, doc);
-		}
-	}
-	
-	private void removeFromLongBeatCheckList(FolderUploadAction folderUploadAction, Repos repos, Doc doc) {
-		Log.debug("removeFromLongBeatCheckList() remove [" + doc.getPath() + doc.getName() + "] from longBeatCheckList");
-		folderUploadAction.longBeatCheckList.remove("[" + doc.getPath() + doc.getName() + "][" + repos.getName() + "]");
-	}
 
 	private LongBeatCheckAction insertToLongBeatCheckListEx(FolderUploadAction folderUploadAction, Repos repos, Doc doc, Integer chunkNum) {
 		if(chunkNum != null && chunkNum > 1)
