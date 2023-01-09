@@ -56,6 +56,43 @@ Boolean isBussienss = BaseController.isBussienss();;
                 "name": data.userName,
             };
 			
+	    	var onRequestHistory = function() {
+	    	    console.log("onRequestHistory()");
+	    	    editor.refreshHistory({
+	    	        "currentVersion": 2,
+	    	        "history": [
+	    	            {
+	    	                "created": "2010-07-06 10:13 AM",
+	    	                "key": "af86C7e71Ca8",
+	    	                "user": {
+	    	                    "id": "F89d8069ba2b",
+	    	                    "name": "Kate Cage"
+	    	                },
+	    	                "version": 1
+	    	            },
+	    	            {
+	    	                "created": "2010-07-07 3:46 PM",
+	    	                "key": "Khirz6zTPdfd7",
+	    	                "user": {
+	    	                    "id": "78e1e841",
+	    	                    "name": "John Smith"
+	    	                },
+	    	                "version": 2
+	    	            },
+	    	        ]
+	    	    });
+	    	};
+	    	
+	    	var onRequestHistoryData = function(event) {
+	    		console.log("onRequestHistoryData() event:", event);
+	    		var version = event.data;
+	    		editor.setHistoryData({
+	    	        "key": "Khirz6zTPdfd7",
+	    	        "url": "https://example.com/url-to-example-document.docx",
+	    	        "version": version
+	    	    })
+	    	};
+			
 	    	var config = {
 					"type": type,
 	    		    "document": {
@@ -71,7 +108,8 @@ Boolean isBussienss = BaseController.isBussienss();;
 	    		            "modifyContentControl": editEn,
 	    		            "modifyFilter": editEn,
 	    		            "print": downloadEn,
-	    		            "review": true
+	    		            "review": true,
+	    		            "changeHistory": true
 	    		        },
 	    		    },
 	    		    "documentType": documentType,
@@ -82,6 +120,10 @@ Boolean isBussienss = BaseController.isBussienss();;
 	                    "user": user,
 	                    "spellcheck": false,
 	                },
+	    		    "events": {
+	    		    	"onRequestHistory": onRequestHistory,
+	    		        "onRequestHistoryData": onRequestHistoryData,
+	    		    },
 	                "height": "100%",
 	                "width": "100%",
 	    	};
