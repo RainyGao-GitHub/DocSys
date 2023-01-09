@@ -88,7 +88,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	    		var version = event.data;
 	    		editor.setHistoryData({
 	    	        "key": "Khirz6zTPdfd7",
-	    	        "url": "https://example.com/url-to-example-document.docx",
+	    	        "url": fileLink,
 	    	        "version": version
 	    	    })
 	    	};
