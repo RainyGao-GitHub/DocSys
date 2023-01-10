@@ -160,6 +160,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        			data.key = data.docId;
 	        			data.created = data.time;	//不转换直接先用
 	        			data.version = i+1;
+	        			console.log("initOfficeDocHistoryList history[" + i + "]", data);
 	        		}
 	        		
 	        		var currentVersion = list.length;
