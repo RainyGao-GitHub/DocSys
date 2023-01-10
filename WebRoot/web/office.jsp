@@ -67,6 +67,10 @@ Boolean isBussienss = BaseController.isBussienss();;
 	    		var version = event.data;
 	    		setOfficeDocHistoryData(version);
 	    	};
+	    	
+	    	var onRequestHistoryClose = function (event){
+	            document.location.reload();
+	        };
 			
 	    	var config = {
 					"type": type,
@@ -98,6 +102,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	    		    "events": {
 	    		    	"onRequestHistory": onRequestHistory,
 	    		        "onRequestHistoryData": onRequestHistoryData,
+	    		        "onRequestHistoryClose": onRequestHistoryClose,
 	    		    },
 	                "height": "100%",
 	                "width": "100%",
@@ -161,7 +166,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        			history.key = data.docId;
 	        			history.created = data.time;	//不转换直接先用
 	        			history.version = i+1;
-	        			history.url = fileLink;
+	        			history.orgChangeIndex = data.orgChangeIndex;           			
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
 	        			historyList.push(history);
 	        		}
@@ -182,6 +187,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        	    	                    "id": "F89d8069ba2b",
 	        	    	                    "name": "Kate Cage"
 	        	    	                },
+	        	    	                "changesUrl":"http://192.168.3.8/example/files/192.168.3.44/%E5%8E%86%E5%8F%B2%E6%9F%A5%E7%9C%8B%E6%B5%8B%E8%AF%95.docx-history/4/diff.zip",	        	    	                
 	        	    	                "version": 1
 	        	    	            },
 	        	    	            {
@@ -191,6 +197,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        	    	                    "id": "78e1e841",
 	        	    	                    "name": "John Smith"
 	        	    	                },
+	        	    	                "changesUrl":"http://192.168.3.8/example/files/192.168.3.44/%E5%8E%86%E5%8F%B2%E6%9F%A5%E7%9C%8B%E6%B5%8B%E8%AF%95.docx-history/4/diff.zip",	        	    	                
 	        	    	                "version": 2
 	        	    	            },
 	        	    	        ]
@@ -204,6 +211,10 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        	if(historyList)
 	        	{
 	        		var data = historyList[version-1];
+	        		if(data.orgChangeIndex != undefined && data.changesUrl == undefined)
+	        		{
+	        			data.changesUrl = buildHistoryDiffLink(docinfo, data.key, data.orgChangeIndex);	
+	        		}
 	        		editor.setHistoryData(data);
 	        		
 	        		/*
