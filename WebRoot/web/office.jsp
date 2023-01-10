@@ -151,7 +151,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	            });
 	        }
 
-	        function initOfficeDocHistoryList(list)
+	        function initOfficeDocHistoryList(list, dataEx)
 	        {
 	        	if(list)
 	        	{
@@ -166,7 +166,14 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        			history.key = data.docId;
 	        			history.created = data.time;	//不转换直接先用
 	        			history.version = i+1;
-	        			history.orgChangeIndex = data.orgChangeIndex;           			
+	        			history.url = fileLink;
+	        			if(data.orgChangeIndex != undefined)
+	        			{
+	        				history.path = dataEx.path;
+		        			history.name = dataEx.name;
+	        				history.orgChangeIndex = data.orgChangeIndex;
+	        				history.changeUrl = buildChangeUrl(docInfo, history);
+	        			}
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
 	        			historyList.push(history);
 	        		}
@@ -205,16 +212,22 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        		 */
 	        	}
 	        }
+	        
+	        function buildChangeUrl(docInfo, history)
+	        {
+	        	var changeUrl = "DocSystem/web/static/office-editor/downloadHistoryDiff/" 
+	        				+ docInfo.vid + "/" + history.path + "/" + history.name 
+	        				+ "/" + history.key + "/" + history.orgChangeIndex 
+	        				+ "/" + docInfo.authCode + "/" + docInfo.shareId;
+
+	        	return buildFullLink(changeUrl);
+	        }
 
 	        function setOfficeDocHistoryData(version)
 	        {
 	        	if(historyList)
 	        	{
 	        		var data = historyList[version-1];
-	        		if(data.orgChangeIndex != undefined && data.changesUrl == undefined)
-	        		{
-	        			data.changesUrl = buildHistoryDiffLink(docinfo, data.key, data.orgChangeIndex);	
-	        		}
 	        		editor.setHistoryData(data);
 	        		
 	        		/*
