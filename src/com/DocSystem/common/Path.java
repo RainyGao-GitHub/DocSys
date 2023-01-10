@@ -750,8 +750,8 @@ public class Path {
 		return path;
 	}
 	
-	protected String getOfficeEditRootPath(Doc doc) {
-		String path = doc.getReposPath() + "data/OfficeEdit/" ;
+	public static String getOfficeEditRootPath(Doc doc) {
+		String path = doc.getReposPath() + "data/OfficeEdit/" + doc.getDocId() + "/";
 		return path;
 	}
 	
