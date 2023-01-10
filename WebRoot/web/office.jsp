@@ -25,6 +25,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	    var documentType = getDocumentType(fileType);
 	    var title = docInfo.name;
 	    var key = docInfo.docId + "";
+	    var historyList;
 	    
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST", <%=isBussienss%>);
 	    document.title = docInfo.name;
@@ -58,39 +59,13 @@ Boolean isBussienss = BaseController.isBussienss();;
 			
 	    	var onRequestHistory = function() {
 	    	    console.log("onRequestHistory()");
-	    	    editor.refreshHistory({
-	    	        "currentVersion": 2,
-	    	        "history": [
-	    	            {
-	    	                "created": "2010-07-06 10:13 AM",
-	    	                "key": "af86C7e71Ca8",
-	    	                "user": {
-	    	                    "id": "F89d8069ba2b",
-	    	                    "name": "Kate Cage"
-	    	                },
-	    	                "version": 1
-	    	            },
-	    	            {
-	    	                "created": "2010-07-07 3:46 PM",
-	    	                "key": "Khirz6zTPdfd7",
-	    	                "user": {
-	    	                    "id": "78e1e841",
-	    	                    "name": "John Smith"
-	    	                },
-	    	                "version": 2
-	    	            },
-	    	        ]
-	    	    });
+	    	    getOfficeDocHistoryList(docInfo, initOfficeDocHistoryList);
 	    	};
 	    	
 	    	var onRequestHistoryData = function(event) {
 	    		console.log("onRequestHistoryData() event:", event);
 	    		var version = event.data;
-	    		editor.setHistoryData({
-	    	        "key": "Khirz6zTPdfd7",
-	    	        "url": fileLink,
-	    	        "version": version
-	    	    })
+	    		setOfficeDocHistoryData(version);
 	    	};
 			
 	    	var config = {
@@ -128,6 +103,114 @@ Boolean isBussienss = BaseController.isBussienss();;
 	                "width": "100%",
 	    	};
 	        editor = new DocsAPI.DocEditor("placeholder", config);
+	        
+	        function getOfficeDocHistoryList(docInfo, successCallback, errorCallback)
+	        {	
+	        	console.log("getOfficeDocHistoryList()  docInfo:", docInfo);
+	            if(!docInfo || docInfo == null || docInfo.id == 0)
+	            {
+	            	//未定义需要显示的文件
+	            	errorInfo = "请选择文件";
+	            	errorCallback && errorCallback(errorInfo);
+	            	return;
+	            }
+	          	
+	            var url = "/DocSystem/Bussiness/getOfficeDocHistoryList.do"
+	            $.ajax({
+	                url : url,
+	                type : "post",
+	                dataType : "json",
+	                data : {
+	                	reposId: docInfo.vid,
+	                    path: docInfo.path,
+	                    name: docInfo.name,
+	                    shareId: docInfo.shareId,
+	                },
+	                success : function (ret) {
+	                	console.log("getOfficeDocHistoryList ret",ret);
+	                	if( "ok" == ret.status )
+	                	{
+	                		successCallback &&successCallback(ret.data, ret.dataEx);
+	                    }
+	                    else 
+	                    {
+	                    	console.log(ret.msgInfo);
+	                    	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+	                    	errorCallback && errorCallback(errorInfo);
+	                    }
+	                },
+	                error : function () {
+	                	errorInfo = "获取文件信息失败：服务器异常";
+	                	errorCallback && errorCallback(errorInfo);
+	                }
+	            });
+	        }
+
+	        function initOfficeDocHistoryList(list)
+	        {
+        		historyList = list;
+	        	if(list)
+	        	{
+	        		for(var i=0; i<list.length; i++)
+	        		{
+	        			var data = list[i];
+	        			data.user = {};
+	        			data.user.id = data.useridoriginal;
+	        			data.user.name = data.user;
+	        			data.key = data.docId;
+	        			data.created = data.time;	//不转换直接先用
+	        			data.version = i+1;
+	        		}
+	        		
+	        		var currentVersion = list.length;
+	        		editor.refreshHistory({
+	        	        "currentVersion": currentVersion,
+	        	        "history": list
+	        	    });
+	        		/*
+	        	    	    editor.refreshHistory({
+	        	    	        "currentVersion": 2,
+	        	    	        "history": [
+	        	    	            {
+	        	    	                "created": "2010-07-06 10:13 AM",
+	        	    	                "key": "af86C7e71Ca8",
+	        	    	                "user": {
+	        	    	                    "id": "F89d8069ba2b",
+	        	    	                    "name": "Kate Cage"
+	        	    	                },
+	        	    	                "version": 1
+	        	    	            },
+	        	    	            {
+	        	    	                "created": "2010-07-07 3:46 PM",
+	        	    	                "key": "Khirz6zTPdfd7",
+	        	    	                "user": {
+	        	    	                    "id": "78e1e841",
+	        	    	                    "name": "John Smith"
+	        	    	                },
+	        	    	                "version": 2
+	        	    	            },
+	        	    	        ]
+	        	    	    });
+	        		 */
+	        	}
+	        }
+
+	        function setOfficeDocHistoryData(version)
+	        {
+	        	if(historyList)
+	        	{
+	        		var data = historyList[version-1];
+	        		editor.setHistoryData(data);
+	        		
+	        		/*
+		    		editor.setHistoryData({
+		    	        "key": "Khirz6zTPdfd7",
+		    	        "url": fileLink,
+		    	        "version": version
+		    	    });
+		    	    */
+	        	}
+	        }	        
 	   	}
     </script>
 </body>
