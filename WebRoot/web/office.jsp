@@ -172,7 +172,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        				history.path = dataEx.path;
 		        			history.name = dataEx.name;
 	        				history.orgChangeIndex = data.orgChangeIndex;
-	        				history.changeUrl = buildChangeUrl(docInfo, history);
+	        				history.changesUrl = buildChangesUrl(docInfo, history);
 	        			}
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
 	        			historyList.push(history);
@@ -213,14 +213,31 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        	}
 	        }
 	        
-	        function buildChangeUrl(docInfo, history)
+	        function buildChangesUrl(docInfo, history)
 	        {
-	        	var changeUrl = "DocSystem/web/static/office-editor/downloadHistoryDiff/" 
+	        	var changesUrl = "/DocSystem/web/static/office-editor/downloadHistoryDiff/" 
 	        				+ docInfo.vid + "/" + history.path + "/" + history.name 
-	        				+ "/" + history.key + "/" + history.orgChangeIndex 
-	        				+ "/" + docInfo.authCode + "/" + docInfo.shareId;
-
-	        	return buildFullLink(changeUrl);
+	        				+ "/" + history.key + "/" + history.orgChangeIndex;
+	       		
+	        	if(docInfo.authCode)
+	       		{
+	        		changesUrl += "/" + docInfo.authCode;
+	       		}
+	       		else
+	       		{
+	       			changesUrl += "/0";
+	       		}
+	        	
+	       		if(docInfo.shareId)
+	       		{
+	       			changesUrl +=  "/"  + docInfo.shareId;
+	       		}
+	       		else
+	       		{
+	       			changesUrl += "/0";
+	       		}
+	        	
+	        	return buildFullLink(changesUrl);
 	        }
 
 	        function setOfficeDocHistoryData(version)
