@@ -751,12 +751,12 @@ public class Path {
 	}
 	
 	protected String getOfficeEditRootPath(Doc doc) {
-		String path = doc.getReposPath() + "tmp/OfficeEdit/";
+		String path = doc.getReposPath() + "data/OfficeEdit/" ;
 		return path;
 	}
 	
 	public static String getOfficeEditPath(String dockey, Doc doc) {
-		String path = doc.getReposPath() + "tmp/OfficeEdit/" + dockey + "/";
+		String path = doc.getReposPath() + "data/OfficeEdit/" + doc.getDocId() + "/" + dockey + "/";
 		return path;
 	}
 
