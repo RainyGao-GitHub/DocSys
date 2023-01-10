@@ -148,25 +148,28 @@ Boolean isBussienss = BaseController.isBussienss();;
 
 	        function initOfficeDocHistoryList(list)
 	        {
-        		historyList = list;
 	        	if(list)
 	        	{
+	        		historyList = [];
 	        		for(var i=0; i<list.length; i++)
 	        		{
 	        			var data = list[i];
-	        			data.user = {};
-	        			data.user.id = data.useridoriginal;
-	        			data.user.name = data.user;
-	        			data.key = data.docId;
-	        			data.created = data.time;	//不转换直接先用
-	        			data.version = i+1;
-	        			console.log("initOfficeDocHistoryList history[" + i + "]", data);
+	        			var history = {};
+	        			history.user = {};
+	        			history.user.id = data.useridoriginal;
+	        			history.user.name = data.user;
+	        			history.key = data.docId;
+	        			history.created = data.time;	//不转换直接先用
+	        			history.version = i+1;
+	        			history.url = fileLink;
+	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
+	        			historyList.push(history);
 	        		}
 	        		
 	        		var currentVersion = list.length;
 	        		editor.refreshHistory({
 	        	        "currentVersion": currentVersion,
-	        	        "history": list
+	        	        "history": historyList
 	        	    });
 	        		/*
 	        	    	    editor.refreshHistory({
