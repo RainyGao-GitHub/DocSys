@@ -18,7 +18,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 <body style="height: 100%; margin: 0;">
     <div id="placeholder" style="height: 100%"></div>
     <script type="text/javascript">
-    	var editor;
+    	var docEditor;
 	    var docInfo = getDocInfoFromRequestParamStr();	    
 	    var fileType = getFileSuffix(docInfo.name);
 	    fileType = convertWpsToOfficeType(fileType);
@@ -57,6 +57,11 @@ Boolean isBussienss = BaseController.isBussienss();;
                 "name": data.userName,
             };
 			
+	        var innerAlert = function (message) {
+	            if (console && console.log)
+	                console.log(message);
+	        };
+			
 	    	var onRequestHistory = function() {
 	    	    console.log("onRequestHistory()");
 	    	    getOfficeDocHistoryList(docInfo, initOfficeDocHistoryList);
@@ -71,6 +76,39 @@ Boolean isBussienss = BaseController.isBussienss();;
 	    	var onRequestHistoryClose = function (event){
 	            document.location.reload();
 	        };
+	        
+	        var onError = function (event) {
+	            if (event)
+	                innerAlert(event.data);
+	        };
+
+	        var onOutdatedVersion = function (event) {
+	            location.reload(true);
+	        };
+
+	        var replaceActionLink = function(href, linkParam) {
+	            var link;
+	            var actionIndex = href.indexOf("&action=");
+	            if (actionIndex != -1) {
+	                var endIndex = href.indexOf("&", actionIndex + "&action=".length);
+	                if (endIndex != -1) {
+	                    link = href.substring(0, actionIndex) + href.substring(endIndex) + "&action=" + encodeURIComponent(linkParam);
+	                } else {
+	                    link = href.substring(0, actionIndex) + "&action=" + encodeURIComponent(linkParam);
+	                }
+	            } else {
+	                link = href + "&action=" + encodeURIComponent(linkParam);
+	            }
+	            return link;
+	        }
+
+	        var onMakeActionLink = function (event) {
+	            var actionData = event.data;
+	            var linkParam = JSON.stringify(actionData);
+	            docEditor.setActionLink(replaceActionLink(location.href, linkParam));
+	        };
+	        
+	        
 			
 	    	var config = {
 					"type": type,
@@ -100,14 +138,17 @@ Boolean isBussienss = BaseController.isBussienss();;
 	                    "spellcheck": false,
 	                },
 	    		    "events": {
+	    		    	"onError": onError,
 	    		    	"onRequestHistory": onRequestHistory,
 	    		        "onRequestHistoryData": onRequestHistoryData,
 	    		        "onRequestHistoryClose": onRequestHistoryClose,
+	    		        "onOutdatedVersion": onOutdatedVersion,
+                        "onMakeActionLink": onMakeActionLink,
 	    		    },
 	                "height": "100%",
 	                "width": "100%",
 	    	};
-	        editor = new DocsAPI.DocEditor("placeholder", config);
+	        docEditor = new DocsAPI.DocEditor("placeholder", config);
 	        
 	        function getOfficeDocHistoryList(docInfo, successCallback, errorCallback)
 	        {	
@@ -164,57 +205,39 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        			history.user.id = data.useridoriginal;
 	        			history.user.name = data.user;
 	        			history.key = data.docId;
-	        			history.created = data.time;	//不转换直接先用
+	        			history.created = data.docId;	//不转换直接先用
 	        			history.version = i+1;
 	        			history.path = dataEx.path;
 	        			history.name = dataEx.name;
-        				history.url = buildHistoryUrl(docInfo, history);
-	        			if(data.orgChangeIndex)
+	        			history.url = buildHistoryUrl(docInfo, history);
+        				if(data.orgChangeIndex != undefined)
 	        			{
 	        				history.orgChangeIndex = data.orgChangeIndex;
 	        				history.changesUrl = buildChangesUrl(docInfo, history);
 
-	        				history.previous = {};
-	        				history.previous.key = history.key;
-	        				history.previous.url = history.url;
-	        			}
+	        				history.changes = [];
+	        				var change = {};
+	        				change.created = history.created;
+	        				change.user = history.user;
+	        				history.changes.push(change);
+	        				
+	        				if(i > 0)
+	        				{
+	        					history.previous = {};
+	        					history.previous.key = historyList[i-1].key;
+	        					history.previous.url = historyList[i-1].url;
+	        				}
+	        			}        				
 	        			
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
 	        			historyList.push(history);
 	        		}
 	        		
 	        		var currentVersion = list.length;
-	        		editor.refreshHistory({
+	        		docEditor.refreshHistory({
 	        	        "currentVersion": currentVersion,
 	        	        "history": historyList
 	        	    });
-	        		/*
-	        	    	    editor.refreshHistory({
-	        	    	        "currentVersion": 2,
-	        	    	        "history": [
-	        	    	            {
-	        	    	                "created": "2010-07-06 10:13 AM",
-	        	    	                "key": "af86C7e71Ca8",
-	        	    	                "user": {
-	        	    	                    "id": "F89d8069ba2b",
-	        	    	                    "name": "Kate Cage"
-	        	    	                },
-	        	    	                "changesUrl":"http://192.168.3.8/example/files/192.168.3.44/%E5%8E%86%E5%8F%B2%E6%9F%A5%E7%9C%8B%E6%B5%8B%E8%AF%95.docx-history/4/diff.zip",	        	    	                
-	        	    	                "version": 1
-	        	    	            },
-	        	    	            {
-	        	    	                "created": "2010-07-07 3:46 PM",
-	        	    	                "key": "Khirz6zTPdfd7",
-	        	    	                "user": {
-	        	    	                    "id": "78e1e841",
-	        	    	                    "name": "John Smith"
-	        	    	                },
-	        	    	                "changesUrl":"http://192.168.3.8/example/files/192.168.3.44/%E5%8E%86%E5%8F%B2%E6%9F%A5%E7%9C%8B%E6%B5%8B%E8%AF%95.docx-history/4/diff.zip",	        	    	                
-	        	    	                "version": 2
-	        	    	            },
-	        	    	        ]
-	        	    	    });
-	        		 */
 	        	}
 	        }
 	        
@@ -294,10 +317,11 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        	if(historyList)
 	        	{
 	        		var data = historyList[version-1];
-	        		editor.setHistoryData(data);
+	        		console.log("setOfficeDocHistoryData() data:", data);
+	        		docEditor.setHistoryData(data);
 	        		
 	        		/*
-		    		editor.setHistoryData({
+		    		docEditor.setHistoryData({
 		    	        "key": "Khirz6zTPdfd7",
 		    	        "url": fileLink,
 		    	        "version": version
