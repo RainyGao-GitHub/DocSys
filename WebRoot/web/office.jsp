@@ -168,16 +168,16 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        			history.version = i+1;
 	        			history.path = dataEx.path;
 	        			history.name = dataEx.name;
-        				if(data.orgChangeIndex)
+        				history.url = buildHistoryUrl(docInfo, history);
+	        			if(data.orgChangeIndex)
 	        			{
 	        				history.orgChangeIndex = data.orgChangeIndex;
 	        				history.changesUrl = buildChangesUrl(docInfo, history);
+
+	        				history.previous = {};
+	        				history.previous.key = history.key;
+	        				history.previous.url = history.url;
 	        			}
-	        			else
-	        			{
-	        				history.orgChangeIndex = -1;
-	        			}
-        				history.url = buildHistoryUrl(docInfo, history);
 	        			
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
 	        			historyList.push(history);
