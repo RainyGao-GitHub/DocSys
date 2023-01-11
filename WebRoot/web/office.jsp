@@ -166,14 +166,19 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        			history.key = data.docId;
 	        			history.created = data.time;	//不转换直接先用
 	        			history.version = i+1;
-	        			history.url = fileLink;
-	        			if(data.orgChangeIndex != undefined)
+	        			history.path = dataEx.path;
+	        			history.name = dataEx.name;
+        				if(data.orgChangeIndex)
 	        			{
-	        				history.path = dataEx.path;
-		        			history.name = dataEx.name;
 	        				history.orgChangeIndex = data.orgChangeIndex;
 	        				history.changesUrl = buildChangesUrl(docInfo, history);
 	        			}
+	        			else
+	        			{
+	        				history.orgChangeIndex = -1;
+	        			}
+        				history.url = buildHistoryUrl(docInfo, history);
+	        			
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
 	        			historyList.push(history);
 	        		}
@@ -213,31 +218,75 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        	}
 	        }
 	        
-	        function buildChangesUrl(docInfo, history)
+	        function buildHistoryUrl(docInfo, history)
 	        {
-	        	var changesUrl = "/DocSystem/web/static/office-editor/downloadHistoryDiff/" 
+	        	var url = "/DocSystem/web/static/office-editor/downloadHistory/" 
 	        				+ docInfo.vid + "/" + history.path + "/" + history.name 
-	        				+ "/" + history.key + "/" + history.orgChangeIndex;
-	       		
+	        				+ "/" + history.key;
+	        	if(history.orgChangeIndex)
+	        	{
+	        		url += "/" + history.orgChangeIndex;
+	        	}
+	        	else
+	        	{
+	        		url += "/-1";;
+	        	}
+	        	
 	        	if(docInfo.authCode)
 	       		{
-	        		changesUrl += "/" + docInfo.authCode;
+	        		url += "/" + docInfo.authCode;
 	       		}
 	       		else
 	       		{
-	       			changesUrl += "/0";
+	       			url += "/0";
 	       		}
 	        	
 	       		if(docInfo.shareId)
 	       		{
-	       			changesUrl +=  "/"  + docInfo.shareId;
+	       			url +=  "/"  + docInfo.shareId;
 	       		}
 	       		else
 	       		{
-	       			changesUrl += "/0";
+	       			url += "/0";
 	       		}
 	        	
-	        	return buildFullLink(changesUrl);
+	        	return buildFullLink(url);
+	        }
+	        
+	        function buildChangesUrl(docInfo, history)
+	        {
+	        	var url = "/DocSystem/web/static/office-editor/downloadHistoryDiff/" 
+	        				+ docInfo.vid + "/" + history.path + "/" + history.name 
+	        				+ "/" + history.key;
+	        	
+	        	if(history.orgChangeIndex)
+	        	{
+	        		url += "/" + history.orgChangeIndex;
+	        	}
+	        	else
+	        	{
+	        		url += "/-1";;
+	        	}
+	       		
+	        	if(docInfo.authCode)
+	       		{
+	        		url += "/" + docInfo.authCode;
+	       		}
+	       		else
+	       		{
+	       			url += "/0";
+	       		}
+	        	
+	       		if(docInfo.shareId)
+	       		{
+	       			url +=  "/"  + docInfo.shareId;
+	       		}
+	       		else
+	       		{
+	       			url += "/0";
+	       		}
+	        	
+	        	return buildFullLink(url);
 	        }
 
 	        function setOfficeDocHistoryData(version)
