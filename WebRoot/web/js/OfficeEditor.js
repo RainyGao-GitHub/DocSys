@@ -11,7 +11,19 @@ var OfficeEditor = (function () {
 	//For ArtDialog
 	function initForArtDialog() 
 	{
-
+	    var params = GetRequest();
+	    var docid = params['docid'];
+	    //获取artDialog父窗口传递过来的参数
+	    var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
+	    if (artDialog2 == null) {
+	        artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
+	    }
+	    
+	    // 获取对话框传递过来的数据
+	    docInfo = artDialog2.config.data;
+		console.log("docInfo:",docInfo);
+		
+		init();
 	}
 	
 	//For NewPage
@@ -19,6 +31,17 @@ var OfficeEditor = (function () {
 	{
 	    docInfo = getDocInfoFromRequestParamStr();	    
 	    
+	    init();
+	}
+	
+	//For BootstrapDialog
+	function PageInit(Input_doc)
+	{
+
+  	}
+
+	function init()
+	{
 	    fileType = getFileSuffix(docInfo.name);
 	    fileType = convertWpsToOfficeType(fileType);
 	    documentType = getDocumentType(fileType);
@@ -27,13 +50,20 @@ var OfficeEditor = (function () {
 	
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST", 1);
 	    document.title = docInfo.name;
-	}
+	}    
 	
-	//For BootstrapDialog
-	function PageInit(Input_doc)
-	{
-
-  	}
+    function GetRequest() {
+        var url = location.search; //获取url中"?"符后的字串
+        var theRequest = {};
+        if (url.indexOf("?") !== -1) {
+            var str = url.substr(1);
+            var strs = str.split("&");
+            for(var i = 0; i < strs.length; i ++) {
+                theRequest[strs[i].split("=")[0]]=unescape(strs[i].split("=")[1]);
+            }
+        }
+        return theRequest;
+    }
     
     function showOffice(data)
    	{
