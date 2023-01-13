@@ -161,7 +161,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	            	return;
 	            }
 	          	
-	            var url = "/DocSystem/Bussiness/getOfficeDocHistoryList.do"
+	            var url = "/DocSystem/web/static/office-editor/getOfficeDocHistoryList.do"
 	            $.ajax({
 	                url : url,
 	                type : "post",
@@ -201,6 +201,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        		{
 	        			var data = list[i];
 	        			var history = {};
+	        			history.serverVersion = dataEx.serverVersion;
 	        			history.user = {};
 	        			history.user.id = data.useridoriginal;
 	        			history.user.name = data.user;
