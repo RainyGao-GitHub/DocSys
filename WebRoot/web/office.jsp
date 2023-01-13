@@ -256,7 +256,9 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        function buildHistoryUrl(docInfo, history, orgChangeIndex)
 	        {
 	        	var url = "/DocSystem/web/static/office-editor/downloadHistory/" 
-	        				+ docInfo.vid + "/" + history.path + "/" + history.name 
+	        				+ docInfo.vid 
+	        				+ "/" + history.path 
+	        				+ "/" + history.name 
 	        				+ "/" + history.key;
 	        	
 	        	if(orgChangeIndex  !== undefined)
@@ -268,7 +270,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        		url += "/-1";
 	        	}
 	        	
-	        	if(docInfo.authCode)
+	        	if(docInfo.authCode !== undefined)
 	       		{
 	        		url += "/" + docInfo.authCode;
 	       		}
@@ -277,7 +279,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	       			url += "/0";
 	       		}
 	        	
-	       		if(docInfo.shareId)
+	       		if(docInfo.shareId !== undefined)
 	       		{
 	       			url +=  "/"  + docInfo.shareId;
 	       		}
@@ -304,7 +306,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        		url += "/-1";;
 	        	}
 	       		
-	        	if(docInfo.authCode)
+	        	if(docInfo.authCode !== undefined)
 	       		{
 	        		url += "/" + docInfo.authCode;
 	       		}
@@ -313,7 +315,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	       			url += "/0";
 	       		}
 	        	
-	       		if(docInfo.shareId)
+	       		if(docInfo.shareId !== undefined)
 	       		{
 	       			url +=  "/"  + docInfo.shareId;
 	       		}
