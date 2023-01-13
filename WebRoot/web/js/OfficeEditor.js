@@ -37,8 +37,11 @@ var OfficeEditor = (function () {
 	//For BootstrapDialog
 	function PageInit(Input_doc)
 	{
-
-  	}
+		console.log("PageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+		init();
+	}	
 
 	function init()
 	{
