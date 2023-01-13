@@ -220,8 +220,8 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        				history.orgChangeIndex = data.orgChangeIndex;
 	        				history.changesUrl = buildChangesUrl(docInfo, history);	        				
 	        				history.previous = buildPreviousHistory(docInfo, history);
-	        				//update history.key
-	        				history.key = history.key + "_" + history.orgChangeIndex;
+	        				//update history.key会触发auth，暂时不修改
+	        				//history.key = history.key + "_" + history.orgChangeIndex;
 	        			}
 	        			
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
