@@ -2150,7 +2150,7 @@ function showOfficeInDialog(docInfo)
 		big: true,
 		mstyle: "width:95%;height:95%;",
 		callback: function(){
-			setTimeout(function (){OfficeEditor.officeEditorPageInit(docInfo)}, 2000); 
+			setTimeout(function(){ OfficeEditor.PageInit(docInfo); }, 2000); 
 		},
 	});
 }
