@@ -205,29 +205,24 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        			history.user.id = data.useridoriginal;
 	        			history.user.name = data.user;
 	        			history.key = data.docId;
-	        			history.created = data.docId;	//不转换直接先用
+	        			history.created = data.time;	//不转换直接先用
 	        			history.version = i+1;
 	        			history.path = dataEx.path;
 	        			history.name = dataEx.name;
-	        			history.url = buildHistoryUrl(docInfo, history);
-        				if(data.orgChangeIndex != undefined)
+	        			history.url = buildHistoryUrl(docInfo, history, data.orgChangeIndex);
+	        			if(data.orgChangeIndex === undefined)
 	        			{
+        					//First history have no previous info
+        					history.orgChangeIndex = -1;
+	        			}
+        				else
+        				{
 	        				history.orgChangeIndex = data.orgChangeIndex;
-	        				history.changesUrl = buildChangesUrl(docInfo, history);
-
-	        				history.changes = [];
-	        				var change = {};
-	        				change.created = history.created;
-	        				change.user = history.user;
-	        				history.changes.push(change);
-	        				
-	        				if(i > 0)
-	        				{
-	        					history.previous = {};
-	        					history.previous.key = historyList[i-1].key;
-	        					history.previous.url = historyList[i-1].url;
-	        				}
-	        			}        				
+	        				history.changesUrl = buildChangesUrl(docInfo, history);	        				
+	        				history.previous = buildPreviousHistory(docInfo, history);
+	        				//update history.key
+	        				history.key = history.key + "_" + history.orgChangeIndex;
+	        			}
 	        			
 	        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
 	        			historyList.push(history);
@@ -241,18 +236,36 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        	}
 	        }
 	        
-	        function buildHistoryUrl(docInfo, history)
+	        function buildPreviousHistory(docInfo, history)
+	        {
+	        	var previous = {};
+				previous.orgChangeIndex = history.orgChangeIndex - 1;
+				if(previous.orgChangeIndex < 0)
+				{
+					previous.key = history.key;
+					previous.url = buildHistoryUrl(docInfo, history, -1);
+				}
+				else
+				{
+					previous.key = history.key + "_" + previous.orgChangeIndex;
+					previous.url = buildHistoryUrl(docInfo, history, previous.orgChangeIndex);
+				}
+				return previous;
+			}
+	        
+	        function buildHistoryUrl(docInfo, history, orgChangeIndex)
 	        {
 	        	var url = "/DocSystem/web/static/office-editor/downloadHistory/" 
 	        				+ docInfo.vid + "/" + history.path + "/" + history.name 
 	        				+ "/" + history.key;
-	        	if(history.orgChangeIndex)
+	        	
+	        	if(orgChangeIndex  !== undefined)
 	        	{
-	        		url += "/" + history.orgChangeIndex;
+	        		url += "/" + orgChangeIndex;
 	        	}
 	        	else
 	        	{
-	        		url += "/-1";;
+	        		url += "/-1";
 	        	}
 	        	
 	        	if(docInfo.authCode)
@@ -282,7 +295,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        				+ docInfo.vid + "/" + history.path + "/" + history.name 
 	        				+ "/" + history.key;
 	        	
-	        	if(history.orgChangeIndex)
+	        	if(history.orgChangeIndex !== undefined)
 	        	{
 	        		url += "/" + history.orgChangeIndex;
 	        	}
@@ -319,14 +332,6 @@ Boolean isBussienss = BaseController.isBussienss();;
 	        		var data = historyList[version-1];
 	        		console.log("setOfficeDocHistoryData() data:", data);
 	        		docEditor.setHistoryData(data);
-	        		
-	        		/*
-		    		docEditor.setHistoryData({
-		    	        "key": "Khirz6zTPdfd7",
-		    	        "url": fileLink,
-		    	        "version": version
-		    	    });
-		    	    */
 	        	}
 	        }	        
 	   	}
