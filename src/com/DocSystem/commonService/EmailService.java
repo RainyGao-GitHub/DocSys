@@ -53,7 +53,7 @@ public class EmailService {
 	@SuppressWarnings("static-access")
 	@ResponseBody
 	@RequestMapping("/sendEmail")
-	public boolean sendEmail(ReturnAjax rt, String toEmail,String content){
+	public boolean sendEmail(ReturnAjax rt, String toEmail,String content, String subject){
 		try {
 			Properties props = new Properties();
 			String basePath = new EmailService().getClass().getClassLoader().getResource("/").getPath();
@@ -72,7 +72,15 @@ public class EmailService {
 			message.addRecipient(RecipientType.TO, toAddress);
 
 			message.setSentDate(Calendar.getInstance().getTime());
-			message.setSubject("来自MxsDoc的邮件");
+			if(subject == null || subject.isEmpty())
+			{
+				message.setSubject("来自MxsDoc的邮件");
+			}
+			else
+			{
+				message.setSubject(subject);				
+			}
+			
 			if(content!=null&&!"".equals(content)){
 				content = URLDecoder.decode(content, "UTF-8");
 				message.setContent(EmailService.getEmailHtmlByCode(content), messagetype);
