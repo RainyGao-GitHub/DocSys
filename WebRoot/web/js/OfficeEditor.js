@@ -112,6 +112,7 @@ var OfficeEditor = (function () {
     	};
     	
     	var onRequestHistoryClose = function (event){
+    		innerAlert("onRequestHistoryClose() event:", event);
             document.location.reload();
         };
         
@@ -121,7 +122,9 @@ var OfficeEditor = (function () {
         };
 
         var onOutdatedVersion = function (event) {
-            location.reload(true);
+        	innerAlert("onOutdatedVersion() event:", event);
+        	//reload will trigger state change loop
+        	location.reload(true);
         };
 
         var replaceActionLink = function(href, linkParam) {
@@ -141,6 +144,7 @@ var OfficeEditor = (function () {
         }
 
         var onMakeActionLink = function (event) {
+        	innerAlert("onMakeActionLink() event:", event);
             var actionData = event.data;
             var linkParam = JSON.stringify(actionData);
             docEditor.setActionLink(replaceActionLink(location.href, linkParam));
@@ -180,8 +184,8 @@ var OfficeEditor = (function () {
     		    	"onRequestHistory": onRequestHistory,
     		        "onRequestHistoryData": onRequestHistoryData,
     		        "onRequestHistoryClose": onRequestHistoryClose,
-    		        "onOutdatedVersion": onOutdatedVersion,
-                    "onMakeActionLink": onMakeActionLink,
+    		        //"onOutdatedVersion": onOutdatedVersion,
+                    //"onMakeActionLink": onMakeActionLink,
     		    },
                 "height": "100%",
                 "width": "100%",
