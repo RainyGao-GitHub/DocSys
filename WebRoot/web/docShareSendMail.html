@@ -17,6 +17,7 @@
 </div>
 
 <script type="text/javascript">
+	var docShareMailSubject = "来自MxsDoc的邮件";
 	function DocShareSendMailPageInit(_url)
 	{
 		console.log("DocShareSendMailPageInit(): _url", _url);		
@@ -72,6 +73,7 @@
 	             data : {
 	            	url: url,
 	            	mailList: mailList,
+	            	mailSubject: docShareMailSubject,
 	             },
 	             success : function (ret) {
 	            	console.log("docShareSendMail ret:", ret);            		
