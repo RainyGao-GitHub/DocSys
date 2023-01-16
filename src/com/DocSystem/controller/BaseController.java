@@ -3513,7 +3513,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean verifyEmail(String email) {
 		ReturnAjax rt = new ReturnAjax();
-		return emailService.sendEmail(rt, email , "这是来自MxsDoc的邮箱验证邮件！");
+		return emailService.sendEmail(rt, email , "这是来自MxsDoc的邮箱验证邮件！", null);
 	}
 
 	protected boolean verifyTelephone(String tel) {

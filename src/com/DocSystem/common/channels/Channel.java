@@ -73,4 +73,6 @@ public interface Channel {
 	Doc getRemoteStorageEntryEx(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc,
 			String commitId);
 
+	String buildMailContent(String content);
+
 }
