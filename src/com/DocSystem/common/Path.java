@@ -755,6 +755,11 @@ public class Path {
 		return path;
 	}
 	
+	public static String getOfficeEditTmpPath(String dockey, Doc doc) {
+		String path = doc.getReposPath() + "tmp/OfficeEdit/" + doc.getDocId() + "/" + dockey + "/";
+		return path;
+	}
+	
 	public static String getOfficeEditPath(String dockey, Doc doc) {
 		String path = doc.getReposPath() + "data/OfficeEdit/" + doc.getDocId() + "/" + dockey + "/";
 		return path;
