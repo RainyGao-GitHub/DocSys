@@ -6695,6 +6695,7 @@ public class DocController extends BaseController{
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
 			String sharePwd,
 			Long shareHours,
+			String mailSubject,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** addDocShare [" + path + name + "] ****************");		
@@ -6786,11 +6787,11 @@ public class DocController extends BaseController{
 		
 		if(shareLink != null)
 		{
-			sendDocShareNotify(docShare, reposAccess.getAccessUser());
+			sendDocShareNotify(docShare, reposAccess.getAccessUser(), mailSubject);
 		}
 	}
 
-	private void sendDocShareNotify(DocShare docShare, User createUser) {
+	private void sendDocShareNotify(DocShare docShare, User createUser, String mailSubject) {
 		
 		User qUser = new User();
 		qUser.setName(createUser.getName());
@@ -6811,29 +6812,19 @@ public class DocController extends BaseController{
 		}		
 		
 		String content = 
-				"尊敬的MxsDoc用户："
-				+ "<br>"
-				+ "<br>"
-				+ "[" + createUser.getName() + "]创建了文件分享！"
-				+ "<br>"
-				+ "<br>"
-				+ "<a href='" + docShare.shareLink + "' "
-				+ "style='width:50px; background: #0287c9; border: 10px solid #0287c9; border-left-width:36px; border-right-width:36px; padding: 0 10px; color:#ffffff!important; font-family: Verdana; font-size: 12px; text-align: center; text-decoration: none!important; text-decoration:none; text-transform:uppercase; display: block; font-weight: bold;' class='prods-left-in-cart-button-a' rel='noopener' target='_blank'>"
-				+ "<font color=\"#FFFFFF\">点击链接访问</font></a>"
-				+ "<br>"
-				+ "<br>"
-				+ "如有任何问题，请联系 "
-				+ "<a href='mailto:helper@gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;' rel='noopener' target='_blank'>helper@gofreeteam.com</a>"
-				+ "<br>"
-				+ "<br>"
-				+ "谢谢,"
-				+ "<br>"
-				+ "<strong>MxsDoc团队</strong>"
-				+ "<br>"
-				+ "<a href='dw.gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;'>dw.gofreeteam.com</a>";
-
+			"[" + createUser.getName() + "]创建了文件分享！"
+			+ "<br>"
+			+ "<br>"
+			+ "<a href='" + docShare.shareLink + "' "
+			+ "style='width:50px; background: #0287c9; border: 10px solid #0287c9; border-left-width:36px; border-right-width:36px; padding: 0 10px; color:#ffffff!important; font-family: Verdana; font-size: 12px; text-align: center; text-decoration: none!important; text-decoration:none; text-transform:uppercase; display: block; font-weight: bold;' class='prods-left-in-cart-button-a' rel='noopener' target='_blank'>"
+			+ "<font color=\"#FFFFFF\">点击链接访问</font></a>"
+			+ "<br>"
+			+ "<br>";
+		
+		String mailContent = channel.buildMailContent(content);
+				
 		ReturnAjax rt = new ReturnAjax();
-		emailService.sendEmail(rt, email, content);
+		emailService.sendEmail(rt, email, mailContent, mailSubject);
 	}
 	
 	private String buildShareLink(HttpServletRequest request, String ipAddress, Integer reposId, Integer shareId) {

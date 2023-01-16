@@ -184,11 +184,29 @@ public class CommunityChannel extends BaseController implements Channel {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
 	@Override
 	public Doc getRemoteStorageEntryEx(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc,
 			String commitId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public String buildMailContent(String content) {
+		String Head = "尊敬的MxsDoc用户:";
+		String Tail = "如有任何问题，请联系 "
+				+ "<a href='mailto:helper@gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;' rel='noopener' target='_blank'>helper@gofreeteam.com</a>"
+				+ "<br>"
+				+ "<br>"
+				+ "谢谢,"
+				+ "<br>"
+				+ "<strong>MxsDoc团队</strong>"
+				+ "<br>"
+				+ "<a href='dw.gofreeteam.com' style='text-decoration: none!important; text-decoration:none; color: #0064c8;'>dw.gofreeteam.com</a>";
+				
+		return Head + content + Tail;
+	}
+
+
 }
