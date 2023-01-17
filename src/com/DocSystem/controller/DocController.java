@@ -194,11 +194,11 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
-		AuthCode auth = checkAuthCode(authCode, null);
+		AuthCode auth = checkAuthCode(authCode, null, rt);
 		if(auth == null)
 		{
 			Log.debug("addDocRS checkAuthCode return false");
-			rt.setError("无效授权码或授权码已过期！");
+			//rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);
 			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
 			addSystemLog(request, null, "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
@@ -556,9 +556,9 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		
-		if(checkAuthCode(authCode, null) == null)
+		if(checkAuthCode(authCode, null, rt) == null)
 		{
-			docSysErrorLog("无效授权码或授权码已过期！", rt);
+			//docSysErrorLog("无效授权码或授权码已过期！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -988,9 +988,9 @@ public class DocController extends BaseController{
 		Log.info("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " srcName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-		if(checkAuthCode(authCode, null) == null)
+		if(checkAuthCode(authCode, null, rt) == null)
 		{
-			rt.setError("无效授权码或授权码已过期！");
+			//rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -2380,9 +2380,9 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
-		if(checkAuthCode(authCode, null) == null)
+		if(checkAuthCode(authCode, null, rt) == null)
 		{
-			docSysErrorLog("无效授权码或授权码已过期！", rt);
+			//docSysErrorLog("无效授权码或授权码已过期！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3366,9 +3366,9 @@ public class DocController extends BaseController{
 		
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == null)
+			if(checkAuthCode(authCode, null, rt) == null)
 			{
-				docSysErrorLog("无效授权码或授权码已过期！", rt);
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -3502,9 +3502,9 @@ public class DocController extends BaseController{
 	
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == null)
+			if(checkAuthCode(authCode, null, rt) == null)
 			{
-				docSysErrorLog("无效授权码或授权码已过期！", rt);
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -3585,9 +3585,9 @@ public class DocController extends BaseController{
 	
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == null)
+			if(checkAuthCode(authCode, null, rt) == null)
 			{
-				docSysErrorLog("无效授权码或授权码已过期！", rt);
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -4324,9 +4324,9 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(checkAuthCode(authCode, null) == null)
+		if(checkAuthCode(authCode, null, rt) == null)
 		{
-			docSysErrorLog("无效授权码或授权码已过期！", rt);
+			//docSysErrorLog("无效授权码或授权码已过期！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4392,9 +4392,9 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(checkAuthCode(authCode, null) == null)
+		if(checkAuthCode(authCode, null, rt) == null)
 		{
-			docSysErrorLog("无效授权码或授权码已过期！", rt);
+			//docSysErrorLog("无效授权码或授权码已过期！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4734,10 +4734,10 @@ public class DocController extends BaseController{
 		ReposAccess reposAccess = null;
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == null)
+			if(checkAuthCode(authCode, null, rt) == null)
 			{
 				Log.debug("lockDoc checkAuthCode Failed");
-				docSysErrorLog("无效授权码或授权码已过期！", rt);
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
 				writeJson(rt, response);		
 				return;
 			}
@@ -4826,10 +4826,10 @@ public class DocController extends BaseController{
 		ReposAccess reposAccess = null;
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode, null) == null)
+			if(checkAuthCode(authCode, null, rt) == null)
 			{
 				Log.debug("lockDoc checkAuthCode Failed");
-				docSysErrorLog("无效授权码或授权码已过期！", rt);
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
 				writeJson(rt, response);		
 				return;
 			}
