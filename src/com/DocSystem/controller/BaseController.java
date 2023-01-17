@@ -427,30 +427,34 @@ public class BaseController  extends BaseFunction{
 		docSysInitAuthCode = authCode.getCode();
 	}
 	
-	protected AuthCode checkAuthCode(String code, String expUsage) {
+	protected AuthCode checkAuthCode(String code, String expUsage, ReturnAjax rt) {
 		Log.debug("checkAuthCode() authCode:" + code);
 		AuthCode authCode = getAuthCode(code);
 		if(authCode == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode for [" + code + "] is null");
+			docSysErrorLog("无效授权码: AuthCode [" + code + "] on [" + serverIP + "] not exists", rt);
 			return null;
 		}
 
 		if(authCode.getUsage() == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode usage is null");
+			docSysErrorLog("无效授权码: AuthCode [" + code + "] on [" + serverIP + "] usage is null", rt);
 			return null;
 		}
 
-		if(authCode.getExpTime() == null || authCode.getRemainCount() == null)
+		if(authCode.getExpTime() == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode expireTime is null");
+			docSysErrorLog("无效授权码: AuthCode [" + code + "] on [" + serverIP + "] expireTime is null", rt);
 			return null;
 		}
 
 		if(authCode.getRemainCount() == null)
 		{
 			Log.debug("checkAuthCode() 无效授权码: authCode remainCount is null");
+			docSysErrorLog("无效授权码: AuthCode [" + code + "] on [" + serverIP + "] remainCount is null", rt);
 			return null;
 		}
 
@@ -460,6 +464,7 @@ public class BaseController  extends BaseFunction{
 			if(!expUsage.equals(authCode.getUsage()))
 			{
 				Log.debug("checkAuthCode() auhtCode usage not matched");				
+				docSysErrorLog("无效授权码: AuthCode [" + code + "] on [" + serverIP + "] usage not matched", rt);
 				return null;
 			}			
 		}
@@ -469,6 +474,7 @@ public class BaseController  extends BaseFunction{
 		if(remainCount == 0)
 		{
 			Log.debug("checkAuthCode() 授权码使用次数为0");
+			docSysErrorLog("无效授权码: AuthCode [" + code + "] on [" + serverIP + "] 使用次数已用完", rt);
 			deleteAuthCode(code);
 			return null;	
 		}
@@ -477,6 +483,7 @@ public class BaseController  extends BaseFunction{
 		if(curTime > authCode.getExpTime())
 		{
 			Log.debug("checkAuthCode() 授权码已过期");
+			docSysErrorLog("无效授权码: AuthCode [" + code + "] on [" + serverIP + "] 已过期", rt);
 			deleteAuthCode(code);
 			return null;			
 		}
@@ -499,10 +506,10 @@ public class BaseController  extends BaseFunction{
 	protected User mamageAccessCheck(String authCode, String expUsage, int role, HttpSession session, ReturnAjax rt) {
 		if(authCode != null)
 		{
-			AuthCode authCodeData = checkAuthCode(authCode, expUsage);
+			AuthCode authCodeData = checkAuthCode(authCode, expUsage, rt);
 			if(authCodeData == null)
 			{
-				docSysErrorLog("无效授权码或授权码已过期！", rt);
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
 				return null;
 			}
 			if(authCodeData.getReposAccess() == null)
