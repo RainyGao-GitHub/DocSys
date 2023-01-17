@@ -1817,7 +1817,7 @@ public class ReposController extends BaseController{
 		
 		if(checkAuthCode(authCode, null) == null)
 		{
-			rt.setError("无效授权码或授权码已过期！");
+			docSysErrorLog("无效授权码或授权码已过期！", rt);
 			writeJson(rt, response);			
 			return;
 		}
