@@ -536,7 +536,7 @@ public class ManageController extends BaseController{
 		Log.debug("clusterServerLoopbackTest() msg:[" + msg + "] authCode:[" + authCode + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
-		AuthCode auth = checkAuthCode(authCode, "clusterServerLoopbackTest");
+		AuthCode auth = checkAuthCode(authCode, "clusterServerLoopbackTest", rt);
 		if(auth == null)
 		{
 			Log.debug("clusterServerLoopbackTest checkAuthCode return false");
@@ -602,11 +602,11 @@ public class ManageController extends BaseController{
 		Log.debug("clusterServerTest() msg:[" + msg + "] authCode:[" + authCode + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
-		AuthCode auth = checkAuthCode(authCode, "clusterServerTest");
+		AuthCode auth = checkAuthCode(authCode, "clusterServerTest", rt);
 		if(auth == null)
 		{
 			Log.debug("clusterServerTest checkAuthCode return false");
-			rt.setError("无效授权码或授权码已过期！");
+			//rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);			
 			return;
 		}

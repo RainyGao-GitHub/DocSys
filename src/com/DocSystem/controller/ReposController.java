@@ -1815,9 +1815,9 @@ public class ReposController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(checkAuthCode(authCode, null) == null)
+		if(checkAuthCode(authCode, null, rt) == null)
 		{
-			docSysErrorLog("无效授权码或授权码已过期！", rt);
+			//docSysErrorLog("无效授权码或授权码已过期！", rt);
 			writeJson(rt, response);			
 			return;
 		}
