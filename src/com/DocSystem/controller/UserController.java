@@ -487,6 +487,10 @@ public class UserController extends BaseController {
 					+ "<br>";
 
 			String mailContent =  channel.buildMailContent(content);
+			if(mailContent == null)
+			{
+				mailContent = content;
+			}
 			
 			emailService.sendEmail(rt, userName, mailContent, mailSubject);
 			writeJson(rt, response);
