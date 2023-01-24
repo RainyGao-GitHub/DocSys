@@ -74,5 +74,7 @@ public interface Channel {
 			String commitId);
 
 	String buildMailContent(String content);
+	
+	String buildDocShareMailContent(String content);
 
 }

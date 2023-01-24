@@ -6821,7 +6821,7 @@ public class DocController extends BaseController{
 			+ "<br>"
 			+ "<br>";
 		
-		String mailContent = channel.buildMailContent(content);
+		String mailContent = channel.buildDocShareMailContent(content);
 				
 		ReturnAjax rt = new ReturnAjax();
 		emailService.sendEmail(rt, email, mailContent, mailSubject);
