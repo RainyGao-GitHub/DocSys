@@ -99,6 +99,12 @@ function buildRequestParamStrForDoc(docInfo)
 		urlParamStr += andFlag + "fileLink=" + docInfo.fileLink;
 		andFlag = "&";
 	}
+	
+	if(docInfo.shareId)
+	{
+		urlParamStr += andFlag + "shareId=" + docInfo.shareId;
+		andFlag = "&";
+	}
 	return urlParamStr;
 }
 
@@ -171,6 +177,11 @@ function getDocInfoFromRequestParamStr()
 		}
 	}
 	
+	var shareId = getQueryString("shareId");
+	if(shareId && shareId != null)
+	{
+		docInfo.shareId = shareId;
+	}
 	return docInfo;
 }
 
