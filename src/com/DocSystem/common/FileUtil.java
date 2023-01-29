@@ -490,8 +490,7 @@ public class FileUtil {
 	    	}
 	    	else
 	    	{
-	    		//mkdirs will create the no exists parent dir, so I use the mkdir
-	    		if(dstDir.mkdir() == false)
+	    		if(dstDir.mkdirs() == false)
 	    		{
 	    			Log.error("copyDir() Failed to create dir:"+dstPath);
 	    			return false;
