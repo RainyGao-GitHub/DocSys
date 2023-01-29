@@ -5,7 +5,7 @@ var OfficeEditor = (function () {
     var fileType;
     var documentType;
     var title;
-    var key;
+    var dockey;
     var historyList;
 
 	//For ArtDialog
@@ -49,7 +49,7 @@ var OfficeEditor = (function () {
 	    fileType = convertWpsToOfficeType(fileType);
 	    documentType = getDocumentType(fileType);
 	    title = docInfo.name;
-	    key = docInfo.docId + "";
+	    dockey = docInfo.docId + "";
 	
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST", 1);
 	    document.title = docInfo.name;
@@ -72,9 +72,9 @@ var OfficeEditor = (function () {
    	{
 		var fileLink = buildFullLink(data.fileLink);
 		var saveFileLink = "";
-		var key = data.key + "";	//key是用来标志唯一性的，文件改动了key也必须改动
+		dockey = data.key + "";	//key是用来标志唯一性的，文件改动了key也必须改动
 		
-    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
+    	console.log("showOffice() title=" + title + " dockey=" + dockey + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 		var type = 'desktop';
     	if(gIsPC == false)
 		{
@@ -156,7 +156,7 @@ var OfficeEditor = (function () {
 				"type": type,
     		    "document": {
     		        "fileType": fileType,
-    		        "key": key,
+    		        "key": dockey,
     		        "title": title,
     		        "url": fileLink,
     		        "permissions": {
@@ -247,7 +247,7 @@ var OfficeEditor = (function () {
         			history.user = {};
         			history.user.id = data.useridoriginal;
         			history.user.name = data.user;
-        			history.key = data.docId;
+    				history.orgKey = data.docId;
         			history.created = data.time;	//不转换直接先用
         			history.version = i+1;
         			history.path = dataEx.path;
@@ -263,9 +263,9 @@ var OfficeEditor = (function () {
         				history.orgChangeIndex = data.orgChangeIndex;
         				history.changesUrl = buildChangesUrl(docInfo, history);	        				
         				history.previous = buildPreviousHistory(docInfo, history);
-        				//update history.key会触发auth，暂时不修改
-        				//history.key = history.key + "_" + history.orgChangeIndex;
         			}
+    				//update history.key会触发auth，暂时不修改
+        			history.key = dockey + "_" + history.orgKey + "_" + data.orgChangeIndex; //history dockey
         			
         			console.log("initOfficeDocHistoryList history[" + i + "]", history);
         			historyList.push(history);
@@ -283,16 +283,8 @@ var OfficeEditor = (function () {
         {
         	var previous = {};
 			previous.orgChangeIndex = history.orgChangeIndex - 1;
-			if(previous.orgChangeIndex < 0)
-			{
-				previous.key = history.key;
-				previous.url = buildHistoryUrl(docInfo, history, -1);
-			}
-			else
-			{
-				previous.key = history.key + "_" + previous.orgChangeIndex;
-				previous.url = buildHistoryUrl(docInfo, history, previous.orgChangeIndex);
-			}
+			previous.key = dockey + "_" + history.orgKey + "_" + previous.orgChangeIndex;
+			previous.url = buildHistoryUrl(docInfo, history, previous.orgChangeIndex);
 			return previous;
 		}
         
@@ -302,7 +294,7 @@ var OfficeEditor = (function () {
         				+ docInfo.vid 
         				+ "/" + history.path 
         				+ "/" + history.name 
-        				+ "/" + history.key;
+        				+ "/" + history.orgKey;
         	
         	if(orgChangeIndex  !== undefined)
         	{
@@ -338,7 +330,7 @@ var OfficeEditor = (function () {
         {
         	var url = "/DocSystem/web/static/office-editor/downloadHistoryDiff/" 
         				+ docInfo.vid + "/" + history.path + "/" + history.name 
-        				+ "/" + history.key;
+        				+ "/" + history.orgKey;
         	
         	if(history.orgChangeIndex !== undefined)
         	{
