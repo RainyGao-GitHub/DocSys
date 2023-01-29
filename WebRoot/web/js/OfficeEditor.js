@@ -294,7 +294,7 @@ var OfficeEditor = (function () {
         				+ docInfo.vid 
         				+ "/" + history.path 
         				+ "/" + history.name 
-        				+ "/" + history.orgKey;
+        				+ "/" + history.key;
         	
         	if(orgChangeIndex  !== undefined)
         	{
@@ -330,7 +330,7 @@ var OfficeEditor = (function () {
         {
         	var url = "/DocSystem/web/static/office-editor/downloadHistoryDiff/" 
         				+ docInfo.vid + "/" + history.path + "/" + history.name 
-        				+ "/" + history.orgKey;
+        				+ "/" + history.key;
         	
         	if(history.orgChangeIndex !== undefined)
         	{
