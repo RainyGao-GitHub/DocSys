@@ -265,7 +265,7 @@ var OfficeEditor = (function () {
         				history.previous = buildPreviousHistory(docInfo, history);
         			}
     				//update history.key会触发auth，暂时不修改
-        			history.key = dockey + "_" + history.orgKey + "_" + data.orgChangeIndex; //history dockey
+        			history.key = dockey + "_" + history.orgKey + "_" + history.orgChangeIndex; //history dockey
         			
         			console.log("initOfficeDocHistoryList history[" + i + "]", history);
         			historyList.push(history);
