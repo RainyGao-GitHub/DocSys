@@ -246,9 +246,9 @@ var OfficeEditor = (function () {
         			history.serverVersion = dataEx.serverVersion;
         			history.user = {};
         			history.user.id = data.useridoriginal;
-        			history.user.name = data.user;
+        			history.user.name = data.userName !== undefined ? data.userName:data.user;
     				history.orgKey = data.docId;
-        			history.created = data.time;	//不转换直接先用
+        			history.created = formatTime(data.time);
         			history.version = i+1;
         			history.path = dataEx.path;
         			history.name = dataEx.name;
@@ -373,6 +373,17 @@ var OfficeEditor = (function () {
         }	        
    	}
 	
+ 	function formatTime(time){
+ 		var now = new Date(time);
+ 		var year=now.getFullYear();
+ 		var month=now.getMonth()+1;
+ 		var date=now.getDate();
+ 		var hh=now.getHours();
+ 		var mm=now.getMinutes();
+ 		var ss=now.getSeconds();
+
+ 		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss;
+ 	}
 	
 	//开放给外部的调用接口
 	return {
