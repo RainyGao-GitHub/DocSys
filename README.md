@@ -134,7 +134,8 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### 二、商业版如何转成个人版
 
-#### 1、将 DocSystem/defaultDocSysType 的内容改为3
+#### 1、下载并安装个人版证书
+[免费获取](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) 
 
 ### 三、商业版如何转成社区版
 
@@ -350,9 +351,7 @@ FTP服务器为被动模式情况下，需要在MxsDoc的FTP配置中增加参�
 
 2. 调试日志等级设置为debug
 
-3. 勾选输出到文件
-
-4. 测试完成后，点击下载
+3. 测试完成后，点击下载
 
 #### 2、调试日志获取（系统无法登录时）
 
