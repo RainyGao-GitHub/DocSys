@@ -134,12 +134,11 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### 二、商业版如何转成个人版
 
-#### 1、下载并安装个人版证书
-[免费获取](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) 
+#### [下载](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)并安装个人版证书 
 
 ### 三、商业版如何转成社区版
 
-#### 1、删除 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录
+#### 删除 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录
 
 ### 四、数据库常见问题
 
@@ -179,7 +178,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ##### 1.2、重启MxsDoc
 
-#### 2、Linux系统Excel在线编辑退出后，修改内容丢失
+#### 2、Linux系统Excel在线编辑退出后修改内容丢失
 
 ##### 2.1、安装字体库
 
