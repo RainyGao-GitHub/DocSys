@@ -15790,11 +15790,11 @@ public class BaseController  extends BaseFunction{
 	protected static String buildScriptRunCmd(String shellScriptPath) {
         String cmd = null;
         if (isWinOS()) {
-        	cmd = "cmd /c " + shellScriptPath;
+        	cmd = "cmd /c \"" + shellScriptPath + "\"";
         }
         else
         {
-        	cmd = "sh " + shellScriptPath;
+        	cmd = "sh \"" + shellScriptPath + "\"";
         }
         return cmd;
     }   
