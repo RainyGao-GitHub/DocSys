@@ -6,7 +6,7 @@ public class OS {
 	public final static int Linux = 2;
 	public final static int MacOS = 3;
 
-	protected static boolean isWinOS(Integer OSType) {
+	public static boolean isWinOS(Integer OSType) {
 		if(OSType == OS.Windows){
 			return true;
 		}
