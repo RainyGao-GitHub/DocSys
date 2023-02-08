@@ -1,6 +1,7 @@
 <%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%
 String officeEditorApi = BaseController.getOfficeEditor(request);
+Integer officeEditorType = BaseController.getOfficeEditorType();
 Boolean isBussienss = BaseController.isBussienss();;
 %>
 
@@ -19,6 +20,7 @@ Boolean isBussienss = BaseController.isBussienss();;
 <body style="height: 100%; margin: 0;">
     <div id="placeholder" style="height: 100%"></div>
     <script type="text/javascript">
+    	var officeEditorType = <%=officeEditorType%>;
     	OfficeEditor.initForNewPage();	
     </script>
 </body>

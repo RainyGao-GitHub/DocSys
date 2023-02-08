@@ -7,6 +7,7 @@ var OfficeEditor = (function () {
     var title;
     var dockey;
     var historyList;
+    var isExternalOffice = false;
 
 	//For ArtDialog
 	function initForArtDialog() 
@@ -45,6 +46,10 @@ var OfficeEditor = (function () {
 
 	function init()
 	{
+		console.log("officeEditorType:", officeEditorType);
+		isExternalOffice = officeEditorType == undefined? false : (officeEditorType == 1);
+		console.log("isExternalOffice:", isExternalOffice);
+		
 	    fileType = getFileSuffix(docInfo.name);
 	    fileType = convertWpsToOfficeType(fileType);
 	    documentType = getDocumentType(fileType);
@@ -102,11 +107,20 @@ var OfficeEditor = (function () {
 		
     	var onRequestHistory = function() {
     	    console.log("onRequestHistory()");
+    	    if(isExternalOffice)
+    	    {
+    	    	return;
+    	    }
     	    getOfficeDocHistoryList(docInfo, initOfficeDocHistoryList);
     	};
     	
     	var onRequestHistoryData = function(event) {
     		console.log("onRequestHistoryData() event:", event);
+    	    if(isExternalOffice)
+    	    {
+    	    	return;
+    	    }
+
     		var version = event.data;
     		setOfficeDocHistoryData(version);
     	};
@@ -149,8 +163,6 @@ var OfficeEditor = (function () {
             var linkParam = JSON.stringify(actionData);
             docEditor.setActionLink(replaceActionLink(location.href, linkParam));
         };
-        
-        
 		
     	var config = {
 				"type": type,
