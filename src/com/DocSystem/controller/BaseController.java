@@ -10997,6 +10997,7 @@ public class BaseController  extends BaseFunction{
     protected static String DB_USER = "root";
     protected static String DB_PASS = "";
     protected static String officeEditorApi = null;
+    protected static Integer officeEditorType = 0;	//0: internal 1:external
 
     //定义数据库的ObjType
     protected final static int DOCSYS_REPOS			=0;
@@ -11033,12 +11034,18 @@ public class BaseController  extends BaseFunction{
 	{
 		return docSysIniState;
 	}
-	
+
 	//This interface will be called by jsp
+	public static Integer getOfficeEditorType()
+	{
+		return officeEditorType;
+	}
 	public static Boolean isBussienss()
 	{
 		return docSysType > 0;
 	}
+	
+	
 	
 	public static String getOfficeEditor(HttpServletRequest request)
 	{

@@ -1,6 +1,7 @@
 <%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%
 String officeEditorApi = BaseController.getOfficeEditor(request);
+Integer officeEditorType = BaseController.getOfficeEditorType();
 Boolean isBussienss = BaseController.isBussienss();
 %>
 
@@ -12,7 +13,8 @@ Boolean isBussienss = BaseController.isBussienss();
 <script type="text/javascript" src=js/OfficeEditor.js></script>    
 <div id="placeholder" style="height: 100%"></div>
 <script type="text/javascript">
-    $(document).ready(function() {
+	var officeEditorType = <%=officeEditorType%>;
+	$(document).ready(function() {
     	OfficeEditor.initForArtDialog();
     });
 </script>
