@@ -2521,23 +2521,26 @@ public class ManageController extends BaseController{
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		if(login_user.getType() < 1)
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		String localParentPath = Path.getSystemLogParentPath(docSysWebPath);
 		if(localParentPath == null)
 		{
 			docSysErrorLog("获取日志路径失败！", rt);
-			writeJson(rt, response);			
-			return;	
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		if(fileName == null || "".equals(fileName))
