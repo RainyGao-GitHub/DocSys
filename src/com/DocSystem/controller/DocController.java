@@ -3369,8 +3369,9 @@ public class DocController extends BaseController{
 			if(checkAuthCode(authCode, null, rt) == null)
 			{
 				//docSysErrorLog("无效授权码或授权码已过期！", rt);
-				writeJson(rt, response);			
-				return;
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
 			}
 			//reposAccess = getAuthCode(authCode).getReposAccess();
 		}
@@ -3380,16 +3381,18 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				writeJson(rt, response);
-				return;	
+				//writeJson(rt, response);
+				//return;	
+				throw new Exception(rt.getMsgInfo());
 			}
 		}
 		
 		if(targetPath == null || targetName == null)
 		{
 			docSysErrorLog("目标路径不能为空！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
@@ -3397,8 +3400,9 @@ public class DocController extends BaseController{
 		if(targetPath == null)
 		{
 			docSysErrorLog("目标路径解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
@@ -3406,8 +3410,9 @@ public class DocController extends BaseController{
 		if(targetName == null)
 		{
 			docSysErrorLog("目标文件名解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		Log.info("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);
@@ -3443,8 +3448,9 @@ public class DocController extends BaseController{
 		if(targetPath == null || targetName == null)
 		{
 			docSysErrorLog("目标路径不能为空！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
@@ -3452,8 +3458,9 @@ public class DocController extends BaseController{
 		if(targetPath == null)
 		{
 			docSysErrorLog("目标路径解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
@@ -3461,8 +3468,9 @@ public class DocController extends BaseController{
 		if(targetName == null)
 		{
 			docSysErrorLog("目标文件名解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		Log.info("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);
@@ -3505,8 +3513,9 @@ public class DocController extends BaseController{
 			if(checkAuthCode(authCode, null, rt) == null)
 			{
 				//docSysErrorLog("无效授权码或授权码已过期！", rt);
-				writeJson(rt, response);			
-				return;
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
 			}
 			//reposAccess = getAuthCode(authCode).getReposAccess();
 		}
@@ -3516,15 +3525,18 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				writeJson(rt, response);
-				return;	
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
 			}
 		}
 		
 		if(targetPath == null || targetName == null)
 		{
 			docSysErrorLog("目标路径不能为空！", rt);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
@@ -3532,7 +3544,9 @@ public class DocController extends BaseController{
 		if(targetPath == null)
 		{
 			docSysErrorLog("目标路径解码失败！", rt);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
@@ -3540,7 +3554,9 @@ public class DocController extends BaseController{
 		if(targetName == null)
 		{
 			docSysErrorLog("目标文件名解码失败！", rt);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		Log.info("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
@@ -3588,8 +3604,9 @@ public class DocController extends BaseController{
 			if(checkAuthCode(authCode, null, rt) == null)
 			{
 				//docSysErrorLog("无效授权码或授权码已过期！", rt);
-				writeJson(rt, response);			
-				return;
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
 			}
 			//reposAccess = getAuthCode(authCode).getReposAccess();
 		}
@@ -3599,15 +3616,18 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				writeJson(rt, response);
-				return;	
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
 			}
 		}
 		
 		if(targetPath == null || targetName == null)
 		{
 			docSysErrorLog("目标路径不能为空！", rt);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
@@ -3615,7 +3635,9 @@ public class DocController extends BaseController{
 		if(targetPath == null)
 		{
 			docSysErrorLog("目标路径解码失败！", rt);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
@@ -3623,7 +3645,9 @@ public class DocController extends BaseController{
 		if(targetName == null)
 		{
 			docSysErrorLog("目标文件名解码失败！", rt);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		Log.info("downloadDocEx targetPath:" + targetPath + " targetName:" + targetName);		
@@ -3670,8 +3694,9 @@ public class DocController extends BaseController{
 		if(repos == null)
 		{
 			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		//get userTmpDir
@@ -4395,15 +4420,17 @@ public class DocController extends BaseController{
 		if(checkAuthCode(authCode, null, rt) == null)
 		{
 			//docSysErrorLog("无效授权码或授权码已过期！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		if(path == null || name == null)
 		{
 			docSysErrorLog("目标路径不能为空！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
@@ -4411,8 +4438,9 @@ public class DocController extends BaseController{
 		if(path == null)
 		{
 			docSysErrorLog("目标路径解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
@@ -4420,8 +4448,9 @@ public class DocController extends BaseController{
 		if(name == null)
 		{
 			docSysErrorLog("目标文件名解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		//Get SubDocList From Server Dir
@@ -4430,16 +4459,18 @@ public class DocController extends BaseController{
 			if(remoteDirectory == null)
 			{
 				docSysErrorLog("服务器路径不能为空！", rt);
-				writeJson(rt, response);			
-				return;				
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());		
 			}
 			remoteDirectory = new String(remoteDirectory.getBytes("ISO8859-1"),"UTF-8");	
 			remoteDirectory = Base64Util.base64Decode(remoteDirectory);
 			if(remoteDirectory == null)
 			{
 				docSysErrorLog("服务器路径解码失败！", rt);
-				writeJson(rt, response);			
-				return;
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
 			}
 			sendTargetToWebPage(remoteDirectory + path, name, remoteDirectory + path, rt, response, request,false, null);
 			return;			
@@ -4448,7 +4479,9 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		String reposPath = Path.getReposPath(repos);
@@ -4461,14 +4494,16 @@ public class DocController extends BaseController{
 		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
-			writeJson(rt, response);	
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
-			writeJson(rt, response);	
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		downloadDocPrepare_FSM(repos, doc, reposAccess, false, rt);
@@ -4504,8 +4539,9 @@ public class DocController extends BaseController{
 		if(status.equals("ok") == false)
 		{
 			Log.debug("downloadDocRS downloadDocPrepare failed:" + rt.getMsgInfo());
-			writeJson(rt, response);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		//注意downloadDoc中的targetPath和targetName都是Base64加密的，所以必须先解密（下面的流程与downloadDoc相同）
@@ -4516,8 +4552,9 @@ public class DocController extends BaseController{
 		if(targetPath == null)
 		{
 			docSysErrorLog("目标路径解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 		
 		String targetName = downloadDoc.targetName;	
@@ -4526,8 +4563,9 @@ public class DocController extends BaseController{
 		if(targetName == null)
 		{
 			docSysErrorLog("目标文件名解码失败！", rt);
-			writeJson(rt, response);			
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 	
 		Log.debug("downloadDocRS targetPath:" + targetPath + " targetName:" + targetName);

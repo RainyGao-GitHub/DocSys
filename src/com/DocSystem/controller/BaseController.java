@@ -2225,8 +2225,9 @@ public class BaseController  extends BaseFunction{
 		if(false == localEntry.exists())
 		{
 			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", rt);
-			writeJson(rt, response);
-			return;
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
 		}
 
 		//For dir 
@@ -2237,8 +2238,9 @@ public class BaseController  extends BaseFunction{
 			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
 			{
 				docSysErrorLog("压缩目录失败：" + localParentPath + targetName, rt);
-				writeJson(rt, response);
-				return;
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
 			}
 			
 			sendFileToWebPage(tmpDir,zipFileName,rt,response, request, disposition); 
