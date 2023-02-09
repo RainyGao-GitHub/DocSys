@@ -48,6 +48,14 @@ var OfficeEditor = (function () {
 	{
 		console.log("officeEditorType:", officeEditorType);
 		isExternalOffice = officeEditorType == undefined? false : (officeEditorType == 1);
+		if(isExternalOffice == true)
+		{
+			if(isLocalhostAccess() == true)
+			{
+				alert("禁止localhost访问，请使用IP地址或域名访问!");
+				return;
+			}
+		}
 		console.log("isExternalOffice:", isExternalOffice);
 		
 	    fileType = getFileSuffix(docInfo.name);
@@ -59,6 +67,15 @@ var OfficeEditor = (function () {
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST", 1);
 	    document.title = docInfo.name;
 	}    
+	
+	function isLocalhostAccess()
+	{
+		if(window.location.hostname=="127.0.0.1" || window.location.hostname=="localhost")
+		{
+			return true;
+		}
+		return false;
+	}
 	
     function GetRequest() {
         var url = location.search; //获取url中"?"符后的字串
