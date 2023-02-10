@@ -1837,7 +1837,7 @@ function showImgInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		url: url,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="' + url + '?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="' + url + '?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1878,7 +1878,7 @@ function showVideoInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="videoViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="videoViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1918,7 +1918,7 @@ function showZipInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" scrolling="auto" name="ArtDialog' + docInfo.docId + '" src="zipViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content: '<iframe frameborder="0" scrolling="auto" name="ArtDialog' + docInfo.docId + '" src="zipViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1958,7 +1958,7 @@ function showPdfInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -2018,7 +2018,7 @@ function showMarkdownInArtDialog(docInfo)
 	var d = new artDialog({
 		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
-		content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="stackeditEditorForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="stackeditEditorForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -2078,7 +2078,7 @@ function showTextInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="aceEditorForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="aceEditorForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -2175,7 +2175,7 @@ function showOfficeInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeEditorForArt.jsp?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeEditorForArt.jsp?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
