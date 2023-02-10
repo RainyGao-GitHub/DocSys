@@ -338,9 +338,32 @@ authMode=1：表示需要进行登录密码校验
 
 FTP服务器为被动模式情况下，需要在MxsDoc的FTP配置中增加参数 isPassive=1
 
-#### 7、nginx反向代理时，大文件上传时提示服务器异常
+#### 7、nginx反向代理设置
+
+```
+server {
+	listen 80;
+	server_name dw.gofreeteam.com;
+	#rewrite ^/DocSystem/(.*)$ http://$host/$1 permanent;	
+	rewrite ^/$ http://$host/DocSystem/  permanent;	
+	location / {
+        	proxy_http_version 1.1;
+        	proxy_set_header Upgrade $http_upgrade;
+        	proxy_set_header Connection 'upgrade';
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For  $proxy_add_x_forwarded_for;
+		proxy_cookie_path /DocSystem/ /;
+		proxy_set_header Cookie $http_cookie;
+		proxy_pass http://127.0.0.1:8100;
+	}
+}
+```
+
+#### 8、nginx反向代理时，大文件上传时提示服务器异常
 
 将nginx的client_max_body_size改为100M
+
 
 ### 十、调试日志获取
 
