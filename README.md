@@ -149,7 +149,20 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 复制 DocSystem\web\static\office-editor\libs\Linux 目录下的所有动态库到 /usr/lib64 目录
 
-##### 1.2、重启MxsDoc
+##### 1.2、手动修改以下目录的执行权限
+
+```
+chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/FileConverter/bin/"
+chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/tools/"
+chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/tools/"
+chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/bin/"
+```
+##### 1.3、手动修改以下目录的写入权限（可选）
+
+```
+chmod 755 -R "/data/"
+```
+##### 1.4、重启MxsDoc
 
 #### 2、Linux系统Excel在线编辑退出后修改内容丢失
 
