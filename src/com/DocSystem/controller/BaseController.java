@@ -234,17 +234,27 @@ public class BaseController  extends BaseFunction{
 		
 		Config config = new Config();
 		config.useSingleServer().setAddress(redisUrl);
-		redisClient = Redisson.create(config);
-		if(redisClient == null)
-		{
+		
+		try {
+			redisClient = Redisson.create(config);
+			if(redisClient == null)
+			{
+				redisEn = false;
+			    Log.error("initRedis() failed to connect to redisServer:" + redisUrl);
+				globalClusterDeployCheckResult = false;
+				globalClusterDeployCheckState = 2;
+				globalClusterDeployCheckResultInfo = "集群失败: Redis服务器连接失败";
+				return false;
+			}
+		} catch (Exception e) {
 			redisEn = false;
 		    Log.error("initRedis() failed to connect to redisServer:" + redisUrl);
 			globalClusterDeployCheckResult = false;
 			globalClusterDeployCheckState = 2;
 			globalClusterDeployCheckResultInfo = "集群失败: Redis服务器连接失败";
-			return false;
-		}
-		     
+			return false;	
+		}   
+		
 		redisEn = true;
 		if(preRedisEn != redisEn)
 		{
