@@ -2376,7 +2376,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//允许iframe中下载文件，但似乎无法工作(需要给iframe设置sandbox属性 allow-downloads)
-		response.setHeader("content-security-policy", "sandbox allow-downloads");			
+		//response.setHeader("content-security-policy", "sandbox allow-downloads");			
 		
 		//读取要下载的文件，保存到文件输入流
 		FileInputStream in = null;
