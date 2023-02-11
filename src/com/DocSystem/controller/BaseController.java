@@ -12004,6 +12004,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private static List<String> getAliveClusterServerList() {
+		if(redisClient == null)
+		{
+			Log.info("getAliveClusterServerList() redisClient is null");
+            return null;
+		}
+		
 	    List<String> list = new ArrayList<String>();
 	    RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 	    
