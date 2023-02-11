@@ -11078,11 +11078,17 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 			
+			//user relative office-editor path
 			Log.debug("getOfficeEditor() url:" + request.getRequestURL());
+			officeEditor = "static/office-editor/web-apps/apps/api/documents/api.js";
+			return officeEditor;
+
+			/* use absolute path
 			String url = getHostAndPortFromUrl(request.getRequestURL());
 			officeEditor = url + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";
 			//business edition
 			return officeEditor;
+			*/
 		}
 		
 		Log.debug("getOfficeEditor() officeEditor:" + officeEditor);
