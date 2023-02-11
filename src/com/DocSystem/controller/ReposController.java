@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.redisson.api.RBucket;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -519,6 +520,13 @@ public class ReposController extends BaseController{
 		deleteReposRemoteStorageConfig(repos);
 
 		deleteReposRemoteServerConfig(repos);
+		
+		if(redisEn)
+		{
+			//delete reposClusterCheckSum
+			RBucket<Object> bucket = redisClient.getBucket("clusterDeployCheckSum" + repos.getId());
+			bucket.delete();
+		}
 
 		writeJson(rt, response);	
 		setReposIsBusy(repos.getId(), false);			
