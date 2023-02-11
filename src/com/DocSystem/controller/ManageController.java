@@ -1322,9 +1322,11 @@ public class ManageController extends BaseController{
 		}
 		
 		String testResult = "1. 配置检查<br/>";
+		boolean testSuccess = true;
 		if(redisUrl == null || redisUrl.isEmpty())
 		{
 			testResult += "Redis服务器地址为空<br/>";
+			testSuccess = false;
 			rt.setError(testResult);
 			writeJson(rt, response);		
 			return;
@@ -1332,6 +1334,7 @@ public class ManageController extends BaseController{
 		if(clusterServerUrl == null || clusterServerUrl.isEmpty())
 		{
 			testResult += "集群服务器地址为空<br/>";
+			testSuccess = false;
 			rt.setError(testResult);
 			writeJson(rt, response);		
 			return;
@@ -1381,19 +1384,39 @@ public class ManageController extends BaseController{
         else
         {
         	testResult += "Map测试失败<br/><br/>";
+			testSuccess = false;
         }
         
         testResult += "3. 集群服务器测试<br/>";
         if(clusterServerLoopbackTest(clusterServerUrl) == false)
         {
-        	testResult += "回环测试失败<br/><br/>";        	
+        	testResult += "3.1 回环测试失败<br/><br/>";
+			testSuccess = false;
         }
         else
         {
-        	testResult += "回环测试成功<br/><br/>";        	        	
+        	testResult += "3.1 回环测试成功<br/><br/>";        	        	
         }
         
-		rt.setMsgInfo(testResult);				
+		//保证服务器之间能够互相访问，向已集群的服务器发送joinApply
+		if(clusterServerCrossCheck(clusterServerUrl) == false)
+        {
+        	testResult += "3.2 互检测试失败<br/><br/>";        	
+			testSuccess = false;
+        }
+        else
+        {
+        	testResult += "3.2 互检测试成功<br/><br/>";        	        	
+        }
+        
+		if(testSuccess)
+		{
+			rt.setMsgInfo(testResult);			
+		}
+		else
+		{
+			rt.setError(testResult);
+		}
 		writeJson(rt, response);
 	}
 	
