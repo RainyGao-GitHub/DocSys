@@ -11081,12 +11081,13 @@ public class BaseController  extends BaseFunction{
 			//user relative office-editor path
 			Log.debug("getOfficeEditor() url:" + request.getRequestURL());
 			officeEditor = "static/office-editor/web-apps/apps/api/documents/api.js";
+			Log.debug("getOfficeEditor() officeEditor:" + officeEditor);
 			return officeEditor;
 
 			/* use absolute path
 			String url = getHostAndPortFromUrl(request.getRequestURL());
 			officeEditor = url + "/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js";
-			//business edition
+			Log.debug("getOfficeEditor() officeEditor:" + officeEditor);
 			return officeEditor;
 			*/
 		}
@@ -11097,7 +11098,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("getOfficeEditor() test officeEditor connection failed");
 			return null;
 		}		
-		Log.debug("getOfficeEditor() officeEditor is ok");
+		Log.debug("getOfficeEditor() officeEditor:" + officeEditor);
 		return officeEditor;
 	}
 	
