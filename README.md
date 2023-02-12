@@ -354,10 +354,14 @@ FTP服务器为被动模式情况下，需要在MxsDoc的FTP配置中增加参�
 #### 7、nginx反向代理设置
 
 ```
+upstream mxsdoc {
+    ip_hash:
+    server 192.168.0.2:8100;
+    server 192.168.0.3:8100;
+}
 server {
 	listen 80;
 	server_name dw.gofreeteam.com;
-	#rewrite ^/DocSystem/(.*)$ http://$host/$1 permanent;	
 	rewrite ^/$ http://$host/DocSystem/  permanent;	
 	location / {
             proxy_http_version 1.1;
@@ -368,7 +372,7 @@ server {
             proxy_set_header X-Forwarded-For  $proxy_add_x_forwarded_for;
             proxy_cookie_path /DocSystem/ /;
             proxy_set_header Cookie $http_cookie;
-            proxy_pass http://127.0.0.1:8100;
+            proxy_pass http://mxsdoc;
         }
 }
 ```
