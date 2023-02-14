@@ -50,17 +50,20 @@ public class DocLock  implements Serializable {
 
     private Integer state; 
 
+    //UserName
     public String[] locker = {null, null, null, null, null, null, null};
-
+    //UserId
     public Integer[] lockBy = {null, null, null, null, null, null, null};
-
+    //LockReleaseTime
     public Long[] lockTime = {null, null, null, null, null, null, null};
-    
+    //LockCreateTime
     public Long[] createTime = {null, null, null, null, null, null, null};
-    
+    //Server
     public String[] server = {null, null, null, null, null, null, null};
-
+    //lock debug info 
 	public String[] info = {null, null, null, null, null, null, null};
+    //Event
+	public Integer[] event = {null, null, null, null, null, null, null};
     
     public String lockId;
     

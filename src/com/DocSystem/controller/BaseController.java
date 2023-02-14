@@ -101,6 +101,7 @@ import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.DocChangeType;
+import com.DocSystem.common.EVENT;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.IPUtil;
@@ -3728,7 +3729,7 @@ public class BaseController  extends BaseFunction{
 			{
 				lockInfo = context.info;
 			}
-			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo, EVENT.folderUpload);
 			
 			if(docLock == null)
 			{
@@ -4010,7 +4011,7 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction == null)
 		{
 			//LockDoc
-			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo);
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo, EVENT.addDocEx);
 			
 			if(docLock == null)
 			{
@@ -4137,7 +4138,7 @@ public class BaseController  extends BaseFunction{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		//String lockInfo = "deleteDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, context.info);	//lock 2 Hours 2*60*60*1000
+		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, context.info, EVENT.deleteDoc);	//lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
 		{
@@ -4799,7 +4800,7 @@ public class BaseController  extends BaseFunction{
 					DocLock docLock = null;
 					int lockType = DocLock.LOCK_TYPE_FORCE;
 					String lockInfo = "syncupForDocChange() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-			    	docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, lockInfo);	//lock 2 Hours 2*60*60*1000
+			    	docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, lockInfo, EVENT.syncUpLocalWithRemoteStorage);	//lock 2 Hours 2*60*60*1000
 					
 					if(docLock == null)
 					{
@@ -5111,7 +5112,7 @@ public class BaseController  extends BaseFunction{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "syncupLocalChangesEx_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
+		docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo, EVENT.syncupLocalChangesEx_FSM); //2 Hours 2*60*60*1000 = 86400,000
 		
 		if(docLock == null)
 		{
@@ -5159,7 +5160,7 @@ public class BaseController  extends BaseFunction{
 			DocLock docLock = null;
 			int lockType = DocLock.LOCK_TYPE_FORCE;
 			String lockInfo = "syncupForDocChange() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo); //2 Hours 2*60*60*1000 = 86400,000
+			docLock = lockDoc(doc, lockType, 1*60*60*1000,login_user,rt,true,lockInfo, EVENT.syncupForDocChange_NoFS); //2 Hours 2*60*60*1000 = 86400,000
 			
 			if(docLock == null)
 			{
@@ -7305,7 +7306,7 @@ public class BaseController  extends BaseFunction{
 	
 		if(context.folderUploadAction == null)
 		{	
-			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo); //lock 2 Hours 2*60*60*1000
+			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,lockInfo, EVENT.updateDoc); //lock 2 Hours 2*60*60*1000
 		
 			if(docLock == null)
 			{
@@ -7425,7 +7426,7 @@ public class BaseController  extends BaseFunction{
 
 		if(context.folderUploadAction == null)
 		{
-			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,context.info); //lock 2 Hours 2*60*60*1000
+			docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt,false,context.info, EVENT.updateDocEx); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
 				Log.info("updateDocEx_FSM() lockDoc " + doc.getName() +" Failed！");
@@ -7532,7 +7533,7 @@ public class BaseController  extends BaseFunction{
 		DocLock dstDocLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		//String lockInfo = "moveDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
-		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
+		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info, EVENT.moveDoc);
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("moveDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
@@ -7540,7 +7541,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//String lockInfo2 = "moveDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
-		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,context.info);
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true,context.info, EVENT.moveDoc);
 		if(dstDocLock == null)
 		{
 			unlockDoc(srcDoc, lockType, login_user);
@@ -7649,7 +7650,7 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		//String lockInfo = "copyDoc_FSM() syncLock [" + srcDoc.getPath() + srcDoc.getName() + "] at repos[" + repos.getName() + "]";
 		//Try to lock the srcDoc
-		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
+		srcDocLock = lockDoc(srcDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info, EVENT.copyDoc);
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("copyDoc_FSM() lock srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] Failed", rt);
@@ -7657,7 +7658,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//String lockInfo2 = "copyDoc_FSM() syncLock [" + dstDoc.getPath() + dstDoc.getName() + "] at repos[" + repos.getName() + "]";
-		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
+		dstDocLock = lockDoc(dstDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info, EVENT.copyDoc);
 		if(dstDocLock == null)
 		{
 			unlockDoc(srcDoc, lockType, login_user);				
@@ -7763,7 +7764,7 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		//String lockInfo = "copySameDocForUpload() syncLock [" + sameDoc.getPath() + sameDoc.getName() + "] at repos[" + repos.getName() + "]";
 		//Try to lock the srcDoc
-		srcDocLock = lockDoc(sameDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info);
+		srcDocLock = lockDoc(sameDoc, lockType, 2*60*60*1000,login_user,rt,true, context.info, EVENT.copySameDocForUpload);
 		if(srcDocLock == null)
 		{
 			docSysDebugLog("copySameDocForUpload() lock srcDoc [" + sameDoc.getPath() + sameDoc.getName() + "] Failed", rt);
@@ -7773,7 +7774,7 @@ public class BaseController  extends BaseFunction{
 		String lockInfo2 = "copySameDocForUpload() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		if(context.folderUploadAction == null)
 		{
-			dstDocLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo2);
+			dstDocLock = lockDoc(doc, lockType, 2*60*60*1000,login_user,rt,true, lockInfo2, EVENT.copySameDocForUpload);
 			if(dstDocLock == null)
 			{
 				unlockDoc(sameDoc, lockType, login_user);				
@@ -7881,7 +7882,7 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		//String lockInfo = "updateRealDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		String lockInfo = "编辑保存 [" + doc.getPath() + doc.getName() + "]";		
-		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
+		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo, EVENT.updateRealDocContent);
 		
 		if(docLock == null)
 		{
@@ -7961,7 +7962,7 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_VFORCE;
 		//String lockInfo = "updateVirualDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		String lockInfo = "修改备注 [" + doc.getPath() + doc.getName() + "]";
-		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo);
+		docLock = lockDoc(doc, lockType, 1*60*60*1000, login_user,rt,false,lockInfo, EVENT.updateVirualDocContent);
 		
 		if(docLock == null)
 		{	
@@ -12957,7 +12958,7 @@ public class BaseController  extends BaseFunction{
 	                        DocLock docLock = null;
         					int lockType = DocLock.LOCK_TYPE_FORCE;
         			    	String lockInfo = "LocalBackupDelayTask() syncLock [" + rootDoc.getPath() + rootDoc.getName() + "] at repos[" + repos.getName() + "]";    	
-        			    	docLock = lockDoc(rootDoc, lockType, 2*60*60*1000, systemUser,rt,true,lockInfo);	//lock 2 Hours 2*60*60*1000
+        			    	docLock = lockDoc(rootDoc, lockType, 2*60*60*1000, systemUser,rt,true,lockInfo, EVENT.LocalAutoBackup);	//lock 2 Hours 2*60*60*1000
         					if(docLock == null)
         					{
         						docSysDebugLog("LocalBackupDelayTask() lock doc [" + rootDoc.getPath() + rootDoc.getName() + "] Failed", rt);
@@ -13143,7 +13144,7 @@ public class BaseController  extends BaseFunction{
 	                        DocLock docLock = null;
         					int lockType = DocLock.LOCK_TYPE_FORCE;
         			    	String lockInfo = "RemoteBackupDelayTask() syncLock [" + rootDoc.getPath() + rootDoc.getName() + "] at repos[" + repos.getName() + "]";    	
-        			    	docLock = lockDoc(rootDoc, lockType, 2*60*60*1000, systemUser,rt,true,lockInfo);	//lock 2 Hours 2*60*60*1000
+        			    	docLock = lockDoc(rootDoc, lockType, 2*60*60*1000, systemUser,rt,true,lockInfo, EVENT.remoteAutoBackup);	//lock 2 Hours 2*60*60*1000
         					if(docLock == null)
         					{
         						docSysDebugLog("RemoteBackupDelayTask() Failed to lock Doc: " + rootDoc.getDocId(), rt);
