@@ -1202,7 +1202,8 @@ public class BaseFunction{
 	
 	//*** docLocksMap ***
 	//Lock Doc
-	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User accessUser, ReturnAjax rt, boolean subDocCheckFlag, String lockInfo) 
+	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User accessUser, ReturnAjax rt, boolean subDocCheckFlag, 
+			String lockInfo, Integer event) 
 	{
 		DocLock docLock = null;
 		String lockName = "syncLock";
@@ -1211,7 +1212,7 @@ public class BaseFunction{
     		redisSyncLockEx(lockName, lockInfo);
     		
 			//LockDoc
-			docLock = doLockDoc(doc, lockType,  lockDuration, accessUser, rt, false, lockInfo);
+			docLock = doLockDoc(doc, lockType,  lockDuration, accessUser, rt, false, lockInfo, event);
 			
 			redisSyncUnlockEx(lockName, lockInfo, syncLock);
 		}
@@ -1219,7 +1220,7 @@ public class BaseFunction{
 	}
 
 	//文件锁定接口需要支持集群部署时服务器之间操作的原子性
-	protected DocLock doLockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag, String info) {
+	protected DocLock doLockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag, String info, Integer event) {
 		Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] lockType:" + lockType + " login_user[" + login_user.getName() + "] subDocCheckFlag:" + subDocCheckFlag);
 
 		if(checkDocLocked(doc, lockType, login_user, subDocCheckFlag, rt))
@@ -1251,6 +1252,7 @@ public class BaseFunction{
 			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime
 			docLock.server[lockType] = clusterServerUrl;
 			docLock.info[lockType] = info;
+			docLock.event[lockType] = event;
 			addDocLock(doc, docLock);
 			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
@@ -1267,6 +1269,7 @@ public class BaseFunction{
 			docLock.lockTime[lockType] = currentTime + lockDuration;	//Set lockTime		
 			docLock.server[lockType] = clusterServerUrl;
 			docLock.info[lockType] = info;
+			docLock.event[lockType] = event;
 			updateDocLock(doc, docLock);
 			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
 			return docLock;

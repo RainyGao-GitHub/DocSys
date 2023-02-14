@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
+import com.DocSystem.common.EVENT;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
@@ -1441,7 +1442,7 @@ public class DocController extends BaseController{
 				gFolderUploadActionHashMap.put(actionId, action);		
 				
 				action.info = "上传目录 [" + doc.getPath() + doc.getName() + "]";
-				DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, action.info);
+				DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, action.info, EVENT.folderUpload);
 				if(docLock == null)
 				{
 					action.isCriticalError = true;
@@ -3198,7 +3199,7 @@ public class DocController extends BaseController{
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "remoteStorageCheckOut() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
-		docLock = lockDoc(doc, lockType, 2*60*60*1000, accessUser, rt, true,lockInfo);	//lock 2 Hours 2*60*60*1000
+		docLock = lockDoc(doc, lockType, 2*60*60*1000, accessUser, rt, true,lockInfo, EVENT.remoteStorageCheckOut);	//lock 2 Hours 2*60*60*1000
 		
 		if(docLock == null)
 		{
@@ -4831,7 +4832,7 @@ public class DocController extends BaseController{
 		DocLock docLock = null;
 		//String lockInfo = "lockDoc() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		String lockInfo = "编辑 [" + doc.getPath() + doc.getName() + "]";
-		docLock = lockDoc(doc, lockType, lockDuration, reposAccess.getAccessUser(), rt, subDocCheckFlag, lockInfo);
+		docLock = lockDoc(doc, lockType, lockDuration, reposAccess.getAccessUser(), rt, subDocCheckFlag, lockInfo, EVENT.lockDoc);
 		
 		if(docLock == null)
 		{
@@ -5472,7 +5473,7 @@ public class DocController extends BaseController{
 		//String lockInfo = "revertDocHistory() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		String lockInfo = "版本回退 [" + doc.getPath() + doc.getName() + "]";
     	
-		docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false, lockInfo);
+		docLock = lockDoc(doc, lockType,  2*60*60*1000, reposAccess.getAccessUser(), rt, false, lockInfo, EVENT.revertDoc);
 		
 		if(docLock == null)
 		{
