@@ -1566,16 +1566,84 @@ public class BaseFunction{
 		}
 		
 		//FocreLock即使是自己锁定的也不可以解锁
-			
-		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定:" + docLock.info[lockType] + "，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
+		rt.setError(buildLockFailMsg(docLock, lockType));
 		
 		long curTime = new Date().getTime();
-		
 		docSysDebugLog("isDocForceLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 强制锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info[lockType] + "]", rt);
 		return true;	
 	}
 	
+	private static String buildLockFailMsg(DocLock docLock, int lockType) {
+		String msg = "文件锁定中，请稍后重试!";
+		Integer event = docLock.event[lockType];
+		if(event == null)
+		{
+			String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
+			msg  = "[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定:" + docLock.info[lockType] + "，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!";
+			return msg;
+		}
+		
+		switch(docLock.event[lockType])
+		{
+		//File Operation
+		case EVENT.lockDoc:
+			return "用户[" + docLock.locker[lockType] +"]锁定了文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.addDoc:
+			return "用户[" + docLock.locker[lockType] +"]正在新增文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.deleteDoc:
+			return "用户[" + docLock.locker[lockType] +"]正在删除文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.updateDoc:
+			return "用户[" + docLock.locker[lockType] +"]正在保存文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.moveDoc:
+			return "用户[" + docLock.locker[lockType] +"]正在移动文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.copyDoc:
+			return "用户[" + docLock.locker[lockType] +"]正在复制文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.updateRealDocContent:
+			return "用户[" + docLock.locker[lockType] +"]正在编辑文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.updateVirualDocContent:
+			return "用户[" + docLock.locker[lockType] +"]正在编辑文件备注[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.copySameDocForUpload:
+			return "用户[" + docLock.locker[lockType] +"]正在上传文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.folderUpload:
+			return "用户[" + docLock.locker[lockType] +"]正在上传目录[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.revertDoc:
+			return "用户[" + docLock.locker[lockType] +"]正在恢复文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";			
+		//File Operation EX
+		case EVENT.addDocEx:
+			return "用户[" + docLock.locker[lockType] +"]正在新增文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";			
+		case EVENT.deleteDocEx:
+			return "用户[" + docLock.locker[lockType] +"]正在删除文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";			
+		case EVENT.updateDocEx:
+			return "用户[" + docLock.locker[lockType] +"]正在保存文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";			
+		case EVENT.moveDocEx:
+			return "用户[" + docLock.locker[lockType] +"]正在移动文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.copyDocEx:
+			return "用户[" + docLock.locker[lockType] +"]正在复制文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		//Office
+		case EVENT.addUserToEditUsersMap:
+			return "用户[" + docLock.locker[lockType] +"]正在编辑文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		//RemoteStorage
+		case EVENT.remoteStoragePush:
+			return "用户[" + docLock.locker[lockType] +"]正在推送文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.remoteStoragePull:
+			return "用户[" + docLock.locker[lockType] +"]正在拉取文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.remoteStorageCheckOut:
+			return "用户[" + docLock.locker[lockType] +"]正在检出文件[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		//AutoBackup
+		case EVENT.LocalAutoBackup:
+			return "用户[" + docLock.locker[lockType] +"]正在本地备份[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		case EVENT.remoteAutoBackup:
+			return "用户[" + docLock.locker[lockType] +"]正在远程备份[" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		//ReposSyncup
+		case EVENT.syncupLocalChangesEx_FSM:
+		case EVENT.syncUpLocalWithRemoteStorage:
+		case EVENT.syncupForDocChange_NoFS:
+			return "用户[" + docLock.locker[lockType] +"]正在同步仓库[" + docLock.getVid() + "][" + docLock.getPath() + docLock.getName() + "],请稍后重试!";
+		}
+		
+		return msg;
+	}
+
 	public static boolean isDocLocked(DocLock docLock, Integer lockType, Integer lockState, User login_user,ReturnAjax rt) {
 		if(docLock == null)
 		{
@@ -1606,8 +1674,7 @@ public class BaseFunction{
 			return false;
 		}
 			
-		String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-		rt.setError("[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]锁定:"+ docLock.info[lockType] +"，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!");
+		rt.setError(buildLockFailMsg(docLock, lockType));
 
 		long curTime = new Date().getTime();
 		docSysDebugLog("isDocLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info[lockType] + "]", rt);
