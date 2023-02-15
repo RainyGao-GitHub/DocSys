@@ -201,9 +201,4 @@ public class CommunityChannel extends BaseController implements Channel {
 	public String buildDocShareMailContent(String content) {
 		return null;
 	}
-
-	@Override
-	public String getServerSN() {
-		return null;
-	}
 }

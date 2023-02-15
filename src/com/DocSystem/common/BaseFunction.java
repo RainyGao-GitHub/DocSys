@@ -94,6 +94,7 @@ import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.MacTools;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -2024,7 +2025,7 @@ public class BaseFunction{
 		systemLicenseInfo.usersCount = null;	//无限制
 		systemLicenseInfo.expireTime = null; //长期有效
 		systemLicenseInfo.hasLicense = false;
-		systemLicenseInfo.SN = channel.getServerSN();
+		systemLicenseInfo.SN = serverSN;
 	}
 	
 	protected static void initLdapConfig() {
