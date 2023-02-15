@@ -202,5 +202,8 @@ public class CommunityChannel extends BaseController implements Channel {
 		return null;
 	}
 
-
+	@Override
+	public String getServerSN() {
+		return null;
+	}
 }
