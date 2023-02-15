@@ -13,6 +13,13 @@
       <input type="text" class="form-control" id="systemLicenseCustomer" name="systemLicenseCustomer" disabled="disabled">
     </div>
   </div>
+  <!-- Customer -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="systemLicenseSN">设备号</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLicenseSN" name="systemLicenseSN" disabled="disabled">
+    </div>
+  </div>
   <!-- usersLimit -->
   <div class="form-group">
     <label class="control-label col-lg-3" for="systemLicenseUsersCount">用户数量</label>
@@ -58,6 +65,11 @@
 	    if(systemLicenseInfo.customer != undefined)
 	    {
 	    	$("#systemLicenseCustomer").val(systemLicenseInfo.customer);	
+	    }
+	    
+	    if(systemLicenseInfo.SN != undefined)
+	    {
+	    	$("#systemLicenseSN").val(systemLicenseInfo.SN);	
 	    }
 
 		var usersCount = "不限";
