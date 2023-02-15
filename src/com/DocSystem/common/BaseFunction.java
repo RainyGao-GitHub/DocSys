@@ -138,6 +138,7 @@ public class BaseFunction{
 	//服务器IP和MAC
     protected static String serverIP = null;
     protected static String serverMAC = null;
+    protected static String serverSN = null;
 	    
 	//分享代理服务线程（一个服务器只允许启动一个）
 	protected static ProxyThread proxyThread = null;
@@ -2023,6 +2024,7 @@ public class BaseFunction{
 		systemLicenseInfo.usersCount = null;	//无限制
 		systemLicenseInfo.expireTime = null; //长期有效
 		systemLicenseInfo.hasLicense = false;
+		systemLicenseInfo.SN = channel.getServerSN();
 	}
 	
 	protected static void initLdapConfig() {
