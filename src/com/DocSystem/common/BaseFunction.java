@@ -2025,7 +2025,7 @@ public class BaseFunction{
 		systemLicenseInfo.usersCount = null;	//无限制
 		systemLicenseInfo.expireTime = null; //长期有效
 		systemLicenseInfo.hasLicense = false;
-		systemLicenseInfo.SN = serverSN;
+		systemLicenseInfo.serverSN = serverSN;
 	}
 	
 	protected static void initLdapConfig() {
