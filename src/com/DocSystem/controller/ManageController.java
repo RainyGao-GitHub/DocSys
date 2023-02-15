@@ -933,9 +933,9 @@ public class ManageController extends BaseController{
 		systemLicense.put("hasLicense", systemLicenseInfo.hasLicense);
 		systemLicense.put("customer", systemLicenseInfo.customer);
 		systemLicense.put("createTime", systemLicenseInfo.createTime);
-		if(systemLicenseInfo.SN != null)
+		if(systemLicenseInfo.serverSN != null)
 		{
-			systemLicense.put("SN", systemLicenseInfo.SN);
+			systemLicense.put("serverSN", systemLicenseInfo.serverSN);
 		}
 		
 		JSONObject officeLicense = new JSONObject();
