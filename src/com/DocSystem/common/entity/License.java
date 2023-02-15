@@ -10,6 +10,7 @@ public class License {
 	public Boolean hasLicense; //是否有证书
 	
 	//purchase info
+	public String SN;	//设备序列号
 	public String customer;
 	public String payInfo;
 	public Long createTime; //创建时间	
