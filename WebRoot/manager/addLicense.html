@@ -31,6 +31,7 @@
 		$(obj).attr("disabled",true);
 		
 		var type = $("#lienceType").val();
+		var serverSN = $("#serverSN").val();
 		var customer = $("#customer").val();
 	    var payInfo = $("#payInfo").val();
 	    var usersCount =  $("#usersCount").val();
@@ -44,6 +45,7 @@
             dataType : "json",
             data : {
             	type: type,
+            	serverSN : serverSN,
             	customer : customer,
             	payInfo : payInfo,
             	usersCount : usersCount,
@@ -88,6 +90,13 @@
                           <option value="2">专业版</option>
                           <option value="1">企业版</option>
                         </select>
+                      </div>
+                    </div>
+                    <!-- serverSN -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="serverSN">设备号</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="serverSN" name="serverSN">
                       </div>
                     </div>
                     <!-- customer -->
