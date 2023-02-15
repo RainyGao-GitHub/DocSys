@@ -76,5 +76,6 @@ public interface Channel {
 	String buildMailContent(String content);
 	
 	String buildDocShareMailContent(String content);
-
+	
+	String getServerSN();
 }
