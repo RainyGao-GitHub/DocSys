@@ -273,9 +273,12 @@ var OfficeEditor = (function () {
         		var version = 1;
         		var history;
         		var historyInfo;
+        		var preHistoryInfo;
         		
         		for(var i=0; i<list.length; i++)
         		{
+        			console.log("initOfficeDocHistoryList() version:" + version);
+
         			var data = list[i];
         			var created = formatTime(data.time);
         			var user = {};
@@ -306,16 +309,18 @@ var OfficeEditor = (function () {
                 		
             			historyList.push(history);
             			historyData.push(historyInfo);
+            			preHistoryInfo = historyInfo;
             			version++;
         			}
         			else 
         			{
-        				history = {};
-            			historyInfo = {};
-
-        				history.orgChangeIndex = data.orgChangeIndex;
         				if(data.orgChangeIndex == 0)
         				{
+            				history = {};
+                			historyInfo = {};
+                			
+                			history.orgChangeIndex = data.orgChangeIndex;
+            					
                 			history.path = dataEx.path;
                 			history.name = dataEx.name;
 
@@ -331,14 +336,18 @@ var OfficeEditor = (function () {
                     		historyInfo.version = version;
                     		historyInfo.key = data.docId;
                     		historyInfo.url = buildHistoryUrl(docInfo, history, data.orgChangeIndex);
-                    		var previous = {};
-                    		previous.key = historyData[version-2].key;
-                    		previous.url = historyData[version-2].url;
-                    		historyInfo.previous = previous;
-                    		previous.changesUrl = buildChangesUrl(docInfo, history);
+                    		if(preHistoryInfo !== undefined)
+                    		{
+                    			var previous = {};
+                    			previous.key = preHistoryInfo.key;
+                    			previous.url = preHistoryInfo.url;
+                    			historyInfo.previous = previous;
+                    		}
+                    		historyInfo.changesUrl = buildChangesUrl(docInfo, history);
 
                     		historyList.push(history);
                 			historyData.push(historyInfo);
+                			preHistoryInfo = historyInfo;
                 			version++;
         				}
         				
@@ -359,15 +368,6 @@ var OfficeEditor = (function () {
         	    });
         	}
         }
-        
-        function buildPreviousHistory(docInfo, history)
-        {
-        	var previous = {};
-			previous.orgChangeIndex = history.orgChangeIndex - 1;
-			previous.key = dockey + "_" + history.orgKey + "_" + previous.orgChangeIndex;
-			previous.url = buildHistoryUrl(docInfo, history, previous.orgChangeIndex);
-			return previous;
-		}
         
         function buildHistoryUrl(docInfo, history, orgChangeIndex)
         {
