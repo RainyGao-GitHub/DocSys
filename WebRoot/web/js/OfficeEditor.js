@@ -7,6 +7,7 @@ var OfficeEditor = (function () {
     var title;
     var dockey;
     var historyList;
+    var historyData;
     var isExternalOffice = false;
 
 	//For ArtDialog
@@ -268,39 +269,90 @@ var OfficeEditor = (function () {
         	if(list)
         	{
         		historyList = [];
+        		historyData = [];
+        		var version = 1;
+        		var history;
+        		var historyInfo;
+        		
         		for(var i=0; i<list.length; i++)
         		{
         			var data = list[i];
-        			var history = {};
-        			history.serverVersion = dataEx.serverVersion;
-        			history.user = {};
-        			history.user.id = data.useridoriginal;
-        			history.user.name = data.userName !== undefined ? data.userName:data.user;
-    				history.orgKey = data.docId;
-        			history.created = formatTime(data.time);
-        			history.version = i+1;
-        			history.path = dataEx.path;
-        			history.name = dataEx.name;
-        			history.url = buildHistoryUrl(docInfo, history, data.orgChangeIndex);
+        			var created = formatTime(data.time);
+        			var user = {};
+        			user.id = data.useridoriginal;
+        			user.name = data.userName !== undefined ? data.userName:data.user;
+        			
         			if(data.orgChangeIndex === undefined)
         			{
-    					//First history have no previous info
+             			history = {};
+            			historyInfo = {};
+
     					history.orgChangeIndex = -1;
+
+            			history.path = dataEx.path;
+            			history.name = dataEx.name;
+
+    					//Build historyList Item
+        				history.changes = null;
+                		history.key = data.docId;
+                		history.version = version;
+                		history.created = created;
+                		history.user = user;
+                		
+                		//Build historyData Item
+                		historyInfo.version = version;
+                		historyInfo.key = data.docId;
+                		historyInfo.url = buildHistoryUrl(docInfo, history, data.orgChangeIndex);
+                		
+            			historyList.push(history);
+            			historyData.push(historyInfo);
+            			version++;
         			}
-    				else
-    				{
+        			else 
+        			{
+        				history = {};
+            			historyInfo = {};
+
         				history.orgChangeIndex = data.orgChangeIndex;
-        				history.changesUrl = buildChangesUrl(docInfo, history);	        				
-        				history.previous = buildPreviousHistory(docInfo, history);
-        			}
-    				//update history.key会触发auth，暂时不修改
-        			history.key = dockey + "_" + history.orgKey + "_" + history.orgChangeIndex; //history dockey
-        			
-        			console.log("initOfficeDocHistoryList history[" + i + "]", history);
-        			historyList.push(history);
+        				if(data.orgChangeIndex == 0)
+        				{
+                			history.path = dataEx.path;
+                			history.name = dataEx.name;
+
+        					//Build historyList Item
+        					history.serverVersion = dataEx.serverVersion;
+            				history.changes = [];
+        					history.key = data.docId;
+                    		history.version = version;
+                    		history.created = created;
+                    		history.user = user;
+                    		
+                    		//Build historyData Item
+                    		historyInfo.version = version;
+                    		historyInfo.key = data.docId;
+                    		historyInfo.url = buildHistoryUrl(docInfo, history, data.orgChangeIndex);
+                    		var previous = {};
+                    		previous.key = historyData[version-2].key;
+                    		previous.url = historyData[version-2].url;
+                    		historyInfo.previous = previous;
+                    		previous.changesUrl = buildChangesUrl(docInfo, history);
+
+                    		historyList.push(history);
+                			historyData.push(historyInfo);
+                			version++;
+        				}
+        				
+        				var change = {};
+        				change.created = created;
+        				change.user = user;
+        				history.changes.push(change);        				
+        			}        			
         		}
         		
-        		var currentVersion = list.length;
+    			console.log("initOfficeDocHistoryList historyList", historyList);
+    			console.log("initOfficeDocHistoryList historyData", historyData);
+        		
+        		var currentVersion = historyList.length;
         		docEditor.refreshHistory({
         	        "currentVersion": currentVersion,
         	        "history": historyList
@@ -393,9 +445,9 @@ var OfficeEditor = (function () {
 
         function setOfficeDocHistoryData(version)
         {
-        	if(historyList)
+        	if(historyData)
         	{
-        		var data = historyList[version-1];
+        		var data = historyData[version-1];
         		console.log("setOfficeDocHistoryData() data:", data);
         		docEditor.setHistoryData(data);
         	}
