@@ -30,6 +30,8 @@
 		var id =  $("#userId").val();
 		var name = $("#name").val();
 	    var realName = $("#realName").val();
+	    var tel = $("#tel").val();
+	    var email = $("#email").val();
 	    //var pwd =  $("#pwd").val();
 	    var type =  $("#type").val();
 	    
@@ -43,6 +45,8 @@
             	 id : id,
                  name : name,
                  realName : realName,
+                 tel : tel,
+                 email: email,
                  type : type,
                  //pwd : MD5(pwd),
             },
@@ -89,7 +93,22 @@
                         <input type="text" class="form-control" id="realName" name="realName">
                       </div>
                     </div>
-                    <!-- Cateogry -->
+                    <!-- tel -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="tel">手机</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="tel" name="tel">
+                      </div>
+                    </div>
+                    <!-- email -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="email">邮箱</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="email" name="email">
+                      </div>
+                    </div>
+                    
+                    <!-- role -->
                     <div class="form-group">
                       <label class="control-label col-lg-3">角色</label>
                       <div class="col-lg-9">

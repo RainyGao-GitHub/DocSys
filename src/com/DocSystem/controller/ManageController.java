@@ -1739,8 +1739,10 @@ public class ManageController extends BaseController{
 		String userName = user.getName();
 		String pwd = user.getPwd();
 		Integer type = user.getType();
+		String tel = user.getTel();
+		String email = user.getEmail();
 
-		Log.debug("userName:"+userName + " pwd:"+pwd + "type:" + type);
+		Log.debug("userName:"+userName + " pwd:"+pwd + " tel:" + tel + " email:" + email + "type:" + type);
 		
 		//检查是否越权设置
 		if(type > login_user.getType())
