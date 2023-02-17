@@ -15849,8 +15849,8 @@ public class BaseController  extends BaseFunction{
         	}
         	else
         	{
-        		Log.debug("BaseController run() command:" + command +  " 执行失败！exitCode:" + exitCode);
-        		Log.debug("BaseController run() 错误日志 result:" + result);   
+        		Log.info("BaseController run() command:" + command +  " 执行失败！exitCode:" + exitCode);
+        		Log.info("BaseController run() 错误日志 result:" + result);   
         	}
         	ps.destroy();
             
@@ -15879,9 +15879,8 @@ public class BaseController  extends BaseFunction{
         	}
         	else
         	{
-        		Log.debug("执行失败:" + exitCode);   
-        		Log.debug("错误日志:" + result);   
-            		
+        		Log.info("BaseController run() command:" + command +  " 执行失败！exitCode:" + exitCode);
+        		Log.info("BaseController run() 错误日志 result:" + result);             		
         	}
         	ps.destroy();
         	runResult.exitCode = exitCode;
