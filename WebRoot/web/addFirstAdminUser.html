@@ -70,6 +70,21 @@
         	showErrorMessage("用户名不能为空");
         	return;
         }
+        
+        var tel = $('input[name="tel"]').val();
+        if(tel == "")
+        {
+        	showErrorMessage("手机号不能为空");
+        	return;
+        }
+
+        var email = $('input[name="email"]').val();
+        if(email == "")
+        {
+        	showErrorMessage("邮箱不能为空");
+        	return;
+        }
+        
         var pwd = $('input[name="pwd"]').val();
     	if(pwd == "")
     	{
@@ -90,11 +105,11 @@
             type : "post",
             dataType : "json",
             data : {
-                 name : $('input[name="userName"]').val(),
-                 pwd : MD5($('input[name="pwd"]').val()),
-                 pwd2: MD5($('input[name="pwd2"]').val()),
-                 tel : $('input[name="tel"]').val(),
-                 email : $('input[name="email"]').val(),
+                 name : name,
+                 pwd : MD5(pwd),
+                 pwd2: MD5(pwd2),
+                 tel : tel,
+                 email : email,
             },
             success : function (ret) {
             	$("#submit").removeAttr("disabled");
