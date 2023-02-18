@@ -43,13 +43,18 @@
 	{
 		console.log("docDetailPageInit()");
         var path = "::/" + node.path;
-        var createTime = formatTime(node.createTime);  
         var lastEditTime = formatTime(node.latestEditTime);  
+        var createTime = lastEditTime;
+        if(node.createTime)
+        {
+        	console.log("docDetailPageInit() node.createTime:", node.createTime);
+        	createTime = formatTime(node.createTime);
+        }
 		
         $("#dialog-doc-detail input[name='name']").val(node.name);
         $("#dialog-doc-detail input[name='size']").val(node.size);               
-        $("#dialog-doc-detail input[name='position']").val(path);                
-        $("#dialog-doc-detail input[name='createTime']").val(createTime);                
+        $("#dialog-doc-detail input[name='position']").val(path);        
+        $("#dialog-doc-detail input[name='createTime']").val(createTime);
         $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);    
 	}
 </script>
