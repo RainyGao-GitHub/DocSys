@@ -298,6 +298,16 @@ public class LuceneUtil2   extends BaseFunction
 			Log.debug("buildDocument() size is null");
 		}
 
+        //createTime
+        if(doc.getCreateTime() != null)
+        {
+            document.add(new LongField("createTime", doc.getCreateTime(), Store.YES));
+        }
+		else
+		{
+			Log.debug("buildDocument() createTime is null");
+		}
+        
         //latestEditTime
         if(doc.getLatestEditTime() != null)
         {
@@ -305,7 +315,7 @@ public class LuceneUtil2   extends BaseFunction
         }
 		else
 		{
-			Log.debug("buildDocument() pid is null");
+			Log.debug("buildDocument() latestEditTime is null");
 		}
 
         //Revision
