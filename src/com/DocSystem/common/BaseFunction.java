@@ -94,7 +94,6 @@ import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.User;
-import com.DocSystem.websocket.MacTools;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -5651,5 +5650,16 @@ public class BaseFunction{
 			rt.setError(logStr);
 		}
 		Log.info(logStr, defaultLogFilePath);
+	}
+	
+	public static boolean createMonitorTrigger(String trigger)
+	{
+		String triggerFileName = trigger + ".trigger";
+		if(false == FileUtil.createFile(docSysIniPath, triggerFileName))
+		{
+			Log.info("createMonitorTrigger() FileUtil.createFile 文件 [" + triggerFileName + "] 创建失败！");
+			return false;					
+		}
+		return true;
 	}
 }
