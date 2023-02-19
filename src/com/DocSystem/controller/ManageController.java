@@ -524,8 +524,11 @@ public class ManageController extends BaseController{
 		
 		docSysIniState = 1; //needRestart
 		addDocSysInitAuthCode(systemUser);
-		
+				
 		writeJson(rt, response);
+		
+		//创建系统重启任务
+		createMonitorTrigger("restart");
 	}
 	
 	@RequestMapping("/clusterServerLoopbackTest.do")
@@ -1590,9 +1593,10 @@ public class ManageController extends BaseController{
 		}
 		
 		//开始升级
-		if(upgradeServer(rt) == false)
+		if(createMonitorTrigger("upgrade") == false)
 		{
 			Log.debug("upgradeSystem() 升级系统失败");
+			rt.setError("创建升级任务失败!");
 			writeJson(rt, response);
 			return;
 		}
@@ -1614,10 +1618,10 @@ public class ManageController extends BaseController{
 			return;
 		}		
 		
-		//开始重启
-		if(restartServer(rt) == false)
+		if(createMonitorTrigger("restart") == false)
 		{
-			Log.debug("restartServer() 重启服务失败");
+			Log.debug("restartServer() 创建重启任务失败");
+			docSysErrorLog("重启任务创建失败!", rt);
 			writeJson(rt, response);
 			return;
 		}
