@@ -11155,6 +11155,8 @@ public class BaseController  extends BaseFunction{
 				//如果之前的版本号低于V2.0.47则需要更新数据库的驱动和链接
 				UserJDBCSettingUpgrade(UserJDBCSettingPath);
 				FileUtil.copyFile(UserJDBCSettingPath, JDBCSettingPath, true);
+
+				FileUtil.saveDocContentToFile("needRestart", docSysIniPath,  "docSysIniState", "UTF-8");
 				return "needRestart";
 			}
 		}
@@ -11199,6 +11201,7 @@ public class BaseController  extends BaseFunction{
 		if(initObjMemberListMap() == false)
 		{
 			Log.info("docSysInit() initObjMemberListMap Faield!");
+			FileUtil.saveDocContentToFile("ERROR_initObjMemberListMapFailed", docSysIniPath,  "docSysIniState", "UTF-8");
 			return "ERROR_initObjMemberListMapFailed";			
 		}
 		Log.info("docSysInit() initObjMemberListMap done!");
@@ -11211,7 +11214,9 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.info("docSysInit() 数据库连接测试失败 (SytemtStart triggered docSysInit)");
 				//系统启动时的初始化force要设置成false,否则数据库初始化时间过长会导致服务器重启
-				Log.info("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");				
+				Log.info("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");		
+
+				FileUtil.saveDocContentToFile("ERROR_DBNotExists", docSysIniPath,  "docSysIniState", "UTF-8");
 				return "ERROR_DBNotExists";
 			}
 			else
@@ -11249,7 +11254,8 @@ public class BaseController  extends BaseFunction{
 				
 				//start DataBase auto backup thread
 				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
-				
+
+				FileUtil.saveDocContentToFile("ok", docSysIniPath,  "docSysIniState", "UTF-8");
 				return "ok";
 			}
 		}
@@ -11283,6 +11289,7 @@ public class BaseController  extends BaseFunction{
 			addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
 		}
 		
+		FileUtil.saveDocContentToFile(ret, docSysIniPath,  "docSysIniState", "UTF-8");
 		return ret;
 	}
 	
