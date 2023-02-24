@@ -7191,7 +7191,7 @@ public class DocController extends BaseController{
 		searchWord = searchWord.replace('\\','/');
 		
 		//文件直接直接命中
-		Doc hitDoc = getHitDoc(repos, path, searchWord);		
+		List<Doc> hitDocList = getHitDocList(repos, path, searchWord);	
 		
 		//拆分字符串中的路径
 		String[] temp = new String[2]; 
@@ -7212,21 +7212,104 @@ public class DocController extends BaseController{
 		
 		luceneSearch(repos, preConditions, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc
 		result = convertSearchResultToDocList(repos, searchResult);	
-		if(hitDoc == null || hitDoc.getType() == null || hitDoc.getType() == 0)
+		if(result == null)
+		{
+			return hitDocList;
+		}
+		
+		if(hitDocList == null)
 		{
 			return result;
 		}
 		
-		if(result != null)
-		{
-			result.add(0,hitDoc);
-			return result;
-		}
-		
-		//hitDoc存在、搜索结果为空
-		result = new ArrayList<Doc>();
-		result.add(hitDoc);
+		result.addAll(0, hitDocList);
 		return result;
+	}
+
+	private List<Doc> getHitDocList(Repos repos, String path, String searchWord) {
+		Log.debug("getHitDocList() path:" + path + " searchWord:" + searchWord);
+		List<Doc> list = new ArrayList<Doc>();
+		Doc hitDoc = getHitDoc(repos, path, searchWord);
+		if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
+		{
+			list.add(hitDoc);
+			return list;
+		}
+		
+		//进行精确模糊搜索
+		//尝试在path下分别删除1/2/3级头部和1级尾部进行搜索 
+		hitDocSmartSearch(repos, path, searchWord, list);
+		return list;
+	}
+
+	private void hitDocSmartSearch(Repos repos, String path, String searchWord, List<Doc> list) {
+		//拆分searchWord路径
+		String searchPath = searchWord.replace('\\','/');
+		Log.debug("hitDocSmartSearch() searchPath:" + searchPath);
+
+
+		String tempPath[] = searchPath.split("/");
+		if(tempPath.length < 2)
+		{
+			Log.debug("hitDocSmartSearch() tempPath length < 2");
+			//没有相对路径信息，不尝试
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		Doc doc = null;
+		Doc hitDoc = null;
+		String docPath = null;
+		
+		//去1/2/3级目录
+		for(int i=0; i<3; i++)
+		{
+			docPath = buildDocPath(tempPath, i+1, tempPath.length-1);
+			if(docPath == null)
+			{
+				break;
+			}
+			docPath = path + "/" + docPath;			
+			doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
+			hitDoc = docSysGetDoc(repos, doc, false);
+			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
+			{
+				list.add(hitDoc);
+				return;
+			}
+			
+			docPath = buildDocPath(tempPath, i+1, tempPath.length-2);
+			if(docPath == null)
+			{
+				break;
+			}
+			docPath = path + "/" + docPath;
+			doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
+			hitDoc = docSysGetDoc(repos, doc, false);
+			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
+			{
+				list.add(hitDoc);
+				return;
+			}			
+		}
+	}
+
+	private String buildDocPath(String[] tempPath, int start, int end) {
+		if(start >= end)
+		{
+			return null;
+		}
+		
+		String path = tempPath[start];
+		for(int i=start+1; i <= end; i++)
+		{
+			path = path + "/" + tempPath[i];
+		}
+		Log.debug("buildDocPath() path [" + path + "]");
+		return path;
 	}
 
 	//通过路径搜索的话，只查找本地的目录，避免远程仓库链接不上或者时间太长
@@ -7247,7 +7330,7 @@ public class DocController extends BaseController{
 			docPath = docPath.replace('\\','/');
 		}
 		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
-		Doc hitDoc = fsGetDoc(repos, doc);
+		Doc hitDoc = docSysGetDoc(repos, doc, false);
 		return hitDoc;
 	}
 
