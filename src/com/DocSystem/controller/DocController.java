@@ -5539,22 +5539,27 @@ public class DocController extends BaseController{
 					return;
 				}
 				
+				boolean isLatestCommitCheck = true;
 				if(isLocalChanged(scanOption))
 				{
-					unlockDoc(doc, lockType, reposAccess.getAccessUser());
+					isLatestCommitCheck = false;
+					
+					//unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					Log.info("revertDocHistory() 本地有改动！");
 					
 					docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);					
 					String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, scanOption.localChangesRootPath, 2, null, null);
 					if(revision == null)
 					{
-						unlockDoc(doc, lockType, reposAccess.getAccessUser());
-						docSysErrorLog("本地文件有改动", rt);
-						writeJson(rt, response);						
-		
 						docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
-						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
-						return;
+						
+						//unlockDoc(doc, lockType, reposAccess.getAccessUser());
+						//docSysErrorLog("本地文件有改动", rt);
+						//writeJson(rt, response);						
+		
+						//docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
+						//addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+						//return;
 					}
 					else
 					{
@@ -5566,19 +5571,22 @@ public class DocController extends BaseController{
 				cleanSyncUpTmpFiles(scanOption);
 				
 				//判断是否为最新版本
-				if(localEntry.getType() != 0)
+				if(isLatestCommitCheck)
 				{
-					if(commitId.equals(remoteEntry.getRevision()))
+					if(localEntry.getType() != 0)
 					{
-						docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision(), rt);
-						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-						unlockDoc(doc, lockType, reposAccess.getAccessUser());
-						writeJson(rt, response);
-							
-						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
-						return;
-					}
-				}	
+						if(commitId.equals(remoteEntry.getRevision()))
+						{
+							docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision(), rt);
+							docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+							unlockDoc(doc, lockType, reposAccess.getAccessUser());
+							writeJson(rt, response);
+								
+							addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+							return;
+						}
+					}	
+				}
 			}
 			
 			revertResult  = revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null, asyncActionList);
