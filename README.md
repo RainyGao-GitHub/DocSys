@@ -124,7 +124,11 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ## 购买与咨询 请加群 : 953982034
 
 # 常见问题
-### 一、二次开发如何集成商业版功能
+### 一、开发文档与使用文档
+
+https://gitee.com/RainyGao/DocSys-Docs
+
+### 二、二次开发如何集成商业版功能
 
 #### 1、编译开源版本 DocSystem.war
 
@@ -134,13 +138,15 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 复制商业版本中的 DocSystem\web\static\office-editor 和 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录到开源版本对应的目录
 
-### 二、商业版如何转成个人版
+### 三、商业版转个人版/社区版
 
-#### [下载](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)并安装个人版证书 
+#### 1、商业版转个人版
 
-### 三、商业版如何转成社区版
+[下载](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)并安装个人版证书 
 
-#### 删除 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录
+#### 2、商业版如何转成社区版
+
+删除 DocSystem\WEB-INF\classes\com\DocSystem\websocket 目录
 
 
 ### 四、Office编辑常见问题
