@@ -15834,7 +15834,7 @@ public class BaseController  extends BaseFunction{
         }
         else
         {
-        	cmd = "sh \"" + shellScriptPath + "\"";
+        	cmd = "sh " + shellScriptPath;
         }
         return cmd;
     }   
