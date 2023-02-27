@@ -174,4 +174,13 @@ public class constants {
 		public final static int remoteServer			= 50;	//localChanged and do not check remoteDoc, treat localNotExist as delete
 		public final static int force  					= 100;	//push Force no any check	
 	}
+	
+	public class PullType  {
+		public final static int autoPull  				= 10;	//remoteAdded and localNoChange
+		public final static int autoPullForce 			= 20;	//remoteChanged and localNoChange
+		public final static int manualPull	 			= 21;	//remoteChanged and localNoChange
+		public final static int manualPullForce 		= 30;	//remoteChanged or localChanged
+		public final static int remoteServerCheckOut	= 40;	//remoteChanged and localNotCheck, treat remoteNotExist as delete
+		public final static int force  					= 100;	//pull Force no any check	
+	}
 }

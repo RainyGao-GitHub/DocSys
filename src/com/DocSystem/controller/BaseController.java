@@ -3597,7 +3597,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(channel != null)
 			{
-				successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, downloadList);
+				successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.manualPullForce, downloadList);
 			}
 		}
 		
@@ -4823,10 +4823,10 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
-							int pullType = 1; //remoteAdded and localNotChanged
+							int pullType = constants.PullType.autoPull; //remoteAdded and localNotChanged
 							if(remote.autoPullForce == 1)
 							{
-								pullType = 2;	//remoteChanged and localNotChanged
+								pullType = constants.PullType.autoPullForce;	//remoteChanged and localNotChanged
 							}
 							
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
