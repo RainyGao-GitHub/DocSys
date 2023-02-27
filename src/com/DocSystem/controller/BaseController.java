@@ -4812,10 +4812,10 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePushEnable && remote.autoPush != null && remote.autoPush == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
-							int pushType = 1; //localAdded and remoteNoChange
+							int pushType = constants.PushType.autoPush; //localAdded and remoteNoChange
 							if(remote.autoPushForce == 1)
 							{
-								pushType = 2; //localChanged and remoteNotChanged
+								pushType = constants.PushType.autoPushForce; //localChanged and remoteNotChanged
 							}
 							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, rt);
 						}				
@@ -5618,13 +5618,13 @@ public class BaseController  extends BaseFunction{
 		{
 			if(localEntry == null || localEntry.getType() == null || localEntry.getType() == 0)
 			{
-				//Log.debug("getLocalDocChangeType " + DocChangeType.NOCHANGE); 
+				Log.debug("getLocalDocChangeType " + DocChangeType.NOCHANGE); 
 				return DocChangeType.NOCHANGE;
 			}
 			
 			if(localEntry.getType() == 1 || localEntry.getType() == 2)
 			{
-				//Log.debug("getLocalDocChangeType " + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALADD); 
+				Log.debug("getLocalDocChangeType " + localEntry.getPath() + localEntry.getName() + " " + DocChangeType.LOCALADD); 
 				return DocChangeType.LOCALADD;
 			}
 
@@ -12376,10 +12376,10 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = 1; //localAdded and remoteNotChanged
+		int pushType = constants.PushType.autoPush;	//localAdded and remoteNotChanged
 		if(remote.autoPushForce == 1)
 		{
-			pushType = 2; //localChanged and remoteNotChanged
+			pushType = constants.PushType.autoPushForce; //localChanged and remoteNotChanged
 		}
 		
 		switch(action)
@@ -12467,13 +12467,12 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = 4;	//localChanged and remoteNoCheck
+		int pushType = constants.PushType.autoBackupWithNewFolder;	//localChanged and remoteNoCheck 
 		if(remote.isVerRepos)
 		{
-			pushType = 3;	//localChanged or remoteChanged
+			pushType = constants.PushType.autoBackupWithVerRepos;	//localChanged or remoteChanged
 		}
 
-		
 		switch(action)
 		{
 		case "copyDoc":
@@ -12545,10 +12544,10 @@ public class BaseController  extends BaseFunction{
 			
 		//push options
 		boolean recurcive = true;
-		int pushType = 4;	//localChanged and remoteNoCheck 
+		int pushType = constants.PushType.autoBackupWithNewFolder;	//localChanged and remoteNoCheck 
 		if(remote.isVerRepos)
 		{
-			pushType = 3;	//localChanged or remoteChanged
+			pushType = constants.PushType.autoBackupWithVerRepos;	//localChanged or remoteChanged
 		}
 		
 		switch(action)
