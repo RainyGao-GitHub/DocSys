@@ -162,4 +162,16 @@ public class constants {
 	public final static int DocSys_Enterprise_Edition = 1;
 	public final static int DocSys_Professional_Edition = 2;
 	public final static int DocSys_Personal_Edition = 3;
+	
+	public class PushType  {
+		public final static int autoPush  				= 10;	//LocalAdded and remoteNoChange
+		public final static int autoPushForce 			= 20;	//localChanged and rmoteNoChange 
+		public final static int manualPush 				= 21;	//localChanged and rmoteNoChange
+		public final static int manualPushForce 		= 30;	//localChanged or remoteChanged
+		public final static int autoBackupWithVerRepos 	= 31;	//localChanged or remoteChanged
+		public final static int autoBackupWithNewFolder	= 40;	//localChanged and do not check remoteDoc
+		public final static int pushToNewFolder			= 41;	//localChanged and do not check remoteDoc
+		public final static int remoteServer			= 50;	//localChanged and do not check remoteDoc, treat localNotExist as delete
+		public final static int force  					= 100;	//push Force no any check	
+	}
 }
