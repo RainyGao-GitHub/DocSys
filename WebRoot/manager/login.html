@@ -94,6 +94,7 @@
 	//登录按键处理函数
 	function login(){
 		//alert("11");
+		var rememberMe = $('input[name="rememberMe"]').is(':checked')? 1: 0;
         $.ajax({
             url : "/DocSystem/User/login.do",
             type : "post",
@@ -101,7 +102,7 @@
             data : {
                  userName : $('input[name="userName"]').val(),
                  pwd : base64_encode($('input[name="pwd"]').val()),
-                 rememberMe : $('input[name="rememberMe"]').val(),
+                 rememberMe : rememberMe,
             },
             success : function (ret) {
                 if( "ok" == ret.status )
