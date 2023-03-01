@@ -13,10 +13,9 @@
     </div>
     <div class="form-group">
         <div class="col-sm-12 text-center">
-            <input id="rememberMe_cb" type="checkbox" onchange="remember(this);" class="needSetVal" value="1">
+            <input id="rememberMe" name="rememberMe" type="checkbox">
 	            <span class="p5">下次自动登录<a style="margin-left:10px;" href="/DocSystem/web/getPassword.html">忘记密码？</a></span>
 			</input>
-			<input id="rememberMe_vl" name="rememberMe" type="hidden" value="0" />        
         </div>
     </div>
     <p class="text-warning"></p>
@@ -130,52 +129,17 @@
 	 	}  
 	}
 	
-	//设置checkbox
-	function setCheckBoxs(){
-		var s = $("input[type=checkbox]");
-		
-		$(s).each(function(i,item){
-			if($(item).hasClass("needSetVal")){
-				var hc = $(item).next();
-				var v = $(hc).val();
-				console.log($(item)[0].checked);
-				if(v=="1"){
-					$(item).attr("checked",true);
-				}else{
-					$(item).attr("checked",false);
-				}
-			}
-		});
-	}
-	
-	//设置rememberMe value
-	function remember(item){
-		console.log($(item));
-		
-		var hc = $(item).next();
-		var rememberMe = $(hc).val();
-		if(rememberMe == "0")
-		{
-			$(hc).val("1");
-		}
-		else
-		{
-			$(hc).val("0");
-		}
-		console.log($("#rememberMe_vl").val());
-		
-	}
-	
 	//登录按键处理函数
 	function login(){
-        $.ajax({
+		var rememberMe = $('input[name="rememberMe"]').is(':checked')? 1: 0;
+		$.ajax({
             url : "/DocSystem/User/login.do",
             type : "post",
             dataType : "json",
             data : {
                  userName : $('input[name="userName"]').val(),
                  pwd : base64_encode($('input[name="pwd"]').val()),
-                 rememberMe : $('input[name="rememberMe"]').val(),
+                 rememberMe : rememberMe,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
