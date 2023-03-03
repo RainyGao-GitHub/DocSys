@@ -1567,7 +1567,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		String fileName = uploadFile.getOriginalFilename();
-		if(!fileName.equals("DocSystem.war"))
+		if(!fileName.startsWith("DocSystem"))
 		{
 			Log.debug("upgradeSystem() 非法升级文件");
 			docSysErrorLog("非法升级文件:" + fileName, rt);
@@ -1575,7 +1575,8 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(FileUtil.saveFile(uploadFile, docSysIniPath, fileName) == null)
+		String upgradePath = docSysIniPath + "upgrade/";
+		if(FileUtil.saveFile(uploadFile, upgradePath, fileName) == null)
 		{
 			Log.debug("upgradeSystem() 保存升级文件失败");
 			docSysErrorLog("保存升级文件失败", rt);
@@ -1584,7 +1585,7 @@ public class ManageController extends BaseController{
 		}
 		
 		//开始解压
-		if(unZip(docSysIniPath + fileName, docSysIniPath + "DocSystem/") == false)
+		if(unZip(upgradePath + fileName, upgradePath + "DocSystem/") == false)
 		{
 			Log.debug("upgradeSystem() 解压失败");
 			docSysErrorLog("升级包解压失败", rt);
