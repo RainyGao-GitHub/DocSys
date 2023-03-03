@@ -19,6 +19,7 @@ import util.ReturnAjax;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -200,5 +201,10 @@ public class CommunityChannel extends BaseController implements Channel {
 	@Override
 	public String buildDocShareMailContent(String content) {
 		return null;
+	}
+	
+	@Override
+	public boolean systemLicenseInfoCheck(ReturnAjax rt) {
+		return true;
 	}
 }

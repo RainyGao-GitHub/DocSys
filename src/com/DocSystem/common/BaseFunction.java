@@ -2220,25 +2220,7 @@ public class BaseFunction{
 	}
 
 	protected boolean systemLicenseInfoCheck(ReturnAjax rt) {
-		if(systemLicenseInfo.expireTime != null)
-		{	
-			long curTime = new Date().getTime();
-			if(systemLicenseInfo.expireTime < curTime) 
-			{
-				rt.setError("证书已过期，请购买商业版证书！");
-				return false;	
-			}
-		}
-		if(systemLicenseInfo.state != null)
-		{	
-			if(systemLicenseInfo.state == 0) 
-			{
-				rt.setError("证书已失效，请重新购买商业版证书！");
-				return false;	
-			}
-		}
-		
-		return true;
+		return channel.systemLicenseInfoCheck(rt);
 	}
 
     public static String getServerHost() {
