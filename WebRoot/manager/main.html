@@ -1723,7 +1723,7 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	showErrorMessage("重启成功!");
+	            	showErrorMessage("系统重启中，请稍候...");
 	        	}
 	            else 
 	            {
@@ -2393,7 +2393,7 @@
 				//上传成功！
 				var ret = JSON.parse(xhr.responseText);
 				if("ok" == ret.status){
-					showErrorMessage("升级成功");
+					showErrorMessage("系统升级中，请稍候...");
 				 }
 				 else	//上传失败
 				 {
