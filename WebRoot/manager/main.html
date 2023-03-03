@@ -2344,7 +2344,7 @@
 		
 		var fileName = firstFile.name;
 	    console.log("firstFile:"+fileName);
-	    if(fileName != "DocSystem.war")
+	    if(fileName.indexOf("DocSystem") == -1)
 	    {
 	    	showErrorMessage("非法升级文件");
 	    	return false;
