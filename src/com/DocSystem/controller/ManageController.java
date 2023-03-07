@@ -2622,7 +2622,7 @@ public class ManageController extends BaseController{
 		}
 		
 		String[] temp = new String[2]; 
-		if(Path.seperatePathAndName(logFilePath, temp) == -1)
+		if(Path.seperatePathAndName(logFilePath, temp) < 0)
 		{
 			docSysErrorLog("日志文件路径错误:" + logFilePath, rt);
 			writeJson(rt, response);			

@@ -7204,7 +7204,7 @@ public class DocController extends BaseController{
 		
 		//拆分字符串中的路径
 		String[] temp = new String[2]; 
-		Path.seperatePathAndName(searchWord, temp);
+		Path.seperatePathAndNameWithoutCheck(searchWord, temp);
 		String pathSuffix = temp[0];
 		searchWord = temp[1];	
 		
