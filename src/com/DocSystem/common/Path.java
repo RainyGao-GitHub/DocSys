@@ -38,6 +38,13 @@ public class Path {
 			{
 				continue;
 			}
+			
+			if(paths[i].equals(".."))
+			{
+				Log.info("getLevelByParentPath() 非法文件路径[" + path + "]");
+				return -1;
+			}
+			
 			level++;
 		}
 		Log.debug("getLevelByParentPath() path:[" + path + "] level:" + level);
@@ -81,6 +88,13 @@ public class Path {
 			{
 				continue;
 			}
+			
+			if(tempName.equals(".."))
+			{
+				Log.info("非法文件路径");
+				return -1;
+			}
+			
 			level++;
 			path = path + tempName + "/";
 		}
