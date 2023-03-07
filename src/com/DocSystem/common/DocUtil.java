@@ -53,7 +53,6 @@ public class DocUtil {
 		
 		if(level == -2)
 		{
-			Log.info("非法文件访问");
 			return null;
 		}
 		

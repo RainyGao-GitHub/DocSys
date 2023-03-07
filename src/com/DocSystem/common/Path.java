@@ -85,10 +85,57 @@ public class Path {
 			
 			if(tempName.equals(".."))
 			{
-				Log.info("非法文件路径");
+				Log.info("非法文件路径 [" + path + name + "]");
 				return -2;
 			}
 			
+			level++;
+			path = path + tempName + "/";
+		}
+		
+		result[0] = path;
+		result[1] = name;
+
+		return level;
+	}
+	
+	public static int seperatePathAndNameWithoutCheck(String entryPath, String [] result) {
+		if(entryPath.isEmpty())
+		{
+			//It it rootDoc
+			return -1;
+		}
+		
+		String [] paths = entryPath.split("/");
+		
+		int deepth = paths.length;
+		Log.debug("seperatePathAndName() deepth:" + deepth); 
+		
+		String  path = "";
+		String name = "";
+		
+		//Get Name and pathEndPos
+		int pathEndPos = 0;
+		for(int i=deepth-1; i>=0; i--)
+		{
+			name = paths[i];
+			if(name.isEmpty())
+			{
+				continue;
+			}
+			pathEndPos = i;
+			break;
+		}
+		
+		//Get Path
+		int level = 0;
+		for(int i=0; i<pathEndPos; i++)
+		{
+			String tempName = paths[i];
+			if(tempName.isEmpty())
+			{
+				continue;
+			}			
 			level++;
 			path = path + tempName + "/";
 		}
