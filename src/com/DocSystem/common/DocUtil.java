@@ -49,6 +49,14 @@ public class DocUtil {
 		if(level == null)
 		{
 			level = Path.getLevelByParentPath(path);
+			if(level == -1)
+			{
+				//检测到非法文件路径，强制修改文件信息
+				path = "";
+				name = "";
+				docId = 0L;
+				pid = -1L;
+			}
 		}
 		
 		Doc doc = new Doc();
