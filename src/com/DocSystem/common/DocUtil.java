@@ -27,36 +27,34 @@ public class DocUtil {
 		}
 		
 		//To support user call the interface by entryPath
+		String[] temp = new String[2]; 
 		if(name.isEmpty())
 		{
 			if(!path.isEmpty())
 			{
-				String[] temp = new String[2]; 
 				level = Path.seperatePathAndName(path, temp);
 				path = temp[0];
 				name = temp[1];			
 			}
-		}
-		
-		//在仓库管理界面，为了能够返回然根节点信息带有仓库名字，导致传入的Name不为空，这是一个错误的决定
-		if(name.isEmpty())	//rootDoc
-		{
-			level = -1;
-			docId = 0L;
-			pid = -1L;
-		}
-		
-		if(level == null)
-		{
-			level = Path.getLevelByParentPath(path);
-			if(level == -1)
+			else	//rootDoc
 			{
-				//检测到非法文件路径，强制修改文件信息
-				path = "";
-				name = "";
+				level = -1;
 				docId = 0L;
-				pid = -1L;
+				pid = -1L;				
 			}
+		}
+		else
+		{
+			//防止使用相对路径进行非法注入
+			level = Path.seperatePathAndName(path + name, temp);
+			path = temp[0];
+			name = temp[1];	
+		}
+		
+		if(level == -2)
+		{
+			Log.info("非法文件访问");
+			return null;
 		}
 		
 		Doc doc = new Doc();
