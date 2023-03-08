@@ -138,7 +138,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
-import com.DocSystem.common.entity.SyncupTask;
+import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -11436,9 +11436,25 @@ public class BaseController  extends BaseFunction{
 
 	private void addClusterHeartBeatDelayTask() {
 		Log.debug("addClusterHeartBeatDelayTask() add beating delay task at " + DateFormat.dateFormat(new Date()));
+		long curTime = new Date().getTime();
+        Log.info("addClusterHeartBeatDelayTask() curTime:" + curTime);        
+		
+		//go through all beatTask and close all task
+		for (GenericTask value : clusterBeatTaskHashMap.values()) {
+			Log.debug("addClusterHeartBeatDelayTask() stop beatTask:" + value.createTime);			
+			value.stopFlag = true;
+		}
+		
+		//Create a new beatTask
+		GenericTask task = new GenericTask();
+		task.createTime = curTime;
+		clusterBeatTaskHashMap.put(curTime, task);
+		
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.schedule(
         		new Runnable() {
+        			long createTime = curTime;
+        			
                     @Override
                     public void run() {
                         try {
@@ -11447,12 +11463,32 @@ public class BaseController  extends BaseFunction{
 	                       
 	                        if(redisEn == false)
 	                        {
+	                        	clusterBeatTaskHashMap.clear();
 	                        	Log.info("[" + clusterServerUrl + "] 已退出集群");
 	                        }
 	                        else
 	                        {
+	                    		GenericTask beatTask = clusterBeatTaskHashMap.get(createTime);
+	                    		if(beatTask == null)
+	                    		{
+	                    			Log.debug("ClusterHeartBeatDelayTask() there is no running beatTask for [" + createTime + "]");					
+	                    			return;
+	                    		}
+	                    		
+	                    		if(beatTask.stopFlag == true)
+	                    		{
+	                    			Log.debug("ClusterHeartBeatDelayTask() beatTask[" + createTime + "] is stoped");
+	                    			return;
+	                    		}	
+	                    		
+	                    		//remove current beatTask in HashMap
+	                    		clusterBeatTaskHashMap.remove(createTime);
+	                    		
+	                    		//update beat time
 		                        RMap<Object, Object> clusterServersMap = redisClient.getMap("clusterServersMap");
 		                        clusterServersMap.put(clusterServerUrl, beatTime);
+		                        
+		                        //Start new beat task
 		                        addClusterHeartBeatDelayTask();                    
 	                        }
                         	Log.info("******** ClusterHeartBeatDelayTask 执行结束\n");		                        
@@ -12189,7 +12225,7 @@ public class BaseController  extends BaseFunction{
 		//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
 		reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
 		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
-		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
+		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, GenericTask>());
 
 		//启动定时备份任务
 		if(repos.autoBackupConfig != null)
@@ -12330,7 +12366,7 @@ public class BaseController  extends BaseFunction{
 				//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
 				reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
 				reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
-				reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
+				reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, GenericTask>());
 
 				//启动定时备份任务
 				if(repos.autoBackupConfig != null)
@@ -12698,7 +12734,7 @@ public class BaseController  extends BaseFunction{
 		delayTime = delayTime + repos.getId() * 10; //根据仓库ID增加偏移时间，避免同时开始
 		Log.info("addDelayTaskForReposSyncUp delayTime:" + delayTime + " 秒后开始同步仓库 ["  + repos.getId() + " " + repos.getName() + "]");		
 		
-		ConcurrentHashMap<Long, SyncupTask> syncupTaskHashMap = reposSyncupTaskHashMap.get(repos.getId());
+		ConcurrentHashMap<Long, GenericTask> syncupTaskHashMap = reposSyncupTaskHashMap.get(repos.getId());
 		if(syncupTaskHashMap == null)
 		{
 			Log.info("addDelayTaskForReposSyncUp syncupTaskHashMap 未初始化");
@@ -12710,13 +12746,13 @@ public class BaseController  extends BaseFunction{
 		
 		//stopReposSyncupTasks
 		//go through all syncupTask and close all task
-		for (SyncupTask value : syncupTaskHashMap.values()) {
+		for (GenericTask value : syncupTaskHashMap.values()) {
 			Log.info("addDelayTaskForReposSyncUp() stop syncupTask:" + value.createTime);			
 			value.stopFlag = true;
 		}
 		
 		//startReposSyncupTask
-		SyncupTask syncupTask = new SyncupTask();
+		GenericTask syncupTask = new GenericTask();
 		syncupTask.createTime = curTime;
 		syncupTaskHashMap.put(curTime, syncupTask);
 
@@ -12733,7 +12769,7 @@ public class BaseController  extends BaseFunction{
 	                        //读取最新的仓库配置信息
 	                		Repos latestReposInfo = getReposEx(reposId);
 
-	                        ConcurrentHashMap<Long, SyncupTask> latestSyncupTask = reposSyncupTaskHashMap.get(reposId);
+	                        ConcurrentHashMap<Long, GenericTask> latestSyncupTask = reposSyncupTaskHashMap.get(reposId);
 	                        if(latestSyncupTask == null)
 	                        {
 		                        Log.info("ReposSyncupDelayTask latestSyncupTask is null");	                        	
@@ -12798,7 +12834,7 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
-	protected boolean isSyncupTaskNeedToStop(Repos latestReposInfo, ConcurrentHashMap<Long, SyncupTask> latestSyncupTask, long createTime) {
+	protected boolean isSyncupTaskNeedToStop(Repos latestReposInfo, ConcurrentHashMap<Long, GenericTask> latestSyncupTask, long createTime) {
 		if(latestReposInfo == null)
 		{
 			Log.debug("isSyncupTaskNeedToStop() latestReposInfo is null");			
@@ -12817,7 +12853,7 @@ public class BaseController  extends BaseFunction{
 			return true;			
 		}
 		
-		SyncupTask syncupTask = latestSyncupTask.get(createTime);
+		GenericTask syncupTask = latestSyncupTask.get(createTime);
 		if(syncupTask == null)
 		{
 			Log.debug("isSyncupTaskNeedToStop() there is no running backup task for [" + createTime + "]");						
