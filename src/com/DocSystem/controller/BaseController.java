@@ -11477,6 +11477,7 @@ public class BaseController  extends BaseFunction{
 	                    		
 	                    		if(beatTask.stopFlag == true)
 	                    		{
+		                    		clusterBeatTaskHashMap.remove(createTime);
 	                    			Log.debug("ClusterHeartBeatDelayTask() beatTask[" + createTime + "] is stoped");
 	                    			return;
 	                    		}	
