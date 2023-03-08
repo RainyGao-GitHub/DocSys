@@ -41,7 +41,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
-import com.DocSystem.common.entity.SyncupTask;
+import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.controller.BaseController;
 
@@ -388,7 +388,7 @@ public class ReposController extends BaseController{
 		InitReposAuthInfo(repos,login_user,rt);		
 		
 		//如果有版本管理，则需要启动定时扫描提交任务
-		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, SyncupTask>());
+		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, GenericTask>());
 		if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
 		{
 			addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步

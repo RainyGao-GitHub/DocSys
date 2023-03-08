@@ -83,7 +83,7 @@ import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
-import com.DocSystem.common.entity.SyncupTask;
+import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.commonService.ProxyThread;
@@ -215,7 +215,7 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposLocalBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();
 	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>> reposRemoteBackupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<String, BackupTask>>();	
 	//仓库文件同步任务HashMap
-	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, SyncupTask>>();
+	protected static ConcurrentHashMap<Integer, ConcurrentHashMap<Long, GenericTask>> reposSyncupTaskHashMap = new ConcurrentHashMap<Integer, ConcurrentHashMap<Long, GenericTask>>();
 
 	//仓库线性任务HashMap（用于保证仓库的任务按顺序执行，不需要考虑集群）
 	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
@@ -223,7 +223,10 @@ public class BaseFunction{
 	//数据库备份任务HashMap
 	//数据库备份任务对系统性能影响不大，而且不存在存储冲突问题，因此不考虑集群的任务唯一性问题
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();
-	
+
+	//集群心跳任务HashMap
+	protected static ConcurrentHashMap<Long, GenericTask> clusterBeatTaskHashMap = new ConcurrentHashMap<Long, GenericTask>();
+
 	//businessChannel
 	protected static Channel channel = null;
 	
