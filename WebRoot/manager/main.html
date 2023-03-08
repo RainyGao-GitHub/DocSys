@@ -1795,6 +1795,50 @@
 	    });
 	}
 	
+	function resetClusterConfirm()
+	{
+		console.log("resetClusterConfirm()");	    
+	    qiao.bs.confirm({
+	    		id: "resetClusterConfirmDialog",
+		        title: "重置",
+		        msg: "是否重置",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+	    		resetCluster();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function resetCluster()
+	{
+		console.log("resetCluster()");
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/resetCluster.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("<font color='green'><strong>重置成功</strong></font>");
+	            }
+	            else
+	            {
+	            	showErrorMessage("<font color='red'><strong>重置失败</strong></font><br/><br/>" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("重置失败:服务器异常");
+	        }
+	    });
+	}
+	
 	function generateRootKey()
 	{
         $.ajax({
