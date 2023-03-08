@@ -11367,7 +11367,7 @@ public class BaseController  extends BaseFunction{
 	    return clusterInfo;
 	}
 	
-	private void clearRedisCache() {
+	protected void clearRedisCache() {
 		Log.info("clearRedisCache()");
 		
 		//注意: 千万不要把当前serverUrl直接加入死亡列表 
@@ -11875,7 +11875,7 @@ public class BaseController  extends BaseFunction{
 		buket.delete();
 	}
 	
-	private boolean clusterDeployCheckGlobal(boolean clusterServerCheckEn) {
+	protected boolean clusterDeployCheckGlobal(boolean clusterServerCheckEn) {
 		boolean ret = false;
 		
 		String lockName = "clusterDeployCheckGlobal";
