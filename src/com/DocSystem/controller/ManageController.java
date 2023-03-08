@@ -1313,13 +1313,59 @@ public class ManageController extends BaseController{
 		
 		addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置","成功",  null, null, null, buildSystemLogDetailContent(rt));
 	}
+	
+	@RequestMapping("/resetCluster.do")
+	public void resetCluster(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** resetCluster.do ***********************");
+
+		Log.debug("resetCluster() redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
+		ReturnAjax rt = new ReturnAjax();
+
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(clusterServerUrl == null || clusterServerUrl.isEmpty())
+		{
+			docSysErrorLog("集群服务器地址未设置", rt);
+			writeJson(rt, response);
+			return;	
+		}
+		
+		if(redisEn == false)
+		{
+			docSysErrorLog("集群未开启,请检查集群参数", rt);
+			writeJson(rt, response);
+			return;			
+		}
+		
+		//ClusterServer自检(确认clusterServerUrl就是当前服务器)
+		if(clusterServerLoopbackTest(clusterServerUrl) == false)
+		{
+			docSysErrorLog("集群服务器自检失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//强制将自己设置为过期状态，触发重新加入集群
+		RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+		clusterServersMap.put(clusterServerUrl, 0L);
+		//TODO: restart接口可能触发两个集群心跳线程，如何保证其唯一性
+		restartClusterServer();
+				
+		writeJson(rt, response);
+	}
 
 	@RequestMapping("/testCluster.do")
 	public void testCluster(String redisUrl, String clusterServerUrl, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.infoHead("****************** redisUrl.do ***********************");
+		Log.infoHead("****************** testCluster.do ***********************");
 
-		Log.debug("testRedis() redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
+		Log.debug("testCluster() redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
 		ReturnAjax rt = new ReturnAjax();
 		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
 		if(accessUser == null)
@@ -1358,16 +1404,16 @@ public class ManageController extends BaseController{
 		
         testResult += "2.2 Lock测试<br/>";
 		//Get Lock
-		Log.debug("testRedis() " + Thread.currentThread().getId() + " getLock(my-lock)");
+		Log.debug("testCluster() " + Thread.currentThread().getId() + " getLock(my-lock)");
 		RLock lock = redissonClient.getLock("my-lock");
-		Log.debug("testRedis() " + Thread.currentThread().getId() + " try to lock(my-lock)");
+		Log.debug("testCluster() " + Thread.currentThread().getId() + " try to lock(my-lock)");
         lock.lock();
         testResult += "加锁成功<br/><br/>";
         
 		testResult += "2.3 Map测试<br/>";
 		boolean isSuccess = true;
         try {
-            Log.debug("testRedis() " + Thread.currentThread().getId() + " 执行业务.... ");
+            Log.debug("testCluster() " + Thread.currentThread().getId() + " 执行业务.... ");
             RMap<Object, Object> map = redissonClient.getMap("myFirstMap");
             JSONObject inputData = new JSONObject();
             inputData.put("key1", "Hello! I am " + Thread.currentThread().getId() + "");
@@ -1375,13 +1421,13 @@ public class ManageController extends BaseController{
             map.put("product", inputData);
             
             JSONObject var = (JSONObject) map.get("product");
-            Log.debug("redisTest() " + Thread.currentThread().getId() + " key1.value=" + var.getString("key1") + " key2.value=" + var.getString("key2"));            
+            Log.debug("testCluster() " + Thread.currentThread().getId() + " key1.value=" + var.getString("key1") + " key2.value=" + var.getString("key2"));            
         } catch (Exception e) {
         	isSuccess = false;
         	Log.info(e);
         } finally {
             //手动解锁
-            Log.debug("redisEn() " + Thread.currentThread().getId() + " 解锁...");
+            Log.debug("testCluster() " + Thread.currentThread().getId() + " 解锁...");
             lock.unlock();
         }
         if(isSuccess)
