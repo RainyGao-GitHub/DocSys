@@ -11631,6 +11631,10 @@ public class BaseController  extends BaseFunction{
 				//clearReposExtentionConfigRedisData
 				clearReposExtentionConfigRedisData(repos, targetServerUrl);
 				
+				//clearReposClusterDeployCheckSum
+				RBucket<Object> bucket = redisClient.getBucket("clusterDeployCheckSum" + repos.getId());
+				bucket.delete();
+				
 				//syncLock can not unlock by other thread, so we should set timeout when do lock
 				//if(targetServerUrl == null)
 				//{
@@ -11723,7 +11727,6 @@ public class BaseController  extends BaseFunction{
 			reposVersionIgnoreConfigHashMap.remove(repos.getId());
 			RMap<Object, Object> reposEncryptConfigHashMap = redisClient.getMap("reposEncryptConfigHashMap");
 			reposEncryptConfigHashMap.remove(repos.getId());
-			
 		}
 	}
 
