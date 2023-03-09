@@ -900,6 +900,7 @@ public class ManageController extends BaseController{
 		config.put("logFile", Log.logFileConfig);
 		config.put("maxThreadCount", maxThreadCount);	
 		config.put("systemDisabled", systemDisabled);
+		config.put("officeDisabled", officeDisabled);
 		config.put("redisEn", redisEn);
 		config.put("redisUrl", redisUrl);
 		config.put("clusterServerUrl", clusterServerUrl);
@@ -1047,6 +1048,46 @@ public class ManageController extends BaseController{
 		}
 		
 		systemDisabled = 0;
+					
+		writeJson(rt, response);
+	}
+	
+	/********** 禁用Office ***************/
+	@RequestMapping("/disableOffice.do")
+	public void disableOffice(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** disableOffice.do ***********************");
+		
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		officeDisabled = 1;
+					
+		writeJson(rt, response);
+	}
+	
+	/********** 启用Office ***************/
+	@RequestMapping("/enableOffice.do")
+	public void enableOffice(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** enableOffice.do ***********************");
+		
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		officeDisabled = 0;
 					
 		writeJson(rt, response);
 	}

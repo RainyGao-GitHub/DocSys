@@ -50,14 +50,6 @@
 	                    <td class="edit">
 	                    </td>
 	                  </tr>
-	                  <tr {{if value.docSysType > 0}} style="display:none" {{/if}}>
-	                    <td>OpenOffice</td>
-	                    <td>
-	                    	<input type="text" class="form-control" id="openOfficePath" name="openOfficePath" value="{{value.openOfficePath}}" disabled="disabled" >
-	                    </td>
-	                    <td class="edit">
-	                    </td>
-	                  </tr>
 	                  <tr>
 	                    <td>OfficeEditor</td>
 	                    <td>
@@ -66,6 +58,8 @@
 	                    <td class="edit">
 	                      	<button onclick="installOffice()" data-id="" class="btn btn-lg btn-warning examine_ban">安装...</button>	                      	
 	                      	<button onclick="onlineInstallOfficeConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">在线安装</button>
+	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>禁用</button>
+	                      	<button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>启用</button>
 	                    </td>
 	                  </tr>
 	                  <tr>

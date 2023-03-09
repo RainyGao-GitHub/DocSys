@@ -1332,6 +1332,7 @@
 			logFile : "", //defualt not set
 			maxThreadCount: 1, //default 1
 			systemDisabled: 0, //default 0
+			officeDisabled: 0, //default 0			
 	}
 	
 	function enableSystemInfoSet(){
@@ -2247,8 +2248,6 @@
 	    });
 	}
 	
-	
-	
 	function disableSystem(){
 		console.log("disableSystem()");
 		disableSystemConfirm();
@@ -2462,6 +2461,106 @@
 		//上传表单			
 		xhr.open("post", "/DocSystem/Manage/upgradeSystem.do");
 		xhr.send(form);
+	}
+	
+	function disableOffice(){
+		console.log("disableOffice()");
+		disableOfficeConfirm();
+	}
+	
+	function enableOffice(){
+		console.log("enableOffice()");
+		enableOfficeConfirm();
+	}
+	
+	function disableOfficeConfirm()
+	{
+		console.log("disableOfficeConfirm()");
+	    qiao.bs.confirm({
+	    		id: "disableOfficeConfirmDialog",
+		        title: "禁用Office",
+		        msg: "是否禁用Office？",
+		        okbtn: "禁用",
+		        qubtn: "取消",
+	    	},function () {
+				doDisableOffice();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function enableOfficeConfirm()
+	{
+		console.log("enableOfficeConfirm()");
+	    qiao.bs.confirm({
+	    		id: "enableOfficeConfirDialog",
+		        title: "启用Office",
+		        msg: "是否启用Office？",
+		        okbtn: "启用",
+		        qubtn: "取消",
+	    	},function () {
+				doEnableOffice();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function doDisableOffice(){
+		$.ajax({
+	        url : "/DocSystem/Manage/disableOffice.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	        	console.log("disableOffice ret:",ret);
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.officeDisabled = 1;
+	        		$("#btnEnableOffice").show();
+	        		$("#btnDisableOffice").hide();
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("禁用Office失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("禁用Office失败::服务器异常");
+	        }
+	    });
+	}
+	
+	function doEnableOffice(){
+		$.ajax({
+	        url : "/DocSystem/Manage/enableOffice.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	        	console.log("enableOffice ret:",ret);
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.officeDisabled = 0;
+	        		$("#btnEnableOffice").hide();
+	        		$("#btnDisableOffice").show();
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("启用Office失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("启用Office失败::服务器异常");
+	        }
+	    });
 	}
 	
 	function installOffice(){
@@ -4231,7 +4330,6 @@
 	        	console.log("doDisableRepos ret:",ret);
 	            if( "ok" == ret.status )
 	            {	        		
-	        		systemInfo.systemDisabled = 1;
 	        		$("#btnEnableRepos" + reposId).show();
 	        		$("#btnDisableRepos" + reposId).hide();
 	            }
@@ -4259,7 +4357,6 @@
 	        	console.log("enableRepos ret:",ret);
 	            if( "ok" == ret.status )
 	            {	        		
-	        		systemInfo.systemDisabled = 0;
 	        		$("#btnEnableRepos" + reposId).hide();
 	        		$("#btnDisableRepos" + reposId).show();
 	            }
