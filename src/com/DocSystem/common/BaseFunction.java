@@ -134,6 +134,7 @@ public class BaseFunction{
 	protected static String serverHost = null;
 	
 	protected static int systemDisabled = 0; //系统禁用标记
+	protected static int officeDisabled = 0; //office在线编辑禁用标记
     
 	//服务器IP和MAC
     protected static String serverIP = null;
