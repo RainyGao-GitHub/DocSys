@@ -534,38 +534,35 @@
 		    		var SubContext = SubContextList[i];
 		    		SubContext.showSize = getFileShowSize(SubContext.size);
 		    		//console.log(SubContext);
-					str+="<li class='el-upload-list__item file"+i+" is-uploading' value="+i+">"+
-		    				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+SubContext.name+"</span></a>"+
-		    				"<a class='reuploadBtn reupload"+i+"' onclick='reuploadFailDocs("+i+")'  style='display:none'>重传</a>"+
-		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
-		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='DocUpload.stopUpload("+i+")'></i>"+
-		    				"<div class='el-progress el-progress--line'>"+
-		    					"<div class='el-progress-bar'>"+
-		    						"<div class='el-progress-bar__outer' >"+
-		    							"<div class='el-progress-bar__inner'></div>"+
-		    						"</div>"+
-		    					"</div>"+
-		    					"<div class='el-progress__text' style='font-size: 12.8px;'></div>"+
-		    				"</div>"+
-		    			  "</li>";
+					str+= _createUploadItem(i, SubContext.name);
 		    		//已绘制个数增1
 		    		drawedNum++;	    		
 				}
-				$('#uploadedFileList').append(str);		
+      			_appendUploadItems(str);
+      	}
+      	
+      	function _createUploadItem(index, name)
+      	{
+      		return _config.createUploadItem && _config.createUploadItem(index, name);
+      	}
+      	
+      	function _appendUploadItems(uploadItemsHtmlStr)
+      	{
+      		_config.appendUploadItems && _config.appendUploadItems(uploadItemsHtmlStr);
       	}
       	
       	function deleteItemsInDisplayDeleteList()
       	{
       		for(var i = 0; i < displayDeleteList.length; i++)
       		{
-      			deleteDisplayItem(displayDeleteList[i]);
+      			_deleteUploadItem(displayDeleteList[i]);
       		}
       		displayDeleteList = [];
       	}
       	
-      	function deleteDisplayItem(index)
+      	function _deleteUploadItem(index)
       	{
-      		$('.file' + index).remove();      		
+      		_config.deleteUploadItem && _config.deleteUploadItem(index);
       	}
  		
 		//文件覆盖确认不能像文件错误确认一样封装成函数的原因在于，文件复制会存在两种种情况：继续、异步等待用户确认，文件错误确认只有一种情况：异步等待用户确认
