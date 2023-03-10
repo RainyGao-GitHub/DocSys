@@ -9087,6 +9087,60 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	protected boolean updateRealDocEx(Doc doc, MultipartFile uploadFile, Integer chunkNum, Long chunkSize, String chunkParentPath, ReturnAjax rt) 
+	{
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		Long fileSize = doc.getSize();
+		String fileCheckSum = doc.getCheckSum();
+		
+		String localDocParentPath = doc.getLocalRootPath() + parentPath;
+		String retName = null;
+		try {
+			if(null == chunkNum)	//非分片上传
+			{
+				retName = FileUtil.saveFile(uploadFile, localDocParentPath,name);
+			}
+			else if(chunkNum == 1)	//单个文件直接复制
+			{
+				String chunk0Path = chunkParentPath + name + "_0";
+				if(new File(chunk0Path).exists() == false)
+				{
+					chunk0Path =  chunkParentPath + name;
+				}
+				if(FileUtil.copyFile(chunk0Path, localDocParentPath+name, true) == false)
+				{
+					return false;
+				}
+				retName = name;
+			}
+			else	//多个则需要进行合并
+			{
+				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
+			}
+			//Verify the size and FileCheckSum
+			if(false == checkFileSizeAndCheckSum(localDocParentPath,name,fileSize,fileCheckSum))
+			{
+				Log.debug("updateRealDoc() checkFileSizeAndCheckSum Error");
+				return false;
+			}			
+		} catch (Exception e) {
+			Log.debug("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
+			docSysDebugLog(e.toString(), rt);
+			Log.info(e);
+			return false;
+		}
+		
+		Log.debug("updateRealDoc() FileUtil.saveFile return: " + retName);
+		if(retName == null  || !retName.equals(name))
+		{
+			Log.debug("updateRealDoc() FileUtil.saveFile " + name +" Failed！");
+			return false;
+		}
+		
+		return true;
+	}
+	
 	//文件加密
 	private void encryptFile(Repos repos, String localPath, String name) {
 		if(repos.encryptType != null && repos.encryptType != 0)

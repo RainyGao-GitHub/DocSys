@@ -2433,7 +2433,95 @@ public class DocController extends BaseController{
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		//TODO:
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		
+		User accessUser = superAdminAccessCheck(null, null, session, rt);
+		if(accessUser == null)		
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getLocalRootPathForUsage(usage);
+		if(localRootPath == null || localRootPath.isEmpty())
+		{
+			docSysErrorLog("非法文件上传", rt);
+			writeJson(rt, response);			
+			return;			
+		}
+		
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String localParentPath = localRootPath + path;
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			localParentDir.mkdirs();
+		}
 
+		String chunkTmpPath = localParentPath;
+		
+		//如果是分片文件，则保存分片文件
+		if(null != chunkIndex)
+		{
+			//Save File chunk to tmp dir with name_chunkIndex
+			String fileChunkName = name + "_" + chunkIndex;
+			
+			if(FileUtil.saveFile(uploadFile, chunkTmpPath,fileChunkName) == null)
+			{
+				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(combineDisabled != null)
+			{
+				Log.debug("uploadDoc combineDisabled!");
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;				
+			}
+			
+			//如果是最后一个分片则开始文件合并处理
+			if(chunkIndex < (chunkNum-1))
+			{
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		//非分片上传或LastChunk Received
+		if(uploadFile != null) 
+		{			
+			//updateRealDocEx
+			Doc doc  = new Doc();
+			doc.setLocalRootPath(localRootPath);
+			doc.setPath(path);
+			doc.setName(name);
+			updateRealDocEx(doc, uploadFile,chunkNum,chunkSize,chunkTmpPath,rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		docSysErrorLog("文件上传失败！", rt);
+		writeJson(rt, response);
+
+		//TODO: 根据用途修改信息
+		addSystemLog(request, accessUser, "uploadDoc", "uploadDoc", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+	}
+
+	private String getLocalRootPathForUsage(Integer usage) {
+		String localRootPath = null;
+		switch(usage)
+		{
+		case constants.DocUpload.UpgradeDocSystem:
+			localRootPath = docSysIniPath + "upgrade/";
+			break;
+		case constants.DocUpload.InstallOffice:
+			localRootPath = docSysWebPath + "web/static/";
+			break;
+		}
+		return localRootPath;
 	}
 
 	private String getMaxUploadSize(Long uploadSize) {
