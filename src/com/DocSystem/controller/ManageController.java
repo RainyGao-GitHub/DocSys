@@ -1631,12 +1631,12 @@ public class ManageController extends BaseController{
 	}
 
 	@RequestMapping("/upgradeSystem.do")
-	public void upgradeSystem(MultipartFile uploadFile, String authCode, 
+	public void upgradeSystem(String name, Long size, String authCode, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		Log.infoHead("****************** upgradeSystem.do ***********************");
-
-		Log.debug("upgradeSystem()");
+		Log.debug("upgradeSystem() name:" + name + " size:" + size);
+		
 		ReturnAjax rt = new ReturnAjax();
 		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
 		if(accessUser == null)		
@@ -1645,34 +1645,23 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//FileUtil.saveFile to tmpPath
-		if(uploadFile == null)
+		if(name == null || !name.startsWith("DocSystem"))
 		{
-			Log.debug("upgradeSystem() uploadFile is null");
-			docSysErrorLog("上传文件为空", rt);
-			writeJson(rt, response);
-			return;
-		}
-		String fileName = uploadFile.getOriginalFilename();
-		if(!fileName.startsWith("DocSystem"))
-		{
-			Log.debug("upgradeSystem() 非法升级文件");
-			docSysErrorLog("非法升级文件:" + fileName, rt);
-			writeJson(rt, response);
-			return;
+			docSysErrorLog("非法文件名 " + name, rt);			
+			writeJson(rt, response);			
+			return;	
 		}
 		
 		String upgradePath = docSysIniPath + "upgrade/";
-		if(FileUtil.saveFile(uploadFile, upgradePath, fileName) == null)
+		if(false == checkFileSizeAndCheckSum(upgradePath, name, size, null))
 		{
-			Log.debug("upgradeSystem() 保存升级文件失败");
-			docSysErrorLog("保存升级文件失败", rt);
+			docSysErrorLog("文件校验失败", rt);
 			writeJson(rt, response);
 			return;
 		}
-		
+
 		//开始解压
-		if(unZip(upgradePath + fileName, upgradePath + "DocSystem/") == false)
+		if(unZip(upgradePath + name, upgradePath + "DocSystem/") == false)
 		{
 			Log.debug("upgradeSystem() 解压失败");
 			docSysErrorLog("升级包解压失败", rt);
