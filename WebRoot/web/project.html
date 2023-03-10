@@ -4203,19 +4203,47 @@
 	var FileUpload;
 	function DocUploadInit()
 	{
-		var uploadDisplayInit = function(index, totalNum)
-      	{
+		var uploadDisplayInit = function(index, totalNum) {
 			var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()' style='display:none'>全部重传 </span><i class='el-icon-close uploadCloseBtn'></i></div>";
 			str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 			$(".el-upload-list").show();
 			$('.el-upload-list').html(str);
 			
 			showDownloadBox($(".el-upload-list").height() + 40);
-      	}
+      	};
+		
+		var createUploadItem = function(index, fileName) {
+			return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
+			"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+ fileName +"</span></a>"+
+			"<a class='reuploadBtn reupload" + index + "' onclick='reuploadFailDocs("+ index +")'  style='display:none'>重传</a>"+
+			"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
+			"<i class='el-icon-close stopUpload'  value="+index+" onclick='FileUpload.stopUpload("+ index +")'></i>"+
+			"<div class='el-progress el-progress--line'>"+
+				"<div class='el-progress-bar'>"+
+					"<div class='el-progress-bar__outer' >"+
+						"<div class='el-progress-bar__inner'></div>"+
+					"</div>"+
+				"</div>"+
+				"<div class='el-progress__text' style='font-size: 12.8px;'></div>"+
+			"</div>"+
+		  "</li>";
+		};
+
+  		var deleteUploadItem = function(index) {
+	  		$('.file' + index).remove();      		
+  		};
+  		
+		var appendUploadItems = function(uploadItemsHtmlStr) {
+			$('#uploadedFileList').append(uploadItemsHtmlStr);
+		};
 		
 		var config = {
 			"uploadDisplayInit": uploadDisplayInit,
+			"createUploadItem": createUploadItem,
+			"appendUploadItems": appendUploadItems,		
+			"deleteUploadItem" : deleteUploadItem,
 		};
+		
 		FileUpload = new DocUpload(config);
 	}
 	
