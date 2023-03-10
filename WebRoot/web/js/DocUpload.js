@@ -1635,11 +1635,7 @@
 			{
 				//更新failNum
 				failNum--;
-	      		//hide the reupload btn
-	    		$(".reupload"+SubContext.index).hide();
-	    		
-	    		$('.file' + SubContext.index).addClass('is-uploading');
-				$('.file' + SubContext.index).removeClass('is-fail');
+				_config.reuploadItemInit(SubContext.index);	
 			}
 			
 			console.log("[" + SubContext.index + "] reuploadHandler() totalNum:" + totalNum +" successNum:"+successNum+" failNum:"+failNum);

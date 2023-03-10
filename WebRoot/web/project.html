@@ -4300,6 +4300,14 @@
       		$("#checkInFile").val("");
   		};
   		
+  		var reuploadItemInit = function(index){
+      		//hide the reupload btn
+    		$(".reupload"+index).hide();
+    		
+    		$('.file' + index).addClass('is-uploading');
+			$('.file' + index).removeClass('is-fail');
+  		};
+  		
 		var config = {
 			"uploadDisplayInit": uploadDisplayInit,
 			"createUploadItem": createUploadItem,
@@ -4310,6 +4318,7 @@
 			"uploadSuccessCallback" : uploadSuccessCallback,			
 			"uploadErrorCallback" : uploadErrorCallback,			
 			"uploadEndCallback" : uploadEndCallback,			
+			"reuploadItemInit" : reuploadItemInit,						
 		};
 		
 		FileUpload = new DocUpload(config);
