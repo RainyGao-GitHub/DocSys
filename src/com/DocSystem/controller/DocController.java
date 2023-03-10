@@ -1212,6 +1212,7 @@ public class DocController extends BaseController{
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** checkDocInfo [" + path + name + "] ****************");
@@ -1739,6 +1740,7 @@ public class DocController extends BaseController{
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
 		Log.infoHead("************** checkChunkUploaded [" + path + name + "] ****************");
@@ -1871,6 +1873,7 @@ public class DocController extends BaseController{
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
 		Log.infoHead("************** combineChunks [" + path + name + "] ****************");
@@ -2106,6 +2109,7 @@ public class DocController extends BaseController{
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
 			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.infoHead("************** uploadDoc [" + path + name + "] ****************");
