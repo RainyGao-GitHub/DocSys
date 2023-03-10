@@ -183,4 +183,9 @@ public class constants {
 		public final static int remoteServerCheckOut	= 40;	//remoteChanged and localNotCheck, treat remoteNotExist as delete
 		public final static int force  					= 100;	//pull Force no any check	
 	}
+	
+	public class DocUpload  {
+		public final static int UpgradeDocSystem  		= 1;
+		public final static int InstallOffice 			= 2;
+	}
 }

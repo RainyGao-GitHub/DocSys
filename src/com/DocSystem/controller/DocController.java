@@ -1217,10 +1217,21 @@ public class DocController extends BaseController{
 	{
 		Log.infoHead("************** checkDocInfo [" + path + name + "] ****************");
 		Log.info("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId
-				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
+				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount + " usage:" + usage);
 		
-		ReturnAjax rt = new ReturnAjax();
+		if(usage != null)
+		{
+			checkDocInfoForUsage(reposId, docId, pid, path, name,  level, type, size, checkSum, 
+					commitMsg,
+					dirPath,	batchStartTime, totalCount, //for folder upload
+					shareId,
+					usage,	//UpgradeDocSystem, InstallOffice
+					session, request, response);
+			return;	
+		}
 
+		ReturnAjax rt = new ReturnAjax();
+		
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -1374,6 +1385,19 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 				
 		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
+	}
+	
+	public void checkDocInfoForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
+			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		//TODO:
+		ReturnAjax rt = new ReturnAjax();
+		docSysDebugLog("checkDocInfoForUsage() usage:" + usage, rt);
+		writeJson(rt, response);
 	}
 
 	private FolderUploadAction getFolderUploadAction(HttpServletRequest request, 
@@ -1746,8 +1770,20 @@ public class DocController extends BaseController{
 		Log.infoHead("************** checkChunkUploaded [" + path + name + "] ****************");
 		Log.info("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId 
-				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
-			
+				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount + " usage:" + usage);
+
+		if(usage != null)
+		{
+			checkChunkUploadedForUsage(reposId, docId, pid, path, name,  level, type, size, checkSum,
+					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
+					commitMsg,
+					dirPath, batchStartTime, totalCount, //for folder upload
+					shareId,
+					usage,	//UpgradeDocSystem, InstallOffice
+					session, request, response);
+			return;
+		}
+		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -1865,6 +1901,18 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	public void checkChunkUploadedForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, Integer combineDisabled,
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
+			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
+			HttpSession session,HttpServletRequest request,HttpServletResponse response) 
+	{
+		//TODO:
+
+	}
+
 	//combine chunks
 	//注意：chunkIndex不能小于chunkNum，否则deleteChunks逻辑会有问题
 	@RequestMapping("/combineChunks.do")
@@ -1881,6 +1929,18 @@ public class DocController extends BaseController{
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId
 				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 			
+		if(usage != null)
+		{
+			combineChunksForUsage(reposId, docId, pid, path, name, level, type, size, checkSum,
+					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash,
+					commitMsg,
+					dirPath, batchStartTime, totalCount, //for folder upload
+					shareId,
+					usage,	//UpgradeDocSystem, InstallOffice
+					session, request, response);
+			return;
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -1961,6 +2021,18 @@ public class DocController extends BaseController{
 		writeJson(rt, response);	
 		
 		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
+	}
+	
+	public void combineChunksForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
+			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		//TODO:
+
 	}
 	
 	private void uploadAfterHandler(int uploadResult, Doc doc, String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath, ReposAccess reposAccess, ActionContext context, ReturnAjax rt) {
@@ -2117,8 +2189,22 @@ public class DocController extends BaseController{
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
 							+ " shareId:" + shareId + " commitMsg:" + commitMsg
 							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
+		
+		if(usage != null)
+		{
+			uploadDocForUsage(reposId, docId, pid, path, name,  level, type, size, checkSum,
+					uploadFile,
+					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
+					commitMsg,
+					dirPath, batchStartTime, totalCount, //for folder upload			
+					shareId,
+					usage,	//UpgradeDocSystem, InstallOffice
+					response, request, session);
+			return;
+		}
+		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-
+		
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -2337,6 +2423,19 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
+	public void uploadDocForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+			MultipartFile uploadFile,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
+			Integer shareId,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		//TODO:
+
+	}
+
 	private String getMaxUploadSize(Long uploadSize) {
 		//字节
 		if(uploadSize < 1024)
