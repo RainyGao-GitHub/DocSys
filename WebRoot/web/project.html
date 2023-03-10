@@ -4244,12 +4244,72 @@
 			//printUploadedTime();
   		};
   		
+  		var stopAllUploadCallback = function(){  	  		
+  	  		$(".reuploadAllBtn").show();
+  		};
+
+  		var uploadSuccessCallback = function(index){  	  		
+
+  			$('.file'+index).removeClass('is-uploading');
+  			$('.file'+index).addClass('is-success');
+  			
+  			//hide the reupload btn
+  			$(".reupload"+index).hide();
+  		};
+  		
+  		var uploadErrorCallback = function(){  	  		
+
+  			$('.file' + index).removeClass('is-uploading');
+  			$('.file' + index).addClass('is-fail');
+  	  	
+  	  		//show the reupload btn
+  			$(".reupload" + index).show();
+  		};
+  		
+  		var uploadEndCallback = function(totalNum, successNum){  	  		
+      		//显示上传完成 
+      		var uploadEndInfo = "上传完成(共" + totalNum +"个)";
+      		if(successNum != totalNum)
+      		{
+      			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+
+      			$(".reuploadAllBtn").show();
+
+      			// 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : uploadEndInfo,
+    					type : 'warning',
+    					time : 2000,
+    				    }); 
+      		}
+      		else
+      		{
+      			$(".reuploadAllBtn").hide();
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : uploadEndInfo,
+    					type : 'success',
+    					time : 2000,
+    				    }); 
+      		}
+      		$(".upload-list-title").text(uploadEndInfo);   		
+      		
+      		//清除文件控件
+			$("#uploadFiles").val("");
+  			$("#uploadDir").val("");
+      		$("#checkInFile").val("");
+  		};
+  		
 		var config = {
 			"uploadDisplayInit": uploadDisplayInit,
 			"createUploadItem": createUploadItem,
 			"appendUploadItems": appendUploadItems,		
 			"deleteUploadItem" : deleteUploadItem,
 			"updateUploadItem" : updateUploadItem,
+			"stopAllUploadCallback" : stopAllUploadCallback,
+			"uploadSuccessCallback" : uploadSuccessCallback,			
+			"uploadErrorCallback" : uploadErrorCallback,			
+			"uploadEndCallback" : uploadEndCallback,			
 		};
 		
 		FileUpload = new DocUpload(config);
