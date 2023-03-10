@@ -2376,16 +2376,18 @@
 				updateUploadSpeed(SubContext, realUploaedSize, false);
 
 				//计算当前文件上传百分比
-				$('.file'+SubContextIndex+' .el-progress__text').text(SubContext.speed + " " + per+"%");
-				$('.file'+SubContextIndex+' .el-progress-bar__inner')[0].style.width = per+"%"; //进度条
-				
-				//printUploadedTime();
+				_updateUploadItem(SubContextIndex, SubContext.speed, per);
 			};
 			
 			//上传表单			
 			xhr.open("post", "/DocSystem/Doc/uploadDoc.do");
 			xhr.send(form);
 			uploadTime = new Date().getTime();	//上传时间初始化
+    	}
+    	
+    	function _updateUploadItem(index, speed, percent)
+    	{
+    		_config.updateUploadItem && _config.updateUploadItem(index, speed, percent);
     	}
     	
     	//每隔一段时间更新一下速度
