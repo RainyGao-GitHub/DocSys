@@ -1909,8 +1909,10 @@ public class DocController extends BaseController{
 			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) 
 	{
-		//TODO:
-
+		//TODO: 暂不考虑断点续传
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		writeJson(rt, response);
+		return;
 	}
 
 	//combine chunks
@@ -2032,7 +2034,40 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		//TODO:
+		ReturnAjax rt = new ReturnAjax();
 
+		User accessUser = superAdminAccessCheck(null, null, session, rt);
+		if(accessUser == null)		
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getLocalRootPathForUsage(usage);
+		if(localRootPath == null || localRootPath.isEmpty())
+		{
+			docSysErrorLog("非法文件上传", rt);
+			writeJson(rt, response);			
+			return;			
+		}
+
+		//check and add parentDir
+		String localParentPath = localRootPath + path;
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			localParentDir.mkdirs();
+		}
+
+		String chunkTmpPath = localParentPath;
+		
+		//updateRealDocEx
+		Doc doc  = new Doc();
+		doc.setLocalRootPath(localRootPath);
+		doc.setPath(path);
+		doc.setName(name);
+		updateRealDocEx(doc, null,chunkNum,chunkSize,chunkTmpPath,rt);
+		writeJson(rt, response);
 	}
 	
 	private void uploadAfterHandler(int uploadResult, Doc doc, String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath, ReposAccess reposAccess, ActionContext context, ReturnAjax rt) {
