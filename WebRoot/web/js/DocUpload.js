@@ -1,6 +1,9 @@
-	//DocUpload类
-    var DocUpload = (function () {
-        /*全局变量*/
+	//FileUpload类
+    var DocUpload = function(config) {
+    	var _config = config || {};
+    	extend(_config, DocUpload.defaultConfig);
+    	
+    	/*全局变量*/
         var isUploading = false;	//文件上传中标记
         var stopFlag = false;	//结束上传
         var drawedNum = 0; //已绘制的进度条个数
@@ -82,27 +85,6 @@
         	console.log("uploadStatus: " + uploadStatus);
         	return uploadStatus;
         }
-      	
-      	//设置进度条的上传取消按键的接口,该接口有性能问题不再使用
-    	function itemStopUploadDelegate()
-    	{
-    		console.log("itemStopUploadDelegate");
-      		var len = SubContextList.length;
-      		if(len > 0)
-      		{
-      			for(var i=0;i<len;i++)
-    			{
-      				//设置每个上传文件的stopUpload处理函数
-    	    		$('.file'+i).delegate('.stopUpload','click',function(){
-    					//isUploading=false
-    					//console.log($(this).attr('value'));
-    					var index = $(this).attr('value');	//value 不是i的原生属性，所以不能用value
-    					console.log("stopUpload " + index);
-    					DocUpload.stopUpload(index);
-    				});
-    			}
-      		}
-    	}
     	
 		//多文件Upload接口
 		function uploadDocs(files,parentNode,parentPath,parentId,level,vid,commitMsg)	//多文件上传函数
@@ -222,15 +204,14 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()' style='display:none'>全部重传 </span><i class='el-icon-close uploadCloseBtn'></i></div>";
-				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
-				$(".el-upload-list").show();
-				$('.el-upload-list').html(str);
-				
-				showDownloadBox($(".el-upload-list").height() + 40);
-				
+				_uploadDisplayInit(index, totalNum);
 				checkAndDrawUploadItems(SubContextList);
 		   	}
+      	}
+      	
+      	function _uploadDisplayInit(index, totalNum)
+      	{
+			_config.uploadDisplayInit && _config.uploadDisplayInit(index, totalNum);				
       	}
       	
       	//增加上传文件
@@ -2538,4 +2519,21 @@
             	return reuploadFailDocs(id);
             },
         };
-    })();
+    };
+    
+    DocUpload.defaultConfig = {};
+        
+    function extend(dest, src) {
+        for (var prop in src) {
+            if (src.hasOwnProperty(prop)) {
+                if (typeof dest[prop] === 'undefined') {
+                    dest[prop] = src[prop];
+                } else
+                if (typeof dest[prop] === 'object' &&
+                        typeof src[prop] === 'object') {
+                    extend(dest[prop], src[prop])
+                }
+            }
+        }
+        return dest;
+    }
