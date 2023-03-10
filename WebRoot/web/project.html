@@ -4228,20 +4228,28 @@
 			"</div>"+
 		  "</li>";
 		};
-
-  		var deleteUploadItem = function(index) {
-	  		$('.file' + index).remove();      		
-  		};
   		
 		var appendUploadItems = function(uploadItemsHtmlStr) {
 			$('#uploadedFileList').append(uploadItemsHtmlStr);
 		};
-		
+				
+  		var deleteUploadItem = function(index) {
+	  		$('.file' + index).remove();      		
+  		};
+
+  		var updateUploadItem = function(index, speed, percent){
+			$('.file'+index+' .el-progress__text').text(speed + " " + percent+"%");
+			$('.file'+index+' .el-progress-bar__inner')[0].style.width = percent +"%"; //进度条
+
+			//printUploadedTime();
+  		};
+  		
 		var config = {
 			"uploadDisplayInit": uploadDisplayInit,
 			"createUploadItem": createUploadItem,
 			"appendUploadItems": appendUploadItems,		
 			"deleteUploadItem" : deleteUploadItem,
+			"updateUploadItem" : updateUploadItem,
 		};
 		
 		FileUpload = new DocUpload(config);
