@@ -1049,11 +1049,7 @@
 			SubContext.msgInfo = errMsg;
     		
     		//update the uploadStatus
-			$('.file' + SubContext.index).removeClass('is-uploading');
-			$('.file' + SubContext.index).addClass('is-fail');
-      	
-      		//show the reupload btn
-    		$(".reupload" + SubContext.index).show();
+			_config.uploadErrorCallback(SubContext.index);
       	}
       	
       	//uploadSuccessHandler
@@ -1084,44 +1080,11 @@
       		SubContext.msgInfo = msgInfo;
 
       		//update the uploadStatus
-			$('.file'+SubContext.index).removeClass('is-uploading');
-			$('.file'+SubContext.index).addClass('is-success');
-			
-			//hide the reupload btn
-			$(".reupload"+SubContext.index).hide();
+      		_config.uploadSuccessCallback(SubContext.index);
 			
 			//add index to displayDeleteList
 			displayDeleteList.push(SubContext.index);
       	}
-
-  		function showUploadEndInfo()
-  		{
-  			var uploadEndInfo = "上传完成(共" + totalNum +"个)";
-      		if(successNum != totalNum)
-      		{
-      			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
-
-      			$(".reuploadAllBtn").show();
-
-      			// 普通消息提示条
-    			bootstrapQ.msg({
-    					msg : uploadEndInfo,
-    					type : 'warning',
-    					time : 2000,
-    				    }); 
-      		}
-      		else
-      		{
-      			$(".reuploadAllBtn").hide();
-                // 普通消息提示条
-    			bootstrapQ.msg({
-    					msg : uploadEndInfo,
-    					type : 'success',
-    					time : 2000,
-    				    }); 
-      		}
-      		$(".upload-list-title").text(uploadEndInfo);
-  		}
   		
 		function printUploadedTime()
 		{
@@ -1162,13 +1125,7 @@
       		console.log("uploadEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			printUploadedTime();
 			
-      		//显示上传完成 
-      		showUploadEndInfo();      		
-      		
-      		//清除文件控件
-			$("#uploadFiles").val("");
-  			$("#uploadDir").val("");
-      		$("#checkInFile").val("");
+			_config.uploadEndCallback(totalNum, successNum);
             
   			//清除标记
   			isUploading = false;
@@ -2439,8 +2396,7 @@
  			updateUploadSpeed(SubContext, SubContext.uploadedSize, false);
  			
 			var per =  Math.floor(100 * SubContext.uploadedSize / SubContext.size);
- 			$('.file'+SubContext.index+' .el-progress__text').text(SubContext.speed + " " + per+"%");
-			$('.file'+SubContext.index+' .el-progress-bar__inner')[0].style.width = per+'%'; //进度条			
+			_updateUploadItem(SubContext.index, SubContext.speed, per);
 			
 			console.log("[" + SubContext.index + "] [" + chunk.index + "] chunkUploadSuccessHandler() uploadedSize:" + SubContext.uploadedSize + " fileSize:" +   SubContext.size + " per:" + per + "%");
 
@@ -2491,7 +2447,7 @@
 	  			reuploadFlag = false;
 
 	  			//显示全部重传标记
-  				$(".reuploadAllBtn").show();
+	  			_config.stopAllUploadCallback && _config.stopAllUploadCallback();
 
 	  			//通过回调来处理每个文件的停止，否则会导致出现对话框卡顿现象
 	  			setTimeout(function () {
@@ -2499,7 +2455,7 @@
 	  			}, 1000);
 			}
 		}
-				
+						
 		//开放给外部的调用接口
         return {
             uploadDocs: function(files,parentNode,parentPath,parentId,level,vid, commitMsg){
