@@ -1080,7 +1080,7 @@
       		SubContext.msgInfo = msgInfo;
 
       		//update the uploadStatus
-      		_config.uploadSuccessCallback(SubContext.index);
+      		_config.uploadSuccessCallback(SubContext.index, SubContext);
 			
 			//add index to displayDeleteList
 			displayDeleteList.push(SubContext.index);
@@ -1857,23 +1857,16 @@
 	             	if( "ok" == ret.status)
 	             	{		
 	             		console.log("[" + SubContext.index + "] combineChunks() ret",ret);
-	             		uploadSuccessHandler(SubContext);
-    					
 	             		if(SubContext.docId == -1) //新增文件
 	    		        {	
-	    		        	var addedParentDocList = ret.dataEx;
-	    		         	if(addedParentDocList)
-	    		         	{
-	    		         		addParentNodes(addedParentDocList);
-	    		         	}
-	    		        		
-	    		        	addTreeNode(ret.data);
-			             	addDocListNode(ret.data);
-	    		        		
+	    		        	SubContext.addedParentDocList = ret.dataEx;
+	    		        	SubContext.newDoc = ret.data;
+	    		        	SubContext.isNewDoc = true;
 	    		         	//set the docId so that We can open it 
 	    		         	SubContext.docId = ret.data.id;
 	    				}
-    					
+	             		
+	             		uploadSuccessHandler(SubContext);    					
     					uploadNextDoc();
 	             		return;
 	                }
