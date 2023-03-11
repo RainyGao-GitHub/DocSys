@@ -74,6 +74,36 @@
         //目录上传子元素个数统计
         var folderUploadTotalCountMap = {};
         
+        //根据配置修改变量
+        if(_config.actionConfig)
+        {
+        	if(_config.actionConfig.overwriteConfirm)
+        	{
+        		if(_config.actionConfig.overwriteConfirm.confirm !== undefined)
+        		{
+        			fileCoverConfirmSet = _config.actionConfig.overwriteConfirm.confirm;
+        		}
+        	}
+        	
+        	if(_config.actionConfig.uploadErrorConfirm)
+        	{
+        		if(_config.actionConfig.uploadErrorConfirm.confirm !== undefined)
+        		{
+        			uploadErrorConfirmSet = _config.actionConfig.uploadErrorConfirm.confirm;
+        		}
+        	}
+        	
+        	if(_config.actionConfig.uploadWarningConfirm)
+        	{
+        		if(_config.actionConfig.uploadWarningConfirm.confirm !== undefined)
+        		{
+        			uploadWarningConfirmSet = _config.actionConfig.uploadWarningConfirm.confirm;
+        		}
+        	}
+        
+        }
+                
+        
         //标准Java成员操作接口
         function getUploadStatus()
         {
@@ -2465,7 +2495,33 @@
         };
     };
     
-    DocUpload.defaultConfig = {};
+    DocUpload.defaultConfig = {
+		//    "uploadDisplayInit": uploadDisplayInit,
+		//	"createUploadItem": createUploadItem,
+		//	"appendUploadItems": appendUploadItems,		
+		//	"deleteUploadItem" : deleteUploadItem,
+		//	"updateUploadItem" : updateUploadItem,
+		//	"stopAllUploadCallback" : stopAllUploadCallback,
+		//	"uploadSuccessCallback" : uploadSuccessCallback,			
+		//	"uploadErrorCallback" : uploadErrorCallback,			
+		//	"uploadEndCallback" : uploadEndCallback,			
+		//	"reuploadItemInit" : reuploadItemInit,
+	    //   appendAllow: true,	//允许添加新文件
+	    //	 actionConfig:{
+	    //		overwriteConfirm: {
+	    //       	confirm: 0,  //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
+	    //       	confirmMsg: confirmMsg,
+	    //    	},
+	    //		uploadErrorConfirm: {
+	    //      	 confirm: 0,  //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传
+	    //       	confirmMsg: confirmMsg,
+	    //    	},
+	    //		uploadWarningConfirm: {
+	    //      	confirm: 0, //0: 上传警告时弹出确认是否继续上传窗口，1：上传警告时继续上传后续文件 2：上传警告时停止整个上传
+	    //       	confirmMsg: confirmMsg,
+	    //    	},
+		//	},    		
+    };
         
     function extend(dest, src) {
         for (var prop in src) {
