@@ -2501,32 +2501,62 @@
         };
     };
     
+	var uploadDisplayInit = function(index, totalNum) {
+		console.log("DocUpload.uploadDisplayInit() index:" + index + " totalNum:" + totalNum);		
+  	};
+	
+	var createUploadItem = function(index, fileName) {
+		console.log("DocUpload.deleteUploadItem() index:" + index + " fileName:" + fileName);		
+		return "";
+	};
+		
+	DocUpload.appendUploadItems = function(uploadItemsHtmlStr) {
+		console.log("DocUpload.appendUploadItems()")
+	};
+			
+	DocUpload.deleteUploadItem = function(index) {
+		console.log("DocUpload.deleteUploadItem() index:" + index)		
+	};
+
+	DocUpload.uploadSuccessCallback = function(index, context){  	  					
+		console.log("DocUpload.uploadSuccessCallback() index:" + index)		
+	};
+		
+	DocUpload.uploadErrorCallback = function(index){  	  		
+		console.log("DocUpload.uploadErrorCallback() index:" + index);				
+	};
+		
+	DocUpload.uploadEndCallback = function(totalNum, successNum){  	  		
+		console.log("DocUpload.uploadEndCallback() totalNum:" + totalNum + " successNum:" + successNum);	
+	};
+		
+	DocUpload.reuploadItemInit = function(index){
+		console.log("DocUpload.reuploadItemInit() index:" + index);				
+	};
+    
     DocUpload.defaultConfig = {
-		//    "uploadDisplayInit": uploadDisplayInit,
-		//	"createUploadItem": createUploadItem,
-		//	"appendUploadItems": appendUploadItems,		
-		//	"deleteUploadItem" : deleteUploadItem,
-		//	"updateUploadItem" : updateUploadItem,
-		//	"stopAllUploadCallback" : stopAllUploadCallback,
-		//	"uploadSuccessCallback" : uploadSuccessCallback,			
-		//	"uploadErrorCallback" : uploadErrorCallback,			
-		//	"uploadEndCallback" : uploadEndCallback,			
-		//	"reuploadItemInit" : reuploadItemInit,
-	    //   appendAllow: true,	//允许添加新文件
-	    //	 actionConfig:{
-	    //		overwriteConfirm: {
-	    //       	confirm: 0,  //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
-	    //       	confirmMsg: confirmMsg,
-	    //    	},
-	    //		uploadErrorConfirm: {
-	    //      	 confirm: 0,  //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传
-	    //       	confirmMsg: confirmMsg,
-	    //    	},
-	    //		uploadWarningConfirm: {
-	    //      	confirm: 0, //0: 上传警告时弹出确认是否继续上传窗口，1：上传警告时继续上传后续文件 2：上传警告时停止整个上传
-	    //       	confirmMsg: confirmMsg,
-	    //    	},
-		//	},    		
+		"uploadDisplayInit": DocUpload.uploadDisplayInit,
+		"createUploadItem": DocUpload.createUploadItem,
+		"appendUploadItems": DocUpload.appendUploadItems,		
+		"deleteUploadItem" : DocUpload.deleteUploadItem,
+		"updateUploadItem" : DocUpload.updateUploadItem,
+		"stopAllUploadCallback" : DocUpload.stopAllUploadCallback,
+		"uploadSuccessCallback" : DocUpload.uploadSuccessCallback,			
+		"uploadErrorCallback" : DocUpload.uploadErrorCallback,			
+		"uploadEndCallback" : DocUpload.uploadEndCallback,			
+		"reuploadItemInit" : DocUpload.reuploadItemInit,
+	    appendAllow: true,	//允许添加新文件
+	    actionConfig:{
+	    	overwriteConfirm: {
+	    		confirm: 0,  //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
+	    	},
+	    	uploadErrorConfirm: {
+	    		confirm: 0,  //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传
+	    	},
+	    	uploadWarningConfirm: {
+	    		confirm: 0, //0: 上传警告时弹出确认是否继续上传窗口，1：上传警告时继续上传后续文件 2：上传警告时停止整个上传
+	    	},
+		},    		
     };
         
     function extend(dest, src) {
