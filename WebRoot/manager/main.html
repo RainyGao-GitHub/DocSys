@@ -2402,7 +2402,7 @@
 	    	},function () {
 		    	//showErrorMessage("点击了确定");
 				//开始上传
-				SystemUpgrade.start(firstFile);
+				SystemUpgrade.start(files);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
@@ -2412,14 +2412,54 @@
 	    );
 	}
 
-	//OfficeInstall类
+	//SystemUpgrade类	
     var SystemUpgrade = (function () {
     	//初始化上传控件
+    	var SystemUpgradeFileUpload;
+		function SystemUpgradeFileUploadInit()
+		{
+			var uploadEndCallback = function(totalNum, successNum){  	  		
+	      		//显示上传完成 
+	      		var uploadEndInfo = "上传完成(共" + totalNum +"个)";
+	      		if(successNum != totalNum)
+	      		{
+	      			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+	
+	      			// 普通消息提示条
+	    			bootstrapQ.msg({
+	    					msg : uploadEndInfo,
+	    					type : 'warning',
+	    					time : 2000,
+	    				    }); 
+	      		}
+	      		else
+	      		{
+	                // 普通消息提示条
+	    			bootstrapQ.msg({
+	    					msg : uploadEndInfo,
+	    					type : 'success',
+	    					time : 2000,
+	    				    }); 
+	      		}
+	  		};
+	  		
+	  		var config = {			
+	  				"uploadEndCallback" : uploadEndCallback,			
+	  		};
+	  		SystemUpgradeFileUpload = new DocUpload(config);
+		}
+    	
+    	function start(files){
+    		SystemUpgradeFileUpload.uploadDocs(files);
+    	}
+    	
+    	//初始化上传控件
+    	SystemUpgradeFileUploadInit();
     	
 		//开放给外部的调用接口
         return {
-        	start: function(file){
-        		start(file);
+        	start: function(files){
+        		start(files);
             },
         };
     })();
@@ -2603,7 +2643,7 @@
 		        okbtn: "是",
 		        qubtn: "否",
 	    	},function () {
-	    		OfficeInstall.start(firstFile);
+	    		OfficeInstall.start(files);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
@@ -2614,12 +2654,53 @@
 	
 	//OfficeInstall类
     var OfficeInstall = (function () {
+    	var OfficeInstallFileUpload;
+    	function OfficeInstallFileUploadInit()
+    	{
+    		var uploadEndCallback = function(totalNum, successNum){  	  		
+          		//显示上传完成 
+          		var uploadEndInfo = "上传完成(共" + totalNum +"个)";
+          		if(successNum != totalNum)
+          		{
+          			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+
+          			// 普通消息提示条
+        			bootstrapQ.msg({
+        					msg : uploadEndInfo,
+        					type : 'warning',
+        					time : 2000,
+        				    }); 
+          		}
+          		else
+          		{
+                    // 普通消息提示条
+        			bootstrapQ.msg({
+        					msg : uploadEndInfo,
+        					type : 'success',
+        					time : 2000,
+        				    }); 
+          		}
+      		};
+      		
+      		var config = {			
+      				"uploadEndCallback" : uploadEndCallback,			
+      			};
+    		OfficeInstallFileUpload = new DocUpload(config);
+    	}
+    	
+    	
     	//初始化上传控件
+    	function start(files){
+    		OfficeInstallFileUpload.uploadDocs(files);
+    	}
+    	
+    	//初始化上传控件
+    	OfficeInstallFileUploadInit();
     	
 		//开放给外部的调用接口
         return {
-        	start: function(file){
-        		start(file);
+        	start: function(files){
+        		start(files);
             },
         };
     })();
