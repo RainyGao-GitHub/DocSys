@@ -2458,7 +2458,9 @@
     	  	var parentPath = "";
     	  	var parentId = 0;
     	  	var level = 0;
-    	  	SystemUpgradeFileUpload.uploadDocs(files, null, parentPath, parentId, level, null);
+    	  	var vid = -1;
+    	  	var parentNode = null;
+    	  	SystemUpgradeFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
     	}
     	
     	//初始化上传控件
@@ -2703,6 +2705,8 @@
     	  	var parentPath = "";
     	  	var parentId = 0;
     	  	var level = 0;
+    	  	var vid = -1;
+    	  	var parentNode = null;
     		OfficeInstallFileUpload.uploadDocs(files, null, parentPath, parentId, level, null);
     	}
     	
