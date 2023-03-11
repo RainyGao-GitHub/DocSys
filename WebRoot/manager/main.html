@@ -2633,11 +2633,14 @@
 	    	   		//console.log("it is not a file");
 	    	   	}
 	    	}
-	    	if(firstFile.name != "office-editor.zip")
-	    	{
-		   		showErrorMessage("请选择正确的Office安装文件!");
-	      		return false;
-	    	}
+	    	
+			var fileName = firstFile.name;
+		    console.log("firstFile:"+fileName);
+		    if(fileName.indexOf("office") == -1)
+		    {
+		    	showErrorMessage("请选择正确的Office安装文件!");
+		    	return false;
+		    }
 	    }
 	    else
 	   	{
@@ -2707,7 +2710,7 @@
     	  	var level = 0;
     	  	var vid = -1;
     	  	var parentNode = null;
-    		OfficeInstallFileUpload.uploadDocs(files, null, parentPath, parentId, level, null);
+    		OfficeInstallFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
     	}
     	
     	//初始化上传控件
