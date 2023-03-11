@@ -1910,11 +1910,69 @@ public class DocController extends BaseController{
 			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) 
 	{
-		//TODO: 暂不考虑断点续传
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-		rt.setMsgData("0");
+
+		User accessUser = superAdminAccessCheck(null, null, session, rt);
+		if(accessUser == null)		
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if("".equals(checkSum))
+		{
+			//CheckSum is empty, mean no need 
+			rt.setMsgData("0");	//标记为chunk not exist or not matched
+			writeJson(rt, response);
+			return;
+		}
+		
+		String localRootPath = getLocalRootPathForUsage(usage);
+		String localParentPath = localRootPath + path;
+		String chunkParentPath = localParentPath;
+		
+		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
+		String fileChunkName = name + "_" + chunkIndex;
+		String chunkFilePath = chunkParentPath + fileChunkName;
+		if(false == isChunkMatched(chunkFilePath,chunkHash))
+		{
+			rt.setMsgData("0");
+			docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
+		}
+		else
+		{
+			rt.setMsgData("1");
+			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
+			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
+			if(combineDisabled != null)
+			{
+				Log.debug("checkChunkUploaded() combineDisabled!");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			//如果是最后一个分片则开始文件合并处理
+			if(chunkIndex == chunkNum -1)	//It is the last chunk
+			{	
+				//updateRealDocEx
+				Doc doc  = new Doc();
+				doc.setLocalRootPath(localRootPath);
+				doc.setPath(path);
+				doc.setName(name);
+				if(updateRealDocEx(doc, null,chunkNum,chunkSize,chunkParentPath,rt) == false)
+				{
+					docSysErrorLog("文件合并失败！", rt);
+					writeJson(rt, response);
+					return;
+				}
+				
+				//deleteChunks when combine ok
+				deleteChunks(name, chunkIndex, chunkNum,chunkParentPath);
+				writeJson(rt, response);
+				return;
+			}
+		}
 		writeJson(rt, response);
-		return;
 	}
 
 	//combine chunks
