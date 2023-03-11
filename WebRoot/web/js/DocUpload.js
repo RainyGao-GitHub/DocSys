@@ -1532,11 +1532,13 @@
 	             		{
 		                	if(SubContext.docId == -1) //文件新建成功
 			                {	
-		                		//set the docId so that We can open it 
-		             			SubContext.docId = ret.data.docId;	            
-			             		addTreeNode(ret.data);
-			             		addDocListNode(ret.data);
-			             		
+		    		        	SubContext.addedParentDocList = ret.dataEx;
+		    		        	SubContext.newDoc = ret.data;
+		    		        	SubContext.isNewDoc = true;
+		    		         	if(SubContext.newDoc){
+			    		        	//set the docId so that We can open it 
+			    		         	SubContext.docId = SubContext.newDoc.docId;
+		    		         	}
 			                }
 	             			
 		                    uploadSuccessHandler(SubContext, ret.msgInfo);
@@ -1914,8 +1916,10 @@
 	    		        	SubContext.addedParentDocList = ret.dataEx;
 	    		        	SubContext.newDoc = ret.data;
 	    		        	SubContext.isNewDoc = true;
-	    		         	//set the docId so that We can open it 
-	    		         	SubContext.docId = ret.data.id;
+	    		         	if(SubContext.newDoc){
+		    		        	//set the docId so that We can open it 
+		    		         	SubContext.docId = SubContext.newDoc.docId;
+	    		         	}
 	    				}
 	             		
 	             		uploadSuccessHandler(SubContext);    					
@@ -2287,26 +2291,21 @@
 							chunkUploadSuccessHandler(SubContext, chunk);
 						}
 						else
-						{		                
-		                	uploadSuccessHandler(SubContext,ret.msgInfo);
-		                	
+						{		   
 		                	//如果是新增文件，需要在目录树上增加节点
 		                	if(SubContext.docId == -1)
 			                {	
-	    		         		var addedParentDocList = ret.dataEx;
-	    		         		if(addedParentDocList)
-	    		         		{
-	    		         			addParentNodes(addedParentDocList);
-	    		         		}
-		                		
-	    		         		//Add Node at zTree and DocList
-			             		addTreeNode(ret.data);
-			             		addDocListNode(ret.data);
-			            		
-			             		//set the docId so that We can open it 
-			             		SubContext.docId = ret.data.id;
+		    		        	SubContext.addedParentDocList = ret.dataEx;
+		    		        	SubContext.newDoc = ret.data;
+		    		        	SubContext.isNewDoc = true;
+		    		         	if(SubContext.newDoc){
+			    		        	//set the docId so that We can open it 
+			    		         	SubContext.docId = SubContext.newDoc.docId;
+		    		         	}
 			                }
-		                	
+							
+		                	uploadSuccessHandler(SubContext,ret.msgInfo);
+		                			                	
 		                	//启动下个文件上传
 		                	uploadNextDoc();
 						}
