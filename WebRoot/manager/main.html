@@ -2683,7 +2683,7 @@
           		}
           		else
           		{
-                    startInstalOffice(file);
+                    startInstalOffice(_firstFile);
           		}
       		};
       		
@@ -2720,7 +2720,7 @@
 	function startInstalOffice(file)
 	{
 		$.ajax({
-	        url : "/DocSystem/Bussiness/installOffice.do"
+	        url : "/DocSystem/Bussiness/installOffice.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
