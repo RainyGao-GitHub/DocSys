@@ -129,6 +129,12 @@
 			
 			if(isUploading == true)
 			{
+				if(_config.appendAllow !== undefined && _config.appendAllow == false)
+				{
+					console.log("uploadDocs() append was not allowed");
+					return;
+				}
+				
 				DocUploadAppend(files,parentNode,parentPath,parentId,level,vid,commitMsg);
 				uploadNextDoc();
 			}
