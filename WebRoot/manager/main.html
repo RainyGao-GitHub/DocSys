@@ -2717,6 +2717,35 @@
         };
     })();
 	
+	function startInstalOffice(file)
+	{
+		$.ajax({
+	        url : "/DocSystem/Bussiness/installOffice.do"
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	name: file.name,
+	        	size: file.size,
+	        },
+	        success : function (ret) {
+	        	console.log("installOffice ret:",ret);
+				if("ok" == ret.status){
+					showErrorMessage("Office编辑器安装成功");
+				 }
+				 else	//上传失败
+				 {
+					//上传失败
+					console.log("Office编辑器安装失败：" + ret.msgInfo);
+					showErrorMessage("Office编辑器安装失败:" + ret.msgInfo);
+					return;
+	             }
+	        },
+	        error : function () {
+				showErrorMessage("Office编辑器安装失败: 服务器异常");
+	        }
+	    });
+	}
+	
 	//在线安装
 	function onlineInstallOfficeConfirm()
 	{
