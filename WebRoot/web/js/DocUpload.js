@@ -74,7 +74,20 @@
         //目录上传子元素个数统计
         var folderUploadTotalCountMap = {};
         
+        var _gShareId;
+        var _usage;
+        
         //根据配置修改变量
+        if(_config.gShareId)
+        {
+        	_gShareId = _config.gShareId;
+        }
+        
+        if(_config.usage)
+        {
+        	_usage = _config.usage;
+        }
+        
         if(_config.actionConfig)
         {
         	if(_config.actionConfig.overwriteConfirm)
@@ -1502,7 +1515,8 @@
 	             	dirPath: SubContext.dirPath,
 	             	batchStartTime: SubContext.batchStartTime,
 	             	totalCount: getFolderUploadTotalCount(SubContext.dirPath), 
-	             	shareId: gShareId,
+	             	shareId: _gShareId,
+	             	usage: _usage,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -1830,7 +1844,8 @@
 	             	dirPath: SubContext.dirPath,
 	             	batchStartTime: SubContext.batchStartTime,
 	             	totalCount: getFolderUploadTotalCount(SubContext.dirPath),
-	             	shareId: gShareId,
+	             	shareId: _gShareId,
+	             	usage: _usage,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -1887,7 +1902,8 @@
 	             	dirPath: SubContext.dirPath,
 	             	batchStartTime: SubContext.batchStartTime,
 	             	totalCount: getFolderUploadTotalCount(SubContext.dirPath),
-	             	shareId: gShareId,
+	             	shareId: _gShareId,
+	             	usage: _usage,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -2183,9 +2199,13 @@
 				form.append("dirPath", SubContext.dirPath);
 				form.append("batchStartTime", SubContext.batchStartTime);
 				form.append("totalCount", getFolderUploadTotalCount(SubContext.dirPath));
-				if(gShareId)
+				if(_gShareId)
 				{
-					form.append("shareId", gShareId);
+					form.append("shareId", _gShareId);
+				}
+				if(_usage)
+				{
+					form.append("usage", _usage);
 				}
 			}
 			else
@@ -2206,9 +2226,13 @@
 				form.append("dirPath", SubContext.dirPath);
 				form.append("batchStartTime", SubContext.batchStartTime);
 				form.append("totalCount", getFolderUploadTotalCount(SubContext.dirPath));
-				if(gShareId)
+				if(_gShareId)
 				{
-					form.append("shareId", gShareId);
+					form.append("shareId", _gShareId);
+				}
+				if(_usage)
+				{
+					form.append("usage", _usage);
 				}
 				
 				//Get chunk data
@@ -2535,16 +2559,17 @@
 	};
     
     DocUpload.defaultConfig = {
-		"uploadDisplayInit": DocUpload.uploadDisplayInit,
-		"createUploadItem": DocUpload.createUploadItem,
-		"appendUploadItems": DocUpload.appendUploadItems,		
-		"deleteUploadItem" : DocUpload.deleteUploadItem,
-		"updateUploadItem" : DocUpload.updateUploadItem,
-		"stopAllUploadCallback" : DocUpload.stopAllUploadCallback,
-		"uploadSuccessCallback" : DocUpload.uploadSuccessCallback,			
-		"uploadErrorCallback" : DocUpload.uploadErrorCallback,			
-		"uploadEndCallback" : DocUpload.uploadEndCallback,			
-		"reuploadItemInit" : DocUpload.reuploadItemInit,
+    	
+		uploadDisplayInit: DocUpload.uploadDisplayInit,
+		createUploadItem: DocUpload.createUploadItem,
+		appendUploadItems: DocUpload.appendUploadItems,		
+		deleteUploadItem: DocUpload.deleteUploadItem,
+		updateUploadItem: DocUpload.updateUploadItem,
+		stopAllUploadCallback: DocUpload.stopAllUploadCallback,
+		uploadSuccessCallback: DocUpload.uploadSuccessCallback,			
+		uploadErrorCallback: DocUpload.uploadErrorCallback,			
+		uploadEndCallback: DocUpload.uploadEndCallback,			
+		reuploadItemInit: DocUpload.reuploadItemInit,
 	    appendAllow: true,	//允许添加新文件
 	    actionConfig:{
 	    	overwriteConfirm: {
