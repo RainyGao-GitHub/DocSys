@@ -9123,7 +9123,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("updateRealDoc() checkFileSizeAndCheckSum Error");
 				return false;
-			}			
+			}
 		} catch (Exception e) {
 			Log.debug("updateRealDoc() FileUtil.saveFile " + name +" 异常！");
 			docSysDebugLog(e.toString(), rt);
