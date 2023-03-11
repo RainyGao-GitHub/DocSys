@@ -9416,7 +9416,7 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		Log.debug("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath);
+		Log.debug("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath + " do delete!");
 		try {
 	        for(int i = 0; i < chunkNum; i ++)
 	        {
