@@ -2069,7 +2069,15 @@ public class DocController extends BaseController{
 		doc.setPath(path);
 		doc.setName(name);
 		doc.setSize(size);
-		updateRealDocEx(doc, null,chunkNum,chunkSize,chunkTmpPath,rt);
+		if(updateRealDocEx(doc, null,chunkNum,chunkSize,chunkTmpPath,rt) == false)
+		{
+			docSysErrorLog("文件合并失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//deleteChunks when combine ok
+		deleteChunks(name, chunkIndex, chunkNum,chunkTmpPath);
 		writeJson(rt, response);
 	}
 	
@@ -2536,7 +2544,15 @@ public class DocController extends BaseController{
 			doc.setLocalRootPath(localRootPath);
 			doc.setPath(path);
 			doc.setName(name);
-			updateRealDocEx(doc, uploadFile,chunkNum,chunkSize,chunkTmpPath,rt);
+			if(updateRealDocEx(doc, uploadFile,chunkNum,chunkSize,chunkTmpPath,rt) == false)
+			{
+				docSysErrorLog("文件保存失败！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
+			//deleteChunks when combine ok
+			deleteChunks(name, chunkIndex, chunkNum,chunkTmpPath);
 			writeJson(rt, response);
 			return;
 		}
