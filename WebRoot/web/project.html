@@ -4248,13 +4248,31 @@
   	  		$(".reuploadAllBtn").show();
   		};
 
-  		var uploadSuccessCallback = function(index){  	  		
-
+  		var uploadSuccessCallback = function(index, context){  	  					
+			//更新上传显示
   			$('.file'+index).removeClass('is-uploading');
   			$('.file'+index).addClass('is-success');
-  			
   			//hide the reupload btn
   			$(".reupload"+index).hide();
+			
+  			//更新文件树和文件列表列表
+         	if(context.isNewDoc)
+  			{
+         		console.log("uploadSuccessCallback() is new Doc", context);
+  				if(context.addedParentDocList)
+  	         	{
+  	         		addParentNodes(context.addedParentDocList);
+  	         		context.addedParentDocList = undefined; //释放内存
+  	         	}
+  				
+  	        	if(context.newDoc)
+  	        	{
+        			addTreeNode(context.newDoc);
+         			addDocListNode(context.newDoc);
+         			context.newDoc = undefined; //释放内存
+  	        	}
+  			}
+
   		};
   		
   		var uploadErrorCallback = function(index){  	  		
