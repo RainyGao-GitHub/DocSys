@@ -2068,6 +2068,7 @@ public class DocController extends BaseController{
 		doc.setLocalRootPath(localRootPath);
 		doc.setPath(path);
 		doc.setName(name);
+		doc.setSize(size);
 		updateRealDocEx(doc, null,chunkNum,chunkSize,chunkTmpPath,rt);
 		writeJson(rt, response);
 	}
