@@ -1796,6 +1796,7 @@ public class DocController extends BaseController{
 		if("".equals(checkSum))
 		{
 			//CheckSum is empty, mean no need 
+			rt.setMsgData("0");	//标记为chunk not exist or not matched
 			writeJson(rt, response);
 			return;
 		}
@@ -1911,6 +1912,7 @@ public class DocController extends BaseController{
 	{
 		//TODO: 暂不考虑断点续传
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		rt.setMsgData("0");
 		writeJson(rt, response);
 		return;
 	}
