@@ -2448,13 +2448,17 @@
 	  		};
 	  		
 	  		var config = {			
-	  				"uploadEndCallback" : uploadEndCallback,			
+	  			uploadEndCallback: uploadEndCallback,
+	  			usage: 1,	//SystemUpgrade
 	  		};
 	  		SystemUpgradeFileUpload = new DocUpload(config);
 		}
     	
     	function start(files){
-    		SystemUpgradeFileUpload.uploadDocs(files);
+    	  	var parentPath = "";
+    	  	var parentId = 0;
+    	  	var level = 0;
+    	  	SystemUpgradeFileUpload.uploadDocs(files, null, parentPath, parentId, level, null);
     	}
     	
     	//初始化上传控件
@@ -2687,7 +2691,8 @@
       		};
       		
       		var config = {			
-      				"uploadEndCallback" : uploadEndCallback,			
+      				uploadEndCallback: uploadEndCallback,	
+    	  			usage: 2,	//OfficeInstall		
       			};
     		OfficeInstallFileUpload = new DocUpload(config);
     	}
@@ -2695,7 +2700,10 @@
     	
     	//初始化上传控件
     	function start(files){
-    		OfficeInstallFileUpload.uploadDocs(files);
+    	  	var parentPath = "";
+    	  	var parentId = 0;
+    	  	var level = 0;
+    		OfficeInstallFileUpload.uploadDocs(files, null, parentPath, parentId, level, null);
     	}
     	
     	//初始化上传控件
