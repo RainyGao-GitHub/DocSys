@@ -409,7 +409,12 @@ public class GitUtil {
     	action.isSubAction = isSubAction;
     	commitActionList.add(action);
     	return action;
-    }    
+    }
+    
+    public void addDir(Doc doc, boolean isSubAction, List<CommitAction> commitActionList)
+    {
+    	CommitAction.insertAddDirAction(commitActionList, doc, isSubAction, true);
+    }   
     
     public void modifyFile(Doc doc, boolean isSubAction, List<CommitAction> commitActionList)
     {
