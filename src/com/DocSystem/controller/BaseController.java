@@ -6152,6 +6152,7 @@ public class BaseController  extends BaseFunction{
 		localDoc.setLocalVRootPath(doc.getLocalVRootPath());
 		localDoc.setPath(doc.getPath());
 		localDoc.setName(doc.getName());
+		localDoc.setLevel(doc.getLevel());
 		localDoc.setType(0);	//不存在
 		localDoc.offsetPath = doc.offsetPath;
 	
