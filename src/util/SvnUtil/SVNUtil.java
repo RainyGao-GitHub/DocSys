@@ -1029,11 +1029,11 @@ public class SVNUtil  extends BaseController{
     		if(remoteEntryType == 0)
     		{
     			//Add to fakeActionList
-        		CommitAction.insertDeleteAction(actionListFake, doc, false);    			
+        		CommitAction.insertDeleteAction(actionListFake, doc);    			
     			return;
     		}
     		//Log.debug("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    		CommitAction.insertDeleteAction(actionList, doc, false);
+    		CommitAction.insertDeleteAction(actionList, doc);
     		return;
     	}
     	
@@ -1048,15 +1048,15 @@ public class SVNUtil  extends BaseController{
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
         		//Log.debug("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction, false);
+    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction);
 	            return;
     		}
     		
     		if(remoteEntryType != 1)	//文件类型改变
     		{
         		//Log.debug("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			CommitAction.insertDeleteAction(actionList, doc, false);
-    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction, false);
+    			CommitAction.insertDeleteAction(actionList, doc);
+    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction);
 	            return;
     		}
     		
@@ -1068,20 +1068,20 @@ public class SVNUtil  extends BaseController{
 	    	{
         		//Log.debug("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			//Add Dir
-    			CommitAction.insertAddDirAction(actionList, doc, isSubAction, false);
+    			CommitAction.insertAddDirAction(actionList, doc, isSubAction);
 	            return;
     		}
     		
     		if(remoteEntryType != 2)	//文件类型改变
     		{
     			//Log.debug("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			CommitAction.insertDeleteAction(actionList, doc, false);
-	        	CommitAction.insertAddDirAction(actionList, doc, isSubAction, false);
+    			CommitAction.insertDeleteAction(actionList, doc);
+	        	CommitAction.insertAddDirAction(actionList, doc, isSubAction);
 	            return;
     		}
     		
     		//Add to fakeActionList (can not use insertAddDirAction it will add subDocs to actionList)
-			CommitAction.insertAddEntryAction(actionListFake, doc, isSubAction, false);
+			CommitAction.insertAddEntryAction(actionListFake, doc, isSubAction);
 
     		//If currentDoc was in changedList then subDocs must in changedList, so set localChangesRootPath to null
     		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, null, subDocCommitFlag);
@@ -1245,7 +1245,7 @@ public class SVNUtil  extends BaseController{
 	    if(isMove)
 	    {
 	       Log.debug("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
-  			CommitAction.insertDeleteAction(commitActionList,srcDoc, false);
+  			CommitAction.insertDeleteAction(commitActionList,srcDoc);
 	    }
         else
         {
@@ -1254,11 +1254,11 @@ public class SVNUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			CommitAction.insertAddEntryAction(commitActionList, dstDoc,false, false);
+			CommitAction.insertAddEntryAction(commitActionList, dstDoc,false);
 		}
 		else
 		{
-			CommitAction.insertAddDirAction(commitActionList, dstDoc,false, false);
+			CommitAction.insertAddDirAction(commitActionList, dstDoc,false);
 		}
 	    
         ISVNEditor editor = getCommitEditor(commitMsg);
