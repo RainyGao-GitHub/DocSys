@@ -366,7 +366,14 @@
 		    		SubContext.docId = -1; //-1: 新增  
 		    		
     	   		   	//advanced Info
-    	   		   	SubContext.type = 1;	
+    	   		   	if(file.isDirectory)
+    	   		   	{
+    	   		   		SubContext.type = 2;
+    	   		   	}
+    	   		   	else
+    	   		   	{
+    	   		   		SubContext.type = 1;
+    	   		   	}
 		    	   	SubContext.size = file.size;
     	   		   	SubContext.name = file.name;
 			    	
@@ -2207,6 +2214,10 @@
 				form.append("dirPath", SubContext.dirPath);
 				form.append("batchStartTime", SubContext.batchStartTime);
 				form.append("totalCount", getFolderUploadTotalCount(SubContext.dirPath));
+				if(SubContext.type)
+				{
+					form.append("type", SubContext.type);					
+				}
 				if(_gShareId)
 				{
 					form.append("shareId", _gShareId);
@@ -2234,6 +2245,10 @@
 				form.append("dirPath", SubContext.dirPath);
 				form.append("batchStartTime", SubContext.batchStartTime);
 				form.append("totalCount", getFolderUploadTotalCount(SubContext.dirPath));
+				if(SubContext.type)
+				{
+					form.append("type", SubContext.type);					
+				}
 				if(_gShareId)
 				{
 					form.append("shareId", _gShareId);
