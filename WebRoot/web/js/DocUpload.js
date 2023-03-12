@@ -411,6 +411,10 @@
 		    		//Update global infos
 		    	   	Content.totalFileSize += file.size;
     	   		}
+        		else
+        		{
+        			console.log("buildSubContextList() file:", file);
+        		}
 	    	}
     		
     		//console.log(SubContextList);
