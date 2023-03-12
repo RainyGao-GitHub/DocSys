@@ -1669,7 +1669,7 @@ public class GITUtil  extends BaseController{
 	    if(isMove)
 	    {
 	    	Log.debug("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
-   			CommitAction.insertDeleteAction(commitActionList,srcDoc, true);
+   			CommitAction.insertDeleteAction(commitActionList,srcDoc);
 	    }
         else
         {
@@ -1678,11 +1678,11 @@ public class GITUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			CommitAction.insertAddEntryAction(commitActionList, dstDoc,false, true);
+			CommitAction.insertAddEntryAction(commitActionList, dstDoc,false);
 		}
 		else
 		{
-			CommitAction.insertAddDirAction(commitActionList, dstDoc,false, true);
+			CommitAction.insertAddDirAction(commitActionList, dstDoc,false);
 		}
 	    
 		Git git = null;
@@ -2505,10 +2505,10 @@ public class GITUtil  extends BaseController{
     		if(type == 0)
     		{
     			//Addd to fakeActionList
-        		CommitAction.insertDeleteAction(actionListFake, doc, true);
+        		CommitAction.insertDeleteAction(actionListFake, doc);
     			return;
     		}
-    		CommitAction.insertDeleteAction(actionList,doc, true);
+    		CommitAction.insertDeleteAction(actionList,doc);
     		return;
     	}
     	
@@ -2522,14 +2522,14 @@ public class GITUtil  extends BaseController{
     	case 1:	//文件
     		if(type == 0) 	//新增文件
 	    	{
-    			CommitAction.insertAddEntryAction(actionList,doc,isSubAction, true);
+    			CommitAction.insertAddEntryAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
     		if(type != 1)	//文件类型改变
     		{
-    			CommitAction.insertDeleteAction(actionList, doc, true);
-    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction, true);
+    			CommitAction.insertDeleteAction(actionList, doc);
+    			CommitAction.insertAddEntryAction(actionList, doc, isSubAction);
 	            return;
     		}
     		
@@ -2539,19 +2539,19 @@ public class GITUtil  extends BaseController{
     		if(type == 0) 	//新增目录
 	    	{
     			//Add Dir
-    			CommitAction.insertAddDirAction(actionList, doc, isSubAction, true);
+    			CommitAction.insertAddDirAction(actionList, doc, isSubAction);
 	            return;
     		}
     		
     		if(type != 2)	//文件类型改变
     		{
-    			CommitAction.insertDeleteAction(actionList, doc, true);
-	        	CommitAction.insertAddDirAction(actionList, doc, isSubAction, true);
+    			CommitAction.insertDeleteAction(actionList, doc);
+	        	CommitAction.insertAddDirAction(actionList, doc, isSubAction);
 	            return;
     		}
 
     		//add to fakeActionList (can not use insertAddDirAction it will add subDocs to actionList)
-    		CommitAction.insertAddEntryAction(actionListFake, doc, isSubAction, true);    		
+    		CommitAction.insertAddEntryAction(actionListFake, doc, isSubAction);    		
 
     		//If currentDoc was in changedList then subDocs must in changedList, so set localChangesRootPath to null
     		scanForSubDocCommit(actionList, actionListFake, repos, doc, isSubAction, null, subDocCommitFlag);
@@ -2624,7 +2624,7 @@ public class GITUtil  extends BaseController{
 				commitActionList = new ArrayList<CommitAction>();
 			}
 			
-    		CommitAction.insertAddDirAction(commitActionList, rootDoc, false, true);
+    		CommitAction.insertAddDirAction(commitActionList, rootDoc, false);
     		
     		Git git = null;
     		try {
