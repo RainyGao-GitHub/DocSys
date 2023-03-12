@@ -87,7 +87,7 @@ function DragUpload(_parentNode) {
 	}
 		
 	function _addFilesFromItems(items) {
-		console.log("_addFilesFromItems items:", items);
+		//console.log("_addFilesFromItems items:", items);
 	    var _iterator6 = dropzone_createForOfIteratorHelper(items, true),
 	        _step6;
 	    
@@ -100,12 +100,14 @@ function DragUpload(_parentNode) {
 	
 				if (item.webkitGetAsEntry != null && (entry = item.webkitGetAsEntry())) 
 				{
+					console.log("_addFilesFromItems entry:", entry);
 					if (entry.isFile) 
 					{
 						result.push(item.getAsFile());
 					} 
 					else if (entry.isDirectory) 
 					{
+						result.push(buildFile(entry));
 						// Append all files from that directory to files
 						resultIsReady = false;
 						_addFilesFromDirectory(entry, entry.name);
@@ -138,6 +140,14 @@ function DragUpload(_parentNode) {
 	    	checkUserUploadRight(result, parentNode, uploadConfirm);
 	    }
 	    return;
+	}
+	
+	function buildFile(entry){
+		var file = {};
+		file.name = entry.name;
+		file.size = 0;
+		file.isDirectory = true;
+		return file;
 	}
 	
 	function _addFilesFromDirectory(directory, path) 
