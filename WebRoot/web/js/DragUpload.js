@@ -107,7 +107,8 @@ function DragUpload(_parentNode) {
 					} 
 					else if (entry.isDirectory) 
 					{
-						result.push(buildFile(entry));
+						//var folderFile = buildFile(entry);
+						//result.push(folderFile);
 						// Append all files from that directory to files
 						resultIsReady = false;
 						_addFilesFromDirectory(entry, entry.name);
@@ -184,7 +185,10 @@ function DragUpload(_parentNode) {
 		                      return; _this5.addFile(file);
 		                 });		                
 		              } else if (entry.isDirectory) {
-		                _addFilesFromDirectory(entry, "".concat(path, "/").concat(entry.name));
+		            	  var folderFile = buildFile(entry);
+		            	  folderFile.fullPath = "".concat(path, "/").concat(entry.name);
+		            	  result.push(folderFile);
+						  _addFilesFromDirectory(entry, folderFile.fullPath);
 		              }
 		            } 
 		            // Recursively call readEntries() again, since browser only handle
