@@ -88,7 +88,7 @@ public class CommitAction{
 	
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
-	public static void insertAddEntryAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
+	public static void insertAddEntryAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
 		//printObject("insertAddFileAction:", doc);
 		Log.debug("insertAddFileAction() [" + doc.getPath() + doc.getName() + "]");
 		
@@ -99,7 +99,7 @@ public class CommitAction{
     	actionList.add(action);
 	}
     
-	public static void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction, boolean isGit) 
+	public static void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction) 
 	{
 		//printObject("insertAddDirAction:", doc);
 		Log.debug("insertAddDirAction() [" + doc.getPath() + doc.getName() + "]");
@@ -136,11 +136,11 @@ public class CommitAction{
 	    	Doc subDoc = DocUtil.buildBasicDoc(doc.getVid(), null, doc.getDocId(),  doc.getReposPath(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "", doc.offsetPath);
 	    	if(localEntry.isDirectory())
 	    	{	
-	    		insertAddDirAction(subActionList,subDoc,true, isGit);
+	    		insertAddDirAction(subActionList,subDoc,true);
 	    	}
 	    	else
 	    	{
-	    		insertAddEntryAction(subActionList,subDoc,true, isGit);
+	    		insertAddEntryAction(subActionList,subDoc,true);
 	    	}
 	 	}
 		
@@ -152,7 +152,7 @@ public class CommitAction{
     	actionList.add(action);    	
 	}
 	
-	public static void insertDeleteAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
+	public static void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
 		//printObject("insertDeleteAction:", doc);
 		Log.debug("insertDeleteAction() [" + doc.getPath() + doc.getName() + "]");
 
