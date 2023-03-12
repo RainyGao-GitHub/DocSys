@@ -2293,6 +2293,12 @@ public class DocController extends BaseController{
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
 							+ " shareId:" + shareId + " commitMsg:" + commitMsg
 							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
+
+		//文件类型未指定当文件处理
+		if(type == null)
+		{
+			type = 1;
+		}
 		
 		if(usage != null)
 		{
@@ -2344,8 +2350,8 @@ public class DocController extends BaseController{
 		//Build Doc
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);		
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "文件上传", repos, doc, null, folderUploadAction);
 		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
@@ -2490,7 +2496,7 @@ public class DocController extends BaseController{
 		}
 		
 		//非分片上传或LastChunk Received
-		if(uploadFile != null) 
+		if(uploadFile != null || type == 2) 
 		{			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
@@ -2499,7 +2505,7 @@ public class DocController extends BaseController{
 			String commitUser = reposAccess.getAccessUser().getName();
 			String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			int ret = 0;
-			if(dbDoc == null || dbDoc.getType() == 0)
+			if(dbDoc == null || dbDoc.getType() == 0 || type == 2)
 			{
 				ret = addDoc(repos, doc, 
 						uploadFile,
