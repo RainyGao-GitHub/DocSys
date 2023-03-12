@@ -112,7 +112,12 @@ public class SvnUtil {
     	action.isSubAction = isSubAction;
     	commitActionList.add(action);
     	return action;
-    }    
+    }
+    
+    public void addDir(Doc doc, boolean isSubAction, List<CommitAction> commitActionList)
+    {
+    	CommitAction.insertAddDirAction(commitActionList, doc, isSubAction, false);
+    }   
     
     public void modifyFile(Doc doc, boolean isSubAction, List<CommitAction> commitActionList)
     {
