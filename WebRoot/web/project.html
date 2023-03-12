@@ -902,17 +902,18 @@
 	//upload file confirm dialog
 	function selectUploadConfirm(e)
 	{
-		console.log("selectUploadConfirm",e,gParentNodeForUpload);
+		console.log("selectUploadConfirm",gParentNodeForUpload);
 	    var entrys = e.target.files;
 
 		checkUserUploadRight(entrys,gParentNodeForUpload,uploadConfirm);
-	    return true;
+
+		DragUploadInit(e, parentNode);
+		return true;
 	}
 
 	function dragUploadConfirm(e,parentNode)
 	{
 		console.log("dragUploadConfirm",e);
-
 		DragUploadInit(e, parentNode);
 	}
 
