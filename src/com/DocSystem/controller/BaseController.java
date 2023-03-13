@@ -19301,6 +19301,7 @@ public class BaseController  extends BaseFunction{
     		action = gFolderUploadActionHashMap.get(actionId);
     		if(action == null)
     		{
+    			Log.debug("checkAndCreateFolderUploadAction() create FolderUploadAction:" + actionId);
 				action = new FolderUploadAction();
 				action.actionId = actionId;
 				action.requestIP = requestIP;
