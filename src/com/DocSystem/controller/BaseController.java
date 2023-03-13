@@ -19586,7 +19586,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private void folderUploadEndHander(FolderUploadAction action) {
+	protected void folderUploadEndHander(FolderUploadAction action) {
 		Log.debug("folderUploadEndHander() FolderUploadAction:" + action.actionId + " total:" + action.totalCount + " successCount:" + action.successCount + " faileCount:" + action.failCount);
 		
 		//Set action to stop to avoid other thread to do the endHandler
@@ -19647,9 +19647,10 @@ public class BaseController  extends BaseFunction{
 		}).start();
 	}
 
-	private boolean isLastSubEntryForFolderUpload(FolderUploadAction folderUploadAction) {
-		if(folderUploadAction.totalCount <= (folderUploadAction.successCount + folderUploadAction.failCount))
+	protected boolean isLastSubEntryForFolderUpload(FolderUploadAction folderUploadAction) {
+		if(folderUploadAction.isEnd == true && folderUploadAction.totalCount <= (folderUploadAction.successCount + folderUploadAction.failCount))
 		{
+			Log.debug("isLastSubEntryForFolderUpload() folderUploadAction:" + folderUploadAction.actionId + " lastSubEntry completed!");
 			return true;
 		}
 		return false;
