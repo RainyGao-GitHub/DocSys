@@ -39,9 +39,8 @@ public class FolderUploadAction {
 	public int totalCount;
 	public int successCount;
 	public int failCount;
+	public boolean isEnd = false;	//所有文件上传请求都已发送
 
-
-	
 	public boolean isCriticalError = false;
 	public String errorInfo;
 
