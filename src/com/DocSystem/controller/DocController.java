@@ -1249,7 +1249,7 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
@@ -1541,7 +1541,7 @@ public class DocController extends BaseController{
 
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null && batchStartTime != null)
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
@@ -1752,7 +1752,7 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
@@ -1944,7 +1944,7 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;		
-		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
@@ -2426,7 +2426,7 @@ public class DocController extends BaseController{
 				
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
+		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
