@@ -45,10 +45,13 @@ public class DocUtil {
 		}
 		else
 		{
-			//防止使用相对路径进行非法注入
-			level = Path.seperatePathAndName(path + name, temp);
-			path = temp[0];
-			name = temp[1];	
+			if(level == null)
+			{
+				//防止使用相对路径进行非法注入
+				level = Path.seperatePathAndName(path + name, temp);
+				path = temp[0];
+				name = temp[1];	
+			}
 		}
 		
 		if(level == -2)
