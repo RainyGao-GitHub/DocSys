@@ -5088,11 +5088,14 @@ public class BaseController  extends BaseFunction{
 		Integer subDocLevel = getSubDocLevel(doc);
 
 		File[] list = file.listFiles();
-		for(int i=0; i<list.length; i++)
+		if(list != null)
 		{
-			File subFile = list[i];
-			Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subFile.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
-			rebuildIndexForDocEx(repos, subDoc, subFile, rt);
+			for(int i=0; i<list.length; i++)
+			{
+				File subFile = list[i];
+				Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subFile.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
+				rebuildIndexForDocEx(repos, subDoc, subFile, rt);
+			}
 		}
 	}
 		
