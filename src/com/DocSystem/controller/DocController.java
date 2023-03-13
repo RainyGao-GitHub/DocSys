@@ -1251,7 +1251,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkDocInfo() folderUploadAction is null", rt);
@@ -1400,274 +1400,6 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private FolderUploadAction getFolderUploadAction(HttpServletRequest request, 
-			User accessUser, 
-			Repos repos, 
-			String dirPath, Long batchStartTime, 
-			String commitMsg, ReturnAjax rt) 
-	{
-		String actionId = dirPath + batchStartTime;
-		FolderUploadAction action = gFolderUploadActionHashMap.get(dirPath + batchStartTime);
-		if(action == null)
-		{
-			String reposPath = Path.getReposPath(repos);
-			String localRootPath = Path.getReposRealPath(repos);
-			String localVRootPath = Path.getReposVirtualPath(repos);
-			Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, dirPath, "", null, 2, true, localRootPath, localVRootPath, 0L, "");
-
-			
-			String requestIP = getRequestIpAddress(request);
-				
-			//create FolderUploadAction
-			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc, commitMsg, rt);
-		}
-		
-		if(action.isCriticalError)
-		{
-			//docSysErrorLog("上传失败:" + action.errorInfo, rt);
-			return null;
-		}
-		return action;
-	}
-	
-	private FolderUploadAction checkAndCreateFolderUploadAction(String actionId, String requestIP, User accessUser, Repos repos, Doc doc, String commitMsg, ReturnAjax rt) {
-		FolderUploadAction action = null;
-		synchronized(gFolderUploadActionSyncLock)
-		{
-    		String lockInfo = "checkAndCreateFolderUploadAction() gFolderUploadActionSyncLock";
-    		SyncLock.lock(lockInfo);
-			
-    		action = gFolderUploadActionHashMap.get(actionId);
-    		if(action == null)
-    		{
-				action = new FolderUploadAction();
-				action.actionId = actionId;
-				action.requestIP = requestIP;
-				action.user = accessUser;
-				action.repos = repos;
-				action.doc = doc;
-				action.docLockType = DocLock.LOCK_TYPE_FORCE;
-
-				action.event = "uploadDoc";
-				action.subEvent = "uploadDoc";
-				action.eventName = "目录上传";
-				
-				action.isCriticalError = false;
-				action.errorInfo = null;
-
-				action.startTime = new Date().getTime();
-				action.beatTime = action.startTime;
-				action.longBeatCheckList = new ConcurrentHashMap<String, LongBeatCheckAction>();
-				
-				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
-				action.localChangesRootPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
-				
-				action.commitMsg = commitMsg == null? "上传目录 [" + doc.getPath() + doc.getName() + "]" : commitMsg;
-				action.commitUser = accessUser.getName(); 
-				
-				gFolderUploadActionHashMap.put(actionId, action);		
-				
-				action.info = "上传目录 [" + doc.getPath() + doc.getName() + "]";
-				DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, action.info, EVENT.folderUpload);
-				if(docLock == null)
-				{
-					action.isCriticalError = true;
-					action.errorInfo = rt.getMsgInfo();
-					action.stopFlag = true;
-					action.stopTime = new Date().getTime();
-				}
-				
-				//this thread is also responsible for delete action
-				startFolderUploadActionBeatCheckThread(action);
-    		}
-		}	
-		return action;
-	}
-	
-	private void startFolderUploadActionBeatCheckThread(FolderUploadAction action) 
-	{
-		String actionId = action.actionId;
-		Log.info("startFolderUploadActionBeatCheckThread [" + actionId + "]");
-
-		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.schedule(
-        		new Runnable() {
-                    @Override
-                    public void run() {
-                    	try {
-                        	long curTime = new Date().getTime();
-                    		Log.info("******** FolderUploadActionBeatCheckThread [" + actionId + "]");
-
-	                        FolderUploadAction folderUploadAction = gFolderUploadActionHashMap.get(actionId);
-	                		if(folderUploadAction == null)
-	                		{
-	                			Log.info("FolderUploadActionBeatCheckThread() there is no FolderUploadAction for [" + actionId + "]");						
-	                			return;
-	                		}
-	                		
-	                		//Action is stopped or isCriticalError need to remove action from gFolderUploadActionHashMap after 3 minutes 
-	                		if(folderUploadAction.isCriticalError == true)
-	                		{
-	                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] there is critical error [" + folderUploadAction.errorInfo + "]");
-
-		                		if((curTime - folderUploadAction.stopTime) > folderUploadAction.beatStopThreshold)
-		                		{
-		                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped more than [" +  folderUploadAction.beatStopThreshold + "] ms, clear action");
-		                			gFolderUploadActionHashMap.remove(actionId);
-		                			return;
-		                		}
-		                		
-	                			startFolderUploadActionBeatCheckThread(folderUploadAction);
-	                			return;
-	                		}
-	                		
-	                		if(folderUploadAction.stopFlag == true)
-	                		{
-	                			Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped");
-	    						if((curTime - folderUploadAction.stopTime) > folderUploadAction.beatStopThreshold)
-			                	{
-			                		Log.info("FolderUploadActionBeatCheckThread() [" + actionId + "] already stopped more than [" +  folderUploadAction.beatStopThreshold + "] ms, clear action");
-			                		gFolderUploadActionHashMap.remove(actionId);
-			                		return;
-			                	}
-	    						
-	                			startFolderUploadActionBeatCheckThread(folderUploadAction);                      
-	                			return;
-	                		}
-	                		
-	                		if(isFolderUploadActionBeatStopped(folderUploadAction, curTime))
-	                		{
-	                			folderUploadEndHander(folderUploadAction);
-	                			return;
-	                		}
-	                		
-	                		startFolderUploadActionBeatCheckThread(folderUploadAction);                      
-	                		                     
-                        	Log.info("******** FolderUploadActionBeatCheckThread [" + actionId + "] 执行结束\n");		                        
-                        } catch(Exception e) {
-                        	Log.info("******** FolderUploadActionBeatCheckThread [" + actionId + "] 执行异常\n");
-                        	Log.info(e);                        	
-                        }                        
-                    }
-                },
-                60,	//1分钟检测一次
-                TimeUnit.SECONDS);		
-	}
-	
-	private boolean isFolderUploadActionBeatStopped(FolderUploadAction action, long curTime) {		
-		if((curTime - action.beatTime) > action.beatStopThreshold)
-		{
-			//TODO: 长心跳线程，最好又超时时间配合，避免线程意外死亡影响检测
-			if(action.longBeatCheckList.size() > 0)	
-			{
-				checkAndCleanLongBeatCheckAction(action.longBeatCheckList);
-				if(action.longBeatCheckList.size() > 0)
-				{
-					Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] there is [" + action.longBeatCheckList.size() + "] longBeatThread");
-					return false;
-				}
-			}
-			
-			Log.debug("isFolderUploadActionBeatStopped() [" + action.actionId + "] beat stopped large than [" + action.beatStopThreshold + "] ms");
-			return true;
-		}
-		return false;
-	}
-
-	private void checkAndCleanLongBeatCheckAction(ConcurrentHashMap<String, LongBeatCheckAction> longBeatCheckList) 
-	{
-		//go through actionList pick to deleteList
-		//Go throuhg clusterServersMap
-	    List<String> deleteList = new ArrayList<String>();
-	    
-	    Iterator<Entry<String, LongBeatCheckAction>> iterator = longBeatCheckList.entrySet().iterator();
-	    long curTime = new Date().getTime();
-	    while (iterator.hasNext()) 
-	    {
-	    	Entry<String, LongBeatCheckAction> entry = iterator.next();
-	        if(entry != null)
-	        {   
-	        	String key = entry.getKey();
-	    		Log.info("checkAndCleanLongBeatCheckAction() action [" + key + "]");
-	            
-	    		LongBeatCheckAction action = entry.getValue();
-	        	if(action == null)
-	            {
-	            	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " action is null");
-	            	deleteList.add(key);
-	            }
-	        	else
-	        	{
-	        		if(action.stopFlag == true)
-	        		{
-			        	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " stopFlag is true");
-			            deleteList.add(key);			            		        			
-	        		}
-	        		else if(action.filePath == null)
-	        		{
-			        	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " filePath is null");
-			            deleteList.add(key);			            		        			
-	        		}
-	        		else if((curTime - action.startTime) > action.duration)	//已超时
-			        {
-			        	Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " is timeout with " + (curTime - action.startTime)/1000 + " minutes");
-			            deleteList.add(key);			            	
-			        }		
-	        		else
-	        		{
-	        			File file = new File(action.filePath);
-	        			if(file.exists() == false)
-	        			{
-	        				Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " [" + action.filePath + "] not exists");
-				            deleteList.add(key);
-	        			}
-	        			else if(action.preSize == file.length())
-	        			{
-	        				if(action.checkCount > 3)
-	        				{
-		        				Log.info("checkAndCleanLongBeatCheckAction() action:" + key + " [" + action.filePath + "] not changed [" + action.checkCount + "] times");
-					            deleteList.add(key);	        					
-	        				}
-	        			}
-	        			else
-	        			{
-	        				action.checkCount = 0;
-	        			}
-	        		}
-	        	}
-	        }
-	    }
-	    
-	    //clear action
-	    for(int i=0; i< deleteList.size(); i++)
-	    {
-	    	longBeatCheckList.remove(deleteList.get(i));
-	    }		
-	}
-
-	protected void removeFolderUploadAction(String actionId) {
-		synchronized(gFolderUploadActionSyncLock)
-		{
-    		String lockInfo = "removeDocData() gFolderUploadActionSyncLock";
-    		SyncLock.lock(lockInfo);
-    		
-    		gFolderUploadActionHashMap.remove(actionId);
-			SyncLock.unlock(gFolderUploadActionSyncLock, lockInfo);
-		}
-	}
-	
-	protected void folderUploadActionBeat(String actionId) {
-		FolderUploadAction action = gFolderUploadActionHashMap.get(actionId);
-		folderUploadActionBeat(action);
-	}
-	
-	private void folderUploadActionBeat(FolderUploadAction action) {
-		if(action != null)
-    	{
-    		action.beatTime = new Date().getTime();
-    	}
-	}
-
 	private Repos getReposInfo(Integer reposId, DocShare docShare) {
 		if(docShare == null || docShare.getType() == null || docShare.getType() == 0)
 		{
@@ -1811,7 +1543,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkChunkUploaded() folderUploadAction is null", rt);
@@ -2022,7 +1754,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("combineChunks() folderUploadAction is null", rt);
@@ -2138,124 +1870,6 @@ public class DocController extends BaseController{
 		deleteChunks(name, chunkIndex, chunkNum,chunkTmpPath);
 		writeJson(rt, response);
 	}
-	
-	private void uploadAfterHandler(int uploadResult, Doc doc, String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath, ReposAccess reposAccess, ActionContext context, ReturnAjax rt) {
-		switch(uploadResult)
-		{
-		case 0:
-			if(context.folderUploadAction != null)
-			{
-				folderSubEntryUploadErrorHandler(context.folderUploadAction);
-			}
-			else
-			{
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			}
-			break;
-		case 1:
-			if(context.folderUploadAction != null)
-			{
-				folderSubEntryUploadSuccessHandler(context.folderUploadAction);
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-				deletePreviewFile(doc);
-			}
-			else
-			{
-				deleteChunks(name, chunkIndex, chunkNum,chunkParentPath);
-				deletePreviewFile(doc);
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			}
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-			deletePreviewFile(doc);
-			break;
-		}				
-	}
-
-	private void folderSubEntryUploadSuccessHandler(FolderUploadAction action) {
-		action.successCount++;
-		if(isLastSubEntryForFolderUpload(action))
-		{
-			folderUploadEndHander(action);
-		}
-	}
-	
-	private void folderSubEntryUploadErrorHandler(FolderUploadAction action) {
-		action.failCount++;
-		if(isLastSubEntryForFolderUpload(action))
-		{
-			folderUploadEndHander(action);
-		}
-	}
-
-	private void folderUploadEndHander(FolderUploadAction action) {
-		//Set action to stop to avoid other thread to do the endHandler
-		action.stopFlag = true;
-		action.stopTime = new Date().getTime();
-		
-		//判断是否有改动
-		Repos repos = action.repos;
-		Doc doc = action.doc;	//目录
-		int lockType = action.docLockType;
-		User user = action.user;
-		String commitMsg = action.commitMsg;
-		String commitUser = action.commitUser;
-		String localChangesRootPath =  action.localChangesRootPath;
-
-		Log.info("folderUploadEndHander() [" + doc.getPath() + doc.getName() + "]");
-
-		if(isLocalChanged(action.localChangesRootPath) == false)
-		{
-			//解锁目录
-			unlockDoc(doc, lockType, user);
-			//写入日志
-			addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action, null));						
-			FileUtil.delDir(action.uploadLogPath);
-			return;
-		}
-		
-		//异步执行
-		new Thread(new Runnable() {
-			public void run() {
-				Log.debug("folderUploadEndHander() execute in new thread");
-				
-				//提交版本
-				ReturnAjax rt = new ReturnAjax();
-				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, null, null);
-				if(revision != null)
-				{
-					verReposPullPush(repos, true, rt);
-				}
-				
-				
-				//远程自动推送
-				realTimeRemoteStoragePush(repos, doc, null, user, commitMsg, rt, action.event);
-				//仓库自动备份
-				realTimeBackup(repos, doc, null, user, commitMsg, rt, action.event);
-						
-				//解锁目录
-				unlockDoc(doc, lockType, user);
-				
-				//update searchIndex
-				rebuildIndexForDocEx(repos, doc, localChangesRootPath, rt);
-				FileUtil.delDir(localChangesRootPath);
-				
-				//写入日志
-				addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action, rt));						
-				FileUtil.delDir(action.uploadLogPath);					
-			}
-		}).start();
-	}
-
-	private boolean isLastSubEntryForFolderUpload(FolderUploadAction folderUploadAction) {
-		if(folderUploadAction.totalCount <= (folderUploadAction.successCount + folderUploadAction.failCount))
-		{
-			return true;
-		}
-		return false;
-	}
-
 
 	@RequestMapping("/getMaxThreadCount.do")
 	public void getMaxThreadCount(HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -2332,7 +1946,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;		
 		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("uploadDoc() folderUploadAction is null", rt);
@@ -2814,7 +2428,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(isFSM(repos) && dirPath != null && !dirPath.isEmpty())
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("uploadDocRS() folderUploadAction is null", rt);
