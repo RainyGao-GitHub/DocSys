@@ -39,7 +39,7 @@ public class FolderUploadAction {
 	public int totalCount;
 	public int successCount;
 	public int failCount;
-	public boolean isEnd = false;	//所有文件上传请求都已发送
+	public boolean isEnd = true; //默认是true, 当totalCount无法预知时，需要先设置成false (例如后台推送)
 
 	public boolean isCriticalError = false;
 	public String errorInfo;
