@@ -6154,6 +6154,7 @@ public class BaseController  extends BaseFunction{
 		localDoc.setName(doc.getName());
 		localDoc.setLevel(doc.getLevel());
 		localDoc.setType(0);	//不存在
+		localDoc.setSize(0L);	//不存在
 		localDoc.offsetPath = doc.offsetPath;
 	
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
@@ -19565,6 +19566,7 @@ public class BaseController  extends BaseFunction{
 
 	private void folderSubEntryUploadSuccessHandler(FolderUploadAction action) {
 		action.successCount++;
+		Log.debug("folderSubEntryUploadSuccessHandler() FolderUploadAction:" + action.actionId + " total:" + action.totalCount + " successCount:" + action.successCount + " faileCount:" + action.failCount);
 		if(isLastSubEntryForFolderUpload(action))
 		{
 			folderUploadEndHander(action);
@@ -19573,6 +19575,7 @@ public class BaseController  extends BaseFunction{
 	
 	private void folderSubEntryUploadErrorHandler(FolderUploadAction action) {
 		action.failCount++;
+		Log.debug("folderSubEntryUploadErrorHandler() FolderUploadAction:" + action.actionId + " total:" + action.totalCount + " successCount:" + action.successCount + " faileCount:" + action.failCount);
 		if(isLastSubEntryForFolderUpload(action))
 		{
 			folderUploadEndHander(action);
@@ -19580,6 +19583,8 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void folderUploadEndHander(FolderUploadAction action) {
+		Log.debug("folderUploadEndHander() FolderUploadAction:" + action.actionId + " total:" + action.totalCount + " successCount:" + action.successCount + " faileCount:" + action.failCount);
+		
 		//Set action to stop to avoid other thread to do the endHandler
 		action.stopFlag = true;
 		action.stopTime = new Date().getTime();
