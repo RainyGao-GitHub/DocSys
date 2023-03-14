@@ -194,6 +194,13 @@
   function showErrorMessage($msg) {
 	 qiao.bs.alert($msg);
   }
+  
+  //弹出对话框操作接口
+  function closeBootstrapDialog(id){ 
+  	console.log("closeBootstrapDialog " + id);
+  	$("#"+id).next('div').remove();	//删除全屏遮罩
+  	$("#"+id).remove();	//删除对话框
+  }
 	
   function addToUrlParam(key,value,url){
     var ref = "";
