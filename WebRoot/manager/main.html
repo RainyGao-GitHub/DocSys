@@ -2902,6 +2902,12 @@
 		case "deleteReposAuth":
 			node.formatedContent = "[删除仓库权限 " + node.event + "] [" + node.reposName + "]";
 			break;
+		case "pushDoc":
+			node.formatedContent = "[文件推送 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+			break;
+		case "saveDocEx":
+			node.formatedContent = "[上传文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+			break;
 		case "addDoc":
 			node.formatedContent = "[新增文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
