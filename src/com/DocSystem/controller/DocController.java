@@ -1589,19 +1589,14 @@ public class DocController extends BaseController{
 				}
 				String commitUser = reposAccess.getAccessUser().getName();
 				
-				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 				String reposPath = Path.getReposPath(repos);
 				String localRootPath = Path.getReposRealPath(repos);
 				String localVRootPath = Path.getReposVirtualPath(repos);
-
-				String localParentPath = localRootPath + path;
-				File localParentDir = new File(localParentPath);
-				if(false == localParentDir.exists())
-				{
-					localParentDir.mkdirs();
-				}
-				
 				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);				
+
+				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+				checkAndAddParentDoc(doc, rt);
+				
 				//Build ActionContext
 				ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", repos, doc, null, folderUploadAction);
 				context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
@@ -1779,12 +1774,7 @@ public class DocController extends BaseController{
 		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
 
 		//check and add parentDir
-		String localParentPath = localRootPath + path;
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			localParentDir.mkdirs();
-		}
+		checkAndAddParentDoc(doc, rt);
 
 		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
 		if(commitMsg == null || commitMsg.isEmpty())
@@ -2068,13 +2058,7 @@ public class DocController extends BaseController{
 			return;							
 		}
 
-		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-		String localParentPath = localRootPath + path;
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			localParentDir.mkdirs();
-		}
+		checkAndAddParentDoc(doc, rt);
 
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
@@ -2147,6 +2131,37 @@ public class DocController extends BaseController{
 		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
+	private void checkAndAddParentDoc(Doc doc, ReturnAjax rt) {
+		List<Doc> addedParentDocList = null;
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			if(rt != null)
+			{
+				addedParentDocList = new ArrayList<Doc>();
+				Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+				addedParentDocList.add(parentDoc);
+				checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
+				rt.setDataEx(addedParentDocList);
+			}
+			localParentDir.mkdirs();
+		}
+
+	}
+
+	private void checkAndAddParentDoc(List<Doc> addedParentDocList, Doc doc, ReturnAjax rt) {
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+			addedParentDocList.add(parentDoc);
+			checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
+		}
+	}
+
 	public void uploadDocForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
@@ -2551,12 +2566,7 @@ public class DocController extends BaseController{
 		}
 
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-		String localParentPath = localRootPath + path;
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			localParentDir.mkdirs();
-		}
+		checkAndAddParentDoc(doc, rt);
 
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
