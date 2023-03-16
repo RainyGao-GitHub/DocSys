@@ -16,4 +16,18 @@ public class DocPushResult {
 	public long retrySleepTime = 3*60*1000;	//3*60秒
 	public int threadCount = 0;
 	public int maxThreadCount = 10;
+	public String msgInfo; //错误信息
+	
+	public void setError(String errmsg){
+		if(this.msgInfo == null)
+		{
+			this.msgInfo = errmsg;
+			return;
+		}
+		
+		if(errmsg != null && errmsg.length() < 10000)
+		{
+			this.msgInfo = errmsg + "\n" + this.msgInfo;
+		}
+	}
 }
