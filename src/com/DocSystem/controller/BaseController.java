@@ -3730,7 +3730,7 @@ public class BaseController  extends BaseFunction{
 			{
 				lockInfo = context.info;
 			}
-			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo, EVENT.folderUpload);
+			docLock = lockDoc(doc, lockType,  2*60*60*1000, login_user, rt, false, lockInfo, EVENT.addDoc);
 			
 			if(docLock == null)
 			{
