@@ -4260,7 +4260,8 @@
          		console.log("uploadSuccessCallback() is new Doc", context);
   				if(context.addedParentDocList)
   	         	{
-  	         		addParentNodes(context.addedParentDocList);
+  	         		//addParentNodes(context.addedParentDocList);
+  	         		addTreeNode(context.addedParentDocList[0]);	//添加最上层目录
   	         		context.addedParentDocList = undefined; //释放内存
   	         	}
   				
