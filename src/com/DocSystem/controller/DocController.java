@@ -2157,7 +2157,7 @@ public class DocController extends BaseController{
 		if(false == localParentDir.exists())
 		{
 			Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-			addedParentDocList.add(parentDoc);
+			addedParentDocList.add(0, parentDoc);	//insert to top
 			checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
 		}
 	}
