@@ -283,11 +283,8 @@
 				var selectListHtml = "";
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					var showName = d.serverUrl;
-					if(d.serverName)
-					{		
-						showName = d.serverName;
-					}
+					var serverType = d.serverType === undefined? "MXSDOC | ":d.serverType+" | ";
+					var showName = d.serverName === undefined? serverType + d.serverUrl : serverType + d.serverName;
 					selectListHtml += "<option value=" + i + ">" + showName + "</option>";
 				}
 				$("#dialog-push-doc select[name='targetServer']").append(selectListHtml);

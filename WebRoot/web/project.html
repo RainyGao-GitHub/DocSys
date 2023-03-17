@@ -4517,22 +4517,32 @@
 						showDocPushPanel(gRootDoc, 1);
 					}
 				},
-				{text: '至目录',  action: function(e){
-						e.preventDefault();
-						showDocPushPanel(gRootDoc, 2);
-					}
-				},
 				{text: '至远程存储',  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePushPanel(gRootDoc);
 					}
 				},
+				{text: '至文件服务器',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(gRootDoc, 2);
+					}
+				},
 				]
 			},
 			{text: '拉取', subMenu: [
+				{text: '从仓库拉取',  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(gRootDoc, 1);
+					}
+				},
 				{text: '从远程存储拉取',  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePullPanel(gRootDoc);
+					}
+				},
+				{text: '从文件服务器拉取',  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(gRootDoc, 2);
 					}
 				},
 				]
@@ -4644,22 +4654,32 @@
 						showDocPushPanel(curRightClickedTreeNode, 1);
 					}
 				},
-				{text: '至目录',  action: function(e){
-						e.preventDefault();
-						showDocPushPanel(curRightClickedTreeNode, 2);
-					}
-				},
 				{text: '至远程存储',  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePushPanel(curRightClickedTreeNode);
 					}
 				},
+				{text: '至文件服务器',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(curRightClickedTreeNode, 2);
+					}
+				},
 				]
 			},
 			{text: '拉取', subMenu: [
+				{text: '从仓库拉取',  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(curRightClickedTreeNode, 1);
+					}
+				},
 				{text: '从远程存储拉取',  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePullPanel(curRightClickedTreeNode);
+					}
+				},
+				{text: '从文件服务器拉取',  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(curRightClickedTreeNode, 2);
 					}
 				},
 				]
