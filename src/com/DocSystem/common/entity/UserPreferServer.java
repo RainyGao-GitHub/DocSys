@@ -13,7 +13,8 @@ public class UserPreferServer {
 	public String serverUrl;	//http://IP:port/DocSystem ftp://IP:port/path 
 	public String serverUserName;
 	public String serverUserPwd;
-	public String rootPath;	//可選
-	public String options; //更多選項
+	public String charset;	//current for ftp only
+	public Integer passiveMode;	//被动模式 0: 否 1: 是
+	
 	public Long createTime;
 }

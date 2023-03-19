@@ -5174,7 +5174,12 @@ public class BaseFunction{
 	}
 	
 	/***** UserPreferServer *******/
-	protected static UserPreferServer addUserPreferServer(String serverUrl, String userName, String pwd, String serverName, User accessUser)
+	protected static UserPreferServer addUserPreferServer(
+			String serverType, String serverUrl, 
+			String userName, String pwd,
+			String charset, Integer passiveMode, 
+			String serverName, 
+			User accessUser)
     {
 		UserPreferServer server = new UserPreferServer();
 		server.createTime = new Date().getTime();
@@ -5183,6 +5188,8 @@ public class BaseFunction{
 		server.serverUrl = serverUrl;
 		server.serverUserName = userName;
 		server.serverUserPwd = pwd;
+		server.charset = charset;
+		server.passiveMode = passiveMode;
 		
 		server.userId = accessUser.getId();
 		server.userName = accessUser.getName();

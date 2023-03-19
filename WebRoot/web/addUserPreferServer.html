@@ -1,6 +1,20 @@
 <div id="dialog-addUserPreferServer" class="form-horizontal">
 	<div class="modal-body">
 	   <div class="form-group">
+	       <label class="col-sm-3 control-label">服务器类型</label>
+	       <div class="col-sm-9">
+	           <select class="form-control" name="serverType" onchange="doSelectServerType();" style="width:100%">   
+			            <option value="mxsdoc">MXSDOC</option>  
+			        	<option value="ftp">FTP</option>   
+			            <option value="sftp">SFTP</option>   
+			            <option value="smb">SMB</option>  
+			            <option value="svn">SVN</option>  
+			            <option value="git">GIT</option>  
+			   </select>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
 	       <label class="col-sm-3 control-label">服务器地址</label>
 	       <div class="col-sm-9">
  	           <input class="form-control" type="text" name="serverUrl" placeholder="请填写您的服务器地址" style="width: 100%"/>
@@ -19,7 +33,29 @@
 	        <div class="col-sm-9">
 	            <input class="form-control"  type="password" name="pwd" maxlength="16"></input>
 	        </div>
+			<div class="clearfix"></div>
 	   </div>
+	   <div class="form-group" style="display: none;">
+	       <label class="col-sm-3 control-label">字符集</label>
+	       <div class="col-sm-9">
+	           <select class="form-control" name="charset" style="width:100%">   
+			            <option value="utf-8">UTF-8</option>  
+			        	<option value="gbk">GBK</option>   
+			            <option value="gb2312">GB2312</option>   
+			            <option value="big5">BIG5</option>  
+			   </select>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div> 
+	   <div class="form-group" style="display: none;">
+	       <label class="col-sm-3 control-label">被动模式</label>
+	       <div class="col-sm-9">
+	           <select class="form-control" name="passiveMode" style="width:100%">   
+			        	<option value="false">否</option>   
+			            <option value="true">是</option>  
+				</select>
+	       </div>
+	       <div class="clearfix"></div> 
 	</div>
     <div class="modal-footer">
 	   <div class="form-group">
@@ -49,6 +85,23 @@
 		AddUerPreferServer.init(_callback, _serverInfo);
 	}
 	
+	function doSelectServerType()
+	{		
+		var serverType = $("#dialog-addUserPreferServer select[name='serverType']").val();
+		console.log("doSelectServerType serverType:", serverType);
+		//选择ftp时显示字符集和被动模式
+		if(serverType == "ftp")
+		{
+			$("#dialog-addUserPreferServer select[name='charset']").parent().parent().show();
+			$("#dialog-addUserPreferServer select[name='passiveMode']").parent().parent().show();
+		}
+		else
+		{
+			$("#dialog-addUserPreferServer select[name='charset']").parent().parent().hide();
+			$("#dialog-addUserPreferServer select[name='passiveMode']").parent().parent().hide();
+		}
+	}
+
 	function closeAddUserPreferServerDialog()
 	{
 		closeBootstrapDialog("addUserPreferServer");
@@ -82,6 +135,7 @@
 		
 		function doAddUserPreferServer()
 		{
+			serverType = $("#dialog-addUserPreferServer select[name='serverType']").val();
 			serverUrl = $("#dialog-addUserPreferServer input[name='serverUrl']").val();
 			serverName = $("#dialog-addUserPreferServer input[name='serverName']").val();
 			userName = $("#dialog-addUserPreferServer input[name='userName']").val();
@@ -89,7 +143,7 @@
 
 		    if(serverUrl)
 			{
-		  	  	addUserPreferServer(serverName, serverUrl, userName, pwd);
+		  	  	addUserPreferServer(serverType, serverName, serverUrl, userName, pwd);
 		      	return true;
 			}
 			else
@@ -99,17 +153,20 @@
 		    }
 		}
 		
-	   	function addUserPreferServer(serverName, serverUrl, userName, pwd)
+	   	function addUserPreferServer(serverType, serverName, serverUrl, userName, pwd)
 	   	{
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/addUserPreferServer.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
+					serverType: serverType,
 	            	serverName: serverName,
 	            	serverUrl: serverUrl,
 		            userName: userName,
 		            pwd: pwd,
+					charset: $("#dialog-addUserPreferServer select[name='charset']").val(),
+					passiveMode: $("#dialog-addUserPreferServer select[name='passiveMode']").val(),
 	             },
 	             success : function (ret) {
 	            	console.log("addUserPreferServer ret:", ret);            		
