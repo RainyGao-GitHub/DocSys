@@ -7098,6 +7098,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
+		//TODO: 考虑多线程搜索，避免仓库越多速度越慢
 		List<Doc> searchResult = new ArrayList<Doc>();
 		for(int i=0; i< reposList.size(); i++)
 		{
@@ -7109,6 +7110,7 @@ public class DocController extends BaseController{
 				searchResult.addAll(result);
 			}
 		}
+		
 		//对搜索结果进行统一排序
 		Collections.sort(searchResult);
 		
