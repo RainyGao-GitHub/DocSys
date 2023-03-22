@@ -5184,6 +5184,7 @@ public class BaseFunction{
 		UserPreferServer server = new UserPreferServer();
 		server.createTime = new Date().getTime();
 		
+		server.serverType = serverType;
 		server.serverName = serverName;
 		server.serverUrl = serverUrl;
 		server.serverUserName = userName;

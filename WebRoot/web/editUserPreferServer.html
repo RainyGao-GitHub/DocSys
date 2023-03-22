@@ -1,6 +1,20 @@
 <div id="dialog-editUserPreferServer" class="form-horizontal">
 	<div class="modal-body">
 	   <div class="form-group">
+	       <label class="col-sm-3 control-label">服务器类型</label>
+	       <div class="col-sm-9">
+	           <select class="form-control" name="serverType" onchange="doSelectServerType();" style="width:100%">   
+			            <option value="mxsdoc">MXSDOC</option>  
+			        	<option value="ftp">FTP</option>   
+			            <option value="sftp">SFTP</option>   
+			            <option value="smb">SMB</option>  
+			            <option value="svn">SVN</option>  
+			            <option value="git">GIT</option>  
+			   </select>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
 	       <label class="col-sm-3 control-label">服务器地址</label>
 	       <div class="col-sm-9">
  	           <input class="form-control" type="text" name="serverUrl" placeholder="请填写您的服务器地址" style="width: 100%"/>
@@ -20,6 +34,28 @@
 	            <input class="form-control"  type="password" name="pwd" maxlength="16"></input>
 	        </div>
 	   </div>
+	   <div class="form-group" style="display: none;">
+	       <label class="col-sm-3 control-label">字符集</label>
+	       <div class="col-sm-9">
+	           <select class="form-control" name="charset" style="width:100%">   
+			            <option value="utf-8">UTF-8</option>  
+			        	<option value="gbk">GBK</option>   
+			            <option value="gb2312">GB2312</option>   
+			            <option value="big5">BIG5</option>  
+			   </select>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div> 
+	   <div class="form-group" style="display: none;">
+	       <label class="col-sm-3 control-label">被动模式</label>
+	       <div class="col-sm-9">
+	           <select class="form-control" name="passiveMode" style="width:100%">   
+			        	<option value="0">否</option>   
+			            <option value="1">是</option>  
+				</select>
+	       </div>
+	       <div class="clearfix"></div> 
+		</div>
 	</div>
     <div class="modal-footer">
 	   <div class="form-group">
@@ -49,6 +85,23 @@
 		EditUserPreferServer.init(_serverInfo, _callback);
 	}
 	
+	function doSelectServerType()
+	{		
+		var serverType = $("#dialog-editUserPreferServer select[name='serverType']").val();
+		console.log("doSelectServerType serverType:", serverType);
+		//选择ftp时显示字符集和被动模式
+		if(serverType == "ftp")
+		{
+			$("#dialog-editUserPreferServer select[name='charset']").parent().parent().show();
+			$("#dialog-editUserPreferServer select[name='passiveMode']").parent().parent().show();
+		}
+		else
+		{
+			$("#dialog-editUserPreferServer select[name='charset']").parent().parent().hide();
+			$("#dialog-editUserPreferServer select[name='passiveMode']").parent().parent().hide();
+		}
+	}
+	
 	function closeEditUserPreferServerDialog()
 	{
 		closeBootstrapDialog("editUserPreferServer");
@@ -74,10 +127,25 @@
 			if(_serverInfo)
 			{
 				serverInfo = _serverInfo;
+				var serverType = serverInfo.serverType;
 				var serverUrl = serverInfo.serverUrl;
 				var serverName = serverInfo.serverName;
 				var userName = serverInfo.serverUserName;
 				var pwd = serverInfo.serverUserPwd;
+				var charset = serverInfo.charset;
+				var passiveMode = serverInfo.passiveMode;
+				
+				//set the serverInf
+				if(serverType)
+				{
+					$("#dialog-editUserPreferServer select[name='serverType'] option[value='" + serverType + "']").attr("selected","selected");
+				}
+				else
+				{
+					
+					$("#dialog-editUserPreferServer select[name='serverType'] option[value='mxsdoc']").attr("selected","selected");
+				}
+				
 				if(serverUrl)
 				{
 					$("#dialog-editUserPreferServer input[name='serverUrl']").val(serverUrl);
@@ -94,6 +162,25 @@
 				{
 					$("#dialog-editUserPreferServer input[name='pwd']").val(pwd);
 				}
+				if(charset)
+				{
+					$("#dialog-editUserPreferServer select[name='charset'] option[value='" + charset + "']").attr("selected","selected");
+				}
+				else
+				{
+					$("#dialog-editUserPreferServer select[name='charset'] option[value='utf-8']").attr("selected","selected");				
+				}
+				if(passiveMode)
+				{
+					$("#dialog-editUserPreferServer select[name='passiveMode'] option[value='" + passiveMode + "']").attr("selected","selected");
+				}
+				else
+				{
+					$("#dialog-editUserPreferServer select[name='passiveMode'] option[value='0']").attr("selected","selected");
+				}
+				
+				doSelectServerType();
+								
 			}			
 			
 			callback = _callback;
