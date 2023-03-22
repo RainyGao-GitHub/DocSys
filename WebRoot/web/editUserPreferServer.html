@@ -190,10 +190,22 @@
 		function doEditUserPreferServer()
 		{
 			var isChanged = false;
+			var serverType;
 			var serverUrl;
 			var serverName;
 			var userName;
 			var pwd;
+			var charset;
+			var passiveMode;
+			
+			var tmpServerType = $("#dialog-editUserPreferServer select[name='serverType']").val();
+			if(!(serverInfo.serverType && tmpServerType === serverInfo.serverType))
+			{				
+				isChanged = true;
+				serverType = tmpServerType;
+				console.log("doEditUserPreferServer serverType changed:", serverType);
+			}
+			
 			var tmpServerUrl = $("#dialog-editUserPreferServer input[name='serverUrl']").val();
 			if(!(serverInfo.serverUrl && tmpServerUrl === serverInfo.serverUrl))
 			{				
@@ -225,10 +237,26 @@
 		    	pwd = base64_encode(tmpPwd);
 				console.log("doEditUserPreferServer serverUserPwd changed:", pwd);
 		    }	
+		    
+		    var tmpCharset = $("#dialog-editUserPreferServer select[name='charset']").val();
+			if(!(serverInfo.charset && tmpCharset === serverInfo.charset))
+			{				
+				isChanged = true;
+				charset = tmpCharset;
+				console.log("doEditUserPreferServer charset changed:", charset);
+			}
+			
+			var tmpPassiveMode = $("#dialog-editUserPreferServer select[name='passiveMode']").val();
+			if(!(serverInfo.passiveMode && tmpPassiveMode === serverInfo.passiveMode))
+			{				
+				isChanged = true;
+				passiveMode = tmpPassiveMode;
+				console.log("doEditUserPreferServer passiveMode changed:", passiveMode);
+			}
 
 		    if(isChanged == true)
 			{
-		  	  	editUserPreferServer(serverName, serverUrl, userName, pwd);
+		  	  	editUserPreferServer(serverName, serverType, serverUrl, userName, pwd, charset, passiveMode);
 		      	return true;
 			}
 			else
@@ -238,7 +266,7 @@
 		    }
 		}
 		
-	   	function editUserPreferServer(serverName, serverUrl, userName, pwd)
+	   	function editUserPreferServer(serverName, serverType, serverUrl, userName, pwd, charset, passiveMode)
 	   	{
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/editUserPreferServer.do",
@@ -247,9 +275,12 @@
 	             data : {
 	            	serverId: serverInfo.id,
 	            	serverName: serverName,
+	            	serverType: serverType,
 	            	serverUrl: serverUrl,
 		            userName: userName,
 		            pwd: pwd,
+		            charset: charset,
+		            passiveMode: passiveMode,		            
 	             },
 	             success : function (ret) {
 	            	console.log("editUserPreferServer ret:", ret);            		
