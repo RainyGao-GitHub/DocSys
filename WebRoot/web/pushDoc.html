@@ -252,7 +252,12 @@
 		                    	{
 			                    	for(var i=0; i<list.length; i++)
 			                    	{
-				                    	targetServerList.push(list[i]);		                    		
+			                    		//filter out not mxsdoc servers
+			                    		var server = list[i];
+			                    		if(server.serverType == undefined || server.serverType == "mxsdoc")
+			                    		{
+					                    	targetServerList.push(server);		                    	
+			                    		}
 			                    	}
 		                    	}
 		                    	callback && callback();
@@ -283,11 +288,11 @@
 				var selectListHtml = "";
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					var serverType = d.serverType === undefined? "MXSDOC | ":d.serverType+" | ";
-					var showName = serverType + d.serverUrl;
+					var serverType = getFormatedServerType(d.serverType);
+					var showName = serverType + " | " + d.serverUrl;
 					if(d.serverName)
 					{
-						showName = serverType + d.serverName;
+						showName = serverType + " | "+ d.serverName;
 					}
 					selectListHtml += "<option value=" + i + ">" + showName + "</option>";
 				}
@@ -296,6 +301,27 @@
 			
 			//get AuthCode For Selected Server
 			getRemoteAuthCode();
+		}
+		
+		function getFormatedServerType(serverType)
+		{
+			if(serverType === undefined) return "MXSDOC";
+			switch(serverType)
+			{
+			case "mxsdoc":
+				return "MXSDOC";
+			case "ftp":
+				return "FTP";
+			case "sftp":
+				return "SFTP";
+			case "smb":
+				return "SMB";
+			case "svn":
+				return "SVN";
+			case "git":
+				return "GIT";
+			}
+			return serverType;
 		}
 		
 		function doSelectTargetSever() {
