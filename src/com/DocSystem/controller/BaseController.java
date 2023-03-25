@@ -19256,6 +19256,14 @@ public class BaseController  extends BaseFunction{
 		return context;
 	}
 	
+	protected boolean isFolderUploadAction(String dirPath, Long batchStartTime) {
+		if(dirPath == null || batchStartTime == null || batchStartTime == 0L)
+		{
+			return false;
+		}
+		return true;
+	}
+	
 	protected FolderUploadAction getFolderUploadAction(HttpServletRequest request, 
 			User accessUser, 
 			Repos repos, 

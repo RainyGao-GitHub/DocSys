@@ -1242,9 +1242,9 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "checkDocInfo", "checkDocInfo", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkDocInfo() folderUploadAction is null", rt);
@@ -1379,7 +1379,7 @@ public class DocController extends BaseController{
 				
 		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
 	}
-	
+
 	public void checkDocInfoForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
@@ -1534,9 +1534,9 @@ public class DocController extends BaseController{
 
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null && batchStartTime != null)
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "checkChunkUploaded", "checkChunkUploaded", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkChunkUploaded() folderUploadAction is null", rt);
@@ -1740,9 +1740,9 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "combineChunks", "combineChunks", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("combineChunks() folderUploadAction is null", rt);
@@ -1927,7 +1927,7 @@ public class DocController extends BaseController{
 		
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;		
-		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
 			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
 			if(folderUploadAction == null)
@@ -2434,9 +2434,9 @@ public class DocController extends BaseController{
 				
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && dirPath != null &&  batchStartTime != null)
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDocRS", "uploadDocRS", "目录上传", rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("uploadDocRS() folderUploadAction is null", rt);
