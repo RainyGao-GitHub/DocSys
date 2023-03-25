@@ -47,14 +47,14 @@
 <script src="js/md5.js"></script>
 <script type="text/javascript">
 	//type: 1: push to repos for mxsdoc server 2:push to file server
-	function pushDocPageInit(_node, _type)
+	function pushDocPageInit(_node, _pushPageType)
 	{
-		console.log("pushDocPageInit() _type:" + _type, _node);
-		if(_type == 1)
+		console.log("pushDocPageInit() _pushPageType:" + _pushPageType, _node);
+		if(_pushPageType == 1)
 		{
 			$("#dialog-push-doc div[name='targetReposDiv']").show();
 		}
-		DocPush.init(_node, _type);  
+		DocPush.init(_node, _pushPageType);  
 	}
 	
 	function closePushDocDialog()
@@ -106,7 +106,7 @@
 	}
 	
 	var DocPush = (function () {
-		var isFileServer;
+		var pushPageType;
 		var node;
 		
 		var localServer = {};
@@ -123,11 +123,11 @@
 		var targetReposId = "";
 		var targetPath = "";
 		
-		function init(_node, _isFileServer)
+		function init(_node, _pushPageType)
 		{
-			console.log("DocPush.init() _isFileServer:" + _isFileServer, _node);
+			console.log("DocPush.init() _pushPageType:" + _pushPageType, _node);
 
-			isFileServer = _isFileServer;
+			pushPageType = _pushPageType;
 			node = _node;
 			
 			//set targetPath
@@ -255,7 +255,7 @@
 			                    	{
 			                    		//filter out not mxsdoc servers
 			                    		var server = list[i];
-			                    		if(isFileServer == 2)
+			                    		if(pushPageType == 2)
 			                    		{
 			                    			targetServerList.push(server);
 			                    		}
@@ -363,7 +363,7 @@
 		                	serverUrl: serverUrl,
 		                	userName: userName,
 		                	pwd: pwd,
-		                	type: isFileServer,
+		                	type: pushPageType,
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
@@ -386,7 +386,7 @@
 		function showReposSelectList(data)
 		{
 		   	console.log("showReposSelectList()");		   	
-		   	if(type != 1)
+		   	if(pushPageType != 1)
 			{
 		   		return;
 			}
@@ -409,7 +409,7 @@
 		function cleanReposSelectList()
 		{
 		   	console.log("cleanReposSelectList()");		   	
-		   	if(type != 1)
+		   	if(pushPageType != 1)
 			{
 		   		return;
 			}
@@ -429,7 +429,7 @@
 		   	userName = seletedServer.serverUserName;
 		   	pwd = seletedServer.serverPwd;	
 		   	
-		    if(type == 1)
+		    if(pushPageType == 1)
 		    {
 		    	targetReposId = $("#dialog-push-doc select[name='targetRepos']").val();
 		    }
