@@ -225,14 +225,17 @@
 			targetServerList = [];
 			curServerIndex = 0;
 			
-			//Build Local ServerUrl
-			var protocol = window.location.protocol + '//';
-			var host = window.location.host; //域名带端口  
-			var serverUrl = protocol + host;
-			localServer.serverUrl = serverUrl;
-			localServer.serverName = "本地服务器";	
-			localServer.isLocal = true;				
-			targetServerList.push(localServer);
+			if(pushPageType == 1)
+			{
+				//Build Local ServerUrl
+				var protocol = window.location.protocol + '//';
+				var host = window.location.host; //域名带端口  
+				var serverUrl = protocol + host;
+				localServer.serverUrl = serverUrl;
+				localServer.serverName = "本地服务器";	
+				localServer.isLocal = true;				
+				targetServerList.push(localServer);
+			}
 			
 			//获取用户自定义服务器列表
 			getUserPreferServerList(showTargetServerSelectList);
