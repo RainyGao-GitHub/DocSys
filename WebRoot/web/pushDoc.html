@@ -141,7 +141,8 @@
 		function showEditUserPreferServerPanel()
 		{
 			console.log("showEditUserPreferServerPanel");
-			if(curServerIndex == 0)
+			var curServer = targetServerList[curServerIndex];
+			if(curServer.isLocal)
 			{
 				showErrorMessage("无法修改本地服务器！");
 				return;
@@ -164,8 +165,10 @@
 		function deleteUserPreferServerConfirm()
 		{
 			console.log("deleteUserPreferServerConfirm()");
-			if(curServerIndex == 0)
-			{
+			
+			var curServer = targetServerList[curServerIndex];
+			if(curServer.isLocal)
+			{			
 				showErrorMessage("无法删除本地服务器！");
 				return;
 			}
