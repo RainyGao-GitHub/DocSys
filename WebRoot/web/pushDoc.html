@@ -46,6 +46,7 @@
 
 <script src="js/md5.js"></script>
 <script type="text/javascript">
+	//type: 1: push to repos for mxsdoc server 2:push to file server
 	function pushDocPageInit(_node, _type)
 	{
 		console.log("pushDocPageInit() _type:" + _type, _node);
@@ -105,7 +106,7 @@
 	}
 	
 	var DocPush = (function () {
-		var type;
+		var isFileServer;
 		var node;
 		
 		var localServer = {};
@@ -122,11 +123,11 @@
 		var targetReposId = "";
 		var targetPath = "";
 		
-		function init(_node, _type)
+		function init(_node, _isFileServer)
 		{
-			console.log("DocPush.init() _type:" + _type, _node);
+			console.log("DocPush.init() _isFileServer:" + _isFileServer, _node);
 
-			type = _type;
+			isFileServer = _isFileServer;
 			node = _node;
 			
 			//set targetPath
@@ -254,9 +255,16 @@
 			                    	{
 			                    		//filter out not mxsdoc servers
 			                    		var server = list[i];
-			                    		if(server.serverType == undefined || server.serverType == "mxsdoc")
+			                    		if(isFileServer == 2)
 			                    		{
-					                    	targetServerList.push(server);		                    	
+			                    			targetServerList.push(server);
+			                    		}
+			                    		else
+			                    		{
+			                    			if(server.serverType == undefined || server.serverType == "mxsdoc")
+			                    			{
+					                    		targetServerList.push(server);		                    	
+			                    			}
 			                    		}
 			                    	}
 		                    	}
@@ -355,7 +363,7 @@
 		                	serverUrl: serverUrl,
 		                	userName: userName,
 		                	pwd: pwd,
-		                	type: type,
+		                	type: isFileServer,
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
