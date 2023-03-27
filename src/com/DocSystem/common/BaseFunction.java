@@ -5287,7 +5287,7 @@ public class BaseFunction{
 		}
     }  
 
-	private static boolean addUserPreferServerIndex(UserPreferServer server, String indexLib) {
+	protected static boolean addUserPreferServerIndex(UserPreferServer server, String indexLib) {
     	Log.debug("addUserPreferServerIndex() id:" + server.id + " indexLib:"+indexLib);    	
     	
     	Analyzer analyzer = null;
