@@ -25,5 +25,9 @@ public class UserPreferServer {
 	public Integer isRemote; //For git/svn
 	public String localVerReposPath; //For git
 	public String serverUserDomain; //For smb
+
+	public Integer reposId;	//For mxsdoc
+	public String remoteDirectory;	//For mxsdoc
+	
 }
 
