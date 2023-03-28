@@ -262,11 +262,11 @@
 			    case "ftp":
 			    	if(charset != "")
 					{
-						params = "charset=" + charset + ";";
+						params += "charset=" + charset + ";";
 					}
 					if(passiveMode != "")
 					{
-						params = "isPassive=" + passiveMode + ";";
+						params += "isPassive=" + passiveMode + ";";
 					}
 			    	break;
 			   	}
