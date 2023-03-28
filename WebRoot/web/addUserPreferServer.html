@@ -124,13 +124,13 @@
 		var serverName;
 		var userName;
 		var pwd;
+		var params = "";
 
 		function init(_callback, _serverInfo)
 		{
 			console.log("AddUerPreferServer.init() _serverInfo:", _serverInfo);
 			serverInfo = _serverInfo;
-			callback = _callback;
-						
+			callback = _callback;						
 		}
 		
 		function doAddUserPreferServer()
@@ -140,10 +140,26 @@
 			serverName = $("#dialog-addUserPreferServer input[name='serverName']").val();
 			userName = $("#dialog-addUserPreferServer input[name='userName']").val();
 		    pwd = base64_encode($("#dialog-addUserPreferServer input[name='pwd']").val());
-
+			
+		    switch(serverType)
+		   	{
+		    case "ftp":
+		    	var charset = $("#dialog-addUserPreferServer select[name='charset']").val();
+				var passiveMode = $("#dialog-addUserPreferServer select[name='passiveMode']").val();
+				if(charset != "")
+				{
+					params = "charset=" + charset + ";";
+				}
+				if(passiveMode != "")
+				{
+					params = "isPassive=" + passiveMode + ";";
+				}
+		    	break;
+		   	}
+		    
 		    if(serverUrl)
 			{
-		  	  	addUserPreferServer(serverType, serverName, serverUrl, userName, pwd);
+		  	  	addUserPreferServer(serverType, serverName, serverUrl, userName, pwd, params);
 		      	return true;
 			}
 			else
@@ -153,7 +169,7 @@
 		    }
 		}
 		
-	   	function addUserPreferServer(serverType, serverName, serverUrl, userName, pwd)
+	   	function addUserPreferServer(serverType, serverName, serverUrl, userName, pwd, params)
 	   	{
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/addUserPreferServer.do",
@@ -165,8 +181,7 @@
 	            	serverUrl: serverUrl,
 		            userName: userName,
 		            pwd: pwd,
-					charset: $("#dialog-addUserPreferServer select[name='charset']").val(),
-					passiveMode: $("#dialog-addUserPreferServer select[name='passiveMode']").val(),
+		            params: params,
 	             },
 	             success : function (ret) {
 	            	console.log("addUserPreferServer ret:", ret);            		
