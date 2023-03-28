@@ -148,11 +148,11 @@
 				var passiveMode = $("#dialog-addUserPreferServer select[name='passiveMode']").val();
 				if(charset != "")
 				{
-					params = "charset=" + charset + ";";
+					params += "charset=" + charset + ";";
 				}
 				if(passiveMode != "")
 				{
-					params = "isPassive=" + passiveMode + ";";
+					params += "isPassive=" + passiveMode + ";";
 				}
 		    	break;
 		   	}
