@@ -195,8 +195,9 @@
 			var serverName;
 			var userName;
 			var pwd;
+			var params;
 			var charset;
-			var passiveMode;
+			var passiveMode; 
 			
 			var tmpServerType = $("#dialog-editUserPreferServer select[name='serverType']").val();
 			if(!(serverInfo.serverType && tmpServerType === serverInfo.serverType))
@@ -256,7 +257,21 @@
 
 		    if(isChanged == true)
 			{
-		  	  	editUserPreferServer(serverName, serverType, serverUrl, userName, pwd, charset, passiveMode);
+			    switch(serverType)
+			   	{
+			    case "ftp":
+			    	if(charset != "")
+					{
+						params = "charset=" + charset + ";";
+					}
+					if(passiveMode != "")
+					{
+						params = "isPassive=" + passiveMode + ";";
+					}
+			    	break;
+			   	}
+		    	
+		  	  	editUserPreferServer(serverName, serverType, serverUrl, userName, pwd, params);
 		      	return true;
 			}
 			else
@@ -266,7 +281,7 @@
 		    }
 		}
 		
-	   	function editUserPreferServer(serverName, serverType, serverUrl, userName, pwd, charset, passiveMode)
+	   	function editUserPreferServer(serverName, serverType, serverUrl, userName, pwd, params)
 	   	{
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/editUserPreferServer.do",
@@ -279,8 +294,7 @@
 	            	serverUrl: serverUrl,
 		            userName: userName,
 		            pwd: pwd,
-		            charset: charset,
-		            passiveMode: passiveMode,		            
+		            params: params,
 	             },
 	             success : function (ret) {
 	            	console.log("editUserPreferServer ret:", ret);            		
