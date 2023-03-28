@@ -5174,37 +5174,6 @@ public class BaseFunction{
 	}
 	
 	/***** UserPreferServer *******/
-	protected static UserPreferServer addUserPreferServer(
-			String serverType, String serverUrl, 
-			String userName, String pwd,
-			String charset, Integer passiveMode, 
-			String serverName, 
-			User accessUser)
-    {
-		UserPreferServer server = new UserPreferServer();
-		server.createTime = new Date().getTime();
-		
-		server.serverType = serverType;
-		server.serverName = serverName;
-		server.serverUrl = serverUrl;
-		server.serverUserName = userName;
-		server.serverUserPwd = pwd;
-		server.charset = charset;
-		server.passiveMode = passiveMode;
-		
-		server.userId = accessUser.getId();
-		server.userName = accessUser.getName();
-		
-		server.id = server.userId + "_" + serverUrl.hashCode() + "_" + server.createTime;
-		
-		String indexLib = getIndexLibPathForUserPreferServer();
-		if(addUserPreferServerIndex(server, indexLib) == false)
-		{
-			return null;
-		}
-		return server;
-    }
-	
 	protected boolean editUserPreferServer(UserPreferServer server) {
 		String indexLib = getIndexLibPathForUserPreferServer();
 		return updateUserPreferServerIndex(server, indexLib);
