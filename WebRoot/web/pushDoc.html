@@ -314,7 +314,7 @@
 			}
 			
 			//get AuthCode For Selected Server
-			getRemoteAuthCode();
+			getReposList();
 		}
 		
 		function getFormatedServerType(serverType)
@@ -342,12 +342,18 @@
 		   	console.log("doSelectTargetSever()");
 			curServerIndex = $("#dialog-push-doc select[name='targetServer']").val();
 		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
-			getRemoteAuthCode();
+			getReposList();
 		}
 		
-		function getRemoteAuthCode()
+		function getReposList()
 		{
-		   	console.log("getRemoteAuthCode()");		
+		   	console.log("getReposList()");
+		   	if(pushPageType != 1) //推送至仓库才需要获取仓库列表
+		   	{
+		   		console.log("getReposList() pushPageType:" + pushPageType);
+		   		return;
+		   	}
+		   	
 		   	var seletedServer = targetServerList[curServerIndex];
 		   	targetServerId = seletedServer.id;
 		   	targetServerUrl = seletedServer.serverUrl;
@@ -379,12 +385,12 @@
 		                    else
 		                    {
 		                    	cleanReposSelectList();
-		                    	showErrorMessage("获取授权码失败:" + ret.msgInfo);
+		                    	showErrorMessage("获取仓库列表失败:" + ret.msgInfo);
 		                    }
 		                },
 		                error : function () {
 		                   cleanReposSelectList();
-		                   showErrorMessage('获取授权码失败：服务器异常！');
+		                   showErrorMessage('获取仓库列表失败：服务器异常！');
 		                }
 		    });
 		}
