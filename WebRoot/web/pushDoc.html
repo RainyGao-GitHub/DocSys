@@ -314,7 +314,7 @@
 			}
 			
 			//get AuthCode For Selected Server
-			getReposList();
+			getRemoteAuthCode();
 		}
 		
 		function getFormatedServerType(serverType)
@@ -342,22 +342,24 @@
 		   	console.log("doSelectTargetSever()");
 			curServerIndex = $("#dialog-push-doc select[name='targetServer']").val();
 		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
-			getReposList();
+			getRemoteAuthCode();
 		}
 		
-		function getReposList()
+		function getRemoteAuthCode()
 		{
-		   	console.log("getReposList()");
-		   	if(pushPageType != 1) //推送至仓库才需要获取仓库列表
+		   	console.log("getRemoteAuthCode()");
+		   	
+		   	//先清除仓库列表
+            
+		   	var seletedServer = targetServerList[curServerIndex];
+		   	if(seletedServer.severType && seletedServer.severType != "mxsdoc")
 		   	{
-		   		console.log("getReposList() pushPageType:" + pushPageType);
+		   		console.log("getRemoteAuthCode() serverType:" + seletedServer.severType);
 		   		return;
 		   	}
 		   	
-		   	//先清除仓库列表
-            cleanReposSelectList();
+		   	cleanReposSelectList();
 		   	
-		   	var seletedServer = targetServerList[curServerIndex];
 		   	targetServerId = seletedServer.id;
 		   	targetServerUrl = seletedServer.serverUrl;
 		   	userName = seletedServer.serverUserName;
