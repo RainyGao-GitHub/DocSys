@@ -354,6 +354,9 @@
 		   		return;
 		   	}
 		   	
+		   	//先清除仓库列表
+            cleanReposSelectList();
+		   	
 		   	var seletedServer = targetServerList[curServerIndex];
 		   	targetServerId = seletedServer.id;
 		   	targetServerUrl = seletedServer.serverUrl;
@@ -384,12 +387,10 @@
 		                    }
 		                    else
 		                    {
-		                    	cleanReposSelectList();
 		                    	showErrorMessage("获取仓库列表失败:" + ret.msgInfo);
 		                    }
 		                },
 		                error : function () {
-		                   cleanReposSelectList();
 		                   showErrorMessage('获取仓库列表失败：服务器异常！');
 		                }
 		    });
@@ -421,11 +422,6 @@
 		function cleanReposSelectList()
 		{
 		   	console.log("cleanReposSelectList()");		   	
-		   	if(pushPageType != 1)
-			{
-		   		return;
-			}
-
 		   	$("#dialog-push-doc div[name='targetReposDiv']").show();
 			var c = $("#dialog-push-doc select[name='targetRepos']").children();
 			$(c).remove();
