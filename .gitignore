@@ -2,3 +2,4 @@
 *.iml
 /.idea/
 /src/rebel.xml
+/WebRoot/WEB-INF/lib/mxsdoc.jar
