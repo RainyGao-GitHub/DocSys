@@ -19257,7 +19257,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean isFolderUploadAction(String dirPath, Long batchStartTime) {
-		if(dirPath == null || batchStartTime == null || batchStartTime == 0L)
+		//dirPath can not be empty, if for repos root it should be /
+		if(dirPath == null || dirPath.isEmpty())
 		{
 			return false;
 		}
