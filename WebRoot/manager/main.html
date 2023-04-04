@@ -2957,7 +2957,7 @@
 			node.formatedContent = "[新建文件分享 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 			break;
 		case "updateDocShare":
-			node.formatedContent = "[修改文件分享 " + node.event + "]";
+			node.formatedContent = "[修改文件分享 " + node.event + "] ";
 			break;
 		case "deleteDocShare":
 			node.formatedContent = "[删除文件分享 " + node.event + "]";
@@ -2979,6 +2979,14 @@
 			break;
 		default:
 			node.formatedContent = "[" + node.action + " " + node.event + "] ";
+			if(node.path)
+			{
+				node.formatedContent += "[" + node.path + node.name + "] ";				
+			}
+			if(node.reposName)
+			{
+				node.formatedContent += "[" + node.reposName + "]";				
+			}
 			break;
 		}
 		if(node.content)
