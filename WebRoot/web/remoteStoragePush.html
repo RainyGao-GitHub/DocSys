@@ -74,6 +74,9 @@
 	
 	function doSelectForceConfirm()
 	{
+		console.log("skip force push confirm");
+		return;
+		
 		var forceEn = $("#dialog-remoteStoragePush input[name='forceEn']").is(':checked')? 1: 0;
 		if(forceEn == 1)
 		{
