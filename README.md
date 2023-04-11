@@ -50,6 +50,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ### 一、系统安装
 #### 1、一键安装包下载
 国内下载地址：[微云](https://share.weiyun.com/0Kjpf2o0)
+
 国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
 #### 2、安装
