@@ -390,7 +390,7 @@ public class BaseController  extends BaseFunction{
 			if(userList.size() > systemLicenseInfo.usersCount)
 			{
 				Log.debug("checkSystemUsersCount() 用户数量已达到上限，请购买商业授权证书！");
-				rt.setError("用户数量已达到上限，请购买专业版或企业版证书！");
+				rt.setError("用户数量已达到上限，请购买商业版证书！");
 				return false;
 			}
 		}
