@@ -55,6 +55,9 @@
 	
 	function doSelectRecurciveConfirm()
 	{
+		console.log("skip sub-entries push confirm");
+		return;
+		
 		var recurciveEn = $("#dialog-remoteStoragePush input[name='recurciveEn']").is(':checked')? 1: 0;
 		if(recurciveEn == 1)
 		{
