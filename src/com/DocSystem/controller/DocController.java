@@ -6191,13 +6191,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Integer verCtr = repos.getVerCtrl();
-		if(verCtr == null || verCtr == 0)
-		{
-			rt.setError("该仓库未开启版本管理，请联系管理员!");			
-			writeJson(rt, response);
-			return;
-		}
+		//Integer verCtr = repos.getVerCtrl();
+		//if(verCtr == null || verCtr == 0)
+		//{
+		//	rt.setError("该仓库未开启版本管理，请联系管理员!");			
+		//	writeJson(rt, response);
+		//	return;
+		//}
 		
 		//设置文件密码
 		if(setVersionIgnore(repos, doc, ignore) == false)
