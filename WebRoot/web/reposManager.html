@@ -1459,11 +1459,11 @@ function showReposVersionIgnoreListManagePanel()
 {
    	console.log("showReposVersionIgnoreListManagePanel()");
    	
-	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
-	{
-		showErrorMessage("该仓库未开通版本管理，请联系管理员！");
-		return;
-	}
+	//if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	//{
+	//	showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+	//	return;
+	//}
 	
 	bootstrapQ.dialog({
 		id: 'reposVersionIgnoreManage',
@@ -1483,11 +1483,11 @@ function addDocToVersionIgnoreListConfirm(node)
 {
    	console.log("addDocToVersionIgnoreListConfirm()");
    	
-	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
-	{
-		showErrorMessage("该仓库未开通版本管理，请联系管理员！");
-		return;
-	}
+	//if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	//{
+	//	showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+	//	return;
+	//}
 	
 	var msg = "关闭 [" + node.path + node.name + "] 的历史版本管理？"
    	if(node.docId == 0)
@@ -1513,11 +1513,11 @@ function removeDocFromVersionIgnoreListConfirm(node)
 {
    	console.log("removeDocFromVersionIgnoreListConfirm()");
    	
-	if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
-	{
-		showErrorMessage("该仓库未开通版本管理，请联系管理员！");
-		return;
-	}
+	//if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	//{
+	//	showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+	//	return;
+	//}
 	
 	var msg = "开启 [" + node.path + node.name + "] 的历史版本管理？"
    	if(node.docId == 0)
