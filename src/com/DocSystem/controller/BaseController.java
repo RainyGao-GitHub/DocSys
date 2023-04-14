@@ -379,22 +379,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean checkSystemUsersCount(ReturnAjax rt) {
-		if(systemLicenseInfoCheck(rt) == false)
-		{
-			return false;
-		}
-		
-		if(systemLicenseInfo.usersCount != null)
-		{
-			List<User> userList = userService.geAllUsers();
-			if(userList.size() > systemLicenseInfo.usersCount)
-			{
-				Log.debug("checkSystemUsersCount() 用户数量已达到上限，请购买商业授权证书！");
-				rt.setError("用户数量已达到上限，请购买商业版证书！");
-				return false;
-			}
-		}
-		return true;
+		return systemLicenseInfoCheck(rt);
 	}
 
 	protected static User buildAdminUser() {
