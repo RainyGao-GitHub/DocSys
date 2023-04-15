@@ -38,7 +38,6 @@ import com.DocSystem.common.constants;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
-import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorageConfig;
@@ -52,6 +51,7 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.entity.DocPullContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import util.ReturnAjax;
@@ -3135,7 +3135,7 @@ public class DocController extends BaseController{
 		}
 		
 		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, pullType, rt);
-		DocPullResult pullResult = (DocPullResult) rt.getDataEx();
+		DocPullContext pullResult = (DocPullContext) rt.getDataEx();
 	    if(pullResult != null && pullResult.successCount > 0)
 	    {
 	    	ret = true;

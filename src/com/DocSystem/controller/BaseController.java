@@ -129,7 +129,6 @@ import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
-import com.DocSystem.common.entity.DocPullResult;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.LDAPConfig;
@@ -155,6 +154,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.websocket.entity.DocPullContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -4815,7 +4815,7 @@ public class BaseController  extends BaseFunction{
 							
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
 						    
-							DocPullResult pullResult = (DocPullResult) rt.getDataEx();
+							DocPullContext pullResult = (DocPullContext) rt.getDataEx();
 						    if(pullResult != null && pullResult.successCount > 0)
 						    {
 								String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/remoteStoragePull-localChanges-" + new Date().getTime() + "/";
