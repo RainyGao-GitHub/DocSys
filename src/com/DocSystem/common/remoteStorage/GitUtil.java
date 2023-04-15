@@ -56,10 +56,10 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
-import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
+import com.DocSystem.websocket.entity.DocPushContext;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -1005,7 +1005,7 @@ public class GitUtil {
 	}
 	
 
-	public String doCommit(String commitMsg, String commitUser, DocPushResult pushResult, List<CommitAction> commitActionList) {
+	public String doCommit(String commitMsg, String commitUser, DocPushContext pushResult, List<CommitAction> commitActionList) {
 	    if(commitActionList == null || commitActionList.size() ==0)
 	    {
 	    	Log.debug("doCommit() There is nothing to commit");
@@ -1070,7 +1070,7 @@ public class GitUtil {
 	}
 	
 	private List<CommitAction> getRealCommitActionList(Doc doc, String commitMsg, String commitUser,
-			DocPushResult pushResult, List<CommitAction> commitActionList) {
+			DocPushContext pushResult, List<CommitAction> commitActionList) {
     	String parentPath = doc.getPath();
         Log.debug("getRealCommitActionList() parentPath:" + parentPath);
 

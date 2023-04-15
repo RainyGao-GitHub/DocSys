@@ -5,10 +5,10 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
-import com.DocSystem.common.entity.DocPushResult;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
+import com.DocSystem.websocket.entity.DocPushContext;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -270,7 +270,7 @@ public class SvnUtil {
 	    return true;
 	}
 
-	public String doCommit(String commitMsg,String commitUser, DocPushResult pushResult, List<CommitAction> commitActionList)
+	public String doCommit(String commitMsg,String commitUser, DocPushContext pushResult, List<CommitAction> commitActionList)
 	{		
 	    if(commitActionList == null || commitActionList.size() ==0)
 	    {
@@ -325,7 +325,7 @@ public class SvnUtil {
 	    return commitInfo.getNewRevision()+"";
 	}
 	
-	private List<CommitAction> getRealCommitActionList(Doc doc, String commitMsg,String commitUser, DocPushResult pushResult, List<CommitAction> commitActionList)
+	private List<CommitAction> getRealCommitActionList(Doc doc, String commitMsg,String commitUser, DocPushContext pushResult, List<CommitAction> commitActionList)
     {
     	String parentPath = doc.getPath();
         Log.debug("getRealCommitActionList() parentPath:" + parentPath);
