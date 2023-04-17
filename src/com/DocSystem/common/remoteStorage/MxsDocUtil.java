@@ -20,7 +20,6 @@ public class MxsDocUtil {
     private String password;
     private Integer reposId;
     public String remoteDirectory;
-    
     private String authCode;
 	
 	public MxsDocUtil(String userName, String pwd, String url, Integer reposId, String remoteDirectory) {
@@ -28,14 +27,20 @@ public class MxsDocUtil {
 		this.username = userName;
 		this.password = Base64Util.base64Encode(pwd);
 		this.reposId = reposId;
-		this.remoteDirectory = remoteDirectory;		
+		this.remoteDirectory = remoteDirectory;
 	}
 
-	public boolean login() {
+	public boolean login(String authCode) {
 		Log.debug("MxsDocUtil login() serverUrl:" + serverUrl);
 		if(serverUrl == null)
 		{
 			return false;
+		}
+		
+		if(authCode != null)
+		{
+			this.authCode = authCode;
+			return true;
 		}
 	 	
 		String requestUrl = serverUrl + "/DocSystem/Bussiness/getAuthCodeRS.do?userName=" + username + "&pwd="+password;
@@ -139,16 +144,15 @@ public class MxsDocUtil {
 			return null;
 		}
 		
-		if(ret.getString("status") == null)
+		String status = ret.getString("status");
+		Log.debug("MxsDocUtil getEntry() ret.status:" + status);
+		if(status == null)
 		{
-			//未知状态
-			Log.debug("MxsDocUtil getEntry() ret.status is null");
 			return null;
 		}
 		
-		if(!ret.getString("status").equals("ok"))
-		{
-			Log.debug("MxsDocUtil getEntry() ret.status is not ok");
+		if(!status.equals("ok"))
+		{	
 			return null;
 		}
 		
