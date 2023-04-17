@@ -2299,6 +2299,7 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
 			String commitMsg,
+			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
 			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
@@ -2445,7 +2446,25 @@ public class DocController extends BaseController{
 			{
 				folderUploadAction.totalCount = totalCount;
 			}
-
+			
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}
 		}
 
 		//Build Doc

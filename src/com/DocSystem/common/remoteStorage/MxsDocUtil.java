@@ -203,26 +203,32 @@ public class MxsDocUtil {
         }
         return ret;		
 	}
-
-	public boolean upload(String remotePath, String localPath, String fileName) {
+	
+	public boolean upload(String remotePath, String localPath, String fileName, 
+			Integer isEnd, 
+			String dirPath, Long batchStartTime, Integer totalCount) 
+	{
     	boolean ret = false;
         try {
         	File file = new File(localPath + fileName);
         	if(file.length() == 0)
         	{
-        		ret = add(remotePath, fileName, 1);
+        		ret = add(remotePath, fileName, 1, isEnd, dirPath, batchStartTime, totalCount);
         	}
         	else
         	{
-        		ret = remoteUploadFile(remotePath, localPath, fileName, null, null);
+        		ret = remoteUploadFile(remotePath, localPath, fileName, null, null, isEnd, dirPath, batchStartTime, totalCount);
         	}
         } catch (Exception e) {
         	e.printStackTrace();
         }
         return ret;
-	}	
+	}
 	
-	private boolean remoteUploadFile(String remotePath, String localPath, String name, Long size, String checkSum) {
+	private boolean remoteUploadFile(String remotePath, String localPath, String name, Long size, String checkSum,
+			Integer isEnd, 
+			String dirPath, Long batchStartTime, Integer totalCount)
+	{
 			Log.debug("remoteUploadFile localPath:" + localPath + " name:" + name);
 
 			String requestUrl = serverUrl + "/DocSystem/Doc/uploadDocRS.do?authCode=" + authCode;
@@ -319,7 +325,10 @@ public class MxsDocUtil {
 			return true;
 		}
 
-	public boolean add(String remotePath, String name, Integer type) {
+	public boolean add(String remotePath, String name, Integer type,
+			Integer isEnd, 
+			String dirPath, Long batchStartTime, Integer totalCount)
+	{
 		Log.debug("MxsDocUtil add " + remoteDirectory + remotePath + name);
         boolean result = false;
 
@@ -363,6 +372,54 @@ public class MxsDocUtil {
             e.printStackTrace();
         }
         return result;		
+	}
+	
+	public boolean delete(String remotePath, String fileName, 
+			Integer isEnd, 
+			String dirPath, Long batchStartTime, Integer totalCount)
+	{
+		Log.debug("MxsDocUtil delete " + remotePath + fileName);
+        boolean result = false;
+
+        try {
+    		String requestUrl = serverUrl + "/DocSystem/Doc/deleteDocRS.do?authCode=" + authCode;
+    		HashMap<String, String> reqParams = new HashMap<String, String>();
+    		if(reposId != null)
+    		{
+    			reqParams.put("reposId", reposId+"");
+    		}
+    		else
+    		{
+    			reqParams.put("remoteDirectory", remoteDirectory);
+    		}
+    		reqParams.put("path", remotePath);
+    		reqParams.put("name", fileName);
+           
+    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
+    		if(ret == null)
+    		{
+    			Log.debug("MxsDocUtil delete() ret is null");
+    			return false;
+    		}
+    		
+    		if(ret.getString("status") == null)
+    		{
+    			//未知状态
+    			Log.debug("MxsDocUtil delete() ret.status is null");
+    			return false;
+    		}
+    		
+    		if(!ret.getString("status").equals("ok"))
+    		{
+    			Log.debug("MxsDocUtil delete() ret.status is not ok");
+    			return false;
+    		}
+    		
+    		result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;	
 	}
 	
 	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
@@ -415,49 +472,4 @@ public class MxsDocUtil {
         }
         return result;	
 	}	
-
-	public boolean delete(String remotePath, String fileName) {
-		Log.debug("MxsDocUtil delete " + remotePath + fileName);
-        boolean result = false;
-
-        try {
-    		String requestUrl = serverUrl + "/DocSystem/Doc/deleteDocRS.do?authCode=" + authCode;
-    		HashMap<String, String> reqParams = new HashMap<String, String>();
-    		if(reposId != null)
-    		{
-    			reqParams.put("reposId", reposId+"");
-    		}
-    		else
-    		{
-    			reqParams.put("remoteDirectory", remoteDirectory);
-    		}
-    		reqParams.put("path", remotePath);
-    		reqParams.put("name", fileName);
-           
-    		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
-    		if(ret == null)
-    		{
-    			Log.debug("MxsDocUtil delete() ret is null");
-    			return false;
-    		}
-    		
-    		if(ret.getString("status") == null)
-    		{
-    			//未知状态
-    			Log.debug("MxsDocUtil delete() ret.status is null");
-    			return false;
-    		}
-    		
-    		if(!ret.getString("status").equals("ok"))
-    		{
-    			Log.debug("MxsDocUtil delete() ret.status is not ok");
-    			return false;
-    		}
-    		
-    		result = true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return result;	
-	}
 }
