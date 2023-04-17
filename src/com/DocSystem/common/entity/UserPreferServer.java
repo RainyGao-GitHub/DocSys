@@ -28,6 +28,7 @@ public class UserPreferServer {
 
 	public Integer reposId;	//For mxsdoc
 	public String remoteDirectory;	//For mxsdoc
-	
+
+	public String authCode; //For mxsdoc(本地服务器没有服务器配置信息）
 }
 

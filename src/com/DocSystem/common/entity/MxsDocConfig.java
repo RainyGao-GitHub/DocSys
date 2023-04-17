@@ -12,4 +12,5 @@ public class MxsDocConfig  implements Serializable {
 	public String url;
 	public Integer reposId;
 	public String remoteDirectory;
+	public String authCode;	//用于本地服务器（不会出现在配置文件中）
 }
