@@ -13,6 +13,8 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.entity.DocSearchContext;
+
 import util.ReturnAjax;
 
 /**
@@ -78,4 +80,6 @@ public interface Channel {
 	String buildDocShareMailContent(String content);
 
 	boolean systemLicenseInfoCheck(ReturnAjax rt);
+
+	void searchDocAsync(List<Repos> reposList, DocSearchContext searchContext);
 }

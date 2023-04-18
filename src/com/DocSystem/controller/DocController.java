@@ -50,6 +50,7 @@ import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.websocket.entity.DocPullContext;
+import com.DocSystem.websocket.entity.DocSearchContext;
 import com.alibaba.fastjson.JSONObject;
 import util.ReturnAjax;
 import util.FileUtil.FileUtils2;
@@ -3927,56 +3928,6 @@ public class DocController extends BaseController{
 		
 		writeText(status+content, response);
 	}
-	
-	
-	private boolean isBinaryFile(Repos repos, Doc doc) {
-		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
-		String code = FileUtils2.getFileEncode(filePath);
-		return FileUtils2.isBinaryFile(code);
-	}
-	
-	public String getDocContent(Repos repos, Doc doc, int offset, int size, User accessUser)
-	{
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		boolean isRealDoc = true;
-		doc.setIsRealDoc(isRealDoc);
-		doc.setLocalRootPath(localRootPath);
-		doc.setLocalVRootPath(localVRootPath);
-		
-		Doc tmpDoc = doc;
-		//置类型仓库需要先将文件下载到本地
-		if(isFSM(repos) == false)
-		{
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.manualPullForce, null);
-		}		
-	
-		String content = "";
-		String fileSuffix = FileUtil.getFileSuffix(doc.getName());
-		if(FileUtil.isText(fileSuffix))
-		{
-			content = readRealDocContent(repos, tmpDoc, offset, size);
-		}
-		else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
-		{
-			if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
-			{
-				content = readOfficeContent(repos, tmpDoc, offset, size);
-			}
-		}
-		else
-		{
-			if(isBinaryFile(repos, tmpDoc))
-			{
-				content = "";
-			}
-			else
-			{
-				content = readRealDocContent(repos, tmpDoc, offset, size);
-			}
-		}
-		return content;
-	}
 
 	/****************   get Tmp Saved Document Content ******************/
 	@RequestMapping("/getTmpSavedDocContent.do")
@@ -4076,88 +4027,6 @@ public class DocController extends BaseController{
 			deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
 		}
 		writeJson(rt, response);
-	}
-	
-	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, String fileSuffix) 
-	{
-		
-		String userTmpDir = Path.getReposTmpPathForOfficeText(repos, doc);
-		String officeTextFileName = Path.getOfficeTextFileName(doc);
-		File file = new File(userTmpDir, officeTextFileName);
-		if(file.exists() == true)
-		{
-			return true;
-		}
-		
-		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
-		
-		//文件需要转换
-		FileUtil.clearDir(userTmpDir);
-		switch(fileSuffix)
-		{
-		case "doc":
-			return OfficeExtract.extractToFileForWord(filePath, userTmpDir, officeTextFileName);
-		case "docx":
-			return OfficeExtract.extractToFileForWord2007(filePath, userTmpDir, officeTextFileName);
-		case "ppt":
-			return OfficeExtract.extractToFileForPPT(filePath, userTmpDir, officeTextFileName);
-		case "pptx":
-			return OfficeExtract.extractToFileForPPT2007(filePath, userTmpDir, officeTextFileName);
-		case "xls":
-			return OfficeExtract.extractToFileForExcel(filePath, userTmpDir, officeTextFileName);
-		case "xlsx":
-			return OfficeExtract.extractToFileForExcel2007(filePath, userTmpDir, officeTextFileName);
-		case "pdf":
-			return OfficeExtract.extractToFileForPdf(filePath, userTmpDir, officeTextFileName);
-		}
-		return false;
-	}
-	
-	private boolean checkAndGenerateOfficeContentEx(Repos repos, Doc doc, String fileSuffix) 
-	{
-		
-		String userTmpDir = Path.getReposTmpPathForOfficeText(repos, doc);
-		String officeTextFileName = Path.getOfficeTextFileName(doc);
-		File file = new File(userTmpDir, officeTextFileName);
-		if(file.exists() == true)
-		{
-			return true;
-		}
-		
-		//文件需要转换
-		FileUtil.clearDir(userTmpDir);
-		
-		//进行提取文件内容前先进行解密
-		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
-		if(repos.encryptType != null && repos.encryptType != 0)
-		{
-			String tmpFilePath = userTmpDir + doc.getName();
-			if(FileUtil.copyFile(filePath, tmpFilePath, true) == false)
-			{
-				return false;
-			}
-			decryptFile(repos, userTmpDir, doc.getName());
-			filePath = tmpFilePath;
-		}
-		
-		switch(fileSuffix)
-		{
-		case "doc":
-			return OfficeExtract.extractToFileForWord(filePath, userTmpDir, officeTextFileName);
-		case "docx":
-			return OfficeExtract.extractToFileForWord2007(filePath, userTmpDir, officeTextFileName);
-		case "ppt":
-			return OfficeExtract.extractToFileForPPT(filePath, userTmpDir, officeTextFileName);
-		case "pptx":
-			return OfficeExtract.extractToFileForPPT2007(filePath, userTmpDir, officeTextFileName);
-		case "xls":
-			return OfficeExtract.extractToFileForExcel(filePath, userTmpDir, officeTextFileName);
-		case "xlsx":
-			return OfficeExtract.extractToFileForExcel2007(filePath, userTmpDir, officeTextFileName);
-		case "pdf":
-			return OfficeExtract.extractToFileForPdf(filePath, userTmpDir, officeTextFileName);
-		}
-		return false;
 	}
 
 	/****************   get Document Info ******************/
@@ -6746,225 +6615,20 @@ public class DocController extends BaseController{
 		}
 		
 		//TODO: 考虑多线程搜索，避免仓库越多速度越慢
-		List<Doc> searchResult = new ArrayList<Doc>();
-		for(int i=0; i< reposList.size(); i++)
-		{
-			Repos queryRepos = reposList.get(i);
-			List<Doc> result =  searchInRepos(queryRepos, pid, path, searchWord, sort);
-			if(result != null && result.size() > 0)
-			{
-				Log.debug("searchDoc() 共 ["+ result.size() +"]结果 hits with " + searchWord + " in reposId:" + queryRepos.getId() + " reposName:" + queryRepos.getName());
-				searchResult.addAll(result);
-			}
-		}
+		DocSearchContext searchContext = new DocSearchContext();
+		searchContext.pid = pid;
+		searchContext.path = path;
+		searchContext.searchWord = searchWord;
+		searchContext.sort = sort;
+		channel.searchDocAsync(reposList, searchContext);
 		
 		//对搜索结果进行统一排序
+		List<Doc> searchResult = searchContext.result;
 		Collections.sort(searchResult);
-		
 		Integer total = searchResult.size();
 		rt.setData(searchResult);
 		rt.setDataEx(total);
 		writeJson(rt, response);
-	}
-	
-	private List<Doc> searchInRepos(Repos repos, Integer pDocId, String path, String searchWord, String sort) 
-	{	
-		if(searchWord == null || searchWord.isEmpty())
-		{
-			return null;
-		}
-
-		List<QueryCondition> preConditions = new ArrayList<QueryCondition>();
-		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
-		List<Doc> result = null;
-		
-		//搜索字符预处理
-		searchWord = searchWord.replace('\\','/');
-		
-		//文件直接直接命中
-		List<Doc> hitDocList = getHitDocList(repos, path, searchWord);	
-		
-		//拆分字符串中的路径
-		String[] temp = new String[2]; 
-		Path.seperatePathAndNameWithoutCheck(searchWord, temp);
-		String pathSuffix = temp[0];
-		searchWord = temp[1];	
-		
-		Log.debug("searchInRepos() reposId:" + repos.getId() + " reposName:" + repos.getName() + " pathSuffix:" + pathSuffix + " searchWord:" + searchWord);
-		
-		if(pathSuffix != null && !pathSuffix.isEmpty())
-		{
-			QueryCondition pathSuffixCondition = new QueryCondition();
-			pathSuffixCondition.setField("path");
-			pathSuffixCondition.setValue(pathSuffix);
-			pathSuffixCondition.setQueryType(QueryCondition.SEARCH_TYPE_Wildcard);
-			preConditions.add(pathSuffixCondition);			
-		}
-		
-		luceneSearch(repos, preConditions, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc
-		result = convertSearchResultToDocList(repos, searchResult);	
-		if(result == null)
-		{
-			return hitDocList;
-		}
-		
-		if(hitDocList == null)
-		{
-			return result;
-		}
-		
-		result.addAll(0, hitDocList);
-		return result;
-	}
-
-	private List<Doc> getHitDocList(Repos repos, String path, String searchWord) {
-		Log.debug("getHitDocList() path:" + path + " searchWord:" + searchWord);
-		List<Doc> list = new ArrayList<Doc>();
-		Doc hitDoc = getHitDoc(repos, path, searchWord);
-		if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
-		{
-			list.add(hitDoc);
-			return list;
-		}
-		
-		//进行精确模糊搜索
-		//尝试在path下分别删除1/2/3级头部和1级尾部进行搜索 
-		hitDocSmartSearch(repos, path, searchWord, list);
-		return list;
-	}
-
-	private void hitDocSmartSearch(Repos repos, String path, String searchWord, List<Doc> list) {
-		//拆分searchWord路径
-		String searchPath = searchWord.replace('\\','/');
-		Log.debug("hitDocSmartSearch() searchPath:" + searchPath);
-
-
-		String tempPath[] = searchPath.split("/");
-		if(tempPath.length < 2)
-		{
-			Log.debug("hitDocSmartSearch() tempPath length < 2");
-			//没有相对路径信息，不尝试
-			return;
-		}
-		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		
-		Doc doc = null;
-		Doc hitDoc = null;
-		String docPath = null;
-		
-		//去1/2/3级目录
-		for(int i=0; i<3; i++)
-		{
-			docPath = buildDocPath(tempPath, i+1, tempPath.length-1);
-			if(docPath == null)
-			{
-				break;
-			}
-			docPath = path + "/" + docPath;			
-			doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
-			hitDoc = docSysGetDoc(repos, doc, false);
-			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
-			{
-				list.add(hitDoc);
-				return;
-			}
-			
-			docPath = buildDocPath(tempPath, i+1, tempPath.length-2);
-			if(docPath == null)
-			{
-				break;
-			}
-			docPath = path + "/" + docPath;
-			doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
-			hitDoc = docSysGetDoc(repos, doc, false);
-			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
-			{
-				list.add(hitDoc);
-				return;
-			}			
-		}
-	}
-
-	private String buildDocPath(String[] tempPath, int start, int end) {
-		if(start >= end)
-		{
-			return null;
-		}
-		
-		String path = tempPath[start];
-		for(int i=start+1; i <= end; i++)
-		{
-			path = path + "/" + tempPath[i];
-		}
-		Log.debug("buildDocPath() path [" + path + "]");
-		return path;
-	}
-
-	//通过路径搜索的话，只查找本地的目录，避免远程仓库链接不上或者时间太长
-	private Doc getHitDoc(Repos repos, String path, String searchWord) {
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-
-		String docPath = searchWord + "";
-		
-		int firstSeperator = docPath.indexOf('/');
-		if(firstSeperator > 0)	//相对路径查找
-		{
-			if(path != null)
-			{
-				docPath = path + "/" + docPath;
-			}
-			docPath = docPath.replace('\\','/');
-		}
-		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
-		Doc hitDoc = docSysGetDoc(repos, doc, false);
-		return hitDoc;
-	}
-
-	private List<Doc> convertSearchResultToDocList(Repos repos, HashMap<String, HitDoc> searchResult) 
-	{
-		List<Doc> docList = new ArrayList<Doc>();
-		for(HitDoc hitDoc: searchResult.values())
-        {
-      	    Doc doc = hitDoc.getDoc();
-      	    doc.setReposName(repos.getName());
-      	    doc.setHitType(hitDoc.getHitType());      	    
-      	    docList.add(doc);
-		}
-		
-		//读取排序前十文件的内容
-		int numOfContentShow = 10;
-		int size = docList.size() > numOfContentShow? numOfContentShow : docList.size();
-		for(int i=0; i <size; i++)
-		{
-			Doc doc = docList.get(i);
-			
-      	    //根据hitType决定是否要取出文件内容或文件备注
-      	    int hitType = doc.getHitType();
-    		Log.debug("convertSearchResultToDocList() " + doc.getName() + " hitType:" + doc.getHitType());	
-
-      	    String hitText = "";
-      	    if((hitType & SEARCH_MASK[1]) > 0) //hit on 文件内容
-      	    {
-      	    	hitText = getDocContent(repos, doc, 0, 120, null);
-      	    	hitText = Base64Util.base64Encode(hitText);
-      	    	Log.debug("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
-      	    }
-      	    else if((hitType & SEARCH_MASK[2]) > 0) //hit on 文件备注
-      	    {
-      	    	hitText = readVirtualDocContent(repos, doc, 0, 120);
-      	    	hitText = Base64Util.base64Encode(hitText);
-     	    	//hitText = removeSpecialJsonChars(hitText);
-      	    	Log.debug("convertSearchResultToDocList() " + doc.getName() + " hitText:" + hitText);	
-      	    }
-  	    	doc.setContent(hitText);
-		}
-		
-		return docList;
 	}
 	
 	/**
@@ -7049,67 +6713,6 @@ public class DocController extends BaseController{
     	hitDoc.setDocPath(docPath);
     	
     	return hitDoc;
-	}
-
-	private static final int[] SEARCH_MASK = { 0x00000001, 0x00000002, 0x00000004};	//DocName RDOC VDOC
-	private boolean luceneSearch(Repos repos, List<QueryCondition> preConditions, String searchWord, String path, HashMap<String, HitDoc> searchResult, int searchMask) 
-	{
-		//文件名通配符搜索（带空格）
-		if((searchMask & SEARCH_MASK[0]) > 0)
-		{
-			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
-			LuceneUtil2.search(repos, preConditions, "nameForSearch", searchWord.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, SEARCH_MASK[0]); 	//Search By DocName
-			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
-		}
-		
-		//空格是或条件
-		String [] keyWords = searchWord.split(" ");		
-		for(int i=0; i< keyWords.length; i++)
-		{
-			String searchStr = keyWords[i];
-			if(!searchStr.isEmpty())
-			{
-				if((searchMask & SEARCH_MASK[0]) > 0)
-				{
-					//0x00000001; //文件内容
-					//文件名通配符搜索（不切词搜索）
-					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
-					LuceneUtil2.search(repos, preConditions, "nameForSearch", searchStr.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1, SEARCH_MASK[0]);	//Search By FileName
-					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
-
-					//文件名智能搜索（切词搜索）
-					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr);
-					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, 1, SEARCH_MASK[0]);	//Search By FileName
-					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
-				}
-				if((searchMask & SEARCH_MASK[1]) > 0)
-				{
-					//0x00000002; //文件内容搜索
-					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr);
-					//Search By FileContent
-					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);
-					if(ret == false  ||  searchResult.size() == 0)
-					{
-						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);
-					}
-					
-					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());
-				}
-				if((searchMask & SEARCH_MASK[2]) > 0)
-				{	
-					//0x00000004; //文件备注搜索
-					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr);
-					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);
-					if(ret == false ||  searchResult.size() == 0)
-					{
-						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);						
-					}
-					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr + " count:" + searchResult.size());
-				}
-			}
-		}
-		
-		return true;
 	}
 	
 	/****************   get Zip InitMenu ******************/

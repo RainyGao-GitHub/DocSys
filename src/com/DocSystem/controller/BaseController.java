@@ -95,6 +95,7 @@ import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
 import util.Encrypt.MD5;
+import util.FileUtil.FileUtils2;
 
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
@@ -104,11 +105,13 @@ import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.EVENT;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
+import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.LongBeatCheckAction;
 import com.DocSystem.common.MyExtractCallback;
 import com.DocSystem.common.OS;
+import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.Reflect;
 import com.DocSystem.common.ReposData;
@@ -132,6 +135,7 @@ import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.LDAPConfig;
+import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -9128,6 +9132,137 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return true;
+	}
+	
+	protected boolean isBinaryFile(Repos repos, Doc doc) {
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		String code = FileUtils2.getFileEncode(filePath);
+		return FileUtils2.isBinaryFile(code);
+	}
+	
+	public String getDocContent(Repos repos, Doc doc, int offset, int size, User accessUser)
+	{
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		boolean isRealDoc = true;
+		doc.setIsRealDoc(isRealDoc);
+		doc.setLocalRootPath(localRootPath);
+		doc.setLocalVRootPath(localVRootPath);
+		
+		Doc tmpDoc = doc;
+		//置类型仓库需要先将文件下载到本地
+		if(isFSM(repos) == false)
+		{
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.manualPullForce, null);
+		}		
+	
+		String content = "";
+		String fileSuffix = FileUtil.getFileSuffix(doc.getName());
+		if(FileUtil.isText(fileSuffix))
+		{
+			content = readRealDocContent(repos, tmpDoc, offset, size);
+		}
+		else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
+		{
+			if(checkAndGenerateOfficeContent(repos, tmpDoc, fileSuffix))
+			{
+				content = readOfficeContent(repos, tmpDoc, offset, size);
+			}
+		}
+		else
+		{
+			if(isBinaryFile(repos, tmpDoc))
+			{
+				content = "";
+			}
+			else
+			{
+				content = readRealDocContent(repos, tmpDoc, offset, size);
+			}
+		}
+		return content;
+	}
+	
+	protected boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, String fileSuffix) 
+	{
+		
+		String userTmpDir = Path.getReposTmpPathForOfficeText(repos, doc);
+		String officeTextFileName = Path.getOfficeTextFileName(doc);
+		File file = new File(userTmpDir, officeTextFileName);
+		if(file.exists() == true)
+		{
+			return true;
+		}
+		
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		
+		//文件需要转换
+		FileUtil.clearDir(userTmpDir);
+		switch(fileSuffix)
+		{
+		case "doc":
+			return OfficeExtract.extractToFileForWord(filePath, userTmpDir, officeTextFileName);
+		case "docx":
+			return OfficeExtract.extractToFileForWord2007(filePath, userTmpDir, officeTextFileName);
+		case "ppt":
+			return OfficeExtract.extractToFileForPPT(filePath, userTmpDir, officeTextFileName);
+		case "pptx":
+			return OfficeExtract.extractToFileForPPT2007(filePath, userTmpDir, officeTextFileName);
+		case "xls":
+			return OfficeExtract.extractToFileForExcel(filePath, userTmpDir, officeTextFileName);
+		case "xlsx":
+			return OfficeExtract.extractToFileForExcel2007(filePath, userTmpDir, officeTextFileName);
+		case "pdf":
+			return OfficeExtract.extractToFileForPdf(filePath, userTmpDir, officeTextFileName);
+		}
+		return false;
+	}
+	
+	protected boolean checkAndGenerateOfficeContentEx(Repos repos, Doc doc, String fileSuffix) 
+	{
+		
+		String userTmpDir = Path.getReposTmpPathForOfficeText(repos, doc);
+		String officeTextFileName = Path.getOfficeTextFileName(doc);
+		File file = new File(userTmpDir, officeTextFileName);
+		if(file.exists() == true)
+		{
+			return true;
+		}
+		
+		//文件需要转换
+		FileUtil.clearDir(userTmpDir);
+		
+		//进行提取文件内容前先进行解密
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			String tmpFilePath = userTmpDir + doc.getName();
+			if(FileUtil.copyFile(filePath, tmpFilePath, true) == false)
+			{
+				return false;
+			}
+			decryptFile(repos, userTmpDir, doc.getName());
+			filePath = tmpFilePath;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "doc":
+			return OfficeExtract.extractToFileForWord(filePath, userTmpDir, officeTextFileName);
+		case "docx":
+			return OfficeExtract.extractToFileForWord2007(filePath, userTmpDir, officeTextFileName);
+		case "ppt":
+			return OfficeExtract.extractToFileForPPT(filePath, userTmpDir, officeTextFileName);
+		case "pptx":
+			return OfficeExtract.extractToFileForPPT2007(filePath, userTmpDir, officeTextFileName);
+		case "xls":
+			return OfficeExtract.extractToFileForExcel(filePath, userTmpDir, officeTextFileName);
+		case "xlsx":
+			return OfficeExtract.extractToFileForExcel2007(filePath, userTmpDir, officeTextFileName);
+		case "pdf":
+			return OfficeExtract.extractToFileForPdf(filePath, userTmpDir, officeTextFileName);
+		}
+		return false;
 	}
 	
 	//文件加密
@@ -19647,5 +19782,67 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		return false;
+	}
+	
+	//文件搜索接口
+	protected static final int[] SEARCH_MASK = { 0x00000001, 0x00000002, 0x00000004};	//DocName RDOC VDOC
+	protected boolean luceneSearch(Repos repos, List<QueryCondition> preConditions, String searchWord, String path, HashMap<String, HitDoc> searchResult, int searchMask) 
+	{
+		//文件名通配符搜索（带空格）
+		if((searchMask & SEARCH_MASK[0]) > 0)
+		{
+			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
+			LuceneUtil2.search(repos, preConditions, "nameForSearch", searchWord.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, SEARCH_MASK[0]); 	//Search By DocName
+			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
+		}
+		
+		//空格是或条件
+		String [] keyWords = searchWord.split(" ");		
+		for(int i=0; i< keyWords.length; i++)
+		{
+			String searchStr = keyWords[i];
+			if(!searchStr.isEmpty())
+			{
+				if((searchMask & SEARCH_MASK[0]) > 0)
+				{
+					//0x00000001; //文件内容
+					//文件名通配符搜索（不切词搜索）
+					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
+					LuceneUtil2.search(repos, preConditions, "nameForSearch", searchStr.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1, SEARCH_MASK[0]);	//Search By FileName
+					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
+
+					//文件名智能搜索（切词搜索）
+					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr);
+					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, 1, SEARCH_MASK[0]);	//Search By FileName
+					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
+				}
+				if((searchMask & SEARCH_MASK[1]) > 0)
+				{
+					//0x00000002; //文件内容搜索
+					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr);
+					//Search By FileContent
+					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);
+					if(ret == false  ||  searchResult.size() == 0)
+					{
+						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);
+					}
+					
+					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());
+				}
+				if((searchMask & SEARCH_MASK[2]) > 0)
+				{	
+					//0x00000004; //文件备注搜索
+					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr);
+					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);
+					if(ret == false ||  searchResult.size() == 0)
+					{
+						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);						
+					}
+					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr + " count:" + searchResult.size());
+				}
+			}
+		}
+		
+		return true;
 	}
 }
