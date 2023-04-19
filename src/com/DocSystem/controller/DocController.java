@@ -29,7 +29,6 @@ import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
-import com.DocSystem.common.OfficeExtract;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.VersionIgnoreConfig;
@@ -38,7 +37,6 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
-import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.entity.ChangedItem;
@@ -53,8 +51,6 @@ import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocSearchContext;
 import com.alibaba.fastjson.JSONObject;
 import util.ReturnAjax;
-import util.FileUtil.FileUtils2;
-import util.LuceneUtil.LuceneUtil2;
 
 /*
 Something you need to know
