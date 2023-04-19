@@ -23,6 +23,7 @@ public class MxsDocUtil {
     private String authCode;
 	
 	public MxsDocUtil(String userName, String pwd, String url, Integer reposId, String remoteDirectory) {
+		Log.debug("MxsDocUtil() reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " url:" + url);
 		this.serverUrl = url;
 		this.username = userName;
 		this.password = Base64Util.base64Encode(pwd);
@@ -217,6 +218,7 @@ public class MxsDocUtil {
         	File file = new File(localPath + fileName);
         	if(file.length() == 0)
         	{
+        		//TODO: file maybe is folder
         		ret = add(remotePath, fileName, 1, isEnd, dirPath, batchStartTime, totalCount);
         	}
         	else
@@ -333,7 +335,7 @@ public class MxsDocUtil {
 			Integer isEnd, 
 			String dirPath, Long batchStartTime, Integer totalCount)
 	{
-		Log.debug("MxsDocUtil add " + remoteDirectory + remotePath + name);
+		Log.debug("MxsDocUtil add [" + remotePath + name + "]");
         boolean result = false;
 
         try {
@@ -382,7 +384,7 @@ public class MxsDocUtil {
 			Integer isEnd, 
 			String dirPath, Long batchStartTime, Integer totalCount)
 	{
-		Log.debug("MxsDocUtil delete " + remotePath + fileName);
+		Log.debug("MxsDocUtil delete [" + remotePath + fileName + "]");
         boolean result = false;
 
         try {
@@ -427,7 +429,7 @@ public class MxsDocUtil {
 	}
 	
 	public boolean copy(String srcRemotePath, String srcName, String dstRemotePath, String dstName, boolean isMove) {
-		Log.debug("MxsDocUtil copy " + remoteDirectory + srcRemotePath + srcName + " to " +  remoteDirectory + dstRemotePath + dstName);
+		Log.debug("MxsDocUtil copy [" + srcRemotePath + srcName + "] to [" + dstRemotePath + dstName + "]");
         boolean result = false;
 
         try {
