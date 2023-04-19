@@ -4675,12 +4675,12 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case SYNC_ALL_FORCE:
+		case SYNC_ALL_FORCE: //用户强制刷新
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			refreshDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
 			break;
-		case SYNC_ALL:
+		case SYNC_ALL:	//用户手动刷新
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			refreshDocSearchIndex(repos, doc, action, 2, false, rt);	//只刷新action.localChangesRootPath中的文件
@@ -4688,14 +4688,15 @@ public class BaseController  extends BaseFunction{
 		case SYNC_AUTO:			//仓库定时同步	
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			refreshDocSearchIndex(repos, doc, action, 2, false, rt);	//只刷新action.localChangesRootPath中的文件
 			break;
-		case SYNC_VerRepos:
+		case SYNC_VerRepos: //版本仓库同步
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			break;	
-		case SYNC_RemoteStorage:
+		case SYNC_RemoteStorage: //远程存储同步
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			break;	
-		case SYNC_SearchIndex:
+		case SYNC_SearchIndex: //强制刷新Index
 			refreshDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
 			break;		
 		default:
