@@ -365,7 +365,6 @@
 		   	console.log("getRemoteAuthCode()");
 		   	
 		   	//先清除仓库列表
-            
 		   	var seletedServer = targetServerList[curServerIndex];
 		   	if(seletedServer.severType && seletedServer.severType != "mxsdoc")
 		   	{
@@ -379,7 +378,7 @@
 			}
 		   	else
 		   	{
-			   	cleanDiskPathSelectList
+			   	cleanDiskPathSelectList();
 		   	}
 		   	
 		   	targetServerId = seletedServer.id;
@@ -457,7 +456,7 @@
 				var selectListHtml = "";
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					selectListHtml += "<option value=" +d.id + ">" + d.name + "</option>";
+					selectListHtml += "<option value=" +d.id + ">" + d.path + "</option>";
 				}
 				$("#dialog-push-doc select[name='targetDiskPath']").append(selectListHtml);
 			}
