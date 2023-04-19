@@ -5620,7 +5620,7 @@ public class BaseFunction{
 		{
 			rt.setError(logStr);
 		}
-		Log.info(logStr, defaultLogFilePath);
+		Log.info(logStr);
 	}
 	
 	public static boolean createMonitorTrigger(String trigger)
