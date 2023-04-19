@@ -890,6 +890,12 @@
 					}
 			},*/
 			{divider: true},
+			{text: '强制刷新', action: function(e){
+					e.preventDefault();
+					refreshDocConfirm(curRightClickedTreeNode);
+				}
+			},
+			{divider: true},
 			{text: '删除仓库', action: function(e){
 						var vid = getQueryString("vid");
 						console.log("删除仓库：" + vid);	
@@ -2228,6 +2234,85 @@ function showTextSearchSetPanel()
 			reposTextSearchSetPageInit(gReposId, curRightClickedTreeNode);
 		}, 
 	}, null);
+}
+
+function refreshDocConfirm(node)
+{
+   	console.log("refreshDocConfirm()");
+   	var msg = "强制刷新 [" + node.path + node.name + "]？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "强制刷新整个仓库?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'refreshDocConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	refreshDoc(node, 1);	//强制刷新
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function refreshDoc(node, force)
+{
+	console.log("refreshDoc node:", node);
+
+	var docId = 0;
+	var pid = -1;
+	var parentPath = "";
+	var docName = "";
+	var level = 0;
+	var type = 2;
+
+	if(node != null)
+	{
+		docId = node.id;
+		pid = node.pid;
+		parentPath = node.path;
+		docName = node.name;
+		level = node.level;
+		type = node.type;
+	}
+
+	console.log("refreshDoc docId:" + docId + " type:"+ type + " level:" + level + " pid:" + pid + " path:" + parentPath + " name:" + docName);
+	$.ajax({
+        url : "/DocSystem/Doc/refreshDoc.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: gReposId,
+            docId : docId,
+            pid	: pid,
+            type: type,
+            level: level,
+            path: parentPath,
+            name: docName,
+            force: force,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	console.log("refresh ok:", ret.data);
+		     	//2秒后刷新页面
+		        setTimeout(function ()
+		        {
+			     	window.location.reload();
+	            }, 100);
+            }
+            else
+            {
+            	showErrorMessage("刷新失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+               showErrorMessage("刷新失败:服务器异常！");
+        }
+	});
 }
 
 </script>
