@@ -4717,28 +4717,25 @@ public class BaseController  extends BaseFunction{
 		if(force)
 		{
 			Log.info("**************************** refreshDocSearchIndex() 强制刷新 SearchIndex for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			if(docDetect(repos, doc))
+			if(doc.getDocId() == 0)
 			{
-				if(doc.getDocId() == 0)
-				{
-					//Delete All Index Lib
-					Log.info("refreshDocSearchIndex() delete all index lib");
-					deleteDocNameIndexLib(repos);
-					deleteRDocIndexLib(repos);
-					deleteVDocIndexLib(repos);
-					//Build All Index For Doc
-					Log.info("refreshDocSearchIndex() buildIndexForDoc");
-					buildIndexForDoc(repos, doc, null, null, rt, 2);
-				}
-				else
-				{
-					//deleteAllIndexUnderDoc
-					Log.info("refreshDocSearchIndex() delete all index for doc [" + doc.getPath() + doc.getName() + "]");
-					deleteAllIndexForDoc(repos, doc, 2);
-					//buildAllIndexForDoc
-					Log.info("refreshDocSearchIndex() buildIndexForDoc [" + doc.getPath() + doc.getName() + "]");
-					buildIndexForDoc(repos, doc, null, null, rt, 2);
-				}
+				//Delete All Index Lib
+				Log.info("refreshDocSearchIndex() delete all index lib");
+				deleteDocNameIndexLib(repos);
+				deleteRDocIndexLib(repos);
+				deleteVDocIndexLib(repos);
+				//Build All Index For Doc
+				Log.info("refreshDocSearchIndex() buildIndexForDoc");
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
+			}
+			else
+			{
+				//deleteAllIndexUnderDoc
+				Log.info("refreshDocSearchIndex() delete all index for doc [" + doc.getPath() + doc.getName() + "]");
+				deleteAllIndexForDoc(repos, doc, 2);
+				//buildAllIndexForDoc
+				Log.info("refreshDocSearchIndex() buildIndexForDoc [" + doc.getPath() + doc.getName() + "]");
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
 			}
 			Log.info("**************************** refreshDocSearchIndex() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			return;
