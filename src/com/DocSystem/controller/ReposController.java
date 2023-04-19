@@ -1578,14 +1578,15 @@ public class ReposController extends BaseController{
 		List <Doc> docList = new ArrayList<Doc>();
 		if(rootDoc.getDocId() != 0) //不是仓库根目录
 		{
-			rootDoc = docSysGetDoc(repos, rootDoc, false);
-			if(rootDoc == null || rootDoc.getType() == null || rootDoc.getType() == 0)
+			Doc tmpDoc = docSysGetDoc(repos, rootDoc, false);
+			if(tmpDoc == null || tmpDoc.getType() == null || tmpDoc.getType() == 0)
 			{
-				docSysErrorLog("根目录不存在！",rt);
+				docSysErrorLog("[" + rootDoc.getPath() + rootDoc.getName() + "] 不存在！",rt);
 				writeJson(rt, response);			
 				return;
 			}
 			
+			rootDoc = tmpDoc;
 			docList.add(rootDoc);
 			
 			//如果rootDoc是文件则不需要获取子目录文件
@@ -1692,7 +1693,7 @@ public class ReposController extends BaseController{
 				File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
 				if(rootFile.exists() == false)
 				{
-					docSysErrorLog("根目录不存在！",rt);
+					docSysErrorLog("[" + rootDoc.getPath() + rootDoc.getName() + "] 不存在！",rt);
 					writeJson(rt, response);			
 					return;
 				}
