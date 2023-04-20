@@ -176,6 +176,8 @@ public class DocController extends BaseController{
 	public void addDocRS(Integer reposId, String remoteDirectory, String path, String name,  Integer type,
 			String commitMsg,
 			String authCode,
+			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** addDocRS [" + path + name + "] ****************");
@@ -257,6 +259,42 @@ public class DocController extends BaseController{
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
+		//Get FolderUploadAction
+		FolderUploadAction folderUploadAction = null;
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
+		{
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+			folderUploadAction.beatTime = new Date().getTime();
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+			
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}
+		}
 		
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);

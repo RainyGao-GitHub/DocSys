@@ -216,14 +216,17 @@ public class MxsDocUtil {
     	boolean ret = false;
         try {
         	File file = new File(localPath + fileName);
-        	if(file.length() == 0)
+        	if(file.isDirectory())
         	{
-        		//TODO: file maybe is folder
+        		ret = add(remotePath, fileName, 2, isEnd, dirPath, batchStartTime, totalCount);        		
+        	}
+        	else if(file.length() == 0)
+        	{
         		ret = add(remotePath, fileName, 1, isEnd, dirPath, batchStartTime, totalCount);
         	}
         	else
         	{
-        		ret = remoteUploadFile(remotePath, localPath, fileName, null, null, isEnd, dirPath, batchStartTime, totalCount);
+        		ret = remoteUploadFile(remotePath, localPath, fileName, file.length(), null, isEnd, dirPath, batchStartTime, totalCount);
         	}
         } catch (Exception e) {
         	e.printStackTrace();
