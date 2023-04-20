@@ -252,7 +252,18 @@ public class MxsDocUtil {
 			}
 			reqParams.put("path", remotePath);
 			reqParams.put("name", name);
-
+			//For folder upload
+			if(isEnd != null)
+			{
+				reqParams.put("isEnd", isEnd + "");				
+			}
+			if(dirPath != null && dirPath.isEmpty() == false)
+			{
+				reqParams.put("dirPath", dirPath);
+				reqParams.put("batchStartTime", batchStartTime + "");
+				reqParams.put("totalCount", totalCount + "");
+			}
+			
 			if(size == null)
 			{
 				size = new File(localPath + name).length();
@@ -355,7 +366,18 @@ public class MxsDocUtil {
     		reqParams.put("type", type + "");
     		reqParams.put("path", remotePath);
     		reqParams.put("name", name);
-           
+			//For folder upload
+			if(isEnd != null)
+			{
+				reqParams.put("isEnd", isEnd + "");				
+			}
+			if(dirPath != null && dirPath.isEmpty() == false)
+			{
+				reqParams.put("dirPath", dirPath);
+				reqParams.put("batchStartTime", batchStartTime + "");
+				reqParams.put("totalCount", totalCount + "");
+			}
+			
     		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
     		if(ret == null)
     		{
@@ -403,7 +425,18 @@ public class MxsDocUtil {
     		}
     		reqParams.put("path", remotePath);
     		reqParams.put("name", fileName);
-           
+			//For folder upload
+			if(isEnd != null)
+			{
+				reqParams.put("isEnd", isEnd + "");				
+			}
+			if(dirPath != null && dirPath.isEmpty() == false)
+			{
+				reqParams.put("dirPath", dirPath);
+				reqParams.put("batchStartTime", batchStartTime + "");
+				reqParams.put("totalCount", totalCount + "");
+			}
+			
     		JSONObject ret = BaseFunction.postFileStreamAndJsonObj(requestUrl, null, null, reqParams, true);
     		if(ret == null)
     		{
