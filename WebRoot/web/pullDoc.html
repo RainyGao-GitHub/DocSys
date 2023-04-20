@@ -264,7 +264,7 @@
 				localServer.serverUrl = serverUrl;
 				localServer.serverName = "本地服务器";	
 				localServer.isLocal = true;				
-				targetServerList.pull(localServer);
+				targetServerList.push(localServer);
 			}
 			
 			//获取用户自定义服务器列表
@@ -290,13 +290,13 @@
 			                    		var server = list[i];
 			                    		if(pullPageType == 2)
 			                    		{
-			                    			targetServerList.pull(server);
+			                    			targetServerList.push(server);
 			                    		}
 			                    		else
 			                    		{
 			                    			if(server.serverType == undefined || server.serverType == "mxsdoc")
 			                    			{
-					                    		targetServerList.pull(server);		                    	
+					                    		targetServerList.push(server);		                    	
 			                    			}
 			                    		}
 			                    	}

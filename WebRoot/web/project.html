@@ -5582,6 +5582,22 @@
 			},
 		});
 	}
+	
+	function showDocPullPanel(node, type)
+	{
+		console.log("showDocPullPanel type:" + type, node);
+		bootstrapQ.dialog({
+			id: 'pullDoc',
+			url: 'pullDoc.html',
+			title: '文件拉取',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				pullDocPageInit(node, type);
+			},
+		});
+	}
 
 	function showRemoteStoragePushPanel(node)
 	{
