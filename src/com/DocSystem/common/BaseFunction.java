@@ -4878,7 +4878,8 @@ public class BaseFunction{
     public static JSONObject postFileStreamAndJsonObj(String url, String fileName, byte[] fileData, HashMap<String, String> params, boolean waitForResponse) {
 		JSONObject returnJson = null;
 		Log.debug("\n*************************** postFileStreamAndJsonObj Start");
-        try {
+		Log.debug("postFileStreamAndJsonObj url:" + url);         		
+		try {
             //开始设置模拟请求的参数，额，不一个个介绍了，根据需要拿
             String boundary = "------WebKitFormBoundaryUey8ljRiiZqhZHBu";
             URL u = new URL(url);
