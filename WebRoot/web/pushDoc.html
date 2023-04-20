@@ -1,4 +1,11 @@
 <div id="dialog-push-doc" class="form-horizontal">
+	<div class="form-group" style="display:none;">
+	        <label class="col-sm-2 control-label">推送</label>
+	        <div class="col-sm-10">
+	            <input type="text" name="pushEntryPath" class="form-control"  maxlength="400"></input>
+	        </div>
+	</div>
+	<div class="modal-footer"></div>   
     <div class="form-group">
        <label class="col-sm-2 control-label">服务器</label>
        <div class="col-sm-7" style="padding-right:0;">
@@ -126,6 +133,8 @@
 		var localServer = {};
 		var targetServerList = [];
 		
+		var pushEntryPath = "";
+		
 		//cur ServerInfo
 		var curServerIndex = 0;
 		var targetServerId;
@@ -144,7 +153,11 @@
 
 			pushPageType = _pushPageType;
 			node = _node;
-			
+
+			//set pushEntryPath
+			pushEntryPath = node.path + "/" + node.name
+	        $("#dialog-push-doc input[name='pushEntryPath']").val(pushEntryPath);
+
 			//set targetPath
 			targetPath = node.path;
 	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);
@@ -522,14 +535,14 @@
 	             dataType : "json",
 	             data : {
 	                reposId : node.vid, 
-	                path: node.path,
-	                name : node.name,
+	                path: pushEntryPath,
+	                name : "",
 	                serverId: targetServerId,
 		            targetServerUrl: targetServerUrl,
 					remoteAuthCode: remoteAuthCode,
 	             	targetReposId: targetReposId,
 	             	targetDiskPath: targetDiskPath,
-	             	targetPath: targetPath,
+	             	//targetPath: targetPath,
 	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
