@@ -77,7 +77,7 @@ public class MxsDocUtil {
 			return false;
 		}
 		
-		authCode = ret.getString("data");
+		this.authCode = ret.getString("data");
 		return true;
 	}
 
