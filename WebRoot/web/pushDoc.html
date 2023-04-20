@@ -514,10 +514,11 @@
 		    }
 		    
 		    targetPath = $("#dialog-push-doc input[name='targetPath']").val();
+		    pushEntryPath = $("#dialog-push-doc input[name='pushEntryPath']").val();
 		    
 		    if(targetServerUrl)
 			{
-		  	  	pushDoc(node, targetServerUrl, userName, pwd, targetReposId, targetPath);
+		  	  	pushDoc();
 		      	return true;
 			}
 			else
@@ -543,7 +544,7 @@
 	             	targetReposId: targetReposId,
 	             	targetDiskPath: targetDiskPath,
 	             	//targetPath: targetPath,
-	             	shareId: gShareId,
+	             	//shareId: gShareId,
 	             },
 	             success : function (ret) {
 	            	console.log("pushDoc ret:", ret);            		
