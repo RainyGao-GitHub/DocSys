@@ -1,15 +1,15 @@
-<div id="dialog-push-doc" class="form-horizontal">
+<div id="dialog-pull-doc" class="form-horizontal">
 	<div class="form-group">
-	        <label class="col-sm-2 control-label">推送</label>
+	        <label class="col-sm-2 control-label">拉取</label>
 	        <div class="col-sm-10">
-	            <input type="text" name="pushEntryPath" class="form-control"  maxlength="400"></input>
+	            <input type="text" name="pullEntryPath" class="form-control"  maxlength="400"></input>
 	        </div>
 	</div>
 	<div class="modal-footer"></div>   
     <div class="form-group">
        <label class="col-sm-2 control-label">服务器</label>
        <div class="col-sm-7" style="padding-right:0;">
-       	    <select class="form-control" name="targetServer"  onchange="DocPush.doSelectTargetSever();" style="width: 100%;">   
+       	    <select class="form-control" name="targetServer"  onchange="DocPull.doSelectTargetSever();" style="width: 100%;">   
             	<option value="" selected="selected">暂无数据</option>
             </select>
        </div>
@@ -51,8 +51,8 @@
 	<div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">确定</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelPushDoc();" style="width: 100px;height: 42px;">取消</button>
+		        <button  type="button" class="btn btnPrimary" onclick="doPullDoc();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelPullDoc();" style="width: 100px;height: 42px;">取消</button>
 			</div>
 		</div>
 	</div>
@@ -60,37 +60,37 @@
 
 <script src="js/md5.js"></script>
 <script type="text/javascript">
-	//type: 1: push to repos for mxsdoc server 2:push to file server
-	function pushDocPageInit(_node, _pushPageType)
+	//type: 1: pull to repos for mxsdoc server 2:pull to file server
+	function pullDocPageInit(_node, _pullPageType)
 	{
-		console.log("pushDocPageInit() _pushPageType:" + _pushPageType, _node);
-		if(_pushPageType == 1)
+		console.log("pullDocPageInit() _pullPageType:" + _pullPageType, _node);
+		if(_pullPageType == 1)
 		{
-			$("#dialog-push-doc div[name='targetReposDiv']").show();
-			$("#dialog-push-doc div[name='targetDiskPathDiv']").hide();
+			$("#dialog-pull-doc div[name='targetReposDiv']").show();
+			$("#dialog-pull-doc div[name='targetDiskPathDiv']").hide();
 		}
 		else
 		{
-			$("#dialog-push-doc div[name='targetReposDiv']").hide();
-			$("#dialog-push-doc div[name='targetDiskPathDiv']").show();
+			$("#dialog-pull-doc div[name='targetReposDiv']").hide();
+			$("#dialog-pull-doc div[name='targetDiskPathDiv']").show();
 		}
-		DocPush.init(_node, _pushPageType);  
+		DocPull.init(_node, _pullPageType);  
 	}
 	
-	function closePushDocDialog()
+	function closePullDocDialog()
 	{
-		closeBootstrapDialog("pushDoc");
+		closeBootstrapDialog("pullDoc");
 	}
 
-	function doPushDoc()
+	function doPullDoc()
 	{
-		DocPush.doPushDoc();
-      	closePushDocDialog();	
+		DocPull.doPullDoc();
+      	closePullDocDialog();	
 	}
 	
-	function cancelPushDoc()
+	function cancelPullDoc()
 	{
-		closePushDocDialog();
+		closePullDocDialog();
 	}
 	
 	function addUserPreferServer()
@@ -100,13 +100,13 @@
 	
 	function editUserPreferServer()
 	{
-		DocPush.showEditUserPreferServerPanel();
+		DocPull.showEditUserPreferServerPanel();
 	}
 	
 	function deleteUserPreferServer()
 	{
 		console.log("deleteUserPreferServer()");		   	
-	   	DocPush.deleteUserPreferServerConfirm();
+	   	DocPull.deleteUserPreferServerConfirm();
 	}
 	
 	function showAddUserPreferServerPanel()
@@ -120,19 +120,19 @@
 			foot: false,
 			big: false,
 			callback: function(){
-				addUserPreferServerPageInit(DocPush.initTaregetServerList);
+				addUserPreferServerPageInit(DocPull.initTaregetServerList);
 			},
 		});
 	}
 	
-	var DocPush = (function () {
-		var pushPageType;
+	var DocPull = (function () {
+		var pullPageType;
 		var node;
 		
 		var localServer = {};
 		var targetServerList = [];
 		
-		var pushEntryPath = "";
+		var pullEntryPath = "";
 		
 		//cur ServerInfo
 		var curServerIndex = 0;
@@ -146,20 +146,20 @@
 		var targetDiskPath = "";
 		var targetPath = "";
 		
-		function init(_node, _pushPageType)
+		function init(_node, _pullPageType)
 		{
-			console.log("DocPush.init() _pushPageType:" + _pushPageType, _node);
+			console.log("DocPull.init() _pullPageType:" + _pullPageType, _node);
 
-			pushPageType = _pushPageType;
+			pullPageType = _pullPageType;
 			node = _node;
 
-			//set pushEntryPath
-			pushEntryPath = node.path + "/" + node.name
-	        $("#dialog-push-doc input[name='pushEntryPath']").val(pushEntryPath);
+			//set pullEntryPath
+			pullEntryPath = node.path + "/" + node.name
+	        $("#dialog-pull-doc input[name='pullEntryPath']").val(pullEntryPath);
 
 			//set targetPath
 			targetPath = node.path;
-	        $("#dialog-push-doc input[name='targetPath']").val(targetPath);
+	        $("#dialog-pull-doc input[name='targetPath']").val(targetPath);
 			
 			//初始化serverList
 			initTaregetServerList();
@@ -184,7 +184,7 @@
 				big: false,
 				callback: function(){
 					var seletedServer = targetServerList[curServerIndex];
-					editUserPreferServerPageInit(seletedServer, DocPush.initTaregetServerList);
+					editUserPreferServerPageInit(seletedServer, DocPull.initTaregetServerList);
 				},
 			});
 		}
@@ -214,7 +214,7 @@
 					},
 					function () {
 				    	//alert("点击了确定");
-						DocPush.deleteUserPreferServer(seletedServer.id);
+						DocPull.deleteUserPreferServer(seletedServer.id);
 				    	return true;   
 				 	});
 		}
@@ -255,7 +255,7 @@
 			targetServerList = [];
 			curServerIndex = 0;
 			
-			if(pushPageType == 1)
+			if(pullPageType == 1)
 			{
 				//Build Local ServerUrl
 				var protocol = window.location.protocol + '//';
@@ -264,7 +264,7 @@
 				localServer.serverUrl = serverUrl;
 				localServer.serverName = "本地服务器";	
 				localServer.isLocal = true;				
-				targetServerList.push(localServer);
+				targetServerList.pull(localServer);
 			}
 			
 			//获取用户自定义服务器列表
@@ -288,15 +288,15 @@
 			                    	{
 			                    		//filter out not mxsdoc servers
 			                    		var server = list[i];
-			                    		if(pushPageType == 2)
+			                    		if(pullPageType == 2)
 			                    		{
-			                    			targetServerList.push(server);
+			                    			targetServerList.pull(server);
 			                    		}
 			                    		else
 			                    		{
 			                    			if(server.serverType == undefined || server.serverType == "mxsdoc")
 			                    			{
-					                    		targetServerList.push(server);		                    	
+					                    		targetServerList.pull(server);		                    	
 			                    			}
 			                    		}
 			                    	}
@@ -323,7 +323,7 @@
 		   	
 			console.log(data);
 			if(data.length > 0){
-				var c = $("#dialog-push-doc select[name='targetServer']").children();
+				var c = $("#dialog-pull-doc select[name='targetServer']").children();
 				$(c).remove();
 							
 				var selectListHtml = "";
@@ -337,7 +337,7 @@
 					}
 					selectListHtml += "<option value=" + i + ">" + showName + "</option>";
 				}
-				$("#dialog-push-doc select[name='targetServer']").append(selectListHtml);
+				$("#dialog-pull-doc select[name='targetServer']").append(selectListHtml);
 			}
 			
 			//get AuthCode For Selected Server
@@ -367,7 +367,7 @@
 		
 		function doSelectTargetSever() {
 		   	console.log("doSelectTargetSever()");
-			curServerIndex = $("#dialog-push-doc select[name='targetServer']").val();
+			curServerIndex = $("#dialog-pull-doc select[name='targetServer']").val();
 		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
 			getRemoteAuthCode();
 		}
@@ -384,7 +384,7 @@
 		   		return;
 		   	}
 		   	
-		   	if(pushPageType == 1)
+		   	if(pullPageType == 1)
 			{
 			   	cleanReposSelectList();
 			}
@@ -413,12 +413,12 @@
 		                	serverUrl: serverUrl,
 		                	userName: userName,
 		                	pwd: pwd,
-		                	type: pushPageType,
+		                	type: pullPageType,
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
 		                    	remoteAuthCode = ret.data;
-		            		   	if(pushPageType == 1)
+		            		   	if(pullPageType == 1)
 		            			{
 			                        showReposSelectList(ret.dataEx);
 		            			}
@@ -441,10 +441,10 @@
 		function showReposSelectList(data)
 		{
 		   	console.log("showReposSelectList()");		   	
-		   	//$("#dialog-push-doc div[name='targetReposDiv']").show();
+		   	//$("#dialog-pull-doc div[name='targetReposDiv']").show();
 			console.log(data);
 			if(data.length > 0){
-				var c = $("#dialog-push-doc select[name='targetRepos']").children();
+				var c = $("#dialog-pull-doc select[name='targetRepos']").children();
 				$(c).remove();
 							
 				var selectListHtml = "";
@@ -452,17 +452,17 @@
 					var d = data[i];
 					selectListHtml += "<option value=" +d.id + ">" + d.name + "</option>";
 				}
-				$("#dialog-push-doc select[name='targetRepos']").append(selectListHtml);
+				$("#dialog-pull-doc select[name='targetRepos']").append(selectListHtml);
 			}
 		}
 		
 		function showDiskPathSelectList(data)
 		{
 		   	console.log("showDiskPathSelectList()");		   	
-		   	//$("#dialog-push-doc div[name='targetDiskPathDiv']").show();
+		   	//$("#dialog-pull-doc div[name='targetDiskPathDiv']").show();
 			console.log(data);
 			if(data.length > 0){
-				var c = $("#dialog-push-doc select[name='targetDiskPath']").children();
+				var c = $("#dialog-pull-doc select[name='targetDiskPath']").children();
 				$(c).remove();
 							
 				var selectListHtml = "";
@@ -470,54 +470,54 @@
 					var d = data[i];
 					selectListHtml += "<option value=" +d.id + ">" + d.path + "</option>";
 				}
-				$("#dialog-push-doc select[name='targetDiskPath']").append(selectListHtml);
+				$("#dialog-pull-doc select[name='targetDiskPath']").append(selectListHtml);
 			}
 		}
 		
 		function cleanReposSelectList()
 		{
 		   	console.log("cleanReposSelectList()");		   	
-		   	//$("#dialog-push-doc div[name='targetReposDiv']").show();
-			var c = $("#dialog-push-doc select[name='targetRepos']").children();
+		   	//$("#dialog-pull-doc div[name='targetReposDiv']").show();
+			var c = $("#dialog-pull-doc select[name='targetRepos']").children();
 			$(c).remove();
 							
 			var selectListHtml = "<option>暂无数据</option>";
-			$("#dialog-push-doc select[name='targetRepos']").append(selectListHtml);
+			$("#dialog-pull-doc select[name='targetRepos']").append(selectListHtml);
 		}
 		
 		function cleanDiskPathSelectList()
 		{
 		   	console.log("cleanDiskPathSelectList()");		   	
-		   	//$("#dialog-push-doc div[name='targetDiskPathDiv']").show();
-			var c = $("#dialog-push-doc select[name='targetDiskPath']").children();
+		   	//$("#dialog-pull-doc div[name='targetDiskPathDiv']").show();
+			var c = $("#dialog-pull-doc select[name='targetDiskPath']").children();
 			$(c).remove();
 							
 			var selectListHtml = "<option>暂无数据</option>";
-			$("#dialog-push-doc select[name='targetDiskPath']").append(selectListHtml);
+			$("#dialog-pull-doc select[name='targetDiskPath']").append(selectListHtml);
 		}
 		
-		function doPushDoc()
+		function doPullDoc()
 		{
 		   	var seletedServer = targetServerList[curServerIndex];
 		   	targetServerUrl = seletedServer.serverUrl;
 		   	userName = seletedServer.serverUserName;
 		   	pwd = seletedServer.serverPwd;	
 		   	
-		    if(pushPageType == 1)
+		    if(pullPageType == 1)
 		    {
-		    	targetReposId = $("#dialog-push-doc select[name='targetRepos']").val();
+		    	targetReposId = $("#dialog-pull-doc select[name='targetRepos']").val();
 		    }
 		    else
 		    {
-		    	targetDiskPath = $("#dialog-push-doc select[name='targetRepos']").text();
+		    	targetDiskPath = $("#dialog-pull-doc select[name='targetRepos']").text();
 		    }
 		    
-		    targetPath = $("#dialog-push-doc input[name='targetPath']").val();
-		    pushEntryPath = $("#dialog-push-doc input[name='pushEntryPath']").val();
+		    targetPath = $("#dialog-pull-doc input[name='targetPath']").val();
+		    pullEntryPath = $("#dialog-pull-doc input[name='pullEntryPath']").val();
 		    
 		    if(targetServerUrl)
 			{
-		  	  	pushDoc();
+		  	  	pullDoc();
 		      	return true;
 			}
 			else
@@ -527,15 +527,15 @@
 		    }
 		}
 		
-	   	function pushDoc()
+	   	function pullDoc()
 	   	{
 	    	$.ajax({
-	             url : "/DocSystem/Bussiness/pushDoc.do",
+	             url : "/DocSystem/Bussiness/pullDoc.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
 	                reposId : node.vid, 
-	                path: pushEntryPath,
+	                path: pullEntryPath,
 	                name : "",
 	                serverId: targetServerId,
 		            targetServerUrl: targetServerUrl,
@@ -546,33 +546,33 @@
 	             	//shareId: gShareId,
 	             },
 	             success : function (ret) {
-	            	console.log("pushDoc ret:", ret);            		
+	            	console.log("pullDoc ret:", ret);            		
 	             	if( "ok" == ret.status){             		
 	             		// 普通消息提示条
-	             		showPushResultInfo(ret);     		
+	             		showPullResultInfo(ret);     		
 	                }
 	                else
 	                {
-	                	showErrorMessage("推送失败:" + ret.msgInfo);
+	                	showErrorMessage("拉取失败:" + ret.msgInfo);
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage("推送失败:服务器异常！");
+	                showErrorMessage("拉取失败:服务器异常！");
 	            }
 	        });
 	    }
 	   	
-	   	function showPushResultInfo(ret)
+	   	function showPullResultInfo(ret)
 	   	{
 	   		var totalNum = ret.dataEx.totalCount;
 	   		var successNum = ret.dataEx.successCount;
-  			var pushResultInfo = "推送成功(共" + totalNum +"个)";
+  			var pullResultInfo = "拉取成功(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
-      			pushResultInfo = "推送完成 (共" + totalNum +"个)"+",成功 " + successNum + "个: " + ret.dataEx.msgInfo;
+      			pullResultInfo = "拉取完成 (共" + totalNum +"个)"+",成功 " + successNum + "个: " + ret.dataEx.msgInfo;
                 // 普通消息提示条
     			bootstrapQ.msg({
-    					msg : pushResultInfo,
+    					msg : pullResultInfo,
     					type : 'warning',
     					time : 2000,
     				    }); 
@@ -581,7 +581,7 @@
       		{
                 // 普通消息提示条
     			bootstrapQ.msg({
-    					msg : pushResultInfo,
+    					msg : pullResultInfo,
     					type : 'success',
     					time : 2000,
     				    }); 
@@ -593,8 +593,8 @@
 			init: function(_type, _parentNode){
 				init(_type, _parentNode);
 			},
-        	doPushDoc: function(){
-        		doPushDoc();
+        	doPullDoc: function(){
+        		doPullDoc();
             },
             deleteUserPreferServerConfirm: function()
             {
