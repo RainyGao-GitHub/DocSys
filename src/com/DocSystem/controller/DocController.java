@@ -98,6 +98,8 @@ public class DocController extends BaseController{
 			String content,
 			String commitMsg,
 			Integer shareId,
+			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload				
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** addDoc [" + path + name + "] ****************");
@@ -116,6 +118,42 @@ public class DocController extends BaseController{
 		if(!reposCheck(repos, rt, response))
 		{
 			return;
+		}
+		
+		FolderUploadAction folderUploadAction = null;
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
+		{
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+			folderUploadAction.beatTime = new Date().getTime();
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+			
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		String reposPath = Path.getReposPath(repos);
@@ -153,7 +191,7 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", repos, doc, null, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", repos, doc, null, folderUploadAction);
 		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
 		int ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, context); 
 		
@@ -329,7 +367,7 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", repos, doc, null, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", repos, doc, null, folderUploadAction);
 		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
 		int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, context);
 		
@@ -505,6 +543,8 @@ public class DocController extends BaseController{
 	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitMsg,
 			Integer shareId,
+			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload				
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** deleteDoc [" + path + name + "] ****************");
@@ -522,6 +562,42 @@ public class DocController extends BaseController{
 		if(!reposCheck(repos, rt, response))
 		{
 			return;
+		}
+
+		FolderUploadAction folderUploadAction = null;
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
+		{
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+			folderUploadAction.beatTime = new Date().getTime();
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+			
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		String reposPath = Path.getReposPath(repos);
@@ -550,7 +626,7 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", repos, doc, null, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", repos, doc, null, folderUploadAction);
 		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
 
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
@@ -574,6 +650,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/deleteDocRS.do")
 	public void deleteDocRS(Integer reposId, String remoteDirectory, String path, String name,
 			String commitMsg,
+			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
+			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload	
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -628,6 +706,41 @@ public class DocController extends BaseController{
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
+		FolderUploadAction folderUploadAction = null;
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
+		{
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+			folderUploadAction.beatTime = new Date().getTime();
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+			
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}
+		}
 		
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -648,7 +761,7 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", repos, doc, null, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", repos, doc, null, folderUploadAction);
 		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
 		
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
@@ -1912,6 +2025,7 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
 			String commitMsg,
+			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
 			Integer shareId,
 			Integer usage,	//UpgradeDocSystem, InstallOffice
@@ -1974,6 +2088,24 @@ public class DocController extends BaseController{
 				folderUploadAction.totalCount = totalCount;
 			}
 
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}			
 		}
 		
 		//Build Doc
