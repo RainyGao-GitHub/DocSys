@@ -8,9 +8,9 @@
     </div>
     <div class="modal-footer"></div>
 	<div class="form-group">
-	   <label name="targetType" class="col-sm-2 control-label">目录</label>
+	   <label class="col-sm-2 control-label">拉取</label>
 	   <div class="col-sm-10">
-	       <input type="text" name="targetPath" class="form-control"  maxlength="400"></input>
+	       <input type="text" name="pullEntryPath" class="form-control"  maxlength="400"></input>
 	   </div>
 	   <div name="pullControlDiv" style="margin-left:90px; margin-top:30px">
 		   <label>
@@ -105,26 +105,22 @@
 			console.log("targetSever:" + targetServer);
 	        $("#dialog-remoteStoragePull input[name='targetServer']").val(targetServer);
 
-			if(node.type == 1)
-			{
-				$("#dialog-remoteStoragePull label[name='targetType']").text("文件");
-			}
-			else
+			if(node.type == 2)
 			{
 				$("#dialog-remoteStoragePull span[name='recurciveEnSpan']").show();				
 			}
 						
-			//set targetPath
-			var targetPath = node.path;
-			if(targetPath == undefined || targetPath == "")
+			//set pullEntryPath
+			var pullEntryPath = node.path;
+			if(pullEntryPath == undefined || pullEntryPath == "")
 			{
-				targetPath = "/";
+				pullEntryPath = "/";
 			}
 			if(node.name)
 			{
-				targetPath += node.name;	
+				pullEntryPath += node.name;	
 			}
-	        $("#dialog-remoteStoragePull input[name='targetPath']").val(targetPath);
+	        $("#dialog-remoteStoragePull input[name='pullEntryPath']").val(pullEntryPath);
 		}
 
 		function doRemoteStoragePull()
