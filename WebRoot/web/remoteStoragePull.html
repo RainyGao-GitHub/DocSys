@@ -60,7 +60,7 @@
 		{
 			qiao.bs.confirm({
 		        id: 'recurcivePullConfirm',
-		        msg: '该操作将会拉取目录下的所有文件，是否允许？',
+		        msg: '该操作将拉取目录下的所有文件，是否允许？',
 		    },function(){
 		    	//确认
 		    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked","checked");
@@ -79,7 +79,7 @@
 		{
 			qiao.bs.confirm({
 		        id: 'forcePullConfirm',
-		        msg: '文件的本地修改将被强制覆盖，是否强制拉取？',
+		        msg: '文件可能被删除或覆盖，是否强制拉取？',
 		    },function(){
 		    	//确认
 		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked","checked");

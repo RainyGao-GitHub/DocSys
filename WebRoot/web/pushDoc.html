@@ -100,15 +100,12 @@
 	
 	function doSelectRecurciveConfirm()
 	{
-		console.log("skip sub-entries push confirm");
-		return;
-		
 		var recurciveEn = $("#dialog-push-doc input[name='recurciveEn']").is(':checked')? 1: 0;
 		if(recurciveEn == 1)
 		{
 			qiao.bs.confirm({
 		        id: 'recurcivePullConfirm',
-		        msg: '该操作将会推送目录下的所有文件，是否允许？',
+		        msg: '该操作将推送目录下的所有文件，是否允许？',
 		    },function(){
 		    	//确认
 		    	$("#dialog-push-doc input[name='recurciveEn']").attr("checked","checked");
@@ -122,15 +119,12 @@
 	
 	function doSelectForceConfirm()
 	{
-		console.log("skip force push confirm");
-		return;
-		
 		var forceEn = $("#dialog-push-doc input[name='forceEn']").is(':checked')? 1: 0;
 		if(forceEn == 1)
 		{
 			qiao.bs.confirm({
 		        id: 'forcePullConfirm',
-		        msg: '远程的文件修改将被强制覆盖，是否强制推送？',
+		        msg: '远程文件可能被删除或覆盖，是否强制推送？',
 		    },function(){
 		    	//确认
 		    	$("#dialog-push-doc input[name='forceEn']").attr("checked","checked");
