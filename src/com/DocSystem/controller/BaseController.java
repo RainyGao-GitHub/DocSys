@@ -3798,7 +3798,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			return 1;
+			//TODO: 目录上传会在结束时统一写入日志，因此返回2
+			return 2;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -4080,7 +4081,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			return 1;
+			//TODO: 目录上传会在结束时统一写入日志，因此返回2
+			return 2;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -7345,7 +7347,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			return 1;
+			//TODO: 目录上传会在结束时统一写入日志，因此返回2
+			return 2;
 		}
 		
 		//需要将文件Commit到版本仓库上去
@@ -7465,7 +7468,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			return 1;
+			//TODO: 目录上传会在结束时统一写入日志，因此返回2
+			return 2;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -7808,7 +7812,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			return 1;
+			//TODO: 目录上传会在结束时统一写入日志，因此返回2
+			return 2;
 		}
 		
 		//get RealDoc Full ParentPath
