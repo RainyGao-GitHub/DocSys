@@ -338,12 +338,16 @@ public class DocController extends BaseController{
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, type, true,localRootPath,localVRootPath, 0L, "");
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", repos, doc, null, folderUploadAction);
+		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
 
 		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}
 
@@ -355,8 +359,8 @@ public class DocController extends BaseController{
 			rt.setData(tmpDoc);
 			writeJson(rt, response);
 
-			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed: 文件已存在", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
 			return;
 		}
 		
@@ -366,24 +370,11 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		
-		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", repos, doc, null, folderUploadAction);
-		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
 		int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, context);
 		
 		writeJson(rt, response);
 		
-		switch(ret)
-		{
-		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			break;
-		}
+		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
 		
 	}
 	
