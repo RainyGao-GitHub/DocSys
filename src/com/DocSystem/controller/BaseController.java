@@ -3798,8 +3798,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			//TODO: 目录上传会在结束时统一写入日志，因此返回2
-			return 2;
+			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
+			return 1;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -4081,8 +4081,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			//TODO: 目录上传会在结束时统一写入日志，因此返回2
-			return 2;
+			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
+			return 1;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -7347,8 +7347,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			//TODO: 目录上传会在结束时统一写入日志，因此返回2
-			return 2;
+			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
+			return 1;
 		}
 		
 		//需要将文件Commit到版本仓库上去
@@ -7468,8 +7468,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			//TODO: 目录上传会在结束时统一写入日志，因此返回2
-			return 2;
+			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
+			return 1;
 		}
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -7812,8 +7812,8 @@ public class BaseController  extends BaseFunction{
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
-			//TODO: 目录上传会在结束时统一写入日志，因此返回2
-			return 2;
+			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
+			return 1;
 		}
 		
 		//get RealDoc Full ParentPath
