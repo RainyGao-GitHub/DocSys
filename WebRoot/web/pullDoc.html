@@ -294,6 +294,7 @@
 			var host = window.location.host; //域名带端口  
 			var serverUrl = protocol + host;
 			localServer.serverUrl = serverUrl;
+			localServer.serverType = "mxsdoc";
 			localServer.serverName = "本地服务器";	
 			localServer.isLocal = true;				
 			targetServerList.push(localServer);
@@ -401,7 +402,7 @@
 	
 		   	seletedServer = targetServerList[curServerIndex];
 			console.log("doSelectTargetSever() seletedServer:", seletedServer);
-		   	if(seletedServer.severType == "mxsdoc")
+		   	if(seletedServer.serverType == "mxsdoc")
 		   	{
 		   		//显示存储选择区域
 		   		$("#dialog-pull-doc div[name='targetStorageDiv']").show();
