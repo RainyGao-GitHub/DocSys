@@ -19,10 +19,10 @@
        	</div>
        <div class="clearfix"></div>
     </div>
-	<div class="form-group"  name="targetReposDiv"  style="display:none;">
+	<div class="form-group"  name="targetStorageDiv">
 		<label class="col-sm-2 control-label"></label>
 		<div class="col-sm-2" style="padding-right:0;">
-			<select class="form-control" name="targetType"  onchange="doSelectTargetType();" style="width: 100%;">   
+			<select class="form-control" name="targetStorageType"  onchange="doSelectTargetStorageType();" style="width: 100%;">   
 				<option value="1" selected="selected">仓库</option>
 				<option value="2">磁盘</option>
 			</select>
@@ -68,20 +68,10 @@
 <script src="js/md5.js"></script>
 <script type="text/javascript">
 	//type: 1: pull to repos for mxsdoc server 2:pull to file server
-	function pullDocPageInit(_node, _pullPageType)
+	function pullDocPageInit(_node)
 	{
-		console.log("pullDocPageInit() _pullPageType:" + _pullPageType, _node);
-		if(_pullPageType == 1)
-		{
-			$("#dialog-pull-doc div[name='targetReposDiv']").show();
-			$("#dialog-pull-doc div[name='targetDiskPathDiv']").hide();
-		}
-		else
-		{
-			$("#dialog-pull-doc div[name='targetReposDiv']").hide();
-			$("#dialog-pull-doc div[name='targetDiskPathDiv']").show();
-		}
-		DocPull.init(_node, _pullPageType);  
+		console.log("pullDocPageInit() node:", _node);
+		DocPull.init(_node);  
 	}
 	
 	function closePullDocDialog()
@@ -170,7 +160,6 @@
 	}
 	
 	var DocPull = (function () {
-		var pullPageType;
 		var node;
 		
 		var localServer = {};
@@ -178,23 +167,24 @@
 		
 		var pullEntryPath = "";
 		
-		//cur ServerInfo
+		//Selected ServerInfo
 		var curServerIndex = 0;
 		var targetServerId;
 		var targetServerUrl = "";
 		var userName = "";
 		var pwd = "";
+		//For mxsdoc server
 		var remoteAuthCode = "";
-		
+		var targetStorageType = 1;	//1:仓库 2:磁盘
+		var targetStorage;	//reposList and diskList
 		var targetReposId = "";
 		var targetDiskPath = "";
 		var targetPath = "";
 		
-		function init(_node, _pullPageType)
+		function init(_node)
 		{
-			console.log("DocPull.init() _pullPageType:" + _pullPageType, _node);
+			console.log("DocPull.init() node:", _node);
 
-			pullPageType = _pullPageType;
 			node = _node;
 
 			//set pullEntryPath
@@ -303,17 +293,14 @@
 			targetServerList = [];
 			curServerIndex = 0;
 			
-			if(pullPageType == 1)
-			{
-				//Build Local ServerUrl
-				var protocol = window.location.protocol + '//';
-				var host = window.location.host; //域名带端口  
-				var serverUrl = protocol + host;
-				localServer.serverUrl = serverUrl;
-				localServer.serverName = "本地服务器";	
-				localServer.isLocal = true;				
-				targetServerList.push(localServer);
-			}
+			//Build Local ServerUrl
+			var protocol = window.location.protocol + '//';
+			var host = window.location.host; //域名带端口  
+			var serverUrl = protocol + host;
+			localServer.serverUrl = serverUrl;
+			localServer.serverName = "本地服务器";	
+			localServer.isLocal = true;				
+			targetServerList.push(localServer);
 			
 			//获取用户自定义服务器列表
 			getUserPreferServerList(showTargetServerSelectList);
@@ -336,17 +323,11 @@
 			                    	{
 			                    		//filter out not mxsdoc servers
 			                    		var server = list[i];
-			                    		if(pullPageType == 2)
+			                    		if(server.serverType == undefined)
 			                    		{
-			                    			targetServerList.push(server);
+			                    			server.serverType = "mxsdoc";
 			                    		}
-			                    		else
-			                    		{
-			                    			if(server.serverType == undefined || server.serverType == "mxsdoc")
-			                    			{
-					                    		targetServerList.push(server);		                    	
-			                    			}
-			                    		}
+			                    		targetServerList.push(server);
 			                    	}
 		                    	}
 		                    	callback && callback();
@@ -417,29 +398,53 @@
 		   	console.log("doSelectTargetSever()");
 			curServerIndex = $("#dialog-pull-doc select[name='targetServer']").val();
 		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
-			getRemoteAuthCode();
-		}
-		
-		function getRemoteAuthCode()
-		{
-		   	console.log("getRemoteAuthCode()");
-		   	
-		   	//先清除仓库列表
+	
 		   	var seletedServer = targetServerList[curServerIndex];
-		   	if(seletedServer.severType && seletedServer.severType != "mxsdoc")
+			console.log("doSelectTargetSever() seletedServer:", seletedServer);
+		   	if(seletedServer.severType == "mxsdoc")
 		   	{
-		   		console.log("getRemoteAuthCode() serverType:" + seletedServer.severType);
-		   		return;
+		   		//显示存储选择区域
+		   		$("#dialog-pull-doc div[name='targetStorageDiv']").show();
+			   	
+		   		//设置targetStorageType
+		   		$("#dialog-pull-doc select[name='targetStorageType']")[0].selectIndex = 0; //选择存储类型：仓库
+				$("#dialog-pull-doc select[name='targetRepos']").show();
+				$("#dialog-pull-doc select[name='targetDiskPath']").hide();
+		   		
+		   		//先清除仓库选择列表和磁盘选择列表  	
+				cleanReposSelectList();
+				cleanDiskPathSelectList();
+				
+				//获取authCode以及仓库和磁盘列表
+				getRemoteAuthCode(seletedServer);
 		   	}
-		   	
-		   	if(pullPageType == 1)
-			{
-			   	cleanReposSelectList();
-			}
 		   	else
 		   	{
-			   	cleanDiskPathSelectList();
+		   		//隐藏存储选择区域
+		   		$("#dialog-pull-doc div[name='targetStorageDiv']").hide();		   		
 		   	}
+		}
+
+		function doSelectTargetStorageType() {
+		   	console.log("doSelectTargetStorageType()");
+			targetStorageType = $("#dialog-pull-doc select[name='targetStorageType']").val();
+		   	console.log("doSelectTargetStorageType() targetStorageType:" + targetStorageType);
+			
+		   	if(targetStorageType == 1)
+		   	{
+				$("#dialog-pull-doc select[name='targetRepos']").show();
+				$("#dialog-pull-doc select[name='targetDiskPath']").hide();
+		   	}
+		   	else
+		   	{
+				$("#dialog-pull-doc select[name='targetRepos']").hide();
+				$("#dialog-pull-doc select[name='targetDiskPath']").show();
+		   	}
+		}
+		
+		function getRemoteAuthCode(seletedServer)
+		{
+		   	console.log("getRemoteAuthCode() seletedServer:", seletedServer);		   	
 		   	
 		   	targetServerId = seletedServer.id;
 		   	targetServerUrl = seletedServer.serverUrl;
@@ -461,19 +466,13 @@
 		                	serverUrl: serverUrl,
 		                	userName: userName,
 		                	pwd: pwd,
-		                	type: pullPageType,
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
 		                    	remoteAuthCode = ret.data;
-		            		   	if(pullPageType == 1)
-		            			{
-			                        showReposSelectList(ret.dataEx);
-		            			}
-		            		   	else
-		            		   	{
-			                        showDiskPathSelectList(ret.dataEx);		            		   		
-		            		   	}
+		                    	targetStorage = ret.dataEx;
+			                    showReposSelectList(targetStorage.reposList);
+		            			showDiskPathSelectList(targetStorage.diskList);            		   		
 		                    }
 		                    else
 		                    {
@@ -489,7 +488,6 @@
 		function showReposSelectList(data)
 		{
 		   	console.log("showReposSelectList()");		   	
-		   	//$("#dialog-pull-doc div[name='targetReposDiv']").show();
 			console.log(data);
 			if(data.length > 0){
 				var c = $("#dialog-pull-doc select[name='targetRepos']").children();
@@ -507,8 +505,7 @@
 		function showDiskPathSelectList(data)
 		{
 		   	console.log("showDiskPathSelectList()");		   	
-		   	//$("#dialog-pull-doc div[name='targetDiskPathDiv']").show();
-			console.log(data);
+		 	console.log(data);
 			if(data.length > 0){
 				var c = $("#dialog-pull-doc select[name='targetDiskPath']").children();
 				$(c).remove();
@@ -525,7 +522,6 @@
 		function cleanReposSelectList()
 		{
 		   	console.log("cleanReposSelectList()");		   	
-		   	//$("#dialog-pull-doc div[name='targetReposDiv']").show();
 			var c = $("#dialog-pull-doc select[name='targetRepos']").children();
 			$(c).remove();
 							
@@ -536,7 +532,6 @@
 		function cleanDiskPathSelectList()
 		{
 		   	console.log("cleanDiskPathSelectList()");		   	
-		   	//$("#dialog-pull-doc div[name='targetDiskPathDiv']").show();
 			var c = $("#dialog-pull-doc select[name='targetDiskPath']").children();
 			$(c).remove();
 							
@@ -551,15 +546,21 @@
 		   	userName = seletedServer.serverUserName;
 		   	pwd = seletedServer.serverPwd;	
 		   	
-		    if(pullPageType == 1)
-		    {
-		    	targetReposId = $("#dialog-pull-doc select[name='targetRepos']").val();
-		    }
-		    else
-		    {
-		    	targetDiskPath = $("#dialog-pull-doc select[name='targetRepos']").text();
-		    }
-		    
+		   	if(seletedServer.serverType == "mxsdoc")
+		   	{
+		   		targetStorageType = $("#dialog-pull-doc select[name='targetStorageType']").val();
+		   		if(targetStorageType == 1)
+			    {
+			    	targetReposId = $("#dialog-pull-doc select[name='targetRepos']").val();
+			    	targetDiskPath = "";
+			    }
+			    else
+			    {
+			    	targetReposId = "";
+			    	targetDiskPath = $("#dialog-pull-doc select[name='targetRepos']").text();	    	
+			    }
+		   	}
+		   	
 		    targetPath = $("#dialog-pull-doc input[name='targetPath']").val();
 		    pullEntryPath = $("#dialog-pull-doc input[name='pullEntryPath']").val();
 		    
