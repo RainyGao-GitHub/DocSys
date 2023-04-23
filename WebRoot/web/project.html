@@ -3745,7 +3745,18 @@
 		}
 		return parentNode;
 	}
-
+	
+	function getParentNodeEx(node)
+	{
+		if(node.docId == 0 || node.docId == gRootDoc.docId)
+		{
+			return node
+		}
+		
+		var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+		return parentNode;
+	}
+	
 	//Get ParentNode of NodeId(zTree)
 	function getParentNodeByNodeId(nodeId)
 	{
@@ -4860,13 +4871,13 @@
 			{divider: true},
 			{text: '推送',  action: function(e){
 					e.preventDefault();
-					var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+					var parentNode = getParentNodeEx(gDocInfo);
 					showDocPushPanel(parentNode, 1);
 				}
 			},
 			{text: '拉取',  action: function(e){
 					e.preventDefault();
-					var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+					var parentNode = getParentNodeEx(gDocInfo);
 					showDocPullPanel(parentNode, 1);
 				}
 			},			
@@ -4874,7 +4885,7 @@
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
 						curRightClickedDocListNode = null;
-						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+						var parentNode = getParentNodeEx(gDocInfo);
 						DoPaste(gCopiedNodes, parentNode, gIsCopy);
 					}
 			},
@@ -4887,7 +4898,7 @@
 			{divider: true},
 			{text: '设置密码', action: function(e){
 					e.preventDefault();
-					var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+					var parentNode = getParentNodeEx(gDocInfo);
 	        		showDocPwdSetPanel(parentNode);
 				}
 			},
@@ -4895,13 +4906,13 @@
 			{text: '远程存储', subMenu: [
 				{text: '推送',  action: function(e){
 						e.preventDefault();
-						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+						var parentNode = getParentNodeEx(gDocInfo);
 						showRemoteStoragePushPanel(parentNode);
 					}
 				},
 				{text: '拉取',  action: function(e){
 						e.preventDefault();
-						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+						var parentNode = getParentNodeEx(gDocInfo);
 						showRemoteStoragePullPanel(parentNode);
 					}
 				},
@@ -4911,33 +4922,33 @@
 			{text: '更多...', subMenu: [
 						{text: '查看历史版本', action: function(e){
 									e.preventDefault();
-									var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+									var parentNode = getParentNodeEx(gDocInfo);
 				        			showDocHistory(parentNode,0);
 								}
 						},
 						{text: '查看备注历史', action: function(e){
 								e.preventDefault();
-								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+								var parentNode = getParentNodeEx(gDocInfo);
 			        			showDocHistory(parentNode, 1);
 		        			}
 						},
 						{divider: true},
 						{text: '锁定', action: function(e){
 								e.preventDefault();
-								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+								var parentNode = getParentNodeEx(gDocInfo);
 								lockDoc(parentNode, 1);
 							}
 						},
 						{text: '解锁', action: function(e){
 								e.preventDefault();
-								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+								var parentNode = getParentNodeEx(gDocInfo);
 								unlockDoc(parentNode, 1);
 							}
 						},
 						{divider: true},
 						{text: '刷新', action: function(e){
 									e.preventDefault();
-									var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+									var parentNode = getParentNodeEx(gDocInfo);
 									refreshDoc(parentNode, 0);
 								}
 						},
@@ -5025,7 +5036,7 @@
 				{divider: true},
 				{text: '粘贴', action: function(e){
 							e.preventDefault();
-							var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+							var parentNode = getParentNodeEx(gDocInfo);
 							DoPaste(gCopiedNodes, parentNode, gIsCopy);
 						}
 				},							
@@ -5083,13 +5094,13 @@
 				{text: '新建', subMenu: [
 					{text: '文件',  action: function(e){
 							e.preventDefault();
-							var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+							var parentNode = getParentNodeEx(gDocInfo);
 		        			newDoc(1,parentNode);
 						}
 					},
 					{text: '文件夹',  action: function(e){
 							e.preventDefault();
-							var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+							var parentNode = getParentNodeEx(gDocInfo);
 		        			newDoc(2,parentNode);
 						}
 					},
@@ -5179,7 +5190,7 @@
 				{divider: true},
 				{text: '粘贴', action: function(e){
 							e.preventDefault();
-							var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+							var parentNode = getParentNodeEx(gDocInfo);
 							DoPaste(gCopiedNodes, parentNode, gIsCopy);
 						}
 				},
