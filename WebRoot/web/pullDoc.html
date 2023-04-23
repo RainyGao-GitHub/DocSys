@@ -22,7 +22,7 @@
 	<div class="form-group"  name="targetStorageDiv">
 		<label class="col-sm-2 control-label"></label>
 		<div class="col-sm-2" style="padding-right:0;">
-			<select class="form-control" name="targetStorageType"  onchange="doSelectTargetStorageType();" style="width: 100%;">   
+			<select class="form-control" name="targetStorageType"  onchange="DocPull.doSelectTargetStorageType();" style="width: 100%;">   
 				<option value="1" selected="selected">仓库</option>
 				<option value="2">磁盘</option>
 			</select>
@@ -169,6 +169,7 @@
 		
 		//Selected ServerInfo
 		var curServerIndex = 0;
+		var seletedServer;
 		var targetServerId;
 		var targetServerUrl = "";
 		var userName = "";
@@ -176,7 +177,7 @@
 		//For mxsdoc server
 		var remoteAuthCode = "";
 		var targetStorageType = 1;	//1:仓库 2:磁盘
-		var targetStorage;	//reposList and diskList
+		var targetStorage = {};	//reposList and diskList
 		var targetReposId = "";
 		var targetDiskPath = "";
 		var targetPath = "";
@@ -206,8 +207,7 @@
 		function showEditUserPreferServerPanel()
 		{
 			console.log("showEditUserPreferServerPanel");
-			var curServer = targetServerList[curServerIndex];
-			if(curServer.isLocal)
+			if(seletedServer.isLocal)
 			{
 				showErrorMessage("无法修改本地服务器！");
 				return;
@@ -221,7 +221,6 @@
 				foot: false,
 				big: false,
 				callback: function(){
-					var seletedServer = targetServerList[curServerIndex];
 					editUserPreferServerPageInit(seletedServer, DocPull.initTaregetServerList);
 				},
 			});
@@ -231,14 +230,12 @@
 		{
 			console.log("deleteUserPreferServerConfirm()");
 			
-			var curServer = targetServerList[curServerIndex];
-			if(curServer.isLocal)
+			if(seletedServer.isLocal)
 			{			
 				showErrorMessage("无法删除本地服务器！");
 				return;
 			}
 			
-			var seletedServer = targetServerList[curServerIndex];
 			var showName = seletedServer.serverUrl;
 			if(seletedServer.serverName)
 			{		
@@ -291,7 +288,6 @@
 		function initTaregetServerList()
 		{	
 			targetServerList = [];
-			curServerIndex = 0;
 			
 			//Build Local ServerUrl
 			var protocol = window.location.protocol + '//';
@@ -302,6 +298,10 @@
 			localServer.isLocal = true;				
 			targetServerList.push(localServer);
 			
+			//设置当前选择的serverInfo
+			curServerIndex = 0;
+			seletedServer = localServer;
+		   	
 			//获取用户自定义服务器列表
 			getUserPreferServerList(showTargetServerSelectList);
 		}
@@ -399,7 +399,7 @@
 			curServerIndex = $("#dialog-pull-doc select[name='targetServer']").val();
 		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
 	
-		   	var seletedServer = targetServerList[curServerIndex];
+		   	seletedServer = targetServerList[curServerIndex];
 			console.log("doSelectTargetSever() seletedServer:", seletedServer);
 		   	if(seletedServer.severType == "mxsdoc")
 		   	{
@@ -416,7 +416,7 @@
 				cleanDiskPathSelectList();
 				
 				//获取authCode以及仓库和磁盘列表
-				getRemoteAuthCode(seletedServer);
+				getRemoteAuthCode();				
 		   	}
 		   	else
 		   	{
@@ -440,9 +440,11 @@
 				$("#dialog-pull-doc select[name='targetRepos']").hide();
 				$("#dialog-pull-doc select[name='targetDiskPath']").show();
 		   	}
+			
+		   	getRemoteAuthCode()
 		}
 		
-		function getRemoteAuthCode(seletedServer)
+		function getRemoteAuthCode()
 		{
 		   	console.log("getRemoteAuthCode() seletedServer:", seletedServer);		   	
 		   	
@@ -466,13 +468,19 @@
 		                	serverUrl: serverUrl,
 		                	userName: userName,
 		                	pwd: pwd,
+		                	type: targetStorageType
 		                },
 		                success : function (ret) {
 		                    if( "ok" == ret.status ){
 		                    	remoteAuthCode = ret.data;
-		                    	targetStorage = ret.dataEx;
-			                    showReposSelectList(targetStorage.reposList);
-		            			showDiskPathSelectList(targetStorage.diskList);            		   		
+		                    	if(targetStorageType == 1)
+		                    	{
+		                    		showReposSelectList(ret.dataEx);
+		                    	}
+		                    	else
+		                    	{
+		            				showDiskPathSelectList(ret.dataEx);           		  
+		                    	}
 		                    }
 		                    else
 		                    {
@@ -541,7 +549,6 @@
 		
 		function doPullDoc()
 		{
-		   	var seletedServer = targetServerList[curServerIndex];
 		   	targetServerUrl = seletedServer.serverUrl;
 		   	userName = seletedServer.serverUserName;
 		   	pwd = seletedServer.serverPwd;	
@@ -665,6 +672,9 @@
             },
             doSelectTargetSever: function(){
             	doSelectTargetSever();
+            },
+            doSelectTargetStorageType: function(){
+            	doSelectTargetStorageType();            	
             },
         };
 	})();
