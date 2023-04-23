@@ -4938,16 +4938,6 @@ public class BaseController  extends BaseFunction{
 		
 		return false;
 	}
-
-	private boolean docDetect(Repos repos, Doc doc) {
-		Log.debug("docDetect()");
-		List<Doc> entryList =  docSysGetDocList(repos, doc, false);
-		if(entryList != null)
-		{
-			return true;
-		}
-		return false;
-	}
 	
 	protected boolean deleteAllIndexForDoc(Repos repos, Doc doc) 
 	{

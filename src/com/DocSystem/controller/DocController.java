@@ -97,9 +97,9 @@ public class DocController extends BaseController{
 	public void addDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String content,
 			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush
 			Integer shareId,
-			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload				
+			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** addDoc [" + path + name + "] ****************");
@@ -213,9 +213,9 @@ public class DocController extends BaseController{
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
 	public void addDocRS(Integer reposId, String remoteDirectory, String path, String name,  Integer type,
 			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
+			Integer shareId,
 			String authCode,
-			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** addDocRS [" + path + name + "] ****************");
@@ -533,9 +533,9 @@ public class DocController extends BaseController{
 	@RequestMapping("/deleteDoc.do")
 	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
 			Integer shareId,
-			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload				
+			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** deleteDoc [" + path + name + "] ****************");
@@ -641,8 +641,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/deleteDocRS.do")
 	public void deleteDocRS(Integer reposId, String remoteDirectory, String path, String name,
 			String commitMsg,
-			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload	
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
+			Integer shareId,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -2016,9 +2016,9 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
 			String commitMsg,
-			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
 			Integer shareId,
+			String authCode,
 			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -2457,8 +2457,8 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
 			String commitMsg,
-			Integer isEnd,  //isRealDoc时标记所有文件上传都已经发送，此时path和name是指realDoc的path和name（此时不会有文件传输）, 否则用来标记单个VDOC传输结束			
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
+			Integer shareId,
 			String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
