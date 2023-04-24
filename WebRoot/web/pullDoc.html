@@ -92,6 +92,9 @@
 	
 	function doSelectRecurciveConfirm()
 	{
+		console.log("doSelectRecurciveConfirm() skip confirm");
+		return;
+		
 		var recurciveEn = $("#dialog-pull-doc input[name='recurciveEn']").is(':checked')? 1: 0;
 		if(recurciveEn == 1)
 		{
@@ -116,7 +119,7 @@
 		{
 			qiao.bs.confirm({
 		        id: 'forcePullConfirm',
-		        msg: '文件可能被删除或覆盖，是否强制拉取？',
+		        msg: '文件改动将被强制覆盖，是否强制拉取？',
 		    },function(){
 		    	//确认
 		    	$("#dialog-pull-doc input[name='forceEn']").attr("checked","checked");
@@ -567,7 +570,7 @@
 			    else
 			    {
 			    	targetReposId = "";
-			    	var diskIndex = $("#dialog-push-doc select[name='targetDiskPath']").val();	
+			    	var diskIndex = $("#dialog-pull-doc select[name='targetDiskPath']").val();	
 			    	targetDiskPath = targetStorage.diskList[diskIndex].path;
 			    }
 		   	}
