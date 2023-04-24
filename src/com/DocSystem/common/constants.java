@@ -164,24 +164,21 @@ public class constants {
 	public final static int DocSys_Personal_Edition = 3;
 	
 	public class PushType  {
-		public final static int autoPush  				= 10;	//LocalAdded and remoteNoChange
-		public final static int autoPushForce 			= 20;	//localChanged and rmoteNoChange 
-		public final static int manualPush 				= 21;	//localChanged and rmoteNoChange
-		public final static int manualPushForce 		= 30;	//localChanged or remoteChanged
-		public final static int autoBackupWithVerRepos 	= 31;	//localChanged or remoteChanged
-		public final static int autoBackupWithNewFolder	= 40;	//localChanged and do not check remoteDoc
-		public final static int pushToNewFolder			= 41;	//localChanged and do not check remoteDoc
-		public final static int remoteServer			= 50;	//localChanged and do not check remoteDoc, treat localNotExist as delete
-		public final static int force  					= 100;	//push Force no any check	
+		public final static int pushLocalAddAndRemoteNochange  						= 10;	//适用于只推送本地新增的场景
+		public final static int pushLocalChangedAndRemoteNotChanged_SkipDelete 		= 20;	//适用于只推送本地改动的场景（自动或手动推送） 
+		public final static int pushLocalChangedOrRemoteChanged_SkipDelete 			= 30;	//适用于强制推送本地文件的场景（自动或手动强制推送，远程的将被强制覆盖）
+		public final static int pushLocalChangedWithoutRemoteCheck					= 40;	//适用于远程目标没有参考意义的场景（例如自动备份到按时间创建的目录，或则推送到新目录）
+		public final static int pushLocalChangedWithoutRemoteCheckForce				= 50;	//适用于远程目标需要和本地保持完全一致的情况（本地文件不存在会当作删除操作进行推送）
+		public final static int force  												= 100;	//适用于基于行为的推送	
 	}
 	
 	public class PullType  {
-		public final static int autoPull  				= 10;	//remoteAdded and localNoChange
-		public final static int autoPullForce 			= 20;	//remoteChanged and localNoChange
-		public final static int manualPull	 			= 21;	//remoteChanged and localNoChange
-		public final static int manualPullForce 		= 30;	//remoteChanged or localChanged
-		public final static int remoteServerCheckOut	= 40;	//remoteChanged and localNotCheck, treat remoteNotExist as delete
-		public final static int force  					= 100;	//pull Force no any check	
+		public final static int pullRemoteAddAndLocalNochange  						= 10;	//适用于只拉取远程新增的场景
+		public final static int pullRemoteChangedAndLocalNotChanged_SkipDelete 		= 20;	//适用于只拉取远程改动的场景（自动或手动拉取）
+		public final static int pullRemoteChangedOrLocalChanged_SkipDelete 			= 30;	//适用于强制拉取远程文件的场景（自动或手动强制拉取，本地的将被强制覆盖）
+		public final static int pullRemoteChangedWithoutLocalCheck					= 40;	//适用于本地目标没有参考意义的场景（例如前置仓库）
+		public final static int pullRemoteChangedWithoutLocalCheckForce				= 50;	//适用于本地目标需要和远程保持完全一致的情况（例如前置仓库：远程文件不存在会当作删除操作进行拉取）
+		public final static int force  												= 100;	//适用于基于行为的拉取（目前没有使用场景，因为远程的行为无法获取）
 	}
 	
 	public class DocUpload  {
