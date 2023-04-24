@@ -476,11 +476,13 @@
 		                    	remoteAuthCode = ret.data;
 		                    	if(targetStorageType == 1)
 		                    	{
-		                    		showReposSelectList(ret.dataEx);
+		                    		targetStorage.reposList = ret.dataEx;
+		                    		showReposSelectList(targetStorage.reposList);
 		                    	}
 		                    	else
 		                    	{
-		            				showDiskPathSelectList(ret.dataEx);           		  
+		                    		targetStorage.diskList = ret.dataEx;
+		                    		showDiskPathSelectList(targetStorage.diskList);           		  
 		                    	}
 		                    }
 		                    else
@@ -522,7 +524,8 @@
 				var selectListHtml = "";
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					selectListHtml += "<option value=" +d.path + ">" + d.path + "</option>";
+					console.log("showDiskPathSelectList() path:[" +d.path + "]")
+					selectListHtml += "<option value=" + i + ">" + d.path + "</option>";
 				}
 				$("#dialog-push-doc select[name='targetDiskPath']").append(selectListHtml);
 			}
@@ -565,8 +568,10 @@
 			    else
 			    {
 			    	targetReposId = "";
-			    	targetDiskPath = $("#dialog-push-doc select[name='targetDiskPath']").val();	    	
+			    	var diskIndex = $("#dialog-push-doc select[name='targetDiskPath']").val();	
+			    	targetDiskPath = targetStorage.diskList[diskIndex].path;
 			    }
+		   		console.log("targetReposId:" + targetReposId + " targetDiskPath:[" + targetDiskPath + "]")
 		   	}
 		   	
 		    targetPath = $("#dialog-push-doc input[name='targetPath']").val();
