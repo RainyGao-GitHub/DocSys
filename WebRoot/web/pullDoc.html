@@ -522,7 +522,7 @@
 				var selectListHtml = "";
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					selectListHtml += "<option value=" +d.id + ">" + d.path + "</option>";
+					selectListHtml += "<option value=" +d.path + ">" + d.path + "</option>";
 				}
 				$("#dialog-pull-doc select[name='targetDiskPath']").append(selectListHtml);
 			}
@@ -565,7 +565,7 @@
 			    else
 			    {
 			    	targetReposId = "";
-			    	targetDiskPath = $("#dialog-pull-doc select[name='targetDiskPath']").text();	    	
+			    	targetDiskPath = $("#dialog-pull-doc select[name='targetDiskPath']").val();	    	
 			    }
 		   	}
 		   	
