@@ -3585,7 +3585,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(channel != null)
 			{
-				successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.manualPullForce, downloadList);
+				successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, downloadList);
 			}
 		}
 		
@@ -4800,10 +4800,10 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePushEnable && remote.autoPush != null && remote.autoPush == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
-							int pushType = constants.PushType.autoPush; //localAdded and remoteNoChange
+							int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged_SkipDelete;
 							if(remote.autoPushForce == 1)
 							{
-								pushType = constants.PushType.autoPushForce; //localChanged and remoteNotChanged
+								pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
 							}
 							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, rt);
 						}				
@@ -4811,10 +4811,10 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
-							int pullType = constants.PullType.autoPull; //remoteAdded and localNotChanged
+							int pullType = constants.PullType.pullRemoteAddAndLocalNochange; //remoteAdded and localNotChanged
 							if(remote.autoPullForce == 1)
 							{
-								pullType = constants.PullType.autoPullForce;	//remoteChanged and localNotChanged
+								pullType = constants.PullType.pullRemoteChangedAndLocalNotChanged_SkipDelete;	//remoteChanged and localNotChanged
 							}
 							
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
@@ -9141,7 +9141,7 @@ public class BaseController  extends BaseFunction{
 		//置类型仓库需要先将文件下载到本地
 		if(isFSM(repos) == false)
 		{
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.manualPullForce, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
 		}		
 	
 		String content = "";
@@ -12583,10 +12583,10 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = constants.PushType.autoPush;	//localAdded and remoteNotChanged
+		int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged_SkipDelete;
 		if(remote.autoPushForce == 1)
 		{
-			pushType = constants.PushType.autoPushForce; //localChanged and remoteNotChanged
+			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
 		}
 		
 		switch(action)
@@ -12674,10 +12674,10 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = constants.PushType.autoBackupWithNewFolder;	//localChanged and remoteNoCheck 
+		int pushType = constants.PushType.pushLocalChangedWithoutRemoteCheck;
 		if(remote.isVerRepos)
 		{
-			pushType = constants.PushType.autoBackupWithVerRepos;	//localChanged or remoteChanged
+			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
 		}
 
 		switch(action)
@@ -12751,10 +12751,10 @@ public class BaseController  extends BaseFunction{
 			
 		//push options
 		boolean recurcive = true;
-		int pushType = constants.PushType.autoBackupWithNewFolder;	//localChanged and remoteNoCheck 
+		int pushType = constants.PushType.pushLocalChangedWithoutRemoteCheck;	//localChanged and remoteNoCheck 
 		if(remote.isVerRepos)
 		{
-			pushType = constants.PushType.autoBackupWithVerRepos;	//localChanged or remoteChanged
+			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;	//localChanged or remoteChanged
 		}
 		
 		switch(action)

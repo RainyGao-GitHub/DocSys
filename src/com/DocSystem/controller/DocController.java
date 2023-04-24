@@ -3153,7 +3153,7 @@ public class DocController extends BaseController{
 			//文件服务器前置仓库不允许远程存储
 			remoteStorageEn = false;
 			//从文件服务器拉取文件
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.manualPullForce, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
 		}
 
 		Doc localEntry = fsGetDoc(repos, doc);
@@ -3973,7 +3973,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos) == false)
 				{
-					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.manualPullForce, null);
+					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
 				}
 			}
 			else	//获取历史版本文件
@@ -4649,7 +4649,7 @@ public class DocController extends BaseController{
 			//前置类型仓库，需要先将文件CheckOut出来
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.manualPullForce, null);
+				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -6914,7 +6914,7 @@ public class DocController extends BaseController{
 		{	
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, rootDoc, null, null, null, null, constants.PullType.manualPullForce, null);
+				channel.remoteServerCheckOut(repos, rootDoc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
 			}
 		}
 		
