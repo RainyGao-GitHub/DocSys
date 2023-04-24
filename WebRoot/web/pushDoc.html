@@ -92,6 +92,9 @@
 	
 	function doSelectRecurciveConfirm()
 	{
+		console.log("doSelectRecurciveConfirm() skip confirm");
+		return;
+		
 		var recurciveEn = $("#dialog-push-doc input[name='recurciveEn']").is(':checked')? 1: 0;
 		if(recurciveEn == 1)
 		{
@@ -116,7 +119,7 @@
 		{
 			qiao.bs.confirm({
 		        id: 'forcePushConfirm',
-		        msg: '文件可能被删除或覆盖，是否强制推送？',
+		        msg: '远程文件改动将被强制覆盖，是否强制推送？',
 		    },function(){
 		    	//确认
 		    	$("#dialog-push-doc input[name='forceEn']").attr("checked","checked");
