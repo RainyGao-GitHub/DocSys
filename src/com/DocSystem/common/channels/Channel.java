@@ -29,7 +29,7 @@ public interface Channel {
 
 	//Repos RemoteServer
 	String remoteServerDocCommit(Repos repos, Doc doc, String commitMsg, User accessUser, ReturnAjax rt,
-			boolean modifyEnable, int subDocCommitFlag);
+			boolean force, int subDocCommitFlag);
 	String remoteServerDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, User accessUser, ReturnAjax rt,
 			boolean isMove);
 	List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String localParentPath,
