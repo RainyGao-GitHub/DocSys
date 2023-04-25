@@ -73,17 +73,21 @@ function DragUpload(_parentNode) {
 	    	} 
 	    	else 
 	    	{
-	    	    console.log("getFileList() result is ready");
-	    		//console.log("getFileList() files:", files);	  
-	    		checkUserUploadRight(files,parentNode,uploadConfirm);
+	    	    console.log("getFileList() result is ready, result size:" + result.length);
+	    	    if(result.length > 0)
+	    	    {
+	    	    	checkUserUploadRight(files,parentNode,uploadConfirm);
+	    	    }
 	    		return;
 	    	}
 	    }
 	    
 	    //触发用户上传确认
-	    console.log("getFileList() result is ready");
-	    //console.log("getFileList() result:", result);	  
-	    checkUserUploadRight(result,parentNode,uploadConfirm);
+	    console.log("getFileList() result is ready, result size:" + result.length);
+	    if(result.length > 0)
+	    {
+	    	checkUserUploadRight(result,parentNode,uploadConfirm);
+	    }
 	}
 		
 	function _addFilesFromItems(items) {
@@ -136,9 +140,11 @@ function DragUpload(_parentNode) {
 	
 	    if(resultIsReady == true)
 	    {
-	    	console.log("_addFilesFromItems() result is ready");
-	    	//console.log("_addFilesFromItems() result:", result);	    	
-	    	checkUserUploadRight(result, parentNode, uploadConfirm);
+		    console.log("_addFilesFromItems() result is ready, result size:" + result.length);
+		    if(result.length > 0)
+		    {
+		    	checkUserUploadRight(result, parentNode, uploadConfirm);
+		    }
 	    }
 	    return;
 	}
@@ -206,9 +212,11 @@ function DragUpload(_parentNode) {
 	    	console.log("_addFilesFromDirectory successHandler readResponseCount:" + readResponseCount + " readRequestCount:" + readRequestCount);
 	    	if(readResponseCount >=  readRequestCount)
 	    	{
-	    		console.log("_addFilesFromDirectory successHandler result is ready");
-		    	//console.log("_addFilesFromDirectory() successHandler result:", result);	    	
-	    		checkUserUploadRight(result,parentNode,uploadConfirm);
+	    	    console.log("_addFilesFromDirectory() result is ready, result size:" + result.length);
+	    	    if(result.length > 0)
+	    	    {
+	    	    	checkUserUploadRight(result,parentNode,uploadConfirm);
+	    	    }
 	    	}
 		};
 		
