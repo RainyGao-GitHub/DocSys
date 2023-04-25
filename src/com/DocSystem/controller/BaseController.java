@@ -4655,12 +4655,6 @@ public class BaseController  extends BaseFunction{
 		
 		Repos repos =  action.getRepos();
 		Log.printObject("syncupForDocChange() repos:",repos);
-		if(isFSM(repos) == false)
-		{
-			Log.info("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
-			Log.info("syncupForDocChange() ************************ 结束自动同步 ****************************");
-			return true;
-		}
 
 		Doc doc = action.getDoc();
 		if(doc == null)
@@ -4680,25 +4674,40 @@ public class BaseController  extends BaseFunction{
 		switch(action.getAction())
 		{
 		case SYNC_ALL_FORCE: //用户强制刷新
-			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
-			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			if(isFSM(repos) == true)
+			{
+				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			}
 			syncUpDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
 			break;
 		case SYNC_ALL:	//用户手动刷新
-			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
-			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			if(isFSM(repos) == true)
+			{
+				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			}
 			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			break;
-		case SYNC_AUTO:			//仓库定时同步	
-			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
-			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+		case SYNC_AUTO:			//仓库定时同步
+			if(isFSM(repos) == true)
+			{
+				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			}
 			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			break;
 		case SYNC_VerRepos: //版本仓库同步
-			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+			if(isFSM(repos) == true)
+			{
+				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+			}
 			break;	
 		case SYNC_RemoteStorage: //远程存储同步
-			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			if(isFSM(repos) == true)
+			{
+				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+			}
 			break;	
 		case SYNC_SearchIndex: //强制刷新Index
 			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
