@@ -3625,7 +3625,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 	        }
 	        
-	        revision = channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2);
+	        revision = channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2);
 			if(revision == null)
 			{
 				return false;
@@ -7504,7 +7504,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
-				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("updateDoc_FSM() remoteServerDocCommit Failed", rt);
@@ -7614,7 +7614,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(channel.remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2) == null)
+			if(channel.remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, false, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
 				Log.info("updateDocEx_FSM() remoteServerDocCommit Failed");
@@ -7970,7 +7970,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
-				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("copySameDocForUpload() remoteServerDocCommit Failed", rt);
@@ -8060,7 +8060,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 				{	
-					if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, true, 2) == null)
+					if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 					{
 						docSysDebugLog("updateRealDocContent_FSM() remoteServerDocCommit Failed", rt);
 						docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
