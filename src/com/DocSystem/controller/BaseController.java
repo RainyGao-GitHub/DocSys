@@ -2795,7 +2795,22 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return list.get(0);
+		User user = list.get(0);
+		//检查密码字段
+		switch(systemLdapConfig.authMode)
+		{
+		case 3:
+			if(user.getPwd() != null)
+			{
+				if(pwd.equals(user.getPwd()) == false)
+				{
+					return null;
+				}
+			}
+			break;
+		}
+		
+		return user;
 	}
 	
 	//获取LDAP Server支持的SASL鉴权机制列表
@@ -2849,6 +2864,7 @@ public class BaseController  extends BaseFunction{
 		String CREDENTIALS = null;
         if(ldapConfig.userAccount != null && ldapConfig.userAccount.isEmpty() == false)
         {
+        	//使用配置的管理员账号密码进行鉴权
         	PRINCIPAL = ldapConfig.userAccount;
         	if(ldapConfig.userPassword != null && ldapConfig.userPassword.isEmpty() == false)
         	{
@@ -2870,14 +2886,38 @@ public class BaseController  extends BaseFunction{
     		}
             else
             {
-            	PRINCIPAL = loginMode + "=" + userName + "," + basedn;     
-            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
+            	if(ldapConfig.authMode == null)
+            	{
+            		ldapConfig.authMode = 0;
+            	}
             	
             	Log.debug("getLDAPConnection() authMode:" + ldapConfig.authMode); 
-    			if(ldapConfig.authMode != null && ldapConfig.authMode != 0)
-    			{
-    				CREDENTIALS = pwd;
-    			}
+    			switch(ldapConfig.authMode)
+            	{
+            	case 0: //使用loginMode + basedn鉴权
+	            	PRINCIPAL = loginMode + "=" + userName + "," + basedn;     
+	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
+	            	break;
+            	case 1:	//使用loginMode + basedn和密码鉴权
+            		PRINCIPAL = loginMode + "=" + userName + "," + basedn;     
+	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
+	            	CREDENTIALS = pwd;
+	            	break;
+            	case 2:	//直接使用登录用户名和密码进行鉴权
+            		PRINCIPAL = userName;     
+	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
+	            	CREDENTIALS = pwd;
+	            	break;
+            	case 3:	//直接使用登录用户名进行鉴权(在后续通过和userPassword信息进行对比校验)
+            		PRINCIPAL = userName;     
+	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
+	            	break;
+            	default:	//直接使用登录用户名和密码进行鉴权
+            		PRINCIPAL = userName;     
+	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
+	            	CREDENTIALS = pwd;
+	            	break;
+            	}
     		}	
         }
 		
