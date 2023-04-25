@@ -4522,15 +4522,18 @@
 				]
 			},
 			{divider: true},
-			{text: '推送',  action: function(e){
-					e.preventDefault();
-					showDocPushPanel(gRootDoc, 1);
-				}
-			},
-			{text: '拉取',  action: function(e){
-					e.preventDefault();
-					showDocPullPanel(gRootDoc, 1);
-				}
+			{text: '远程存储', subMenu: [
+				{text: '推送',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePushPanel(gRootDoc);
+					}
+				},
+				{text: '拉取',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePullPanel(gRootDoc);
+					}
+				},
+				]
 			},
 			{divider: true},
 			{text: '下载', action: function(e){
@@ -4560,18 +4563,15 @@
 				}
 			},
 			{divider: true},
-			{text: '远程存储', subMenu: [
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						showRemoteStoragePushPanel(gRootDoc);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						showRemoteStoragePullPanel(gRootDoc);
-					}
-				},
-				]
+			{text: '推送',  action: function(e){
+					e.preventDefault();
+					showDocPushPanel(gRootDoc, 1);
+				}
+			},
+			{text: '拉取',  action: function(e){
+					e.preventDefault();
+					showDocPullPanel(gRootDoc, 1);
+				}
 			},
 			{divider: true},
 			{text: '全选', action: function(e){
@@ -4647,15 +4647,18 @@
 				]
 			},
 			{divider: true},
-			{text: '推送',  action: function(e){
-					e.preventDefault();
-					showDocPushPanel(curRightClickedTreeNode, 1);
-				}
-			},
-			{text: '拉取',  action: function(e){
-					e.preventDefault();
-					showDocPullPanel(curRightClickedTreeNode, 1);
-				}
+			{text: '远程存储', subMenu: [
+				{text: '推送',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePushPanel(curRightClickedTreeNode);
+					}
+				},
+				{text: '拉取',  action: function(e){
+						e.preventDefault();
+						showRemoteStoragePullPanel(curRightClickedTreeNode);
+					}
+				},				
+				]
 			},
 			{divider: true},
 			{text: '预览', action: function(e){
@@ -4732,18 +4735,15 @@
 				}
 			},
 			{divider: true},
-			{text: '远程存储', subMenu: [
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						showRemoteStoragePushPanel(curRightClickedTreeNode);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						showRemoteStoragePullPanel(curRightClickedTreeNode);
-					}
-				},				
-				]
+			{text: '推送',  action: function(e){
+					e.preventDefault();
+					showDocPushPanel(curRightClickedTreeNode, 1);
+				}
+			},
+			{text: '拉取',  action: function(e){
+					e.preventDefault();
+					showDocPullPanel(curRightClickedTreeNode, 1);
+				}
 			},
 			{divider: true},
 			{text: '全选', action: function(e){
@@ -4869,18 +4869,21 @@
 				]
 			},
 			{divider: true},
-			{text: '推送',  action: function(e){
-					e.preventDefault();
-					var parentNode = getParentNodeEx(gDocInfo);
-					showDocPushPanel(parentNode, 1);
-				}
+			{text: '远程存储', subMenu: [
+				{text: '推送',  action: function(e){
+						e.preventDefault();
+						var parentNode = getParentNodeEx(gDocInfo);
+						showRemoteStoragePushPanel(parentNode);
+					}
+				},
+				{text: '拉取',  action: function(e){
+						e.preventDefault();
+						var parentNode = getParentNodeEx(gDocInfo);
+						showRemoteStoragePullPanel(parentNode);
+					}
+				},
+				]
 			},
-			{text: '拉取',  action: function(e){
-					e.preventDefault();
-					var parentNode = getParentNodeEx(gDocInfo);
-					showDocPullPanel(parentNode, 1);
-				}
-			},			
 			{divider: true},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
@@ -4903,21 +4906,18 @@
 				}
 			},
 			{divider: true},
-			{text: '远程存储', subMenu: [
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						var parentNode = getParentNodeEx(gDocInfo);
-						showRemoteStoragePushPanel(parentNode);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						var parentNode = getParentNodeEx(gDocInfo);
-						showRemoteStoragePullPanel(parentNode);
-					}
-				},
-				]
+			{text: '推送',  action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+					showDocPushPanel(parentNode, 1);
+				}
 			},
+			{text: '拉取',  action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+					showDocPullPanel(parentNode, 1);
+				}
+			},			
 			{divider: true},
 			{text: '更多...', subMenu: [
 						{text: '查看历史版本', action: function(e){
@@ -4984,16 +4984,20 @@
 						downloadDoc(treeNodes,true,1);
 					}
 				},
+
 				{divider: true},
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						showDocPushPanel(curRightClickedDocListNode, 1);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						showDocPullPanel(curRightClickedDocListNode, 1);
-					}
+				{text: '远程存储', subMenu: [
+					{text: '推送',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePushPanel(curRightClickedDocListNode);
+						}
+					},
+					{text: '拉取',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePullPanel(curRightClickedDocListNode);
+						}
+					},
+					]
 				},
 				{divider: true},
 				{text: '分享', action: function(e){
@@ -5056,18 +5060,15 @@
 					}
 				},
 				{divider: true},
-				{text: '远程存储', subMenu: [
-					{text: '推送',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePushPanel(curRightClickedDocListNode);
-						}
-					},
-					{text: '拉取',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePullPanel(curRightClickedDocListNode);
-						}
-					},
-					]
+				{text: '推送',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(curRightClickedDocListNode, 1);
+					}
+				},
+				{text: '拉取',  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(curRightClickedDocListNode, 1);
+					}
 				},
 				{divider: true},
 				{text: '查看历史版本', action: function(e){
@@ -5124,15 +5125,18 @@
 					]
 				},
 				{divider: true},
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						showDocPushPanel(curRightClickedDocListNode, 1);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						showDocPullPanel(curRightClickedDocListNode, 1);
-					}
+				{text: '远程存储', subMenu: [
+					{text: '推送',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePushPanel(curRightClickedDocListNode);
+						}
+					},
+					{text: '拉取',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePullPanel(curRightClickedDocListNode);
+						}
+					},
+					]
 				},
 				{divider: true},
 				{text: '预览', action: function(e){
@@ -5219,18 +5223,15 @@
 					}
 				},
 				{divider: true},
-				{text: '远程存储', subMenu: [
-					{text: '推送',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePushPanel(curRightClickedDocListNode);
-						}
-					},
-					{text: '拉取',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePullPanel(curRightClickedDocListNode);
-						}
-					},
-					]
+				{text: '推送',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(curRightClickedDocListNode, 1);
+					}
+				},
+				{text: '拉取',  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(curRightClickedDocListNode, 1);
+					}
 				},
 				{divider: true},
 				{text: '更多...', subMenu: [
@@ -5345,15 +5346,18 @@
 					}
 				},
 				{divider: true},
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						showDocPushPanel(gRootDoc, 1);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						showDocPullPanel(gRootDoc, 1);
-					}
+				{text: '远程存储', subMenu: [
+					{text: '推送',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePushPanel(gDocInfo);
+						}
+					},
+					{text: '拉取',  action: function(e){
+							e.preventDefault();
+							showRemoteStoragePullPanel(gDocInfo);
+						}
+					},
+					]
 				},
 				{divider: true},
 				{text: '分享', action: function(e){
@@ -5377,18 +5381,15 @@
 					}
 				},
 				{divider: true},
-				{text: '远程存储', subMenu: [
-					{text: '推送',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePushPanel(gDocInfo);
-						}
-					},
-					{text: '拉取',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePullPanel(gDocInfo);
-						}
-					},
-					]
+				{text: '推送',  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(gRootDoc, 1);
+					}
+				},
+				{text: '拉取',  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(gRootDoc, 1);
+					}
 				},
 				{divider: true},
 				{text: '查看历史版本', action: function(e){
