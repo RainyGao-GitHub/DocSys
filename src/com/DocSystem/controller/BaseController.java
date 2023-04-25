@@ -141,6 +141,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
+import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -159,6 +160,7 @@ import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.websocket.entity.DocPullContext;
+import com.DocSystem.websocket.entity.DocPushContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -4680,17 +4682,17 @@ public class BaseController  extends BaseFunction{
 		case SYNC_ALL_FORCE: //用户强制刷新
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
-			refreshDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
+			syncUpDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
 			break;
 		case SYNC_ALL:	//用户手动刷新
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
-			refreshDocSearchIndex(repos, doc, action, 2, false, rt);	//只刷新action.localChangesRootPath中的文件
+			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			break;
 		case SYNC_AUTO:			//仓库定时同步	
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
-			refreshDocSearchIndex(repos, doc, action, 2, false, rt);	//只刷新action.localChangesRootPath中的文件
+			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			break;
 		case SYNC_VerRepos: //版本仓库同步
 			syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
@@ -4699,7 +4701,7 @@ public class BaseController  extends BaseFunction{
 			syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			break;	
 		case SYNC_SearchIndex: //强制刷新Index
-			refreshDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
+			syncUpDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
 			break;		
 		default:
 			break;
@@ -4708,7 +4710,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private void refreshDocSearchIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, boolean force, ReturnAjax rt) {
+	private void syncUpDocSearchIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, boolean force, ReturnAjax rt) {
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == null)
 		{
@@ -4744,11 +4746,146 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		
-		//只更新有改动的文件节点
-		if(isLocalChanged(action.localChangesRootPath))
+		//基于文件名的IndexLib进行扫描并更新
+		refreshSearchIndexForDoc(repos, doc, subDocSyncupFlag, rt);
+	}
+
+	private boolean refreshSearchIndexForDoc(Repos repos, Doc doc, Integer subDocSyncupFlag, ReturnAjax rt) 
+	{
+    	Doc entry = docSysGetDoc(repos, doc, true);
+		//从DocName IndexLib中获取IndexEntryHashMap用于参照节点
+		String indexLib = getIndexLibPath(repos,0);
+    	Doc dbEntry = getIndexEntry(repos, doc, indexLib);
+    	
+    	//刷新索引
+    	return refreshSearchIndexForEntry(repos, entry, dbEntry, subDocSyncupFlag, rt);
+	}
+	
+	//根据doc和dbDoc确定是否需要更新索引的操作
+	private boolean refreshSearchIndexForEntry(Repos repos, Doc doc, Doc dbDoc, Integer subEntryPushFlag, ReturnAjax rt) 
+	{
+		//TODO: 如果是前置仓库，使用getLocalDocChangeType是否会出现问题，待确定
+		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, doc);	
+		switch(localChangeType )
 		{
-			rebuildIndexForDocEx(repos, doc, action.localChangesRootPath, rt);
+		case LOCALADD:
+			Log.debug("refreshSearchIndexForEntry() [" +doc.getPath() + doc.getName()+ "] 本地新增, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 2);
+			break;
+		case LOCALCHANGE:
+			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地改动, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 1);
+			break;			
+		case LOCALDELETE:
+			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地删除, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			break;
+		case LOCALDIRTOFILE:
+			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地目录->文件, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 1);
+			break;
+		case LOCALFILETODIR:
+			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地文件->目录, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 2);
+			break;
+		case NOCHANGE:
+			break;
+		default:
+			break;
 		}
+		
+		if(doc.getType() == 2 && localChangeType == DocChangeType.NOCHANGE)
+		{
+			refreshSearchIndexForSubEntries(repos, doc, subEntryPushFlag, rt);			
+		}
+		return true;	
+	}
+	
+	private boolean refreshSearchIndexForSubEntries(Repos repos, Doc doc, Integer subEntryPushFlag, ReturnAjax rt) 
+	{		
+		Log.debug("refreshSearchIndexForSubEntries() doc:[" + doc.getPath() + doc.getName() + "]");
+
+		//子目录不递归
+		if(subEntryPushFlag == 0)
+		{
+			return true;
+		}
+		
+		//子目录递归不继承
+		if(subEntryPushFlag == 1)
+		{
+			subEntryPushFlag = 0;
+		}
+		
+		List<Doc> entryList = docSysGetDocList(repos, doc, true);
+		if(entryList == null)
+		{
+			Log.info("refreshSearchIndexForSubEntries() getLocalEntryList return null for:" + doc.getPath() + doc.getName());			
+			return false;
+		}
+		
+		//从DocName IndexLib中获取IndexEntryHashMap用于参照节点
+		String indexLib = getIndexLibPath(repos,0);
+		HashMap<String, Doc> dbHashMap = getIndexEntryHashMap(repos, doc, indexLib);
+		for(int i=0; i<entryList.size(); i++)
+		{
+			Doc subLocalDoc  = entryList.get(i);
+			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
+			refreshSearchIndexForEntry(repos, subLocalDoc, subDbDoc, subEntryPushFlag, rt);	
+			if(subDbDoc != null)
+			{
+				dbHashMap.remove(subDbDoc.getName());
+			}
+		}
+		
+		//The entries remained in dbHashMap is the entries which have been deleted
+		for (Doc subDbDoc : dbHashMap.values()) {
+			Log.debug("doPushSubEntriesToRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());	
+			deleteAllIndexForDoc(repos, doc, 2);
+		}
+		return true;
+	}
+
+	protected static Doc getIndexEntry(Repos repos, Doc doc, String indexLib) 
+	{
+		//查询数据库
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setDocId(doc.getDocId());
+		
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib, 100);
+		if(list == null || list.size() == 0)
+		{
+			return null;
+		}
+		
+		return list.get(0);
+	}
+	
+	protected static HashMap<String, Doc> getIndexEntryHashMap(Repos repos, Doc doc, String indexLib) 
+	{
+		//查询数据库
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setPid(doc.getDocId());
+		
+		//子目录下的文件个数可能很多，但一万个应该是比较夸张了
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib, 10000);
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();
+		if(list != null)
+		{
+			docHashMap = new HashMap<String, Doc>();
+			for(int i=0; i<list.size(); i++)
+			{
+				Doc subDoc = list.get(i);
+				docHashMap.put(subDoc.getName(), subDoc);
+			}
+		}
+		return docHashMap;
 	}
 
 	private void syncUpLocalWithVerRepos(Repos repos, Doc doc, User login_user, CommonAction action, Integer subDocSyncupFlag,
@@ -4832,8 +4969,6 @@ public class BaseController  extends BaseFunction{
 									{
 										verReposPullPush(repos, true, rt);
 									}
-
-									rebuildIndexForDocEx(repos, doc, localChangesRootPath, rt);
 									FileUtil.delDir(localChangesRootPath);
 								}
 							}							
@@ -19752,7 +19887,7 @@ public class BaseController  extends BaseFunction{
 				//解锁目录
 				unlockDoc(doc, lockType, user);
 				
-				//update searchIndex
+				//更新文件搜索索引
 				rebuildIndexForDocEx(repos, doc, localChangesRootPath, rt);
 				FileUtil.delDir(localChangesRootPath);
 				
