@@ -5084,10 +5084,10 @@
 					}
 				},
 				{text: '备注历史', action: function(e){
-					e.preventDefault();
-				    showDocHistory(curRightClickedDocListNode,1);
-				}
-			},	
+						e.preventDefault();
+					    showDocHistory(curRightClickedDocListNode,1);
+					}
+				},	
 			]);
 		}
 		else
@@ -5296,9 +5296,10 @@
 							},
 							{divider: true},
 							{text: '备注历史', action: function(e){
-								e.preventDefault();
-							    showDocHistory(curRightClickedDocListNode,1);
-							},
+									e.preventDefault();
+								    showDocHistory(curRightClickedDocListNode,1);
+								}						
+							},							
 							{text: '下载备注', action: function(e){
 									e.preventDefault();
 									var treeNodes = [];
@@ -5306,7 +5307,6 @@
 									downloadDoc(treeNodes,true,2);
 								}
 							},
-						},							
 	   				]
 	   			},
 				{divider: true},
