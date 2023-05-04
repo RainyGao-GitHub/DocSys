@@ -4543,6 +4543,13 @@
 					}
 			},
 			{divider: true},
+			{text: '查看历史', action: function(e){
+						e.preventDefault();
+						curRightClickedTreeNode = null;
+		    			showDocHistory(gRootDoc,0);
+					}
+			},
+			{divider: true},
 			{text: '设置密码', action: function(e){
 					e.preventDefault();
 	        		showDocPwdSetPanel(gRootDoc);
@@ -4561,13 +4568,6 @@
 					}
 				},
 				]
-			},
-			{divider: true},
-			{text: '查看历史', action: function(e){
-						e.preventDefault();
-						curRightClickedTreeNode = null;
-		    			showDocHistory(gRootDoc,0);
-					}
 			},
 			{divider: true},
 			{text: '全选', action: function(e){
@@ -4716,6 +4716,12 @@
 					}
 			},
 			{divider: true},
+			{text: '查看历史', action: function(e){
+						e.preventDefault();
+			      		showDocHistory(curRightClickedTreeNode,0);
+					}
+			},
+			{divider: true},
 			{text: '设置密码', action: function(e){
 					e.preventDefault();
 	        		showDocPwdSetPanel(curRightClickedTreeNode);
@@ -4734,12 +4740,6 @@
 					}
 				},				
 				]
-			},
-			{divider: true},
-			{text: '查看历史', action: function(e){
-						e.preventDefault();
-			      		showDocHistory(curRightClickedTreeNode,0);
-					}
 			},
 			{divider: true},
 			{text: '全选', action: function(e){
@@ -4884,6 +4884,13 @@
 					}
 			},
 			{divider: true},
+			{text: '查看历史', action: function(e){
+						e.preventDefault();
+						var parentNode = getParentNodeEx(gDocInfo);
+		    			showDocHistory(parentNode,0);
+					}
+			},
+			{divider: true},
 			{text: '设置密码', action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeEx(gDocInfo);
@@ -4905,13 +4912,6 @@
 					}
 				},
 				]
-			},
-			{divider: true},
-			{text: '查看历史', action: function(e){
-						e.preventDefault();
-						var parentNode = getParentNodeEx(gDocInfo);
-		    			showDocHistory(parentNode,0);
-					}
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
@@ -5041,6 +5041,12 @@
 						}
 				},
 				{divider: true},
+				{text: '查看历史', action: function(e){
+						e.preventDefault();
+						showDocHistory(curRightClickedDocListNode,0);
+					}
+				},	
+				{divider: true},
 				{text: '设置密码', action: function(e){
 						e.preventDefault();
 		        		showDocPwdSetPanel(curRightClickedDocListNode);
@@ -5059,13 +5065,7 @@
 						}
 					},
 					]
-				},
-				{divider: true},
-				{text: '查看历史', action: function(e){
-						e.preventDefault();
-						showDocHistory(curRightClickedDocListNode,0);
-					}
-				},				
+				},			
 				{divider: true},
 				{text: '推送',  action: function(e){
 						e.preventDefault();
@@ -5204,6 +5204,12 @@
 						}
 				},
 				{divider: true},
+				{text: '查看历史', action: function(e){
+						e.preventDefault();
+						showDocHistory(curRightClickedDocListNode,0);
+					}
+				},
+				{divider: true},
 				{text: '设置密码', action: function(e){
 						e.preventDefault();
 		        		showDocPwdSetPanel(curRightClickedDocListNode);
@@ -5222,12 +5228,6 @@
 						}
 					},
 					]
-				},
-				{divider: true},
-				{text: '查看历史', action: function(e){
-						e.preventDefault();
-						showDocHistory(curRightClickedDocListNode,0);
-					}
 				},
 				{divider: true},
 				{text: '更多...', subMenu: [
@@ -5362,6 +5362,12 @@
 						}
 				},
 				{divider: true},
+				{text: '查看历史', action: function(e){
+						e.preventDefault();
+						showDocHistory(gDocInfo,0);
+					}
+				},
+				{divider: true},
 				{text: '设置密码', action: function(e){
 						e.preventDefault();
 		        		showDocPwdSetPanel(gDocInfo);
@@ -5380,12 +5386,6 @@
 						}
 					},
 					]
-				},
-				{divider: true},
-				{text: '查看历史', action: function(e){
-						e.preventDefault();
-						showDocHistory(gDocInfo,0);
-					}
 				},
 				{divider: true},
 				{text: '推送',  action: function(e){
