@@ -2013,18 +2013,18 @@
 		}
 		console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 
-		var title = "文件历史版本:" + docName;
+		var title = "历史版本:" + docName;
 		if(historyType == 0)
 		{
 			if(docId == 0)
 			{
-				var title = "仓库历史版本: " + gReposInfo.name;
+				var title = "历史版本:" + gReposInfo.name;
 			}
 			else
 			{
 				if(docType == 2)
 				{
-					var title = "目录历史版本:" + docName + "/";
+					var title = "历史版本:" + docName + "/";
 				}
 			}
 		}
@@ -2032,11 +2032,11 @@
 		{
 			if(docId == 0)
 			{
-				var title = "仓库备注历史:" + gReposInfo.name;
+				var title = "备注历史:" + gReposInfo.name;
 			}
 			else
 			{
-				var title = "文件备注历史:" + docName;
+				var title = "备注历史:" + docName;
 			}
 		}
 
@@ -4813,17 +4813,17 @@
 								}
 						},
 						{divider: true},
+						{text: '备注历史', action: function(e){
+								e.preventDefault();
+								showDocHistory(curRightClickedTreeNode,1);
+							}
+						},						
 						{text: '下载备注', action: function(e){
 									e.preventDefault();
 									var treeNodes = getSelectedNodes();
 									downloadDoc(treeNodes,true,2);
 								}
 						},
-						{text: '备注历史', action: function(e){
-								e.preventDefault();
-								showDocHistory(curRightClickedTreeNode,1);
-							}
-						},						
    				  ]
    			},
 			{divider: true},
@@ -4915,13 +4915,6 @@
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
-						{text: '备注历史', action: function(e){
-								e.preventDefault();
-								var parentNode = getParentNodeEx(gDocInfo);
-			        			showDocHistory(parentNode, 1);
-		        			}
-						},
-						{divider: true},
 						{text: '推送',  action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
@@ -4954,6 +4947,13 @@
 									refreshDoc(parentNode, 0);
 								}
 						},
+						{divider: true},
+						{text: '备注历史', action: function(e){
+								e.preventDefault();
+								var parentNode = getParentNodeEx(gDocInfo);
+			        			showDocHistory(parentNode, 1);
+		        			}
+						},						
 				  	]
    				},
 			]
@@ -5295,6 +5295,10 @@
 									}
 							},
 							{divider: true},
+							{text: '备注历史', action: function(e){
+								e.preventDefault();
+							    showDocHistory(curRightClickedDocListNode,1);
+							},
 							{text: '下载备注', action: function(e){
 									e.preventDefault();
 									var treeNodes = [];
@@ -5302,10 +5306,6 @@
 									downloadDoc(treeNodes,true,2);
 								}
 							},
-							{text: '备注历史', action: function(e){
-								e.preventDefault();
-							    showDocHistory(curRightClickedDocListNode,1);
-							}
 						},							
 	   				]
 	   			},
