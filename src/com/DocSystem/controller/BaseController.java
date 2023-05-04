@@ -4735,7 +4735,6 @@ public class BaseController  extends BaseFunction{
 				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			}
-			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			break;
 		case SYNC_VerRepos: //版本仓库同步
 			if(isFSM(repos) == true)
