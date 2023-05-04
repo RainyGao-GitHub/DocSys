@@ -4563,6 +4563,13 @@
 				]
 			},
 			{divider: true},
+			{text: '查看历史', action: function(e){
+						e.preventDefault();
+						curRightClickedTreeNode = null;
+		    			showDocHistory(gRootDoc,0);
+					}
+			},
+			{divider: true},
 			{text: '全选', action: function(e){
 					e.preventDefault();
 					selectAllNode(null);
@@ -4570,19 +4577,6 @@
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
-						{text: '仓库历史', action: function(e){
-									e.preventDefault();
-									curRightClickedTreeNode = null;
-				        			showDocHistory(gRootDoc,0);
-								}
-						},
-						{text: '备注历史', action: function(e){
-							e.preventDefault();
-							curRightClickedTreeNode = null;
-		        			showDocHistory(gRootDoc, 1);
-		        			}
-						},
-						{divider: true},
 						{text: '推送',  action: function(e){
 								e.preventDefault();
 								showDocPushPanel(gRootDoc, 1);
@@ -4609,6 +4603,13 @@
 									e.preventDefault();
 									refreshDoc(null, 0);
 								}
+						},
+						{divider: true},
+						{text: '备注历史', action: function(e){
+							e.preventDefault();
+							curRightClickedTreeNode = null;
+		        			showDocHistory(gRootDoc, 1);
+		        			}
 						},
 					]
    				},
@@ -4735,6 +4736,12 @@
 				]
 			},
 			{divider: true},
+			{text: '查看历史', action: function(e){
+						e.preventDefault();
+			      		showDocHistory(curRightClickedTreeNode,0);
+					}
+			},
+			{divider: true},
 			{text: '全选', action: function(e){
 					e.preventDefault();
 					selectAllNode(curRightClickedTreeNode);
@@ -4742,17 +4749,6 @@
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
-						{text: '历史版本', action: function(e){
-									e.preventDefault();
-						      		showDocHistory(curRightClickedTreeNode,0);
-								}
-						},
-						{text: '备注历史', action: function(e){
-								e.preventDefault();
-								showDocHistory(curRightClickedTreeNode,1);
-							}
-						},
-			   			{divider: true},
 						{text: '复制', subMenu: [
 				           	{text: '名字', action: function(e){
 									e.preventDefault();
@@ -4807,13 +4803,6 @@
 							}
 						},
 						{divider: true},
-						{text: '下载备注', action: function(e){
-									e.preventDefault();
-									var treeNodes = getSelectedNodes();
-									downloadDoc(treeNodes,true,2);
-								}
-						},
-						{divider: true},
 						{text: '刷新', action: function(e){
 									e.preventDefault();
 									if(curRightClickedTreeNode !== null)
@@ -4823,6 +4812,18 @@
 					    			}
 								}
 						},
+						{divider: true},
+						{text: '下载备注', action: function(e){
+									e.preventDefault();
+									var treeNodes = getSelectedNodes();
+									downloadDoc(treeNodes,true,2);
+								}
+						},
+						{text: '备注历史', action: function(e){
+								e.preventDefault();
+								showDocHistory(curRightClickedTreeNode,1);
+							}
+						},						
    				  ]
    			},
 			{divider: true},
@@ -4906,13 +4907,14 @@
 				]
 			},
 			{divider: true},
+			{text: '查看历史', action: function(e){
+						e.preventDefault();
+						var parentNode = getParentNodeEx(gDocInfo);
+		    			showDocHistory(parentNode,0);
+					}
+			},
+			{divider: true},
 			{text: '更多...', subMenu: [
-						{text: '历史版本', action: function(e){
-									e.preventDefault();
-									var parentNode = getParentNodeEx(gDocInfo);
-				        			showDocHistory(parentNode,0);
-								}
-						},
 						{text: '备注历史', action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
@@ -5059,16 +5061,11 @@
 					]
 				},
 				{divider: true},
-				{text: '历史版本', action: function(e){
+				{text: '查看历史', action: function(e){
 						e.preventDefault();
 						showDocHistory(curRightClickedDocListNode,0);
 					}
-				},
-				{text: '备注历史', action: function(e){
-						e.preventDefault();
-					    showDocHistory(curRightClickedDocListNode,1);
-					}
-				},					
+				},				
 				{divider: true},
 				{text: '推送',  action: function(e){
 						e.preventDefault();
@@ -5086,6 +5083,11 @@
 						showDocDetail(curRightClickedDocListNode);
 					}
 				},
+				{text: '备注历史', action: function(e){
+					e.preventDefault();
+				    showDocHistory(curRightClickedDocListNode,1);
+				}
+			},	
 			]);
 		}
 		else
@@ -5222,18 +5224,13 @@
 					]
 				},
 				{divider: true},
+				{text: '查看历史', action: function(e){
+						e.preventDefault();
+						showDocHistory(curRightClickedDocListNode,0);
+					}
+				},
+				{divider: true},
 				{text: '更多...', subMenu: [
-							{text: '历史版本', action: function(e){
-									e.preventDefault();
-									showDocHistory(curRightClickedDocListNode,0);
-								}
-							},
-							{text: '备注历史', action: function(e){
-									e.preventDefault();
-								    showDocHistory(curRightClickedDocListNode,1);
-								}
-							},
-							{divider: true},
 							{text: '复制', subMenu: [
 					           	{text: '名字', action: function(e){
 											e.preventDefault();
@@ -5288,14 +5285,6 @@
 								}
 							},
 							{divider: true},
-							{text: '下载备注', action: function(e){
-									e.preventDefault();
-									var treeNodes = [];
-									treeNodes.push(curRightClickedDocListNode);
-									downloadDoc(treeNodes,true,2);
-								}
-							},
-							{divider: true},
 							{text: '刷新', action: function(e){
 										e.preventDefault();
 										if(curRightClickedDocListNode !== null)
@@ -5305,6 +5294,19 @@
 						    			}
 									}
 							},
+							{divider: true},
+							{text: '下载备注', action: function(e){
+									e.preventDefault();
+									var treeNodes = [];
+									treeNodes.push(curRightClickedDocListNode);
+									downloadDoc(treeNodes,true,2);
+								}
+							},
+							{text: '备注历史', action: function(e){
+								e.preventDefault();
+							    showDocHistory(curRightClickedDocListNode,1);
+							}
+						},							
 	   				]
 	   			},
 				{divider: true},
@@ -5380,14 +5382,9 @@
 					]
 				},
 				{divider: true},
-				{text: '历史版本', action: function(e){
+				{text: '查看历史', action: function(e){
 						e.preventDefault();
 						showDocHistory(gDocInfo,0);
-					}
-				},
-				{text: '备注历史', action: function(e){
-						e.preventDefault();
-					    showDocHistory(gDocInfo,1);
 					}
 				},
 				{divider: true},
@@ -5407,6 +5404,12 @@
 						showDocDetail(gDocInfo);
 					}
 				},
+				{divider: true},
+				{text: '备注历史', action: function(e){
+						e.preventDefault();
+					    showDocHistory(gDocInfo,1);
+					}
+				},				
 			]);
 		}
 
