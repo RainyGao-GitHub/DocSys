@@ -4530,6 +4530,12 @@
 					}
 			},
 			{divider: true},
+			{text: '全选', action: function(e){
+					e.preventDefault();
+					selectAllNode(null);
+		    	}
+			},
+			{divider: true},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
 						curRightClickedTreeNode = null;
@@ -4570,14 +4576,25 @@
 				]
 			},
 			{divider: true},
-			{text: '全选', action: function(e){
-					e.preventDefault();
-					selectAllNode(null);
-		    	}
-			},
-			{divider: true},
 			{text: '更多...', subMenu: [
-						{text: '推送',  action: function(e){
+					{text: '备注', subMenu: [
+							{text: '查看历史', action: function(e){
+									e.preventDefault();
+									curRightClickedTreeNode = null;
+				        			showDocHistory(gRootDoc, 1);
+			        			}
+							},	
+							{text: '下载备注', action: function(e){
+									e.preventDefault();
+									var treeNodes = [];
+									treeNodes.push(gRootDoc);
+									downloadDoc(treeNodes,true,2);
+								}
+							},
+		   				]
+		   			},
+		   			{divider: true},
+					{text: '推送',  action: function(e){
 								e.preventDefault();
 								showDocPushPanel(gRootDoc, 1);
 							}
@@ -4603,13 +4620,6 @@
 									e.preventDefault();
 									refreshDoc(null, 0);
 								}
-						},
-						{divider: true},
-						{text: '备注历史', action: function(e){
-							e.preventDefault();
-							curRightClickedTreeNode = null;
-		        			showDocHistory(gRootDoc, 1);
-		        			}
 						},
 					]
    				},
@@ -4677,6 +4687,12 @@
 					}
 			},
 			{divider: true},
+			{text: '全选', action: function(e){
+					e.preventDefault();
+					selectAllNode(curRightClickedTreeNode);
+		    	}
+			},
+			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
 						gCopiedNodes = getSelectedNodes();
@@ -4742,12 +4758,6 @@
 				]
 			},
 			{divider: true},
-			{text: '全选', action: function(e){
-					e.preventDefault();
-					selectAllNode(curRightClickedTreeNode);
-		    	}
-			},
-			{divider: true},
 			{text: '更多...', subMenu: [
 						{text: '复制', subMenu: [
 				           	{text: '名字', action: function(e){
@@ -4781,6 +4791,22 @@
 							]
 						},
 						{divider: true},
+						{text: '备注', subMenu: [
+									{text: '查看历史', action: function(e){
+											e.preventDefault();
+											showDocHistory(curRightClickedTreeNode,1);
+										}
+									},						
+									{text: '下载备注', action: function(e){
+											e.preventDefault();
+											var treeNodes = [];
+											treeNodes.push(curRightClickedTreeNode);
+											downloadDoc(treeNodes,true,2);
+										}
+									},
+			   				  ]
+			   			},
+						{divider: true},
 						{text: '推送',  action: function(e){
 								e.preventDefault();
 								showDocPushPanel(curRightClickedTreeNode, 1);
@@ -4812,21 +4838,9 @@
 					    			}
 								}
 						},
-						{divider: true},
-						{text: '备注历史', action: function(e){
-								e.preventDefault();
-								showDocHistory(curRightClickedTreeNode,1);
-							}
-						},						
-						{text: '下载备注', action: function(e){
-									e.preventDefault();
-									var treeNodes = getSelectedNodes();
-									downloadDoc(treeNodes,true,2);
-								}
-						},
    				  ]
    			},
-			{divider: true},
+   			{divider: true},
 			{text: '属性', action: function(e){
 					e.preventDefault();
 					if(curRightClickedTreeNode == null)
@@ -4915,7 +4929,62 @@
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
-						{text: '推送',  action: function(e){
+						{text: '复制', subMenu: [
+				           	{text: '名字', action: function(e){
+									e.preventDefault();
+									var parentNode = getParentNodeEx(gDocInfo);
+				        			copyDocName(parentNode);
+								}
+							},
+							{text: '路径', action: function(e){
+										e.preventDefault();
+										var parentNode = getParentNodeEx(gDocInfo);
+					        			copyDocPath(parentNode);
+									}
+							},
+							{text: '链接', action: function(e){
+										e.preventDefault();
+										var parentNode = getParentNodeEx(gDocInfo);
+					        			copyUrl(parentNode);
+									}
+							},
+							{text: '本地路径', action: function(e){
+									e.preventDefault();
+									var parentNode = getParentNodeEx(gDocInfo);
+									var localPath = getDocLocalPath(gReposInfo, parentNode);
+									console.log("本地路径 localPath:" + localPath);
+									copyString(localPath);
+								}
+							},
+							{text: '下载链接', action: function(e){
+									e.preventDefault();
+									var parentNode = getParentNodeEx(gDocInfo);
+									parentNode.shareId = gShareId;
+							  		getDocFileLink(parentNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+								}
+							},
+							]
+						},
+						{divider: true},
+						{text: '备注', subMenu: [
+	   							{text: '查看历史', action: function(e){
+	   									e.preventDefault();
+	   									var parentNode = getParentNodeEx(gDocInfo);
+	   				        			showDocHistory(parentNode, 1);
+	   			        			}
+	   							},						
+	   							{text: '下载备注', action: function(e){
+										e.preventDefault();
+										var parentNode = getParentNodeEx(gDocInfo);
+										var treeNodes = [];
+										treeNodes.push(parentNode);
+										downloadDoc(treeNodes,true,2);
+				        			}
+								},						   							
+	   					  	]
+	   	   				},   	
+	   	   				{divider: true},
+   						{text: '推送',  action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
 								showDocPushPanel(parentNode, 1);
@@ -4946,16 +5015,9 @@
 									var parentNode = getParentNodeEx(gDocInfo);
 									refreshDoc(parentNode, 0);
 								}
-						},
-						{divider: true},
-						{text: '备注历史', action: function(e){
-								e.preventDefault();
-								var parentNode = getParentNodeEx(gDocInfo);
-			        			showDocHistory(parentNode, 1);
-		        			}
-						},						
+						},					
 				  	]
-   				},
+   				},			
 			]
 		);
 		//secondList上的右键菜单
@@ -5067,27 +5129,73 @@
 					]
 				},			
 				{divider: true},
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						showDocPushPanel(curRightClickedDocListNode, 1);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						showDocPullPanel(curRightClickedDocListNode, 1);
-					}
-				},
+				{text: '更多...', subMenu: [
+					{text: '复制', subMenu: [
+			           	{text: '名字', action: function(e){
+								e.preventDefault();
+			        			copyDocName(curRightClickedDocListNode);
+							}
+						},
+						{text: '路径', action: function(e){
+									e.preventDefault();
+				        			copyDocPath(curRightClickedDocListNode);
+								}
+						},
+						{text: '链接', action: function(e){
+									e.preventDefault();
+				        			copyUrl(curRightClickedDocListNode);
+								}
+						},
+						{text: '本地路径', action: function(e){
+								e.preventDefault();
+								var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
+								console.log("本地路径 localPath:" + localPath);
+								copyString(localPath);
+							}
+						},
+						{text: '下载链接', action: function(e){
+								e.preventDefault();
+								curRightClickedDocListNode.shareId = gShareId;
+						  		getDocFileLink(curRightClickedDocListNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+							}
+						},
+						]
+					},
+					{divider: true},					
+					{text: '备注', subMenu: [
+							{text: '查看历史', action: function(e){
+									e.preventDefault();
+								    showDocHistory(curRightClickedDocListNode,1);
+								}
+							},						
+							{text: '下载备注', action: function(e){
+									e.preventDefault();
+									var treeNodes = [];
+									treeNodes.push(curRightClickedDocListNode);
+									downloadDoc(treeNodes,true,2);
+								}
+							},
+		   				]
+		   			},
+		   			{divider: true},
+					{text: '推送',  action: function(e){
+							e.preventDefault();
+							showDocPushPanel(curRightClickedDocListNode, 1);
+						}
+					},
+					{text: '拉取',  action: function(e){
+							e.preventDefault();
+							showDocPullPanel(curRightClickedDocListNode, 1);
+						}
+					},	
+					]
+				},		
 				{divider: true},
 				{text: '属性', action: function(e){
 						e.preventDefault();
 						showDocDetail(curRightClickedDocListNode);
 					}
 				},
-				{text: '备注历史', action: function(e){
-						e.preventDefault();
-					    showDocHistory(curRightClickedDocListNode,1);
-					}
-				},	
 			]);
 		}
 		else
@@ -5263,6 +5371,22 @@
 								]
 							},
 							{divider: true},
+							{text: '备注', subMenu: [
+										{text: '查看历史', action: function(e){
+												e.preventDefault();
+											    showDocHistory(curRightClickedDocListNode,1);
+											}						
+										},							
+										{text: '下载备注', action: function(e){
+												e.preventDefault();
+												var treeNodes = [];
+												treeNodes.push(curRightClickedDocListNode);
+												downloadDoc(treeNodes,true,2);
+											}
+										},
+				   				]
+				   			},
+							{divider: true},
 							{text: '推送',  action: function(e){
 									e.preventDefault();
 									showDocPushPanel(curRightClickedDocListNode, 1);
@@ -5294,21 +5418,8 @@
 						    			}
 									}
 							},
-							{divider: true},
-							{text: '备注历史', action: function(e){
-									e.preventDefault();
-								    showDocHistory(curRightClickedDocListNode,1);
-								}						
-							},							
-							{text: '下载备注', action: function(e){
-									e.preventDefault();
-									var treeNodes = [];
-									treeNodes.push(curRightClickedDocListNode);
-									downloadDoc(treeNodes,true,2);
-								}
-							},
 	   				]
-	   			},
+	   			},   			
 				{divider: true},
 				{text: '属性', action: function(e){
 						e.preventDefault();
@@ -5388,28 +5499,73 @@
 					]
 				},
 				{divider: true},
-				{text: '推送',  action: function(e){
-						e.preventDefault();
-						showDocPushPanel(gRootDoc, 1);
-					}
-				},
-				{text: '拉取',  action: function(e){
-						e.preventDefault();
-						showDocPullPanel(gRootDoc, 1);
-					}
+				{text: '更多...', subMenu: [
+					{text: '复制', subMenu: [
+			           	{text: '名字', action: function(e){
+									e.preventDefault();
+				        			copyDocName(gDocInfo);
+								}
+						},
+						{text: '路径', action: function(e){
+									e.preventDefault();
+				        			copyDocPath(gDocInfo);
+								}
+						},
+						{text: '链接', action: function(e){
+									e.preventDefault();
+				        			copyUrl(gDocInfo);
+								}
+						},
+						{text: '本地路径', action: function(e){
+								e.preventDefault();
+								var localPath = getDocLocalPath(gReposInfo, gDocInfo);
+								console.log("本地路径 localPath:" + localPath);
+								copyString(localPath);
+							}
+						},
+						{text: '下载链接', action: function(e){
+								e.preventDefault();
+								gDocInfo.shareId = gShareId;
+						  		getDocFileLink(gDocInfo, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+							}
+						},
+						]
+					},
+					{divider: true},
+					{text: '备注', subMenu: [
+							{text: '查看历史', action: function(e){
+									e.preventDefault();
+								    showDocHistory(gDocInfo,1);
+								}
+							},	
+							{text: '下载备注', action: function(e){
+									e.preventDefault();
+									var treeNodes = [];
+									treeNodes.push(gDocInfo);
+									downloadDoc(treeNodes,true,2);
+								}
+							},
+		   				]
+		   			},
+		   			{divider: true},
+					{text: '推送',  action: function(e){
+							e.preventDefault();
+							showDocPushPanel(gRootDoc, 1);
+						}
+					},
+					{text: '拉取',  action: function(e){
+							e.preventDefault();
+							showDocPullPanel(gRootDoc, 1);
+						}
+					},
+					]
 				},
 				{divider: true},
 				{text: '属性', action: function(e){
 						e.preventDefault();
 						showDocDetail(gDocInfo);
 					}
-				},
-				{divider: true},
-				{text: '备注历史', action: function(e){
-						e.preventDefault();
-					    showDocHistory(gDocInfo,1);
-					}
-				},				
+				},			
 			]);
 		}
 
