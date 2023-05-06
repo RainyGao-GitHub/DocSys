@@ -2455,7 +2455,9 @@ public class DocController extends BaseController{
 
 	@RequestMapping("/uploadDocRS.do")
 	public void uploadDocRS(Integer reposId, String remoteDirectory, String path, String name, Long size, String checkSum,
+			String taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
 			MultipartFile uploadFile,
+			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
@@ -2495,7 +2497,7 @@ public class DocController extends BaseController{
 			if(null != chunkIndex)
 			{
 				String fileChunkName = name + "_" + chunkIndex;
-				if(FileUtil.saveFile(uploadFile, chunkTmpPath, fileChunkName) == null)
+				if(saveFileEx(uploadFile, fileLink, chunkTmpPath, fileChunkName) == false)
 				{
 					docSysDebugLog("uploadDocRS 分片文件 " + fileChunkName +  " 暂存失败!", rt);
 					docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
@@ -2516,7 +2518,7 @@ public class DocController extends BaseController{
 			//非分片或者是已经收到最后一个分片文件
 			if(null == chunkNum)	//非分片上传
 			{
-				if(FileUtil.saveFile(uploadFile, remoteDirectory + path, name) == null)
+				if(saveFileEx(uploadFile, fileLink, remoteDirectory + path, name) == false)
 				{
 					docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
 					docSysErrorLog("文件 " + name +  " 保存失败!", rt);
@@ -2742,7 +2744,7 @@ public class DocController extends BaseController{
 			//Save File chunk to tmp dir with name_chunkIndex
 			String fileChunkName = name + "_" + chunkIndex;
 			String userTmpDir = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
-			if(FileUtil.saveFile(uploadFile,userTmpDir,fileChunkName) == null)
+			if(saveFileEx(uploadFile, fileLink, userTmpDir, fileChunkName) == false)
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
@@ -2760,44 +2762,69 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//非分片上传或LastChunk Received
-		if(uploadFile != null) 
-		{			
-			if(commitMsg == null || commitMsg.isEmpty())
-			{
-				commitMsg = "上传 " + path + name;
-			}
-			String commitUser = reposAccess.getAccessUser().getName();
-			String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
+		//文件上传结束（如果是分片上传那么文件已经存入分片文件中）
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传 " + path + name;
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			
-			int ret = 0;
-			if(dbDoc == null || dbDoc.getType() == 0)
-			{
-				ret = addDoc(repos, doc, 
-						uploadFile,
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
-				
-				writeJson(rt, response);
-
-				uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
-				return;
-			}
-
-			//updateDoc
-			ret = updateDoc(repos, doc, 
-					uploadFile,  
-					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
+		int ret = 0;
 		
-			writeJson(rt, response);	
+		Integer saveType = getSaveType(chunkNum, uploadFile, fileLink, null);
+		
+		ret = saveDoc_FSM(repos, doc, 
+				saveType ,
+				uploadFile,
+				null,
+				fileLink,
+				chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 
-			uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
-			return;
+		writeJson(rt, response);
+		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
+		return;
+	}
+	
+	private Integer getSaveType(Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
+		if(chunkNum != null)
+		{
+			return SAVE_TYPE_ChunkedFile;	
 		}
 		
+		if(uploadFile != null)
+		{
+			return SAVE_TYPE_MultipartFile;
+		}
 		
-		docSysErrorLog("文件上传失败！", rt);
-		writeJson(rt, response);
-		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
+		if(fileLink != null)
+		{
+			return SAVE_TYPE_FileLink;
+		}
+
+		if(docData != null)
+		{
+			return SAVE_TYPE_DataBuffer;
+		}
+
+		return null;
+	}
+
+	private boolean saveFileEx(MultipartFile uploadFile, String fileLink, String localParentPath, String name) 
+	{
+		//Save File From uploadFile
+		if(uploadFile != null)
+		{
+			return FileUtil.saveFileEx(uploadFile, localParentPath, name);
+		}
+		
+		//Save File From fileLink
+		if(fileLink != null)
+		{
+			return saveFileFromUrl(fileLink, localParentPath,name);
+		}		
+		
+		return false;
 	}
 
 	/****************   Upload a Picture for Markdown ******************/

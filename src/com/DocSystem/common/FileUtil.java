@@ -751,6 +751,27 @@ public class FileUtil {
         return file.exists();
     }
     
+	public static boolean saveFileEx(MultipartFile srcFile,String path,String fileName)
+	{					
+		File forder1 = new File(path);
+		if(!forder1.exists())
+		{
+			Log.debug("saveFile() path:" + path + " not exists!");
+			forder1.mkdirs(); //创建目录
+		}
+		
+		File dstFile = new File(path,fileName);
+		
+		boolean ret = true;
+		try {
+			srcFile.transferTo(dstFile);
+		} catch (Exception e) {
+			ret = false;
+			e.printStackTrace();
+		}
+		return ret;
+	}
+    
 	public static String saveFile(MultipartFile srcFile,String path,String fileName)throws Exception{		
 		if(fileName==null || "".equals(fileName))
 		{

@@ -141,7 +141,6 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
-import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -160,7 +159,6 @@ import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.websocket.entity.DocPullContext;
-import com.DocSystem.websocket.entity.DocPushContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -4067,6 +4065,8 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
+		Doc preDoc = docSysGetDoc(repos, doc, false);
+		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
 		String localDocPath = localParentPath + doc.getName();
 		File localEntry = new File(localDocPath);
@@ -4105,23 +4105,42 @@ public class BaseController  extends BaseFunction{
 			{	
 				unlockDoc(doc, lockType, login_user);
 			}
-			docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
-			docSysDebugLog("saveDoc_FSM() updateRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+			docSysErrorLog("saveDoc_FSM " + doc.getName() +" Failed", rt);
+			docSysDebugLog("saveDoc_FSM() save [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 			return 0;
 		}
 		
-		//Update the DBEntry
 		Doc fsDoc = fsGetDoc(repos, doc);
-		doc.setCreateTime(fsDoc.getLatestEditTime());
-		doc.setLatestEditTime(fsDoc.getLatestEditTime());
-		if(dbAddDoc(repos, doc, false, false) == false)
-		{	
-			docSysDebugLog("saveDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+		Action Action_Type = Action.UPDATE;
+		if(preDoc == null || preDoc.getType() == 0)	//0: add  1: update
+		{
+			Action_Type = Action.ADD;
+			doc.setCreateTime(fsDoc.getLatestEditTime());
+			doc.setCreatorName(login_user.getName());
+			doc.setCreator(login_user.getId());
+			
+			doc.setLatestEditTime(fsDoc.getLatestEditTime());
+			doc.setLatestEditorName(login_user.getName());
+			doc.setLatestEditor(login_user.getId());
+			if(dbAddDoc(repos, doc, false, false) == false)
+			{	
+				docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+			}
+			 
+			rt.setData(doc);
+			rt.setMsgData("isNewNode");
+			docSysDebugLog("新增成功", rt); 
 		}
-		 
-		rt.setData(doc);
-		rt.setMsgData("isNewNode");
-		docSysDebugLog("新增成功", rt); 
+		else
+		{
+			doc.setLatestEditor(login_user.getId());
+			doc.setLatestEditorName(login_user.getName());
+			doc.setLatestEditTime(fsDoc.getLatestEditTime());
+			if(dbUpdateDoc(repos, doc, true) == false)
+			{
+				docSysWarningLog("saveDoc_FSM() updateDocInfo Failed", rt);
+			}
+		}	
 		
 		if(context.folderUploadAction != null)
 		{
@@ -4134,12 +4153,12 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Add Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action_Type, DocType.REALDOC, null, login_user, false);
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
-				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "addDoc", null, login_user, false);
-				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "addDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "saveDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "saveDoc", null, login_user, false);
 				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 			}

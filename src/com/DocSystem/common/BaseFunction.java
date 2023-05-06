@@ -105,6 +105,12 @@ public class BaseFunction{
 	protected static final long CONST_DAY = 24*CONST_HOUR;
 	protected static final long CONST_MONTH = 30*CONST_DAY;
 	protected static final long CONST_YEAR = 12*CONST_MONTH;
+
+	protected static final int SAVE_TYPE_ADD = 0;
+	protected static final int SAVE_TYPE_MultipartFile = 1;
+	protected static final int SAVE_TYPE_FileLink = 2;
+	protected static final int SAVE_TYPE_DataBuffer = 3;
+	protected static final int SAVE_TYPE_ChunkedFile = 4;
 	
 	//应用路径
     protected static String docSysIniPath = null;
