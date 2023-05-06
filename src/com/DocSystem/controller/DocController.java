@@ -39,7 +39,6 @@ import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
-import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -378,158 +377,7 @@ public class DocController extends BaseController{
 		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
 		
 	}
-	
-	/****************   Feeback  ******************/
-	@RequestMapping("/feeback.do")
-	public void feeback(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String content, 
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		Log.infoHead("************** feeback [" + path + name + "] ****************");
-		Log.info("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
-		ReturnAjax rt = new ReturnAjax();
 
-		//设置跨域访问允许
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
-		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
-		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
-		
-		docSysErrorLog("请在码云上提交意见与建议：<br>https://gitee.com/RainyGao/DocSys/issues", rt);
-		writeJson(rt, response);	
-		return;
-		
-		/*
-		if(name == null)
-		{
-			docSysErrorLog("意见不能为空！", rt);
-			writeJson(rt, response);	
-			return;
-		}
-		
-		if(reposId == null)
-		{
-			reposId = getReposIdForFeeback();		
-		}
-		if(path == null)
-		{
-			path = "";
-		}
-		if(type == null)
-		{
-			type = 1;
-		}
-		
-		Repos repos = getReposEx(reposId);
-		if(repos == null)
-		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);		
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, level, type, true, localRootPath, localVRootPath, 0L, "");
-		doc.setContent(content);
-		
-		String commitMsg = "用户反馈 " + path + name;
-		String commitUser = "游客";
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user != null)
-		{
-			commitUser = login_user.getName();
-		}
-		else
-		{
-			login_user = new User();
-			login_user.setId(0);
-		}
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null, null,null,null,commitMsg,commitUser,login_user,rt, actionList);
-		writeJson(rt, response);
-		
-		if(ret == false)
-		{
-			Log.debug("feeback() addDoc failed");
-			return;
-		}
-		
-		executeCommonActionList(actionList, rt);
-		*/
-	}
-
-	/****************   refresh a Document ******************/
-	@RequestMapping("/refreshDoc.do")
-	public void refreshDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String commitMsg, Integer force,
-			Integer shareId,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		Log.infoHead("************** refreshDoc [" + path + name + "] ****************");
-		Log.info("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
-		
-		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
-		if(reposAccess == null)
-		{
-			writeJson(rt, response);			
-			return;	
-		}
-		
-		Repos repos = getReposEx(reposId);
-		if(!reposCheck(repos, rt, response))
-		{
-			docSysDebugLog("refreshDoc() [" + path + name + "] reposCheck Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, null, null, buildSystemLogDetailContent(rt));
-			return;
-		}
-		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "同步 " + doc.getPath() + doc.getName();
-		}
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		if(checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
-		{
-			writeJson(rt, response);
-
-			docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "] was force locked", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
-			return;
-		}
-
-		//doc was not force locked
-		if(force != null && force == 1)
-		{
-			addDocToSyncUpList(actionList, repos, doc, Action.SYNC_ALL_FORCE, reposAccess.getAccessUser(), commitMsg, true);
-		}
-		else
-		{
-			addDocToSyncUpList(actionList, repos, doc, Action.SYNC_ALL, reposAccess.getAccessUser(), commitMsg, true);
-		}
-
-		writeJson(rt, response);
-
-		docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "]", rt);
-
-		String requestIP = getRequestIpAddress(request);
-
-		new Thread(new Runnable() {
-			public void run() {
-				Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
-				executeUniqueCommonActionList(actionList, rt);
-				addSystemLog(requestIP, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
-			}
-		}).start();
-	}
-	
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
 	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
@@ -1262,6 +1110,158 @@ public class DocController extends BaseController{
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
 		}
+	}
+
+	/****************   refresh a Document ******************/
+	@RequestMapping("/refreshDoc.do")
+	public void refreshDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitMsg, Integer force,
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("************** refreshDoc [" + path + name + "] ****************");
+		Log.info("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			docSysDebugLog("refreshDoc() [" + path + name + "] reposCheck Failed", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "同步 " + doc.getPath() + doc.getName();
+		}
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		if(checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
+		{
+			writeJson(rt, response);
+
+			docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "] was force locked", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		//doc was not force locked
+		if(force != null && force == 1)
+		{
+			addDocToSyncUpList(actionList, repos, doc, Action.SYNC_ALL_FORCE, reposAccess.getAccessUser(), commitMsg, true);
+		}
+		else
+		{
+			addDocToSyncUpList(actionList, repos, doc, Action.SYNC_ALL, reposAccess.getAccessUser(), commitMsg, true);
+		}
+
+		writeJson(rt, response);
+
+		docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "]", rt);
+
+		String requestIP = getRequestIpAddress(request);
+
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
+				executeUniqueCommonActionList(actionList, rt);
+				addSystemLog(requestIP, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+			}
+		}).start();
+	}
+	
+	
+	/****************   Feeback  ******************/
+	@RequestMapping("/feeback.do")
+	public void feeback(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String content, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("************** feeback [" + path + name + "] ****************");
+		Log.info("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
+		ReturnAjax rt = new ReturnAjax();
+
+		//设置跨域访问允许
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
+		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
+		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
+		
+		docSysErrorLog("请在码云上提交意见与建议：<br>https://gitee.com/RainyGao/DocSys/issues", rt);
+		writeJson(rt, response);	
+		return;
+		
+		/*
+		if(name == null)
+		{
+			docSysErrorLog("意见不能为空！", rt);
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(reposId == null)
+		{
+			reposId = getReposIdForFeeback();		
+		}
+		if(path == null)
+		{
+			path = "";
+		}
+		if(type == null)
+		{
+			type = 1;
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);		
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, level, type, true, localRootPath, localVRootPath, 0L, "");
+		doc.setContent(content);
+		
+		String commitMsg = "用户反馈 " + path + name;
+		String commitUser = "游客";
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user != null)
+		{
+			commitUser = login_user.getName();
+		}
+		else
+		{
+			login_user = new User();
+			login_user.setId(0);
+		}
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = addDoc(repos, doc, null, null,null,null,commitMsg,commitUser,login_user,rt, actionList);
+		writeJson(rt, response);
+		
+		if(ret == false)
+		{
+			Log.debug("feeback() addDoc failed");
+			return;
+		}
+		
+		executeCommonActionList(actionList, rt);
+		*/
 	}
 	
 	/****************   execute a Document ******************/
