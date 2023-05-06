@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -5034,6 +5035,37 @@ public class BaseFunction{
 			errorLog(e);
 		}
 		return returnJson;
+	}
+	
+	public boolean saveFileFromUrl(String url, String localPath, String fileName) {
+		Log.debug("saveFileFromUrl() url:" + url + " localPath:" + localPath + " fileName:" + fileName);
+        boolean ret = false;
+        File file = null;
+        FileOutputStream os = null;
+        
+        try {
+            File localDir = new File(localPath);
+            if(localDir.exists() == false)
+            {
+            	localDir.mkdirs();
+            }
+            file = new File(localPath + fileName);
+            os = new FileOutputStream(file);
+            
+    		ret = downloadFromUrl(url, os);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+        	if(os != null)
+        	{
+        		try {
+					os.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+        	}
+        }
+        return ret;		
 	}
 	
     public static boolean downloadFromUrl(String urlStr, OutputStream os) {

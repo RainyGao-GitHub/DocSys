@@ -3716,8 +3716,11 @@ public class BaseController  extends BaseFunction{
 	{
 		Log.debug("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 	
-		return addDoc_FSM(repos, doc,	//Add a empty file
+		return saveDoc_FSM(repos, doc,	
+					0, //Add a empty file
 					uploadFile, //For upload
+					null,
+					null,
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, context);
 	}
@@ -3737,12 +3740,16 @@ public class BaseController  extends BaseFunction{
 					commitMsg, commitUser, login_user, rt, context);
 	}
 
-	protected int addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
-			MultipartFile uploadFile, //For upload
-			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
+	//文件保存接口
+	protected int saveDoc_FSM(Repos repos, Doc doc, 
+			Integer saveType,	//0: 新建空目录或文件 1: saveFileFromUploadFile 2: saveFileFromDocData 3. saveFileFromFileLink 4. saveFileFromChunkedFiles
+			MultipartFile uploadFile,
+			byte[] docData,
+			String fileLink,
+			Integer chunkNum, Long chunkSize, String chunkParentPath,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, ActionContext context) 
 	{
-		Log.debug("addDoc_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
+		Log.debug("saveDoc_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 		
 		//add doc detail info
 		doc.setCreator(login_user.getId());
@@ -3752,7 +3759,7 @@ public class BaseController  extends BaseFunction{
 		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
-		String lockInfo = "addDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+		String lockInfo = "saveDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 
 		if(context.folderUploadAction == null)
 		{	
@@ -3764,7 +3771,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(docLock == null)
 			{
-				docSysDebugLog("addDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
+				docSysDebugLog("saveDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 				return 0;
 			}
 		}
@@ -3774,34 +3781,21 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localDocPath);
 		if(localEntry.exists())
 		{	
-			docSysDebugLog("addDoc_FSM() [" + doc.getPath() + doc.getName() +  "]　已存在！", rt);
+			docSysDebugLog("saveDoc_FSM() [" + doc.getPath() + doc.getName() +  "]　已存在！", rt);
 		}
-		
-		//addDoc接口用uploadFile以及chunkNum同时为空来判定是新建文件或上传了空文件
-		//TODO: 这个接口做的事情似乎有点太多了，后面有机会需要进行优化
+				
 		boolean ret = false;
-		if(uploadFile == null && chunkNum == null)
-		{	
-			//File must not exists
-			ret = createRealDoc(repos, doc, rt);
-			if(ret == false)
-			{	
-				if(context.folderUploadAction == null)
-				{	
-					unlockDoc(doc, lockType, login_user);
-				}
-				docSysErrorLog("createRealDoc " + doc.getName() +" Failed", rt);
-				docSysDebugLog("addDoc_FSM() createRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-				return 0;
-			}
-		}
-		else
+		switch(saveType)
 		{
+		case 0:
+			ret = createRealDoc(repos, doc, rt);
+			break;
+		default:
 			if(context.folderUploadAction != null)
 			{
 				//TODO: 根据分片个数来设置长心跳的超时时间
 				LongBeatCheckAction action = insertToLongBeatCheckListEx(context.folderUploadAction, repos, doc, chunkNum);
-				ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);
+				ret = saveRealDoc(repos, doc, saveType, uploadFile, docData, fileLink, chunkNum,chunkSize,chunkParentPath,rt);
 				if(action != null)
 				{
 					action.stopFlag = true;
@@ -3809,19 +3803,20 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				ret = updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt);				
-			}
-			
-			if(ret == false)
+				ret = saveRealDoc(repos, doc, saveType, uploadFile, docData, fileLink, chunkNum,chunkSize,chunkParentPath,rt);				
+			}	
+			break;
+		}
+		
+		if(ret == false)
+		{	
+			if(context.folderUploadAction == null)
 			{	
-				if(context.folderUploadAction == null)
-				{	
-					unlockDoc(doc, lockType, login_user);
-				}
-				docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
-				docSysDebugLog("addDoc_FSM() updateRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-				return 0;
+				unlockDoc(doc, lockType, login_user);
 			}
+			docSysErrorLog("updateRealDoc " + doc.getName() +" Failed", rt);
+			docSysDebugLog("saveDoc_FSM() updateRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+			return 0;
 		}
 		
 		//Update the DBEntry
@@ -3830,7 +3825,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		if(dbAddDoc(repos, doc, false, false) == false)
 		{	
-			docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+			docSysDebugLog("saveDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 		}
 		 
 		rt.setData(doc);
@@ -3865,7 +3860,7 @@ public class BaseController  extends BaseFunction{
 				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
-					docSysDebugLog("addDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+					docSysDebugLog("saveDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 					docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
 					return 0;
 				}
@@ -3873,7 +3868,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				unlockDoc(doc, lockType, login_user);
-				docSysDebugLog("addDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
+				docSysDebugLog("saveDoc_FSM() remoteServerDocCommit Failed: RemoteActionDisabled", rt);
 				docSysErrorLog("远程推送失败", rt); 
 				return 0;
 			}
@@ -9188,6 +9183,104 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		return true;
+	}
+	
+	//Function: saveRealDoc
+	protected boolean saveRealDoc(Repos repos, Doc doc, Integer saveType, 
+			MultipartFile uploadFile,
+			byte [] docData,
+			String fileLink,
+			Integer chunkNum, Long chunkSize, String chunkParentPath, 
+			ReturnAjax rt) 
+	{
+		String name = doc.getName();
+		Long fileSize = doc.getSize();
+		String fileCheckSum = doc.getCheckSum();
+		
+		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
+		String localDocPath = localParentPath + name;
+		
+		String retName = null;
+		try {
+			switch(saveType)
+			{
+			case 0:
+				if(doc.getType() == 1)
+				{
+					if(false == FileUtil.createFile(localParentPath, name))
+					{
+						return false;
+					}
+				}
+				else //if(type == 2) //目录
+				{
+					if(false == FileUtil.createDir(localDocPath))
+					{
+						return false;
+					}
+				}
+				break;
+			case 1:
+				retName = FileUtil.saveFile(uploadFile, localParentPath, name);
+				if(retName == null  || !retName.equals(name))
+				{
+					return false;
+				}
+				break;
+			case 2:
+				if(FileUtil.saveDataToFile(docData, localParentPath, name) == false)
+				{
+					return false;
+				}
+				break;
+			case 3:
+				if(saveFileFromUrl(fileLink, localParentPath,name) == false)
+				{
+					return false;
+				}
+				break;
+			case 4:
+				if(chunkNum == 1)	//单个文件直接复制
+				{
+					String chunk0Path = chunkParentPath + name + "_0";
+					if(new File(chunk0Path).exists() == false)
+					{
+						chunk0Path =  chunkParentPath + name;
+					}
+					if(FileUtil.copyFile(chunk0Path, localParentPath+name, true) == false)
+					{
+						return false;
+					}
+				}
+				else	//多个则需要进行合并
+				{
+					retName = combineChunks(localParentPath,name,chunkNum,chunkSize,chunkParentPath);
+					if(retName == null  || !retName.equals(name))
+					{
+						return false;
+					}
+				}
+				break;
+			default:
+				Log.debug("saveRealDoc() unkown saveType:" + saveType);				
+				return false;
+			}
+		} catch (Exception e) {
+			Log.debug("saveRealDoc() save [" + localParentPath + name +"] 异常！");
+			docSysDebugLog(e.toString(), rt);
+			Log.info(e);
+			return false;
+		}
+		
+		//Verify the size and FileCheckSum
+		if(false == checkFileSizeAndCheckSum(localParentPath, name, fileSize, fileCheckSum))
+		{
+			Log.debug("saveRealDoc() checkFileSizeAndCheckSum Error");
+			return false;
+		}
+		
+		encryptFile(repos, localParentPath, name);
 		return true;
 	}
 	
