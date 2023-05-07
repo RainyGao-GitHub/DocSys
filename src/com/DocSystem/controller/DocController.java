@@ -2483,94 +2483,16 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			//如果是分片文件，则保存分片文件
-			String localParentPath = remoteDirectory + path;
-			String chunkTmpPath = localParentPath;
-			if(null != chunkIndex)
-			{
-				String fileChunkName = name + "_" + chunkIndex;
-				if(saveFileEx(uploadFile, fileLink, chunkTmpPath, fileChunkName) == false)
-				{
-					docSysDebugLog("uploadDocRS 分片文件 " + fileChunkName +  " 暂存失败!", rt);
-					docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
-					writeJson(rt, response);
-					
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
-					return;
-				}
-				
-				if(chunkIndex < (chunkNum-1))
-				{
-					rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
-					writeJson(rt, response);
-					return;					
-				}
-			}
-			
-			//非分片或者是已经收到最后一个分片文件
-			if(null == chunkNum)	//非分片上传
-			{
-				if(saveFileEx(uploadFile, fileLink, remoteDirectory + path, name) == false)
-				{
-					docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
-					docSysErrorLog("文件 " + name +  " 保存失败!", rt);
-				
-					writeJson(rt, response);
-					
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
-					return;
-				}
-
-				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
-
-				writeJson(rt, response);
-				
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
-				return;
-			}
-			
-			if(chunkNum == 1)	//单个分片文件直接复制
-			{
-				String chunk0Path = chunkTmpPath + name + "_0";
-				if(new File(chunk0Path).exists() == false)
-				{
-					chunk0Path =  chunkTmpPath + name;
-				}
-				if(FileUtil.moveFileOrDir(chunkTmpPath, name + "_0", localParentPath, name, true) == false)
-				{
-					docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
-					docSysErrorLog("文件 " + name +  " 保存失败!", rt);
-
-					writeJson(rt, response);
-
-					addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
-					return;
-				}
-
-				writeJson(rt, response);
-				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
-				return;
-			}
-			
-			//多个则需要进行合并
-			combineChunks(localParentPath,name,chunkNum,chunkSize,chunkTmpPath);
-			deleteChunks(name,chunkIndex, chunkNum,chunkTmpPath);
-			//Verify the size and FileCheckSum
-			if(false == checkFileSizeAndCheckSum(localParentPath,name, size, checkSum))
-			{
-				docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验失败", rt);
-				docSysErrorLog("文件校验失败", rt);
-				
-				writeJson(rt, response);
-
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
-				return;
-			}
-			
-			writeJson(rt, response);
-			docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验成功", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));				
+			uploadDocToDisk(remoteDirectory, path, name, size, checkSum,
+					taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
+					uploadFile,
+					fileLink,
+					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash,
+					commitMsg,
+					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+					reposAccess,
+					rt,
+					response, request, session);
 			return;			
 		}
 		
@@ -2583,6 +2505,30 @@ public class DocController extends BaseController{
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 				
+		uploadDocToRepos(repos, path, name, size, checkSum,
+				taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
+				uploadFile,
+				fileLink,
+				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);
+		return;
+	}
+	
+	private void uploadDocToRepos(Repos repos, String path, String name, Long size, String checkSum, 
+			String taskId,
+			MultipartFile uploadFile, 
+			String fileLink, 
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, 
+			String commitMsg, 
+			String dirPath, Long batchStartTime, Integer totalCount, Integer isEnd, 
+			ReposAccess reposAccess, 
+			ReturnAjax rt, 
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) 
+	{
 		//Get FolderUploadAction
 		FolderUploadAction folderUploadAction = null;
 		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
@@ -2624,7 +2570,7 @@ public class DocController extends BaseController{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "文件上传", repos, doc, null, folderUploadAction);
 		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
@@ -2655,7 +2601,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
-			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+			Doc parentDoc = buildBasicDoc(repos.getId(), doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 			DocAuth parentDocUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask());
 			if(parentDocUserAuth == null)
 			{
@@ -2774,10 +2720,111 @@ public class DocController extends BaseController{
 				chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 
 		writeJson(rt, response);
-		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
-		return;
+		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);				
 	}
-	
+
+	private void uploadDocToDisk(String remoteDirectory, String path, String name, Long size, String checkSum,
+			String taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
+			MultipartFile uploadFile,
+			String fileLink,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
+			ReposAccess reposAccess,
+			ReturnAjax rt,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) 
+	{
+		// TODO Auto-generated method stub
+		//如果是分片文件，则保存分片文件
+		String localParentPath = remoteDirectory + path;
+		String chunkTmpPath = localParentPath;
+		if(null != chunkIndex)
+		{
+			String fileChunkName = name + "_" + chunkIndex;
+			if(saveFileEx(uploadFile, fileLink, chunkTmpPath, fileChunkName) == false)
+			{
+				docSysDebugLog("uploadDocRS 分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				writeJson(rt, response);
+				
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+			
+			if(chunkIndex < (chunkNum-1))
+			{
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;					
+			}
+		}
+		
+		//非分片或者是已经收到最后一个分片文件
+		if(null == chunkNum)	//非分片上传
+		{
+			if(saveFileEx(uploadFile, fileLink, remoteDirectory + path, name) == false)
+			{
+				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
+			
+				writeJson(rt, response);
+				
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+
+			docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
+
+			writeJson(rt, response);
+			
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			return;
+		}
+		
+		if(chunkNum == 1)	//单个分片文件直接复制
+		{
+			String chunk0Path = chunkTmpPath + name + "_0";
+			if(new File(chunk0Path).exists() == false)
+			{
+				chunk0Path =  chunkTmpPath + name;
+			}
+			if(FileUtil.moveFileOrDir(chunkTmpPath, name + "_0", localParentPath, name, true) == false)
+			{
+				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
+
+				writeJson(rt, response);
+
+				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+
+			writeJson(rt, response);
+			docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			return;
+		}
+		
+		//多个则需要进行合并
+		combineChunks(localParentPath,name,chunkNum,chunkSize,chunkTmpPath);
+		deleteChunks(name,chunkIndex, chunkNum,chunkTmpPath);
+		//Verify the size and FileCheckSum
+		if(false == checkFileSizeAndCheckSum(localParentPath,name, size, checkSum))
+		{
+			docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验失败", rt);
+			docSysErrorLog("文件校验失败", rt);
+			
+			writeJson(rt, response);
+
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+			return;
+		}
+		
+		writeJson(rt, response);
+		docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验成功", rt);
+		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));			
+	}
+
 	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
 		if(doc.getType() == 2)
 		{
