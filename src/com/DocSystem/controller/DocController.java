@@ -7053,7 +7053,7 @@ public class DocController extends BaseController{
 	
 	//系统日志精确查询
 	@RequestMapping("/querySystemLog.do")
-	public void querySystemLog(SystemLog systemLog,
+	public void querySystemLog(String id, String event, String path, String name, String queryId,
 			String authCode,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
@@ -7068,8 +7068,15 @@ public class DocController extends BaseController{
 			return;
 		}
 
+		SystemLog queryLog = new SystemLog();
+		queryLog.id = id;
+		queryLog.event = event;
+		queryLog.path = path;
+		queryLog.name = name;
+		queryLog.queryId = queryId;
+		
 		QueryResult queryResult = new QueryResult();
-		List<SystemLog> list = BussinessBase.getSystemLogList(systemLog, null, null);
+		List<SystemLog> list = BussinessBase.getSystemLogList(queryLog, null, null);
 		Integer total = queryResult.total;
 		Log.debug("getSystemLogList() total:" + total);
 		
