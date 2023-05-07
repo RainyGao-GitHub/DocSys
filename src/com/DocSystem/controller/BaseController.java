@@ -10037,8 +10037,13 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	protected boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Long fileSize,
-			String fileCheckSum) {
+	protected boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Long fileSize, String fileCheckSum) {
+		if(fileSize == null)
+		{
+			//fileSize is null, means no need to check
+			return true;
+		}
+		
 		File file = new File(localDocParentPath,name);
 		return checkFileSizeAndCheckSum(file.length(), null, fileSize, fileCheckSum);
 	}

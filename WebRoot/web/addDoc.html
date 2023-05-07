@@ -14,6 +14,13 @@
 	       </div>
 	       <div class="clearfix"></div>
 	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">文件链接</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="fileLink" style="width: 100%" placeholder="如指定该地址将从该地址下载文件并新建"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
 	</div>
     <div class="modal-footer">
     	<div class="form-group">
@@ -87,6 +94,7 @@
 		{
 		    var name = $("#dialog-new-doc input[name='name']").val();
 		    var content = $("#dialog-new-doc textarea[name='content']").val();
+		    var fileLink = $("#dialog-new-doc textarea[name='fileLink']").val();
 
 		    //检查当前目录下是否有同名文件
 			  if(isNodeExist(name,parentNode) == true)
@@ -97,8 +105,15 @@
 			  var vid = gReposInfo.id;
 			  
 			  //发送新建文件请求到后台
-		    if( name ){		  	  	
-		      	addDoc(name,type,content,parentNode,parentId,vid);
+		    if( name ){
+		    	if(fileLink && fileLink.length > 0)
+		    	{
+		    		addDocFromUrl(name, type, content, fileLink, parentNode, parentId, vid);
+		    	}
+		    	else
+		    	{
+		    		addDoc(name,type,content,parentNode,parentId,vid);
+		    	}
 		      	return true;
 		    }else{
 		    	  alert("文件名不能为空");
@@ -130,6 +145,66 @@
 	             },
 	             success : function (ret) {
 	            	console.log("addDoc ret:", ret);            		
+	             	if( "ok" == ret.status && ret.data.docId){             		
+	             		if(type == 2)
+	                    {
+	                    	isParent = true;
+	                    }
+	                    else
+	                    {
+	                    	isParent = false;                    	
+	                    }
+	             		
+	             		
+	                    //Add zTreeNode
+	             		addTreeNode(ret.data);
+	                    
+	                    //Add docListNode
+	             		addDocListNode(ret.data);
+	                    
+	             		// 普通消息提示条
+						bootstrapQ.msg({
+									msg : "新建完成！",
+									type : 'success',
+									time : 2000,
+						});         		
+	                }
+	                else
+	                {
+	                	showErrorMessage("新建失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("新建失败:服务器异常！");
+	            }
+	        });
+	    }
+	   	
+	   	function addDocFromUrl(name, type, content, fileLink, parentNode, parentId, vid)
+	   	{
+	   		console.log("addDocFromUrl name:" + name + " type:" +  type + " content:" +  content + " fileLink:" + fileLink + " parentNode:" +  parentNode + " vid:" +  vid);
+	   		var parentPath = "";
+	   		if(parentNode && parentNode != null)
+	   		{
+	   			parentPath = parentNode.path + parentNode.name + "/";
+	   		}
+
+	    	$.ajax({
+	             url : "/DocSystem/Doc/uploadDocRS.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	                reposId : vid, 
+					type : type, //文件类型
+		            pid : parentId,
+	                path: parentPath,
+	                name : name,
+	             	content: content,
+	             	fileLink: fileLink,
+	             	shareId: gShareId,
+	             },
+	             success : function (ret) {
+	            	console.log("addDocFromUrl ret:", ret);            		
 	             	if( "ok" == ret.status && ret.data.docId){             		
 	             		if(type == 2)
 	                    {
