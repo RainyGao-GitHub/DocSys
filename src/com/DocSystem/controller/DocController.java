@@ -2041,7 +2041,9 @@ public class DocController extends BaseController{
 		
 		if(usage != null)
 		{
-			uploadDocForUsage(reposId, docId, pid, path, name,  level, type, size, checkSum,
+			uploadDocForUsage(
+					"uploadDoc", null,
+					reposId, docId, pid, path, name,  level, type, size, checkSum,
 					uploadFile,
 					fileLink,
 					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
@@ -2068,8 +2070,9 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		uploadDocToRepos(repos, path, name, size, type, checkSum,
-				null,
+		uploadDocToRepos(
+				"uploadDoc", null,
+				repos, path, name, size, type, checkSum,
 				uploadFile,
 				fileLink,
 				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
@@ -2112,7 +2115,9 @@ public class DocController extends BaseController{
 		}
 	}
 
-	public void uploadDocForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+	public void uploadDocForUsage(
+			String event, String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
@@ -2165,7 +2170,7 @@ public class DocController extends BaseController{
 			
 			if(combineDisabled != null)
 			{
-				Log.debug("uploadDoc combineDisabled!");
+				Log.debug("uploadDocForUsage() combineDisabled!");
 				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
 				writeJson(rt, response);
 				return;				
@@ -2205,7 +2210,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 
 		//TODO: 根据用途修改信息
-		addSystemLog(request, accessUser, "uploadDoc", "uploadDoc", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+		addSystemLog(request, accessUser, event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 	}
 
 	private String getLocalRootPathForUsage(Integer usage) {
@@ -2293,8 +2298,8 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			uploadDocToDisk(remoteDirectory, path, name, size, checkSum,
-					taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
+			uploadDocToDisk("uploadDocRS", taskId,
+					remoteDirectory, path, name, size, checkSum,
 					uploadFile,
 					fileLink,
 					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash,
@@ -2315,8 +2320,8 @@ public class DocController extends BaseController{
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 				
-		uploadDocToRepos(repos, path, name, size, 1, checkSum,
-				taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
+		uploadDocToRepos("uploadDocRS", taskId,
+				repos, path, name, size, 1, checkSum,
 				uploadFile,
 				fileLink,
 				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
@@ -2328,8 +2333,9 @@ public class DocController extends BaseController{
 		return;
 	}
 	
-	private void uploadDocToRepos(Repos repos, String path, String name, Long size, Integer type, String checkSum, 
-			String taskId,
+	private void uploadDocToRepos(
+			String event, String taskId,	//info for SystemLog 
+			Repos repos, String path, String name, Long size, Integer type, String checkSum, 
 			MultipartFile uploadFile, 
 			String fileLink, 
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
@@ -2343,10 +2349,10 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;		
 		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "uploadDoc", "uploadDoc", "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, event, event, "目录上传", rt);
 			if(folderUploadAction == null)
 			{
-				docSysDebugLog("uploadDoc() folderUploadAction is null", rt);
+				docSysDebugLog("uploadDocToRepos() folderUploadAction is null", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -2382,7 +2388,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "文件上传", repos, doc, null, folderUploadAction);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, event, "文件上传", repos, doc, null, folderUploadAction);
 		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
 
 		//Check Edit Right
@@ -2445,7 +2451,7 @@ public class DocController extends BaseController{
 			
 			if(isUploadSizeExceeded(size, parentDocUserAuth.getUploadSize()))
 			{
-				docSysDebugLog("uploadDoc size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+				docSysDebugLog("uploadDocToRepos() size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
 
 				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
 				docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
@@ -2471,7 +2477,7 @@ public class DocController extends BaseController{
 		
 		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
 		{
-			docSysDebugLog("uploadDoc size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+			docSysDebugLog("uploadDocToRepos() size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
 			
 			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
 			docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
@@ -2503,7 +2509,7 @@ public class DocController extends BaseController{
 			
 			if(combineDisabled != null)
 			{
-				Log.debug("uploadDoc combineDisabled!");
+				Log.debug("uploadDocToRepos() combineDisabled!");
 				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
 				writeJson(rt, response);
 				return;				
@@ -2541,8 +2547,8 @@ public class DocController extends BaseController{
 		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);				
 	}
 
-	private void uploadDocToDisk(String remoteDirectory, String path, String name, Long size, String checkSum,
-			String taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
+	private void uploadDocToDisk(String event, String taskId, //Info for SystemLog
+			String remoteDirectory, String path, String name, Long size, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
@@ -2561,11 +2567,11 @@ public class DocController extends BaseController{
 			String fileChunkName = name + "_" + chunkIndex;
 			if(saveFileEx(uploadFile, fileLink, chunkTmpPath, fileChunkName) == false)
 			{
-				docSysDebugLog("uploadDocRS 分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				docSysDebugLog("uploadDocToDisk() 分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
 				
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 			
@@ -2582,20 +2588,20 @@ public class DocController extends BaseController{
 		{
 			if(saveFileEx(uploadFile, fileLink, remoteDirectory + path, name) == false)
 			{
-				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
 				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
 			
 				writeJson(rt, response);
 				
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
-			docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
+			docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
 
 			writeJson(rt, response);
 			
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -2608,18 +2614,18 @@ public class DocController extends BaseController{
 			}
 			if(FileUtil.moveFileOrDir(chunkTmpPath, name + "_0", localParentPath, name, true) == false)
 			{
-				docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
 				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
 
 				writeJson(rt, response);
 
-				addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
 			writeJson(rt, response);
-			docSysDebugLog("uploadDocRS 文件 [" + path + name +  "] 保存成功!", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
+			addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -2629,18 +2635,18 @@ public class DocController extends BaseController{
 		//Verify the size and FileCheckSum
 		if(false == checkFileSizeAndCheckSum(localParentPath,name, size, checkSum))
 		{
-			docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验失败", rt);
+			docSysDebugLog("uploadDocToDisk() [" + path + name + "] 文件校验失败", rt);
 			docSysErrorLog("文件校验失败", rt);
 			
 			writeJson(rt, response);
 
-			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
 		writeJson(rt, response);
-		docSysDebugLog("uploadDocRS [" + path + name + "] 文件校验成功", rt);
-		addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));			
+		docSysDebugLog("uploadDocToDisk() [" + path + name + "] 文件校验成功", rt);
+		addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));			
 	}
 
 	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
