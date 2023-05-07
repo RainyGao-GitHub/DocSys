@@ -4479,6 +4479,26 @@
 			setting.view = view;
 		}*/
     }
+	
+	function querySystemLogTest()
+	{
+		//查询日志列表测试
+    	$.ajax({
+             url : "/DocSystem/Doc/querySystemLog.do",
+             type : "post",
+             dataType : "json",
+             data : {
+	            path: "",
+                name : "demo.png",
+             },
+             success : function (ret) {
+            	console.log("querySystemLog ret:", ret); 
+            },
+            error : function () {
+                showErrorMessage("querySystemLog exception!");
+            }
+        });
+	}
 
     function contextMenuInit()
     {
