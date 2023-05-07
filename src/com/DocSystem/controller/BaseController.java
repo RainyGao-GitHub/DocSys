@@ -9384,7 +9384,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			switch(saveType)
 			{
-			case 0:
+			case SAVE_TYPE_AddEntry:
 				if(doc.getType() == 1)
 				{
 					if(false == FileUtil.createFile(localParentPath, name))
@@ -9400,26 +9400,26 @@ public class BaseController  extends BaseFunction{
 					}
 				}
 				break;
-			case 1:
+			case SAVE_TYPE_MultipartFile:
 				retName = FileUtil.saveFile(uploadFile, localParentPath, name);
 				if(retName == null  || !retName.equals(name))
 				{
 					return false;
 				}
 				break;
-			case 2:
+			case SAVE_TYPE_DataBuffer:
 				if(FileUtil.saveDataToFile(docData, localParentPath, name) == false)
 				{
 					return false;
 				}
 				break;
-			case 3:
+			case SAVE_TYPE_FileLink:
 				if(saveFileFromUrl(fileLink, localParentPath,name) == false)
 				{
 					return false;
 				}
 				break;
-			case 4:
+			case SAVE_TYPE_ChunkedFile:
 				if(chunkNum == 1)	//单个文件直接复制
 				{
 					String chunk0Path = chunkParentPath + name + "_0";
