@@ -9176,6 +9176,11 @@ public class BaseController  extends BaseFunction{
 	
 	//接口的第一个参数不能为空
 	protected boolean isUploadSizeExceeded(Long size, Long maxUploadSize) {
+		//TODO: size 不允许为空，这里是临时测试用的，测试完请删除
+		if(size == null)
+		{
+			return true;
+		}
 		//注意：最大上传限制值小于等于0将被作为不限制处理		
 		if(maxUploadSize != null && maxUploadSize > 0 && size > maxUploadSize)
 		{
@@ -10038,9 +10043,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Long fileSize, String fileCheckSum) {
+		//TODO: 期望文件大小不允许为空，这里是临时测试用代码，使用后请删除
 		if(fileSize == null)
 		{
-			//fileSize is null, means no need to check
 			return true;
 		}
 		
