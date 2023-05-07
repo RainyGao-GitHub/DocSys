@@ -7058,7 +7058,8 @@ public class DocController extends BaseController{
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
 		Log.infoHead("*********** querySystemLog *******************");
-
+		Log.info("querySystemLog id: " + id + " event: " + event  + " path:" + path + " name:"+ name + " queryId:" + queryId);
+		
 		ReturnAjax rt = new ReturnAjax();
 		
 		User accessUser = userAccessCheck(authCode, null, session, rt);
