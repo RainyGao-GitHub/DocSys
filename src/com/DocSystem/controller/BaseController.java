@@ -4078,7 +4078,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		switch(saveType)
 		{
-		case 0:
+		case SAVE_TYPE_AddEntry:
 			ret = createRealDoc(repos, doc, rt);
 			break;
 		default:

@@ -2015,6 +2015,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
+			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
@@ -2039,6 +2040,7 @@ public class DocController extends BaseController{
 		{
 			uploadDocForUsage(reposId, docId, pid, path, name,  level, type, size, checkSum,
 					uploadFile,
+					fileLink,
 					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
 					commitMsg,
 					dirPath, batchStartTime, totalCount, //for folder upload			
@@ -2215,7 +2217,7 @@ public class DocController extends BaseController{
 			//Save File chunk to tmp dir with name_chunkIndex
 			String fileChunkName = name + "_" + chunkIndex;
 			String userTmpDir = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
-			if(FileUtil.saveFile(uploadFile,userTmpDir,fileChunkName) == null)
+			if(saveFileEx(uploadFile, fileLink, userTmpDir,fileChunkName) == false)
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
@@ -2242,42 +2244,28 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//非分片上传或LastChunk Received
-		if(uploadFile != null || type == 2) 
-		{			
-			if(commitMsg == null || commitMsg.isEmpty())
-			{
-				commitMsg = "上传 " + path + name;
-			}
-			String commitUser = reposAccess.getAccessUser().getName();
-			String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
-			int ret = 0;
-			if(dbDoc == null || dbDoc.getType() == 0 || type == 2)
-			{
-				ret = addDoc(repos, doc, 
-						uploadFile,
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
-
-				writeJson(rt, response);
-				
-				uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
-				return;				
-			}
-			
-			//updateDoc
-			ret = updateDoc(repos, doc, 
-					uploadFile,  
-					chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
-		
-			writeJson(rt, response);
-
-			uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
-			return;
+		//文件上传结束（如果是分片上传那么文件已经存入分片文件中）
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传 " + path + name;
 		}
-		
-		docSysErrorLog("文件上传失败！", rt);
+		String commitUser = reposAccess.getAccessUser().getName();
+		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
+			
+		int ret = 0;
+	
+		Integer saveType = getSaveType(doc, chunkNum, uploadFile, fileLink, null);		
+	
+		ret = saveDoc_FSM(repos, doc, 
+				saveType ,
+				uploadFile,
+				null,
+				fileLink,
+				chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+
 		writeJson(rt, response);
-		addSystemLog(request, reposAccess.getAccessUser(), "uploadDoc", "uploadDoc", "上传文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));	
+		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
+		return;
 	}
 	
 	private void checkAndAddParentDoc(Doc doc, ReturnAjax rt) {
@@ -2313,6 +2301,7 @@ public class DocController extends BaseController{
 
 	public void uploadDocForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
+			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
@@ -2354,7 +2343,7 @@ public class DocController extends BaseController{
 			//Save File chunk to tmp dir with name_chunkIndex
 			String fileChunkName = name + "_" + chunkIndex;
 			
-			if(FileUtil.saveFile(uploadFile, chunkTmpPath,fileChunkName) == null)
+			if(saveFileEx(uploadFile, fileLink, chunkTmpPath,fileChunkName) == false)
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
@@ -2772,7 +2761,7 @@ public class DocController extends BaseController{
 			
 		int ret = 0;
 		
-		Integer saveType = getSaveType(chunkNum, uploadFile, fileLink, null);
+		Integer saveType = getSaveType(doc, chunkNum, uploadFile, fileLink, null);
 		
 		ret = saveDoc_FSM(repos, doc, 
 				saveType ,
@@ -2786,7 +2775,12 @@ public class DocController extends BaseController{
 		return;
 	}
 	
-	private Integer getSaveType(Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
+	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
+		if(doc.getType() == 2)
+		{
+			return SAVE_TYPE_AddEntry;
+		}
+		
 		if(chunkNum != null)
 		{
 			return SAVE_TYPE_ChunkedFile;	

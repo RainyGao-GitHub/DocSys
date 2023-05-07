@@ -94,7 +94,7 @@
 		{
 		    var name = $("#dialog-new-doc input[name='name']").val();
 		    var content = $("#dialog-new-doc textarea[name='content']").val();
-		    var fileLink = $("#dialog-new-doc textarea[name='fileLink']").val();
+		    var fileLink = $("#dialog-new-doc input[name='fileLink']").val();
 
 		    //检查当前目录下是否有同名文件
 			  if(isNodeExist(name,parentNode) == true)
@@ -190,7 +190,7 @@
 	   		}
 
 	    	$.ajax({
-	             url : "/DocSystem/Doc/uploadDocRS.do",
+	             url : "/DocSystem/Doc/uploadDoc.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
