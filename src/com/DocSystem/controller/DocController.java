@@ -37,8 +37,10 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
+import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
+import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -47,6 +49,7 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.BussinessBase;
 import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocSearchContext;
 import com.alibaba.fastjson.JSONObject;
@@ -7046,6 +7049,33 @@ public class DocController extends BaseController{
 			Doc doc =  subDocList.get(i);
 			Log.debug("sortDocListWithDocId docId:" + doc.getDocId() + " pid:" + doc.getPid() + " " + doc.getPath() + doc.getName());
 		}
+	}
+	
+	//系统日志精确查询
+	@RequestMapping("/querySystemLog.do")
+	public void querySystemLog(SystemLog systemLog,
+			String authCode,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("*********** querySystemLog *******************");
+
+		ReturnAjax rt = new ReturnAjax();
+		
+		User accessUser = userAccessCheck(authCode, null, session, rt);
+		if(accessUser == null) 
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		QueryResult queryResult = new QueryResult();
+		List<SystemLog> list = BussinessBase.getSystemLogList(systemLog, null, null);
+		Integer total = queryResult.total;
+		Log.debug("getSystemLogList() total:" + total);
+		
+		rt.setData(list);
+		rt.setDataEx(total);
+        writeJson(rt, response);
 	}
 }
 	

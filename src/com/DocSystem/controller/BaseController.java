@@ -500,7 +500,9 @@ public class BaseController  extends BaseFunction{
 	protected User adminAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
 		return mamageAccessCheck(authCode, expUsage, 1, session, rt);
 	}
-
+	protected User userAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
+		return mamageAccessCheck(authCode, expUsage, 0, session, rt);
+	}
 	
 	//role: 0 普通用户、1 管理员、2超级管理员
 	protected User mamageAccessCheck(String authCode, String expUsage, int role, HttpSession session, ReturnAjax rt) {

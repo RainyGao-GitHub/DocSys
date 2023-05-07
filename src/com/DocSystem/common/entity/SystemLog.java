@@ -17,4 +17,5 @@ public class SystemLog {
 	public String newPath;
 	public String newName;
 	public String content;
+	public String queryId;	//For User query, defined by user
 }
