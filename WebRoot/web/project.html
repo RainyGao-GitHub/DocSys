@@ -4490,8 +4490,8 @@
              data : {
             	queryId: "myTestQueryId",
             	//reposName: gReposInfo.name,
-	            path: "",
-                name : "demo.png",
+	            //path: "",
+                //name : "demo.png",
              },
              success : function (ret) {
             	console.log("querySystemLog ret:", ret); 
@@ -4568,6 +4568,11 @@
 			{text: '分享', action: function(e){
 						e.preventDefault();
 						shareDoc(gRootDoc);
+					}
+			},
+			{text: '测试', action: function(e){
+						e.preventDefault();
+						querySystemLogTest();
 					}
 			},
 			{divider: true},
