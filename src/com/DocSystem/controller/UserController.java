@@ -63,7 +63,7 @@ public class UserController extends BaseController {
 				writeJson(rt, response);
 				User tmp_user = new User();
 				tmp_user.setName(userName);
-				addSystemLog(request, tmp_user, "login", "login", "登录","失败", null, null, null, buildSystemLogDetailContent(rt));
+				addSystemLog(request, tmp_user, "login", "login", "登录", null, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;
 			}
 		} catch (Exception e) {
@@ -94,7 +94,7 @@ public class UserController extends BaseController {
 		}
 
 		//Feeback to page
-		addSystemLog(request, loginUser, "login", "login", "登录","成功", null, null, null, buildSystemLogDetailContent(rt));
+		addSystemLog(request, loginUser, "login", "login", "登录", null, "成功", null, null, null, buildSystemLogDetailContent(rt));
 		
 		rt.setMsgInfo("登录成功！");
 		rt.setData(loginUser);	//将数据库取出的用户信息返回至前台
@@ -200,7 +200,7 @@ public class UserController extends BaseController {
 		
 		rt.setMsgInfo("您已成功退出登陆。");
 
-		addSystemLog(request, loginUser, "logout", "logout", "退出登录","成功", null, null, null, buildSystemLogDetailContent(rt));
+		addSystemLog(request, loginUser, "logout", "logout", "退出登录", null, "成功", null, null, null, buildSystemLogDetailContent(rt));
 
 		writeJson(rt, response);	
 	}
@@ -328,7 +328,7 @@ public class UserController extends BaseController {
 		}
 		userService.addUser(user);
 		
-		addSystemLog(request, user, "register", "register", "用户注册","成功", null, null, null, buildSystemLogDetailContent(rt));
+		addSystemLog(request, user, "register", "register", "用户注册", null, "成功", null, null, null, buildSystemLogDetailContent(rt));
 
 		user.setPwd("");	//密码不要返回回去
 		rt.setData(user);
@@ -430,7 +430,7 @@ public class UserController extends BaseController {
 		}
 		userService.addUser(user);
 		
-		addSystemLog(request, user, "registerEx", "registerEx", "用户注册","成功", null, null, null, buildSystemLogDetailContent(rt));
+		addSystemLog(request, user, "registerEx", "registerEx", "用户注册", null, "成功", null, null, null, buildSystemLogDetailContent(rt));
 
 		user.setPwd("");	//密码不要返回回去
 		rt.setData(user);

@@ -1330,7 +1330,7 @@ public class ManageController extends BaseController{
 			docSysDebugLog("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName, rt);
 			docSysErrorLog("写入配置文件失败！", rt);
 			writeJson(rt, response);
-			addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置","失败",  null, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置", null, "失败",  null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 				
@@ -1352,7 +1352,7 @@ public class ManageController extends BaseController{
 			restartClusterServer();
 		}
 		
-		addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置","成功",  null, null, null, buildSystemLogDetailContent(rt));
+		addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置", null, "成功",  null, null, null, buildSystemLogDetailContent(rt));
 	}
 	
 	@RequestMapping("/resetCluster.do")
