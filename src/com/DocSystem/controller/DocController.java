@@ -126,7 +126,7 @@ public class DocController extends BaseController{
 		
 		saveDocToRepos(
 				"addDoc", "addDoc", "新增文件", taskId,
-				repos, path, name, null, type, null,
+				repos, path, name, 0L, type, null,
 				null,
 				null,
 				null,
@@ -181,7 +181,7 @@ public class DocController extends BaseController{
 			
 			saveDocToDisk(
 					"addDocRS", "addDocRS", "新增文件", taskId,
-					remoteDirectory, path, name, null, type, null,
+					remoteDirectory, path, name, 0L, type, null,
 					null,
 					null,
 					null,
@@ -208,7 +208,7 @@ public class DocController extends BaseController{
 		
 		saveDocToRepos(
 				"addDocRS", "addDocRS", "新增文件", taskId,
-				repos, path, name, null, type, null,
+				repos, path, name, 0L, type, null,
 				null,
 				null,
 				null,
