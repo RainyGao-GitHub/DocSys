@@ -20749,12 +20749,8 @@ public class BaseController  extends BaseFunction{
 		addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
 	}
 
-	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
-		if(doc.getType() == 2)
-		{
-			return SAVE_TYPE_AddEntry;
-		}
-		
+	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) 
+	{		
 		if(chunkNum != null)
 		{
 			return SAVE_TYPE_ChunkedFile;	
@@ -20775,7 +20771,7 @@ public class BaseController  extends BaseFunction{
 			return SAVE_TYPE_DataBuffer;
 		}
 
-		return null;
+		return SAVE_TYPE_AddEntry;
 	}
 
 	private boolean saveFileEx(MultipartFile uploadFile, String fileLink, byte [] docData, String localParentPath, String name) 
