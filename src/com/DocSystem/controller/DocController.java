@@ -184,7 +184,7 @@ public class DocController extends BaseController{
 					remoteDirectory, path, name, null, type, null,
 					null,
 					null,
-					null, null, null, null, null,
+					null, null, null, null, null, null,
 					commitMsg,
 					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
 					reposAccess,
@@ -1802,8 +1802,8 @@ public class DocController extends BaseController{
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		//TODO:
-		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-		
+		ReturnAjax rt = new ReturnAjax();
+
 		User accessUser = superAdminAccessCheck(null, null, session, rt);
 		if(accessUser == null)		
 		{
@@ -1818,8 +1818,8 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;			
 		}
-		
-		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+
+		//check and add parentDir
 		String localParentPath = localRootPath + path;
 		File localParentDir = new File(localParentPath);
 		if(false == localParentDir.exists())
@@ -1829,62 +1829,22 @@ public class DocController extends BaseController{
 
 		String chunkTmpPath = localParentPath;
 		
-		//如果是分片文件，则保存分片文件
-		if(null != chunkIndex)
+		//updateRealDocEx
+		Doc doc  = new Doc();
+		doc.setLocalRootPath(localRootPath);
+		doc.setPath(path);
+		doc.setName(name);
+		doc.setSize(size);
+		if(updateRealDocEx(doc, null,chunkNum,chunkSize,chunkTmpPath,rt) == false)
 		{
-			//Save File chunk to tmp dir with name_chunkIndex
-			String fileChunkName = name + "_" + chunkIndex;
-			
-			if(saveFileEx(uploadFile, fileLink, chunkTmpPath,fileChunkName) == false)
-			{
-				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
-				writeJson(rt, response);
-				return;
-			}
-			
-			if(combineDisabled != null)
-			{
-				Log.debug("uploadDocForUsage() combineDisabled!");
-				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
-				writeJson(rt, response);
-				return;				
-			}
-			
-			//如果是最后一个分片则开始文件合并处理
-			if(chunkIndex < (chunkNum-1))
-			{
-				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
-				writeJson(rt, response);
-				return;
-			}
-		}
-		
-		//非分片上传或LastChunk Received
-		if(uploadFile != null) 
-		{			
-			//updateRealDocEx
-			Doc doc  = new Doc();
-			doc.setLocalRootPath(localRootPath);
-			doc.setPath(path);
-			doc.setName(name);
-			if(updateRealDocEx(doc, uploadFile,chunkNum,chunkSize,chunkTmpPath,rt) == false)
-			{
-				docSysErrorLog("文件保存失败！", rt);
-				writeJson(rt, response);
-				return;
-			}
-			
-			//deleteChunks when combine ok
-			deleteChunks(name, chunkIndex, chunkNum,chunkTmpPath);
+			docSysErrorLog("文件合并失败！", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
-		docSysErrorLog("文件上传失败！", rt);
+		//deleteChunks when combine ok
+		deleteChunks(name, chunkIndex, chunkNum,chunkTmpPath);
 		writeJson(rt, response);
-
-		//TODO: 根据用途修改信息
-		addSystemLogEx(request, accessUser, event, subEvent, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 	}
 
 	private String getLocalRootPathForUsage(Integer usage) {
@@ -1940,7 +1900,7 @@ public class DocController extends BaseController{
 			Integer reposId, String remoteDirectory, String path, String name, Long size, Integer type, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
-			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
 			Integer shareId,
@@ -1983,7 +1943,7 @@ public class DocController extends BaseController{
 					remoteDirectory, path, name, size, type, checkSum,
 					uploadFile,
 					fileLink,
-					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash,
+					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
 					commitMsg,
 					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
 					reposAccess,
@@ -2347,7 +2307,7 @@ public class DocController extends BaseController{
 			String remoteDirectory, String path, String name, Long size, Integer type, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
-			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,  Integer combineDisabled,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
 			ReposAccess reposAccess,
@@ -2369,6 +2329,14 @@ public class DocController extends BaseController{
 				
 				addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
+			}
+			
+			if(combineDisabled != null)
+			{
+				Log.debug("saveDocToDisk() combineDisabled!");
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;				
 			}
 			
 			if(chunkIndex < (chunkNum-1))
@@ -2488,7 +2456,8 @@ public class DocController extends BaseController{
 			return saveFileFromUrl(fileLink, localParentPath,name);
 		}		
 		
-		return false;
+		//说明不需要进行文件存储
+		return true;
 	}
 
 	/****************   Upload a Picture for Markdown ******************/

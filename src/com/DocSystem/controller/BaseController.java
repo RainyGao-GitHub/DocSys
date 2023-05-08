@@ -4078,27 +4078,19 @@ public class BaseController  extends BaseFunction{
 		}
 				
 		boolean ret = false;
-		switch(saveType)
+		if(context.folderUploadAction != null)
 		{
-		case SAVE_TYPE_AddEntry:
-			ret = createRealDoc(repos, doc, rt);
-			break;
-		default:
-			if(context.folderUploadAction != null)
+			//TODO: 根据分片个数来设置长心跳的超时时间
+			LongBeatCheckAction action = insertToLongBeatCheckListEx(context.folderUploadAction, repos, doc, chunkNum);
+			ret = saveRealDoc(repos, doc, saveType, uploadFile, docData, fileLink, chunkNum,chunkSize,chunkParentPath,rt);
+			if(action != null)
 			{
-				//TODO: 根据分片个数来设置长心跳的超时时间
-				LongBeatCheckAction action = insertToLongBeatCheckListEx(context.folderUploadAction, repos, doc, chunkNum);
-				ret = saveRealDoc(repos, doc, saveType, uploadFile, docData, fileLink, chunkNum,chunkSize,chunkParentPath,rt);
-				if(action != null)
-				{
-					action.stopFlag = true;
-				}
+				action.stopFlag = true;
 			}
-			else
-			{
-				ret = saveRealDoc(repos, doc, saveType, uploadFile, docData, fileLink, chunkNum,chunkSize,chunkParentPath,rt);				
-			}	
-			break;
+		}
+		else
+		{
+			ret = saveRealDoc(repos, doc, saveType, uploadFile, docData, fileLink, chunkNum,chunkSize,chunkParentPath,rt);				
 		}
 		
 		if(ret == false)
