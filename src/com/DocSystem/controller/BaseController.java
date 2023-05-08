@@ -20104,7 +20104,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				addSystemLogBasic(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.queryId, context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			}
 			break;
 		case 1:
@@ -20118,7 +20118,7 @@ public class BaseController  extends BaseFunction{
 			{
 				deleteChunks(name, chunkIndex, chunkNum,chunkParentPath);
 				deletePreviewFile(doc);
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				addSystemLogBasic(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.queryId, context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
 			}
 			break;
 		default:	//异步执行中（异步线程负责日志写入）

@@ -4629,25 +4629,6 @@ public class BaseFunction{
 	protected static boolean addSystemLog(
 			HttpServletRequest request, 
 			User user, 
-			String event, String subEvent, String action, 
-			String result, 
-			Repos repos, 
-			Doc doc, 
-			Doc newDoc, 
-			String content)
-    {
-		String requestIP = "未知";
-		if(request != null)
-		{
-			requestIP = getRequestIpAddress(request);
-		}
-		
-		return addSystemLogBasic(requestIP, user, event, subEvent, action, null, result, repos, doc, newDoc, content);
-    }
-	
-	protected static boolean addSystemLogEx(
-			HttpServletRequest request, 
-			User user, 
 			String event, String subEvent, String action, String queryId,
 			String result, 
 			Repos repos, 
@@ -4661,15 +4642,10 @@ public class BaseFunction{
 			requestIP = getRequestIpAddress(request);
 		}
 		
-		return addSystemLogBasic(requestIP, user, event, subEvent, action, queryId, result, repos, doc, newDoc, content);
+		return addSystemLog(requestIP, user, event, subEvent, action, queryId, result, repos, doc, newDoc, content);
     }
-	
-	protected static boolean addSystemLog(String requestIP, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
-	{
-		return addSystemLogBasic(requestIP, user, event, subEvent, action, null, result, repos, doc, newDoc, content);
-	}
-	
-	protected static boolean addSystemLogBasic(
+		
+	protected static boolean addSystemLog(
 			String requestIP, 
 			User user, 
 			String event, String subEvent, String action, String queryId,
