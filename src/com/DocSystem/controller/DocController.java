@@ -56,7 +56,6 @@ import com.alibaba.fastjson.JSONObject;
 import util.ReturnAjax;
 
 /*
-Something you need to know
 1、文件节点
 （1）文件节点可以是文件或目录，包括本地文件或目录、版本仓库节点、数据库记录、虚拟文件和版本仓库节点
 （2）虚拟文件：虚拟文件的实体跟实文件不同，并不是一个单一的文件，而是以文件节点ID为名称的目录，里面包括content.md文件和res目录，markdown文件记录了虚文件的文字内容，res目录下存放相关的资源文件
@@ -187,7 +186,7 @@ public class DocController extends BaseController{
 					null, null, null, null, null, null,
 					commitMsg,
 					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
-					reposAccess,
+					reposAccess.getAccessUser(),
 					rt,
 					response, request, session);		
 			return;
@@ -1071,12 +1070,10 @@ public class DocController extends BaseController{
 		
 		if(usage != null)
 		{
-			checkDocInfoForUsage(reposId, docId, pid, path, name,  level, type, size, checkSum, 
-					commitMsg,
-					dirPath,	batchStartTime, totalCount, //for folder upload
-					shareId,
-					usage,	//UpgradeDocSystem, InstallOffice
-					session, request, response);
+			//If for special purpose, no need to checkDocInfo
+			ReturnAjax rt = new ReturnAjax();
+			docSysDebugLog("checkDocInfoForUsage() usage:" + usage, rt);
+			writeJson(rt, response);
 			return;	
 		}
 
@@ -1237,19 +1234,6 @@ public class DocController extends BaseController{
 		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
 	}
 
-	public void checkDocInfoForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
-			String commitMsg,
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
-			Integer shareId,
-			Integer usage,	//UpgradeDocSystem, InstallOffice
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		//TODO:
-		ReturnAjax rt = new ReturnAjax();
-		docSysDebugLog("checkDocInfoForUsage() usage:" + usage, rt);
-		writeJson(rt, response);
-	}
-
 	private Repos getReposInfo(Integer reposId, DocShare docShare) {
 		if(docShare == null || docShare.getType() == null || docShare.getType() == 0)
 		{
@@ -1346,7 +1330,7 @@ public class DocController extends BaseController{
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, Integer combineDisabled,
 			String commitMsg,
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd, //for folder upload
 			Integer shareId,
 			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1356,19 +1340,47 @@ public class DocController extends BaseController{
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId 
 				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount + " usage:" + usage);
 
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		if(usage != null)
 		{
-			checkChunkUploadedForUsage(reposId, docId, pid, path, name,  level, type, size, checkSum,
+			User accessUser = superAdminAccessCheck(null, null, session, rt);
+			if(accessUser == null)		
+			{
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if("".equals(checkSum))
+			{
+				//CheckSum is empty, mean no need 
+				rt.setMsgData("0");	//标记为chunk not exist or not matched
+				writeJson(rt, response);
+				return;
+			}
+			
+			String localDiskPath = getLocalRootPathForUsage(usage);
+			if(localDiskPath == null || localDiskPath.isEmpty())
+			{
+				docSysErrorLog("非法文件上传", rt);
+				writeJson(rt, response);			
+				return;			
+			}
+			
+			String usageName = getUsageName(usage);
+			
+			saveDocToDisk(
+					"checkChunkUploaded", "checkChunkUploaded", usageName, taskId,
+					localDiskPath, path, name,  size, type, checkSum,
+					null,
+					null,
 					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
 					commitMsg,
-					dirPath, batchStartTime, totalCount, //for folder upload
-					shareId,
-					usage,	//UpgradeDocSystem, InstallOffice
-					session, request, response);
+					dirPath, batchStartTime, totalCount, isEnd, //for folder upload			
+					accessUser,
+					rt,	//UpgradeDocSystem, InstallOffice
+					response, request, session);
 			return;
 		}
-		
-		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
@@ -1425,6 +1437,7 @@ public class DocController extends BaseController{
 			rt.setMsgData("1");
 			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
 			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
+		
 			if(combineDisabled != null)
 			{
 				Log.debug("checkChunkUploaded() combineDisabled!");
@@ -1480,79 +1493,6 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-	
-	public void checkChunkUploadedForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
-			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, Integer combineDisabled,
-			String commitMsg,
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
-			Integer shareId,
-			Integer usage,	//UpgradeDocSystem, InstallOffice
-			HttpSession session,HttpServletRequest request,HttpServletResponse response) 
-	{
-		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-
-		User accessUser = superAdminAccessCheck(null, null, session, rt);
-		if(accessUser == null)		
-		{
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if("".equals(checkSum))
-		{
-			//CheckSum is empty, mean no need 
-			rt.setMsgData("0");	//标记为chunk not exist or not matched
-			writeJson(rt, response);
-			return;
-		}
-		
-		String localRootPath = getLocalRootPathForUsage(usage);
-		String localParentPath = localRootPath + path;
-		String chunkParentPath = localParentPath;
-		
-		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
-		String fileChunkName = name + "_" + chunkIndex;
-		String chunkFilePath = chunkParentPath + fileChunkName;
-		if(false == isChunkMatched(chunkFilePath,chunkHash))
-		{
-			rt.setMsgData("0");
-			docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
-		}
-		else
-		{
-			rt.setMsgData("1");
-			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
-			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
-			if(combineDisabled != null)
-			{
-				Log.debug("checkChunkUploaded() combineDisabled!");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			//如果是最后一个分片则开始文件合并处理
-			if(chunkIndex == chunkNum -1)	//It is the last chunk
-			{	
-				//updateRealDocEx
-				Doc doc  = new Doc();
-				doc.setLocalRootPath(localRootPath);
-				doc.setPath(path);
-				doc.setName(name);
-				if(updateRealDocEx(doc, null,chunkNum,chunkSize,chunkParentPath,rt) == false)
-				{
-					docSysErrorLog("文件合并失败！", rt);
-					writeJson(rt, response);
-					return;
-				}
-				
-				//deleteChunks when combine ok
-				deleteChunks(name, chunkIndex, chunkNum,chunkParentPath);
-				writeJson(rt, response);
-				return;
-			}
-		}
-		writeJson(rt, response);
-	}
 
 	//combine chunks
 	//注意：chunkIndex不能小于chunkNum，否则deleteChunks逻辑会有问题
@@ -1562,7 +1502,7 @@ public class DocController extends BaseController{
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
 			String commitMsg,
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd, //for folder upload
 			Integer shareId,
 			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1572,19 +1512,39 @@ public class DocController extends BaseController{
 				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId
 				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 			
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		
 		if(usage != null)
 		{
-			combineChunksForUsage(reposId, docId, pid, path, name, level, type, size, checkSum,
-					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash,
+			User accessUser = superAdminAccessCheck(null, null, session, rt);
+			if(accessUser == null)		
+			{
+				writeJson(rt, response);			
+				return;
+			}
+			
+			String localDiskPath = getLocalRootPathForUsage(usage);
+			if(localDiskPath == null || localDiskPath.isEmpty())
+			{
+				docSysErrorLog("非法文件上传", rt);
+				writeJson(rt, response);			
+				return;			
+			}
+			
+			String usageName = getUsageName(usage);	
+			saveDocToDisk(
+					"combineChunks", "combineChunks", usageName, taskId,
+					localDiskPath, path, name,  size, type, checkSum,
+					null,
+					null,
+					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
 					commitMsg,
-					dirPath, batchStartTime, totalCount, //for folder upload
-					shareId,
-					usage,	//UpgradeDocSystem, InstallOffice
-					session, request, response);
+					dirPath, batchStartTime, totalCount, isEnd, //for folder upload			
+					accessUser,
+					rt,	//UpgradeDocSystem, InstallOffice
+					response, request, session);
 			return;
 		}
-		
-		ReturnAjax rt = new ReturnAjax();
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
@@ -1606,7 +1566,7 @@ public class DocController extends BaseController{
 				null,
 				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
 				commitMsg,
-				dirPath, batchStartTime, totalCount, null,  //Parameters for FolderUpload or FolderPush	
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
 				reposAccess,
 				rt,
 				response, request, session);
@@ -1653,6 +1613,8 @@ public class DocController extends BaseController{
 							+ " shareId:" + shareId + " commitMsg:" + commitMsg
 							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+
 		//文件类型未指定当文件处理
 		if(type == null)
 		{
@@ -1661,21 +1623,36 @@ public class DocController extends BaseController{
 		
 		if(usage != null)
 		{
-			uploadDocForUsage(
-					"uploadDoc", null, "文件上传", null,
-					reposId, docId, pid, path, name,  level, type, size, checkSum,
+			User accessUser = superAdminAccessCheck(null, null, session, rt);
+			if(accessUser == null)		
+			{
+				writeJson(rt, response);			
+				return;
+			}
+			
+			String localDiskPath = getLocalRootPathForUsage(usage);
+			if(localDiskPath == null || localDiskPath.isEmpty())
+			{
+				docSysErrorLog("非法文件上传", rt);
+				writeJson(rt, response);			
+				return;			
+			}
+			
+			String usageName = getUsageName(usage);
+			
+			saveDocToDisk(
+					"uploadDoc", "uploadDoc", usageName, taskId,
+					localDiskPath, path, name,  size, type, checkSum,
 					uploadFile,
 					fileLink,
 					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
 					commitMsg,
-					dirPath, batchStartTime, totalCount, //for folder upload			
-					shareId,
-					usage,	//UpgradeDocSystem, InstallOffice
+					dirPath, batchStartTime, totalCount, isEnd, //for folder upload			
+					accessUser,
+					rt,	//UpgradeDocSystem, InstallOffice
 					response, request, session);
 			return;
 		}
-		
-		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
@@ -1695,7 +1672,7 @@ public class DocController extends BaseController{
 				repos, path, name, size, type, checkSum,
 				uploadFile,
 				fileLink,
-				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
+				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
 				commitMsg,
 				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
 				reposAccess,
@@ -1704,6 +1681,17 @@ public class DocController extends BaseController{
 		return;
 	}
 	
+	private String getUsageName(Integer usage) {
+		switch(usage)
+		{
+		case constants.DocUpload.UpgradeDocSystem:
+			return "系统升级";
+		case constants.DocUpload.InstallOffice:
+			return "安装Office";
+		}
+		return "文件上传";
+	}
+
 	private void checkAndAddParentDoc(Doc doc, ReturnAjax rt) {
 		List<Doc> addedParentDocList = null;
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
@@ -1733,118 +1721,6 @@ public class DocController extends BaseController{
 			addedParentDocList.add(0, parentDoc);	//insert to top
 			checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
 		}
-	}
-	
-	public void combineChunksForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
-			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
-			String commitMsg,
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
-			Integer shareId,
-			Integer usage,	//UpgradeDocSystem, InstallOffice
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		//TODO:
-		ReturnAjax rt = new ReturnAjax();
-
-		User accessUser = superAdminAccessCheck(null, null, session, rt);
-		if(accessUser == null)		
-		{
-			writeJson(rt, response);			
-			return;
-		}
-		
-		String localRootPath = getLocalRootPathForUsage(usage);
-		if(localRootPath == null || localRootPath.isEmpty())
-		{
-			docSysErrorLog("非法文件上传", rt);
-			writeJson(rt, response);			
-			return;			
-		}
-
-		//check and add parentDir
-		String localParentPath = localRootPath + path;
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			localParentDir.mkdirs();
-		}
-
-		String chunkTmpPath = localParentPath;
-		
-		//updateRealDocEx
-		Doc doc  = new Doc();
-		doc.setLocalRootPath(localRootPath);
-		doc.setPath(path);
-		doc.setName(name);
-		doc.setSize(size);
-		if(updateRealDocEx(doc, null,chunkNum,chunkSize,chunkTmpPath,rt) == false)
-		{
-			docSysErrorLog("文件合并失败！", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-		//deleteChunks when combine ok
-		deleteChunks(name, chunkIndex, chunkNum,chunkTmpPath);
-		writeJson(rt, response);
-	}
-
-	public void uploadDocForUsage(
-			String event, String subEvent, String eventName, String queryId,
-			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
-			MultipartFile uploadFile,
-			String fileLink,
-			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
-			String commitMsg,
-			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload			
-			Integer shareId,
-			Integer usage,	//UpgradeDocSystem, InstallOffice
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		//TODO:
-		ReturnAjax rt = new ReturnAjax();
-
-		User accessUser = superAdminAccessCheck(null, null, session, rt);
-		if(accessUser == null)		
-		{
-			writeJson(rt, response);			
-			return;
-		}
-		
-		String localRootPath = getLocalRootPathForUsage(usage);
-		if(localRootPath == null || localRootPath.isEmpty())
-		{
-			docSysErrorLog("非法文件上传", rt);
-			writeJson(rt, response);			
-			return;			
-		}
-
-		//check and add parentDir
-		String localParentPath = localRootPath + path;
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			localParentDir.mkdirs();
-		}
-
-		String chunkTmpPath = localParentPath;
-		
-		//updateRealDocEx
-		Doc doc  = new Doc();
-		doc.setLocalRootPath(localRootPath);
-		doc.setPath(path);
-		doc.setName(name);
-		doc.setSize(size);
-		if(updateRealDocEx(doc, null,chunkNum,chunkSize,chunkTmpPath,rt) == false)
-		{
-			docSysErrorLog("文件合并失败！", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-		//deleteChunks when combine ok
-		deleteChunks(name, chunkIndex, chunkNum,chunkTmpPath);
-		writeJson(rt, response);
 	}
 
 	private String getLocalRootPathForUsage(Integer usage) {
@@ -1946,7 +1822,7 @@ public class DocController extends BaseController{
 					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
 					commitMsg,
 					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
-					reposAccess,
+					reposAccess.getAccessUser(),
 					rt,
 					response, request, session);
 			return;			
@@ -2304,19 +2180,18 @@ public class DocController extends BaseController{
 
 	private void saveDocToDisk(
 			String event, String subEvent, String eventName, String queryId, //Info for SystemLog
-			String remoteDirectory, String path, String name, Long size, Integer type, String checkSum,
+			String localDiskPath, String path, String name, Long size, Integer type, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,  Integer combineDisabled,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
-			ReposAccess reposAccess,
+			User accessUser,
 			ReturnAjax rt,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) 
 	{
-		// TODO Auto-generated method stub
 		//如果是分片文件，则保存分片文件
-		String localParentPath = remoteDirectory + path;
+		String localParentPath = localDiskPath + path;
 		String chunkTmpPath = localParentPath;
 		if(null != chunkIndex)
 		{
@@ -2327,7 +2202,7 @@ public class DocController extends BaseController{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
 				
-				addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 			
@@ -2350,14 +2225,14 @@ public class DocController extends BaseController{
 		//非分片或者是已经收到最后一个分片文件
 		if(null == chunkNum)	//非分片上传
 		{
-			if(saveFileEx(uploadFile, fileLink, remoteDirectory + path, name) == false)
+			if(saveFileEx(uploadFile, fileLink, localDiskPath + path, name) == false)
 			{
 				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
 				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
 			
 				writeJson(rt, response);
 				
-				addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
@@ -2365,7 +2240,7 @@ public class DocController extends BaseController{
 
 			writeJson(rt, response);
 			
-			addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -2383,13 +2258,13 @@ public class DocController extends BaseController{
 
 				writeJson(rt, response);
 
-				addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
 			writeJson(rt, response);
 			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
-			addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -2404,13 +2279,13 @@ public class DocController extends BaseController{
 			
 			writeJson(rt, response);
 
-			addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
 		writeJson(rt, response);
 		docSysDebugLog("saveDocToDisk() [" + path + name + "] 文件校验成功", rt);
-		addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
+		addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
 	}
 
 	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
