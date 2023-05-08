@@ -4626,7 +4626,15 @@ public class BaseFunction{
     }
 
 	//日志管理	
-	protected static boolean addSystemLog(HttpServletRequest request, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
+	protected static boolean addSystemLog(
+			HttpServletRequest request, 
+			User user, 
+			String event, String subEvent, String action, 
+			String result, 
+			Repos repos, 
+			Doc doc, 
+			Doc newDoc, 
+			String content)
     {
 		String requestIP = "未知";
 		if(request != null)
@@ -4634,15 +4642,49 @@ public class BaseFunction{
 			requestIP = getRequestIpAddress(request);
 		}
 		
-		return addSystemLog(requestIP, user, event, subEvent, action, result, repos, doc, newDoc, content);
+		return addSystemLogBasic(requestIP, user, event, subEvent, action, null, result, repos, doc, newDoc, content);
+    }
+	
+	protected static boolean addSystemLogEx(
+			HttpServletRequest request, 
+			User user, 
+			String event, String subEvent, String action, String queryId,
+			String result, 
+			Repos repos, 
+			Doc doc, 
+			Doc newDoc, 
+			String content)
+    {
+		String requestIP = "未知";
+		if(request != null)
+		{
+			requestIP = getRequestIpAddress(request);
+		}
+		
+		return addSystemLogBasic(requestIP, user, event, subEvent, action, queryId, result, repos, doc, newDoc, content);
     }
 	
 	protected static boolean addSystemLog(String requestIP, User user, String event, String subEvent, String action, String result, Repos repos, Doc doc, Doc newDoc, String content)
+	{
+		return addSystemLogBasic(requestIP, user, event, subEvent, action, null, result, repos, doc, newDoc, content);
+	}
+	
+	protected static boolean addSystemLogBasic(
+			String requestIP, 
+			User user, 
+			String event, String subEvent, String action, String queryId,
+			String result, 
+			Repos repos, 
+			Doc doc, 
+			Doc newDoc, 
+			String content)
     {
 		SystemLog log = new SystemLog();
 		log.time = new Date().getTime();
 		
 		log.ip = requestIP;			
+		
+		log.queryId = queryId;
 		
 		if(user == null)
 		{

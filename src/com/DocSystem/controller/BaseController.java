@@ -19798,7 +19798,7 @@ public class BaseController  extends BaseFunction{
 	
 
 	protected ActionContext buildBasicActionContext(String requestIP, User accessUser, 
-			String event, String subEvent, String eventName, 
+			String event, String subEvent, String eventName, String queryId,
 			Repos repos, Doc doc, Doc newDoc,
 			FolderUploadAction folderUploadAction) 
 	{
@@ -19807,7 +19807,8 @@ public class BaseController  extends BaseFunction{
 		context.user = accessUser;
 		context.event = event;
 		context.subEvent = subEvent;
-		context.eventName = eventName;	
+		context.eventName = eventName;
+		context.queryId = queryId;
 		context.repos = repos;
 		context.doc = doc;
 		context.newDoc = newDoc;
@@ -19829,7 +19830,7 @@ public class BaseController  extends BaseFunction{
 			Repos repos, 
 			String dirPath, Long batchStartTime, 
 			String commitMsg, 
-			String event, String subEvent, String eventName,
+			String event, String subEvent, String eventName, String queryId,
 			ReturnAjax rt) 
 	{
 		String actionId = dirPath + batchStartTime;
@@ -19845,7 +19846,7 @@ public class BaseController  extends BaseFunction{
 			String requestIP = getRequestIpAddress(request);
 				
 			//create FolderUploadAction
-			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc, commitMsg, event, subEvent, eventName, rt);
+			action = checkAndCreateFolderUploadAction(actionId, requestIP, accessUser, repos, doc, commitMsg, event, subEvent, eventName, queryId, rt);
 		}
 		
 		if(action.isCriticalError)
@@ -19857,7 +19858,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private FolderUploadAction checkAndCreateFolderUploadAction(String actionId, String requestIP, User accessUser, Repos repos, Doc doc, String commitMsg, 
-			String event, String subEvent, String eventName,
+			String event, String subEvent, String eventName, String queryId,
 			ReturnAjax rt) {
 		FolderUploadAction action = null;
 		synchronized(gFolderUploadActionSyncLock)
@@ -19883,7 +19884,7 @@ public class BaseController  extends BaseFunction{
 				action.event = event;
 				action.subEvent = subEvent;
 				action.eventName = eventName;
-
+				action.queryId = queryId;
 				
 				action.isCriticalError = false;
 				action.errorInfo = null;
@@ -20130,6 +20131,37 @@ public class BaseController  extends BaseFunction{
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+			deletePreviewFile(doc);
+			break;
+		}				
+	}
+	
+	protected void deleteAfterHandler(int deleteResult, Doc doc, String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath, ReposAccess reposAccess, ActionContext context, ReturnAjax rt) {
+		switch(deleteResult)
+		{
+		case 0:
+			if(context.folderUploadAction != null)
+			{
+				folderSubEntryUploadErrorHandler(context.folderUploadAction);
+			}
+			else
+			{
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			}
+			break;
+		case 1:
+			if(context.folderUploadAction != null)
+			{
+				folderSubEntryUploadSuccessHandler(context.folderUploadAction);
+				deletePreviewFile(doc);
+			}
+			else
+			{
+				deletePreviewFile(doc);
+				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			}
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
 			deletePreviewFile(doc);
 			break;
 		}				

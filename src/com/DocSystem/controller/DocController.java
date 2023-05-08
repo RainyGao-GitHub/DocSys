@@ -97,7 +97,9 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void addDoc(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String content,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush
@@ -123,98 +125,23 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
-		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
-			if(folderUploadAction == null)
-			{
-				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
-				writeJson(rt, response);
-				return;
-			}
-			folderUploadAction.beatTime = new Date().getTime();
-			if(folderUploadAction.totalCount < totalCount)
-			{
-				folderUploadAction.totalCount = totalCount;
-			}
-			
-			//并不是真正的文件上传请求
-			if(isEnd != null)
-			{
-				if(isEnd == 1)
-				{
-					folderUploadAction.isEnd = true;					
-					if(isLastSubEntryForFolderUpload(folderUploadAction))
-					{
-						folderUploadEndHander(folderUploadAction);
-					}
-				}
-				else
-				{
-					folderUploadAction.isEnd = false;										
-				}
-				writeJson(rt, response);
-				return;
-			}
-		}
-		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath,localVRootPath, 0L, "");
-		doc.setContent(content);
-				
-		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
-		{
-			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));			
-			return;
-		}
-
-		Doc tmpDoc = docSysGetDoc(repos, doc, false);
-		if(tmpDoc != null && tmpDoc.getType() != 0)
-		{
-			docSysErrorLog(doc.getName() + " 已存在", rt);
-
-			rt.setMsgData(1);
-			rt.setData(tmpDoc);
-			
-			writeJson(rt, response);
-			
-			docSysDebugLog("addDoc() add doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
-			return;
-		}
-		
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "新增 [" + path + name + "]";
-		}
-		String commitUser = reposAccess.getAccessUser().getName();
-
-		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDoc", "addDoc", "新增文件", repos, doc, null, folderUploadAction);
-		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
-		int ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, context); 
-		
-		writeJson(rt, response);
-		
-		switch(ret)
-		{
-		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			break;
-		}
+		saveDocToRepos(
+				"addDoc", "addDoc", "新增文件", taskId,
+				repos, path, name, null, type, null,
+				null,
+				null,
+				null, null, null, null, null, null,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);
 	}
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDocRS(Integer reposId, String remoteDirectory, String path, String name,  Integer type,
+	public void addDocRS(
+			String taskId,
+			Integer reposId, String remoteDirectory, String path, String name,  Integer type,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
 			Integer shareId,
@@ -252,41 +179,18 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			if(type == null)
-			{
-				rt.setError("文件类型不能为空！");
-				writeJson(rt, response);	
-				
-				docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed: type is null", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
-				return;			
-			}
-			
-			if(type == 2) //目录
-			{
-				if(false == FileUtil.createDir(remoteDirectory + path + name))
-				{
-					docSysDebugLog("addDocRS() 目录 " +remoteDirectory + path + name + " 创建失败！", rt);
-					rt.setError("新增目录失败");
-					writeJson(rt, response);
-					addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
-					return;
-				}				
-			}
-			else
-			{
-				if(false == FileUtil.createFile(remoteDirectory + path, name))
-				{
-					docSysDebugLog("addDocRS() 文件 " + remoteDirectory + path + name + "创建失败！", rt);
-					rt.setError("新建文件失败");
-					writeJson(rt, response);
-					addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
-					return;
-				}
-			}
-			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "成功", null, null, null, buildSystemLogDetailContent(rt));
-			return;			
+			saveDocToDisk(
+					"addDocRS", "addDocRS", "新增文件", taskId,
+					remoteDirectory, path, name, null, type, null,
+					null,
+					null,
+					null, null, null, null, null,
+					commitMsg,
+					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+					reposAccess,
+					rt,
+					response, request, session);		
+			return;
 		}
 		
 		//Add Doc On Repos
@@ -300,90 +204,25 @@ public class DocController extends BaseController{
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
-		//Get FolderUploadAction
-		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
-		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
-			if(folderUploadAction == null)
-			{
-				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
-				writeJson(rt, response);
-				return;
-			}
-			folderUploadAction.beatTime = new Date().getTime();
-			if(folderUploadAction.totalCount < totalCount)
-			{
-				folderUploadAction.totalCount = totalCount;
-			}
-			
-			//并不是真正的文件上传请求
-			if(isEnd != null)
-			{
-				if(isEnd == 1)
-				{
-					folderUploadAction.isEnd = true;					
-					if(isLastSubEntryForFolderUpload(folderUploadAction))
-					{
-						folderUploadEndHander(folderUploadAction);
-					}
-				}
-				else
-				{
-					folderUploadAction.isEnd = false;										
-				}
-				writeJson(rt, response);
-				return;
-			}
-		}
 		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, type, true,localRootPath,localVRootPath, 0L, "");
-		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", repos, doc, null, folderUploadAction);
-		context.info = "新增文件 [" + doc.getPath() + doc.getName() + "]";
-
-		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
-		{
-			writeJson(rt, response);	
-
-			//upload failed
-			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
-			return;
-		}
-
-		Doc tmpDoc = docSysGetDoc(repos, doc, false);
-		if(tmpDoc != null && tmpDoc.getType() != 0)
-		{
-			rt.setError("文件已存在");
-			rt.setMsgData(1);
-			rt.setData(tmpDoc);
-			writeJson(rt, response);
-
-			//upload failed
-			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
-			return;
-		}
-		
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "新增 " + path + name;
-		}
-		String commitUser = reposAccess.getAccessUser().getName();
-		
-		int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, reposAccess.getAccessUser(),rt, context);
-		
-		writeJson(rt, response);
-		
-		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
-		
+		saveDocToRepos(
+				"addDocRS", "addDocRS", "新增文件", taskId,
+				repos, path, name, null, type, null,
+				null,
+				null,
+				null, null, null, null, null, null,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);		
 	}
 
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
-	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void deleteDoc(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
 			Integer shareId,
@@ -406,92 +245,24 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-
-		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
-		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
-			if(folderUploadAction == null)
-			{
-				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
-				writeJson(rt, response);
-				return;
-			}
-			folderUploadAction.beatTime = new Date().getTime();
-			if(folderUploadAction.totalCount < totalCount)
-			{
-				folderUploadAction.totalCount = totalCount;
-			}
-			
-			//并不是真正的文件上传请求
-			if(isEnd != null)
-			{
-				if(isEnd == 1)
-				{
-					folderUploadAction.isEnd = true;					
-					if(isLastSubEntryForFolderUpload(folderUploadAction))
-					{
-						folderUploadEndHander(folderUploadAction);
-					}
-				}
-				else
-				{
-					folderUploadAction.isEnd = false;										
-				}
-				writeJson(rt, response);
-				return;
-			}
-		}
 		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		
-		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
-		{
-			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
-			return;
-		}
-		
-		if(checkUserAccessPwd(repos, doc, session, rt) == false)
-		{
-			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
-			return;
-		}
-
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "删除 " + doc.getPath() + doc.getName();
-		}
-		String commitUser = reposAccess.getAccessUser().getName();
-		
-		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除文件", repos, doc, null, folderUploadAction);
-		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
-
-		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
-		
-		writeJson(rt, response);
-		
-		switch(ret)
-		{
-		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			break;
-		}
+		deleteDocFromRepos(
+				"deleteDoc", "deleteDoc", "删除文件", taskId,
+				repos, path, name, null, type, null,
+				null,
+				null,
+				null, null, null, null, null, null,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);
 	}
-	
-	
+
 	@RequestMapping("/deleteDocRS.do")
-	public void deleteDocRS(Integer reposId, String remoteDirectory, String path, String name,
+	public void deleteDocRS(
+			String taskId,
+			Integer reposId, String remoteDirectory, String path, String name, Integer type,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
 			Integer shareId,
@@ -502,7 +273,6 @@ public class DocController extends BaseController{
 		Log.info("deleteDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-		
 		
 		if(checkAuthCode(authCode, null, rt) == null)
 		{
@@ -525,19 +295,17 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			if(FileUtil.delFileOrDir(remoteDirectory + path + name) == false)
-			{
-				docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除失败！", rt);
-				rt.setError("删除失败");				
-				writeJson(rt, response);
-				addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", null, null, null, buildSystemLogDetailContent(rt));
-				return;
-			}
-			
-			writeJson(rt, response);	
-			
-			docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除成功！", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","成功", null, null, null, buildSystemLogDetailContent(rt));
+			deleteDocFromDisk(
+					"deleteDocRS", "deleteDocRS", "删除文件", taskId,
+					remoteDirectory, path, name, null, type, null,
+					null,
+					null,
+					null, null, null, null, null, null,
+					commitMsg,
+					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+					reposAccess,
+					rt,
+					response, request, session);
 			return;			
 		}
 		
@@ -549,87 +317,28 @@ public class DocController extends BaseController{
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
-		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
-		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "addDocRS", "addDocRS", "目录上传", rt);
-			if(folderUploadAction == null)
-			{
-				docSysDebugLog("addDocRS() folderUploadAction is null", rt);
-				writeJson(rt, response);
-				return;
-			}
-			folderUploadAction.beatTime = new Date().getTime();
-			if(folderUploadAction.totalCount < totalCount)
-			{
-				folderUploadAction.totalCount = totalCount;
-			}
-			
-			//并不是真正的文件上传请求
-			if(isEnd != null)
-			{
-				if(isEnd == 1)
-				{
-					folderUploadAction.isEnd = true;					
-					if(isLastSubEntryForFolderUpload(folderUploadAction))
-					{
-						folderUploadEndHander(folderUploadAction);
-					}
-				}
-				else
-				{
-					folderUploadAction.isEnd = false;										
-				}
-				writeJson(rt, response);
-				return;
-			}
-		}
 		
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
-		
-		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
-		{
-			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", repos, doc, null, buildSystemLogDetailContent(rt));
-			return;
-		}
-
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "删除 " + doc.getPath() + doc.getName();
-		}
-		String commitUser = reposAccess.getAccessUser().getName();
-
-		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", repos, doc, null, folderUploadAction);
-		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
-		
-		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
-		
-		writeJson(rt, response);
-		
-		switch(ret)
-		{
-		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			break;
-		}
+		deleteDocFromRepos(
+				"deleteDocRS", "deleteDocRS", "删除文件", taskId,
+				repos, path, name, null, type, null,
+				null,
+				null,
+				null, null, null, null, null, null,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);
 	}
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String dstName, 
-							String commitMsg, 
-							Integer shareId,
-							HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void renameDoc(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String dstName, 
+			String commitMsg, 
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** renameDoc [" + path + name + "] ****************");
 		Log.info("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName+ " shareId:" + shareId);
@@ -710,7 +419,7 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", repos, srcDoc, dstDoc, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "重命名 [" + srcDoc.getPath() + srcDoc.getName() + "] 为 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		
 		int ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
@@ -736,7 +445,9 @@ public class DocController extends BaseController{
 	
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
-	public void moveDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type, 
+	public void moveDoc(
+			String taskId,
+			Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type, 
 			String commitMsg, 
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -819,7 +530,7 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 				
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", repos, srcDoc, dstDoc, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		
 		int ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
@@ -873,7 +584,9 @@ public class DocController extends BaseController{
 
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type,
+	public void copyDoc(
+			String taskId,
+			Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type,
 			String commitMsg,
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -941,7 +654,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", repos, srcDoc, dstDoc, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		int ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -962,7 +675,9 @@ public class DocController extends BaseController{
 	
 	/****************   copy/move/rename a Document ******************/
 	@RequestMapping("/copyDocRS.do")
-	public void copyDocRS(Integer reposId, String remoteDirectory, String srcPath, String srcName, String dstPath, String dstName, Integer isMove,
+	public void copyDocRS(
+			String taskId,
+			Integer reposId, String remoteDirectory, String srcPath, String srcName, String dstPath, String dstName, Integer isMove,
 			String commitMsg,
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1086,7 +801,7 @@ public class DocController extends BaseController{
 		}
 
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", repos, srcDoc, dstDoc, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, repos, srcDoc, dstDoc, null);
 		
 		int ret = 0;
 		if(move)
@@ -1341,7 +1056,9 @@ public class DocController extends BaseController{
 
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
+	public void checkDocInfo(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
@@ -1384,7 +1101,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "checkDocInfo", "checkDocInfo", "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "checkDocInfo", "checkDocInfo", "目录上传", taskId, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkDocInfo() folderUploadAction is null", rt);
@@ -1404,7 +1121,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkDocInfo", "checkDocInfo", "文件上传", repos, doc, null, folderUploadAction);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkDocInfo", "checkDocInfo", "文件上传", taskId, repos, doc, null, folderUploadAction);
 		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
 
 		//检查登录用户的权限
@@ -1624,7 +1341,9 @@ public class DocController extends BaseController{
 	
 	//check if chunk uploaded 
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+	public void checkChunkUploaded(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash, Integer combineDisabled,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
@@ -1676,7 +1395,7 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;
 		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "checkChunkUploaded", "checkChunkUploaded", "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "checkChunkUploaded", "checkChunkUploaded", "目录上传", taskId, rt);
 			if(folderUploadAction == null)
 			{
 				docSysDebugLog("checkChunkUploaded() folderUploadAction is null", rt);
@@ -1731,7 +1450,7 @@ public class DocController extends BaseController{
 				checkAndAddParentDoc(doc, rt);
 				
 				//Build ActionContext
-				ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", repos, doc, null, folderUploadAction);
+				ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", taskId, repos, doc, null, folderUploadAction);
 				context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
 				
 				int ret = 0;
@@ -1838,7 +1557,9 @@ public class DocController extends BaseController{
 	//combine chunks
 	//注意：chunkIndex不能小于chunkNum，否则deleteChunks逻辑会有问题
 	@RequestMapping("/combineChunks.do")
-	public void combineChunks(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+	public void combineChunks(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Long chunkSize,String chunkHash,
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
@@ -1878,66 +1599,140 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//Get FolderUploadAction
-		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
-		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "combineChunks", "combineChunks", "目录上传", rt);
-			if(folderUploadAction == null)
-			{
-				docSysDebugLog("combineChunks() folderUploadAction is null", rt);
-				writeJson(rt, response);
-				return;
-			}
-			folderUploadAction.beatTime = new Date().getTime();
-			if(folderUploadAction.totalCount < totalCount)
-			{
-				folderUploadAction.totalCount = totalCount;
-			}
+		saveDocToRepos(
+				"combineChunks", "combineChunks", "文件上传", taskId,
+				repos, path, name, size, type, checkSum,
+				null,
+				null,
+				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, null,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);
+	}
 
+	@RequestMapping("/getMaxThreadCount.do")
+	public void getMaxThreadCount(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getMaxThreadCount.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		Integer maxThreadCount = 1;
+		
+		Log.info("getMaxThreadCount() DB_TYPE:" + DB_TYPE);
+		if(false == DB_TYPE.equals("sqlite"))
+		{
+			maxThreadCount = getMaxThreadCount();
+			Log.debug("getMaxThreadCount() maxThreadCount in config:" + maxThreadCount);
 		}
-					
-		//Build Doc
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);	
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, 1, true,localRootPath, localVRootPath, size, checkSum);
-		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "combineChunks", "combineChunks", "文件上传", repos, doc, null, folderUploadAction);
-		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
+		Log.info("getMaxThreadCount() maxThreadCount:" + maxThreadCount);		
+		
+		rt.setData(maxThreadCount);
+		writeJson(rt, response);
+	}
+	
+	/****************   Upload a Document ******************/
+	@RequestMapping("/uploadDoc.do")
+	public void uploadDoc(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+			MultipartFile uploadFile,
+			String fileLink,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
+			Integer shareId,
+			String authCode,
+			Integer usage,	//UpgradeDocSystem, InstallOffice
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		Log.infoHead("************** uploadDoc [" + path + name + "] ****************");
+		Log.info("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
+							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
+							+ " shareId:" + shareId + " commitMsg:" + commitMsg
+							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
 
-		//check and add parentDir
-		checkAndAddParentDoc(doc, rt);
-
-		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());			
-		if(commitMsg == null || commitMsg.isEmpty())
+		//文件类型未指定当文件处理
+		if(type == null)
 		{
-			commitMsg = "上传 " + path + name;
+			type = 1;
 		}
-		String commitUser = reposAccess.getAccessUser().getName();
-
-		int ret = 0;
-		Doc dbDoc = docSysGetDoc(repos, doc, false);
-		if(dbDoc == null || dbDoc.getType() == 0) //新增文件
+		
+		if(usage != null)
 		{
-			ret = addDoc(repos, doc,
-							null,
-							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
-
-			writeJson(rt, response);
-			
-			uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
+			uploadDocForUsage(
+					"uploadDoc", null, "文件上传", null,
+					reposId, docId, pid, path, name,  level, type, size, checkSum,
+					uploadFile,
+					fileLink,
+					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
+					commitMsg,
+					dirPath, batchStartTime, totalCount, //for folder upload			
+					shareId,
+					usage,	//UpgradeDocSystem, InstallOffice
+					response, request, session);
 			return;
 		}
-
-		//更新文件
-		ret = updateDoc(repos, doc, 
-						null,   
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);					
-
-		writeJson(rt, response);	
 		
-		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+		
+		saveDocToRepos(
+				"uploadDoc", "uploadDoc", "文件上传", taskId,
+				repos, path, name, size, type, checkSum,
+				uploadFile,
+				fileLink,
+				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);
+		return;
+	}
+	
+	private void checkAndAddParentDoc(Doc doc, ReturnAjax rt) {
+		List<Doc> addedParentDocList = null;
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			if(rt != null)
+			{
+				addedParentDocList = new ArrayList<Doc>();
+				Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+				addedParentDocList.add(parentDoc);
+				checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
+				rt.setDataEx(addedParentDocList);
+			}
+			localParentDir.mkdirs();
+		}
+
+	}
+
+	private void checkAndAddParentDoc(List<Doc> addedParentDocList, Doc doc, ReturnAjax rt) {
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+			addedParentDocList.add(0, parentDoc);	//insert to top
+			checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
+		}
 	}
 	
 	public void combineChunksForUsage(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
@@ -1994,129 +1789,8 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	@RequestMapping("/getMaxThreadCount.do")
-	public void getMaxThreadCount(HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		Log.infoHead("****************** getMaxThreadCount.do ***********************");
-
-		ReturnAjax rt = new ReturnAjax();
-		Integer maxThreadCount = 1;
-		
-		Log.info("getMaxThreadCount() DB_TYPE:" + DB_TYPE);
-		if(false == DB_TYPE.equals("sqlite"))
-		{
-			maxThreadCount = getMaxThreadCount();
-			Log.debug("getMaxThreadCount() maxThreadCount in config:" + maxThreadCount);
-		}
-		Log.info("getMaxThreadCount() maxThreadCount:" + maxThreadCount);		
-		
-		rt.setData(maxThreadCount);
-		writeJson(rt, response);
-	}
-	
-	/****************   Upload a Document ******************/
-	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
-			MultipartFile uploadFile,
-			String fileLink,
-			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
-			String commitMsg,
-			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
-			Integer shareId,
-			String authCode,
-			Integer usage,	//UpgradeDocSystem, InstallOffice
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		Log.infoHead("************** uploadDoc [" + path + name + "] ****************");
-		Log.info("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
-							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash + " combineDisabled:" + combineDisabled
-							+ " shareId:" + shareId + " commitMsg:" + commitMsg
-							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
-
-		//文件类型未指定当文件处理
-		if(type == null)
-		{
-			type = 1;
-		}
-		
-		if(usage != null)
-		{
-			uploadDocForUsage(
-					"uploadDoc", null,
-					reposId, docId, pid, path, name,  level, type, size, checkSum,
-					uploadFile,
-					fileLink,
-					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
-					commitMsg,
-					dirPath, batchStartTime, totalCount, //for folder upload			
-					shareId,
-					usage,	//UpgradeDocSystem, InstallOffice
-					response, request, session);
-			return;
-		}
-		
-		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-		
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
-		if(reposAccess == null)
-		{
-			writeJson(rt, response);			
-			return;	
-		}
-		
-		Repos repos = getReposEx(reposId);
-		if(!reposCheck(repos, rt, response))
-		{
-			return;
-		}
-		
-		uploadDocToRepos(
-				"uploadDoc", null,
-				repos, path, name, size, type, checkSum,
-				uploadFile,
-				fileLink,
-				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
-				commitMsg,
-				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
-				reposAccess,
-				rt,
-				response, request, session);
-		return;
-	}
-	
-	private void checkAndAddParentDoc(Doc doc, ReturnAjax rt) {
-		List<Doc> addedParentDocList = null;
-		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-		String localParentPath = doc.getLocalRootPath() + doc.getPath();
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			if(rt != null)
-			{
-				addedParentDocList = new ArrayList<Doc>();
-				Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-				addedParentDocList.add(parentDoc);
-				checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
-				rt.setDataEx(addedParentDocList);
-			}
-			localParentDir.mkdirs();
-		}
-
-	}
-
-	private void checkAndAddParentDoc(List<Doc> addedParentDocList, Doc doc, ReturnAjax rt) {
-		String localParentPath = doc.getLocalRootPath() + doc.getPath();
-		File localParentDir = new File(localParentPath);
-		if(false == localParentDir.exists())
-		{
-			Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-			addedParentDocList.add(0, parentDoc);	//insert to top
-			checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
-		}
-	}
-
 	public void uploadDocForUsage(
-			String event, String taskId,
+			String event, String subEvent, String eventName, String queryId,
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
@@ -2210,7 +1884,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 
 		//TODO: 根据用途修改信息
-		addSystemLog(request, accessUser, event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+		addSystemLogEx(request, accessUser, event, subEvent, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 	}
 
 	private String getLocalRootPathForUsage(Integer usage) {
@@ -2261,8 +1935,9 @@ public class DocController extends BaseController{
 	}
 
 	@RequestMapping("/uploadDocRS.do")
-	public void uploadDocRS(Integer reposId, String remoteDirectory, String path, String name, Long size, String checkSum,
-			String taskId,	//If taskId was set, need to add queryTask so that this interface can be queried by user
+	public void uploadDocRS(
+			String taskId,	//用户自定义的taskId，将会被存入系统日志的queryId字段，以便用户可以随时查询该任务的信息
+			Integer reposId, String remoteDirectory, String path, String name, Long size, Integer type, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
@@ -2288,6 +1963,11 @@ public class DocController extends BaseController{
 
 		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
 
+		if(type == null)
+		{
+			type = 1;
+		}
+		
 		//upload to server directory
 		if(reposId == null)
 		{
@@ -2298,8 +1978,9 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			uploadDocToDisk("uploadDocRS", taskId,
-					remoteDirectory, path, name, size, checkSum,
+			saveDocToDisk(
+					"uploadDocRS", "uploadDocRS", "文件上传", taskId,
+					remoteDirectory, path, name, size, type, checkSum,
 					uploadFile,
 					fileLink,
 					chunkIndex, chunkNum, cutSize, chunkSize, chunkHash,
@@ -2320,8 +2001,9 @@ public class DocController extends BaseController{
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 				
-		uploadDocToRepos("uploadDocRS", taskId,
-				repos, path, name, size, 1, checkSum,
+		saveDocToRepos(
+				"uploadDocRS", "uploadDocRS", "文件上传", taskId,
+				repos, path, name, size, type, checkSum,
 				uploadFile,
 				fileLink,
 				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, null,
@@ -2333,8 +2015,121 @@ public class DocController extends BaseController{
 		return;
 	}
 	
-	private void uploadDocToRepos(
-			String event, String taskId,	//info for SystemLog 
+	private void deleteDocFromDisk(
+			String event, String subEvent, String eventName, String queryId,	//info for SystemLog 
+			String remoteDirectory, String path, String name, Long size, Integer type, String checkSum, 
+			MultipartFile uploadFile, 
+			String fileLink, 
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg, 
+			String dirPath, Long batchStartTime, Integer totalCount, Integer isEnd, 
+			ReposAccess reposAccess, 
+			ReturnAjax rt, 
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) 
+	{
+		// TODO Auto-generated method stub
+		if(FileUtil.delFileOrDir(remoteDirectory + path + name) == false)
+		{
+			docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除失败！", rt);
+			rt.setError("删除失败");				
+			writeJson(rt, response);
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		
+		writeJson(rt, response);	
+		
+		docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除成功！", rt);
+		addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));
+	}
+	
+	private void deleteDocFromRepos(
+			String event, String subEvent, String eventName, String queryId,	//info for SystemLog 
+			Repos repos, String path, String name, Long size, Integer type, String checkSum, 
+			MultipartFile uploadFile, 
+			String fileLink, 
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg, 
+			String dirPath, Long batchStartTime, Integer totalCount, Integer isEnd, 
+			ReposAccess reposAccess, 
+			ReturnAjax rt, 
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) 
+	{
+		// TODO Auto-generated method stub
+		FolderUploadAction folderUploadAction = null;
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
+		{
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, event, subEvent, "目录上传", queryId, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("deleteDocAtRepos() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+			folderUploadAction.beatTime = new Date().getTime();
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+			
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
+		
+		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "删除 " + doc.getPath() + doc.getName();
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, subEvent, eventName, queryId, repos, doc, null, folderUploadAction);
+		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
+
+		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+		
+		writeJson(rt, response);
+		
+		deleteAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
+	}
+	
+	private void saveDocToRepos(
+			String event, String subEvent, String eventName, String queryId,	//info for SystemLog 
 			Repos repos, String path, String name, Long size, Integer type, String checkSum, 
 			MultipartFile uploadFile, 
 			String fileLink, 
@@ -2349,10 +2144,10 @@ public class DocController extends BaseController{
 		FolderUploadAction folderUploadAction = null;		
 		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
 		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, event, event, "目录上传", rt);
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, event, subEvent, "目录上传", queryId, rt);
 			if(folderUploadAction == null)
 			{
-				docSysDebugLog("uploadDocToRepos() folderUploadAction is null", rt);
+				docSysDebugLog("saveDocToRepos() folderUploadAction is null", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -2388,8 +2183,8 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, size, checkSum);
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, event, "文件上传", repos, doc, null, folderUploadAction);
-		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, event, eventName, queryId, repos, doc, null, folderUploadAction);
+		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
 
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
@@ -2451,7 +2246,7 @@ public class DocController extends BaseController{
 			
 			if(isUploadSizeExceeded(size, parentDocUserAuth.getUploadSize()))
 			{
-				docSysDebugLog("uploadDocToRepos() size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+				docSysDebugLog("saveDocToRepos() size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
 
 				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
 				docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
@@ -2477,7 +2272,7 @@ public class DocController extends BaseController{
 		
 		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
 		{
-			docSysDebugLog("uploadDocToRepos() size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+			docSysDebugLog("saveDocToRepos() size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
 			
 			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
 			docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
@@ -2509,7 +2304,7 @@ public class DocController extends BaseController{
 			
 			if(combineDisabled != null)
 			{
-				Log.debug("uploadDocToRepos() combineDisabled!");
+				Log.debug("saveDocToRepos() combineDisabled!");
 				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
 				writeJson(rt, response);
 				return;				
@@ -2547,8 +2342,9 @@ public class DocController extends BaseController{
 		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);				
 	}
 
-	private void uploadDocToDisk(String event, String taskId, //Info for SystemLog
-			String remoteDirectory, String path, String name, Long size, String checkSum,
+	private void saveDocToDisk(
+			String event, String subEvent, String eventName, String queryId, //Info for SystemLog
+			String remoteDirectory, String path, String name, Long size, Integer type, String checkSum,
 			MultipartFile uploadFile,
 			String fileLink,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash,
@@ -2567,11 +2363,11 @@ public class DocController extends BaseController{
 			String fileChunkName = name + "_" + chunkIndex;
 			if(saveFileEx(uploadFile, fileLink, chunkTmpPath, fileChunkName) == false)
 			{
-				docSysDebugLog("uploadDocToDisk() 分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				docSysDebugLog("saveDocToDisk() 分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
 				
-				addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 			
@@ -2588,20 +2384,20 @@ public class DocController extends BaseController{
 		{
 			if(saveFileEx(uploadFile, fileLink, remoteDirectory + path, name) == false)
 			{
-				docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
 				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
 			
 				writeJson(rt, response);
 				
-				addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
-			docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
+			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
 
 			writeJson(rt, response);
 			
-			addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -2614,18 +2410,18 @@ public class DocController extends BaseController{
 			}
 			if(FileUtil.moveFileOrDir(chunkTmpPath, name + "_0", localParentPath, name, true) == false)
 			{
-				docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
 				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
 
 				writeJson(rt, response);
 
-				addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
 			writeJson(rt, response);
-			docSysDebugLog("uploadDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -2635,18 +2431,18 @@ public class DocController extends BaseController{
 		//Verify the size and FileCheckSum
 		if(false == checkFileSizeAndCheckSum(localParentPath,name, size, checkSum))
 		{
-			docSysDebugLog("uploadDocToDisk() [" + path + name + "] 文件校验失败", rt);
+			docSysDebugLog("saveDocToDisk() [" + path + name + "] 文件校验失败", rt);
 			docSysErrorLog("文件校验失败", rt);
 			
 			writeJson(rt, response);
 
-			addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
 		writeJson(rt, response);
-		docSysDebugLog("uploadDocToDisk() [" + path + name + "] 文件校验成功", rt);
-		addSystemLog(request, reposAccess.getAccessUser(), event, event, "上传文件", "成功",  null, null, null, buildSystemLogDetailContent(rt));			
+		docSysDebugLog("saveDocToDisk() [" + path + name + "] 文件校验成功", rt);
+		addSystemLogEx(request, reposAccess.getAccessUser(), event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
 	}
 
 	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {

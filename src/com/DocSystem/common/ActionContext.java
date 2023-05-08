@@ -13,6 +13,8 @@ public class ActionContext {
 	public String event;
 	public String eventName;
 	public String subEvent;
+	
+	public String queryId;	//queryId for this task
 		
 	public Repos repos;
 	public Doc doc;

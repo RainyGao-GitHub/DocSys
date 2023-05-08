@@ -12,6 +12,7 @@ public class FolderUploadAction {
 	public String event;
 	public String subEvent;
 	public String eventName;
+	public String queryId;
 	
 	public String requestIP;
 
