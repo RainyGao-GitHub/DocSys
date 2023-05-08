@@ -20308,4 +20308,585 @@ public class BaseController  extends BaseFunction{
 		
 		return true;
 	}
+	
+	//Doc Operation Interface
+	protected void deleteDocFromDisk(
+			String event, String subEvent, String eventName, String queryId,	//info for SystemLog 
+			String remoteDirectory, String path, String name, Long size, Integer type, String checkSum, 
+			MultipartFile uploadFile, 
+			String fileLink, 
+			Integer chunkIndex, Integer chunkNum, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg, 
+			String dirPath, Long batchStartTime, Integer totalCount, Integer isEnd, 
+			ReposAccess reposAccess, 
+			ReturnAjax rt, 
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) 
+	{
+		// TODO Auto-generated method stub
+		if(FileUtil.delFileOrDir(remoteDirectory + path + name) == false)
+		{
+			docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除失败！", rt);
+			rt.setError("删除失败");				
+			writeJson(rt, response);
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		
+		writeJson(rt, response);	
+		
+		docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除成功！", rt);
+		addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));
+	}
+	
+	protected void deleteDocFromRepos(
+			String event, String subEvent, String eventName, String queryId,	//info for SystemLog 
+			Repos repos, String path, String name, Long size, Integer type, String checkSum, 
+			MultipartFile uploadFile, 
+			String fileLink, 
+			Integer chunkIndex, Integer chunkNum, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg, 
+			String dirPath, Long batchStartTime, Integer totalCount, Integer isEnd, 
+			ReposAccess reposAccess, 
+			ReturnAjax rt, 
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) 
+	{
+		// TODO Auto-generated method stub
+		FolderUploadAction folderUploadAction = null;
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
+		{
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, event, subEvent, "目录上传", queryId, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("deleteDocAtRepos() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+			folderUploadAction.beatTime = new Date().getTime();
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+			
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
+		
+		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "删除 " + doc.getPath() + doc.getName();
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, subEvent, eventName, queryId, repos, doc, null, folderUploadAction);
+		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
+
+		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+		
+		writeJson(rt, response);
+		
+		deleteAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
+	}
+	
+	protected void saveDocToRepos(
+			String event, String subEvent, String eventName, String queryId,	//info for SystemLog 
+			Repos repos, String path, String name, Long size, Integer type, String checkSum, 
+			MultipartFile uploadFile, 
+			String fileLink, 
+			byte [] docData,
+			Integer chunkIndex, Integer chunkNum, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg, 
+			String dirPath, Long batchStartTime, Integer totalCount, Integer isEnd, 
+			ReposAccess reposAccess, 
+			ReturnAjax rt, 
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) 
+	{
+		//Get FolderUploadAction
+		FolderUploadAction folderUploadAction = null;		
+		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
+		{
+			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, event, subEvent, "目录上传", queryId, rt);
+			if(folderUploadAction == null)
+			{
+				docSysDebugLog("saveDocToRepos() folderUploadAction is null", rt);
+				writeJson(rt, response);
+				return;
+			}
+			folderUploadAction.beatTime = new Date().getTime();
+			if(folderUploadAction.totalCount < totalCount)
+			{
+				folderUploadAction.totalCount = totalCount;
+			}
+
+			//并不是真正的文件上传请求
+			if(isEnd != null)
+			{
+				if(isEnd == 1)
+				{
+					folderUploadAction.isEnd = true;					
+					if(isLastSubEntryForFolderUpload(folderUploadAction))
+					{
+						folderUploadEndHander(folderUploadAction);
+					}
+				}
+				else
+				{
+					folderUploadAction.isEnd = false;										
+				}
+				writeJson(rt, response);
+				return;
+			}			
+		}
+		
+		//Build Doc
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, size, checkSum);
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, event, eventName, queryId, repos, doc, null, folderUploadAction);
+		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
+
+		//Check Edit Right
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
+		if(docUserAuth == null)
+		{
+			docSysErrorLog("您无此操作权限，请联系管理员", rt);
+			writeJson(rt, response);
+			
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+			return;
+		}
+
+		if(docUserAuth.getAccess() == 0)
+		{
+			docSysErrorLog("您无权访问该目录，请联系管理员", rt);
+			writeJson(rt, response);
+			
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+			return;
+		}
+
+		//Check Add Right
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
+		{
+			Doc parentDoc = buildBasicDoc(repos.getId(), doc.getPid(), null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+			DocAuth parentDocUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask());
+			if(parentDocUserAuth == null)
+			{
+				docSysErrorLog("您无此操作权限，请联系管理员", rt);
+				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+				return;
+			}
+			
+			if(parentDocUserAuth.getAccess() == 0)
+			{
+				docSysErrorLog("您无权访问该目录，请联系管理员", rt);
+				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+				return;
+			}
+			
+			if(parentDocUserAuth.getAddEn() == null || parentDocUserAuth.getAddEn() != 1)
+			{
+				docSysErrorLog("您没有该目录的新增权限，请联系管理员", rt);
+				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+				return;
+			}
+			
+			if(isUploadSizeExceeded(size, parentDocUserAuth.getUploadSize()))
+			{
+				docSysDebugLog("saveDocToRepos() size:" + size + " parentDocUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+
+				String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+				docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
+				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+				return;							
+			}
+		}
+		else
+		{
+			if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
+			{
+				docSysErrorLog("您没有该文件的编辑权限，请联系管理员", rt);
+				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+				return;				
+			}
+		}
+		
+		if(isUploadSizeExceeded(size, docUserAuth.getUploadSize()))
+		{
+			docSysDebugLog("saveDocToRepos() size:" + size + " docUserAuth max uploadSize:" + docUserAuth.getUploadSize(), rt);
+			
+			String maxUploadSize = getMaxUploadSize(docUserAuth.getUploadSize());
+			docSysErrorLog("上传文件大小超限[" + maxUploadSize + "]，请联系管理员", rt);
+			
+			writeJson(rt, response);
+
+			//upload failed
+			uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+			return;							
+		}
+
+		checkAndAddParentDoc(doc, rt);
+
+		//如果是分片文件，则保存分片文件
+		if(null != chunkIndex)
+		{
+			//Save File chunk to tmp dir with name_chunkIndex
+			String fileChunkName = name + "_" + chunkIndex;
+			String userTmpDir = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
+			if(saveFileEx(uploadFile, fileLink, docData, userTmpDir,fileChunkName) == false)
+			{
+				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				writeJson(rt, response);
+				
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+				return;
+			}
+			
+			if(combineDisabled != null)
+			{
+				Log.debug("saveDocToRepos() combineDisabled!");
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;				
+			}
+			
+			//如果是最后一个分片则开始文件合并处理
+			if(chunkIndex < (chunkNum-1))
+			{
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		//文件上传结束（如果是分片上传那么文件已经存入分片文件中）
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传 " + path + name;
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
+		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
+			
+		int ret = 0;
+	
+		Integer saveType = getSaveType(doc, chunkNum, uploadFile, fileLink, null);		
+	
+		ret = saveDoc_FSM(repos, doc, 
+				saveType ,
+				uploadFile,
+				null,
+				fileLink,
+				chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
+
+		writeJson(rt, response);
+		uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);				
+	}
+
+	protected void saveDocToDisk(
+			String event, String subEvent, String eventName, String queryId, //Info for SystemLog
+			String localDiskPath, String path, String name, Long size, Integer type, String checkSum,
+			MultipartFile uploadFile,
+			String fileLink,
+			byte [] docData,
+			Integer chunkIndex, Integer chunkNum, Long chunkSize, String chunkHash,  Integer combineDisabled,
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
+			User accessUser,
+			ReturnAjax rt,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) 
+	{
+		//如果是分片文件，则保存分片文件
+		String localParentPath = localDiskPath + path;
+		String chunkTmpPath = localParentPath;
+		if(null != chunkIndex)
+		{
+			String fileChunkName = name + "_" + chunkIndex;
+			if(saveFileEx(uploadFile, fileLink, docData, chunkTmpPath, fileChunkName) == false)
+			{
+				docSysDebugLog("saveDocToDisk() 分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
+				writeJson(rt, response);
+				
+				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+			
+			if(combineDisabled != null)
+			{
+				Log.debug("saveDocToDisk() combineDisabled!");
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;				
+			}
+			
+			if(chunkIndex < (chunkNum-1))
+			{
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;					
+			}
+		}
+		
+		//非分片或者是已经收到最后一个分片文件
+		if(null == chunkNum)	//非分片上传
+		{
+			if(saveFileEx(uploadFile, fileLink, docData, localDiskPath + path, name) == false)
+			{
+				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
+			
+				writeJson(rt, response);
+				
+				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+
+			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
+
+			writeJson(rt, response);
+			
+			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			return;
+		}
+		
+		if(chunkNum == 1)	//单个分片文件直接复制
+		{
+			String chunk0Path = chunkTmpPath + name + "_0";
+			if(new File(chunk0Path).exists() == false)
+			{
+				chunk0Path =  chunkTmpPath + name;
+			}
+			if(FileUtil.moveFileOrDir(chunkTmpPath, name + "_0", localParentPath, name, true) == false)
+			{
+				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
+				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
+
+				writeJson(rt, response);
+
+				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+
+			writeJson(rt, response);
+			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
+			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			return;
+		}
+		
+		//多个则需要进行合并
+		combineChunks(localParentPath,name,chunkNum,chunkSize,chunkTmpPath);
+		deleteChunks(name,chunkIndex, chunkNum,chunkTmpPath);
+		//Verify the size and FileCheckSum
+		if(false == checkFileSizeAndCheckSum(localParentPath,name, size, checkSum))
+		{
+			docSysDebugLog("saveDocToDisk() [" + path + name + "] 文件校验失败", rt);
+			docSysErrorLog("文件校验失败", rt);
+			
+			writeJson(rt, response);
+
+			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+			return;
+		}
+		
+		writeJson(rt, response);
+		docSysDebugLog("saveDocToDisk() [" + path + name + "] 文件校验成功", rt);
+		addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
+	}
+
+	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) {
+		if(doc.getType() == 2)
+		{
+			return SAVE_TYPE_AddEntry;
+		}
+		
+		if(chunkNum != null)
+		{
+			return SAVE_TYPE_ChunkedFile;	
+		}
+		
+		if(uploadFile != null)
+		{
+			return SAVE_TYPE_MultipartFile;
+		}
+		
+		if(fileLink != null)
+		{
+			return SAVE_TYPE_FileLink;
+		}
+
+		if(docData != null)
+		{
+			return SAVE_TYPE_DataBuffer;
+		}
+
+		return null;
+	}
+
+	private boolean saveFileEx(MultipartFile uploadFile, String fileLink, byte [] docData, String localParentPath, String name) 
+	{
+		if(docData != null)
+		{
+			return FileUtil.saveDataToFile(docData, localParentPath, name);
+		}
+
+		//Save File From uploadFile
+		if(uploadFile != null)
+		{
+			return FileUtil.saveFileEx(uploadFile, localParentPath, name);
+		}
+				
+		//Save File From fileLink
+		if(fileLink != null)
+		{
+			return saveFileFromUrl(fileLink, localParentPath,name);
+		}		
+		
+		//说明不需要进行文件存储
+		return true;
+	}
+	
+	protected String getUsageName(Integer usage) {
+		switch(usage)
+		{
+		case constants.DocUpload.UpgradeDocSystem:
+			return "系统升级";
+		case constants.DocUpload.InstallOffice:
+			return "安装Office";
+		}
+		return "文件上传";
+	}
+
+	protected void checkAndAddParentDoc(Doc doc, ReturnAjax rt) {
+		List<Doc> addedParentDocList = null;
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			if(rt != null)
+			{
+				addedParentDocList = new ArrayList<Doc>();
+				Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+				addedParentDocList.add(parentDoc);
+				checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
+				rt.setDataEx(addedParentDocList);
+			}
+			localParentDir.mkdirs();
+		}
+
+	}
+
+	private void checkAndAddParentDoc(List<Doc> addedParentDocList, Doc doc, ReturnAjax rt) {
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getReposPath(), doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+			addedParentDocList.add(0, parentDoc);	//insert to top
+			checkAndAddParentDoc(addedParentDocList, parentDoc, rt);
+		}
+	}
+
+	protected String getLocalRootPathForUsage(Integer usage) {
+		String localRootPath = null;
+		switch(usage)
+		{
+		case constants.DocUpload.UpgradeDocSystem:
+			localRootPath = docSysIniPath + "upgrade/";
+			break;
+		case constants.DocUpload.InstallOffice:
+			localRootPath = docSysWebPath + "web/static/";
+			break;
+		}
+		return localRootPath;
+	}
+
+	protected String getMaxUploadSize(Long uploadSize) {
+		//字节
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "";
+		}
+		
+		//KB
+		uploadSize = uploadSize/1024;
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "K"; 
+		}
+		
+		//MB
+		uploadSize = uploadSize/1024;
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "M";
+		}
+		
+		//GB
+		uploadSize = uploadSize/1024;
+		if(uploadSize < 1024)
+		{
+			return uploadSize + "G";
+		}
+		
+		//TB
+		uploadSize = uploadSize/1024;
+		return uploadSize + "T";
+	}
 }
