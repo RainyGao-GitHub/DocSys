@@ -160,7 +160,7 @@ public class DocController extends BaseController{
 			//rt.setError("无效授权码或授权码已过期！");
 			writeJson(rt, response);
 			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
-			addSystemLog(request, null, "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, null, "addDocRS", "addDocRS", "新增文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -175,7 +175,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 
 				docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed: remoteDirectory is null", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
+				addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
@@ -200,7 +200,7 @@ public class DocController extends BaseController{
 		{
 			writeJson(rt, response);
 			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", "失败", null, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
@@ -293,7 +293,7 @@ public class DocController extends BaseController{
 				docSysDebugLog("deleteDocRS remoteDirectory is null", rt);
 				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
-				addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件","失败", null, null, null, buildSystemLogDetailContent(rt));
+				addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
@@ -382,14 +382,14 @@ public class DocController extends BaseController{
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 	
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -402,7 +402,7 @@ public class DocController extends BaseController{
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -415,7 +415,7 @@ public class DocController extends BaseController{
 
 			writeJson(rt, response);
 			
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
@@ -431,12 +431,12 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "失败",  buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
 			//Update related DocShare
 			updateRelatedDocShare(repos, srcDoc, dstDoc, rt);
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "成功",  buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			//Update related DocShare
@@ -487,7 +487,7 @@ public class DocController extends BaseController{
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), srcParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 
@@ -495,7 +495,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -513,7 +513,7 @@ public class DocController extends BaseController{
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));	
 
 			return;
 		}
@@ -525,7 +525,7 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
 
 			return;
 		}
@@ -542,12 +542,12 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "失败",  buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
 			//Update related DocShare
 			updateRelatedDocShare(repos, srcDoc, dstDoc, rt);
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "成功",  buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			//Update related DocShare
@@ -622,7 +622,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -644,14 +644,14 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -665,10 +665,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "失败",  buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "成功",  buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -710,7 +710,7 @@ public class DocController extends BaseController{
 				docSysDebugLog("copyDocRS remoteDirectory is null", rt);
 				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
-				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  null, null, null, buildSystemLogDetailContent(rt));
+				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
@@ -721,7 +721,7 @@ public class DocController extends BaseController{
 					docSysDebugLog("copyDocRS() move " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！", rt);
 					rt.setError("移动失败");
 					writeJson(rt, response);			
-					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  null, null, null, buildSystemLogDetailContent(rt));
+					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 					return;
 				}				
 			}
@@ -732,7 +732,7 @@ public class DocController extends BaseController{
 					docSysDebugLog("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！", rt);
 					rt.setError("复制失败");
 					writeJson(rt, response);			
-					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  null, null, null, buildSystemLogDetailContent(rt));
+					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 					return;
 				}
 			}
@@ -740,7 +740,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			
 			docSysDebugLog("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "成功！", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","成功",  null, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "成功", null, null, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 		
@@ -761,7 +761,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -793,11 +793,11 @@ public class DocController extends BaseController{
 			
 			if(move)
 			{
-				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "移动文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));				
+				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "移动文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));				
 			}
 			else
 			{
-				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件","失败",  repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
+				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
 			}
 			return;
 		}
@@ -822,10 +822,10 @@ public class DocController extends BaseController{
 		switch(ret)
 		{
 		case 0:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "失败",  buildSystemLogDetailContent(rt));						
 			break;
 		case 1:
-			addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+			addSystemLog(context, reposAccess.getAccessUser(), "成功",  buildSystemLogDetailContent(rt));						
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
 			break;
@@ -834,7 +834,9 @@ public class DocController extends BaseController{
 
 	/****************   refresh a Document ******************/
 	@RequestMapping("/refreshDoc.do")
-	public void refreshDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void refreshDoc(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitMsg, Integer force,
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -854,7 +856,7 @@ public class DocController extends BaseController{
 		if(!reposCheck(repos, rt, response))
 		{
 			docSysDebugLog("refreshDoc() [" + path + name + "] reposCheck Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
@@ -873,7 +875,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 
 			docSysDebugLog("refreshDoc() [" + doc.getPath() + doc.getName() + "] was force locked", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 
@@ -897,7 +899,7 @@ public class DocController extends BaseController{
 			public void run() {
 				Log.debug("refreshDoc() executeUniqueCommonActionList in new thread");
 				executeUniqueCommonActionList(actionList, rt);
-				addSystemLog(requestIP, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+				addSystemLog(requestIP, reposAccess.getAccessUser(), "refreshDoc", "refreshDoc", "刷新", taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 			}
 		}).start();
 	}
@@ -1775,6 +1777,7 @@ public class DocController extends BaseController{
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
 	public void uploadMarkdownPic(
+			String taskId,
 			Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String imgName,
 			@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception
@@ -1868,12 +1871,14 @@ public class DocController extends BaseController{
 		res.put("message", "upload success!");
 		writeJson(res,response);
 		
-		addSystemLog(request, null, "uploadMarkdownPic", "uploadMarkdownPic", "上传备注图片", "成功",  repos, curDoc, null, "");			
+		addSystemLog(request, null, "uploadMarkdownPic", "uploadMarkdownPic", "上传备注图片", taskId, "成功", repos, curDoc, null, "");			
 	}
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
-	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+	public void updateDocContent(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			String content, Integer docType,
 			String commitMsg,
 			Integer shareId,
@@ -1908,7 +1913,7 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
 			writeJson(rt, response);			
-			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -1921,7 +1926,7 @@ public class DocController extends BaseController{
 		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -1937,7 +1942,7 @@ public class DocController extends BaseController{
 				docSysErrorLog(name + " 不是文本文件，禁止修改！", rt);
 				writeJson(rt, response);
 				
-				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
+				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));			
 				return;
 			}
 			
@@ -1951,13 +1956,13 @@ public class DocController extends BaseController{
 	
 			if(ret)
 			{
-				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));			
+				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));			
 				deleteTmpRealDocContent(repos, doc, reposAccess.getAccessUser());
 				executeCommonActionList(actionList, rt);
 			}
 			else
 			{
-				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));			
+				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));			
 			}
 			return;
 		}
@@ -1972,19 +1977,21 @@ public class DocController extends BaseController{
 
 		if(ret)
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));			
 			deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
 			executeCommonActionList(actionList, rt);
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
+			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改备注", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));						
 		}
 	}
 	
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
-	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void tmpSaveVirtualDocContent(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String content, Integer docType,
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -2021,7 +2028,7 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("saveRealDocContent Error!", rt);
 				docSysDebugLog("tmpSaveVirtualDocContent() saveTmpRealDocContent [" + doc.getPath() + doc.getName() + "]", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "文件修改临时保存", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
+				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "文件修改临时保存", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));						
 			}			
 		}
 		else
@@ -2030,7 +2037,7 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("saveVirtualDocContent Error!", rt);
 				docSysDebugLog("tmpSaveVirtualDocContent() saveTmpRealDocContent [" + doc.getPath() + doc.getName() + "]", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "备注修改临时保存", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));						
+				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "备注修改临时保存", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));						
 			}
 		}
 		writeJson(rt, response);
@@ -2038,7 +2045,9 @@ public class DocController extends BaseController{
 	
 	/**************** downloadDocPrepare ******************/
 	@RequestMapping("/downloadDocPrepare.do")
-	public void downloadDocPrepare(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void downloadDocPrepare(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			Integer downloadType,
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
@@ -2071,14 +2080,14 @@ public class DocController extends BaseController{
 		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
 		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -2111,11 +2120,11 @@ public class DocController extends BaseController{
 		//下载的是文件或者需要在downloadDoc阶段下载的目录
 		if(rt.getStatus().equals("ok"))
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 	}
 
@@ -3702,7 +3711,9 @@ public class DocController extends BaseController{
 
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+	public void lockDoc(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer lockType, Integer docType,
 			Integer shareId,
 			String authCode,
@@ -3781,7 +3792,7 @@ public class DocController extends BaseController{
 			docSysDebugLog("lockDoc() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);			
 			writeJson(rt, response);
 			
-			addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件", "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 		
@@ -3789,12 +3800,14 @@ public class DocController extends BaseController{
 		rt.setData(doc);
 		writeJson(rt, response);	
 		
-		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "锁定文件",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
 	/****************   SyncLock.unlock a Doc ******************/
 	@RequestMapping("/unlockDoc.do")  //SyncLock.unlock Doc主要用于用户解锁doc
-	public void unlockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+	public void unlockDoc(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer lockType, Integer docType,
 			Integer shareId,
 			String authCode,
@@ -3891,7 +3904,7 @@ public class DocController extends BaseController{
 		rt.setData(doc);
 		writeJson(rt, response);	
 
-		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "解锁文件", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+		addSystemLog(request, reposAccess.getAccessUser(), "lockDoc", "lockDoc", "解锁文件",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 	}
 	
 	private boolean isForceUnlockAllow(Doc doc, Integer lockType, User accessUser) {
@@ -4077,7 +4090,9 @@ public class DocController extends BaseController{
 
 	/**************** download History Doc  *****************/
 	@RequestMapping("/downloadHistoryDocPrepare.do")
-	public void downloadHistoryDocPrepare(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void downloadHistoryDocPrepare(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
 			Integer historyType, 
 			String entryPath,
@@ -4265,12 +4280,14 @@ public class DocController extends BaseController{
 		rt.setMsgData(1);
 		writeJson(rt, response);	
 		
-		addSystemLog(request, reposAccess.getAccessUser(), "downloadHistoryDocPrepare", "downloadHistoryDocPrepare", "下载历史文件", "成功", repos, doc, null, "历史版本:" + commitId);	
+		addSystemLog(request, reposAccess.getAccessUser(), "downloadHistoryDocPrepare", "downloadHistoryDocPrepare", "下载历史文件",  taskId, "成功", repos, doc, null, "历史版本:" + commitId);	
 	}
 	
 	/****************   revert Document History ******************/	
 	@RequestMapping("/revertDocHistory.do")
-	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void revertDocHistory(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
 			Integer historyType, 
 			String entryPath,
@@ -4422,7 +4439,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			
 			docSysDebugLog("revertDocHistory() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 
@@ -4445,7 +4462,7 @@ public class DocController extends BaseController{
 					writeJson(rt, response);
 
 					docSysDebugLog("revertDocHistory() fsGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;				
 				}
 	
@@ -4457,7 +4474,7 @@ public class DocController extends BaseController{
 					writeJson(rt, response);
 					
 					docSysDebugLog("revertDocHistory() verReposGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;				
 				}
 				
@@ -4477,7 +4494,7 @@ public class DocController extends BaseController{
 					writeJson(rt, response);
 
 					docSysDebugLog("revertDocHistory() syncupScanForDoc_FSM [" + doc.getPath() + doc.getName() + "] Failed", rt);
-					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;
 				}
 				
@@ -4500,7 +4517,7 @@ public class DocController extends BaseController{
 						//writeJson(rt, response);						
 		
 						//docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
-						//addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+						//addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 						//return;
 					}
 					else
@@ -4524,7 +4541,7 @@ public class DocController extends BaseController{
 							unlockDoc(doc, lockType, reposAccess.getAccessUser());
 							writeJson(rt, response);
 								
-							addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+							addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 							return;
 						}
 					}	
@@ -4546,7 +4563,7 @@ public class DocController extends BaseController{
 					unlockDoc(doc, lockType, reposAccess.getAccessUser());
 					writeJson(rt, response);
 
-					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败",  repos, doc, null, buildSystemLogDetailContent(rt));				
+					addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 					return;				
 				}
 			}
@@ -4560,17 +4577,19 @@ public class DocController extends BaseController{
 		if(revertResult)
 		{
 			executeCommonActionListAsync(asyncActionList, rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 	}
 
 	/****************   set  LocalBackup Ignore ******************/
 	@RequestMapping("/setLocalBackupIgnore.do")
-	public void setLocalBackupIgnore(Integer reposId, String path, String name,
+	public void setLocalBackupIgnore(
+			String taskId,
+			Integer reposId, String path, String name,
 			Integer ignore,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -4617,11 +4636,11 @@ public class DocController extends BaseController{
 		if(setLocalBackupIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("本地自动备份忽略设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "setLocalBackupIgnore", "setLocalBackupIgnore", "本地自动备份忽略设置",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -4769,7 +4788,9 @@ public class DocController extends BaseController{
 	
 	/****************   set  RemoteBackup Ignore ******************/
 	@RequestMapping("/setRemoteBackupIgnore.do")
-	public void setRemoteBackupIgnore(Integer reposId, String path, String name,
+	public void setRemoteBackupIgnore(
+			String taskId,
+			Integer reposId, String path, String name,
 			Integer ignore,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -4816,11 +4837,11 @@ public class DocController extends BaseController{
 		if(setRemoteBackupIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("远程自动备份忽略设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteBackupIgnore", "setRemoteBackupIgnore", "远程自动备份忽略设置",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -4968,7 +4989,9 @@ public class DocController extends BaseController{
 	
 	/****************   set  RealDoc TextSearch Ignore ******************/
 	@RequestMapping("/setTextSearchIgnore.do")
-	public void setTextSearchIgnore(Integer reposId, String path, String name,
+	public void setTextSearchIgnore(
+			String taskId,
+			Integer reposId, String path, String name,
 			Integer ignore,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -5015,11 +5038,11 @@ public class DocController extends BaseController{
 		if(setTextSearchIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("全文搜索忽略设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "setTextSearchIgnore", "setTextSearchIgnore", "全文搜索忽略设置",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -5169,7 +5192,9 @@ public class DocController extends BaseController{
 	
 	/****************   set  Doc Version Ignore ******************/
 	@RequestMapping("/setVersionIgnore.do")
-	public void setVersionIgnore(Integer reposId, String path, String name,
+	public void setVersionIgnore(
+			String taskId,
+			Integer reposId, String path, String name,
 			Integer ignore,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -5218,11 +5243,11 @@ public class DocController extends BaseController{
 		if(setVersionIgnore(repos, doc, ignore) == false)
 		{
 			rt.setError("版本管理设置失败");			
-			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "setVersionIgnore", "setVersionIgnore", "版本管理忽略设置",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}
@@ -5389,7 +5414,9 @@ public class DocController extends BaseController{
 
 	/****************   set  Doc Access PWD ******************/
 	@RequestMapping("/setDocPwd.do")
-	public void setDocPwd(Integer reposId, String path, String name,
+	public void setDocPwd(
+			String taskId,
+			Integer reposId, String path, String name,
 			String pwd,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -5455,7 +5482,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "setDocPwd", "setDocPwd", "设置文件访问密码", "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "setDocPwd", "setDocPwd", "设置文件访问密码",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 		writeJson(rt, response);
 	}

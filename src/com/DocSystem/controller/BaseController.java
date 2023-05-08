@@ -4522,7 +4522,7 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//write systemLog
-				addSystemLog(context.requestIP, context.user, context.event, context.subEvent, context.eventName, "成功", context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));
+				addSystemLog(context, context.user, "成功", buildSystemLogDetailContent(rt));
 			}
 		}).start();
 	}	
@@ -13302,7 +13302,7 @@ public class BaseController  extends BaseFunction{
 	                        if(ret == false)
 	                        {
 								docSysDebugLog("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行失败", rt);		                       
-		                		addSystemLog(serverIP, systemUser, "DBBackup", "DBBackup", "数据库自动备份", "失败",  null, null, null, buildSystemLogDetailContent(rt));
+		                		addSystemLog(serverIP, systemUser, "DBBackup", "DBBackup", "数据库自动备份", null, "失败", null, null, null, buildSystemLogDetailContent(rt));
 
 	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
 	                        	addDelayTaskForDBBackup(5, null);                      
@@ -13313,7 +13313,7 @@ public class BaseController  extends BaseFunction{
 	                        else
 	                        {
 	                        	docSysDebugLog("******** DBBackupDelayTask [" + createTime + "] for DataBase 执行成功", rt);
-		                		addSystemLog(serverIP, systemUser, "DBBackup", "DBBackup", "数据库自动备份", "成功",  null, null, null, buildSystemLogDetailContent(rt));
+		                		addSystemLog(serverIP, systemUser, "DBBackup", "DBBackup", "数据库自动备份", null, "成功", null, null, null, buildSystemLogDetailContent(rt));
 
 	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
 	                        	addDelayTaskForDBBackup(5, null);                      
@@ -13425,7 +13425,7 @@ public class BaseController  extends BaseFunction{
 	        					executeUniqueCommonActionList(actionList, rt);	        					
 	        				}
 	        				
-    						addSystemLog(serverIP, systemUser, "ReposAutoSyncup", "ReposAutoSyncup", "仓库自动同步", "完成",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+    						addSystemLog(serverIP, systemUser, "ReposAutoSyncup", "ReposAutoSyncup", "仓库自动同步", null, "完成", latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	        				
 	                        //将自己从任务备份任务表中删除
 	                        latestSyncupTask.remove(createTime);
@@ -13620,7 +13620,7 @@ public class BaseController  extends BaseFunction{
         					{
         						docSysDebugLog("LocalBackupDelayTask() lock doc [" + rootDoc.getPath() + rootDoc.getName() + "] Failed", rt);
         						rt.setError("LockDocFailed");
-        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", null, "失败", latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
         					}
         					else
         					{
@@ -13652,13 +13652,13 @@ public class BaseController  extends BaseFunction{
 	                        {
 	                        	lastestBackupTask.status = 2;
 	                        	lastestBackupTask.info = "本地备份成功";
-        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", "成功",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", null, "成功", latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        else
 	                        {
 	                        	lastestBackupTask.status = 3;
 	                        	lastestBackupTask.info = "本地备份失败:" + rt.getMsgInfo();
-        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposLocalAutoBackup", "ReposLocalAutoBackup", "仓库本地自动备份", null, "失败", latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        
 	                        addDelayTaskForReposLocalBackupTaskDelete(lastestBackupTask, 600L); //10分钟后删除任务
@@ -13806,7 +13806,7 @@ public class BaseController  extends BaseFunction{
         					{
         						docSysDebugLog("RemoteBackupDelayTask() Failed to lock Doc: " + rootDoc.getDocId(), rt);
         						rt.setError("LockDocFailed");
-        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", null, "失败", latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
         					}
         					else
         					{
@@ -13834,13 +13834,13 @@ public class BaseController  extends BaseFunction{
 	                        {
 	                        	lastestBackupTask.status = 2;
 	                        	lastestBackupTask.info = "异地自动备份成功";
-        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "成功",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", null, "成功", latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        else
 	                        {
 	                        	lastestBackupTask.status = 3;
 	                        	lastestBackupTask.info = "异地自动备份失败:" + rt.getMsgInfo();
-        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", "失败",  latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
+        						addSystemLog(serverIP, systemUser, "ReposRemoteAutoBackup", "ReposRemoteAutoBackup", "仓库异地自动备份", null, "失败", latestReposInfo, rootDoc, null, buildSystemLogDetailContent(rt));
 	                        }
 	                        addDelayTaskForReposRemoteBackupTaskDelete(lastestBackupTask, 600L); //10分钟后删除任务
 	                        
@@ -18875,7 +18875,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -18887,7 +18887,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -18910,7 +18910,7 @@ public class BaseController  extends BaseFunction{
 			task.targetName = tmpCheckoutName;
 			
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);		
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);		
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -18921,7 +18921,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "空目录无法下载";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;		
@@ -18950,7 +18950,7 @@ public class BaseController  extends BaseFunction{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 
 				//删除临时目录
 				FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -18963,7 +18963,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 2; //Success
 			task.info = "目录压缩成功";
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -18980,7 +18980,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "目录压缩失败";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);		
@@ -18993,7 +18993,7 @@ public class BaseController  extends BaseFunction{
 		task.status = 2; //Success
 		task.info = "目录压缩成功";
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
 
 		//删除临时目录
 		FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);	
@@ -19044,7 +19044,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -19057,7 +19057,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或者授权)";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -19083,7 +19083,7 @@ public class BaseController  extends BaseFunction{
 			task.targetName = tmpCheckoutName;
 			
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);		
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);		
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -19094,7 +19094,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "空目录无法下载";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;		
@@ -19126,7 +19126,7 @@ public class BaseController  extends BaseFunction{
 				task.info = "目录压缩失败";
 				Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩失败");
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 
 				//删除临时目录
 				FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -19140,7 +19140,7 @@ public class BaseController  extends BaseFunction{
 			task.info = "目录压缩成功";
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩成功");
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);
@@ -19159,7 +19159,7 @@ public class BaseController  extends BaseFunction{
 			task.info = "目录压缩失败";
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩失败");
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			
 			//删除临时目录
 			FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);		
@@ -19173,7 +19173,7 @@ public class BaseController  extends BaseFunction{
 		task.info = "目录压缩成功";
 		Log.debug("executeDownloadPrepareTaskForVerReposEntry() 目录压缩成功");
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
 
 		//删除临时目录
 		FileUtil.delDir(tmpCheckoutPath + tmpCheckoutName);	
@@ -19209,7 +19209,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "目录压缩失败";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 			
 			if(task.deleteInput)
 			{
@@ -19224,7 +19224,7 @@ public class BaseController  extends BaseFunction{
 		task.status = 2; //Success
 		task.info = "目录压缩成功";
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
 		if(task.deleteInput)
 		{
 			FileUtil.delDir(task.inputPath + task.inputName);
@@ -19271,7 +19271,7 @@ public class BaseController  extends BaseFunction{
 				task.status = 3; //Failed
 				task.info = "目录压缩失败";
 				deleteDelayTime = 300L; //5分钟后删除
-				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);								
+				addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
 				//删除临时解密目录
 				FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
 				//延时删除任务和压缩文件
@@ -19282,7 +19282,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 2; //Success
 			task.info = "目录压缩成功";
 			deleteDelayTime = 72000L; //20小时后			
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
 			//删除临时解密目录
 			FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
 			//延时删除任务和压缩文件
@@ -19297,7 +19297,7 @@ public class BaseController  extends BaseFunction{
 			task.status = 3; //Failed
 			task.info = "目录压缩失败";
 			deleteDelayTime = 300L; //5分钟后删除
-			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "失败",  task.repos, task.doc, null, task.info);				
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);				
 			//延时删除任务和压缩文件
 			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
 			return;
@@ -19306,7 +19306,7 @@ public class BaseController  extends BaseFunction{
 		task.status = 2; //Success
 		task.info = "目录压缩成功";
 		deleteDelayTime = 72000L; //20小时后			
-		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", "成功",  task.repos, task.doc, null, task.info);			
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);			
 		//延时删除任务和压缩文件
 		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);			
 	}
@@ -20104,7 +20104,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				addSystemLogBasic(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.queryId, context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				addSystemLog(context, reposAccess.getAccessUser(), "失败", buildSystemLogDetailContent(rt));						
 			}
 			break;
 		case 1:
@@ -20118,7 +20118,7 @@ public class BaseController  extends BaseFunction{
 			{
 				deleteChunks(name, chunkIndex, chunkNum,chunkParentPath);
 				deletePreviewFile(doc);
-				addSystemLogBasic(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.queryId, context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				addSystemLog(context, reposAccess.getAccessUser(), "成功", buildSystemLogDetailContent(rt));						
 			}
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
@@ -20138,7 +20138,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "失败",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				addSystemLog(context, reposAccess.getAccessUser(), "失败", buildSystemLogDetailContent(rt));						
 			}
 			break;
 		case 1:
@@ -20150,7 +20150,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				deletePreviewFile(doc);
-				addSystemLog(context.requestIP, reposAccess.getAccessUser(), context.event, context.subEvent, context.eventName, "成功",  context.repos, context.doc, context.newDoc, buildSystemLogDetailContent(rt));						
+				addSystemLog(context, reposAccess.getAccessUser(), "成功", buildSystemLogDetailContent(rt));						
 			}
 			break;
 		default:	//异步执行中（异步线程负责日志写入）
@@ -20200,7 +20200,7 @@ public class BaseController  extends BaseFunction{
 			//解锁目录
 			unlockDoc(doc, lockType, user);
 			//写入日志
-			addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action, null));						
+			addSystemLog(action, user, "成功", buildSystemLogDetailContentForFolderUpload(action, null));
 			FileUtil.delDir(action.uploadLogPath);
 			return;
 		}
@@ -20232,7 +20232,7 @@ public class BaseController  extends BaseFunction{
 				FileUtil.delDir(localChangesRootPath);
 				
 				//写入日志
-				addSystemLog(action.requestIP, user, action.event, action.subEvent, action.eventName, "成功", action.repos, action.doc, null, buildSystemLogDetailContentForFolderUpload(action, rt));						
+				addSystemLog(action, user, "成功", buildSystemLogDetailContentForFolderUpload(action, rt));						
 				FileUtil.delDir(action.uploadLogPath);					
 			}
 		}).start();
@@ -20328,14 +20328,14 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除失败！", rt);
 			rt.setError("删除失败");				
 			writeJson(rt, response);
-			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
 		writeJson(rt, response);	
 		
 		docSysDebugLog("deleteDocRS() " + remoteDirectory + path + name + "删除成功！", rt);
-		addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));
+		addSystemLog(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));
 	}
 	
 	protected void deleteDocFromRepos(
@@ -20395,14 +20395,14 @@ public class BaseController  extends BaseFunction{
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		
 		if(checkUserAccessPwd(repos, doc, session, rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLogEx(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), event, subEvent, eventName, queryId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 
@@ -20663,7 +20663,7 @@ public class BaseController  extends BaseFunction{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
 				
-				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 			
@@ -20693,7 +20693,7 @@ public class BaseController  extends BaseFunction{
 			
 				writeJson(rt, response);
 				
-				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
@@ -20701,7 +20701,7 @@ public class BaseController  extends BaseFunction{
 
 			writeJson(rt, response);
 			
-			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, accessUser, event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -20719,13 +20719,13 @@ public class BaseController  extends BaseFunction{
 
 				writeJson(rt, response);
 
-				addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 				return;
 			}
 
 			writeJson(rt, response);
 			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
-			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, accessUser, event, event, eventName, queryId, "成功",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -20740,13 +20740,13 @@ public class BaseController  extends BaseFunction{
 			
 			writeJson(rt, response);
 
-			addSystemLogEx(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
 		writeJson(rt, response);
 		docSysDebugLog("saveDocToDisk() [" + path + name + "] 文件校验成功", rt);
-		addSystemLogEx(request, accessUser, event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
+		addSystemLog(request, accessUser, event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
 	}
 
 	private Integer getSaveType(Doc doc, Integer chunkNum, MultipartFile uploadFile, String fileLink, byte [] docData) 

@@ -4644,7 +4644,16 @@ public class BaseFunction{
 		
 		return addSystemLog(requestIP, user, event, subEvent, action, queryId, result, repos, doc, newDoc, content);
     }
-		
+	
+	protected static boolean addSystemLog(ActionContext context, User accessUser, String result, String content)
+    {
+		return addSystemLog(context.requestIP, accessUser, context.event, context.subEvent, context.eventName, context.queryId, result,  context.repos, context.doc, context.newDoc, content);
+    }	
+	
+	protected static boolean addSystemLog(FolderUploadAction action, User accessUser, String result, String content) {
+		return addSystemLog(action.requestIP, accessUser, action.event, action.subEvent, action.eventName, action.queryId, result, action.repos, action.doc, null, content);					
+	}
+	
 	protected static boolean addSystemLog(
 			String requestIP, 
 			User user, 
