@@ -111,7 +111,7 @@ public class DocController extends BaseController{
 		Log.debug("addDoc default charset:" + Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfoEx(authCode, null, shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
@@ -153,19 +153,6 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
-		AuthCode auth = checkAuthCode(authCode, null, rt);
-		if(auth == null)
-		{
-			Log.debug("addDocRS checkAuthCode return false");
-			//rt.setError("无效授权码或授权码已过期！");
-			writeJson(rt, response);
-			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
-			addSystemLog(request, null, "addDocRS", "addDocRS", "新增文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
-			return;
-		}
-		
-		ReposAccess reposAccess = auth.getReposAccess();
-		
 		//add Doc on Server Directory
 		if(reposId == null)
 		{
@@ -175,8 +162,14 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 
 				docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed: remoteDirectory is null", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
+			}
+			
+			User accessUser = superAdminAccessCheck(authCode, null, session, rt);
+			if(accessUser == null) 
+			{
+				writeJson(rt, response);			
+				return;
 			}
 			
 			saveDocToDisk(
@@ -188,10 +181,17 @@ public class DocController extends BaseController{
 					null, null, null, null, null,
 					commitMsg,
 					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
-					reposAccess.getAccessUser(),
+					accessUser,
 					rt,
 					response, request, session);		
 			return;
+		}
+		
+		ReposAccess reposAccess = checkAndGetAccessInfoEx(authCode, null, shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
 		}
 		
 		//Add Doc On Repos
@@ -1553,7 +1553,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfoEx(null, null, shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
@@ -1663,7 +1663,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfoEx(authCode, null, shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
@@ -1726,7 +1726,7 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
-			User accessUser = adminAccessCheck(authCode, null, session, rt);
+			User accessUser = superAdminAccessCheck(authCode, null, session, rt);
 			if(accessUser == null) 
 			{
 				writeJson(rt, response);			
