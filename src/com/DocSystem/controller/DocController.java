@@ -1711,15 +1711,6 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
-		if(checkAuthCode(authCode, null, rt) == null)
-		{
-			//docSysErrorLog("无效授权码或授权码已过期！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-
-		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
-
 		if(type == null)
 		{
 			type = 1;
@@ -1735,6 +1726,13 @@ public class DocController extends BaseController{
 				return;				
 			}
 			
+			User accessUser = adminAccessCheck(authCode, null, session, rt);
+			if(accessUser == null) 
+			{
+				writeJson(rt, response);			
+				return;
+			}
+			
 			saveDocToDisk(
 					"uploadDocRS", "uploadDocRS", "文件上传", taskId,
 					remoteDirectory, path, name, size, type, checkSum,
@@ -1744,10 +1742,17 @@ public class DocController extends BaseController{
 					chunkIndex, chunkNum, chunkSize, chunkHash, combineDisabled,
 					commitMsg,
 					dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
-					reposAccess.getAccessUser(),
+					accessUser,
 					rt,
 					response, request, session);
 			return;			
+		}
+		
+		ReposAccess reposAccess = checkAndGetAccessInfoEx(authCode, null, shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
 		}
 		
 		Repos repos = getReposEx(reposId);

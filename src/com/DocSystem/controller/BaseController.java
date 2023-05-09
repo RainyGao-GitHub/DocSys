@@ -7042,6 +7042,35 @@ public class BaseController  extends BaseFunction{
 		return results.get(0);
 	}
 	
+	protected ReposAccess checkAndGetAccessInfoEx(
+			String authCode, String expUsage,
+			Integer shareId,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response, 
+			Integer reposId, String path, String name, boolean forceCheck,
+			ReturnAjax rt) 
+	{
+		if(authCode != null)
+		{
+			AuthCode authCodeData = checkAuthCode(authCode, expUsage, rt);
+			if(authCodeData == null)
+			{
+				return null;
+			}
+			
+			ReposAccess reposAccess = authCodeData.getReposAccess();
+			if(reposAccess== null)
+			{
+				docSysDebugLog("checkAndGetAccessInfoEx() reposAccess was not configured for authCode:" + authCode, rt);
+				docSysErrorLog("非法仓库访问", rt);
+				return null;
+			}
+			return reposAccess;
+		}
+		
+		return checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		
+	}
+	
 	protected ReposAccess checkAndGetAccessInfo(
 			Integer shareId, 
 			HttpSession session, HttpServletRequest request, HttpServletResponse response, 
