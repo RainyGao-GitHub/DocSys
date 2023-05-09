@@ -4552,6 +4552,12 @@
 					}
 			},
 			{divider: true},
+			{text: '分享', action: function(e){
+						e.preventDefault();
+						shareDoc(gRootDoc);
+					}
+			},
+			{divider: true},
 			{text: '全选', action: function(e){
 					e.preventDefault();
 					selectAllNode(null);
@@ -4565,28 +4571,11 @@
 					}
 			},
 			{divider: true},
-			{text: '分享', action: function(e){
-						e.preventDefault();
-						shareDoc(gRootDoc);
-					}
-			},
-			{text: '测试', action: function(e){
-						e.preventDefault();
-						querySystemLogTest();
-					}
-			},
-			{divider: true},
 			{text: '查看历史', action: function(e){
 						e.preventDefault();
 						curRightClickedTreeNode = null;
 		    			showDocHistory(gRootDoc,0);
 					}
-			},
-			{divider: true},
-			{text: '设置密码', action: function(e){
-					e.preventDefault();
-	        		showDocPwdSetPanel(gRootDoc);
-				}
 			},
 			{divider: true},
 			{text: '远程存储', subMenu: [
@@ -4622,32 +4611,32 @@
 		   			},
 		   			{divider: true},
 					{text: '推送',  action: function(e){
+							e.preventDefault();
+							showDocPushPanel(gRootDoc, 1);
+						}
+					},
+					{text: '拉取',  action: function(e){
+							e.preventDefault();
+							showDocPullPanel(gRootDoc, 1);
+						}
+					},
+					{divider: true},
+					{text: '锁定', action: function(e){
+							e.preventDefault();
+							lockDoc(gRootDoc, 1);
+						}
+					},
+					{text: '解锁', action: function(e){
+							e.preventDefault();
+							unlockDoc(gRootDoc, 1);
+						}
+					},
+					{divider: true},
+					{text: '刷新', action: function(e){
 								e.preventDefault();
-								showDocPushPanel(gRootDoc, 1);
+								refreshDoc(null, 0);
 							}
-						},
-						{text: '拉取',  action: function(e){
-								e.preventDefault();
-								showDocPullPanel(gRootDoc, 1);
-							}
-						},
-						{divider: true},
-						{text: '锁定', action: function(e){
-								e.preventDefault();
-								lockDoc(gRootDoc, 1);
-							}
-						},
-						{text: '解锁', action: function(e){
-								e.preventDefault();
-								unlockDoc(gRootDoc, 1);
-							}
-						},
-						{divider: true},
-						{text: '刷新', action: function(e){
-									e.preventDefault();
-									refreshDoc(null, 0);
-								}
-						},
+					},
 					]
    				},
 			]
@@ -4685,29 +4674,13 @@
 				]
 			},
 			{divider: true},
-			{text: '预览', action: function(e){
-					e.preventDefault();
-					openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);
-				}
-			},
-			{text: '打开', action: function(e){
-					e.preventDefault();
-					if(curRightClickedTreeNode != null && curRightClickedTreeNode.type == 2)
-					{
-						openDocInNewPage(curRightClickedTreeNode);
-					}
-					else
-					{
-						openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);
-					}
-				}
-			},
 			{text: '下载', action: function(e){
 						e.preventDefault();
 						var treeNodes = getSelectedNodes();
 						downloadDoc(treeNodes,true,1);
 					}
 			},
+			{divider: true},
 			{text: '分享', action: function(e){
 						e.preventDefault();
 						shareDoc(curRightClickedTreeNode);
@@ -4765,12 +4738,6 @@
 					}
 			},
 			{divider: true},
-			{text: '设置密码', action: function(e){
-					e.preventDefault();
-	        		showDocPwdSetPanel(curRightClickedTreeNode);
-				}
-			},
-			{divider: true},
 			{text: '远程存储', subMenu: [
 				{text: '推送',  action: function(e){
 						e.preventDefault();
@@ -4786,6 +4753,24 @@
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
+						{text: '在新窗口打开', action: function(e){
+								e.preventDefault();
+								if(curRightClickedTreeNode != null && curRightClickedTreeNode.type == 2)
+								{
+									openDocInNewPage(curRightClickedTreeNode);
+								}
+								else
+								{
+									openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);
+								}
+							}
+						},
+						{text: '预览', action: function(e){
+								e.preventDefault();
+								openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);
+							}
+						},
+						{divider: true},
 						{text: '复制', subMenu: [
 				           	{text: '名字', action: function(e){
 									e.preventDefault();
@@ -4856,6 +4841,12 @@
 							}
 						},
 						{divider: true},
+						{text: '设置密码', action: function(e){
+								e.preventDefault();
+				        		showDocPwdSetPanel(curRightClickedTreeNode);
+							}
+						},
+						{divider: true},
 						{text: '刷新', action: function(e){
 									e.preventDefault();
 									if(curRightClickedTreeNode !== null)
@@ -4911,32 +4902,25 @@
 				]
 			},
 			{divider: true},
-			{text: '粘贴', action: function(e){
-						e.preventDefault();
-						curRightClickedDocListNode = null;
-						var parentNode = getParentNodeEx(gDocInfo);
-						DoPaste(gCopiedNodes, parentNode, gIsCopy);
-					}
-			},
-			{divider: true},
 			{text: '分享', action: function(e){
 						e.preventDefault();
 						shareDoc(gDocInfo);
 					}
 			},
 			{divider: true},
+			{text: '粘贴', action: function(e){
+						e.preventDefault();
+						curRightClickedDocListNode = null;
+						var parentNode = getParentNodeEx(gDocInfo);
+						DoPaste(gCopiedNodes, parentNode, gIsCopy);
+					}
+			},			
+			{divider: true},
 			{text: '查看历史', action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeEx(gDocInfo);
 		    			showDocHistory(parentNode,0);
 					}
-			},
-			{divider: true},
-			{text: '设置密码', action: function(e){
-					e.preventDefault();
-					var parentNode = getParentNodeEx(gDocInfo);
-	        		showDocPwdSetPanel(parentNode);
-				}
 			},
 			{divider: true},
 			{text: '远程存储', subMenu: [
@@ -5037,6 +5021,13 @@
 							}
 						},
 						{divider: true},
+						{text: '设置密码', action: function(e){
+								e.preventDefault();
+								var parentNode = getParentNodeEx(gDocInfo);
+				        		showDocPwdSetPanel(parentNode);
+							}
+						},
+						{divider: true},
 						{text: '刷新', action: function(e){
 									e.preventDefault();
 									var parentNode = getParentNodeEx(gDocInfo);
@@ -5051,23 +5042,6 @@
 		if(gIsPC == false)
 		{
 			context.attach('#secondList', [
-				{text: '预览', action: function(e){
-						e.preventDefault();
-						openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
-					}
-				},
-				{text: '打开', action: function(e){
-						e.preventDefault();
-						if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
-						{
-							openDocInNewPage(curRightClickedDocListNode);
-						}
-						else
-						{
-							openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);
-						}
-					}
-				},
 				{text: '下载', action: function(e){
 						e.preventDefault();
 						var treeNodes = [];
@@ -5136,12 +5110,6 @@
 					}
 				},	
 				{divider: true},
-				{text: '设置密码', action: function(e){
-						e.preventDefault();
-		        		showDocPwdSetPanel(curRightClickedDocListNode);
-					}
-				},
-				{divider: true},
 				{text: '远程存储', subMenu: [
 					{text: '推送',  action: function(e){
 							e.preventDefault();
@@ -5157,6 +5125,23 @@
 				},			
 				{divider: true},
 				{text: '更多...', subMenu: [
+					{text: '预览', action: function(e){
+							e.preventDefault();
+							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
+						}
+					},
+					{text: '打开', action: function(e){
+							e.preventDefault();
+							if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
+							{
+								openDocInNewPage(curRightClickedDocListNode);
+							}
+							else
+							{
+								openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);
+							}
+						}
+					},
 					{text: '复制', subMenu: [
 			           	{text: '名字', action: function(e){
 								e.preventDefault();
@@ -5215,6 +5200,12 @@
 							showDocPullPanel(curRightClickedDocListNode, 1);
 						}
 					},	
+					{divider: true},
+					{text: '设置密码', action: function(e){
+							e.preventDefault();
+			        		showDocPwdSetPanel(curRightClickedDocListNode);
+						}
+					},					
 					]
 				},		
 				{divider: true},
@@ -5261,23 +5252,6 @@
 					]
 				},
 				{divider: true},
-				{text: '预览', action: function(e){
-							e.preventDefault();
-							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
-						}
-				},
-				{text: '打开', action: function(e){
-							e.preventDefault();
-							if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
-							{
-								openDocInNewPage(curRightClickedDocListNode);
-							}
-							else
-							{
-								openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);
-							}
-						}
-				},
 				{text: '下载', action: function(e){
 						e.preventDefault();
 						var treeNodes = [];
@@ -5285,6 +5259,7 @@
 						downloadDoc(treeNodes,true,1);
 					}
 				},
+				{divider: true},
 				{text: '分享', action: function(e){
 							e.preventDefault();
 							shareDoc(curRightClickedDocListNode);
@@ -5345,27 +5320,39 @@
 					}
 				},
 				{divider: true},
-				{text: '设置密码', action: function(e){
-						e.preventDefault();
-		        		showDocPwdSetPanel(curRightClickedDocListNode);
-					}
-				},
-				{divider: true},
 				{text: '远程存储', subMenu: [
-					{text: '推送',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePushPanel(curRightClickedDocListNode);
-						}
-					},
-					{text: '拉取',  action: function(e){
-							e.preventDefault();
-							showRemoteStoragePullPanel(curRightClickedDocListNode);
-						}
-					},
+						{text: '推送',  action: function(e){
+								e.preventDefault();
+								showRemoteStoragePushPanel(curRightClickedDocListNode);
+							}
+						},
+						{text: '拉取',  action: function(e){
+								e.preventDefault();
+								showRemoteStoragePullPanel(curRightClickedDocListNode);
+							}
+						},
 					]
 				},
 				{divider: true},
 				{text: '更多...', subMenu: [
+							{text: '在新窗口打开', action: function(e){
+									e.preventDefault();
+									if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
+									{
+										openDocInNewPage(curRightClickedDocListNode);
+									}
+									else
+									{
+										openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);
+									}
+								}
+							},
+							{text: '预览', action: function(e){
+									e.preventDefault();
+									openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
+								}
+							},
+							{divider: true},
 							{text: '复制', subMenu: [
 					           	{text: '名字', action: function(e){
 											e.preventDefault();
@@ -5436,6 +5423,12 @@
 								}
 							},
 							{divider: true},
+							{text: '设置密码', action: function(e){
+									e.preventDefault();
+					        		showDocPwdSetPanel(curRightClickedDocListNode);
+								}
+							},
+							{divider: true},
 							{text: '刷新', action: function(e){
 										e.preventDefault();
 										if(curRightClickedDocListNode !== null)
@@ -5460,23 +5453,6 @@
 		if(gIsPC == true)
 		{
 			context.attach('#docPreview', [
-				{text: '预览', action: function(e){
-						e.preventDefault();
-						openDoc(gDocInfo, true, "openInArtDialog", "pdf", gShareId);
-					}
-				},
-				{text: '打开', action: function(e){
-						e.preventDefault();
-						if(gDocInfo != null && gDocInfo.type == 2)
-						{
-							openDocInNewPage(gDocInfo);
-						}
-						else
-						{
-							openDoc(gDocInfo, true, "openInNewPage", "office", gShareId);
-						}
-					}
-				},
 				{text: '下载', action: function(e){
 						e.preventDefault();
 						var treeNodes = [];
@@ -5506,12 +5482,6 @@
 					}
 				},
 				{divider: true},
-				{text: '设置密码', action: function(e){
-						e.preventDefault();
-		        		showDocPwdSetPanel(gDocInfo);
-					}
-				},
-				{divider: true},
 				{text: '远程存储', subMenu: [
 					{text: '推送',  action: function(e){
 							e.preventDefault();
@@ -5527,6 +5497,24 @@
 				},
 				{divider: true},
 				{text: '更多...', subMenu: [
+					{text: '在新窗口打开', action: function(e){
+							e.preventDefault();
+							if(gDocInfo != null && gDocInfo.type == 2)
+							{
+								openDocInNewPage(gDocInfo);
+							}
+							else
+							{
+								openDoc(gDocInfo, true, "openInNewPage", "office", gShareId);
+							}
+						}
+					},
+					{text: '预览', action: function(e){
+							e.preventDefault();
+							openDoc(gDocInfo, true, "openInArtDialog", "pdf", gShareId);
+						}
+					},
+					{divider: true},
 					{text: '复制', subMenu: [
 			           	{text: '名字', action: function(e){
 									e.preventDefault();
@@ -5583,6 +5571,12 @@
 					{text: '拉取',  action: function(e){
 							e.preventDefault();
 							showDocPullPanel(gRootDoc, 1);
+						}
+					},
+					{divider: true},
+					{text: '设置密码', action: function(e){
+							e.preventDefault();
+			        		showDocPwdSetPanel(gDocInfo);
 						}
 					},
 					]
