@@ -35,7 +35,6 @@ import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
-import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
@@ -1337,29 +1336,33 @@ public class DocController extends BaseController{
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd, //for folder upload
 			Integer shareId,
+			String authCode,
 			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
 		Log.infoHead("************** checkChunkUploaded [" + path + name + "] ****************");
-		Log.info("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
-				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId 
-				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount + " usage:" + usage);
+		Log.info("checkChunkUploaded  taskId:" + taskId + " reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
+				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash
+				+ " shareId:" + shareId + " authCode:" + authCode
+				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount + " isEnd:" + isEnd
+				+ " usage:" + usage);
 
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		
+		if("".equals(checkSum))
+		{
+			//CheckSum is empty, mean no need to check
+			rt.setMsgData("0");	//标记为chunk not exist or not matched
+			writeJson(rt, response);
+			return;
+		}
+		
 		if(usage != null)
 		{
-			User accessUser = superAdminAccessCheck(null, null, session, rt);
+			User accessUser = superAdminAccessCheck(authCode, null, session, rt);
 			if(accessUser == null)		
 			{
 				writeJson(rt, response);			
-				return;
-			}
-			
-			if("".equals(checkSum))
-			{
-				//CheckSum is empty, mean no need 
-				rt.setMsgData("0");	//标记为chunk not exist or not matched
-				writeJson(rt, response);
 				return;
 			}
 			
@@ -1372,6 +1375,21 @@ public class DocController extends BaseController{
 			}
 			
 			String usageName = getUsageName(usage);
+			
+			//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
+			String fileChunkName = name + "_" + chunkIndex;
+			String chunkFilePath = localDiskPath + fileChunkName;
+			if(false == isChunkMatched(chunkFilePath,chunkHash))
+			{
+				rt.setMsgData("0");
+				docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
+			rt.setMsgData("1");
+			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
+			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			
 			saveDocToDisk(
 					"checkChunkUploaded", "checkChunkUploaded", usageName, taskId,
@@ -1388,44 +1406,17 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfoEx(authCode, null, shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
 			return;	
-		}
-		
-		if("".equals(checkSum))
-		{
-			//CheckSum is empty, mean no need 
-			rt.setMsgData("0");	//标记为chunk not exist or not matched
-			writeJson(rt, response);
-			return;
 		}
 
 		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
 			return;
-		}
-
-		//Get FolderUploadAction
-		FolderUploadAction folderUploadAction = null;
-		if(isFSM(repos) && isFolderUploadAction(dirPath, batchStartTime))
-		{
-			folderUploadAction = getFolderUploadAction(request, reposAccess.getAccessUser(), repos, dirPath, batchStartTime, commitMsg, "checkChunkUploaded", "checkChunkUploaded", "目录上传", taskId, rt);
-			if(folderUploadAction == null)
-			{
-				docSysDebugLog("checkChunkUploaded() folderUploadAction is null", rt);
-				writeJson(rt, response);
-				return;
-			}
-			folderUploadAction.beatTime = new Date().getTime();
-			if(folderUploadAction.totalCount < totalCount)
-			{
-				folderUploadAction.totalCount = totalCount;
-			}
-
 		}
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
@@ -1437,67 +1428,26 @@ public class DocController extends BaseController{
 		{
 			rt.setMsgData("0");
 			docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
+			writeJson(rt, response);
+			return;
 		}
-		else
-		{
-			rt.setMsgData("1");
-			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
-			Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 		
-			if(combineDisabled != null)
-			{
-				Log.debug("checkChunkUploaded() combineDisabled!");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			//如果是最后一个分片则开始文件合并处理
-			if(chunkIndex == chunkNum -1)	//It is the last chunk
-			{
-				if(commitMsg == null || commitMsg.isEmpty())
-				{
-					commitMsg = "上传 " + path + name;
-				}
-				String commitUser = reposAccess.getAccessUser().getName();
-				
-				String reposPath = Path.getReposPath(repos);
-				String localRootPath = Path.getReposRealPath(repos);
-				String localVRootPath = Path.getReposVirtualPath(repos);
-				Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);				
-
-				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-				checkAndAddParentDoc(doc, rt);
-				
-				//Build ActionContext
-				ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkChunkUploaded", "checkChunkUploaded", "文件上传", taskId, repos, doc, null, folderUploadAction);
-				context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
-				
-				int ret = 0;
-				Doc dbDoc = docSysGetDoc(repos, doc, false);
-				if(dbDoc == null || dbDoc.getType() == 0)
-				{
-					ret = addDoc(repos, doc,
-								null,
-								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
-					writeJson(rt, response);
-
-					uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
-				}
-				else
-				{
-					ret = updateDoc(repos, doc, 
-							null,   
-							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);				
-				
-					writeJson(rt, response);	
-
-					uploadAfterHandler(ret, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);			
-				}
-				
-				return;
-			}
-		}
-		writeJson(rt, response);
+		rt.setMsgData("1");
+		docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
+		Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
+		
+		saveDocToRepos(
+				"checkChunkUploaded", "checkChunkUploaded", "文件上传", taskId,
+				repos, path, name, size, type, checkSum,
+				null,
+				null,
+				null,
+				chunkIndex, chunkNum, chunkSize, chunkHash, combineDisabled,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				reposAccess,
+				rt,
+				response, request, session);		
 	}
 
 	//combine chunks

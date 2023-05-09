@@ -33,7 +33,28 @@
   <link href="./static/style/style.css" rel="stylesheet">
   <!-- Widgets stylesheet -->
   <link href="./static/style/widgets.css" rel="stylesheet">
-  
+  <link rel="stylesheet" type="text/css" href="/DocSystem/web/css/upload-css.css">
+  <style type="text/css">
+        .uploadFileName, .downloadFileName{
+        	cursor: text;
+        }
+        .reuploadAllBtn, .redownloadAllBtn{
+        	position:absolute;
+        	top:15px;
+        	right:50px;
+        	font-size:13px;
+        	cursor: pointer;
+        }
+
+        .reuploadBtn, .redownloadBtn{
+        	position:absolute;
+        	top:0px;
+        	right:50px;
+        	font-size:13px;
+        	cursor: pointer;
+        }
+  </style>
+    
   <!-- jQuery -->
   <script src="./static/js/jquery.js"></script>
   <script src="./static/js/bootstrap.js"></script> <!-- Bootstrap -->
@@ -137,30 +158,32 @@
 <!-- Main content starts -->
 
 <div class="content">
-<div class="sidebar" id="sidebar" data-tmpl="sidebar">
-</div>
+	<div class="sidebar" id="sidebar" data-tmpl="sidebar">
+	</div>
 
-<!-- Main bar -->
-<div class="mainbar" >
-    <!-- Page heading -->
-    <div class="page-head" id="pagehead">
-    </div>
-    <!-- Page heading ends -->
-
-
-  <!-- Matter -->
-  <div class="matter">
-    <div class="container" id="container">
-
-    </div>
-  </div>
-  <!-- Matter ends -->
-
-</div>
-
-<!-- Mainbar ends -->
-<div class="clearfix"></div>
-
+	<!-- Main bar -->
+	<div class="mainbar" >
+	    <!-- Page heading -->
+	    <div class="page-head" id="pagehead">
+	    </div>
+	    <!-- Page heading ends -->
+	
+	
+	  <!-- Matter -->
+	  <div class="matter">
+	    	<div class="container" id="container">
+	    	</div>
+	  </div>
+	  <!-- Matter ends -->
+	
+	</div>
+	<!-- Mainbar ends -->
+	
+	<div id="uploadBox" class="uploadBox ">
+		<ul id="uploadList" style="display:none" class="el-upload-list el-upload-list--text"></ul>
+	</div>
+	
+	<div class="clearfix"></div>
 </div>
 <!-- Content ends -->
 
@@ -2431,6 +2454,110 @@
     	var SystemUpgradeFileUpload;
 		function SystemUpgradeFileUploadInit()
 		{
+			var uploadDisplayInit = function(index, totalNum) {
+				console.log("uploadDisplayInit index:" + index + " totalNum:" + totalNum);
+				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()' style='display:none'>全部重传 </span><i class='el-icon-close uploadCloseBtn'></i></div>";
+				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
+				$(".el-upload-list").show();
+				$('.el-upload-list').html(str);
+	      	};
+			
+			var createUploadItem = function(index, fileName) {
+				console.log("createUploadItem index:" + index + " fileName:" + fileName);
+				return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
+				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+ fileName +"</span></a>"+
+				"<a class='reuploadBtn reupload" + index + "' onclick='reuploadFailDocs("+ index +")'  style='display:none'>重传</a>"+
+				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
+				"<i class='el-icon-close stopUpload'  value="+index+" onclick='FileUpload.stopUpload("+ index +")'></i>"+
+				"<div class='el-progress el-progress--line'>"+
+					"<div class='el-progress-bar'>"+
+						"<div class='el-progress-bar__outer' >"+
+							"<div class='el-progress-bar__inner'></div>"+
+						"</div>"+
+					"</div>"+
+					"<div class='el-progress__text' style='font-size: 12.8px;'></div>"+
+				"</div>"+
+			  "</li>";
+			};
+	  		
+			var appendUploadItems = function(uploadItemsHtmlStr) {
+				$('#uploadedFileList').append(uploadItemsHtmlStr);
+			};
+					
+	  		var deleteUploadItem = function(index) {
+		  		$('.file' + index).remove();      		
+	  		};
+
+	  		var updateUploadItem = function(index, speed, percent){
+				$('.file'+index+' .el-progress__text').text(speed + " " + percent+"%");
+				$('.file'+index+' .el-progress-bar__inner')[0].style.width = percent +"%"; //进度条
+
+				//printUploadedTime();
+	  		};
+	  		
+	  		var stopAllUploadCallback = function(){  	  		
+	  	  		$(".reuploadAllBtn").show();
+	  		};
+	  		
+	  		var reuploadItemInit = function(index){
+	      		//hide the reupload btn
+	    		$(".reupload"+index).hide();
+	    		
+	    		$('.file' + index).addClass('is-uploading');
+				$('.file' + index).removeClass('is-fail');
+	  		};
+
+	  		var uploadSuccessCallback = function(index, context){  	  					
+				//更新上传显示
+	  			$('.file'+index).removeClass('is-uploading');
+	  			$('.file'+index).addClass('is-success');
+	  			//hide the reupload btn
+	  			$(".reupload"+index).hide();
+	  		};
+	  		
+	  		var uploadErrorCallback = function(index){  	  		
+
+	  			$('.file' + index).removeClass('is-uploading');
+	  			$('.file' + index).addClass('is-fail');
+	  	  	
+	  	  		//show the reupload btn
+	  			$(".reupload" + index).show();
+	  		};
+	  		
+	  		var uploadEndCallback = function(totalNum, successNum){  	  		
+	      		//显示上传完成 
+	      		var uploadEndInfo = "上传完成(共" + totalNum +"个)，开始升级...";
+	      		if(successNum != totalNum)
+	      		{
+	      			uploadEndInfo = "升级失败:上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+
+	      			$(".reuploadAllBtn").show();
+
+	      			// 普通消息提示条
+	    			bootstrapQ.msg({
+	    					msg : uploadEndInfo,
+	    					type : 'warning',
+	    					time : 2000,
+	    				    }); 
+	      		}
+	      		else
+	      		{
+	      			$(".reuploadAllBtn").hide();
+	                // 普通消息提示条
+	    			bootstrapQ.msg({
+	    					msg : uploadEndInfo,
+	    					type : 'success',
+	    					time : 2000,
+	    				    }); 
+	                
+	    			startUpgradeSystem(_firstFile);
+	      		}
+	      		$(".upload-list-title").text(uploadEndInfo);   		
+	      		
+	      		//清除文件控件
+				$("#upgradeFiles").val("");
+	  		};
+	  		
 			var uploadEndCallback = function(totalNum, successNum){  	  		
 	      		if(successNum != totalNum)
 	      		{
@@ -2448,10 +2575,20 @@
 	      		}
 	  		};
 	  		
-	  		var config = {			
-	  			uploadEndCallback: uploadEndCallback,
-	  			usage: 1,	//SystemUpgrade
-	  		};
+			var config = {
+					uploadDisplayInit: uploadDisplayInit,
+					createUploadItem: createUploadItem,
+					appendUploadItems: appendUploadItems,		
+					deleteUploadItem: deleteUploadItem,
+					updateUploadItem: updateUploadItem,
+					stopAllUploadCallback: stopAllUploadCallback,
+					uploadSuccessCallback: uploadSuccessCallback,			
+					uploadErrorCallback: uploadErrorCallback,			
+					uploadEndCallback: uploadEndCallback,			
+					reuploadItemInit: reuploadItemInit,
+					usage: 1,	//SystemUpgrade
+				};
+			
 	  		SystemUpgradeFileUpload = new DocUpload(config);
 		}
     	
