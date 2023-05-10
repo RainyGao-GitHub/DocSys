@@ -34,9 +34,203 @@
   <!-- Widgets stylesheet -->
   <link href="./static/style/widgets.css" rel="stylesheet">
   <!-- upload stylesheet -->
-  <link rel="stylesheet" type="text/css" href="/DocSystem/web/css/upload-css.css">
   <style type="text/css">
-        .uploadFileName, .downloadFileName{
+        .el-upload-list{
+		    position: absolute;
+		    bottom: 0;
+		    top:31px;
+		    left: 0;
+		    right: 0;
+		    background:white;
+		    z-index:22;
+		     margin: 0;
+		    padding: 25px 5px;
+		    list-style: none;
+		}
+		.el-upload-list__item, .el-download-list__item {
+		    transition: all .5s cubic-bezier(.55,0,.1,1);
+		    font-size: 14px;
+		    color: #48576a;
+		    margin-top: 18px;
+		    box-sizing: border-box;
+		    border-radius: 4px;
+		    width: 100%;
+		    line-height:1.8;
+		    
+		    position: relative;
+		}
+		.el-upload-list__item:first-child, .el-download-list__item:first-child {
+		    margin-top: 10px;
+		}
+		.el-upload-list__item-name, .el-download-list__item-name {
+		    color: #48576a;
+		    display: block;
+		    margin-right: 40px;
+		    overflow: hidden;
+		    padding-left: 4px;
+		    text-overflow: ellipsis;
+		    transition: color .3s;
+		    white-space: nowrap;
+		}
+		.el-upload-list__item.is-success .el-upload-list__item-status-label, .el-download-list__item.is-success .el-download-list__item-status-label {
+		    display: block;
+		}
+		
+		.el-upload-list__item.is-success .el-progress__text, .el-download-list__item.is-success .el-progress__text{
+			display:none;
+		}
+		.el-upload-list__item-status-label, .el-download-list__item-status-label {
+		    position: absolute;
+		    right: 5px;
+		    top: 0;
+		    line-height: inherit;
+		    display: none;
+		}
+		.el-progress {
+		    position: relative;
+		    line-height: 1;
+		}
+		.el-upload-list__item .el-progress, .el-download-list__item .el-progress {
+		    position: absolute;
+		    /* top: 20px; */
+		    width: 100%;
+		}
+		.el-progress-bar {
+		    padding-right: 50px;
+		    display: inline-block;
+		    vertical-align: middle;
+		    width: 100%;
+		    margin-right: -55px;
+		    box-sizing: border-box;
+		}
+		.el-upload-list__item .el-progress-bar, .el-download-list__item .el-progress-bar {
+		    margin-right: 0;
+		    padding-right: 0;
+		}
+		.el-progress__text {
+		    font-size: 14px;
+		    color: #48576a;
+		    display: inline-block;
+		    vertical-align: middle;
+		    margin-left: 10px;
+		    line-height: 1;
+		}
+		.el-upload-list__item .el-progress__text, .el-download-list__item .el-progress__text {
+		    position: absolute;
+		    top: -16px;
+		    right: 0;
+		}
+		.el-progress-bar__outer {
+		    height: 4px;
+		    border-radius: 100px;
+		    background-color: #e4e8f1;
+		    overflow: hidden;
+		    position: relative;
+		    vertical-align: middle;
+		}
+		.el-progress-bar__inner {
+		    position: absolute;
+		    left: 0;
+		    top: 0;
+		    height: 100%;
+		    border-radius: 2px 0 0 2px;
+		    background-color: #20a0ff;
+		    text-align: right;
+		    border-radius: 100px;
+		    line-height: 1;
+		    white-space: nowrap;
+		}
+		.el-upload-list__item .el-icon-upload-success, .el-download-list__item .el-icon-download-success {
+		    color: #13ce66;
+		}
+		.el-upload-list__item.is-uploading:hover .el-icon-close, .el-download-list__item.is-downloading:hover .el-icon-close {
+		    display: inline-block;
+		}
+		.el-upload-list__item .el-icon-close, .el-download-list__item .el-icon-close {
+		    display: none;
+		    position: absolute;
+		    top: 7px;
+		    right: 5px;
+		    cursor: pointer;
+		    opacity: .75;
+		    color: #48576a;
+		    transform: scale(.7);
+		}
+		.el-upload-list__item:hover, .el-download-list__item:hover {
+		    background-color: #eef1f6;
+		}
+		.el-upload-list__item-name, .el-download-list__item-name{
+			text-decoration:none;
+			text-align:left;
+		}
+		.el-upload-list__item.is-success .el-upload-list__item-name:hover, .el-download-list__item.is-success .el-download-list__item-name:hover {
+		    color: #20a0ff;
+		    cursor: pointer;
+		    text-decoration:none;
+		}
+		
+		.el-upload-list__item.is-uploading .el-upload-list__item .el-icon-close:hover, .el-download-list__item.is-uploading .el-download-list__item .el-icon-close:hover {
+		    opacity: 1;
+		}
+		
+		.el-upload-list__item:hover .el-progress__text, .el-download-list__item:hover .el-progress__text {
+		    display: none;
+		}
+		.el-icon-document{
+			margin-right:10px;
+		}
+		.el-progress-bar__inner {
+		    position: absolute;
+		    left: 0;
+		    top: 0;
+		    height: 100%;
+		    border-radius: 2px 0 0 2px;
+		    background-color: #20a0ff;
+		    text-align: right;
+		    border-radius: 100px;
+		    line-height: 1;
+		    white-space: nowrap;
+		}
+		.el-upload-list {
+		    border: 1px solid #e3e3e3;
+		    border-radius: 5px;
+		    position: fixed;
+		    max-height: 200px;
+		    bottom: 0;
+		    top: auto;
+		    min-width: 320px;
+		    width: 25%;
+		    left: auto;
+		    right: 0;
+		    background: white;
+		    z-index: 999;
+		    margin: 5px;
+		    padding: 10px 15px 25px 15px;
+		    list-style: none;
+		}
+		.upload-list-title{
+		    display: inline-block;
+		    padding: 10px 0px;
+		    margin-top: -5px;
+		    width: 270px;
+		}
+		.uploadedFileList{
+			border-top: 1px solid #eee;
+			border-bottom: 1px solid #eee;
+			max-height: 155px;
+		    min-height: 100px;
+		    overflow-y: auto;
+		    padding-right: 10px;
+		    margin-right: -5px;
+		}
+		.uploadCloseBtn{
+			position:absolute;
+			top:20px;
+			right:15px;
+			font-size:13px;
+			cursor: pointer;
+		}
+		        .uploadFileName, .downloadFileName{
         	cursor: text;
         }
         .reuploadAllBtn, .redownloadAllBtn{
