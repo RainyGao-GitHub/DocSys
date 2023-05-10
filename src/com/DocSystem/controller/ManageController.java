@@ -1661,12 +1661,25 @@ public class ManageController extends BaseController{
 		}
 
 		//开始解压
-		if(unZip(upgradePath + name, upgradePath + "DocSystem/") == false)
+		if(unZip(upgradePath + name, upgradePath + "DocSystem-tmp/") == false)
 		{
 			Log.debug("upgradeSystem() 解压失败");
 			docSysErrorLog("升级包解压失败", rt);
 			writeJson(rt, response);
 			return;
+		}
+		
+		//检查并处理解压后的升级包
+		File tmpDocSystem = new File(upgradePath + "DocSystem-tmp/");
+		File[] subEntrys = tmpDocSystem.listFiles();
+		if(subEntrys.length == 1)
+		{
+			Log.debug("installOffice() subEntryName:" + subEntrys[0].getName());
+			FileUtil.moveFileOrDir(upgradePath + "DocSystem-tmp/", subEntrys[0].getName(), upgradePath, "DocSystem", false);
+		}
+		else
+		{
+			FileUtil.moveFileOrDir(upgradePath, "DocSystem-tmp", upgradePath, "DocSystem", false);			
 		}
 		
 		//开始升级
