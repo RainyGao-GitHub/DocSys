@@ -1065,24 +1065,56 @@ public class DocController extends BaseController{
 			String commitMsg,
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
+			String authCode,
 			Integer usage,	//UpgradeDocSystem, InstallOffice
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** checkDocInfo [" + path + name + "] ****************");
 		Log.info("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId
 				+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount + " usage:" + usage);
-		
+
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+
 		if(usage != null)
 		{
-			//If for special purpose, no need to checkDocInfo
-			ReturnAjax rt = new ReturnAjax();
-			docSysDebugLog("checkDocInfoForUsage() usage:" + usage, rt);
+			User accessUser = superAdminAccessCheck(authCode, null, session, rt);
+			if(accessUser == null)		
+			{
+				writeJson(rt, response);			
+				return;
+			}
+			
+			String localDiskPath = getLocalRootPathForUsage(usage);
+			if(localDiskPath == null || localDiskPath.isEmpty())
+			{
+				docSysErrorLog("非法文件上传", rt);
+				writeJson(rt, response);			
+				return;			
+			}
+			
+			File targetFile = new File(localDiskPath + path + name);
+			if(targetFile.exists() == false)
+			{
+				//File not exist
+				writeJson(rt, response);
+				return;	
+			}
+			
+			if(targetFile.length() == size)
+			{
+				rt.setMsgData("1");
+				docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
+			rt.setMsgData("0");
+			docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
 			writeJson(rt, response);
-			return;	
+			return;
 		}
-
-		ReturnAjax rt = new ReturnAjax();
 		
+		//Upload to Repos
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
