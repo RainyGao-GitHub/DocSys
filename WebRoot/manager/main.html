@@ -34,6 +34,7 @@
   <!-- Widgets stylesheet -->
   <link href="./static/style/widgets.css" rel="stylesheet">
   <!-- upload stylesheet -->
+  <link href="/DocSystem/web/static/fonts/font.css" rel="stylesheet">
   <style type="text/css">
         .el-upload-list{
 		    position: absolute;
@@ -2577,9 +2578,26 @@
 	    });
 	}
 	
+	var gStatus = 0;
+	
 	function upgradeSystem(){
 		console.log("upgradeSystem()");
-  		//清除文件控件
+  		
+		switch(gStatus)
+		{
+		case 1:
+			showErrorMessage("系统升级中，请稍后重试!");
+			return;
+		case 2:
+			showErrorMessage("正在安装Office，请稍后重试!");			
+			return;
+		case 3:
+			showErrorMessage("正在在线安装Office，请稍后重试!");			
+			return;
+		}
+		gStatus = 1;
+		
+		//清除文件控件
 		$("#upgradeFiles").val("");
 	    return $("#upgradeFiles").click();
 	}
@@ -2611,6 +2629,7 @@
 	    else
 	   	{
 	   		showErrorMessage("请选择文件");
+	   		gStatus = 0;
 	      	return false;
 	   	}  
 		
@@ -2619,6 +2638,7 @@
 	    if(fileName.indexOf("DocSystem") == -1)
 	    {
 	    	showErrorMessage("非法升级文件");
+	    	gStatus = 0;
 	    	return false;
 	    }
 	    
@@ -2636,6 +2656,7 @@
 	    	},function()
 	    	{
 	    		//showErrorMessage("点击了取消")
+	    		gStatus = 0;
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -2725,49 +2746,17 @@
 	      		if(successNum != totalNum)
 	      		{
 	      			uploadEndInfo = "升级失败:上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
-
 	      			$(".reuploadAllBtn").show();
-
-	      			// 普通消息提示条
-	    			bootstrapQ.msg({
-	    					msg : uploadEndInfo,
-	    					type : 'warning',
-	    					time : 2000,
-	    				    }); 
 	      		}
 	      		else
 	      		{
 	      			$(".reuploadAllBtn").hide();
-	                // 普通消息提示条
-	    			bootstrapQ.msg({
-	    					msg : uploadEndInfo,
-	    					type : 'success',
-	    					time : 2000,
-	    				    }); 
-	                
 	    			startUpgradeSystem(_firstFile);
 	      		}
 	      		$(".upload-list-title").text(uploadEndInfo);   		
 	      		
 	      		//清除文件控件
 				$("#upgradeFiles").val("");
-	  		};
-	  		
-			var uploadEndCallback = function(totalNum, successNum){  	  		
-	      		if(successNum != totalNum)
-	      		{
-	      			var uploadEndInfo = "升级文件上传失败 (共" + totalNum +"个)"+",成功 " + successNum + "个";
-	      			// 普通消息提示条
-	    			bootstrapQ.msg({
-	    					msg : uploadEndInfo,
-	    					type : 'warning',
-	    					time : 2000,
-	    				    }); 
-	      		}
-	      		else
-	      		{
-	                startUpgradeSystem(_firstFile);
-	      		}
 	  		};
 	  		
 			var config = {
@@ -2830,11 +2819,13 @@
 					//上传失败
 					console.log("升级失败：" + ret.msgInfo);
 					showErrorMessage("升级失败:" + ret.msgInfo);
+					gStatus = 0;
 					return;
 	             }
 	        },
 	        error : function () {
 				showErrorMessage("升级失败: 服务器异常");
+				gStatus = 0;
 	        }
 	    });
 	}
@@ -2941,6 +2932,21 @@
 	
 	function installOffice(){
 		console.log("installOffice()");
+		
+		switch(gStatus)
+		{
+		case 1:
+			showErrorMessage("系统升级中，请稍后重试!");
+			return;
+		case 2:
+			showErrorMessage("正在安装Office，请稍后重试!");			
+			return;
+		case 3:
+			showErrorMessage("正在在线安装Office，请稍后重试!");			
+			return;
+		}
+		gStatus = 3;
+		
   		//清除文件控件
 		$("#installOffice").val("");
 	    return $("#installOffice").click();
@@ -2975,13 +2981,15 @@
 		    if(fileName.indexOf("office") == -1)
 		    {
 		    	showErrorMessage("请选择正确的Office安装文件!");
+		    	gStatus = 0;
 		    	return false;
 		    }
 	    }
 	    else
 	   	{
 	   		showErrorMessage("请选择文件");
-	      	return false;
+	    	gStatus = 0;
+	   		return false;
 	   	}  
 	    
 	    
@@ -2996,6 +3004,7 @@
 		    	return true;   //close dialog
 	    	},function()
 	    	{
+		    	gStatus = 0;
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -3070,17 +3079,20 @@
 	        	console.log("installOffice ret:",ret);
 				if("ok" == ret.status){
 					showErrorMessage("Office编辑器安装成功");
+			    	gStatus = 0;
 				 }
 				 else	//上传失败
 				 {
 					//上传失败
 					console.log("Office编辑器安装失败：" + ret.msgInfo);
 					showErrorMessage("Office编辑器安装失败:" + ret.msgInfo);
+			    	gStatus = 0;
 					return;
 	             }
 	        },
 	        error : function () {
 				showErrorMessage("Office编辑器安装失败: 服务器异常");
+		    	gStatus = 0;
 	        }
 	    });
 	}
@@ -3089,6 +3101,20 @@
 	function onlineInstallOfficeConfirm()
 	{
 		console.log("onlineInstallOfficeConfirm()");
+		switch(gStatus)
+		{
+		case 1:
+			showErrorMessage("系统升级中，请稍后重试!");
+			return;
+		case 2:
+			showErrorMessage("正在安装Office，请稍后重试!");			
+			return;
+		case 3:
+			showErrorMessage("正在在线安装Office，请稍后重试!");			
+			return;
+		}
+		gStatus = 3;
+		
 	    qiao.bs.confirm({
 	    		id: "onlineInstallOfficeConfirmDialog",
 		        title: "安装Office",
@@ -3100,6 +3126,7 @@
 		    	return true;   //close dialog
 	    	},function()
 	    	{
+	    		gStatus = 0;
 	    		return true;	//close dialog
 	    	}
 	    );
@@ -3119,15 +3146,18 @@
 	            if( "ok" == ret.status )
 	            {
 	            	showErrorMessage("安装成功");
+	            	gStatus = 0;
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-		        	showErrorMessage("安装失败:" + ret.msgInfo);	                
+		        	showErrorMessage("安装失败:" + ret.msgInfo);	               
+		        	gStatus = 0;
 	            }
 	        },
 	        error : function () {
 	        	showErrorMessage("安装失败:服务器异常");
+	        	gStatus = 0;
 	        }
 	    });
 	}
