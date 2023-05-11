@@ -2662,8 +2662,28 @@
 	    );
 	}
 
+	//系统升级状态栏隐藏控制
+	var showUploadList = true;
+	$(".el-upload-list").delegate(".upload-list-title","click",function(){
+		var uploadListHeight = $(".el-upload-list").height();
+		if(showUploadList == true)
+		{
+			showUploadList = false;
+			//收起进度
+			var height = - uploadListHeight + "px";
+			$(".el-upload-list").animate({bottom: height});
+			$(".uploadCloseBtn").animate({opacity: 0});	//隐藏关闭按键
+		}
+		else
+		{
+			showUploadList = true;
+			$(".el-upload-list").animate({bottom: "0px"});
+			$(".uploadCloseBtn").animate({opacity: 1});	//显示关闭按键
+		}
+	});
+	
 	//SystemUpgrade类	
-    var SystemUpgrade = (function () {
+	var SystemUpgrade = (function () {
     	var _firstFile;
     	
     	//初始化上传控件
@@ -2672,7 +2692,7 @@
 		{
 			var uploadDisplayInit = function(index, totalNum) {
 				console.log("uploadDisplayInit index:" + index + " totalNum:" + totalNum);
-				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()' style='display:none'>全部重传 </span><i class='el-icon-close uploadCloseBtn'></i></div>";
+				var str="<div><span class='upload-list-title'>[系统升级] 正在上传  " +index +" / " + totalNum +"</span><i class='el-icon-close uploadCloseBtn' onclick='stopUpgradeSystem()'></i></div>";
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
@@ -2682,9 +2702,9 @@
 				console.log("createUploadItem index:" + index + " fileName:" + fileName);
 				return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
 				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+ fileName +"</span></a>"+
-				"<a class='reuploadBtn reupload" + index + "' onclick='reuploadFailDocs("+ index +")'  style='display:none'>重传</a>"+
+				"<a class='reuploadBtn reupload" + index + "' onclick='SystemUpgrade.reuploadFailDocs("+ index +")'  style='display:none'>重传</a>"+
 				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
-				"<i class='el-icon-close stopUpload'  value="+index+" onclick='FileUpload.stopUpload("+ index +")'></i>"+
+				"<i class='el-icon-close stopUpload'  value="+index+" onclick='SystemUpgrade.stopUpload("+ index +")'></i>"+
 				"<div class='el-progress el-progress--line'>"+
 					"<div class='el-progress-bar'>"+
 						"<div class='el-progress-bar__outer' >"+
@@ -2712,7 +2732,9 @@
 	  		};
 	  		
 	  		var stopAllUploadCallback = function(){  	  		
-	  	  		$(".reuploadAllBtn").show();
+		    	//停止上传
+	  			$(".el-upload-list").hide();
+		    	gStatus = 0;
 	  		};
 	  		
 	  		var reuploadItemInit = function(index){
@@ -2742,10 +2764,10 @@
 	  		
 	  		var uploadEndCallback = function(totalNum, successNum){  	  		
 	      		//显示上传完成 
-	      		var uploadEndInfo = "上传完成(共" + totalNum +"个)，开始升级...";
+	      		var uploadEndInfo = "[系统升级] 上传完成(共" + totalNum +"个)，开始升级...";
 	      		if(successNum != totalNum)
 	      		{
-	      			uploadEndInfo = "升级失败:上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+	      			uploadEndInfo = "[系统升级] 上传失败 (共" + totalNum +"个)"+",成功 " + successNum + "个";
 	      			$(".reuploadAllBtn").show();
 	      		}
 	      		else
@@ -2788,6 +2810,25 @@
     	  	SystemUpgradeFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
     	}
     	
+    	function stop(){
+    		SystemUpgradeFileUpload.stopAllUpload();
+    	}
+    	
+    	//Re Upload Fail Docs
+        function reuploadFailDocs(index)
+        {
+        	console.log("reuploadFailDocs() index:" + index);
+        	SystemUpgradeFileUpload.reuploadFailDocs(index);
+        }
+
+    	//Stop Upload
+    	function stopUpload(index)
+    	{
+        	//var index = $(this).attr('value');	//value 不是i的原生属性，所以不能用value
+        	console.log("stopUpload " + index);
+        	SystemUpgradeFileUpload.stopUpload(index);
+        }
+    	
     	//初始化上传控件
     	SystemUpgradeFileUploadInit();
     	
@@ -2795,6 +2836,15 @@
         return {
         	start: function(files, firstFile){
         		start(files, firstFile);
+            },
+            stop: function(){
+            	stop();
+            },
+            stopUpload: function(index){
+            	stopUpload(index);
+            },
+            reuploadFailDocs: function(index){
+            	reuploadFailDocs(index);
             },
         };
     })();
@@ -2829,6 +2879,20 @@
 	        }
 	    });
 	}
+	
+    function stopUpgradeSystem(){
+		qiao.bs.confirm({
+	        id: 'bsconfirm',
+	        msg: '是否取消系统升级！',
+	        okbtn: "取消升级",
+	        qubtn: "继续",
+	    },function(){
+	    	SystemUpgrade.stop();
+	    },function(){
+	        //alert('点击了取消！');
+	    });
+	}
+
 	
 	function disableOffice(){
 		console.log("disableOffice()");
