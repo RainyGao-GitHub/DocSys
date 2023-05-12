@@ -45,6 +45,7 @@ import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
+import com.DocSystem.common.entity.StatusQueryTask;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -1674,7 +1675,7 @@ public class ManageController extends BaseController{
 		File[] subEntrys = tmpDocSystem.listFiles();
 		if(subEntrys.length == 1)
 		{
-			Log.debug("installOffice() subEntryName:" + subEntrys[0].getName());
+			Log.debug("upgradeSystem() subEntryName:" + subEntrys[0].getName());
 			FileUtil.moveFileOrDir(upgradePath + "DocSystem-tmp/", subEntrys[0].getName(), upgradePath, "DocSystem", false);
 		}
 		else
@@ -1691,6 +1692,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		docSysDebugLog("安装包解压成功", rt);
 		writeJson(rt, response);
 	}
 	

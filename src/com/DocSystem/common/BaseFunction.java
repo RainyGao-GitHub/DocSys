@@ -83,6 +83,7 @@ import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
+import com.DocSystem.common.entity.StatusQueryTask;
 import com.DocSystem.common.entity.SvnConfig;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.entity.SystemLog;
@@ -161,6 +162,9 @@ public class BaseFunction{
 
 	//仓库全量备份任务HashMap: 全量备份任务只会在用户登录的服务器上创建，因此不需要考虑集群
 	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
+	
+	//Global StatusQueryTask
+	protected static ConcurrentHashMap<String, StatusQueryTask> statusQueryTaskHashMap = new ConcurrentHashMap<String, StatusQueryTask>();
 	
 	//系统默认用户
 	protected static User coEditUser = new User();

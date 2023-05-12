@@ -2362,7 +2362,9 @@ public class DocController extends BaseController{
 	
 	/**************** queryDownloadPrepareTask ******************/
 	@RequestMapping("/queryDownloadPrepareTask.do")
-	public void queryDownloadPrepareTask(String taskId, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	public void queryDownloadPrepareTask(
+			String taskId, 
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		Log.infoHead("************** queryDownloadPrepareTask.do ****************");
 		Log.info("queryDownloadPrepareTask taskId:" + taskId);

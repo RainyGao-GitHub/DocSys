@@ -141,6 +141,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
+import com.DocSystem.common.entity.StatusQueryTask;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -20913,5 +20914,32 @@ public class BaseController  extends BaseFunction{
 		//TB
 		uploadSize = uploadSize/1024;
 		return uploadSize + "T";
+	}
+	
+	//状态查询认为
+	protected StatusQueryTask createStatusQueryTask(
+			String event, String eventName,
+			ReturnAjax rt) 
+	{
+		long curTime = new Date().getTime();
+        Log.info("createStatusQueryTask() curTime:" + curTime);
+        
+		String taskId = event + "-" + curTime;
+		if(downloadPrepareTaskHashMap.get(taskId) != null)
+		{
+			Log.info("createStatusQueryTask() StatusQueryTask [" + taskId + "] 已存在");
+			return null;
+		}
+		
+		StatusQueryTask task =	new StatusQueryTask();
+		task.id = taskId;
+		task.event = event;
+		task.eventName = eventName;
+		task.createTime = curTime;
+				
+		task.status = 0;	//初始化 		
+		task.info = "";
+		statusQueryTaskHashMap.put(taskId, task);		
+		return task;
 	}
 }
