@@ -2777,7 +2777,7 @@
 	  		
 	  		var uploadEndCallback = function(totalNum, successNum){  	  		
 	      		//显示上传完成 
-	      		var uploadEndInfo = "[系统升级] 上传完成(共" + totalNum +"个)，开始升级...";
+	      		var uploadEndInfo = "[系统升级] 上传完成(共" + totalNum +"个)，解压安装文件...";
 	      		if(successNum != totalNum)
 	      		{
 	      			uploadEndInfo = "[系统升级] 上传失败 (共" + totalNum +"个)"+",成功 " + successNum + "个";
@@ -2876,19 +2876,22 @@
 	        success : function (ret) {
 	        	console.log("upgradeSystem ret:",ret);
 				if("ok" == ret.status){
-					showErrorMessage("系统升级中，请稍候...");
+					//showErrorMessage("系统升级中，请稍候...");
+					$(".upload-list-title").text("[系统升级] 安装文件解压完成，系统开始升级，请稍候...");
 				 }
 				 else	//上传失败
 				 {
 					//上传失败
 					console.log("升级失败：" + ret.msgInfo);
-					showErrorMessage("升级失败:" + ret.msgInfo);
+					//showErrorMessage("升级失败:" + ret.msgInfo);
+					$(".upload-list-title").text("[系统升级] 安装文件解压失败:" + ret.msgInfo);
 					gStatus = 0;
 					return;
 	             }
 	        },
 	        error : function () {
-				showErrorMessage("升级失败: 服务器异常");
+				$(".upload-list-title").text("[系统升级] 安装文件解压失败: 服务器异常");
+	        	//showErrorMessage("升级失败: 服务器异常");
 				gStatus = 0;
 	        }
 	    });
@@ -3280,21 +3283,24 @@
 	        success : function (ret) {
 	        	console.log("installOffice ret:",ret);
 				if("ok" == ret.status){
-					showErrorMessage("Office编辑器安装成功");
+					//showErrorMessage("Office编辑器安装成功");
+					$(".upload-list-title").text("[Office安装] 安装成功");
 			    	gStatus = 0;
 				 }
 				 else	//上传失败
 				 {
 					//上传失败
 					console.log("Office编辑器安装失败：" + ret.msgInfo);
-					showErrorMessage("Office编辑器安装失败:" + ret.msgInfo);
-			    	gStatus = 0;
+					//showErrorMessage("Office编辑器安装失败:" + ret.msgInfo);
+			    	$(".upload-list-title").text("[Office安装] 安装失败:" + ret.msgInfo);
+					gStatus = 0;
 					return;
 	             }
 	        },
 	        error : function () {
-				showErrorMessage("Office编辑器安装失败: 服务器异常");
-		    	gStatus = 0;
+				//showErrorMessage("Office编辑器安装失败: 服务器异常");
+		    	$(".upload-list-title").text("[Office安装] 安装失败: 服务器异常");
+				gStatus = 0;
 	        }
 	    });
 	}
