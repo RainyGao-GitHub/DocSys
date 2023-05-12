@@ -4221,6 +4221,18 @@
 			
 			showDownloadBox($(".el-upload-list").height() + 40);
       	};
+      	
+      	var showUploadingInfo = function(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum)
+      	{
+      		if(reuploadFlag == false)
+      		{
+      			$(".upload-list-title").text("正在上传   " + uploadStartedNum + " / " + totalNum);
+      		}
+      		else
+      		{
+      			$(".upload-list-title").text("正在重传   " + reuploadStartedNum + " / " + reuploadTotalNum);
+      		}
+      	}
 		
 		var createUploadItem = function(index, fileName) {
 			return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
@@ -4339,6 +4351,7 @@
   		
 		var config = {
 			uploadDisplayInit: uploadDisplayInit,
+			showUploadingInfo: showUploadingInfo,
 			createUploadItem: createUploadItem,
 			appendUploadItems: appendUploadItems,		
 			deleteUploadItem: deleteUploadItem,

@@ -2697,7 +2697,19 @@
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
 	      	};
-			
+	     
+	      	var showUploadingInfo = function(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum)
+	      	{
+	      		if(reuploadFlag == false)
+	      		{
+	      			$(".upload-list-title").text("[系统升级] 正在上传   " + uploadStartedNum + " / " + totalNum);
+	      		}
+	      		else
+	      		{
+	      			$(".upload-list-title").text("[系统升级] 正在重传   " + reuploadStartedNum + " / " + reuploadTotalNum);
+	      		}
+	      	}
+	      	
 			var createUploadItem = function(index, fileName) {
 				console.log("createUploadItem index:" + index + " fileName:" + fileName);
 				return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
@@ -2783,6 +2795,7 @@
 	  		
 			var config = {
 					uploadDisplayInit: uploadDisplayInit,
+					showUploadingInfo: showUploadingInfo,
 					createUploadItem: createUploadItem,
 					appendUploadItems: appendUploadItems,		
 					deleteUploadItem: deleteUploadItem,

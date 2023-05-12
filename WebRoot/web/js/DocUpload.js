@@ -213,7 +213,7 @@
 	        
 	        console.log("DocUploadInit Content:", Content);
 	        
-			showUploadingInfo();
+			_showUploadingInfo(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum);
 			
 			//设置为正在上传，避免被其他上传中断
 			isUploading = true;
@@ -263,6 +263,11 @@
 			_config.uploadDisplayInit && _config.uploadDisplayInit(index, totalNum);				
       	}
       	
+      	function _showUploadingInfo(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum)
+      	{
+			_config.showUploadingInfo && _config.showUploadingInfo(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum);				      		
+      	}
+      	
       	//增加上传文件
       	function DocUploadAppend(files,parentNode, parentPath, parentId, level, vid,commitMsg)	//多文件移动函数
 		{
@@ -295,7 +300,7 @@
 			Content.totalFileNum += fileNum;
 			totalNum = Content.totalFileNum;
 			
-			showUploadingInfo();
+			_showUploadingInfo(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum);
 			
 			console.log("DocUploadAppend Content:", Content);
 			
@@ -1578,18 +1583,6 @@
    			return false;
       	}
       	
-      	function showUploadingInfo()
-      	{
-      		if(reuploadFlag == false)
-      		{
-	      		$(".upload-list-title").text("正在上传   " + uploadStartedNum + " / " + totalNum);
-      		}
-      		else
-      		{
-      			$(".upload-list-title").text("正在重传   " + reuploadStartedNum + " / " + reuploadTotalNum);
-      		}
-      	}
-      	
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
 		function reuploadFailDocs(id)
 		{
@@ -1649,7 +1642,7 @@
 			}
 			
 			//更新上传进度
-			showUploadingInfo();
+			_showUploadingInfo(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum);
 			
 			if(false == reuploadFlag && false == isUploading)
 			{
@@ -2017,7 +2010,7 @@
     				reuploadStartedNum++;
     			}
 				
-				showUploadingInfo();
+				_showUploadingInfo(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum);
 				
 				//get the file from the SubContextList
     			var file = SubContext.file;
@@ -2546,7 +2539,13 @@
 	var uploadDisplayInit = function(index, totalNum) {
 		console.log("DocUpload.uploadDisplayInit() index:" + index + " totalNum:" + totalNum);		
   	};
-	
+  	
+  	var showUploadingInfo = function(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum)
+  	{
+  		console.log("DocUpload.showUploadingInfo() reuploadFlag:" + reuploadFlag + " uploadStartedNum:" + uploadStartedNum + " totalNum:" + totalNum
+  					+ " reuploadStartedNum:" + reuploadStartedNum + " reuploadTotalNum:" + reuploadTotalNum);
+  	}
+  	
 	var createUploadItem = function(index, fileName) {
 		console.log("DocUpload.deleteUploadItem() index:" + index + " fileName:" + fileName);		
 		return "";
@@ -2577,8 +2576,8 @@
 	};
     
     DocUpload.defaultConfig = {
-    	
 		uploadDisplayInit: DocUpload.uploadDisplayInit,
+		showUploadingInfo: DocUpload.showUploadingInfo,
 		createUploadItem: DocUpload.createUploadItem,
 		appendUploadItems: DocUpload.appendUploadItems,		
 		deleteUploadItem: DocUpload.deleteUploadItem,
