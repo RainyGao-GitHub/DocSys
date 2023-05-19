@@ -122,6 +122,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "新增文件 [" + path + name + "]";
+		}
 		saveDocToRepos(
 				"addDoc", "addDoc", "新增文件", taskId,
 				repos, path, name, 0L, type, null,
@@ -204,6 +208,10 @@ public class DocController extends BaseController{
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 		
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "新增文件 [" + path + name + "]";
+		}
 		saveDocToRepos(
 				"addDocRS", "addDocRS", "新增文件", taskId,
 				repos, path, name, 0L, type, null,
@@ -1467,6 +1475,10 @@ public class DocController extends BaseController{
 		docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);			
 		Log.debug("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 		
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传文件 [" + path + name + "]";
+		}
 		saveDocToRepos(
 				"checkChunkUploaded", "checkChunkUploaded", "文件上传", taskId,
 				repos, path, name, size, type, checkSum,
@@ -1546,7 +1558,11 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		
+
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传文件 [" + path + name + "]";
+		}
 		saveDocToRepos(
 				"combineChunks", "combineChunks", "文件上传", taskId,
 				repos, path, name, size, type, checkSum,
@@ -1657,6 +1673,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传文件 [" + path + name + "]";
+		}
 		saveDocToRepos(
 				"uploadDoc", "uploadDoc", "文件上传", taskId,
 				repos, path, name, size, type, checkSum,
@@ -1745,6 +1765,10 @@ public class DocController extends BaseController{
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
 				
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "上传文件 [" + path + name + "]";
+		}
 		saveDocToRepos(
 				"uploadDocRS", "uploadDocRS", "文件上传", taskId,
 				repos, path, name, size, type, checkSum,

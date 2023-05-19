@@ -20646,10 +20646,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//文件上传结束（如果是分片上传那么文件已经存入分片文件中）
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "上传 " + path + name;
-		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			
