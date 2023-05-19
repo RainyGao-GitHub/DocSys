@@ -48,7 +48,6 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
-import com.DocSystem.websocket.BussinessBase;
 import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocSearchContext;
 import com.alibaba.fastjson.JSONObject;
@@ -6042,7 +6041,7 @@ public class DocController extends BaseController{
 		queryLog.queryId = queryId;
 		
 		QueryResult queryResult = new QueryResult();
-		List<SystemLog> list = BussinessBase.getSystemLogList(queryLog, null, null);
+		List<SystemLog> list = channel.getSystemLogList(queryLog, null, null);
 		Integer total = queryResult.total;
 		Log.debug("getSystemLogList() total:" + total);
 		
