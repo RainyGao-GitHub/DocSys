@@ -2905,16 +2905,16 @@
        				{
        					if(DocListState == 0)
        					{
-	   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+	   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
        					}
        					else
        					{
-	   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons folder-open2" onclick="dk(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+	   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons folder-open2" onclick="dk(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
        					}
        				}
        				else
        				{
-   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
        				}
    	        	}
    	           	else
@@ -2923,16 +2923,16 @@
    	           		{
        					if(DocListState == 0)
        					{
-		   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+		   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
        					}
        					else
        					{
-		   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons folder-open2" onclick="dk(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+		   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons folder-open2" onclick="dk(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
        					}
    	           		}
    	           		else
    	           		{
-	   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+	   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
    	           		}
    	           	}
      	    }
@@ -2993,11 +2993,11 @@
          				+' latestEditTime=' + node.latestEditTime;
          	if(node.type == 2)
          	{
-         		nodeStr += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis" style="width: 60%;">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+         		nodeStr += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis" style="width: 60%;">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
          	}
          	else
          	{
-         		nodeStr += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis" style="width: 60%;">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+         		nodeStr += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis" style="width: 60%;">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatTimeEx(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
          	}
          	$("#secondList").append(nodeStr);
 		}
@@ -3383,6 +3383,16 @@
  		var ss=now.getSeconds();
 
  		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss;
+ 	}
+ 	
+ 	function formatTimeEx(time){
+ 		var now = new Date(time);
+ 		var year=now.getFullYear();
+ 		var month=now.getMonth()+1;
+ 		var date=now.getDate();
+ 		var hh=now.getHours();
+ 		var mm=now.getMinutes();
+ 		return year+"-"+month+"-"+date + " " + hh+":"+mm;
  	}
 
  	var gSearchFolder = "";
