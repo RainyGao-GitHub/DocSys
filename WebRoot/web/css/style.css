@@ -1,14 +1,14 @@
 .second-table{
     position: absolute;
-    left: 282px;
+    left: 453px;
     top: 55px;
     bottom: 0;
-    width: 379px;
+    width: 450px;
 }
 .second-line{
     position: absolute;
     cursor: col-resize;
-    left: 658px;
+    left: 903px;
     top: 55px;
     bottom: 0;
     width: 3px;

@@ -127,7 +127,7 @@ h6 {
 #line.manual-line{
      	position:absolute;
      	cursor: col-resize;
-     	left:279px;
+     	left:450px;
      	top:55px;
      	bottom:0;
      	width:3px;
@@ -137,7 +137,7 @@ h6 {
 #line2.manual-line{
        position:absolute;
        cursor: col-resize;
-       left:483px;
+       left:903px;
        top:55px;
        bottom:0;
        width:3px;
@@ -151,7 +151,7 @@ h6 {
     top: 55px;
     /*z-index: 301;*/
     bottom: 0;
-    width: 279px;
+    width: 450px;
     /* border-right: 1px solid #ddd; */
     background-color: #fafafa;
 }
@@ -272,7 +272,7 @@ h6 {
 
 .m-manual .manual-right {
     position: absolute;
-    left: 661px;
+    left: 906px;
     top: 55px;
     /*z-index: 300; */
     overflow-y: auto;
