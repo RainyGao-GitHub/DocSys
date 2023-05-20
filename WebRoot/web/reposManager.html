@@ -803,6 +803,24 @@
 				},
 				]
 			},
+			{text: '远程存储', subMenu: [
+				{text: '关闭远程存储',  action: function(e){
+						e.preventDefault();
+						addDocToRemoteStorageIgnoreListConfirm(curRightClickedTreeNode);
+					}
+				},
+				{text: '开启远程存储',  action: function(e){
+						e.preventDefault();
+						removeDocFromRemoteStorageIgnoreListConfirm(curRightClickedTreeNode);
+					}
+				},
+				{text: '忽略列表管理',  action: function(e){
+						e.preventDefault();
+						showReposRemoteStorageIgnoreListManagePanel();
+					}
+				},
+				]
+			},
 			{text: '全文搜索', subMenu: [
 				{text: '关闭全文搜索',  action: function(e){
 						e.preventDefault();
