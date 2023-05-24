@@ -9413,10 +9413,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else //if(type == 2) //目录
 				{
-					if(false == FileUtil.createDir(localDocPath))
-					{
-						return false;
-					}
+					return FileUtil.createDir(localDocPath);				
 				}
 				break;
 			case SAVE_TYPE_MultipartFile:
