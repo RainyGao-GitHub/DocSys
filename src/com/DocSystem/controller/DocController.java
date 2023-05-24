@@ -1099,23 +1099,28 @@ public class DocController extends BaseController{
 				return;			
 			}
 			
-			File targetFile = new File(localDiskPath + path + name);
-			if(targetFile.exists() == false)
+			//构造fakeRepos是为了能够重用与前端交换的逻辑
+			Repos fakeRepos = buildFakeReposForLocalDisk(localDiskPath);
+			Doc doc = buildBasicDoc(fakeRepos.getId(), null, null, null, path, name, null, type, true, localDiskPath, null, size, checkSum);
+			Doc fsDoc = fsGetDoc(fakeRepos, doc);
+			if(fsDoc.getType() == 0)
 			{
 				//File not exist
 				writeJson(rt, response);
 				return;	
 			}
 			
-			if(targetFile.length() == size)
+			if(fsDoc.getSize() == size)
 			{
 				rt.setMsgData("1");
+				rt.setData(fsDoc);
 				docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
 				writeJson(rt, response);
 				return;
 			}
 			
 			rt.setMsgData("0");
+			rt.setData(fsDoc);
 			docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
 			writeJson(rt, response);
 			return;
@@ -1275,6 +1280,11 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 				
 		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
+	}
+
+	private Repos buildFakeReposForLocalDisk(String localDiskPath) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private Repos getReposInfo(Integer reposId, DocShare docShare) {
