@@ -45,7 +45,6 @@ import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
-import com.DocSystem.common.entity.StatusQueryTask;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -1669,6 +1668,7 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		docSysDebugLog("安装包解压成功", rt);
 		
 		//检查并处理解压后的升级包
 		File tmpDocSystem = new File(upgradePath + "DocSystem-tmp/");
@@ -1683,6 +1683,9 @@ public class ManageController extends BaseController{
 			FileUtil.moveFileOrDir(upgradePath, "DocSystem-tmp", upgradePath, "DocSystem", false);			
 		}
 		
+		//解压成功，删除升级包
+		FileUtil.delFile(upgradePath + name);	//删除压缩包
+		
 		//开始升级
 		if(createMonitorTrigger("upgrade") == false)
 		{
@@ -1692,7 +1695,9 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		docSysDebugLog("安装包解压成功", rt);
+		//monitor.sh会负责后续的升级工作
+		//但这个接口解压时间很长，这个接口会超时，建议增加状态检查机制
+		docSysDebugLog("升级准备工作已完成，等待升级", rt);		
 		writeJson(rt, response);
 	}
 	
