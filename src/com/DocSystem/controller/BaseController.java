@@ -20918,7 +20918,7 @@ public class BaseController  extends BaseFunction{
         Log.info("createStatusQueryTask() curTime:" + curTime);
         
 		String taskId = event + "-" + curTime;
-		if(downloadPrepareTaskHashMap.get(taskId) != null)
+		if(statusQueryTaskHashMap.get(taskId) != null)
 		{
 			Log.info("createStatusQueryTask() StatusQueryTask [" + taskId + "] 已存在");
 			return null;

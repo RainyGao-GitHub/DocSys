@@ -2877,24 +2877,78 @@
 	        	console.log("upgradeSystem ret:",ret);
 				if("ok" == ret.status){
 					//showErrorMessage("系统升级中，请稍候...");
-					$(".upload-list-title").text("[系统升级] 解压完成，开始升级，请稍候...");
+					var queryTask = ret.data;
+					startSystemUpgradePrepareQueryTask(queryTask.id, 2000); //2秒后查询
+					$(".upload-list-title").text("[系统升级] 升级准备中:" + queryTask.info);
 				 }
 				 else	//上传失败
 				 {
 					//上传失败
 					console.log("升级失败：" + ret.msgInfo);
 					//showErrorMessage("升级失败:" + ret.msgInfo);
-					$(".upload-list-title").text("[系统升级] 安装文件解压失败:" + ret.msgInfo);
+					$(".upload-list-title").text("[系统升级] 升级失败:" + ret.msgInfo);
 					gStatus = 0;
 					return;
 	             }
 	        },
 	        error : function () {
-				$(".upload-list-title").text("[系统升级] 安装文件解压失败: 服务器异常");
+				$(".upload-list-title").text("[系统升级] 升级失败: 服务器异常");
 	        	//showErrorMessage("升级失败: 服务器异常");
 				gStatus = 0;
 	        }
 	    });
+	}
+	
+	function startSystemUpgradePrepareQueryTask(queryId, delayTime)
+	{
+		console.log("startSystemUpgradePrepareQueryTask() queryId:" + queryId + " delayTime:" + delayTime);
+		var nextDelayTime = delayTime; //每次增加5s
+		if(nextDelayTime < 60000) //最长1分钟
+		{
+			nextDelayTime += 5000;
+		}
+		
+		setTimeout(function () {
+			console.log("timerForQuerySystemUpgradePrepareTask triggered!");
+			doQuerySystemUpgradePrepareTask(queryId, nextDelayTime);
+		},delayTime);	//check it 2s later	
+	}
+	
+	function doQuerySystemUpgradePrepareTask(queryId, nextDelayTime)
+	{
+		console.log("doQuerySystemUpgradePrepareTask() queryId:" + queryId);
+
+		$.ajax({
+            url : "/DocSystem/Manage/getStausQeuryTask.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                queryId: queryId,
+            },
+            success : function (ret) {
+        	   console.log("doQuerySystemUpgradePrepareTask() ret:",ret);        
+               if( "ok" == ret.status )
+               {    
+            	   var queryTask = ret.data;
+           	       if(queryTask.status == 200)
+            	   {
+	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
+	           			$(".upload-list-title").text("[系统升级] 开始升级，请稍候...");
+           	        	return;
+            	   }
+           	       startSystemUpgradePrepareQueryTask(queryTask.id, nextDelayTime);
+               }
+               else	//后台报错
+               {
+            	   	console.log("系统升级失败:" + ret.msgInfo);
+					$(".upload-list-title").text("[系统升级] 升级失败:" + ret.msgInfo);
+               }
+            },
+            error : function () {	//后台异常
+        	   	console.log("系统升级失败:服务器异常");
+				$(".upload-list-title").text("[系统升级] 升级失败:服务器异常");
+            }
+    	});	
 	}
 	
     function stopUpgradeSystem(){

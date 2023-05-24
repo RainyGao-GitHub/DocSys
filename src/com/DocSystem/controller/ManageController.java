@@ -5,6 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.naming.ldap.LdapContext;
 import javax.servlet.http.HttpServletRequest;
@@ -43,8 +46,10 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
+import com.DocSystem.common.entity.StatusQueryTask;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -1660,17 +1665,33 @@ public class ManageController extends BaseController{
 			return;
 		}
 
+		StatusQueryTask queryTask = createStatusQueryTask("upgradeSystem", "系统升级", rt);
+		queryTask.status = 0;  
+		queryTask.info = "开始升级准备工作";
+		Log.debug("upgradeSystem() " + queryTask.info);
+		rt.setData(queryTask);
+		writeJson(rt, response);
+
 		//开始解压
+		queryTask.status = 1;	//升级解压中
+		queryTask.info = "安装包解压";
+		Log.debug("upgradeSystem() " + queryTask.info);
 		if(unZip(upgradePath + name, upgradePath + "DocSystem-tmp/") == false)
 		{
-			Log.debug("upgradeSystem() 解压失败");
-			docSysErrorLog("升级包解压失败", rt);
-			writeJson(rt, response);
+			Log.debug("upgradeSystem() 安装包解压失败");
+			//docSysErrorLog("安装包解压失败", rt);
+			queryTask.status = -1;
+			queryTask.info = "安装包解压失败";	
 			return;
 		}
-		docSysDebugLog("安装包解压成功", rt);
-		
+		queryTask.info = "安装包解压成功";	
+		Log.debug("upgradeSystem() " + queryTask.info);
+
+
 		//检查并处理解压后的升级包
+		queryTask.status = 2;
+		queryTask.info = "安装包检查";
+		Log.debug("upgradeSystem() " + queryTask.info);
 		File tmpDocSystem = new File(upgradePath + "DocSystem-tmp/");
 		File[] subEntrys = tmpDocSystem.listFiles();
 		if(subEntrys.length == 1)
@@ -1682,23 +1703,100 @@ public class ManageController extends BaseController{
 		{
 			FileUtil.moveFileOrDir(upgradePath, "DocSystem-tmp", upgradePath, "DocSystem", false);			
 		}
-		
+		queryTask.info = "安装包检查完成";	
+		Log.debug("upgradeSystem() " + queryTask.info);
+
 		//解压成功，删除升级包
 		FileUtil.delFile(upgradePath + name);	//删除压缩包
 		
 		//开始升级
+		queryTask.status = 3;
+		queryTask.info = "创建升级任务";
+		Log.debug("upgradeSystem() " + queryTask.info);
 		if(createMonitorTrigger("upgrade") == false)
 		{
-			Log.debug("upgradeSystem() 升级系统失败");
-			rt.setError("创建升级任务失败!");
-			writeJson(rt, response);
+			queryTask.status = -1;
+			queryTask.info = "升级任务创建失败";	
+			Log.debug("upgradeSystem() " + queryTask.info);
 			return;
 		}
+		queryTask.info = "升级任务创建完成";
+		Log.debug("upgradeSystem() " + queryTask.info);
 		
 		//monitor.sh会负责后续的升级工作
-		//但这个接口解压时间很长，这个接口会超时，建议增加状态检查机制
-		docSysDebugLog("升级准备工作已完成，等待升级", rt);		
-		writeJson(rt, response);
+		queryTask.status = 200;	//这里用比较大的数字，是为了以后可能中间需要增加状态，参照网络的成功状态值
+		queryTask.info = "准备工作已完成，等待升级";
+		Log.debug("upgradeSystem() " + queryTask.info);
+	}
+	/**************** getStatusQueryTask ******************/
+	@RequestMapping("/getStatusQueryTask.do")
+	public void getStatusQueryTask(
+			String taskId, 
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.infoHead("************** getStatusQueryTask.do ****************");
+		Log.info("getStatusQueryTask taskId:" + taskId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		StatusQueryTask task = getStatusQueryTaskById(taskId);
+		if(task == null)
+		{
+			//可能任务已被取消或者超时删除
+			rt.setError("状态查询任务 [" + taskId + "] 不存在");
+			writeJson(rt, response);			
+			return;
+		}
+
+		switch(task.status)
+		{
+		case 200:	//成功
+			//延时删除下载压缩任务
+			addDelayTaskForStatusQueryTaskDelete(task.id, 120L);	//2分钟后删除
+			break;
+		case -1: 	//失败
+			rt.setError(task.info);
+			addDelayTaskForStatusQueryTaskDelete(task.id, 120L);	//2分钟后删除
+			break;
+		default:
+			//任务未结束
+			break;
+		}
+
+		rt.setData(task);
+		writeJson(rt, response);			
+	}
+	
+	public void addDelayTaskForStatusQueryTaskDelete(String taskId, Long deleteDelayTime) {
+		if(deleteDelayTime == null)
+		{
+			Log.info("addDelayTaskForStatusQueryTaskDelete() delayTime is null");			
+			return;
+		}
+		Log.info("addDelayTaskForStatusQueryTaskDelete() delayTime:" + deleteDelayTime + " 秒后开始删除查询任务！" );		
+		
+		long curTime = new Date().getTime();
+        Log.info("addDelayTaskForStatusQueryTaskDelete() curTime:" + curTime);        
+		
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("******** StatusQueryTaskDeleteDelayTask *****");
+	                        statusQueryTaskHashMap.remove(taskId);
+                        } catch(Exception e) {
+	                		Log.info("******** StatusQueryTaskDeleteDelayTask 查询任务 [" + taskId + "] 删除异常\n");		                        
+                        	Log.info(e);                        	
+                        }                        
+                    }
+                },
+                deleteDelayTime,
+                TimeUnit.SECONDS);
+	}
+	
+	private StatusQueryTask getStatusQueryTaskById(String taskId) {
+		return statusQueryTaskHashMap.get(taskId);
 	}
 	
 	@RequestMapping("/restartServer.do")
