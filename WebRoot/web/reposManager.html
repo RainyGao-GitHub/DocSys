@@ -1358,7 +1358,7 @@ function showReposTextSearchIgnoreListManagePanel()
 	
 	bootstrapQ.dialog({
 		id: 'reposTextSearchIgnoreManage',
-		title: '版本忽略管理',
+		title: '远程存储忽略管理',
 		url: 'reposTextSearchIgnoreManage.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -1580,6 +1580,105 @@ function setVersionIgnore(node, ignore)
             if( "ok" == ret.status ){
             	// 普通消息提示条
             	docVersionIgnore[node.docId] = ignore;
+            	bootstrapQ.msg({
+						msg : '设置成功！',
+						type : 'success',
+						time : 2000,
+					    });
+            }
+            else
+            {
+            	showErrorMessage("设置失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+           	showErrorMessage('设置失败:服务器异常！');
+        }
+	});
+}
+
+function showReposRemoteStorageIgnoreListManagePanel()
+{
+   	console.log("showReposRemoteStorageIgnoreListManagePanel()");
+	bootstrapQ.dialog({
+		id: 'reposRemoteStorageIgnoreManage',
+		title: '远程存储忽略管理',
+		url: 'reposRemoteStorageIgnoreManage.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		callback: function(){
+			RemoteStorageIgnoreMange.init(gReposId);
+		},
+	}, null);
+}
+
+
+function addDocToRemoteStorageIgnoreListConfirm(node)
+{
+   	console.log("addDocToRemoteStorageIgnoreListConfirm()");
+	
+	var msg = "关闭 [" + node.path + node.name + "] 的远程存储？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "关闭仓库所有文件的远程存储?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'addRemoteStorageIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setRemoteStorageIgnore(node, 1);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function removeDocFromRemoteStorageIgnoreListConfirm(node)
+{
+   	console.log("removeDocFromRemoteStorageIgnoreListConfirm()");
+   
+	var msg = "开启 [" + node.path + node.name + "] 的远程存储？"
+   	if(node.docId == 0)
+   	{
+   	   msg = "开启仓库所有文件的远程存储?";
+   	}
+   	
+   	qiao.bs.confirm({
+ 	    	id: 'removeRemoteStorageIgnoreConfirm',
+ 	        msg: msg,
+ 	        close: false,		
+ 	        okbtn: "确定",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	setRemoteStorageIgnore(node, 0);
+ 	    	return true;   
+ 	    },function(){
+ 	    	return true;
+ 	    }); 
+}
+
+function setRemoteStorageIgnore(node, ignore)
+{
+	console.log("setRemoteStorageIgnore()");
+    $.ajax({
+        url : "/DocSystem/Doc/setRemoteStorageIgnore.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId : gReposId,
+        	path: node.path,
+        	name: node.name,
+        	ignore: ignore,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+            	// 普通消息提示条
+            	docRemoteStorageIgnore[node.docId] = ignore;
             	bootstrapQ.msg({
 						msg : '设置成功！',
 						type : 'success',

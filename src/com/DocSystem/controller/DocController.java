@@ -4600,7 +4600,234 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 	}
+	
+	
+	/****************   set  Doc RemoteStorage Ignore ******************/
+	@RequestMapping("/setRemoteStorageIgnore.do")
+	public void setRemoteStorageIgnore(
+			String taskId,
+			Integer reposId, String path, String name,
+			Integer ignore,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("************** setRemoteStorageIgnore [" + path + name + "] ****************");
+		Log.info("setRemoteStorageIgnore reposId:" + reposId + " path:" + path + " name:" + name  + " ignore:" + ignore);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
 
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//获取并检查用户权限
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(repos.remoteStorageConfig == null)
+		{
+			rt.setError("该仓库未设置远程存储，请联系管理员!");			
+			writeJson(rt, response);
+			return;
+		}
+		
+		//设置文件密码
+		if(setRemoteStorageIgnore(repos, doc, ignore) == false)
+		{
+			rt.setError("远程存储忽略设置失败");			
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteStorageIgnore", "setRemoteStorageIgnore", "远程存储忽略设置",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+		}
+		else
+		{
+			addSystemLog(request, reposAccess.getAccessUser(), "setRemoteStorageIgnore", "setRemoteStorageIgnore", "远程存储忽略设置",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));	
+		}
+		writeJson(rt, response);
+	}
+	
+	private boolean setRemoteStorageIgnore(Repos repos, Doc doc, Integer ignore) {
+		String reposRemoteStorageConfigPath = Path.getReposRemoteStorageConfigPath(repos);
+		String ignoreFilePath = reposRemoteStorageConfigPath + doc.getPath() + doc.getName();
+		String ignoreFileName = ".ignore";
+		if(ignore != null && ignore == 1)
+		{
+			//将ignore路径加入到repos的ignore HashMap中			
+			if(FileUtil.createFile(ignoreFilePath, ignoreFileName) == true)
+			{
+				if(repos.remoteStorageConfig.ignoreHashMap == null)
+				{
+					repos.remoteStorageConfig.ignoreHashMap = new ConcurrentHashMap<String, Integer>(); 
+				}
+				repos.remoteStorageConfig.ignoreHashMap.put("/" + doc.getPath() + doc.getName(), 1);
+				setReposRemoteStorageConfig(repos, repos.remoteStorageConfig);
+				return true;
+			}
+			return false;
+		}
+		
+		//将ignore从repos的ignore HashMap中删除
+		if(FileUtil.delFile(ignoreFilePath +  "/" + ignoreFileName) == true)
+		{
+			if(repos.remoteStorageConfig.ignoreHashMap != null)
+			{
+				repos.remoteStorageConfig.ignoreHashMap.remove("/" + doc.getPath() + doc.getName());
+				setReposRemoteStorageConfig(repos, repos.remoteStorageConfig);
+			}
+			return true;			
+		}
+		return false;
+	}
+	
+	@RequestMapping("/getRemoteStorageIgnore.do")
+	public void getRemoteStorageIgnore(
+			Integer reposId, String path, String name,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.info("************** getRemoteStorageIgnore [" + path + name + "] ****************");
+		Log.info("getRemoteStorageIgnore reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(repos.remoteStorageConfig == null)
+		{
+			rt.setError("该仓库未设置远程存储，请联系管理员!");			
+			writeJson(rt, response);
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		rt.setData(getRemoteStorageIgnore(repos, doc));			
+		writeJson(rt, response);
+	}
+	
+	private Integer getRemoteStorageIgnore(Repos repos, Doc doc) {
+		if(repos.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			return 1;
+		}
+		return 0;
+	}
+	
+	@RequestMapping("/getRemoteStorageIgnoreList.do")
+	public void getRemoteStorageIgnoreList(Integer reposId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("************** getRemoteStorageIgnoreList ****************");
+		Log.info("getRemoteStorageIgnoreList reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(repos.remoteStorageConfig == null)
+		{
+			rt.setError("该仓库未设置远程存储，请联系管理员!");			
+			writeJson(rt, response);
+			return;
+		}
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		String configPath = Path.getReposRemoteStorageConfigPath(repos);
+		List<Doc> ignoreList = getRemoteStorageIgnoreList(repos, doc, configPath, null);
+		
+		rt.setData(ignoreList);			
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getRemoteStorageIgnoreList(Repos repos, Doc doc, String configPath, List<Doc> ignoreList) {
+		Log.info("*getRemoteStorageIgnoreList() reposId:" + repos.getId() + " [" + doc.getPath() + doc.getName() + "]");
+		if(ignoreList == null)
+		{
+			ignoreList = new ArrayList<Doc>();
+		}
+		
+		if(repos.remoteStorageConfig.ignoreHashMap.get("/" + doc.getPath() + doc.getName()) != null)
+		{
+			ignoreList.add(doc);
+		}
+		
+		String ignoreConfigEntryPath = configPath + doc.getPath() + doc.getName();
+		File dir = new File(ignoreConfigEntryPath);
+    	if(false == dir.exists())
+    	{
+    		Log.debug("getRemoteStorageIgnoreList() " +  ignoreConfigEntryPath + " 不存在！");
+    		return ignoreList;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		Log.debug("getRemoteStorageIgnoreList() " + ignoreConfigEntryPath + " 不是目录！");
+    		return ignoreList;
+    	}
+
+		String subDocParentPath = getSubDocParentPath(doc);
+		Integer subDocLevel = getSubDocLevel(doc);
+    	
+        //Go through the subEntries
+    	File[] localFileList = dir.listFiles();
+    	for(int i=0;i<localFileList.length;i++)
+    	{
+    		File subFile = localFileList[i];
+    		if(subFile.isFile())
+    		{
+    			continue;
+    		}
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		getRemoteStorageIgnoreList(repos, subDoc, configPath, ignoreList);
+    	}
+    	return ignoreList;
+	}
+	
 	/****************   set  LocalBackup Ignore ******************/
 	@RequestMapping("/setLocalBackupIgnore.do")
 	public void setLocalBackupIgnore(

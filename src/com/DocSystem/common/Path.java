@@ -769,7 +769,7 @@ public class Path {
 		String path = getReposPath(repos) + "data/versionIgnoreSetting/";
 		return path;
 	}
-	
+		
 	public static String getReposTextSearchConfigPath(Repos repos) {
 		String path = getReposPath(repos) + "data/textSearchSetting/";
 		return path;
@@ -785,6 +785,11 @@ public class Path {
 		return path;
 	}
 	
+	public static String getReposRemoteStorageConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/remoteStorageSetting/";
+		return path;
+	}
+
 	public static String getReposRemoteServerConfigPath(Repos repos) {
 		String path = getReposPath(repos) + "data/remoteServerSetting/";
 		return path;

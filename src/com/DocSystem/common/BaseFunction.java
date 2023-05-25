@@ -648,7 +648,7 @@ public class BaseFunction{
 	}
 	
 	//*** reposRemoteStorageHashMap
-	private static void setReposRemoteStorageConfig(Repos repos, RemoteStorageConfig config) {
+	protected static void setReposRemoteStorageConfig(Repos repos, RemoteStorageConfig config) {
 		reposRemoteStorageHashMap.put(repos.getId(), config);
 		if(redisEn)
 		{
