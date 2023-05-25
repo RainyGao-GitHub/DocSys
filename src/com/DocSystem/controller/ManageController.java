@@ -1776,7 +1776,8 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-
+		
+		Log.debug("queryLongTermTask() status:" + task.status + " info:" + task.info);
 		switch(task.status)
 		{
 		case 200:	//成功
