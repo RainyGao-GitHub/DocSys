@@ -1099,10 +1099,9 @@ public class DocController extends BaseController{
 				return;			
 			}
 			
-			//构造fakeRepos是为了能够重用与前端交换的逻辑
-			Repos fakeRepos = buildFakeReposForLocalDisk(localDiskPath);
-			Doc doc = buildBasicDoc(fakeRepos.getId(), null, null, null, path, name, null, type, true, localDiskPath, null, size, checkSum);
-			Doc fsDoc = fsGetDoc(fakeRepos, doc);
+			//Fake Doc
+			Doc doc = buildBasicDoc(null, null, null, null, path, name, null, type, true, localDiskPath, null, size, checkSum);
+			Doc fsDoc = fsGetDoc(null, doc);
 			if(fsDoc.getType() == 0)
 			{
 				//File not exist
@@ -1280,11 +1279,6 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 				
 		uploadAfterHandler(ret, doc, name, null, null, null, reposAccess, context, rt);
-	}
-
-	private Repos buildFakeReposForLocalDisk(String localDiskPath) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	private Repos getReposInfo(Integer reposId, DocShare docShare) {

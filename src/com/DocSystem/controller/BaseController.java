@@ -6467,7 +6467,7 @@ public class BaseController  extends BaseFunction{
 	protected static Doc fsGetDoc(Repos repos, Doc doc) 
 	{
 		Doc localDoc = new Doc();
-		localDoc.setVid(repos.getId());
+		localDoc.setVid(doc.getVid());
 		localDoc.setDocId(doc.getDocId());
 		localDoc.setPid(doc.getPid());
 		localDoc.setReposPath(doc.getReposPath());
