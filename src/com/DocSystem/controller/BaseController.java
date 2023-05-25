@@ -20913,10 +20913,11 @@ public class BaseController  extends BaseFunction{
 	protected LongTermTask createLongTermTask(
 			String event, String eventName,
 			ReturnAjax rt) 
-	{
+	{		
 		long curTime = new Date().getTime();
         Log.info("createLongTermTask() curTime:" + curTime);
-        
+		cleanExpiredLongTermTask(curTime);
+   
 		String taskId = event + "-" + curTime;
 		if(longTermTaskHashMap.get(taskId) != null)
 		{
@@ -20932,7 +20933,42 @@ public class BaseController  extends BaseFunction{
 				
 		task.status = 0;	//初始化 		
 		task.info = "";
-		longTermTaskHashMap.put(taskId, task);		
+		longTermTaskHashMap.put(taskId, task);	
 		return task;
+	}
+
+	private void cleanExpiredLongTermTask(long curTime) 
+	{
+		if(longTermTaskHashMap.size() == 0)
+		{
+			return;
+		}
+		List<String> deleteList = new ArrayList<String>();
+		//遍历所有的LongTermTask，删除过期的
+		for (Entry<String, LongTermTask> entry : longTermTaskHashMap.entrySet()) 
+		{
+			LongTermTask task = entry.getValue();
+			if(task.status == 0)
+			{
+				//未开始的任务，如果超过10分钟，删除
+				if(curTime - task.createTime > 10*60*1000)
+				{
+					deleteList.add(entry.getKey());
+				}
+			}
+			else
+			{
+				//已经开始的任务，如果超过6小时，删除
+				if(curTime - task.createTime > 6*60*60*1000)
+				{
+					deleteList.add(entry.getKey());
+				}
+			}
+		}
+		//删除过期的任务
+		for(String taskId : deleteList)
+		{
+			longTermTaskHashMap.remove(taskId);
+		}
 	}
 }
