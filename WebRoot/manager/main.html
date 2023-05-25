@@ -2859,7 +2859,7 @@
     	
     	function doQuerySystemUpgradePrepareTask(taskId, nextDelayTime)
     	{
-    		console.log("doQuerySystemUpgradePrepareTask() taskId:" + taskId);
+    		console.log("doQuerySystemUpgradePrepareTask() taskId:" + taskId + " nextDelayTime:" + nextDelayTime);
 
     		$.ajax({
                 url : "/DocSystem/Manage/queryLongTermTask.do",
@@ -2877,6 +2877,7 @@
                 	   {
     	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
     	           			$(".upload-list-title").text("[系统升级] 开始升级，请稍候...");
+    	           			gStatus = 0;
                	        	return;
                 	   }
                	       startSystemUpgradePrepareTask(task.id, nextDelayTime);
@@ -2922,6 +2923,7 @@
                    {    
     	           		console.log("stopSystemUpgradePrepareTask() 升级任务已取消");
     	           		$(".upload-list-title").text("[系统升级] 升级任务已取消");
+    	           		gStatus = 0;
                    }
                    else
                    {
@@ -2995,7 +2997,14 @@
 	    });
 	}
 	
-    function stopUpgradeSystem(){
+    function stopUpgradeSystem()
+    {
+		if(gStatus == 0)
+		{
+    		$(".el-upload-list").hide();
+			return;
+		}
+
 		qiao.bs.confirm({
 	        id: 'bsconfirm',
 	        msg: '是否取消系统升级！',
@@ -3363,7 +3372,7 @@
     	
     	function doQueryOfficeInstallPrepareTask(taskId, nextDelayTime)
     	{
-    		console.log("doQueryOfficeInstallPrepareTask() taskId:" + taskId);
+    		console.log("doQueryOfficeInstallPrepareTask() taskId:" + taskId + " nextDelayTime:" + nextDelayTime);
 
     		$.ajax({
                 url : "/DocSystem/Manage/queryLongTermTask.do",
@@ -3379,8 +3388,9 @@
                 	   var task = ret.data;
                	       if(task.status == 200)
                 	   {
-    	           			console.log("OfficeInstallPrepareSuccessHandler() 安装准备工作已完成，等待安装");
-    	           			$(".upload-list-title").text("[Office安装] 开始安装，请稍候...");
+    	           			console.log("OfficeInstallPrepareSuccessHandler() Off编辑器安装完成");
+    	           			$(".upload-list-title").text("[Office安装] Office编辑器安装完成");
+    	           			gStatus = 0;
                	        	return;
                 	   }
                	       startOfficeInstallPrepareTask(task.id, nextDelayTime);
@@ -3398,7 +3408,8 @@
         	});	
     	}
     	
-    	function stop(){
+    	function stop()
+    	{
 	    	if(_status < 2)	//上传中
 	    	{
 	    		OfficeInstallFileUpload.stopAllUpload();
@@ -3480,7 +3491,6 @@
 					var task = ret.data;
 					OfficeInstall.startOfficeInstallPrepareTask(task.id, 2000); //2秒后查询
 					$(".upload-list-title").text("[Office安装] 安装准备中...");
-			    	gStatus = 0;
 				 }
 				 else	//上传失败
 				 {
@@ -3501,6 +3511,12 @@
 	}
 	
     function stopInstallOffice(){
+		if(gStatus == 0)
+		{
+    		$(".el-upload-list").hide();
+			return;
+		}
+		
 		qiao.bs.confirm({
 	        id: 'bsconfirm',
 	        msg: '是否取消Office安装！',
