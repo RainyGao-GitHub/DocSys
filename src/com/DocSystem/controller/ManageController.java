@@ -1666,6 +1666,12 @@ public class ManageController extends BaseController{
 		}
 
 		LongTermTask queryTask = createLongTermTask("upgradeSystem", "系统升级", rt);
+		if(queryTask == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
 		queryTask.status = 0;  
 		queryTask.info = "开始升级准备工作";
 		Log.debug("upgradeSystem() " + queryTask.info);

@@ -20913,7 +20913,14 @@ public class BaseController  extends BaseFunction{
 	protected LongTermTask createLongTermTask(
 			String event, String eventName,
 			ReturnAjax rt) 
-	{		
+	{	
+		if(longTermTaskHashMap.size() > 1000)
+		{
+			Log.info("createLongTermTask() longTermTask 总数已超限，请检查您的系统是否正常");
+			rt.setError("系统长任务过多，请检查您的系统是否正常");
+			return null;
+		}
+
 		long curTime = new Date().getTime();
         Log.info("createLongTermTask() curTime:" + curTime);
 		cleanExpiredLongTermTask(curTime);
@@ -20939,10 +20946,11 @@ public class BaseController  extends BaseFunction{
 
 	private void cleanExpiredLongTermTask(long curTime) 
 	{
-		if(longTermTaskHashMap.size() == 0)
+		if(longTermTaskHashMap.size() < 100)
 		{
 			return;
 		}
+
 		List<String> deleteList = new ArrayList<String>();
 		//遍历所有的LongTermTask，删除过期的
 		for (Entry<String, LongTermTask> entry : longTermTaskHashMap.entrySet()) 
