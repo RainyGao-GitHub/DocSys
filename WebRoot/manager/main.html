@@ -2686,6 +2686,8 @@
 	//SystemUpgrade类	
 	var SystemUpgrade = (function () {
     	var _firstFile;
+    	var _status = 0; //0: init 1:uploading 2:upload-success 3:systemUpgradePrepare 4:systemUpgradePrepare-success 5: systemUpgradeInProgress
+    	var _taskId;
     	
     	//初始化上传控件
     	var SystemUpgradeFileUpload;
@@ -2812,22 +2814,6 @@
 	  		SystemUpgradeFileUpload = new DocUpload(config);
 		}
     	
-    	function start(files, firstFile){
-    		_firstFile = firstFile;
-    		
-    		var parentPath = "";
-    	  	var parentId = 0;
-    	  	var level = 0;
-    	  	var vid = -1;
-    	  	var parentNode = null;
-    	  	
-    	  	SystemUpgradeFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
-    	}
-    	
-    	function stop(){
-    		SystemUpgradeFileUpload.stopAllUpload();
-    	}
-    	
     	//Re Upload Fail Docs
         function reuploadFailDocs(index)
         {
@@ -2842,6 +2828,113 @@
         	console.log("stopUpload " + index);
         	SystemUpgradeFileUpload.stopUpload(index);
         }
+    	
+    	function start(files, firstFile){
+    		_firstFile = firstFile;
+    		
+    		var parentPath = "";
+    	  	var parentId = 0;
+    	  	var level = 0;
+    	  	var vid = -1;
+    	  	var parentNode = null;
+    	  	
+    	  	SystemUpgradeFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
+    	}
+    	
+    	function startSystemUpgradePrepareTask(taskId, delayTime)
+    	{
+    		_taskId = taskId;
+    		console.log("startSystemUpgradePrepareTask() taskId:" + taskId + " delayTime:" + delayTime);
+    		var nextDelayTime = delayTime; //每次增加5s
+    		if(nextDelayTime < 60000) //最长1分钟
+    		{
+    			nextDelayTime += 5000;
+    		}
+    		
+    		setTimeout(function () {
+    			console.log("timerForQuerySystemUpgradePrepareTask triggered!");
+    			doQuerySystemUpgradePrepareTask(_taskId, nextDelayTime);
+    		},delayTime);	//check it 2s later	
+    	}
+    	
+    	function doQuerySystemUpgradePrepareTask(taskId, nextDelayTime)
+    	{
+    		console.log("doQuerySystemUpgradePrepareTask() taskId:" + taskId);
+
+    		$.ajax({
+                url : "/DocSystem/Manage/queryLongTermTask.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    taskId: taskId,
+                },
+                success : function (ret) {
+            	   console.log("doQuerySystemUpgradePrepareTask() ret:",ret);        
+                   if( "ok" == ret.status )
+                   {    
+                	   var task = ret.data;
+               	       if(task.status == 200)
+                	   {
+    	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
+    	           			$(".upload-list-title").text("[系统升级] 开始升级，请稍候...");
+               	        	return;
+                	   }
+               	       startSystemUpgradePrepareTask(task.id, nextDelayTime);
+                   }
+                   else	//后台报错
+                   {
+                	   	console.log("系统升级失败:" + ret.msgInfo);
+    					$(".upload-list-title").text("[系统升级] 升级失败:" + ret.msgInfo);
+                   }
+                },
+                error : function () {	//后台异常
+            	   	console.log("系统升级失败:服务器异常");
+    				$(".upload-list-title").text("[系统升级] 升级失败:服务器异常");
+                }
+        	});	
+    	}
+    	
+    	function stop(){
+	    	if(_status < 2)	//上传中
+	    	{
+	    		SystemUpgradeFileUpload.stopAllUpload();	        	
+	    	}
+	    	else
+	    	{
+	    		stopSystemUpgradePrepareTask(_taskId);
+	    	}
+    	}
+    	
+    	function stopSystemUpgradePrepareTask(taskId)
+    	{
+    		console.log("stopSystemUpgradePrepareTask() taskId:" + taskId);
+
+    		$.ajax({
+                url : "/DocSystem/Manage/stopLongTermTask.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    taskId: taskId,
+                },
+                success : function (ret) {
+            	   console.log("stopSystemUpgradePrepareTask() ret:",ret);        
+                   if( "ok" == ret.status )
+                   {    
+    	           		console.log("stopSystemUpgradePrepareTask() 升级任务已取消");
+    	           		$(".upload-list-title").text("[系统升级] 升级任务已取消");
+                   }
+                   else
+                   {
+                	   	console.log("stopSystemUpgradePrepareTask() 升级任务取消失败:" + ret.msgInfo);
+                	   	showErrorMessage("升级任务取消失败:" + ret.msgInfo);
+                   }
+                },
+                error : function () {	//后台异常
+            	   	console.log("stopSystemUpgradePrepareTask() 系统升级失败:服务器异常");
+            	   	showErrorMessage("升级任务取消失败:服务器异常");
+                }
+        	});	
+    	}
     	
     	//初始化上传控件
     	SystemUpgradeFileUploadInit();
@@ -2860,6 +2953,9 @@
             reuploadFailDocs: function(index){
             	reuploadFailDocs(index);
             },
+            startSystemUpgradePrepareTask: function(taskId, delayTime){
+            	startSystemUpgradePrepareTask(taskId, delayTime);
+            },
         };
     })();
 
@@ -2877,9 +2973,9 @@
 	        	console.log("upgradeSystem ret:",ret);
 				if("ok" == ret.status){
 					//showErrorMessage("系统升级中，请稍候...");
-					var queryTask = ret.data;
-					startSystemUpgradePrepareQueryTask(queryTask.id, 2000); //2秒后查询
-					$(".upload-list-title").text("[系统升级] 升级准备中:" + queryTask.info);
+					var task = ret.data;
+					SystemUpgrade.startSystemUpgradePrepareTask(task.id, 2000); //2秒后查询
+					$(".upload-list-title").text("[系统升级] 升级准备中:" + task.info);
 				 }
 				 else	//上传失败
 				 {
@@ -2897,58 +2993,6 @@
 				gStatus = 0;
 	        }
 	    });
-	}
-	
-	function startSystemUpgradePrepareQueryTask(queryId, delayTime)
-	{
-		console.log("startSystemUpgradePrepareQueryTask() queryId:" + queryId + " delayTime:" + delayTime);
-		var nextDelayTime = delayTime; //每次增加5s
-		if(nextDelayTime < 60000) //最长1分钟
-		{
-			nextDelayTime += 5000;
-		}
-		
-		setTimeout(function () {
-			console.log("timerForQuerySystemUpgradePrepareTask triggered!");
-			doQuerySystemUpgradePrepareTask(queryId, nextDelayTime);
-		},delayTime);	//check it 2s later	
-	}
-	
-	function doQuerySystemUpgradePrepareTask(queryId, nextDelayTime)
-	{
-		console.log("doQuerySystemUpgradePrepareTask() queryId:" + queryId);
-
-		$.ajax({
-            url : "/DocSystem/Manage/getStausQeuryTask.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                queryId: queryId,
-            },
-            success : function (ret) {
-        	   console.log("doQuerySystemUpgradePrepareTask() ret:",ret);        
-               if( "ok" == ret.status )
-               {    
-            	   var queryTask = ret.data;
-           	       if(queryTask.status == 200)
-            	   {
-	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
-	           			$(".upload-list-title").text("[系统升级] 开始升级，请稍候...");
-           	        	return;
-            	   }
-           	       startSystemUpgradePrepareQueryTask(queryTask.id, nextDelayTime);
-               }
-               else	//后台报错
-               {
-            	   	console.log("系统升级失败:" + ret.msgInfo);
-					$(".upload-list-title").text("[系统升级] 升级失败:" + ret.msgInfo);
-               }
-            },
-            error : function () {	//后台异常
-        	   	console.log("系统升级失败:服务器异常");
-				$(".upload-list-title").text("[系统升级] 升级失败:服务器异常");
-            }
-    	});	
 	}
 	
     function stopUpgradeSystem(){
@@ -3149,6 +3193,9 @@
 	//OfficeInstall类
     var OfficeInstall = (function () {
     	var _firstFile;
+    	var _status = 0;
+    	var _taskId;
+    	
     	var OfficeInstallFileUpload;
     	function OfficeInstallFileUploadInit()
     	{
@@ -3238,10 +3285,10 @@
 	  		
 	  		var uploadEndCallback = function(totalNum, successNum){  	  		
 	      		//显示上传完成 
-	      		var uploadEndInfo = "[安装Office] 上传完成(共" + totalNum +"个)，开始安装...";
+	      		var uploadEndInfo = "[Office安装] 上传完成(共" + totalNum +"个)，开始安装...";
 	      		if(successNum != totalNum)
 	      		{
-	      			uploadEndInfo = "[安装Office] 上传失败 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+	      			uploadEndInfo = "[Office安装] 上传失败 (共" + totalNum +"个)"+",成功 " + successNum + "个";
 	      			$(".reuploadAllBtn").show();
 	      		}
 	      		else
@@ -3272,23 +3319,7 @@
       		
     		OfficeInstallFileUpload = new DocUpload(config);
     	}
-    	
-    	
-    	//初始化上传控件
-    	function start(files, firstFile){
-    		_firstFile = firstFile;
-    	  	var parentPath = "";
-    	  	var parentId = 0;
-    	  	var level = 0;
-    	  	var vid = -1;
-    	  	var parentNode = null;
-    		OfficeInstallFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
-    	}
-    	
-    	function stop(){
-    		OfficeInstallFileUpload.stopAllUpload();
-    	}
-    	
+    	    	
     	//Re Upload Fail Docs
         function reuploadFailDocs(index)
         {
@@ -3303,6 +3334,111 @@
         	console.log("stopUpload " + index);
         	OfficeInstallFileUpload.stopUpload(index);
         }
+
+    	function start(files, firstFile){
+    		_firstFile = firstFile;
+    	  	var parentPath = "";
+    	  	var parentId = 0;
+    	  	var level = 0;
+    	  	var vid = -1;
+    	  	var parentNode = null;
+    		OfficeInstallFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
+    	}
+    	
+    	function startOfficeInstallPrepareTask(taskId, delayTime)
+    	{
+    		_taskId = taskId;
+    		console.log("startOfficeInstallPrepareTask() taskId:" + taskId + " delayTime:" + delayTime);
+    		var nextDelayTime = delayTime; //每次增加5s
+    		if(nextDelayTime < 60000) //最长1分钟
+    		{
+    			nextDelayTime += 5000;
+    		}
+    		
+    		setTimeout(function () {
+    			console.log("timerForQueryOfficeInstallPrepareTask triggered!");
+    			doQueryOfficeInstallPrepareTask(taskId, nextDelayTime);
+    		},delayTime);	//check it 2s later	
+    	}
+    	
+    	function doQueryOfficeInstallPrepareTask(taskId, nextDelayTime)
+    	{
+    		console.log("doQueryOfficeInstallPrepareTask() taskId:" + taskId);
+
+    		$.ajax({
+                url : "/DocSystem/Manage/queryLongTermTask.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    taskId: taskId,
+                },
+                success : function (ret) {
+            	   console.log("doQueryOfficeInstallPrepareTask() ret:",ret);        
+                   if( "ok" == ret.status )
+                   {    
+                	   var task = ret.data;
+               	       if(task.status == 200)
+                	   {
+    	           			console.log("OfficeInstallPrepareSuccessHandler() 安装准备工作已完成，等待安装");
+    	           			$(".upload-list-title").text("[Office安装] 开始安装，请稍候...");
+               	        	return;
+                	   }
+               	       startOfficeInstallPrepareTask(task.id, nextDelayTime);
+                   }
+                   else	//后台报错
+                   {
+                	   	console.log("Office安装失败:" + ret.msgInfo);
+    					$(".upload-list-title").text("[Office安装] 安装失败:" + ret.msgInfo);
+                   }
+                },
+                error : function () {	//后台异常
+            	   	console.log("Office安装失败:服务器异常");
+    				$(".upload-list-title").text("[Office安装] 安装失败:服务器异常");
+                }
+        	});	
+    	}
+    	
+    	function stop(){
+	    	if(_status < 2)	//上传中
+	    	{
+	    		OfficeInstallFileUpload.stopAllUpload();
+	    	}
+	    	else
+	    	{
+	    		stopOfficeInstallPrepareTask(_taskId);
+	    	}
+    	}
+    	
+    	function stopOfficeInstallPrepareTask(taskId)
+    	{
+    		console.log("stopOfficeInstallPrepareTask() taskId:" + taskId);
+
+    		$.ajax({
+                url : "/DocSystem/Manage/stopLongTermTask.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    taskId: taskId,
+                },
+                success : function (ret) {
+            	   console.log("stopOfficeInstallPrepareTask() ret:",ret);        
+                   if( "ok" == ret.status )
+                   {    
+    	           		console.log("stopOfficeInstallPrepareTask() Office安装任务已取消");
+    	           		$(".upload-list-title").text("[Office安装] Office安装任务已取消");
+                   }
+                   else
+                   {
+                	   	console.log("stopSystemUpgradePrepareTask() Office安装任务取消失败:" + ret.msgInfo);
+                	   	showErrorMessage("Office安装任务取消失败:" + ret.msgInfo);
+                   }
+                },
+                error : function () {	//后台异常
+            	   	console.log("stopSystemUpgradePrepareTask() Office安装任务取消失败:服务器异常");
+            	   	showErrorMessage("Office安装任务取消失败:服务器异常");
+                }
+        	});	
+    	}
     	
     	//初始化上传控件
     	OfficeInstallFileUploadInit();
@@ -3321,7 +3457,10 @@
             reuploadFailDocs: function(index){
             	reuploadFailDocs(index);
             },
-        };
+            startOfficeInstallPrepareTask: function(taskId, delayTime){
+            	startOfficeInstallPrepareTask(taskId, delayTime);
+            },
+		};
     })();
 	
 	function startInstalOffice(file)
@@ -3338,7 +3477,9 @@
 	        	console.log("installOffice ret:",ret);
 				if("ok" == ret.status){
 					//showErrorMessage("Office编辑器安装成功");
-					$(".upload-list-title").text("[Office安装] 安装成功");
+					var task = ret.data;
+					OfficeInstall.startOfficeInstallPrepareTask(task.id, 2000); //2秒后查询
+					$(".upload-list-title").text("[Office安装] 安装准备中...");
 			    	gStatus = 0;
 				 }
 				 else	//上传失败

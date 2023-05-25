@@ -83,7 +83,7 @@ import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
-import com.DocSystem.common.entity.StatusQueryTask;
+import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.common.entity.SvnConfig;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.entity.SystemLog;
@@ -164,7 +164,7 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();
 	
 	//Global StatusQueryTask
-	protected static ConcurrentHashMap<String, StatusQueryTask> statusQueryTaskHashMap = new ConcurrentHashMap<String, StatusQueryTask>();
+	protected static ConcurrentHashMap<String, LongTermTask> longTermTaskHashMap = new ConcurrentHashMap<String, LongTermTask>();
 	
 	//系统默认用户
 	protected static User coEditUser = new User();

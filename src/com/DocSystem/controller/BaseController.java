@@ -141,7 +141,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
-import com.DocSystem.common.entity.StatusQueryTask;
+import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -20910,21 +20910,21 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//状态查询认为
-	protected StatusQueryTask createStatusQueryTask(
+	protected LongTermTask createLongTermTask(
 			String event, String eventName,
 			ReturnAjax rt) 
 	{
 		long curTime = new Date().getTime();
-        Log.info("createStatusQueryTask() curTime:" + curTime);
+        Log.info("createLongTermTask() curTime:" + curTime);
         
 		String taskId = event + "-" + curTime;
-		if(statusQueryTaskHashMap.get(taskId) != null)
+		if(longTermTaskHashMap.get(taskId) != null)
 		{
-			Log.info("createStatusQueryTask() StatusQueryTask [" + taskId + "] 已存在");
+			Log.info("createLongTermTask() LongTermTask [" + taskId + "] 已存在");
 			return null;
 		}
 		
-		StatusQueryTask task =	new StatusQueryTask();
+		LongTermTask task =	new LongTermTask();
 		task.id = taskId;
 		task.event = event;
 		task.eventName = eventName;
@@ -20932,7 +20932,7 @@ public class BaseController  extends BaseFunction{
 				
 		task.status = 0;	//初始化 		
 		task.info = "";
-		statusQueryTaskHashMap.put(taskId, task);		
+		longTermTaskHashMap.put(taskId, task);		
 		return task;
 	}
 }
