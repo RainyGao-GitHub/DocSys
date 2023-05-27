@@ -2241,3 +2241,125 @@ function getDialogStyle()
 {
 	return 'width:95%;';	
 }
+
+//在前端构造DocInfo
+function buildDocInfo(reposId, path, name)
+{
+	var docInfo = {};
+	var entryPath = getEntryPath(path, name);
+	var result = {};
+	var level = seperatePathAndName(entryPath, result);
+	docInfo.vid = reposId;
+	docInfo.path = result.path;
+	docInfo.name = result.name;
+	docInfo.level = level;
+	docInfo.docId = buildDocIdByName(level, result.path, result.name);
+	return docInfo;	
+}
+
+function buildDocIdByName(level, parentPath, docName) 
+{
+	var docPath = parentPath + docName;
+	if(docName == "")
+	{
+		if(parentPath == "")
+		{
+			return 0;
+		}
+		
+		docPath = parentPath.substring(0, parentPath.length-1);	//remove the last char '/'
+	}
+	
+	var docId = level*100000000000 + getHashCode(docPath) + 102147483647;	//为了避免文件重复使用level*100000000 + docName的hashCode
+	return docId;
+}
+
+//Java的String.hashCode()实现
+function getHashCode(str)
+{
+	let hash = 0;
+	var len = str.length;
+	if(len == 0)
+	{
+		return hash
+	}
+
+	for (var i = 0; i < len; i++)
+	{
+		var ch = str.charCodeAt(i);
+		hash = ((hash<<5) - hash) + ch;
+		hash = hash & hash; // Convert to 32bit integer
+	}
+	return hash;
+}
+
+function getEntryPath(path, name)
+{
+	if(path == undefined)
+	{
+		path = "";
+	}
+
+	if(name == undefined)
+	{
+		name = "";
+	}
+
+	//无法确定path是否以 / 结尾，因此需要加上 /
+	//无法确定name是否包含了 /, 因此需要组合成整个路径统一处理
+	var entryPath = path + "/" + name;
+
+	//将 \\ 替换为 /
+	entryPath = entryPath.replace(/\\/g, "/");
+	return entryPath;
+}
+
+function seperatePathAndName(entryPath, result) 
+{
+	if(entryPath == '')
+	{
+		//It it rootDoc
+		return -1;
+	}
+		
+	//拆分路径（中间可能有无效空字段）
+	var paths = entryPath.split("/");
+	var deepth = paths.length;
+	Log.debug("seperatePathAndName() deepth:" + deepth); 
+		
+	var  path = "";
+	var name = "";
+		
+	//Get Name and pathEndPos
+	var pathEndPos = 0;
+	for(var i=deepth-1; i>=0; i--)
+	{
+		name = paths[i];
+		if(name == '')
+		{
+			continue;
+		}
+		pathEndPos = i;
+		break;
+	}
+		
+	//Get Path
+	var level = 0;
+	for(var i=0; i<pathEndPos; i++)
+	{
+		var tempName = paths[i];
+		if(tempName == '')
+		{
+			continue;
+		}
+
+		level++;
+		path = path + tempName + "/";
+	}
+		
+	result.path = path;
+	result.name = name;
+	return level;
+}
+
+
