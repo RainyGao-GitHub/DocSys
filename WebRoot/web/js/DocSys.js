@@ -2325,8 +2325,7 @@ function seperatePathAndName(entryPath, result)
 	//拆分路径（中间可能有无效空字段）
 	var paths = entryPath.split("/");
 	var deepth = paths.length;
-	Log.debug("seperatePathAndName() deepth:" + deepth); 
-		
+	
 	var  path = "";
 	var name = "";
 		
