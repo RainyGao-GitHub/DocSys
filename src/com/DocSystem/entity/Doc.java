@@ -91,7 +91,8 @@ public class Doc  implements Comparable<Doc>{
     //用于标记当前doc是否已加密	
 	public Integer encryptEn;
 
-	public String offsetPath = "";	//偏移路径，目前只用于远程存储推送
+	public String rebasePath = "";	//该路径非空时，remotePath = doc.path - rebasePath, 只用于远程存储
+	public String offsetPath = "";	//该路径非空时，remotePath = offsetPath + doc.path, 只用于远程存储
     
     public Integer getId() {
         return id;
