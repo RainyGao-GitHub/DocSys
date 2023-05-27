@@ -1024,7 +1024,7 @@ public class GitUtil {
 	    //如果第一个节点是Add且父节点不是根节点，那么需要检查父节点是否存在，如果不存在那么需要获取真正的commitAction
 	    if(firstAction.getAction() == CommitType.ADD && doc.getPid() != 0)	//如果父节点非根节点
 	    {
-	    	Integer type = checkPath(doc.offsetPath + doc.getPath(), null);
+	    	Integer type = checkPath(doc.getRemotePath(), null);
 	    	if(type == null || type == 0)
 	    	{
 	    		List<CommitAction> tempActionList = getRealCommitActionList(doc, commitUser, commitUser, pushResult, commitActionList);
@@ -1071,7 +1071,7 @@ public class GitUtil {
 	
 	private List<CommitAction> getRealCommitActionList(Doc doc, String commitMsg, String commitUser,
 			DocPushContext pushResult, List<CommitAction> commitActionList) {
-    	String parentPath = doc.getPath();
+    	String parentPath = doc.getRebasedPath();
         Log.debug("getRealCommitActionList() parentPath:" + parentPath);
 
         String [] paths = parentPath.split("/");
@@ -1332,7 +1332,7 @@ public class GitUtil {
     {
     	//Add to Doc to WorkingDirectory
     	String entryPath = doc.getPath() + doc.getName();
-		String remoteEntryPath = getRemoteEntryPath(doc, entryPath);
+		String remoteEntryPath = doc.getRemotePath() + doc.getName();
     	
     	String docPath = doc.getLocalRootPath() + entryPath;
 		String wcDocPath = wcDir + remoteEntryPath;
@@ -1356,7 +1356,7 @@ public class GitUtil {
 	private boolean deleteEntry(Git git, Doc doc) 
 	{
 		String entryPath = doc.getPath() + doc.getName();
-		String remoteEntryPath = getRemoteEntryPath(doc, entryPath);
+		String remoteEntryPath = doc.getRemotePath() + doc.getName();
 		String wcDocPath = wcDir + remoteEntryPath;
 		
 		if(FileUtil.delFileOrDir(wcDocPath) == false)
@@ -1378,7 +1378,7 @@ public class GitUtil {
 	public boolean addEntry(Git git, Doc doc) 
 	{
 		String entryPath = doc.getPath() + doc.getName();
-		String remoteEntryPath = getRemoteEntryPath(doc, entryPath);
+		String remoteEntryPath = doc.getRemotePath() + doc.getName();
 		
 		//local Doc Path
 		String docPath = doc.getLocalRootPath() + entryPath;
@@ -1416,10 +1416,6 @@ public class GitUtil {
 			return false;
 		}
 		return true;
-	}
-	
-	private String getRemoteEntryPath(Doc doc, String entryPath) {
-		return doc.offsetPath + entryPath;
 	}
 
 	public boolean moveEntry(Git git, String srcPath, String srcName, String dstPath, String dstName) 

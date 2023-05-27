@@ -4822,7 +4822,7 @@ public class DocController extends BaseController{
     		{
     			continue;
     		}
-    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc);    		
     		getRemoteStorageIgnoreList(repos, subDoc, configPath, ignoreList);
     	}
     	return ignoreList;
@@ -5023,7 +5023,7 @@ public class DocController extends BaseController{
     		{
     			continue;
     		}
-    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc);    		
     		getLocalBackupIgnoreList(repos, subDoc, configPath, ignoreList);
     	}
     	return ignoreList;
@@ -5224,7 +5224,7 @@ public class DocController extends BaseController{
     		{
     			continue;
     		}
-    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc);    		
     		getRemoteBackupIgnoreList(repos, subDoc, configPath, ignoreList);
     	}
     	return ignoreList;
@@ -5427,7 +5427,7 @@ public class DocController extends BaseController{
     		{
     			continue;
     		}
-    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc);    		
     		getTextSearchIgnoreList(repos, subDoc, configPath, ignoreList);
     	}
     	return ignoreList;
@@ -5649,7 +5649,7 @@ public class DocController extends BaseController{
     		{
     			continue;
     		}
-    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc.offsetPath);    		
+    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subFile.getName(), subDocLevel, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), subFile.length(), "", doc);    		
     		getVersionIgnoreList(repos, subDoc, reposVersionIgnoreSettingPath, ignoreList);
     	}
     	return ignoreList;

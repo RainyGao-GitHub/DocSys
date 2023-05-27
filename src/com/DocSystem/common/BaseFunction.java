@@ -3958,10 +3958,6 @@ public class BaseFunction{
 		{
 			name = "";
 		}
-		if(offsetPath == null)
-		{
-			offsetPath = "";
-		}
 		
 		//To support user call the interface by entryPath
 		String[] temp = new String[2]; 
@@ -4038,7 +4034,7 @@ public class BaseFunction{
 	
 	public static Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
 	{
-		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, "");
+		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, null);
 		doc.isBussiness = systemLicenseInfo.hasLicense;
 		doc.officeType = officeType;
 		return doc;
@@ -4049,6 +4045,19 @@ public class BaseFunction{
 		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, offsetPath);
 		doc.isBussiness = systemLicenseInfo.hasLicense;
 		doc.officeType = officeType;
+		return doc;
+	}
+	
+	public static Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum, Doc docInfo) 
+	{
+		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, null);
+		doc.isBussiness = systemLicenseInfo.hasLicense;
+		doc.officeType = officeType;
+		if(docInfo != null)
+		{
+			doc.rebasePath = docInfo.rebasePath;
+			doc.offsetPath = docInfo.offsetPath;			
+		}		
 		return doc;
 	}
 	

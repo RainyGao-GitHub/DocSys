@@ -91,8 +91,8 @@ public class Doc  implements Comparable<Doc>{
     //用于标记当前doc是否已加密	
 	public Integer encryptEn;
 
-	public String rebasePath = "";	//该路径非空时，remotePath = doc.path - rebasePath, 只用于远程存储
-	public String offsetPath = "";	//该路径非空时，remotePath = offsetPath + doc.path, 只用于远程存储
+	public String rebasePath = null;	//该路径非空时，remotePath = doc.path - rebasePath, 只用于远程存储
+	public String offsetPath = null;	//该路径非空时，remotePath = offsetPath + doc.path, 只用于远程存储
     
     public Integer getId() {
         return id;
@@ -404,4 +404,28 @@ public class Doc  implements Comparable<Doc>{
     public void setState(Integer state) {
         this.state = state;
     }
+
+	public String getRebasedPath() {
+		String path = this.path;
+		if(this.rebasePath != null)
+		{
+			path = this.path.substring(this.rebasePath.length(), this.path.length());
+		}
+
+		return path;
+	}
+    
+	public String getRemotePath() {
+		String path = this.path;
+		if(this.rebasePath != null)
+		{
+			path = this.path.substring(this.rebasePath.length(), this.path.length());
+		}
+				
+		if(this.offsetPath != null)
+		{
+			path = this.offsetPath + path;
+		}
+		return path;
+	}
 }

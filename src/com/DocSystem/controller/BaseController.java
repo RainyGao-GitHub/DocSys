@@ -771,7 +771,7 @@ public class BaseController  extends BaseFunction{
 	    		String name = file.getName();
 	    		//Log.debug("getLocalEntryList subFile:" + name);
 	
-	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc.offsetPath);
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc);
 	    		subDoc.setLatestEditTime(file.lastModified());
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryList.add(subDoc);
@@ -835,7 +835,7 @@ public class BaseController  extends BaseFunction{
 	    		String name = file.getName();
 	    		//Log.debug("getLocalEntryList subFile:" + name);
 	
-	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc.offsetPath);
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc);
 	    		subDoc.setLatestEditTime(file.lastModified());
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryHashMap.put(subDoc.getName(), subDoc);
@@ -5413,7 +5413,7 @@ public class BaseController  extends BaseFunction{
 			for(int i=0; i<list.length; i++)
 			{
 				File subFile = list[i];
-				Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subFile.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc.offsetPath);
+				Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, subFile.getName(), subDocLevel, null, true, localRootPath, localVRootPath, null, "", doc);
 				rebuildIndexForDocEx(repos, subDoc, subFile, rt);
 			}
 		}
@@ -6478,6 +6478,7 @@ public class BaseController  extends BaseFunction{
 		localDoc.setLevel(doc.getLevel());
 		localDoc.setType(0);	//不存在
 		localDoc.setSize(0L);	//不存在
+		localDoc.rebasePath = doc.rebasePath;
 		localDoc.offsetPath = doc.offsetPath;
 	
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
@@ -19506,7 +19507,7 @@ public class BaseController  extends BaseFunction{
     	    			type = 2;
     	    		}
     	    		long size = subFile.length();
-    	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc.offsetPath);
+    	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc);
             		DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
             		String subSrcFilePath = srcFilePath + "/" + subDocName;
             		String subDstFilePath = dstFilePath + "/" + subDocName;
@@ -19614,7 +19615,7 @@ public class BaseController  extends BaseFunction{
     	    			type = 2;
     	    		}
     	    		long size = subFile.length();
-    	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc.offsetPath);
+    	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc);
             		DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
             		configCompressExcludes(fileSet, flist[i], repos, subDoc, subDocAuth, docAuthHashMap, subRelativePath);
                 }
@@ -19692,7 +19693,7 @@ public class BaseController  extends BaseFunction{
     	    			type = 2;
     	    		}
     	    		long size = subFile.length();
-            		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc.offsetPath);
+            		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), doc.getReposPath(), subDocParentPath, subDocName, subDocLevel, type, true,localRootPath, localVRootPath, size, "", doc);
             		DocAuth subDocAuth = getDocAuthFromHashMap(subDoc.getDocId(), curDocAuth, docAuthHashMap);
             		compressAuthedFilesWith7Z(out, flist[i], repos, subDoc, subDocAuth, docAuthHashMap);
                 }
