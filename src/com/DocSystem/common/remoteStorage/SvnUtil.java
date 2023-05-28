@@ -349,7 +349,7 @@ public class SvnUtil {
 	    			continue;
 	    		}
 	    		
-	    		Integer type = checkPath(doc.offsetPath + path + name, null);
+	    		Integer type = checkPath(doc.getRemotePath(path) + name, null);
 	    		if(type == null)
 	    		{
 	    			return null;
@@ -357,7 +357,7 @@ public class SvnUtil {
 	    		
 	    		if(type == 0)
 	    		{
-	    			Doc tempDoc = DocUtil.buildBasicDoc(doc.getVid(), null, null, doc.getReposPath(), path, name, null, 2, true,  doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null, doc.offsetPath);
+	    			Doc tempDoc = DocUtil.buildBasicDoc(doc.getVid(), null, null, doc.getReposPath(), path, name, null, 2, true,  doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null, doc);
 	    			List<CommitAction> tempCommitActionList = new ArrayList<CommitAction>();
 	    			action = addEntry(tempDoc, isSubAction, tempCommitActionList);	    			
 	    			if(isSubAction == false)

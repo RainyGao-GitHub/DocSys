@@ -3941,8 +3941,7 @@ public class BaseFunction{
 
 	//注意：该接口和DocUtil中的buildBasicDoc是一样的，在这里定义是因为自动备份线程调用DocUtil类时
 	public static Doc buildBasicDocBase(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, 
-			Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum,
-			String offsetPath) 
+			Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
 	{
 		//Format path and name
 		if(reposPath == null)
@@ -4005,7 +4004,6 @@ public class BaseFunction{
 		doc.setCheckSum(checkSum);
 		
 		doc.setIsRealDoc(isRealDoc);
-		doc.offsetPath = offsetPath;
 		
 		if(isRealDoc)
 		{
@@ -4034,15 +4032,7 @@ public class BaseFunction{
 	
 	public static Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
 	{
-		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, null);
-		doc.isBussiness = systemLicenseInfo.hasLicense;
-		doc.officeType = officeType;
-		return doc;
-	}
-	
-	public static Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum, String offsetPath) 
-	{
-		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, offsetPath);
+		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum);
 		doc.isBussiness = systemLicenseInfo.hasLicense;
 		doc.officeType = officeType;
 		return doc;
@@ -4050,7 +4040,7 @@ public class BaseFunction{
 	
 	public static Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String reposPath, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum, Doc docInfo) 
 	{
-		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum, null);
+		Doc doc = buildBasicDocBase(reposId, docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, size, checkSum);
 		doc.isBussiness = systemLicenseInfo.hasLicense;
 		doc.officeType = officeType;
 		if(docInfo != null)

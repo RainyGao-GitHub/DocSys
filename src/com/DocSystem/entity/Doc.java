@@ -404,16 +404,6 @@ public class Doc  implements Comparable<Doc>{
     public void setState(Integer state) {
         this.state = state;
     }
-
-	public String getRebasedPath() {
-		String path = this.path;
-		if(this.rebasePath != null)
-		{
-			path = this.path.substring(this.rebasePath.length(), this.path.length());
-		}
-
-		return path;
-	}
     
 	public String getRemotePath() {
 		String path = this.path;
@@ -426,6 +416,25 @@ public class Doc  implements Comparable<Doc>{
 		{
 			path = this.offsetPath + path;
 		}
+		return path;
+	}
+	
+	public String getRemotePath(String rebasedPath) {
+		String path = rebasedPath;
+		if(this.offsetPath != null)
+		{
+			path = this.offsetPath + rebasedPath;
+		}
+		return path;
+	}
+	
+	public String getRebasedPath() {
+		String path = this.path;
+		if(this.rebasePath != null)
+		{
+			path = this.path.substring(this.rebasePath.length(), this.path.length());
+		}
+
 		return path;
 	}
 }
