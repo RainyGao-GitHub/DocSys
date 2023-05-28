@@ -134,6 +134,7 @@ import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
+import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
@@ -141,8 +142,14 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
+import com.DocSystem.common.entity.SftpConfig;
+import com.DocSystem.common.entity.SmbConfig;
+import com.DocSystem.common.entity.SvnConfig;
+import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.common.entity.LongTermTask;
+import com.DocSystem.common.entity.MxsDocConfig;
 import com.DocSystem.common.entity.GenericTask;
+import com.DocSystem.common.entity.GitConfig;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -20979,5 +20986,70 @@ public class BaseController  extends BaseFunction{
 		{
 			longTermTaskHashMap.remove(taskId);
 		}
+	}
+	
+	protected String getLocalMxsdocServerUrl(HttpServletRequest request) {
+		String requestUrl = request.getRequestURL().toString();
+		String localServerUrl = requestUrl.substring(0, requestUrl.length() - request.getRequestURI().length());
+		return localServerUrl;
+	}
+	
+	protected RemoteStorageConfig convertFileServerConfigToRemoteStorageConfig(UserPreferServer server) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
+		remote.protocol = server.serverType;
+		remote.rootPath = "";	
+		
+		switch(server.serverType)
+		{
+		case "mxsdoc":
+			remote.MXSDOC = new MxsDocConfig();
+			remote.MXSDOC.url = server.url;
+			remote.MXSDOC.userName = server.serverUserName;
+			remote.MXSDOC.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			remote.MXSDOC.remoteDirectory = server.remoteDirectory;
+			remote.MXSDOC.reposId = server.reposId;
+			remote.MXSDOC.authCode = server.authCode;
+			break;
+		case "ftp":
+			remote.FTP = new FtpConfig();
+			remote.FTP.host = server.host;
+			remote.FTP.port = server.port;
+			remote.FTP.userName = server.serverUserName;
+			remote.FTP.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			remote.FTP.charset = server.charset;
+			remote.FTP.isPassive = (server.passiveMode == 1);
+			break;
+		case "sftp":
+			remote.SFTP = new SftpConfig();
+			remote.SFTP.host = server.host;
+			remote.SFTP.port = server.port;
+			remote.SFTP.userName = server.serverUserName;
+			remote.SFTP.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			break;
+		case "smb":
+			remote.SMB = new SmbConfig();
+			remote.SMB.host = server.host;
+			remote.SMB.port = server.port;
+			remote.SMB.userDomain = server.serverUserDomain;
+			remote.SMB.userName = server.serverUserName;
+			remote.SMB.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			break;
+		case "git":
+			remote.GIT = new GitConfig();
+			remote.GIT.url = server.url;
+			remote.GIT.isRemote = server.isRemote;
+			remote.GIT.localVerReposPath = server.localVerReposPath;
+			remote.GIT.userName = server.serverUserName;
+			remote.GIT.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			break;
+		case "svn":
+			remote.SVN = new SvnConfig();
+			remote.SVN.url = server.url;
+			remote.SVN.isRemote = server.isRemote;
+			remote.SVN.userName = server.serverUserName;
+			remote.SVN.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			break;
+		}
+		return remote;
 	}
 }
