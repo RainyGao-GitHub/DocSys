@@ -130,6 +130,7 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.AutoTaskConfig;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
@@ -13519,17 +13520,18 @@ public class BaseController  extends BaseFunction{
 
 	private Long getDelayTimeForNextReposSyncupTask(int offsetMinute) {
 		//每天凌晨2:00同步
-		BackupConfig backupConfig = new BackupConfig();
-		backupConfig.backupTime = 120; //2:00
+		AutoTaskConfig autoTaskConfig = new AutoTaskConfig();
 		
-		backupConfig.weekDay1 = 1;
-		backupConfig.weekDay2 = 1;
-		backupConfig.weekDay3 = 1;
-		backupConfig.weekDay4 = 1;
-		backupConfig.weekDay5 = 1;
-		backupConfig.weekDay6 = 1;
-		backupConfig.weekDay7 = 1;
-		return getDelayTimeForNextBackupTask(backupConfig, offsetMinute);
+		autoTaskConfig.backupTime = 120; //2:00
+		
+		autoTaskConfig.weekDay1 = 1;
+		autoTaskConfig.weekDay2 = 1;
+		autoTaskConfig.weekDay3 = 1;
+		autoTaskConfig.weekDay4 = 1;
+		autoTaskConfig.weekDay5 = 1;
+		autoTaskConfig.weekDay6 = 1;
+		autoTaskConfig.weekDay7 = 1;
+		return getDelayTimeForNextAutoTask(autoTaskConfig, offsetMinute);
 	}
 
 	public BackupTask addDelayTaskForLocalBackup(Repos repos, BackupConfig localBackupConfig, int offsetMinute, Long forceStartDelay, boolean forceStart) {
@@ -13546,7 +13548,8 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			delayTime = getDelayTimeForNextBackupTask(localBackupConfig, offsetMinute);
+			AutoTaskConfig autoTaskConfig = getAutoTaskConfigFromBackupConfig(localBackupConfig);
+			delayTime = getDelayTimeForNextAutoTask(autoTaskConfig, offsetMinute);
 			if(delayTime == null)
 			{
 				Log.info("addDelayTaskForLocalBackup delayTime is null");			
@@ -13726,13 +13729,27 @@ public class BaseController  extends BaseFunction{
 		return backupTask;
 	}
 		
+	private AutoTaskConfig getAutoTaskConfigFromBackupConfig(BackupConfig backupConfig) {
+		AutoTaskConfig config = new AutoTaskConfig();
+		config.backupTime = backupConfig.backupTime;
+		config.weekDay1 = backupConfig.weekDay1;
+		config.weekDay2 = backupConfig.weekDay2;
+		config.weekDay3 = backupConfig.weekDay3;
+		config.weekDay4 = backupConfig.weekDay4;
+		config.weekDay5 = backupConfig.weekDay5;
+		config.weekDay6 = backupConfig.weekDay6;
+		config.weekDay7 = backupConfig.weekDay7;
+		return config;
+	}
+
 	public BackupTask addDelayTaskForRemoteBackup(Repos repos, BackupConfig remoteBackupConfig, int offsetMinute, Long forceStartDelay, boolean forceStart) {
 		if(remoteBackupConfig == null)
 		{
 			return null;
 		}
 		
-		Long delayTime = getDelayTimeForNextBackupTask(remoteBackupConfig, offsetMinute);
+		AutoTaskConfig autoTaskConfig = getAutoTaskConfigFromBackupConfig(remoteBackupConfig);
+		Long delayTime = getDelayTimeForNextAutoTask(autoTaskConfig, offsetMinute);
 		if(delayTime == null)
 		{
 			Log.info("addDelayTaskForRemoteBackup delayTime is null");			
@@ -14080,7 +14097,7 @@ public class BaseController  extends BaseFunction{
 	private Long getDelayTimeForNextDBBackupTask(int offsetMinute)
 	{
 		//每天凌晨1:40备份
-		BackupConfig backupConfig = new BackupConfig();
+		AutoTaskConfig backupConfig = new AutoTaskConfig();
 		backupConfig.backupTime = 60; //1:00
 		backupConfig.weekDay1 = 1;
 		backupConfig.weekDay2 = 1;
@@ -14089,19 +14106,19 @@ public class BaseController  extends BaseFunction{
 		backupConfig.weekDay5 = 1;
 		backupConfig.weekDay6 = 1;
 		backupConfig.weekDay7 = 1;
-		return getDelayTimeForNextBackupTask(backupConfig, offsetMinute);
+		return getDelayTimeForNextAutoTask(backupConfig, offsetMinute);
 	}
 	
-	private Long getDelayTimeForNextBackupTask(BackupConfig backupConfig, int offsetMinute) {
+	private Long getDelayTimeForNextAutoTask(AutoTaskConfig autoTaskConfig, int offsetMinute) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = backupConfig.weekDay1;
-		weekDayBackupEnTab[2] = backupConfig.weekDay2;
-		weekDayBackupEnTab[3] = backupConfig.weekDay3;
-		weekDayBackupEnTab[4] = backupConfig.weekDay4;
-		weekDayBackupEnTab[5] = backupConfig.weekDay5;
-		weekDayBackupEnTab[6] = backupConfig.weekDay6;
-		weekDayBackupEnTab[0] = backupConfig.weekDay7;
+		weekDayBackupEnTab[1] = autoTaskConfig.weekDay1;
+		weekDayBackupEnTab[2] = autoTaskConfig.weekDay2;
+		weekDayBackupEnTab[3] = autoTaskConfig.weekDay3;
+		weekDayBackupEnTab[4] = autoTaskConfig.weekDay4;
+		weekDayBackupEnTab[5] = autoTaskConfig.weekDay5;
+		weekDayBackupEnTab[6] = autoTaskConfig.weekDay6;
+		weekDayBackupEnTab[0] = autoTaskConfig.weekDay7;
 		
 		Calendar calendar = Calendar.getInstance();
 		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -14109,23 +14126,23 @@ public class BaseController  extends BaseFunction{
 		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 		int curMinuteOfDay = curHour*60 + curMinute;		
 		Log.debug("getDelayTimeForNextBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
-				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + backupConfig.backupTime);
+				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + autoTaskConfig.backupTime);
 		
-		Long delayTime  = getNextBackupDelayTime(curWeekDay, curMinuteOfDay, offsetMinute, backupConfig.backupTime, weekDayBackupEnTab);
+		Long delayTime  = getNextAutoTaskDelayTime(curWeekDay, curMinuteOfDay, offsetMinute, autoTaskConfig.backupTime, weekDayBackupEnTab);
 		return delayTime;
 	}
 	
-	private Long getNextBackupDelayTime(int curWeekDay, int curMinuteOfDay, int offsetMinute, Integer backupMinuteOfDay, int[] weekDayBackupEnTab) 
+	private Long getNextAutoTaskDelayTime(int curWeekDay, int curMinuteOfDay, int offsetMinute, Integer backupMinuteOfDay, int[] weekDayBackupEnTab) 
 	{
 		//获取备份日期
-		Integer backupWeekDay = getNextBackupWeekDay(curWeekDay, curMinuteOfDay + offsetMinute, backupMinuteOfDay, weekDayBackupEnTab);
+		Integer backupWeekDay = getNextAutoTaskWeekDay(curWeekDay, curMinuteOfDay + offsetMinute, backupMinuteOfDay, weekDayBackupEnTab);
 		if(backupWeekDay == null)
 		{
-			Log.debug("getNextBackupDelayTime() 未找到备份任务");
+			Log.debug("getNextAutoTaskDelayTime() 未找到备份任务");
 			return null;	
 		}
 		
-		Log.debug("getNextBackupDelayTime() backupWeekDay:" + backupWeekDay);
+		Log.debug("getNextAutoTaskDelayTime() backupWeekDay:" + backupWeekDay);
 		Integer delayDays = 0;
 		if(backupWeekDay < curWeekDay)
 		{
@@ -14135,7 +14152,7 @@ public class BaseController  extends BaseFunction{
 		{
 			delayDays = backupWeekDay - curWeekDay;
 		}
-		Log.debug("getNextBackupDelayTime() delayDays:" + delayDays);
+		Log.debug("getNextAutoTaskDelayTime() delayDays:" + delayDays);
 		
 		Long delayTime = null;
 		//delayDays == 0 是一种特殊情况
@@ -14152,11 +14169,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		delayTime = (long) (delayDays*24*60*60 + (backupMinuteOfDay - curMinuteOfDay) * 60);
-		Log.debug("getNextBackupDelayTime() delayTime:" + delayTime);
+		Log.debug("getNextAutoTaskDelayTime() delayTime:" + delayTime);
 		return delayTime;
 	}
 
-	private Integer getNextBackupWeekDay(int curWeekDay, int curMinuteOfDay, Integer backupMinuteOfDay, int[] weekDayBackupEnTab) {
+	private Integer getNextAutoTaskWeekDay(int curWeekDay, int curMinuteOfDay, Integer backupMinuteOfDay, int[] weekDayBackupEnTab) {
 		Integer backupWeekDay = null;
 		
 		//当前时间已经过了备份时间，从明天开始检查是否有备份任务
@@ -14165,15 +14182,15 @@ public class BaseController  extends BaseFunction{
 		{
 			index += 1;
 		}
-		Log.debug("getDelayTimeForNextBackupTask() index:" + index);		
+		Log.debug("getNextAutoTaskWeekDay() index:" + index);		
 		
 		for(int i = 0; i < 7; i++)
 		{
 			if(weekDayBackupEnTab[index % 7] == 1)
 			{
-				Log.debug("getDelayTimeForNextBackupTask() weekDay:" + index % 7 + " backup enabled");
+				Log.debug("getNextAutoTaskWeekDay() weekDay:" + index % 7 + " backup enabled");
 				backupWeekDay = index;
-				Log.debug("getDelayTimeForNextBackupTask() backupWeekDay:" + backupWeekDay);
+				Log.debug("getNextAutoTaskWeekDay() backupWeekDay:" + backupWeekDay);
 				break;
 			}
 			index++;
