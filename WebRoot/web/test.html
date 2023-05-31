@@ -63,91 +63,255 @@
 
             <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
                 <ul class="nav navbar-nav navbar-left">
-                	<div>API接口测试</div>
+                	<div>开放API测试</div>
             	</ul>
             </nav>
         </div>      
     </header>
+    <article class="container-fluid manual-body">
+        <div class="manual-right" style="left:0px;overflow-y: auto;">
+            <div class="manual-article">
+               <div class="article-body editor-content"  id="doc" style="min-height: 650px">
+               		<div class="panel-body eventset-list" >	
+	               		<li class="eventset-tit" style="margin-top: 0px;">
+							<i class="cell w7">名称</i>
+							<i class="cell w20">地址</i>
+							<i class="cell w15">参数</i>
+							<i class="cell w10">结果</i>
+							<i class="cell w10">操作</i>						
+						</li>
+					</div>
+               		<div class="panel-body eventset-list">
+			 			<li>	
+			 				<i class="cell w7">获取授权码</i> 	
+			 				<i class="cell w20">		
+			 					<input id="getAuthCodeUrl" value="http://localhost:8100/DocSystem/Bussiness/getAuthCode.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					userName="Admin"
+			 					pwd="Admin"
+			 					type=1		 					
+			 					</textarea>
+			 				</i>	
+			 				<i class="cell w10">		
+			 					<textarea id="getAuthCodeResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="getAuthCodeTest();" class="mybtn-primary">获取授权码</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">获取文件列表</i> 	
+			 				<i class="cell w20">		
+			 					<input id="getSubDocListUrl" value="http://localhost:8100/DocSystem/Repos/getSubDocListRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					reposId=1
+			 					path=""
+			 					authCode=gAuthCode			 					
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="getSubDocListResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="getSubDocListTest();" class="mybtn-primary">获取文件列表</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">获取文件信息</i> 	
+			 				<i class="cell w20">		
+			 					<input id="getDocInfoUrl" value="http://localhost:8100/DocSystem/Doc/getDocRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					reposId=1
+			 					path=""
+			 					path="test1.txt"
+			 					authCode=gAuthCode			 					
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="getDocInfoResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="getDocInfoTest();" class="mybtn-primary">获取文件信息</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">获取下载链接</i> 	
+			 				<i class="cell w20">		
+			 					<input id="getDocFileLink" value="http://localhost:8100/DocSystem/Doc/getDocFileLinkRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					reposId=1
+			 					path=""
+			 					path="test1.txt"
+			 					urlStyle="REST"
+			 					authCode=gAuthCode			 					
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="getDocFileLinkResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="getDocFileLinkTest();" class="mybtn-primary">获取下载链接</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">新增文件</i> 	
+			 				<i class="cell w20">		
+			 					<input id="addDocUrl" value="http://localhost:8100/DocSystem/Doc/addDocRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					reposId=1
+			 					path=""
+			 					path="test1.txt"
+			 					type=1	 					
+			 					authCode=gAuthCode			 					
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="addDocResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="addDocTest();" class="mybtn-primary">新增文件</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">上传文件</i>
+			 				<i class="cell w20">		
+			 					<input id="uploadDocUrl" value="http://localhost:8100/DocSystem/Doc/uploadDocRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					reposId=1
+			 					path=""
+			 					name="test2.txt"
+			 					fileLink="http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-572270089/0/1"
+			 					size=0
+			 					type=1			 					
+			 					authCode=gAuthCode			 					
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="uploadDocResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="uploadDocTest();" class="mybtn-primary">上传文件</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">推送文件</i> 	
+			 				<i class="cell w20">		
+			 					<input id="pushDocUrl" value="http://localhost:8100/DocSystem/Doc/pushDocRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					reposId=1
+			 					path=""
+			 					path="test1.txt"
+			 					targetReposId=1
+			 					targetPath="pushTest/"			 					
+			 					authCode=gAuthCode	
+			 					recurciveEn=1		 					
+			 					forceEn=1	 					
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="pushDocResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="pushDocTest();" class="mybtn-primary">推送文件</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">删除文件</i> 	
+			 				<i class="cell w20">		
+			 					<input id="deleteDocUrl" value="http://localhost:8100/DocSystem/Doc/deleteDocRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					reposId=1
+			 					path=""
+			 					name="test1.txt"
+			 					authCode=gAuthCode			 					
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="deleteDocResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="deleteDocTest();" class="mybtn-primary">删除文件</a>
+			 				</i>
+			 			</li>
+			</div>
+        <div class="manual-progress"><b class="progress-bar"></b></div>
+    </article>
     <div class="manual-mask"></div>
 </div>
 
-    <div class="highlight-info">
-        <div class="overlay spacer">
-            <div class="container">
-                <div class="row text-center">
-	                MxsDoc V2.02.47
-	                <a id="downloadPackageBtn" class="banner_btn"  onclick="downloadInstallPackage();">下载</a>
-	                <a id="purchaseLicenseBtn" class="banner_btn"  onclick="purchaseLicense();">购买</a>
-                </div>
-            </div>
-        </div>
-    </div>
 <script type="text/javascript">
 var gAuthCode = "";
+var fileLink = "http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-572270089/0/1";
 
 //页面加载完成处理函数    
 $(document).ready(function(){
 	console.log("Page is ready");
-	TestStep1();
 });
 
-function TestStep1()
+function getAuthCodeTest()
 {
-	//Start to Test
-	alert("开始测试");
-	getAuthCode("Admin", "Admin", TestStep2);
+	getAuthCode("Admin", "Admin");
 }
 
-function TestStep2()
+function getSubDocListTest()
 {
-	alert("获取授权码成功");
-	getSubDocList(1, "", gAuthCode, TestStep3);
+	getSubDocList(1, "", gAuthCode);
 }
 
-function TestStep3()
+function getDocInfoTest()
 {
-	alert("获取文件列表成功");
-	addDoc(1, "", "pushTest/", 2, gAuthCode, TestNull);
-	addDoc(1, "", "test1.txt", 1, gAuthCode, TestStep4);
+	getDocInfo(1, "", "test1.txt", gAuthCode);  
 }
 
-function TestStep4()
+function getDocFileLinkTest()
 {
-	alert("新增目录和文件成功");
-	getDocInfo(1, "", "test1.txt", gAuthCode, TestStep5);  
+	getDocFileLink(1, "", "test1.txt", gAuthCode);
 }
 
-function TestStep5()
+function addDocTest()
 {
-	alert("获取文件信息成功");
-	pushDoc(1,"", "test1.txt", 1, "pushTest/", gAuthCode, TestStep6);
+	addDoc(1, "", "test1.txt", 1, gAuthCode);
 }
 
-function TestStep6()
+function pushDocTest()
 {
-	alert("文件推送成功");
-	var fileLink = "http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-572270089/0/1";
-	uploadDoc(1,"","test2.txt", 0, fileLink, gAuthCode, TestStep7);
+	pushDoc(1,"", "test1.txt", 1, "pushTest/", gAuthCode);
 }
 
-function TestStep7()
+function uploadDocTest()
 {
-	alert("文件上传成功");
-	bootstrapQ.confirm({
-		id: "deleteConfirm",
-		title: "删除确认",
-		msg : "是否删除测试文件?",
-		},function () {
-			deleteDoc(1, "","test1.txt", gAuthCode, TestNull);            	
-			deleteDoc(1, "","test2.txt", gAuthCode, TestNull);            	
-			deleteDoc(1, "","pushTest", gAuthCode, TestNull);            	            	
-			return true;
-	 	});
+	uploadDoc(1,"","test2.txt", 0, fileLink, gAuthCode);
 }
 
-function TestNull(){}
+function deleteDocTest()
+{
+	deleteDoc(1, "","test1.txt", gAuthCode);            	
+}
 
-function getAuthCode(userName, pwd, callback)
+function deleteAllTestDocs()
+{
+	deleteDoc(1, "","test1.txt", gAuthCode);            	
+	deleteDoc(1, "","test2.txt", gAuthCode);          	
+	deleteDoc(1, "","pushTest", gAuthCode);            	            	
+}
+
+function getAuthCode(userName, pwd)
 {	
 	pwd = base64_encode(pwd);
 	$.ajax({
@@ -162,13 +326,14 @@ function getAuthCode(userName, pwd, callback)
         success : function (ret) {
      		if(ret.status == "ok")
         	{
-     			console.log("获取授权码成功:", ret.data);
             	gAuthCode = ret.data;
-            	callback && callback()
+            	$("#getAuthCodeResult").val(JSON.stringify(ret));
+     			alert("获取授权码成功:" + ret.data);
 			}
             else
             {
-            	alert("获取授权码失败:", ret.msgInfo);
+            	$("#getAuthCodeResult").val(JSON.stringify(ret));
+            	alert("获取授权码失败:" + ret.msgInfo);
             }
         },
         error : function () {
@@ -191,12 +356,13 @@ function getSubDocList(reposId, path, authCode, callback)
         success : function (ret) {
      		if(ret.status == "ok")
         	{
-     			console.log("获取文件列表成功:", ret.data);
-            	callback & callback();
-			}
+     			$("#getSubDocListResult").val(JSON.stringify(ret));
+     			alert("获取文件列表成功");
+        	}
             else
             {
-            	alert("获取文件列表失败:", ret.msgInfo);
+            	$("#getSubDocListResult").val(JSON.stringify(ret));
+            	alert("获取文件列表失败:" + ret.msgInfo);
             }
         },
         error : function () {
@@ -205,7 +371,7 @@ function getSubDocList(reposId, path, authCode, callback)
     });
 }
 
-function getDocInfo(reposId, path, name, authCode, callback)
+function getDocInfo(reposId, path, name, authCode)
 {		
 	$.ajax({
         url : "http://localhost:8100/DocSystem/Doc/getDocRS.do",
@@ -220,14 +386,14 @@ function getDocInfo(reposId, path, name, authCode, callback)
         success : function (ret) {
      		if(ret.status == "ok")
         	{
-     			console.log("获取文件信息成功:", ret.data);
-            	callback & callback();
-			}
+     			$("#getDocInfoResult").val(JSON.stringify(ret));
+     			alert("获取文件信息成功");
+        	}
             else
             {
-			
 				//getSubDocList failed
-            	alert("获取文件信息失败:", ret.msgInfo);
+            	$("#getDocInfoResult").val(JSON.stringify(ret));
+            	alert("获取文件信息失败:" + ret.msgInfo);
             }
         },
         error : function () {
@@ -236,7 +402,40 @@ function getDocInfo(reposId, path, name, authCode, callback)
     });
 }
 
-function addDoc(reposId, path, name, type, authCode, callback)
+function getDocFileLink(reposId, path, name, authCode)
+{	
+	$.ajax({
+        url : "/DocSystem/Doc/getDocFileLinkRS.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: reposId,
+            path: path,
+            name: name,
+            urlStyle: "REST",
+            authCode: gAuthCode,
+        },
+        success : function (ret) {
+        	if( "ok" == ret.status )
+        	{
+        		var docLink = ret.data;
+        		fileLink = buildFullLink(docLink);
+        		$("#getDocFileLinkResult").val(JSON.stringify(ret));
+        		alert("获取文件链接成功");
+        	}
+            else 
+            {
+        		$("#getDocFileLinkResult").val(JSON.stringify(ret));
+            	alert("获取文件链接失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+        	errorInfo = "获取文件信息失败：服务器异常";
+        }
+    });
+}
+
+function addDoc(reposId, path, name, type, authCode)
 {		
 	$.ajax({
         url : "http://localhost:8100/DocSystem/Doc/addDocRS.do",
@@ -252,12 +451,13 @@ function addDoc(reposId, path, name, type, authCode, callback)
         success : function (ret) {
      		if(ret.status == "ok")
         	{
-     			console.log("新增文件成功:", ret.data);
-            	callback & callback();
+     			$("#addDocResult").val(JSON.stringify(ret));
+     			alert("新增文件成功");
 			}
             else
             {
-            	alert("新增文件失败:", ret.msgInfo);
+     			$("#addDocResult").val(JSON.stringify(ret));
+            	alert("新增文件失败:" + ret.msgInfo);
             }
         },
         error : function () {
@@ -266,7 +466,7 @@ function addDoc(reposId, path, name, type, authCode, callback)
     });
 }
 
-function uploadDoc(reposId, path, name, size, fileLink, authCode, callback)
+function uploadDoc(reposId, path, name, size, fileLink, authCode)
 {		
 	$.ajax({
         url : "http://localhost:8100/DocSystem/Doc/uploadDocRS.do",
@@ -283,12 +483,13 @@ function uploadDoc(reposId, path, name, size, fileLink, authCode, callback)
         success : function (ret) {
      		if(ret.status == "ok")
         	{
-     			console.log("上传文件成功:", ret.data);
-            	callback & callback();
+     			$("#uploadDocResult").val(JSON.stringify(ret));
+     			alert("上传文件成功:", ret.data);
 			}
             else
             {
-            	alert("上传文件失败:", ret.msgInfo);
+            	$("#uploadDocResult").val(JSON.stringify(ret));
+            	alert("上传文件失败:" + ret.msgInfo);
             }
         },
         error : function () {
@@ -304,22 +505,25 @@ function pushDoc(reposId, path, name, targetReposId, targetPath, authCode, callb
         type : "post",
         dataType : "json",
         data : {
-            authCode: authCode,
             reposId: reposId,
             path: path,
 			name: name,
 			targetReposId: targetReposId,
             targetPath: targetPath,
+            authCode: authCode,
+            recurciveEn: 1,
+            forceEn:1,
         },
         success : function (ret) {
      		if(ret.status == "ok")
         	{
-     			console.log("推送文件成功:", ret.data);
-            	callback & callback();
+     			$("#pushDocResult").val(JSON.stringify(ret));
+     			alert("推送文件成功");
 			}
             else
             {
-            	alert("推送文件失败:", ret.msgInfo);
+     			$("#pushDocResult").val(JSON.stringify(ret));
+            	alert("推送文件失败:" + ret.msgInfo);
             }
         },
         error : function () {
@@ -343,12 +547,13 @@ function deleteDoc(reposId, path, name, authCode, callback)
         success : function (ret) {
      		if(ret.status == "ok")
         	{
-            	console.log("删除文件成功:", ret.data);
-            	callback & callback();
+            	alert("删除文件成功:");
+            	$("#deleteDocResult").val(JSON.stringify(ret));
 			}
             else
             {
-            	alert("删除文件失败:", ret.msgInfo);
+            	alert("删除文件失败:" + ret.msgInfo);
+            	$("#deleteDocResult").val(JSON.stringify(ret));        		
             }
         },
         error : function () {

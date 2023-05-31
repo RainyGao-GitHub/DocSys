@@ -3867,6 +3867,148 @@ public class DocController extends BaseController{
 		if(fileLink == null)
 		{
 			Log.debug("getDocFileLink() buildDocFileLink failed");
+			rt.setError("Failed to buildDocFileLink");
+			writeJson(rt, response);
+			return;
+		}
+		
+		rt.setData(fileLink);
+		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/getDocFileLinkRS.do")
+	public void getDocFileLink(Integer reposId, String path, String name, String commitId,
+			Integer shareId,
+			String authCode,
+			String urlStyle,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("*************** getDocFileLinkRS [" + path + name + "] ********************");		
+		Log.info("getDocFileLinkRS reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId);
+
+		//注意该接口支持name是空的的情况
+		if(path == null)
+		{
+			path = "";
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		doc.setShareId(shareId);
+		path = doc.getPath();
+		name = doc.getName();
+		
+		//检查用户是否有文件读取权限
+		ReposAccess reposAccess = getAuthCode(authCode).getReposAccess();
+		if(checkUseAccessRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			Log.debug("getDocRS() you have no access right on doc:" + doc.getDocId());
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
+		Doc tmpDoc = doc;
+		if(commitId == null)
+		{
+			//前置类型仓库，需要先将文件CheckOut出来
+			if(isFSM(repos) == false)
+			{
+				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+			}
+			
+			Doc localDoc = fsGetDoc(repos, tmpDoc);
+			if(localDoc.getType() != 1)
+			{
+				docSysErrorLog("不是文件", rt);
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{
+			Doc remoteDoc = null;
+			if(isFSM(repos))
+			{
+				remoteDoc = verReposGetDoc(repos, doc, commitId);
+			}
+			else
+			{
+				remoteDoc = remoteServerGetDoc(repos, doc, commitId);					
+			}
+			
+			if(remoteDoc == null)
+			{
+				docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			if(remoteDoc.getType() == 0)
+			{
+				docSysErrorLog(name + " 不存在！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			else if(remoteDoc.getType() == 2)
+			{
+				docSysErrorLog(name + " 是目录！", rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			
+			//checkOut历史版本文件
+			String tempLocalRootPath = Path.getReposTmpPathForHistory(repos, commitId, true);
+			File dir = new File(tempLocalRootPath + path);
+			if(dir.exists() == false)
+			{
+				dir.mkdirs();
+			}
+			File file = new File(tempLocalRootPath + path + name);
+			if(file.exists() == false)
+			{
+				if(isFSM(repos))
+				{
+					verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+				}
+				else
+				{
+					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
+				}
+			}
+			
+			tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
+			tmpDoc.setShareId(shareId);
+		}
+		
+		String downloadAuthCode = addDocDownloadAuthCode(reposAccess, null);
+		String fileLink = buildDownloadDocLink(tmpDoc, downloadAuthCode, urlStyle, 1, rt);
+		if(fileLink == null)
+		{
+			Log.debug("getDocFileLinkRS() buildDocFileLink failed");
+			rt.setError("Failed to buildDocFileLink");
+			writeJson(rt, response);
 			return;
 		}
 		
