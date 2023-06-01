@@ -249,6 +249,24 @@
 			 					<a href="javascript:void(0)" onclick="deleteDocTest();" class="mybtn-primary">删除文件</a>
 			 				</i>
 			 			</li>
+			 			<li>	
+			 				<i class="cell w7">查询状态</i> 	
+			 				<i class="cell w20">		
+			 					<input id="querySystemLogUrl" value="http://localhost:8100/DocSystem/Doc/querySystemLog.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea>
+			 					queryId="123456"
+			 					authCode=gAuthCode
+			 					</textarea>
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="querySystemLogResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="querySystemLogTest();" class="mybtn-primary">查询状态</a>
+			 				</i>
+			 			</li>
 			</div>
         <div class="manual-progress"><b class="progress-bar"></b></div>
     </article>
@@ -302,6 +320,11 @@ function uploadDocTest()
 function deleteDocTest()
 {
 	deleteDoc(1, "","test1.txt", gAuthCode);            	
+}
+
+function querySystemLogTest()
+{
+	querySystemLog("123456", gAuthCode);            	
 }
 
 function deleteAllTestDocs()
@@ -532,17 +555,18 @@ function pushDoc(reposId, path, name, targetReposId, targetPath, authCode, callb
     });
 }
 
-function deleteDoc(reposId, path, name, authCode, callback)
+function deleteDoc(reposId, path, name, authCode)
 {		
 	$.ajax({
         url : "http://localhost:8100/DocSystem/Doc/deleteDocRS.do",
         type : "post",
         dataType : "json",
         data : {
-            authCode: authCode,
+        	taskId: "123456",
             reposId: reposId,
             path: path,
 			name: name,
+			authCode: authCode,
         },
         success : function (ret) {
      		if(ret.status == "ok")
@@ -558,6 +582,35 @@ function deleteDoc(reposId, path, name, authCode, callback)
         },
         error : function () {
         	alert ("删除文件失败: 服务器异常");
+        }
+    });
+}
+
+
+function querySystemLog(queryId, authCode)
+{		
+	$.ajax({
+        url : "http://localhost:8100/DocSystem/Doc/querySystemLog.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            queryId: queryId,
+            authCode: authCode,
+        },
+        success : function (ret) {
+     		if(ret.status == "ok")
+        	{
+            	alert("查询状态成功");
+            	$("#querySystemLogResult").val(JSON.stringify(ret));
+			}
+            else
+            {
+            	alert("查询状态失败:" + ret.msgInfo);
+            	$("#querySystemLogResult").val(JSON.stringify(ret));        		
+            }
+        },
+        error : function () {
+        	alert ("查询状态失败: 服务器异常");
         }
     });
 }
