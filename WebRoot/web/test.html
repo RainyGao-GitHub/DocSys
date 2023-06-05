@@ -218,15 +218,16 @@
 			 					<input id="uploadDocUrl" value="http://localhost:8100/DocSystem/Doc/uploadDocRS.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					reposId=1
-			 					path=""
-			 					name="test2.txt"
-			 					fileLink="http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-572270089/0/1"
-			 					size=0
-			 					type=1			 					
-			 					authCode=gAuthCode			 					
-			 					</textarea>
+			 					<textarea id="uploadDocParam">
+			 					{
+			 						"reposId":1,
+			 						"path":"",
+			 						"name":"test2.txt",
+			 						"fileLink":"http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-572270089/0/1",
+			 						"size":0,
+			 						"type":1			 						
+			 					}		 					
+			 					</textarea>	
 			 				</i>
 			 				<i class="cell w10">		
 			 					<textarea id="uploadDocResult"></textarea>
@@ -241,16 +242,17 @@
 			 					<input id="pushDocUrl" value="http://localhost:8100/DocSystem/Doc/pushDocRS.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					reposId=1
-			 					path=""
-			 					path="test1.txt"
-			 					targetReposId=1
-			 					targetPath="pushTest/"			 					
-			 					authCode=gAuthCode	
-			 					recurciveEn=1		 					
-			 					forceEn=1	 					
-			 					</textarea>
+			 					<textarea id="pushDocParam">
+			 					{
+			 						"reposId":1,
+			 						"path":"",
+			 						"name":"test1.txt",
+			 						"targetReposId":1,
+			 						"targetPath":"pushTest/",
+			 						"recurciveEn":1,
+			 						"forceEn":1			 						
+			 					}		 					
+			 					</textarea>	
 			 				</i>
 			 				<i class="cell w10">		
 			 					<textarea id="pushDocResult"></textarea>
@@ -265,12 +267,13 @@
 			 					<input id="deleteDocUrl" value="http://localhost:8100/DocSystem/Doc/deleteDocRS.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					reposId=1
-			 					path=""
-			 					name="test1.txt"
-			 					authCode=gAuthCode			 					
-			 					</textarea>
+			 					<textarea id="deleteDocParam">
+			 					{
+			 						"reposId":1,
+			 						"path":"",
+			 						"name":"test1.txt",
+			 					}		 					
+			 					</textarea>	
 			 				</i>
 			 				<i class="cell w10">		
 			 					<textarea id="deleteDocResult"></textarea>
@@ -285,10 +288,11 @@
 			 					<input id="querySystemLogUrl" value="http://localhost:8100/DocSystem/Doc/querySystemLog.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					queryId="123456"
-			 					authCode=gAuthCode
-			 					</textarea>
+			 					<textarea id="querySystemLogParam">
+			 					{
+			 						"queryId":"123456",
+			 					}		 					
+			 					</textarea>	
 			 				</i>
 			 				<i class="cell w10">		
 			 					<textarea id="querySystemLogResult"></textarea>
@@ -305,7 +309,6 @@
 
 <script type="text/javascript">
 var gAuthCode = "";
-var fileLink = "http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-572270089/0/1";
 
 //页面加载完成处理函数    
 $(document).ready(function(){
@@ -326,7 +329,7 @@ function getAuthCodeTest()
         data : {
             userName: param.userName,
 			pwd: base64_encode(param.pwd),
-			type: 1
+			type: param.type
         },
         success : function (ret) {
      		if(ret.status == "ok")
