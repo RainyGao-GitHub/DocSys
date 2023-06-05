@@ -314,7 +314,7 @@ $(document).ready(function(){
 
 function getAuthCodeTest()
 {	
-	var paramStr = $("#getAuthCodeParam").text();
+	var paramStr = $("#getAuthCodeParam").val();
 	console.log(paramStr);	
 	var param = JSON.parse(paramStr);
 	console.log(param);
@@ -349,7 +349,7 @@ function getAuthCodeTest()
 
 function getSubDocListTest()
 {	
-	var paramStr = $("#getSubDocListParam").text();
+	var paramStr = $("#getSubDocListParam").val();
 	console.log(paramStr);	
 	var param = JSON.parse(paramStr);
 	console.log(param);
@@ -383,7 +383,7 @@ function getSubDocListTest()
 
 function getDocInfoTest()
 {	
-	var paramStr = $("#getDocInfoParam").text();
+	var paramStr = $("#getDocInfoParam").val();
 	console.log(paramStr);	
 	var param = JSON.parse(paramStr);
 	console.log(param);
@@ -419,7 +419,7 @@ function getDocInfoTest()
 
 function getDocFileLinkTest()
 {	
-	var paramStr = $("#getDocFileLinkParam").text();
+	var paramStr = $("#getDocFileLinkParam").val();
 	console.log(paramStr);	
 	var param = JSON.parse(paramStr);
 	console.log(param);
@@ -457,7 +457,7 @@ function getDocFileLinkTest()
 
 function addDocTest()
 {		
-	var paramStr = $("#addDocParam").text();
+	var paramStr = $("#addDocParam").val();
 	console.log(paramStr);	
 	var param = JSON.parse(paramStr);
 	console.log(param);
@@ -477,12 +477,12 @@ function addDocTest()
      		if(ret.status == "ok")
         	{
      			$("#addDocResult").val(JSON.stringify(ret));
-     			alert("新增文件成功");
+     			//alert("新增文件成功");
 			}
             else
             {
      			$("#addDocResult").val(JSON.stringify(ret));
-            	alert("新增文件失败:" + ret.msgInfo);
+            	//alert("新增文件失败:" + ret.msgInfo);
             }
         },
         error : function () {
@@ -493,7 +493,7 @@ function addDocTest()
 
 function copyDocTest()
 {	
-	var paramStr = $("#copyDocParam").text();
+	var paramStr = $("#copyDocParam").val();
 	console.log(paramStr);	
 	var param = JSON.parse(paramStr);
 	console.log(param);
