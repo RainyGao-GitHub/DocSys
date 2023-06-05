@@ -480,12 +480,12 @@ function addDocTest()
      		if(ret.status == "ok")
         	{
      			$("#addDocResult").val(JSON.stringify(ret));
-     			//alert("新增文件成功");
+     			alert("新增文件成功");
 			}
             else
             {
      			$("#addDocResult").val(JSON.stringify(ret));
-            	//alert("新增文件失败:" + ret.msgInfo);
+            	alert("新增文件失败:" + ret.msgInfo);
             }
         },
         error : function () {
