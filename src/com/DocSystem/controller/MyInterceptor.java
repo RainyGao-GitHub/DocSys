@@ -70,6 +70,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Doc/revertDocHistory",
 		"Doc/searchDoc",
 		"Doc/refreshDoc",
+		"Doc/querySystemLog",
 		"web/static/office-editor",
 		//For Sales
 		"Sales/checkLicense",
