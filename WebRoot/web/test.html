@@ -88,10 +88,12 @@
 			 					<input id="getAuthCodeUrl" value="http://localhost:8100/DocSystem/Bussiness/getAuthCode.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					userName="Admin"
-			 					pwd="Admin"
-			 					type=1		 					
+			 					<textarea id="getAuthCodeParam">
+			 					{
+			 						"userName":"Admin",
+			 						"pwd":"Admin",
+			 						"type":1
+			 					}		 					
 			 					</textarea>
 			 				</i>	
 			 				<i class="cell w10">		
@@ -107,10 +109,11 @@
 			 					<input id="getSubDocListUrl" value="http://localhost:8100/DocSystem/Repos/getSubDocListRS.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					reposId=1
-			 					path=""
-			 					authCode=gAuthCode			 					
+			 					<textarea id="getSubDocListParam">
+			 					{
+			 						"reposId":1,
+			 						"path":""
+			 					}		 					
 			 					</textarea>
 			 				</i>
 			 				<i class="cell w10">		
@@ -126,11 +129,12 @@
 			 					<input id="getDocInfoUrl" value="http://localhost:8100/DocSystem/Doc/getDocRS.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					reposId=1
-			 					path=""
-			 					path="test1.txt"
-			 					authCode=gAuthCode			 					
+			 					<textarea id="getDocInfoParam">
+			 					{
+			 						"reposId":1,
+			 						"path":"",
+			 						"name":"test1.txt"
+			 					}		 					
 			 					</textarea>
 			 				</i>
 			 				<i class="cell w10">		
@@ -143,16 +147,17 @@
 			 			<li>	
 			 				<i class="cell w7">获取下载链接</i> 	
 			 				<i class="cell w20">		
-			 					<input id="getDocFileLink" value="http://localhost:8100/DocSystem/Doc/getDocFileLinkRS.do" type="text" style="width:80%">
+			 					<input id="getDocFileLinkUrl" value="http://localhost:8100/DocSystem/Doc/getDocFileLinkRS.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					reposId=1
-			 					path=""
-			 					path="test1.txt"
-			 					urlStyle="REST"
-			 					authCode=gAuthCode			 					
-			 					</textarea>
+			 					<textarea id="getDocFileLinkParam">
+			 					{
+			 						"reposId":1,
+			 						"path":"",
+			 						"name":"test1.txt",
+			 						"urlStyle":"REST"
+			 					}		 					
+			 					</textarea>			 					
 			 				</i>
 			 				<i class="cell w10">		
 			 					<textarea id="getDocFileLinkResult"></textarea>
@@ -167,19 +172,44 @@
 			 					<input id="addDocUrl" value="http://localhost:8100/DocSystem/Doc/addDocRS.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea>
-			 					reposId=1
-			 					path=""
-			 					path="test1.txt"
-			 					type=1	 					
-			 					authCode=gAuthCode			 					
-			 					</textarea>
+			 					<textarea id="addDocParam">
+			 					{
+			 						"reposId":1,
+			 						"path":"",
+			 						"name":"test1.txt",
+			 						"type":1
+			 					}		 					
+			 					</textarea>		
 			 				</i>
 			 				<i class="cell w10">		
 			 					<textarea id="addDocResult"></textarea>
 			 				</i>
 			 				<i class="cell w10">
 			 					<a href="javascript:void(0)" onclick="addDocTest();" class="mybtn-primary">新增文件</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">复制文件</i> 	
+			 				<i class="cell w20">		
+			 					<input id="copyDocUrl" value="http://localhost:8100/DocSystem/Doc/copyDocRS.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea id="copyDocParam">
+			 					{
+			 						"reposId":1,
+			 						"srcPath":"",
+			 						"srcName":"test1.txt",
+			 						"dstPath":"copyTest/",
+			 						"dstName":"test2.txt",
+			 						"isMove":0
+			 					}		 					
+			 					</textarea>	
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="copyDocResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="copyDocTest();" class="mybtn-primary">复制文件</a>
 			 				</i>
 			 			</li>
 			 			<li>	
@@ -283,67 +313,19 @@ $(document).ready(function(){
 });
 
 function getAuthCodeTest()
-{
-	getAuthCode("Admin", "Admin");
-}
-
-function getSubDocListTest()
-{
-	getSubDocList(1, "", gAuthCode);
-}
-
-function getDocInfoTest()
-{
-	getDocInfo(1, "", "test1.txt", gAuthCode);  
-}
-
-function getDocFileLinkTest()
-{
-	getDocFileLink(1, "", "test1.txt", gAuthCode);
-}
-
-function addDocTest()
-{
-	addDoc(1, "", "test1.txt", 1, gAuthCode);
-}
-
-function pushDocTest()
-{
-	pushDoc(1,"", "test1.txt", 1, "pushTest/", gAuthCode);
-}
-
-function uploadDocTest()
-{
-	uploadDoc(1,"","test2.txt", 0, fileLink, gAuthCode);
-}
-
-function deleteDocTest()
-{
-	deleteDoc(1, "","test1.txt", gAuthCode);            	
-}
-
-function querySystemLogTest()
-{
-	querySystemLog("123456", gAuthCode);            	
-}
-
-function deleteAllTestDocs()
-{
-	deleteDoc(1, "","test1.txt", gAuthCode);            	
-	deleteDoc(1, "","test2.txt", gAuthCode);          	
-	deleteDoc(1, "","pushTest", gAuthCode);            	            	
-}
-
-function getAuthCode(userName, pwd)
 {	
-	pwd = base64_encode(pwd);
+	var paramStr = $("#getAuthCodeParam").text();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Bussiness/getAuthCode.do",
+        url : $("#getAuthCodeUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-            userName: userName,
-			pwd: pwd,
+            userName: param.userName,
+			pwd: base64_encode(param.pwd),
 			type: 1
         },
         success : function (ret) {
@@ -365,16 +347,21 @@ function getAuthCode(userName, pwd)
     });
 }
 
-function getSubDocList(reposId, path, authCode, callback)
-{		
+function getSubDocListTest()
+{	
+	var paramStr = $("#getSubDocListParam").text();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Repos/getSubDocListRS.do",
+        url : $("#getSubDocListUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-            reposId: reposId,
-            path: path,
-            authCode: authCode,
+            reposId: param.reposId,
+            path: param.path,
+            authCode: gAuthCode,
         },
         success : function (ret) {
      		if(ret.status == "ok")
@@ -394,17 +381,22 @@ function getSubDocList(reposId, path, authCode, callback)
     });
 }
 
-function getDocInfo(reposId, path, name, authCode)
-{		
+function getDocInfoTest()
+{	
+	var paramStr = $("#getDocInfoParam").text();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Doc/getDocRS.do",
+        url : $("#getDocInfoUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-            reposId: reposId,
-            path: path,
-			name: name,
-            authCode: authCode,
+            reposId: param.reposId,
+            path: param.path,
+			name: param.name,
+            authCode: gAuthCode,
         },
         success : function (ret) {
      		if(ret.status == "ok")
@@ -425,17 +417,22 @@ function getDocInfo(reposId, path, name, authCode)
     });
 }
 
-function getDocFileLink(reposId, path, name, authCode)
+function getDocFileLinkTest()
 {	
+	var paramStr = $("#getDocFileLinkParam").text();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
-        url : "/DocSystem/Doc/getDocFileLinkRS.do",
+        url : $("#getDocFileLinkUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-        	reposId: reposId,
-            path: path,
-            name: name,
-            urlStyle: "REST",
+        	reposId: param.reposId,
+            path: param.path,
+            name: param.name,
+            urlStyle: param.urlStyle,
             authCode: gAuthCode,
         },
         success : function (ret) {
@@ -458,18 +455,23 @@ function getDocFileLink(reposId, path, name, authCode)
     });
 }
 
-function addDoc(reposId, path, name, type, authCode)
+function addDocTest()
 {		
+	var paramStr = $("#addDocParam").text();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Doc/addDocRS.do",
+        url : $("#addDocUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-            reposId: reposId,
-            path: path,
-			name: name,
-			type: type,
-            authCode: authCode,
+            reposId: param.reposId,
+            path: param.path,
+			name: param.name,
+			type: param.type,
+            authCode: gAuthCode,
         },
         success : function (ret) {
      		if(ret.status == "ok")
@@ -489,10 +491,47 @@ function addDoc(reposId, path, name, type, authCode)
     });
 }
 
+function copyDocTest()
+{	
+	var paramStr = $("#copyDocParam").text();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	$.ajax({
+        url : $("#copyDocUrl").val(),
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId: param.reposId,
+            srcPath: param.srcPath,
+			srcName: param.srcName,
+			dstPath: param.dstPath,
+			dstName: param.dstName,
+			isMove: param.isMove,
+            authCode: gAuthCode,
+        },
+        success : function (ret) {
+     		if(ret.status == "ok")
+        	{
+     			$("#copyDocResult").val(JSON.stringify(ret));
+     			alert("复制文件成功");
+			}
+            else
+            {
+     			$("#copyDocResult").val(JSON.stringify(ret));
+            	alert("复制文件失败:" + ret.msgInfo);
+            }
+        },
+        error : function () {
+        	alert ("复制文件失败: 服务器异常");
+        }
+    });
+}
+
 function uploadDoc(reposId, path, name, size, fileLink, authCode)
 {		
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Doc/uploadDocRS.do",
+        url : $("#uploadDocUrl").val(),
         type : "post",
         dataType : "json",
         data : {
@@ -524,7 +563,7 @@ function uploadDoc(reposId, path, name, size, fileLink, authCode)
 function pushDoc(reposId, path, name, targetReposId, targetPath, authCode, callback)
 {		
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Doc/pushDocRS.do",
+        url : $("#pushDocUrl").val(),
         type : "post",
         dataType : "json",
         data : {
@@ -558,7 +597,7 @@ function pushDoc(reposId, path, name, targetReposId, targetPath, authCode, callb
 function deleteDoc(reposId, path, name, authCode)
 {		
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Doc/deleteDocRS.do",
+        url : $("#deleteDocUrl").val(),
         type : "post",
         dataType : "json",
         data : {
@@ -590,7 +629,7 @@ function deleteDoc(reposId, path, name, authCode)
 function querySystemLog(queryId, authCode)
 {		
 	$.ajax({
-        url : "http://localhost:8100/DocSystem/Doc/querySystemLog.do",
+        url : $("#querySystemLogUrl").val(),
         type : "post",
         dataType : "json",
         data : {
