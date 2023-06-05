@@ -497,6 +497,7 @@ function copyDocTest()
 	console.log(paramStr);	
 	var param = JSON.parse(paramStr);
 	console.log(param);
+	
 	$.ajax({
         url : $("#copyDocUrl").val(),
         type : "post",
@@ -528,19 +529,24 @@ function copyDocTest()
     });
 }
 
-function uploadDoc(reposId, path, name, size, fileLink, authCode)
-{		
+function uploadDocTest()
+{	
+	var paramStr = $("#uploadDocParam").val();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
         url : $("#uploadDocUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-            authCode: authCode,
-            reposId: reposId,
-            path: path,
-			name: name,
-			size: size,
-			fileLink: fileLink
+            reposId: param.reposId,
+            path: param.path,
+			name: param.name,
+			size: param.size,
+			fileLink: param.fileLink,
+            authCode: gAuthCode,
         },
         success : function (ret) {
      		if(ret.status == "ok")
@@ -560,21 +566,26 @@ function uploadDoc(reposId, path, name, size, fileLink, authCode)
     });
 }
 
-function pushDoc(reposId, path, name, targetReposId, targetPath, authCode, callback)
-{		
+function pushDocTest()
+{
+	var paramStr = $("#pushDocParam").val();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
         url : $("#pushDocUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-            reposId: reposId,
-            path: path,
-			name: name,
-			targetReposId: targetReposId,
-            targetPath: targetPath,
-            authCode: authCode,
-            recurciveEn: 1,
-            forceEn:1,
+            reposId: param.reposId,
+            path: param.path,
+			name: param.name,
+			targetReposId: param.targetReposId,
+            targetPath: param.targetPath,
+            recurciveEn: param.recurciveEn,
+            forceEn: param.recurciveEn,
+            authCode: gAuthCode
         },
         success : function (ret) {
      		if(ret.status == "ok")
@@ -594,18 +605,22 @@ function pushDoc(reposId, path, name, targetReposId, targetPath, authCode, callb
     });
 }
 
-function deleteDoc(reposId, path, name, authCode)
+function deleteDocTest()
 {		
+	var paramStr = $("#deleteDocParam").val();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
         url : $("#deleteDocUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-        	taskId: "123456",
-            reposId: reposId,
-            path: path,
-			name: name,
-			authCode: authCode,
+            reposId: param.reposId,
+            path: param.path,
+			name: param.name,
+			authCode: gAuthCode,
         },
         success : function (ret) {
      		if(ret.status == "ok")
@@ -626,15 +641,20 @@ function deleteDoc(reposId, path, name, authCode)
 }
 
 
-function querySystemLog(queryId, authCode)
-{		
+function querySystemLogTest()
+{
+	var paramStr = $("#deleteDocParam").val();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
 	$.ajax({
         url : $("#querySystemLogUrl").val(),
         type : "post",
         dataType : "json",
         data : {
-            queryId: queryId,
-            authCode: authCode,
+            queryId: param.queryId,
+            authCode: gAuthCode,
         },
         success : function (ret) {
      		if(ret.status == "ok")
