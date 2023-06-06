@@ -693,7 +693,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** copyDocRS [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
-		Log.info("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " srcName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
+		Log.info("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " dstName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		if(checkAuthCode(authCode, null, rt) == null)
