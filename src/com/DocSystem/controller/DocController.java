@@ -624,13 +624,20 @@ public class DocController extends BaseController{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, repos, srcDoc, dstDoc, null);
+		context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
+		
 		Log.debug("copyDoc checkUserAddRight");
 		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);
 			return;
 		}
 		
@@ -643,44 +650,33 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
 		}
-		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDocTmp = buildBasicDoc(reposId, docId, srcPid, reposPath, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDoc = docSysGetDoc(repos, srcDocTmp, false);
-		if(srcDoc == null || srcDoc.getType() == 0)
+		String commitUser = reposAccess.getAccessUser().getName();
+
+		
+		Doc tmpDoc = docSysGetDoc(repos, srcDoc, false);
+		if(tmpDoc == null || tmpDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
+			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);
 			return;
-		}
+		}		
+		srcDoc = tmpDoc;
 		
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
+			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);
 			return;
 		}
 		
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, repos, srcDoc, dstDoc, null);
-		context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		int ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
 		writeJson(rt, response);
 		
-		switch(ret)
-		{
-		case 0:
-			addSystemLog(context, reposAccess.getAccessUser(), "失败",  buildSystemLogDetailContent(rt));						
-			break;
-		case 1:
-			addSystemLog(context, reposAccess.getAccessUser(), "成功",  buildSystemLogDetailContent(rt));						
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			break;
-		}
+		copyAfterHandler(ret, srcDoc, dstDoc, reposAccess, context, rt);
 	}
 	
 	/****************   copy/move/rename a Document ******************/
@@ -764,12 +760,27 @@ public class DocController extends BaseController{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc srcDoc = buildBasicDoc(reposId, null, null, reposPath, srcPath, srcName, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, dstName, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, repos, srcDoc, dstDoc, null);		
+		if(move)
+		{
+			context.eventName = "移动文件";	
+			context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
+		}
+		else
+		{
+			context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
+		}
 		
 		Doc dstParentDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			
+			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);	
 			return;
 		}
 		
@@ -790,54 +801,33 @@ public class DocController extends BaseController{
 			}
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDocTmp = buildBasicDoc(reposId, null, null, reposPath, srcPath, srcName, null, null, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, dstName, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDoc = docSysGetDoc(repos, srcDocTmp, false);
+		Doc tmpDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDoc == null || srcDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);
 			
-			if(move)
-			{
-				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "移动文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));				
-			}
-			else
-			{
-				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));
-			}
+			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);			
 			return;
 		}
+		srcDoc = tmpDoc;
 
-		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, repos, srcDoc, dstDoc, null);
 		
 		int ret = 0;
 		if(move)
 		{
-			context.eventName = "移动文件";	
-			context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
+			
 			ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);			
 		}
 		else
 		{
-			context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 			ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		}
+		
 		writeJson(rt, response);
 		
-		switch(ret)
-		{
-		case 0:
-			addSystemLog(context, reposAccess.getAccessUser(), "失败",  buildSystemLogDetailContent(rt));						
-			break;
-		case 1:
-			addSystemLog(context, reposAccess.getAccessUser(), "成功",  buildSystemLogDetailContent(rt));						
-			break;
-		default:	//异步执行中（异步线程负责日志写入）
-			break;
-		}
+		copyAfterHandler(ret, srcDoc, dstDoc, reposAccess, context, rt);
 	}
 
 	/****************   refresh a Document ******************/

@@ -20210,6 +20210,20 @@ public class BaseController  extends BaseFunction{
 			break;
 		}				
 	}
+	
+	protected void copyAfterHandler(int copyResult, Doc srcDoc, Doc dstDoc, ReposAccess reposAccess, ActionContext context, ReturnAjax rt) {
+		switch(copyResult)
+		{
+		case 0:
+			addSystemLog(context, reposAccess.getAccessUser(), "失败",  buildSystemLogDetailContent(rt));						
+			break;
+		case 1:
+			addSystemLog(context, reposAccess.getAccessUser(), "成功",  buildSystemLogDetailContent(rt));						
+			break;
+		default:	//异步执行中（异步线程负责日志写入）
+			break;
+		}		
+	}
 
 	private void folderSubEntryUploadSuccessHandler(FolderUploadAction action) {
 		action.successCount++;
