@@ -3502,15 +3502,15 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc dbDoc = docSysGetDoc(repos, doc, false);
-		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
+		Doc tmpDoc = docSysGetDoc(repos, doc, false);
+		if(tmpDoc == null || tmpDoc.getType() == null || tmpDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
-		rt.setData(dbDoc);
+		rt.setData(tmpDoc);
 		writeJson(rt, response);
 	}
 	
