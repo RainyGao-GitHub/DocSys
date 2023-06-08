@@ -296,7 +296,60 @@ var ReposConfig = (function () {
 		reposInfo.textSearch = getTextSearchConfig();
 		console.log("reposInfo.textSearch:" + reposInfo.textSearch);
 	}
-	
+
+	/******* 自动同步 *************/
+	function showAutoSyncupConfig(reposInfo)
+	{
+		if(reposInfo.autoSyncupConfig == undefined)
+	   	{
+			$("#autoSyncupConfigDiv").hide();
+	   		$("#autoSyncupEnable").attr("checked",false);
+		}
+		else
+		{	
+			if(reposInfo.autoSyncupConfig.verReposSyncupConfig == undefined && 
+				reposInfo.autoSyncupConfig.remoteStorageSyncupConfig == undefined)
+			{
+				$("#autoSyncupConfigDiv").hide();
+		   		$("#autoSyncupEnable").attr("checked",false);
+			}
+			else
+			{				
+				$("#autoSyncupConfigDiv").show();
+				$("#autoSyncupEnable").attr("checked", "checked");
+				
+				showVerReposSyncupConfig(reposInfo.autoSyncupConfig.verReposSyncupConfig);
+				showRemoteStorageSyncupConfig(reposInfo.autoSyncupConfig.remoteStroageSyncupConfig);
+			}
+		}
+		
+		//init autoBackup
+		reposInfo.autoSyncup = getAutoSyncupConfig();
+		console.log("reposInfo.autoSyncup:" + reposInfo.autoSyncup);
+	}
+
+	function showVerReposSyncupConfig(verReposSyncupConfig)
+	{
+		if(verReposSyncupConfig == undefined || verReposSyncupConfig.autoSyncupEn == 0)
+	   	{
+	   		$("#verReposSyncupEnable").attr("checked",false);
+			return;
+	   	}
+		
+		$("#verReposSyncupEnable").attr("checked", "checked");	
+	}
+
+	function showRemoteStorageSyncupConfig(remoteStroageSyncupConfig)
+	{
+		if(remoteStroageSyncupConfig == undefined || remoteStroageSyncupConfig.autoSyncupEn == 0)
+	   	{
+	   		$("#remoteStroageSyncupEnable").attr("checked",false);
+			return;
+	   	}
+		
+		$("#remoteStroageSyncupEnable").attr("checked", "checked");	
+	}
+
 	/******* 自动备份 *************/
 	function showAutoBackupConfig(reposInfo)
 	{
@@ -665,6 +718,9 @@ var ReposConfig = (function () {
 		newReposSetting.remoteServer = remoteServer;
 		var remoteStorage = getRemoteStorageConfig();
 		newReposSetting.remoteStorage = remoteStorage;
+		var autoSyncup = getAutoSyncupConfig();
+		newReposSetting.autoSyncup = autoSyncup;
+		console.log("newReposSetting.autoSyncup:" + autoSyncup);
 		var autoBackup = getAutoBackupConfig();
 		newReposSetting.autoBackup = autoBackup;
 		console.log("newReposSetting.autoBackup:" + autoBackup);
@@ -883,6 +939,10 @@ var ReposConfig = (function () {
 	    
 	    var textSearch = getTextSearchConfig();
 	    var encryptType = MyJquery.isChecked("isEncryptEnabled");
+	    
+	    var autoSyncupConfig = getAutoSyncupConfig();	//autoSyncupConfig
+	    console.log("autoSyncupConfig = " + autoSyncupConfig);
+	    
 	    var autoBackupConfig = getAutoBackupConfig();	//autoBackupConfig
 	    console.log("autoBackupConfig = " + autoBackupConfig);
 	    
@@ -1328,6 +1388,21 @@ var ReposConfig = (function () {
 		return remoteStorage;
 	}	
 	
+	/********* 自动同步设置 *****************/
+	function doSelectAutoSyncupConfigEanble()
+	{
+		var autoSyncupEnable = MyJquery.isChecked("autoSyncupEnable");
+		console.log("doSelectAutoSyncupConfigEanble autoSyncupEnable:" + autoSyncupEnable);
+		if(autoSyncupEnable == 0)
+		{
+			MyJquery.hide("autoSyncupConfigDiv");
+		}
+		else
+		{	
+			MyJquery.show("autoSyncupConfigDiv");
+		}		
+	}
+	
 	/********* 自动备份设置 *****************/
 	function doSelectAutoBackupConfigEanble()
 	{
@@ -1406,6 +1481,48 @@ var ReposConfig = (function () {
 	    var isTextSearchEnabled = MyJquery.isChecked("isTextSearchEnabled");
 		console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
 		var config = "{enable:" + isTextSearchEnabled + "}";
+		return config;
+	}
+	
+	function getAutoSyncupConfig()
+	{   
+		var autoSyncupEnable = MyJquery.isChecked("autoSyncupEnable");
+		console.log("getAutoSyncupConfig autoSyncupEnable:" + autoSyncupEnable);
+		if(autoSyncupEnable == 0)
+		{
+			return "{verReposSyncup:{},remoteStorageSyncup:{}}";
+		}
+		
+		var verReposSyncupConfig = getVerReposSyncupConfig();
+		var remoteStorageSyncupConfig = getRemoteStorageSyncupConfig();
+		return "{verReposSyncup:" + verReposSyncupConfig + ",remoteStorageSyncup:" + remoteStorageSyncupConfig + "}";
+	}
+
+	function getVerReposSyncupConfig()
+	{
+		var verReposSyncupEnable = MyJquery.isChecked("verReposSyncupEnable");
+		console.log("getVerReposSyncupConfig verReposSyncupEnable:" + verReposSyncupEnable);
+		if(verReposSyncupEnable == 0)
+		{
+			return "{}";
+		}
+
+		var config = "{SyncupEnable:" + verReposSyncupEnable + "}";
+			
+		return config;
+	}
+
+	function getRemoteStorageSyncupConfig()
+	{
+		var remoteStorageSyncupEnable = MyJquery.isChecked("remoteStorageSyncupEnable");
+		console.log("getRemoteStorageSyncupConfig remoteStorageSyncupEnable:" + remoteStorageSyncupEnable);
+		if(remoteStorageSyncupEnable == 0)
+		{
+			return "{}";
+		}
+
+		var config = "{SyncupEnable:" + remoteStorageSyncupEnable + "}";
+			
 		return config;
 	}
 	
@@ -1728,6 +1845,9 @@ var ReposConfig = (function () {
 	    doSetEncryptConfirm: function(){
 	    	doSetEncryptConfirm();
 	    },    
+	    doSelectAutoSyncupConfigEanble: function(){
+	    	doSelectAutoSyncupConfigEanble();
+	    },
 	    doSelectAutoBackupConfigEanble: function(){
 	    	doSelectAutoBackupConfigEanble();
 	    },    
