@@ -1328,6 +1328,21 @@ var ReposConfig = (function () {
 		return remoteStorage;
 	}	
 	
+	/********* 自动同步设置 *****************/
+	function doSelectAutoSyncupConfigEanble()
+	{
+		var autoSyncupEnable = MyJquery.isChecked("autoSyncupEnable");
+		console.log("doSelectAutoSyncupConfigEanble autoSyncupEnable:" + autoSyncupEnable);
+		if(autoSyncupEnable == 0)
+		{
+			MyJquery.hide("autoSyncupConfigDiv");
+		}
+		else
+		{	
+			MyJquery.show("autoSyncupConfigDiv");
+		}		
+	}
+	
 	/********* 自动备份设置 *****************/
 	function doSelectAutoBackupConfigEanble()
 	{
@@ -1407,6 +1422,20 @@ var ReposConfig = (function () {
 		console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
 		var config = "{enable:" + isTextSearchEnabled + "}";
 		return config;
+	}
+	
+	function getAutoSyncupConfig()
+	{   
+		var autoSyncupEnable = MyJquery.isChecked("autoSyncupEnable");
+		console.log("getAutoSyncupConfig autoSyncupEnable:" + autoSyncupEnable);
+		if(autoSyncupEnable == 0)
+		{
+			return "{verReposSyncup:{},remoteStorageSyncup:{}}";
+		}
+		
+		var verReposSyncupConfig = getVerReposSyncupConfig();
+		var remoteStorageSyncupConfig = getRemoteStorageSyncupConfig();
+		return "{verReposSyncup:" + verReposSyncupConfig + ",remoteStorageSyncup:" + remoteStorageSyncupConfig + "}";
 	}
 	
 	function getAutoBackupConfig()
@@ -1728,6 +1757,9 @@ var ReposConfig = (function () {
 	    doSetEncryptConfirm: function(){
 	    	doSetEncryptConfirm();
 	    },    
+	    doSelectAutoSyncupConfigEanble: function(){
+	    	doSelectAutoSyncupConfigEanble();
+	    },
 	    doSelectAutoBackupConfigEanble: function(){
 	    	doSelectAutoBackupConfigEanble();
 	    },    
