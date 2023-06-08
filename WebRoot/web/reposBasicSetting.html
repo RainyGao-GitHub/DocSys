@@ -126,7 +126,7 @@
 			</div>
 
 			<div id="remoteStorageDiv" style="margin-top:20px">
-                <label style="margin-top:10px">远程存储
+                <label>远程存储
                 	<span style="margin-left:5px">
 	            		<input type="checkbox" id="remoteStorageConfigEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageConfigEnable()">
 	            	</span>
@@ -153,7 +153,31 @@
 			        </div>
 				</div>
 			</div>
+
+			<div id="autoSyncupEnablelDiv" style="margin-top:20px">
+	            <label>自动同步
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" id="autoSyncupEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupConfigEanble()">
+	            	</span>
+	            </label>
+			</div>
 			
+			<div id="autoSyncupConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
+	            <label>版本管理
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" id="verReposSyncupEnable" value="0" onclick="ReposConfig.doSelectVerReposSyncupEnable()">
+	            	</span>
+	            </label>
+	       
+				<br>
+
+	            <label style="margin-top:10px">远程存储 
+	            	<span style="margin-left:5px;">
+	            		<input type="checkbox" id="remoteStorageSyncupEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageSyncupEnable()">
+	            	</span>
+	            </label>
+	        </div>
+	       
 			<div id="autoBackupEnablelDiv" style="margin-top:20px">
 	            <label>自动备份 
 	            	<span style="margin-left:5px">
