@@ -5110,7 +5110,19 @@ public class BaseController  extends BaseFunction{
 
 	private void syncUpLocalWithVerRepos(Repos repos, Doc doc, User login_user, CommonAction action, Integer subDocSyncupFlag,
 			ReturnAjax rt) 
-	{
+	{	
+		if(repos.autoSyncupConfig == null)
+		{
+			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " autoSyncupConfig is null");
+			return;
+		}
+		
+		if(repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == null || repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == 0)
+		{
+			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " verReposSyncup was disabled");
+			return;
+		}
+		
 		if(repos.getIsRemote() == 1)
 		{
 			//Sync Up local VerRepos with remote VerRepos
@@ -5133,7 +5145,19 @@ public class BaseController  extends BaseFunction{
 
 	private void syncUpLocalWithRemoteStorage(Repos repos, Doc doc, User login_user, CommonAction action, int subDocSyncupFlag,
 			boolean remoteStorageEnable, boolean remoteStoragePullEnable, boolean remoteStoragePushEnable,  
-			ReturnAjax rt) {
+			ReturnAjax rt) 
+	{
+		if(repos.autoSyncupConfig == null)
+		{
+			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " autoSyncupConfig is null");
+			return;
+		}
+		
+		if(repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == null || repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == 0)
+		{
+			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " remoteStorageSyncup was disabled");
+			return;
+		}
 		
 		if(remoteStorageEnable && (remoteStoragePullEnable || remoteStoragePushEnable))
 		{
