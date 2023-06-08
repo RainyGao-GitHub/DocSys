@@ -170,6 +170,7 @@ public class ReposController extends BaseController{
 			Long createTime,
 			String textSearch,
 			Integer encryptType,
+			String autoSyncup,
 			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
@@ -180,7 +181,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ "textSearch:" + textSearch + " autoBackup:" + autoBackup);
+				+ "textSearch:" + textSearch + " autoSyncup:" + autoSyncup + " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
@@ -255,6 +256,7 @@ public class ReposController extends BaseController{
 		repos.setSvnPath1(svnPath1);
 		repos.setSvnUser1(svnUser1);
 		repos.setSvnPwd1(svnPwd1);
+		repos.setAutoSyncup(autoSyncup);
 		repos.setAutoBackup(autoBackup);
 		repos.setTextSearch(textSearch);
 		
@@ -386,12 +388,18 @@ public class ReposController extends BaseController{
 		setReposEncrypt(repos, encryptType);
 		
 		InitReposAuthInfo(repos,login_user,rt);		
-		
-		//如果有版本管理，则需要启动定时扫描提交任务
+
 		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, GenericTask>());
-		if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+		if(autoSyncup != null)
 		{
-			addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步
+			setReposAutoSyncup(repos, autoSyncup);
+			initReposAutoSyncupConfig(repos, autoSyncup);
+			if(repos.autoSyncupConfig != null)
+			{
+				addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步
+				//TODO: autoSyncup的同步时间参考自动备份
+				//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
+			}
 		}
 		
 		unlockRepos(repos, lockType, login_user); 

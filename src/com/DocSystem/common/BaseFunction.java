@@ -78,9 +78,11 @@ import com.DocSystem.common.entity.PreferLink;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
+import com.DocSystem.common.entity.RemoteStorageSyncupConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
+import com.DocSystem.common.entity.ReposSyncupConfig;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.LongTermTask;
@@ -88,6 +90,7 @@ import com.DocSystem.common.entity.SvnConfig;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.UserPreferServer;
+import com.DocSystem.common.entity.VerReposSyncupConfig;
 import com.DocSystem.commonService.ProxyThread;
 import com.DocSystem.commonService.ShareThread;
 import com.DocSystem.entity.Doc;
@@ -213,6 +216,8 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteStorageHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();	
 	//仓库远程服务器前置配置HashMap
 	protected static ConcurrentHashMap<Integer, RemoteStorageConfig> reposRemoteServerHashMap = new ConcurrentHashMap<Integer, RemoteStorageConfig>();		
+	//仓库自动同步配置HashMap
+	protected static ConcurrentHashMap<Integer, ReposSyncupConfig> reposSyncupConfigHashMap = new ConcurrentHashMap<Integer, ReposSyncupConfig>();
 	//仓库自动备份配置HashMap
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
 	//仓库全文搜索配置HashMap
@@ -772,7 +777,50 @@ public class BaseFunction{
 	protected static RemoteStorageConfig getReposRemoteServerConfigRedis(Repos repos) {
 		RMap<Object, Object> reposRemoteServerHashMap = redisClient.getMap("reposRemoteServerHashMap");
 		return (RemoteStorageConfig) reposRemoteServerHashMap.get(repos.getId());
-	}		
+	}
+
+	//*** reposSyncupConfigHashMap
+	private void setReposSyncupConfig(Repos repos, ReposSyncupConfig config) {
+		reposSyncupConfigHashMap.put(repos.getId(), config);		
+		if(redisEn)
+		{
+			String lockInfo = "setReposSyncupConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposSyncupConfigRedis(repos, config);
+
+			redisSyncUnlock(lockName, lockInfo);
+		}
+	}
+	
+	private void setReposSyncupConfigRedis(Repos repos, ReposSyncupConfig config) {
+		RMap<Object, Object> reposSyncupConfigHashMap = redisClient.getMap("reposSyncupConfigHashMap");
+		config.checkSum = new Date().getTime() + "";
+		reposSyncupConfigHashMap.put(repos.getId(), config);
+
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoSyncupConfig, config.checkSum);			
+	}
+	
+	private void deleteReposSyncupConfig(Repos repos) {
+		reposSyncupConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposSyncupConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			deleteReposSyncupConfigRedis(repos);
+			
+			redisSyncUnlock(lockName, lockInfo);
+		}
+	}
+	
+	private void deleteReposSyncupConfigRedis(Repos repos) {
+		RMap<Object, Object> reposSyncupConfigHashMap = redisClient.getMap("reposSyncupConfigHashMap");
+		reposSyncupConfigHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoSyncupConfig, "");	
+	}
 	
 	//*** reposBackupConfigHashMap
 	private void setReposBackupConfig(Repos repos, ReposBackupConfig config) {
@@ -2291,6 +2339,65 @@ public class BaseFunction{
 		return OS.isWinOS(OSType);
 	}	
 	
+	//**** 自动同步配置 *******
+	protected static ReposSyncupConfig parseAutoSyncupConfig(Repos repos, String autoSyncup) {
+		try {
+			//autoSyncup中不允许出现转义字符 \ ,否则会导致JSON解析错误
+			if(autoSyncup == null || autoSyncup.isEmpty())
+			{
+				return null;
+			}
+			
+			autoSyncup = autoSyncup.replace('\\', '/');	
+			
+			JSONObject jsonObj = JSON.parseObject(autoSyncup);
+			if(jsonObj == null)
+			{
+				return null;
+			}
+			
+			Log.printObject("parseAutoSyncupConfig() ", jsonObj);
+			
+			VerReposSyncupConfig verReposSyncupConfig = null;
+			JSONObject verReposSyncupObj = jsonObj.getJSONObject("verReposSyncup");
+			if(verReposSyncupObj != null)
+			{
+				Log.printObject("parseAutoSyncupConfig() ", verReposSyncupObj);
+				verReposSyncupConfig = getVerReposSyncupConfig(repos, verReposSyncupObj);
+			}
+			
+			
+			RemoteStorageSyncupConfig remoteStorageSyncupConfig = null;
+			JSONObject remoteStorageSyncupObj = jsonObj.getJSONObject("remoteStorageSyncup");
+			if(remoteStorageSyncupObj != null)
+			{
+				Log.printObject("parseAutoSyncupConfig() ", remoteStorageSyncupObj);
+				remoteStorageSyncupConfig = getRemoteStorageSyncupConfig(repos, remoteStorageSyncupObj);
+			}
+			
+			ReposSyncupConfig syncupConfig = new ReposSyncupConfig();
+			syncupConfig.verReposSyncupConfig = verReposSyncupConfig;
+			syncupConfig.remoteStorageSyncupConfig = remoteStorageSyncupConfig;
+			return syncupConfig;				
+		}
+		catch(Exception e) {
+			errorLog(e);
+			return null;
+		}
+	}	
+
+	private static VerReposSyncupConfig getVerReposSyncupConfig(Repos repos, JSONObject verReposSyncupObj) {
+		VerReposSyncupConfig config = new VerReposSyncupConfig();
+		config.autoSyncupEn = verReposSyncupObj.getInteger("autoSyncupEn");
+		return config;
+	}
+	
+	private static RemoteStorageSyncupConfig getRemoteStorageSyncupConfig(Repos repos, JSONObject remoteStorageSyncupObj) {
+		RemoteStorageSyncupConfig config = new RemoteStorageSyncupConfig();
+		config.autoSyncupEn = remoteStorageSyncupObj.getInteger("autoSyncupEn");
+		return config;
+	}
+	
 	//**** 自动备份配置 *******
 	protected static ReposBackupConfig parseAutoBackupConfig(Repos repos, String autoBackup) {
 		try {
@@ -3277,6 +3384,32 @@ public class BaseFunction{
 		return FileUtil.readDocContentFromFile(configPath, "remoteServer.conf", "UTF-8");
 	}
 	
+	//*** 仓库自动同步配置 *****
+	protected void initReposAutoSyncupConfig(Repos repos, String autoSyncup)
+	{
+		Log.debug("+++++++++ initReposAutoSyncupConfig for repos [" + repos.getName() + "] autoSyncup: " + autoSyncup);
+		
+		if(isFSM(repos) == false)
+		{
+			Log.debug("initReposAutoSyncupConfig 前置类型仓库不支持自动同步！");
+			return;
+		}
+		
+		ReposSyncupConfig config = parseAutoSyncupConfig(repos, autoSyncup);
+		repos.autoSyncupConfig = config;
+		
+		if(config == null)
+		{
+			deleteReposSyncupConfig(repos);
+			Log.debug("initReposAutoSyncupConfig 自动同步未设置或者设置错误");
+		}
+		else
+		{			
+			setReposSyncupConfig(repos, config);		
+		}
+		Log.debug("------- initReposAutoBackupConfig 自动备份配置初始化完成 -------");
+	}
+	
 	//*** 仓库自动备份配置 *****
 	protected void initReposAutoBackupConfig(Repos repos, String autoBackup)
 	{
@@ -3449,6 +3582,17 @@ public class BaseFunction{
 				checkAndSetLocalBackupIgnored(parentPath + subFile.getName(), subFile, repos);			
 			}
 		}	
+	}
+	
+	protected boolean setReposAutoSyncup(Repos repos, String autoSyncup) {
+		String reposAutoSyncupConfigPath = Path.getReposAutoSyncupConfigPath(repos);
+		
+		if(autoSyncup == null || autoSyncup.isEmpty())
+		{
+			return FileUtil.delFile(reposAutoSyncupConfigPath + "autoSyncup.json");
+		}
+		
+		return FileUtil.saveDocContentToFile(autoSyncup, reposAutoSyncupConfigPath, "autoSyncup.json", "UTF-8");
 	}
 	
 	protected boolean setReposAutoBackup(Repos repos, String autoBackup) {

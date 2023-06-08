@@ -5,6 +5,7 @@ import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.ReposSyncupConfig;
 import com.alibaba.fastjson.JSONObject;
 
 public class Repos {    
@@ -24,6 +25,8 @@ public class Repos {
     private String realDocPath;
 
 	private String remoteStorage;
+
+	private String autoSyncup;
 
 	private String autoBackup;
 	
@@ -88,6 +91,7 @@ public class Repos {
 	public JSONObject reposExtConfigDigest = null;
 	public RemoteStorageConfig remoteStorageConfig;
 	public RemoteStorageConfig remoteServerConfig;
+	public ReposSyncupConfig autoSyncupConfig;
 	public ReposBackupConfig autoBackupConfig;
 	public VersionIgnoreConfig versionIgnoreConfig;
 	public TextSearchConfig textSearchConfig;
@@ -310,6 +314,14 @@ public class Repos {
     
 	public void setRemoteStorage(String remoteStorage) {
         this.remoteStorage = remoteStorage;		
+	}
+
+    public String getAutoSyncup() {
+        return autoSyncup;
+    }
+    
+	public void setAutoSyncup(String autoSyncup) {
+        this.autoSyncup = autoSyncup;		
 	}
 	
     public String getAutoBackup() {

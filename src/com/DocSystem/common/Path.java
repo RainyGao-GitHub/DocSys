@@ -795,6 +795,11 @@ public class Path {
 		return path;
 	}
 	
+	public static String getReposAutoSyncupConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/autoSyncupSetting/";
+		return path;
+	}
+	
 	public static String getReposAutoBackupConfigPath(Repos repos) {
 		String path = getReposPath(repos) + "data/autoBackupSetting/";
 		return path;
