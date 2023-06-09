@@ -3857,7 +3857,10 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Add Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+			if(repos.getVerCtrl() > 0)
+			{
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
@@ -4011,7 +4014,10 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Add Action
-			CommonAction.insertCommonAction(asyncActionList , repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+			if(repos.getVerCtrl() > 0)
+			{
+				CommonAction.insertCommonAction(asyncActionList , repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+			}
 		}
 		else
 		{
@@ -4156,7 +4162,10 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Add Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action_Type, DocType.REALDOC, null, login_user, false);
+			if(repos.getVerCtrl() > 0)
+			{
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action_Type, DocType.REALDOC, null, login_user, false);
+			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
@@ -4371,7 +4380,10 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Delete Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.DELETE, DocType.REALDOC, null, login_user, false);
+			if(repos.getVerCtrl() > 0)
+			{
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.DELETE, DocType.REALDOC, null, login_user, false);
+			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{
@@ -7755,7 +7767,10 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Update Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			if(repos.getVerCtrl() > 0)
+			{
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
@@ -7875,7 +7890,10 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Update Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			if(repos.getVerCtrl() > 0)
+			{
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			}
 		}
 		else
 		{
@@ -8221,7 +8239,10 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			//Insert VerRepos Update Action
-			CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			if(repos.getVerCtrl() > 0)
+			{
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
@@ -8311,8 +8332,11 @@ public class BaseController  extends BaseFunction{
 			if(isFSM(repos))
 			{
 				//Insert VerRepos Update Action
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
-					
+				if(repos.getVerCtrl() > 0)
+				{
+					CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+				}
+				
 				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 				{	
 					CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDocContent", null, login_user, false);
