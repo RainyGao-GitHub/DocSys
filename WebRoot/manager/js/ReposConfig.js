@@ -342,15 +342,15 @@ var ReposConfig = (function () {
 		$("#verReposSyncupEnable").attr("checked", "checked");	
 	}
 
-	function showRemoteStorageSyncupConfig(remoteStroageSyncupConfig)
+	function showRemoteStorageSyncupConfig(remoteStorageSyncupConfig)
 	{
-		if(remoteStroageSyncupConfig == undefined || remoteStroageSyncupConfig.autoSyncupEn == 0)
+		if(remoteStorageSyncupConfig == undefined || remoteStorageSyncupConfig.autoSyncupEn == 0)
 	   	{
-	   		$("#remoteStroageSyncupEnable").attr("checked",false);
+	   		$("#remoteStorageSyncupEnable").attr("checked",false);
 			return;
 	   	}
 		
-		$("#remoteStroageSyncupEnable").attr("checked", "checked");	
+		$("#remoteStorageSyncupEnable").attr("checked", "checked");	
 	}
 
 	/******* 自动备份 *************/
