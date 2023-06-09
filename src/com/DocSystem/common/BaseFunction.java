@@ -2382,7 +2382,7 @@ public class BaseFunction{
 			JSONObject verReposSyncupObj = jsonObj.getJSONObject("verReposSyncup");
 			if(verReposSyncupObj != null)
 			{
-				Log.printObject("parseAutoSyncupConfig() ", verReposSyncupObj);
+				Log.printObject("parseAutoSyncupConfig() verReposSyncupObj:", verReposSyncupObj);
 				verReposSyncupConfig = getVerReposSyncupConfig(repos, verReposSyncupObj);
 			}
 			
@@ -2391,7 +2391,7 @@ public class BaseFunction{
 			JSONObject remoteStorageSyncupObj = jsonObj.getJSONObject("remoteStorageSyncup");
 			if(remoteStorageSyncupObj != null)
 			{
-				Log.printObject("parseAutoSyncupConfig() ", remoteStorageSyncupObj);
+				Log.printObject("parseAutoSyncupConfig() remoteStorageSyncupObj:", remoteStorageSyncupObj);
 				remoteStorageSyncupConfig = getRemoteStorageSyncupConfig(repos, remoteStorageSyncupObj);
 			}
 			
@@ -3417,6 +3417,7 @@ public class BaseFunction{
 		
 		ReposSyncupConfig config = parseAutoSyncupConfig(repos, autoSyncup);
 		repos.autoSyncupConfig = config;
+		Log.printObject("initReposAutoSyncupConfig repos.autoSyncupConfig:", repos.autoSyncupConfig);
 		
 		if(config == null)
 		{
