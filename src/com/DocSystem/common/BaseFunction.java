@@ -3428,7 +3428,50 @@ public class BaseFunction{
 		{			
 			setReposSyncupConfig(repos, config);		
 		}
-		Log.debug("------- initReposAutoBackupConfig 自动备份配置初始化完成 -------");
+		Log.debug("------- initReposAutoSyncupConfig 自动同步配置初始化完成 -------");
+	}
+	
+	protected void initReposAutoSyncupConfigEx(Repos repos, String autoSyncup, boolean updateRedis)
+	{
+		Log.debug("+++++++ initReposAutoSyncupConfigEx() for repos [" + repos.getName() + "] autoSyncup: " + autoSyncup);
+		
+		if(isFSM(repos) == false)
+		{
+			Log.debug("initReposAutoSyncupConfigEx() 前置类型仓库不支持自动同步！");
+			return;
+		}
+		
+		ReposSyncupConfig config = parseAutoSyncupConfig(repos, autoSyncup);
+		repos.autoSyncupConfig = config;
+		
+		if(config == null)
+		{
+			reposSyncupConfigHashMap.remove(repos.getId());
+			Log.debug("initReposAutoSyncupConfigEx() 自动同步未设置或者设置错误");
+		}
+		else
+		{
+			reposSyncupConfigHashMap.put(repos.getId(), config);	
+		}
+		
+		if(updateRedis)
+		{
+			if(config == null)
+			{
+				deleteReposSyncupConfig(repos);
+			}
+			else
+			{				
+				setReposSyncupConfig(repos, config);		
+			}
+		}
+		
+		Log.debug("------- initReposAutoSyncupConfigEx() 自动同步配置初始化完成 *****");	
+	}
+	
+	protected String getReposAutoSyncup(Repos repos) {
+		String reposAutoSyncupConfigPath = Path.getReposAutoSyncupConfigPath(repos);		
+		return FileUtil.readDocContentFromFile(reposAutoSyncupConfigPath, "autoSyncup.json", "UTF-8");
 	}
 	
 	//*** 仓库自动备份配置 *****

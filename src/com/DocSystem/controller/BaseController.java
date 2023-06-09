@@ -12897,14 +12897,7 @@ public class BaseController  extends BaseFunction{
 		repos.remoteServer = remoteServer;
 		initReposRemoteServerConfigEx(repos, remoteServer, updateRedis);
 		Log.debug("----------- initReposExtentionConfigEx() initReposRemoteServerConfigEx End ------");
-		
-		//Init ReposAutoBackupConfig
-		Log.debug("++++++++++ initReposExtentionConfigEx() initReposAutoBackupConfigEx Start +++++");
-		String autoBackup = getReposAutoBackup(repos);
-		repos.setAutoBackup(autoBackup);
-		initReposAutoBackupConfigEx(repos, autoBackup, updateRedis);
-		Log.debug("----------- initReposExtentionConfigEx() initReposAutoBackupConfigEx End ------");
-				
+			
 		//Init ReposTextSearchConfig
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposTextSearchConfigEx Start +++++");
 		String textSearch = getReposTextSearch(repos);
@@ -12922,7 +12915,21 @@ public class BaseController  extends BaseFunction{
 		initReposEncryptConfigEx(repos, updateRedis);
 		Log.debug("----------- initReposExtentionConfigEx() initReposEncryptConfigEx End ------");
 		/*** Init ReposExtConfig End ***/
+
+		//Init ReposAutoSyncupConfig
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposAutoSyncupConfigEx Start +++++");
+		String autoSyncup = getReposAutoSyncup(repos);
+		repos.setAutoSyncup(autoSyncup);
+		initReposAutoSyncupConfigEx(repos, autoSyncup, updateRedis);
+		Log.debug("----------- initReposExtentionConfigEx() initReposAutoSyncupConfigEx End ------");
 		
+		//Init ReposAutoBackupConfig
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposAutoBackupConfigEx Start +++++");
+		String autoBackup = getReposAutoBackup(repos);
+		repos.setAutoBackup(autoBackup);
+		initReposAutoBackupConfigEx(repos, autoBackup, updateRedis);
+		Log.debug("----------- initReposExtentionConfigEx() initReposAutoBackupConfigEx End ------");
+					
 		/*** Init Repos related Async Tasks Start ***/
 		Log.debug("+++++++++++ initReposExtentionConfigEx() init repos related Async Tasks Start +++++++++");		
 		//每个仓库都必须有对应的备份任务和同步任务，新建的仓库必须在新建仓库时创建任务
@@ -12930,19 +12937,19 @@ public class BaseController  extends BaseFunction{
 		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());	
 		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, GenericTask>());
 
-		//启动定时备份任务
-		if(repos.autoBackupConfig != null)
-		{
-			addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L);	//1小时后开始本地备份
-			addDelayTaskForRemoteBackup(repos, repos.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始远程备份
-		}
-		
 		//启动定时同步任务
 		if(repos.autoSyncupConfig != null)
 		{
 			addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
 			//TODO: autoSyncup的同步时间参考自动备份
 			//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
+		}
+		
+		//启动定时备份任务
+		if(repos.autoBackupConfig != null)
+		{
+			addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L);	//1小时后开始本地备份
+			addDelayTaskForRemoteBackup(repos, repos.autoBackupConfig.remoteBackupConfig, 10, null, true); //7200L); //2小时后开始远程备份
 		}
 		
 		Log.debug("------------ initReposExtentionConfigEx() init repos related Async Tasks End ---------");		
