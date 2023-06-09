@@ -313,12 +313,14 @@ var ReposConfig = (function () {
 		else
 		{	
 			if((reposInfo.autoSyncupConfig.verReposSyncupConfig && reposInfo.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn)
-				|| (reposInfo.autoSyncupConfig.remoteStorageSyncupConfig && reposInfo.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn))
+				|| (reposInfo.autoSyncupConfig.remoteStorageSyncupConfig && reposInfo.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn)
+				|| (reposInfo.autoSyncupConfig.searchIndexSyncupConfig && reposInfo.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn))
 			{
 				$("#autoSyncupConfigDiv").show();
 				$("#autoSyncupEnable").attr("checked", "checked");				
 				showVerReposSyncupConfig(reposInfo.autoSyncupConfig.verReposSyncupConfig);
 				showRemoteStorageSyncupConfig(reposInfo.autoSyncupConfig.remoteStorageSyncupConfig);
+				showSearchIndexSyncupConfig(reposInfo.autoSyncupConfig.searchIndexSyncupConfig);
 			}
 			else
 			{	
@@ -352,6 +354,17 @@ var ReposConfig = (function () {
 	   	}
 		
 		$("#remoteStorageSyncupEnable").attr("checked", "checked");	
+	}
+	
+	function showSearchIndexSyncupConfig(searchIndexSyncupConfig)
+	{
+		if(searchIndexSyncupConfig == undefined || searchIndexSyncupConfig.autoSyncupEn == undefined || searchIndexSyncupConfig.autoSyncupEn == 0)
+	   	{
+	   		$("#searchIndexSyncupEnable").attr("checked",false);
+			return;
+	   	}
+		
+		$("#searchIndexSyncupEnable").attr("checked", "checked");	
 	}
 
 	/******* 自动备份 *************/
