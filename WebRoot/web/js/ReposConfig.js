@@ -157,6 +157,9 @@ var ReposConfig = (function () {
 		   	$("#isEncryptEnabled").attr("checked","checked");
 	   	}
 	   	
+	   	//自动同步
+	   	showAutoSyncupConfig(reposInfo);
+
 	   	//自动备份
 	   	showAutoBackupConfig(reposInfo);
 	   	
