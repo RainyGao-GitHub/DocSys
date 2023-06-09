@@ -12938,10 +12938,13 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//启动定时同步任务
-		if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+		if(repos.autoSyncupConfig != null)
 		{
 			addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
+			//TODO: autoSyncup的同步时间参考自动备份
+			//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
 		}
+		
 		Log.debug("------------ initReposExtentionConfigEx() init repos related Async Tasks End ---------");		
 		/*** Init Repos related Async Tasks End ***/
 	}
@@ -13079,10 +13082,13 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//启动定时同步任务
-				if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+				if(repos.autoSyncupConfig != null)
 				{
 					addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
+					//TODO: autoSyncup的同步时间参考自动备份
+					//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
 				}
+				
 				/*** Init Repos related Async Tasks End ***/
 				
 				Log.debug("************* initReposExtentionConfig End for repos:" + repos.getId() + " " + repos.getName() + " *******\n");				
