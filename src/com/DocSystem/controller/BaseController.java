@@ -10465,6 +10465,12 @@ public class BaseController  extends BaseFunction{
 		
 		String vDocName = Path.getVDocName(doc);
 		
+		if(FileUtil.isFileExist(reposVPath + vDocName) == false)
+		{
+			//if vdoc not eixst, treat as success
+			return true;
+		}
+		
 		String newVDocName = Path.getVDocName(newDoc);
 				
 		if(FileUtil.moveFileOrDir(reposVPath, vDocName, reposVPath, newVDocName, true) == false)
