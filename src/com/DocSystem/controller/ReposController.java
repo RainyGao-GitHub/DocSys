@@ -41,6 +41,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
+import com.DocSystem.common.entity.ReposSyncupConfig;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.controller.BaseController;
@@ -905,6 +906,7 @@ public class ReposController extends BaseController{
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
 			String textSearch,
 			Integer encryptType,
+			String autoSyncup,
 			String autoBackup,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -915,7 +917,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage:" + remoteStorage 
 				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ " textSearch:" + textSearch);
+				+ " textSearch:" + textSearch + " encryptType:" + encryptType + " autoSyncup:" + autoSyncup+ " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
@@ -963,6 +965,7 @@ public class ReposController extends BaseController{
 		newReposInfo.setSvnPath1(svnPath1);
 		newReposInfo.setSvnUser1(svnUser1);
 		newReposInfo.setSvnPwd1(svnPwd1);
+		newReposInfo.setAutoSyncup(autoSyncup);
 		newReposInfo.setAutoBackup(autoBackup);
 		newReposInfo.setTextSearch(textSearch);
 		formatReposInfo(newReposInfo);
@@ -1005,6 +1008,36 @@ public class ReposController extends BaseController{
 			initReposRemoteServerConfig(reposInfo, remoteServer);
 		}	
 		
+		//设置全文搜索
+		if(textSearch != null)
+		{
+			setReposTextSearch(reposInfo, textSearch);
+			initReposTextSearchConfig(reposInfo, textSearch);
+		}
+				
+		if(encryptType != null)
+		{			
+			if(reposInfo.encryptType == null || encryptType != reposInfo.encryptType)
+			{
+				setReposEncrypt(reposInfo, encryptType);				
+			}			
+		}
+		
+		if(autoSyncup != null)
+		{
+			//Save Old autoBackupConfig
+			ReposSyncupConfig oldAutoSyncupConfig = reposInfo.autoSyncupConfig;
+			
+			setReposAutoSyncup(reposInfo, autoSyncup);
+			initReposAutoSyncupConfig(reposInfo, autoSyncup);
+			if(reposInfo.autoSyncupConfig != null && oldAutoSyncupConfig == null)
+			{
+				addDelayTaskForReposSyncUp(reposInfo, 10, 600L); //10分钟后自动同步
+				//TODO: autoSyncup的同步时间参考自动备份
+				//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
+			}
+		}
+		
 		if(autoBackup != null)
 		{
 			//Save Old autoBackupConfig
@@ -1020,21 +1053,6 @@ public class ReposController extends BaseController{
 			
 			//Check and clear old backup indexLib
 			checkAndClearOldBackupIndexLib(reposInfo, oldAutoBackupConfig, reposInfo.autoBackupConfig);
-		}
-		
-		//设置全文搜索
-		if(textSearch != null)
-		{
-			setReposTextSearch(reposInfo, textSearch);
-			initReposTextSearchConfig(reposInfo, textSearch);
-		}
-				
-		if(encryptType != null)
-		{			
-			if(reposInfo.encryptType == null || encryptType != reposInfo.encryptType)
-			{
-				setReposEncrypt(reposInfo, encryptType);				
-			}			
 		}
 		
 		//Update ReposInfo
