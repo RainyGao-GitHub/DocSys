@@ -634,6 +634,8 @@ public class BaseFunction{
 		case ReposExtConfigDigest.RemoteStorageConfig:
 		case ReposExtConfigDigest.RemoteServerConfig:
 			return ((RemoteStorageConfig) config).checkSum;
+		case ReposExtConfigDigest.AutoSyncupConfig:
+			return ((ReposSyncupConfig) config).checkSum;
 		case ReposExtConfigDigest.AutoBackupConfig:
 			return ((ReposBackupConfig) config).checkSum;
 		case ReposExtConfigDigest.TextSearchConfig:
