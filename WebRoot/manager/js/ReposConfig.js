@@ -793,6 +793,7 @@ var ReposConfig = (function () {
 	                    svnPwd1 : newReposSetting.svnPwd1,
 	                    textSearch: newReposSetting.textSearch,
 	                    encryptType: newReposSetting.encryptType,
+	                    autoSyncup : newReposSetting.autoSyncup,                    
 	                    autoBackup : newReposSetting.autoBackup,                    
 	                },
 	                success : function (ret) {
@@ -1048,6 +1049,7 @@ var ReposConfig = (function () {
 	                createTime:createTime,
 	                textSearch: textSearch,
 	                encryptType : encryptType,
+	                autoSyncup : autoSyncupConfig,	                
 	                autoBackup : autoBackupConfig,	                
 	            },
 	            success : function (ret) {
