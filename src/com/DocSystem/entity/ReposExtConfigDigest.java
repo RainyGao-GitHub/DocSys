@@ -12,6 +12,7 @@ public class ReposExtConfigDigest {
 	public Integer reposId;
 	public String remoteStorageConfigCheckSum;
 	public String remoteServerConfigCheckSum;
+	public String autoSyncupConfigCheckSum;
 	public String autoBackupConfigCheckSum;
 	public String textSearchConfigCheckSum;
 	public String versionIgnoreConfigCheckSum;

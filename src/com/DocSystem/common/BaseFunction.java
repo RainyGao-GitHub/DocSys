@@ -822,6 +822,24 @@ public class BaseFunction{
 		updateReposExtConfigDigest(repos, ReposExtConfigDigest.AutoSyncupConfig, "");	
 	}
 	
+	protected ReposSyncupConfig getReposSyncupConfig(Repos repos) {
+		ReposSyncupConfig config = reposSyncupConfigHashMap.get(repos.getId());
+	
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.AutoSyncupConfig, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposSyncupConfigRedis(repos);
+		reposSyncupConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+	
+	private ReposSyncupConfig getReposSyncupConfigRedis(Repos repos) {
+		RMap<Object, Object> reposSyncupConfigHashMap = redisClient.getMap("reposSyncupConfigHashMap");
+		return (ReposSyncupConfig) reposSyncupConfigHashMap.get(repos.getId());
+	}
+	
 	//*** reposBackupConfigHashMap
 	private void setReposBackupConfig(Repos repos, ReposBackupConfig config) {
 		reposBackupConfigHashMap.put(repos.getId(), config);		

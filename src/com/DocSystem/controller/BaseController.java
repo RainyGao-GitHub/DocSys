@@ -16815,6 +16815,7 @@ public class BaseController  extends BaseFunction{
 				if(isFSM(repos))
 				{
 					repos.remoteStorageConfig = getReposRemoteStorageConfig(repos);
+					repos.autoSyncupConfig = getReposSyncupConfig(repos);
 					repos.autoBackupConfig = getReposBackupConfig(repos);
 				}
 				else
