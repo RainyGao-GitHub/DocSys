@@ -1512,7 +1512,7 @@ var ReposConfig = (function () {
 			return "{}";
 		}
 
-		var config = "{SyncupEnable:" + verReposSyncupEnable + "}";
+		var config = "{autoSyncupEn:" + verReposSyncupEnable + "}";
 			
 		return config;
 	}
@@ -1526,7 +1526,7 @@ var ReposConfig = (function () {
 			return "{}";
 		}
 
-		var config = "{SyncupEnable:" + remoteStorageSyncupEnable + "}";
+		var config = "{autoSyncupEn:" + remoteStorageSyncupEnable + "}";
 			
 		return config;
 	}
