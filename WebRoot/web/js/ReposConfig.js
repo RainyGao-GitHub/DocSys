@@ -322,7 +322,7 @@ var ReposConfig = (function () {
 				$("#autoSyncupEnable").attr("checked", "checked");
 				
 				showVerReposSyncupConfig(reposInfo.autoSyncupConfig.verReposSyncupConfig);
-				showRemoteStorageSyncupConfig(reposInfo.autoSyncupConfig.remoteStroageSyncupConfig);
+				showRemoteStorageSyncupConfig(reposInfo.autoSyncupConfig.remoteStorageSyncupConfig);
 			}
 		}
 		
