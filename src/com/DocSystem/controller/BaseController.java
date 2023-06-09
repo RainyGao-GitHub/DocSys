@@ -5126,12 +5126,12 @@ public class BaseController  extends BaseFunction{
 		if(repos.getIsRemote() == 1)
 		{
 			//Sync Up local VerRepos with remote VerRepos
-			Log.info("syncupForDocChange() 同步远程版本仓库");
+			Log.info("syncUpLocalWithVerRepos() 同步远程版本仓库");
 			verReposPullPush(repos, true, null);
 		}
 			
 		//文件管理系统
-		Log.info("syncupForDocChange() 同步版本管理");
+		Log.info("syncUpLocalWithVerRepos() 同步版本管理");
 		ScanOption scanOption = new ScanOption();
 		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange, remoteNotChecked
 		scanOption.scanTime = new Date().getTime();
@@ -5149,13 +5149,13 @@ public class BaseController  extends BaseFunction{
 	{
 		if(repos.autoSyncupConfig == null)
 		{
-			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " autoSyncupConfig is null");
+			Log.info("syncUpLocalWithRemoteStorage() repos:" + repos.getName() + " autoSyncupConfig is null");
 			return;
 		}
 		
 		if(repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == null || repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == 0)
 		{
-			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " remoteStorageSyncup was disabled");
+			Log.info("syncUpLocalWithRemoteStorage() repos:" + repos.getName() + " remoteStorageSyncup was disabled");
 			return;
 		}
 		
@@ -5169,18 +5169,18 @@ public class BaseController  extends BaseFunction{
 		        {	
 					DocLock docLock = null;
 					int lockType = DocLock.LOCK_TYPE_FORCE;
-					String lockInfo = "syncupForDocChange() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
+					String lockInfo = "syncUpLocalWithRemoteStorage() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 			    	docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, lockInfo, EVENT.syncUpLocalWithRemoteStorage);	//lock 2 Hours 2*60*60*1000
 					
 					if(docLock == null)
 					{
-						docSysDebugLog("remoteStoragePush() Failed to lock Doc: " + doc.getDocId(), rt);
+						docSysDebugLog("syncUpLocalWithRemoteStorage() Failed to lock Doc: " + doc.getDocId(), rt);
 					}
 					else
 					{
 						if(remoteStoragePushEnable && remote.autoPush != null && remote.autoPush == 1)
 						{
-							Log.info("syncupForDocChange() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
+							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
 							int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged_SkipDelete;
 							if(remote.autoPushForce == 1)
 							{
@@ -5191,7 +5191,7 @@ public class BaseController  extends BaseFunction{
 						
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
-							Log.info("syncupForDocChange() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
+							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
 							int pullType = constants.PullType.pullRemoteAddAndLocalNochange; //remoteAdded and localNotChanged
 							if(remote.autoPullForce == 1)
 							{
