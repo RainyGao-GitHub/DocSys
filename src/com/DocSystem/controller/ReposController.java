@@ -149,7 +149,9 @@ public class ReposController extends BaseController{
 		{
 			return;
 		}
-				
+		
+		//Log.printObject("repos:", repos);
+		
 		//获取磁盘空间
 		String localRootPath = Path.getReposRealPath(repos);
 		File file = new File(localRootPath);

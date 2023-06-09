@@ -303,6 +303,8 @@ var ReposConfig = (function () {
 	/******* 自动同步 *************/
 	function showAutoSyncupConfig(reposInfo)
 	{
+		console.log("showAutoSyncupConfig autoSyncupConfig:", reposInfo.autoSyncupConfig);
+		
 		if(reposInfo.autoSyncupConfig == undefined)
 	   	{
 			$("#autoSyncupConfigDiv").hide();
@@ -333,7 +335,7 @@ var ReposConfig = (function () {
 
 	function showVerReposSyncupConfig(verReposSyncupConfig)
 	{
-		if(verReposSyncupConfig == undefined || verReposSyncupConfig.autoSyncupEn == 0)
+		if(verReposSyncupConfig == undefined || verReposSyncupConfig.autoSyncupEn == undefined || verReposSyncupConfig.autoSyncupEn == 0)
 	   	{
 	   		$("#verReposSyncupEnable").attr("checked",false);
 			return;
@@ -344,7 +346,7 @@ var ReposConfig = (function () {
 
 	function showRemoteStorageSyncupConfig(remoteStorageSyncupConfig)
 	{
-		if(remoteStorageSyncupConfig == undefined || remoteStorageSyncupConfig.autoSyncupEn == 0)
+		if(remoteStorageSyncupConfig == undefined || remoteStorageSyncupConfig.autoSyncupEn == undefined || remoteStorageSyncupConfig.autoSyncupEn == 0)
 	   	{
 	   		$("#remoteStorageSyncupEnable").attr("checked",false);
 			return;

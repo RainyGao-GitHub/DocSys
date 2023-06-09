@@ -3443,6 +3443,7 @@ public class BaseFunction{
 		
 		ReposSyncupConfig config = parseAutoSyncupConfig(repos, autoSyncup);
 		repos.autoSyncupConfig = config;
+		Log.printObject("initReposAutoSyncupConfigEx repos.autoSyncupConfig:", repos.autoSyncupConfig);
 		
 		if(config == null)
 		{
