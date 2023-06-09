@@ -312,19 +312,18 @@ var ReposConfig = (function () {
 		}
 		else
 		{	
-			if(reposInfo.autoSyncupConfig.verReposSyncupConfig == undefined && 
-				reposInfo.autoSyncupConfig.remoteStorageSyncupConfig == undefined)
+			if((reposInfo.autoSyncupConfig.verReposSyncupConfig && reposInfo.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn)
+				|| (reposInfo.autoSyncupConfig.remoteStorageSyncupConfig && reposInfo.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn))
 			{
-				$("#autoSyncupConfigDiv").hide();
-		   		$("#autoSyncupEnable").attr("checked",false);
-			}
-			else
-			{				
 				$("#autoSyncupConfigDiv").show();
-				$("#autoSyncupEnable").attr("checked", "checked");
-				
+				$("#autoSyncupEnable").attr("checked", "checked");				
 				showVerReposSyncupConfig(reposInfo.autoSyncupConfig.verReposSyncupConfig);
 				showRemoteStorageSyncupConfig(reposInfo.autoSyncupConfig.remoteStorageSyncupConfig);
+			}
+			else
+			{	
+				$("#autoSyncupConfigDiv").hide();
+		   		$("#autoSyncupEnable").attr("checked",false);
 			}
 		}
 		
