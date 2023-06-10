@@ -5189,6 +5189,7 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
+		Log.info("syncUpLocalWithRemoteStorage() 同步远程存储");
 		if(remoteStorageEnable && (remoteStoragePullEnable || remoteStoragePushEnable))
 		{
 			//远程存储自动拉取/推送
