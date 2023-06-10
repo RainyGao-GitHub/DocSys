@@ -4977,6 +4977,18 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
+		//普通同步需要检查是否开启了自动同步
+		if(repos.autoSyncupConfig == null)
+		{
+			Log.info("syncUpDocSearchIndex() repos:" + repos.getName() + " autoSyncupConfig is null");
+			return;
+		}
+		
+		if(repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == null || repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == 0)
+		{
+			Log.info("syncUpDocSearchIndex() repos:" + repos.getName() + " searchIndexSyncupConfig was disabled");
+			return;
+		}
 		
 		//基于文件名的IndexLib进行扫描并更新
 		refreshSearchIndexForDoc(repos, doc, subDocSyncupFlag, rt);
