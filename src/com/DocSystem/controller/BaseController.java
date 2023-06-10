@@ -4984,7 +4984,9 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		if(repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == null || repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == 0)
+		if(repos.autoSyncupConfig.searchIndexSyncupConfig == null 
+				|| repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == null
+				|| repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == 0)
 		{
 			Log.info("syncUpDocSearchIndex() repos:" + repos.getName() + " searchIndexSyncupConfig was disabled");
 			return;
@@ -5141,7 +5143,9 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		if(repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == null || repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == 0)
+		if(repos.autoSyncupConfig.verReposSyncupConfig == null 
+				|| repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == null 
+				|| repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == 0)
 		{
 			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " verReposSyncup was disabled");
 			return;
@@ -5177,7 +5181,9 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		if(repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == null || repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == 0)
+		if(repos.autoSyncupConfig.remoteStorageSyncupConfig == null 
+				|| repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == null
+				|| repos.autoSyncupConfig.remoteStorageSyncupConfig.autoSyncupEn == 0)
 		{
 			Log.info("syncUpLocalWithRemoteStorage() repos:" + repos.getName() + " remoteStorageSyncup was disabled");
 			return;
