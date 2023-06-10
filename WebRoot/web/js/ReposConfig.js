@@ -1509,12 +1509,13 @@ var ReposConfig = (function () {
 		console.log("getAutoSyncupConfig autoSyncupEnable:" + autoSyncupEnable);
 		if(autoSyncupEnable == 0)
 		{
-			return "{verReposSyncup:{},remoteStorageSyncup:{}}";
+			return "{verReposSyncupConfig:{},remoteStorageSyncupConfig:{},searchIndexSyncupConfig:{}}";
 		}
 		
 		var verReposSyncupConfig = getVerReposSyncupConfig();
 		var remoteStorageSyncupConfig = getRemoteStorageSyncupConfig();
-		return "{verReposSyncup:" + verReposSyncupConfig + ",remoteStorageSyncup:" + remoteStorageSyncupConfig + "}";
+		var searchIndexSyncupConfig = getSearchIndexSyncupConfig();
+		return "{verReposSyncupConfig:" + verReposSyncupConfig + ",remoteStorageSyncupConfig:" + remoteStorageSyncupConfig + ",searchIndexSyncupConfig:" + searchIndexSyncupConfig + "}";
 	}
 
 	function getVerReposSyncupConfig()
