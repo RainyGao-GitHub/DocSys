@@ -12,4 +12,5 @@ public class ReposSyncupConfig  implements Serializable {
 	public AutoTaskConfig autoTaskConfig;	//TODO: 自动同步时间配置
 	public VerReposSyncupConfig verReposSyncupConfig;
 	public RemoteStorageSyncupConfig remoteStorageSyncupConfig;	
+	public SearchIndexSyncupConfig searchIndexSyncupConfig;	
 }

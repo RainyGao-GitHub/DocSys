@@ -83,6 +83,7 @@ import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.ReposSyncupConfig;
+import com.DocSystem.common.entity.SearchIndexSyncupConfig;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.LongTermTask;
@@ -2379,25 +2380,33 @@ public class BaseFunction{
 			Log.printObject("parseAutoSyncupConfig() ", jsonObj);
 			
 			VerReposSyncupConfig verReposSyncupConfig = null;
-			JSONObject verReposSyncupObj = jsonObj.getJSONObject("verReposSyncup");
+			JSONObject verReposSyncupObj = jsonObj.getJSONObject("verReposSyncupConfig");
 			if(verReposSyncupObj != null)
 			{
 				Log.printObject("parseAutoSyncupConfig() verReposSyncupObj:", verReposSyncupObj);
 				verReposSyncupConfig = getVerReposSyncupConfig(repos, verReposSyncupObj);
 			}
 			
-			
 			RemoteStorageSyncupConfig remoteStorageSyncupConfig = null;
-			JSONObject remoteStorageSyncupObj = jsonObj.getJSONObject("remoteStorageSyncup");
+			JSONObject remoteStorageSyncupObj = jsonObj.getJSONObject("remoteStorageSyncupConfig");
 			if(remoteStorageSyncupObj != null)
 			{
 				Log.printObject("parseAutoSyncupConfig() remoteStorageSyncupObj:", remoteStorageSyncupObj);
 				remoteStorageSyncupConfig = getRemoteStorageSyncupConfig(repos, remoteStorageSyncupObj);
 			}
 			
+			SearchIndexSyncupConfig searchIndexSyncupConfig = null;
+			JSONObject searchIndexSyncupObj = jsonObj.getJSONObject("searchIndexSyncupConfig");
+			if(searchIndexSyncupObj != null)
+			{
+				Log.printObject("parseAutoSyncupConfig() searchIndexSyncupObj:", searchIndexSyncupObj);
+				searchIndexSyncupConfig = getSearchIndexSyncupConfig(repos, searchIndexSyncupObj);
+			}
+			
 			ReposSyncupConfig syncupConfig = new ReposSyncupConfig();
 			syncupConfig.verReposSyncupConfig = verReposSyncupConfig;
 			syncupConfig.remoteStorageSyncupConfig = remoteStorageSyncupConfig;
+			syncupConfig.searchIndexSyncupConfig = searchIndexSyncupConfig;			
 			return syncupConfig;				
 		}
 		catch(Exception e) {
@@ -2415,6 +2424,12 @@ public class BaseFunction{
 	private static RemoteStorageSyncupConfig getRemoteStorageSyncupConfig(Repos repos, JSONObject remoteStorageSyncupObj) {
 		RemoteStorageSyncupConfig config = new RemoteStorageSyncupConfig();
 		config.autoSyncupEn = remoteStorageSyncupObj.getInteger("autoSyncupEn");
+		return config;
+	}
+
+	private static SearchIndexSyncupConfig getSearchIndexSyncupConfig(Repos repos, JSONObject searchIndexSyncupObj) {
+		SearchIndexSyncupConfig config = new SearchIndexSyncupConfig();
+		config.autoSyncupEn = searchIndexSyncupObj.getInteger("autoSyncupEn");
 		return config;
 	}
 	
