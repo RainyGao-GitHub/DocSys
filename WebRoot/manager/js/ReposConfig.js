@@ -1546,6 +1546,20 @@ var ReposConfig = (function () {
 		return config;
 	}
 	
+	function getSearchIndexSyncupConfig()
+	{
+		var searchIndexSyncupEnable = MyJquery.isChecked("searchIndexSyncupEnable");
+		console.log("getSearchIndexSyncupConfig searchIndexSyncupEnable:" + searchIndexSyncupEnable);
+		if(searchIndexSyncupEnable == 0)
+		{
+			return "{}";
+		}
+
+		var config = "{autoSyncupEn:" + searchIndexSyncupEnable + "}";
+			
+		return config;
+	}
+	
 	function getAutoBackupConfig()
 	{   
 		var autoBackupEnable = MyJquery.isChecked("autoBackupEnable");
