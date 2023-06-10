@@ -4943,6 +4943,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void syncUpDocSearchIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, boolean force, ReturnAjax rt) {
+		Log.info("syncUpDocSearchIndex() 同步文件搜索");
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == null)
 		{
@@ -5137,6 +5138,7 @@ public class BaseController  extends BaseFunction{
 	private void syncUpLocalWithVerRepos(Repos repos, Doc doc, User login_user, CommonAction action, Integer subDocSyncupFlag,
 			ReturnAjax rt) 
 	{	
+		Log.info("syncUpLocalWithVerRepos() 同步版本管理");
 		if(repos.autoSyncupConfig == null)
 		{
 			Log.info("syncUpLocalWithVerRepos() repos:" + repos.getName() + " autoSyncupConfig is null");
@@ -5159,7 +5161,6 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		//文件管理系统
-		Log.info("syncUpLocalWithVerRepos() 同步版本管理");
 		ScanOption scanOption = new ScanOption();
 		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange, remoteNotChecked
 		scanOption.scanTime = new Date().getTime();
@@ -5175,6 +5176,8 @@ public class BaseController  extends BaseFunction{
 			boolean remoteStorageEnable, boolean remoteStoragePullEnable, boolean remoteStoragePushEnable,  
 			ReturnAjax rt) 
 	{
+		Log.info("syncUpLocalWithRemoteStorage() 同步远程存储");
+
 		if(repos.autoSyncupConfig == null)
 		{
 			Log.info("syncUpLocalWithRemoteStorage() repos:" + repos.getName() + " autoSyncupConfig is null");
@@ -5189,7 +5192,6 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		Log.info("syncUpLocalWithRemoteStorage() 同步远程存储");
 		if(remoteStorageEnable && (remoteStoragePullEnable || remoteStoragePushEnable))
 		{
 			//远程存储自动拉取/推送
