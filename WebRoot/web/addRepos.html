@@ -159,7 +159,7 @@
 			<div id="autoSyncupEnablelDiv" style="margin-top:10px">
 	            <label>自动同步 
 	            	<span style="margin-left:5px">
-	            		<input type="checkbox" id="autoSyncupEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupConfigEanble()">
+	            		<input type="checkbox" id="autoSyncupEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupConfigEnable()">
 	            	</span>
 	            </label>
 			</div>
@@ -185,12 +185,62 @@
 	            		<input type="checkbox" id="searchIndexSyncupEnable" value="0">
 	            	</span>
 	            </label>
+	            
+	            <br>
+	            <label style="margin-top:10px">高级选项
+            		<span style="margin-left:5px">
+            			<input type="checkbox" id="auotSyncupExtConfigEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupExtConfigEnable()">
+            		</span>
+            	</label>
+            	<div id="auotSyncupExtConfig" style="margin-top:5px; display:none">
+					<div style="height:60px;">
+						<span>同步时间</span>
+						<select class="form-control" id="localBackupTime" style="width:100%">   
+					        <option value="0">0:00</option>   
+					        <option value="60">1:00</option>   
+					        <option value="120">2:00</option>   
+					        <option value="180">3:00</option>  
+					        <option value="240">4:00</option>  
+					        <option value="300">5:00</option>  
+					        <option value="360">6:00</option>  
+					        <option value="420">7:00</option>  
+					        <option value="480">8:00</option>  
+					        <option value="540">9:00</option>  
+					        <option value="600">10:00</option>
+					        <option value="660">11:00</option>
+					        <option value="720">12:00</option>
+					        <option value="780">13:00</option>
+					        <option value="840">14:00</option>
+					        <option value="900">15:00</option>
+					        <option value="960">16:00</option>
+					        <option value="1020">17:00</option>
+					        <option value="1080">18:00</option>
+					        <option value="1140">19:00</option>
+					        <option value="1200">20:00</option>
+					        <option value="1260">21:00</option>
+					        <option value="1320">22:00</option>
+					        <option value="1380">23:00</option>
+					    </select>
+					</div>
+					<div style="height:60px;">
+						<span style="margin-top:5px">同步周期</span>
+						<span><input type="checkbox" id="localBackupWeekDay1" value="0">周一</span>
+						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay2" value="0">周二</span>
+						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay3" value="0">周三</span>
+						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay4" value="0">周四</span>
+						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay5" value="0">周五</span>
+						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay6" value="0">周六</span>
+						<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay7" value="0">周日</span>
+					</div>  
+					
+					<div></div>
+				</div>
 			</div>
 			
 			<div id="autoBackupEnablelDiv" style="margin-top:10px">
 	            <label>自动备份 
 	            	<span style="margin-left:5px">
-	            		<input type="checkbox" id="autoBackupEnable" value="0" onclick="ReposConfig.doSelectAutoBackupConfigEanble()">
+	            		<input type="checkbox" id="autoBackupEnable" value="0" onclick="ReposConfig.doSelectAutoBackupConfigEnable()">
 	            	</span>
 	            </label>
 			</div>

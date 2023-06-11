@@ -1408,10 +1408,10 @@ var ReposConfig = (function () {
 	}	
 	
 	/********* 自动同步设置 *****************/
-	function doSelectAutoSyncupConfigEanble()
+	function doSelectAutoSyncupConfigEnable()
 	{
 		var autoSyncupEnable = MyJquery.isChecked("autoSyncupEnable");
-		console.log("doSelectAutoSyncupConfigEanble autoSyncupEnable:" + autoSyncupEnable);
+		console.log("doSelectAutoSyncupConfigEnable autoSyncupEnable:" + autoSyncupEnable);
 		if(autoSyncupEnable == 0)
 		{
 			MyJquery.hide("autoSyncupConfigDiv");
@@ -1422,11 +1422,25 @@ var ReposConfig = (function () {
 		}		
 	}
 	
+	function doSelectAutoSyncupExtConfigEnable()
+	{
+		var autoSyncupExtConfigEnable = MyJquery.isChecked("autoSyncupExtConfigEnable");
+		console.log("doSelectAutoSyncupExtConfigEnable autoSyncupExtConfigEnable:" + autoSyncupExtConfigEnable);
+		if(autoSyncupExtConfigEnable == 0)
+		{
+			MyJquery.hide("autoSyncupExtConfig");
+		}
+		else
+		{	
+			MyJquery.show("autoSyncupExtConfig");
+		}
+	}
+	
 	/********* 自动备份设置 *****************/
-	function doSelectAutoBackupConfigEanble()
+	function doSelectAutoBackupConfigEnable()
 	{
 		var autoBackupEnable = MyJquery.isChecked("autoBackupEnable");
-		console.log("doSelectAutoBackupConfigEanble autoBackupEnable:" + autoBackupEnable);
+		console.log("doSelectAutoBackupConfigEnable autoBackupEnable:" + autoBackupEnable);
 		if(autoBackupEnable == 0)
 		{
 			MyJquery.hide("autoBackupConfigDiv");
@@ -1879,11 +1893,14 @@ var ReposConfig = (function () {
 	    doSetEncryptConfirm: function(){
 	    	doSetEncryptConfirm();
 	    },    
-	    doSelectAutoSyncupConfigEanble: function(){
-	    	doSelectAutoSyncupConfigEanble();
+	    doSelectAutoSyncupConfigEnable: function(){
+	    	doSelectAutoSyncupConfigEnable();
 	    },
-	    doSelectAutoBackupConfigEanble: function(){
-	    	doSelectAutoBackupConfigEanble();
+	    doSelectAutoSyncupExtConfigEnable: function(){
+	    	doSelectAutoSyncupExtConfigEnable();
+	    },
+	    doSelectAutoBackupConfigEnable: function(){
+	    	doSelectAutoBackupConfigEnable();
 	    },    
 	    doSelectLocalBackupEnable: function(){
 	    	doSelectLocalBackupEnable();
