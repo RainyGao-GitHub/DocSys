@@ -13610,7 +13610,7 @@ public class BaseController  extends BaseFunction{
 		//每天凌晨2:00同步
 		AutoTaskConfig autoTaskConfig = new AutoTaskConfig();
 		
-		autoTaskConfig.backupTime = 120; //2:00
+		autoTaskConfig.executeTime = 120; //2:00
 		
 		autoTaskConfig.weekDay1 = 1;
 		autoTaskConfig.weekDay2 = 1;
@@ -13819,7 +13819,7 @@ public class BaseController  extends BaseFunction{
 		
 	private AutoTaskConfig getAutoTaskConfigFromBackupConfig(BackupConfig backupConfig) {
 		AutoTaskConfig config = new AutoTaskConfig();
-		config.backupTime = backupConfig.backupTime;
+		config.executeTime = backupConfig.backupTime;
 		config.weekDay1 = backupConfig.weekDay1;
 		config.weekDay2 = backupConfig.weekDay2;
 		config.weekDay3 = backupConfig.weekDay3;
@@ -14186,7 +14186,7 @@ public class BaseController  extends BaseFunction{
 	{
 		//每天凌晨1:40备份
 		AutoTaskConfig backupConfig = new AutoTaskConfig();
-		backupConfig.backupTime = 60; //1:00
+		backupConfig.executeTime = 60; //1:00
 		backupConfig.weekDay1 = 1;
 		backupConfig.weekDay2 = 1;
 		backupConfig.weekDay3 = 1;
@@ -14214,9 +14214,9 @@ public class BaseController  extends BaseFunction{
 		int curWeekDay = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 		int curMinuteOfDay = curHour*60 + curMinute;		
 		Log.debug("getDelayTimeForNextBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
-				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + autoTaskConfig.backupTime);
+				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + autoTaskConfig.executeTime);
 		
-		Long delayTime  = getNextAutoTaskDelayTime(curWeekDay, curMinuteOfDay, offsetMinute, autoTaskConfig.backupTime, weekDayBackupEnTab);
+		Long delayTime  = getNextAutoTaskDelayTime(curWeekDay, curMinuteOfDay, offsetMinute, autoTaskConfig.executeTime, weekDayBackupEnTab);
 		return delayTime;
 	}
 	

@@ -1529,7 +1529,12 @@ var ReposConfig = (function () {
 		var verReposSyncupConfig = getVerReposSyncupConfig();
 		var remoteStorageSyncupConfig = getRemoteStorageSyncupConfig();
 		var searchIndexSyncupConfig = getSearchIndexSyncupConfig();
-		return "{verReposSyncupConfig:" + verReposSyncupConfig + ",remoteStorageSyncupConfig:" + remoteStorageSyncupConfig + ",searchIndexSyncupConfig:" + searchIndexSyncupConfig + "}";
+		var autoTaskConfig = getAutoTaskConfig();
+		return "{verReposSyncupConfig:" + verReposSyncupConfig 
+				+ ",remoteStorageSyncupConfig:" + remoteStorageSyncupConfig 
+				+ ",searchIndexSyncupConfig:" + searchIndexSyncupConfig 
+				+ ",autoTaskConfig:" + autoTaskConfig
+				+ "}";
 	}
 
 	function getVerReposSyncupConfig()
@@ -1572,6 +1577,39 @@ var ReposConfig = (function () {
 		var config = "{autoSyncupEn:" + searchIndexSyncupEnable + "}";
 			
 		return config;
+	}
+	
+	function getAutoTaskConfig()
+	{
+		var autoSyncupExtConfigEnable = MyJquery.isChecked("autoSyncupExtConfigEnable");
+		console.log("getAutoTaskConfig autoSyncupExtConfigEnable:" + autoSyncupExtConfigEnable);
+		if(autoSyncupExtConfigEnable == 0)
+		{
+			return "{}";
+		}
+		
+		var executeTime = MyJquery.getValue("autoSyncupTime");
+	    var weekDay1 = MyJquery.isChecked("autoSyncupWeekDay1");
+	    var weekDay2 = MyJquery.isChecked("autoSyncupWeekDay2");
+	    var weekDay3 = MyJquery.isChecked("autoSyncupWeekDay3");
+	    var weekDay4 = MyJquery.isChecked("autoSyncupWeekDay4");
+	    var weekDay5 = MyJquery.isChecked("autoSyncupWeekDay5");
+	    var weekDay6 = MyJquery.isChecked("autoSyncupWeekDay6");
+	    var weekDay7 = MyJquery.isChecked("autoSyncupWeekDay7");
+
+	    var config = 
+		"{" +
+			"executeTime:" + executeTime + "," +
+			"weekDay1:" + weekDay1 +"," + 
+			"weekDay2:" + weekDay2 +"," + 
+			"weekDay3:" + weekDay3 +"," + 
+			"weekDay4:" + weekDay4 +"," + 
+			"weekDay5:" + weekDay5 +"," + 
+			"weekDay6:" + weekDay6 +"," + 
+			"weekDay7:" + weekDay7 +"," + 
+		"}";
+		
+	    return config;
 	}
 	
 	function getAutoBackupConfig()

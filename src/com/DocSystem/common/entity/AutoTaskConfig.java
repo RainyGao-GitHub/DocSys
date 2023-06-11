@@ -7,7 +7,7 @@ public class AutoTaskConfig implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -1763519620666924909L;
-	public Integer backupTime;
+	public Integer executeTime;
 	public Integer weekDay1;
 	public Integer weekDay2;
 	public Integer weekDay3;
