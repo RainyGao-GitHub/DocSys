@@ -803,7 +803,7 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		
 		Doc tmpDoc = docSysGetDoc(repos, srcDoc, false);
-		if(srcDoc == null || srcDoc.getType() == 0)
+		if(tmpDoc == null || tmpDoc.getType() == null ||tmpDoc.getType() == 0)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);
