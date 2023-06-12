@@ -400,8 +400,6 @@ public class ReposController extends BaseController{
 			if(repos.autoSyncupConfig != null)
 			{
 				addDelayTaskForReposSyncUp(repos, 10, 600L); //10分钟后自动同步
-				//TODO: autoSyncup的同步时间参考自动备份
-				//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
 			}
 		}
 		
@@ -1035,8 +1033,6 @@ public class ReposController extends BaseController{
 			if(reposInfo.autoSyncupConfig != null && oldAutoSyncupConfig == null)
 			{
 				addDelayTaskForReposSyncUp(reposInfo, 10, 600L); //10分钟后自动同步
-				//TODO: autoSyncup的同步时间参考自动备份
-				//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
 			}
 		}
 		

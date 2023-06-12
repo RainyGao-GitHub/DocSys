@@ -63,6 +63,7 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.channels.Channel;
 import com.DocSystem.common.constants.LICENSE_RESULT;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.AutoTaskConfig;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
@@ -2403,10 +2404,19 @@ public class BaseFunction{
 				searchIndexSyncupConfig = getSearchIndexSyncupConfig(repos, searchIndexSyncupObj);
 			}
 			
+			AutoTaskConfig autoTaskConfig = null;
+			JSONObject autoTaskConfigObj = jsonObj.getJSONObject("autoTaskConfig");
+			if(autoTaskConfigObj != null)
+			{
+				Log.printObject("parseAutoSyncupConfig() autoTaskConfigObj:", autoTaskConfigObj);
+				autoTaskConfig = getAutoTaskConfig(repos, autoTaskConfigObj);
+			}
+			
 			ReposSyncupConfig syncupConfig = new ReposSyncupConfig();
 			syncupConfig.verReposSyncupConfig = verReposSyncupConfig;
 			syncupConfig.remoteStorageSyncupConfig = remoteStorageSyncupConfig;
-			syncupConfig.searchIndexSyncupConfig = searchIndexSyncupConfig;			
+			syncupConfig.searchIndexSyncupConfig = searchIndexSyncupConfig;	
+			syncupConfig.autoTaskConfig = autoTaskConfig;
 			return syncupConfig;				
 		}
 		catch(Exception e) {
@@ -2414,6 +2424,20 @@ public class BaseFunction{
 			return null;
 		}
 	}	
+
+	private static AutoTaskConfig getAutoTaskConfig(Repos repos, JSONObject autoTaskConfigObj) {
+		AutoTaskConfig config = new AutoTaskConfig();
+		config.executeTime = autoTaskConfigObj.getInteger("executeTime");
+		config.weekDay1 = autoTaskConfigObj.getInteger("weekDay1");
+		config.weekDay2 = autoTaskConfigObj.getInteger("weekDay1");
+		config.weekDay3 = autoTaskConfigObj.getInteger("weekDay1");
+		config.weekDay4 = autoTaskConfigObj.getInteger("weekDay1");
+		config.weekDay5 = autoTaskConfigObj.getInteger("weekDay1");
+		config.weekDay6 = autoTaskConfigObj.getInteger("weekDay1");
+		config.weekDay7 = autoTaskConfigObj.getInteger("weekDay1");
+
+		return config;
+	}
 
 	private static VerReposSyncupConfig getVerReposSyncupConfig(Repos repos, JSONObject verReposSyncupObj) {
 		VerReposSyncupConfig config = new VerReposSyncupConfig();

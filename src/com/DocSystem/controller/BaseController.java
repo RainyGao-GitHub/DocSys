@@ -12962,8 +12962,6 @@ public class BaseController  extends BaseFunction{
 		if(repos.autoSyncupConfig != null)
 		{
 			addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
-			//TODO: autoSyncup的同步时间参考自动备份
-			//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
 		}
 		
 		//启动定时备份任务
@@ -13113,8 +13111,6 @@ public class BaseController  extends BaseFunction{
 				if(repos.autoSyncupConfig != null)
 				{
 					addDelayTaskForReposSyncUp(repos, 10, 9800L);	//3小时后开始仓库同步
-					//TODO: autoSyncup的同步时间参考自动备份
-					//addDelayTaskForLocalBackup(repos, repos.autoBackupConfig.localBackupConfig, 10, null, true); //3600L); //1小时后开始备份
 				}
 				
 				/*** Init Repos related Async Tasks End ***/
@@ -13455,7 +13451,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected void addDelayTaskForReposSyncUp(Repos repos, int offsetMinute, Long forceStartDelay) {
-		Long delayTime = getDelayTimeForNextReposSyncupTask(offsetMinute);
+		Long delayTime = getDelayTimeForNextReposSyncupTask(repos, offsetMinute);
 		if(delayTime == null)
 		{
 			Log.info("addDelayTaskForReposSyncUp delayTime is null");			
@@ -13606,19 +13602,22 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private Long getDelayTimeForNextReposSyncupTask(int offsetMinute) {
+	private Long getDelayTimeForNextReposSyncupTask(Repos repos, int offsetMinute) {
 		//每天凌晨2:00同步
-		AutoTaskConfig autoTaskConfig = new AutoTaskConfig();
+		AutoTaskConfig autoTaskConfig = repos.autoSyncupConfig.autoTaskConfig;
 		
-		autoTaskConfig.executeTime = 120; //2:00
-		
-		autoTaskConfig.weekDay1 = 1;
-		autoTaskConfig.weekDay2 = 1;
-		autoTaskConfig.weekDay3 = 1;
-		autoTaskConfig.weekDay4 = 1;
-		autoTaskConfig.weekDay5 = 1;
-		autoTaskConfig.weekDay6 = 1;
-		autoTaskConfig.weekDay7 = 1;
+		if(autoTaskConfig == null)
+		{
+			autoTaskConfig = new AutoTaskConfig();		
+			autoTaskConfig.executeTime = 120; //2:00		
+			autoTaskConfig.weekDay1 = 1;
+			autoTaskConfig.weekDay2 = 1;
+			autoTaskConfig.weekDay3 = 1;
+			autoTaskConfig.weekDay4 = 1;
+			autoTaskConfig.weekDay5 = 1;
+			autoTaskConfig.weekDay6 = 1;
+			autoTaskConfig.weekDay7 = 1;
+		}
 		return getDelayTimeForNextAutoTask(autoTaskConfig, offsetMinute);
 	}
 
