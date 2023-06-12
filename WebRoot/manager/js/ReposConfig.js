@@ -385,7 +385,7 @@ var ReposConfig = (function () {
 			$("#autoSyncupTime option[value='" + autoTaskConfig.executeTime + "']").attr("selected","selected");	
 		}
 		
-		if(autoSyncupConfig.weekDay1 == undefined || autoSyncupConfig.weekDay1 == 0)
+		if(autoTaskConfig.weekDay1 == undefined || autoTaskConfig.weekDay1 == 0)
 		{	
 			$("#autoSyncupWeekDay1").attr("checked", false);
 		}
@@ -394,7 +394,7 @@ var ReposConfig = (function () {
 			$("#autoSyncupWeekDay1").attr("checked", "checked");		
 		}
 		
-		if(autoSyncupConfig.weekDay2 == undefined || autoSyncupConfig.weekDay2 == 0)
+		if(autoTaskConfig.weekDay2 == undefined || autoTaskConfig.weekDay2 == 0)
 		{	
 			$("#autoSyncupWeekDay2").attr("checked", false);
 		}
@@ -403,7 +403,7 @@ var ReposConfig = (function () {
 			$("#autoSyncupWeekDay2").attr("checked", "checked");		
 		}
 		
-		if(autoSyncupConfig.weekDay3 == undefined || autoSyncupConfig.weekDay3 == 0)
+		if(autoTaskConfig.weekDay3 == undefined || autoTaskConfig.weekDay3 == 0)
 		{	
 			$("#autoSyncupWeekDay3").attr("checked", false);
 		}
@@ -412,7 +412,7 @@ var ReposConfig = (function () {
 			$("#autoSyncupWeekDay3").attr("checked", "checked");		
 		}
 		
-		if(autoSyncupConfig.weekDay4 == undefined || autoSyncupConfig.weekDay4 == 0)
+		if(autoTaskConfig.weekDay4 == undefined || autoTaskConfig.weekDay4 == 0)
 		{	
 			$("#autoSyncupWeekDay4").attr("checked", false);
 		}
@@ -421,7 +421,7 @@ var ReposConfig = (function () {
 			$("#autoSyncupWeekDay4").attr("checked", "checked");		
 		}
 		
-		if(autoSyncupConfig.weekDay5 == undefined || autoSyncupConfig.weekDay5 == 0)
+		if(autoTaskConfig.weekDay5 == undefined || autoTaskConfig.weekDay5 == 0)
 		{	
 			$("#autoSyncupWeekDay5").attr("checked", false);
 		}
@@ -430,7 +430,7 @@ var ReposConfig = (function () {
 			$("#autoSyncupWeekDay5").attr("checked", "checked");		
 		}
 		
-		if(autoSyncupConfig.weekDay6 == undefined || autoSyncupConfig.weekDay6 == 0)
+		if(autoTaskConfig.weekDay6 == undefined || autoTaskConfig.weekDay6 == 0)
 		{	
 			$("#autoSyncupWeekDay6").attr("checked", false);
 		}
@@ -439,7 +439,7 @@ var ReposConfig = (function () {
 			$("#autoSyncupWeekDay6").attr("checked", "checked");		
 		}
 		
-		if(autoSyncupConfig.weekDay7 == undefined || autoSyncupConfig.weekDay7 == 0)
+		if(autoTaskConfig.weekDay7 == undefined || autoTaskConfig.weekDay7 == 0)
 		{	
 			$("#autoSyncupWeekDay7").attr("checked", false);
 		}

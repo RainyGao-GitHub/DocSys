@@ -2429,12 +2429,12 @@ public class BaseFunction{
 		AutoTaskConfig config = new AutoTaskConfig();
 		config.executeTime = autoTaskConfigObj.getInteger("executeTime");
 		config.weekDay1 = autoTaskConfigObj.getInteger("weekDay1");
-		config.weekDay2 = autoTaskConfigObj.getInteger("weekDay1");
-		config.weekDay3 = autoTaskConfigObj.getInteger("weekDay1");
-		config.weekDay4 = autoTaskConfigObj.getInteger("weekDay1");
-		config.weekDay5 = autoTaskConfigObj.getInteger("weekDay1");
-		config.weekDay6 = autoTaskConfigObj.getInteger("weekDay1");
-		config.weekDay7 = autoTaskConfigObj.getInteger("weekDay1");
+		config.weekDay2 = autoTaskConfigObj.getInteger("weekDay2");
+		config.weekDay3 = autoTaskConfigObj.getInteger("weekDay3");
+		config.weekDay4 = autoTaskConfigObj.getInteger("weekDay4");
+		config.weekDay5 = autoTaskConfigObj.getInteger("weekDay5");
+		config.weekDay6 = autoTaskConfigObj.getInteger("weekDay6");
+		config.weekDay7 = autoTaskConfigObj.getInteger("weekDay7");
 
 		return config;
 	}
