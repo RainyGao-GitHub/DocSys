@@ -321,6 +321,7 @@ var ReposConfig = (function () {
 				showVerReposSyncupConfig(reposInfo.autoSyncupConfig.verReposSyncupConfig);
 				showRemoteStorageSyncupConfig(reposInfo.autoSyncupConfig.remoteStorageSyncupConfig);
 				showSearchIndexSyncupConfig(reposInfo.autoSyncupConfig.searchIndexSyncupConfig);
+				showAutoTaskConfig(reposInfo.autoSyncupConfig.autoTaskConfig);
 			}
 			else
 			{	
@@ -365,6 +366,87 @@ var ReposConfig = (function () {
 	   	}
 		
 		$("#searchIndexSyncupEnable").attr("checked", "checked");	
+	}
+	
+	function showAutoTaskConfig(autoTaskConfig)
+	{
+		if(autoTaskConfig == undefined)
+	   	{
+			$("#autoSyncupExtConfig").hide();
+	   		$("#autoSyncupExtConfigEnable").attr("checked",false);
+			return;
+	   	}
+		
+		$("#autoSyncupExtConfig").show();
+		$("#autoSyncupExtConfigEnable").attr("checked", "checked");	
+		
+		if(autoTaskConfig.executeTime)
+		{
+			$("#autoSyncupTime option[value='" + autoTaskConfig.executeTime + "']").attr("selected","selected");	
+		}
+		
+		if(autoSyncupConfig.weekDay1 == undefined || autoSyncupConfig.weekDay1 == 0)
+		{	
+			$("#autoSyncupWeekDay1").attr("checked", false);
+		}
+		else
+		{
+			$("#autoSyncupWeekDay1").attr("checked", "checked");		
+		}
+		
+		if(autoSyncupConfig.weekDay2 == undefined || autoSyncupConfig.weekDay2 == 0)
+		{	
+			$("#autoSyncupWeekDay2").attr("checked", false);
+		}
+		else
+		{
+			$("#autoSyncupWeekDay2").attr("checked", "checked");		
+		}
+		
+		if(autoSyncupConfig.weekDay3 == undefined || autoSyncupConfig.weekDay3 == 0)
+		{	
+			$("#autoSyncupWeekDay3").attr("checked", false);
+		}
+		else
+		{
+			$("#autoSyncupWeekDay3").attr("checked", "checked");		
+		}
+		
+		if(autoSyncupConfig.weekDay4 == undefined || autoSyncupConfig.weekDay4 == 0)
+		{	
+			$("#autoSyncupWeekDay4").attr("checked", false);
+		}
+		else
+		{
+			$("#autoSyncupWeekDay4").attr("checked", "checked");		
+		}
+		
+		if(autoSyncupConfig.weekDay5 == undefined || autoSyncupConfig.weekDay5 == 0)
+		{	
+			$("#autoSyncupWeekDay5").attr("checked", false);
+		}
+		else
+		{
+			$("#autoSyncupWeekDay5").attr("checked", "checked");		
+		}
+		
+		if(autoSyncupConfig.weekDay6 == undefined || autoSyncupConfig.weekDay6 == 0)
+		{	
+			$("#autoSyncupWeekDay6").attr("checked", false);
+		}
+		else
+		{
+			$("#autoSyncupWeekDay6").attr("checked", "checked");		
+		}
+		
+		if(autoSyncupConfig.weekDay7 == undefined || autoSyncupConfig.weekDay7 == 0)
+		{	
+			$("#autoSyncupWeekDay7").attr("checked", false);
+		}
+		else
+		{
+			$("#autoSyncupWeekDay7").attr("checked", "checked");		
+		}
 	}
 
 	/******* 自动备份 *************/
@@ -1529,7 +1611,12 @@ var ReposConfig = (function () {
 		var verReposSyncupConfig = getVerReposSyncupConfig();
 		var remoteStorageSyncupConfig = getRemoteStorageSyncupConfig();
 		var searchIndexSyncupConfig = getSearchIndexSyncupConfig();
-		return "{verReposSyncupConfig:" + verReposSyncupConfig + ",remoteStorageSyncupConfig:" + remoteStorageSyncupConfig + ",searchIndexSyncupConfig:" + searchIndexSyncupConfig + "}";
+		var autoTaskConfig = getAutoTaskConfig();
+		return "{verReposSyncupConfig:" + verReposSyncupConfig 
+				+ ",remoteStorageSyncupConfig:" + remoteStorageSyncupConfig 
+				+ ",searchIndexSyncupConfig:" + searchIndexSyncupConfig 
+				+ ",autoTaskConfig:" + autoTaskConfig
+				+ "}";
 	}
 
 	function getVerReposSyncupConfig()
@@ -1572,6 +1659,39 @@ var ReposConfig = (function () {
 		var config = "{autoSyncupEn:" + searchIndexSyncupEnable + "}";
 			
 		return config;
+	}
+	
+	function getAutoTaskConfig()
+	{
+		var autoSyncupExtConfigEnable = MyJquery.isChecked("autoSyncupExtConfigEnable");
+		console.log("getAutoTaskConfig autoSyncupExtConfigEnable:" + autoSyncupExtConfigEnable);
+		if(autoSyncupExtConfigEnable == 0)
+		{
+			return "{}";
+		}
+		
+		var executeTime = MyJquery.getValue("autoSyncupTime");
+	    var weekDay1 = MyJquery.isChecked("autoSyncupWeekDay1");
+	    var weekDay2 = MyJquery.isChecked("autoSyncupWeekDay2");
+	    var weekDay3 = MyJquery.isChecked("autoSyncupWeekDay3");
+	    var weekDay4 = MyJquery.isChecked("autoSyncupWeekDay4");
+	    var weekDay5 = MyJquery.isChecked("autoSyncupWeekDay5");
+	    var weekDay6 = MyJquery.isChecked("autoSyncupWeekDay6");
+	    var weekDay7 = MyJquery.isChecked("autoSyncupWeekDay7");
+
+	    var config = 
+		"{" +
+			"executeTime:" + executeTime + "," +
+			"weekDay1:" + weekDay1 +"," + 
+			"weekDay2:" + weekDay2 +"," + 
+			"weekDay3:" + weekDay3 +"," + 
+			"weekDay4:" + weekDay4 +"," + 
+			"weekDay5:" + weekDay5 +"," + 
+			"weekDay6:" + weekDay6 +"," + 
+			"weekDay7:" + weekDay7 +"," + 
+		"}";
+		
+	    return config;
 	}
 	
 	function getAutoBackupConfig()
