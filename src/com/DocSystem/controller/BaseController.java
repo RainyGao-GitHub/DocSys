@@ -16967,6 +16967,43 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+	protected boolean extarctZipFile(String path, String name, String targetPath)
+	{
+		String compressFileType = FileUtil.getCompressFileType(name);
+		if(compressFileType == null)
+		{
+			Log.debug("extarctZipFile() " + name + " 不是压缩文件！");
+			return null;
+		}
+		
+		switch(compressFileType)
+		{
+		case "zip":
+		case "war":
+		case "7z":
+		case "rar":
+			return extractAllForCompressFile(path, name, targetPath);			
+		case "tar":
+			return extractAllForTar(path, name, targetPath);	
+		case "tgz":
+		case "tar.gz":
+			return extractAllForTgz(path, name, targetPath);			
+		case "txz":
+		case "tar.xz":
+			return extractAllForTxz(path, name, targetPath);			
+		case "tbz2":
+		case "tar.bz2":
+			return extractAllForTarBz2(path, name, targetPath);							
+		case "gz":
+			return extractAllForGz(path, name, targetPath);						
+		case "xz":
+			return extractAllForXz(path, name, targetPath);	
+		case "bz2":
+			return extractAllForBz2(path, name, targetPath);	
+		}
+		return false;
+	}
+	
 	protected List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) 
 	{
 		if(name != null && !name.equals(rootDoc.getName()))
@@ -17012,7 +17049,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	//使用SevenZip方式（支持多种格式）
+	//SevenZip
 	private List<Doc> getSubDocListForCompressFile(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		Log.debug("getSubDocListForCompressFile path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
 		String zipFilePath = rootDoc.getLocalRootPath() + rootDoc.getPath() + rootDoc.getName();
@@ -17067,6 +17104,126 @@ public class BaseController  extends BaseFunction{
         }
         
 		return subDocList;
+	}
+	
+	private boolean extractAllForCompressFile(String path, String name, String targetPath) {
+		Log.debug("extractForCompressFile path:" + path + " name:" + name);
+		String zipFilePath = path + name;
+		Log.debug("extractForCompressFile zipFilePath:" + zipFilePath);
+		
+        RandomAccessFile randomAccessFile = null;
+        IInArchive inArchive = null;
+        boolean ret = true;
+        try {
+            randomAccessFile = new RandomAccessFile(zipFilePath, "r");
+            inArchive = SevenZip.openInArchive(null, // autodetect archive type
+                    new RandomAccessFileInStream(randomAccessFile));
+
+            inArchive.extract(null, false, new MyExtractCallback(inArchive, "366", targetPath));
+        } catch (Exception e) {
+        	ret = false;
+            errorLog("extractAllForCompressFile() Error occurs");
+            errorLog(e);
+        } finally {
+            if (inArchive != null) {
+                try {
+                    inArchive.close();
+                } catch (SevenZipException e) {
+                    errorLog("extractAllForCompressFile() Error closing archive");
+                    errorLog(e);
+                }
+            }
+            if (randomAccessFile != null) {
+                try {
+                    randomAccessFile.close();
+                } catch (IOException e) {
+                    errorLog("extractAllForCompressFile() Error closing file");
+                    errorLog(e);
+                }
+            }
+        }
+        
+		return ret;
+	}
+
+	private boolean extractEntryFromCompressFile(Doc parentZipDoc, Doc zipDoc) {
+        boolean ret = false;
+		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		
+        File file = new File(parentZipFilePath);
+		if(file.exists() == false)
+		{
+			Log.debug("extractEntryFromCompressFile " + parentZipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			Log.debug("extractEntryFromCompressFile " + parentZipFilePath + " 是目录！");
+			return ret;
+		}
+		
+	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
+	    String expEntryPath = relativePath + zipDoc.getName();
+	    if(isWinOS())
+	    {
+	    	expEntryPath = expEntryPath.replace("/", "\\");
+	    }
+    	Log.debug("extractEntryFromCompressFile expEntryPath:" + expEntryPath);
+        
+        RandomAccessFile randomAccessFile = null;
+        IInArchive inArchive = null;
+        try {
+            randomAccessFile = new RandomAccessFile(parentZipFilePath, "r");
+            inArchive = SevenZip.openInArchive(null, // autodetect archive type
+                    new RandomAccessFileInStream(randomAccessFile));
+
+        	int[] in = new int[inArchive.getNumberOfItems()];
+	        for (int i = 0; i < inArchive.getNumberOfItems(); i++) {
+            	String subEntryPath = (String) inArchive.getProperty(i, PropID.PATH);
+            	Log.debug("extractEntryFromCompressFile subEntryPath:" + subEntryPath);
+            	if(subEntryPath.equals(expEntryPath))
+            	{
+                	Log.debug("extractEntryFromCompressFile expEntry found:" + subEntryPath);
+                    if (((Boolean) inArchive.getProperty(i, PropID.IS_FOLDER)).booleanValue()) {
+                		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
+                    }
+                	else
+                	{
+                    	File tmpFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+    					File parent = tmpFile.getParentFile();
+    					if (!parent.exists()) {
+     						parent.mkdirs();
+     					}
+                    	
+                    	//解压
+    				    in[0] = i;
+    				    String outputDir = zipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName() + "/";
+    				    Log.debug("extractEntryFromCompressFile outDir:" + outputDir);
+    		            inArchive.extract(in, false, new MyExtractCallback(inArchive, "366", outputDir));
+                	}
+                    ret = true;
+                    break;
+            	}
+            }
+        } catch (Exception e) {
+            System.err.println("extractEntryFromCompressFile Error occurs: " + e);
+        } finally {
+            if (inArchive != null) {
+                try {
+                    inArchive.close();
+                } catch (SevenZipException e) {
+                    System.err.println("extractEntryFromCompressFile Error closing archive: " + e);
+                }
+            }
+            if (randomAccessFile != null) {
+                try {
+                    randomAccessFile.close();
+                } catch (IOException e) {
+                    System.err.println("extractEntryFromCompressFile Error closing file: " + e);
+                }
+            }
+        }
+        return ret;
 	}
 
 	private Doc buildBasicDocFromCompressEntry(Doc rootDoc, String docPath, ISimpleInArchiveItem entry) throws SevenZipException {
@@ -17808,8 +17965,6 @@ public class BaseController  extends BaseFunction{
 		}
 		return false;
 	}
-	
-
 
 	private Doc checkAndGetRealParentCompressDoc(Repos repos, Doc rootDoc, Doc parentCompressDoc) {
 		File parentFile = new File(parentCompressDoc.getLocalRootPath() + parentCompressDoc.getPath() + parentCompressDoc.getName());
@@ -18426,87 +18581,6 @@ public class BaseController  extends BaseFunction{
             }
         }
 		return ret;
-	}
-
-	//这是使用SevenZip的解压接口
-	private boolean extractEntryFromCompressFile(Doc parentZipDoc, Doc zipDoc) {
-        boolean ret = false;
-		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
-		
-        File file = new File(parentZipFilePath);
-		if(file.exists() == false)
-		{
-			Log.debug("extractEntryFromCompressFile " + parentZipFilePath + " 不存在！");
-			return ret;
-		}
-		else if(file.isDirectory())
-		{
-			Log.debug("extractEntryFromCompressFile " + parentZipFilePath + " 是目录！");
-			return ret;
-		}
-		
-	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
-	    String expEntryPath = relativePath + zipDoc.getName();
-	    if(isWinOS())
-	    {
-	    	expEntryPath = expEntryPath.replace("/", "\\");
-	    }
-    	Log.debug("extractEntryFromCompressFile expEntryPath:" + expEntryPath);
-        
-        RandomAccessFile randomAccessFile = null;
-        IInArchive inArchive = null;
-        try {
-            randomAccessFile = new RandomAccessFile(parentZipFilePath, "r");
-            inArchive = SevenZip.openInArchive(null, // autodetect archive type
-                    new RandomAccessFileInStream(randomAccessFile));
-
-        	int[] in = new int[inArchive.getNumberOfItems()];
-	        for (int i = 0; i < inArchive.getNumberOfItems(); i++) {
-            	String subEntryPath = (String) inArchive.getProperty(i, PropID.PATH);
-            	Log.debug("extractEntryFromCompressFile subEntryPath:" + subEntryPath);
-            	if(subEntryPath.equals(expEntryPath))
-            	{
-                	Log.debug("extractEntryFromCompressFile expEntry found:" + subEntryPath);
-                    if (((Boolean) inArchive.getProperty(i, PropID.IS_FOLDER)).booleanValue()) {
-                		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
-                    }
-                	else
-                	{
-                    	File tmpFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-    					File parent = tmpFile.getParentFile();
-    					if (!parent.exists()) {
-     						parent.mkdirs();
-     					}
-                    	
-                    	//解压
-    				    in[0] = i;
-    				    String outputDir = zipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName() + "/";
-    				    Log.debug("extractEntryFromCompressFile outDir:" + outputDir);
-    		            inArchive.extract(in, false, new MyExtractCallback(inArchive, "366", outputDir));
-                	}
-                    ret = true;
-                    break;
-            	}
-            }
-        } catch (Exception e) {
-            System.err.println("extractEntryFromCompressFile Error occurs: " + e);
-        } finally {
-            if (inArchive != null) {
-                try {
-                    inArchive.close();
-                } catch (SevenZipException e) {
-                    System.err.println("extractEntryFromCompressFile Error closing archive: " + e);
-                }
-            }
-            if (randomAccessFile != null) {
-                try {
-                    randomAccessFile.close();
-                } catch (IOException e) {
-                    System.err.println("extractEntryFromCompressFile Error closing file: " + e);
-                }
-            }
-        }
-        return ret;
 	}
 	
 	@SuppressWarnings({ "unused", "deprecation" })
