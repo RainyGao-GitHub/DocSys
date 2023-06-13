@@ -18929,6 +18929,95 @@ public class BaseController  extends BaseFunction{
 		return parentCompressDoc;
 	}
 
+	private boolean extractAllFor7zFile(String path, String name, String targetPath) {
+        boolean ret = false;
+		String zipFilePath = path + name;
+		
+        File file = new File(zipFilePath);
+		if(file.exists() == false)
+		{
+			Log.debug("extractAllFor7zFile " + zipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			Log.debug("extractAllFor7zFile " + zipFilePath + " 是目录！");
+			return ret;
+		}
+		
+	    SevenZFile sevenZFile = null;
+        OutputStream outputStream = null;
+        try {
+            sevenZFile = new SevenZFile(file);
+            SevenZArchiveEntry entry;
+            while((entry = sevenZFile.getNextEntry()) != null)
+            {
+            	String subEntryPath = entry.getName();
+            	Log.debug("extractAllFor7zFile() subEntry:" + subEntryPath);
+            	String targetEntryPath = targetPath + subEntryPath;
+            	
+            	if(entry.isDirectory())
+            	{
+            		FileUtil.createDir(targetEntryPath); // 创建子目录
+                }
+            	else
+            	{
+            		extract7zEntry(sevenZFile, targetEntryPath);
+            	}
+            }
+            ret = true;
+        } catch (IOException e) {
+            Log.info(e);
+        }finally {
+            try {
+                if(sevenZFile != null){
+                    sevenZFile.close();
+                }
+                if(outputStream != null){
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+	
+	private boolean extract7zEntry(SevenZFile sevenZFile, String targetEntryPath) {
+        boolean ret = false;
+		OutputStream outputStream = null;
+        try {
+    		File tempFile = new File(targetEntryPath);
+    		File parent = tempFile.getParentFile();
+    		if (!parent.exists()) {
+    			parent.mkdirs();
+    		}
+    		
+            outputStream = new FileOutputStream(tempFile);
+            int len = 0;
+            byte[] b = new byte[2048];
+            while((len = sevenZFile.read(b)) != -1){
+                outputStream.write(b, 0, len);
+            }
+            outputStream.flush();
+            ret = true;
+        } catch (IOException e) {
+            Log.info(e);
+        }finally {
+            try {
+                if(sevenZFile != null){
+                    sevenZFile.close();
+                }
+                if(outputStream != null){
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+
 	private boolean extractEntryFrom7zFile(Doc parentZipDoc, Doc zipDoc) {
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
@@ -18961,25 +19050,12 @@ public class BaseController  extends BaseFunction{
             	{
 	            	if(entry.isDirectory())
 	            	{
-	            		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
+	            		ret = FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
 	                }
 	            	else
 	            	{
-	            		File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-	        			File parent = tempFile.getParentFile();
-	        			if (!parent.exists()) {
-	        				parent.mkdirs();
-	        			}
-	        			
-	                    outputStream = new FileOutputStream(tempFile);
-	                    int len = 0;
-	                    byte[] b = new byte[2048];
-	                    while((len = sevenZFile.read(b)) != -1){
-	                        outputStream.write(b, 0, len);
-	                    }
-	                    outputStream.flush();
+	            		ret = extract7zEntry(sevenZFile, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
 	            	}
-                    ret = true;
                     break;
             	}
             }
@@ -18999,9 +19075,90 @@ public class BaseController  extends BaseFunction{
         }
 		return ret;
 	}
-	
-	@SuppressWarnings({ "unused", "deprecation" })
-	private boolean extractEntryFromRarFile(Doc parentZipDoc, Doc zipDoc) {
+
+	protected boolean extractAllForRarFile(String path, String name, String targetPath) {
+        boolean ret = false;
+		String zipFilePath = path + name;
+		Log.debug("extractAllForRarFile() zipFilePath:" + zipFilePath);
+		
+        File file = new File(zipFilePath);
+		if(file.exists() == false)
+		{
+			Log.debug("extractAllForRarFile() " + zipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			Log.debug("extractAllForRarFile() " + zipFilePath + " 是目录！");
+			return ret;
+		}
+        
+		Archive archive = null;
+        OutputStream outputStream = null;
+        try {
+            archive = new Archive(new FileInputStream(file));
+            
+            FileHeader fileHeader;
+            while( (fileHeader = archive.nextFileHeader()) != null)
+            {
+	        	String subEntryPath = fileHeader.getFileNameW();
+	        	Log.debug("extractAllForRarFile() subEntry:" + subEntryPath);
+	            String targetEntryPath = targetPath + subEntryPath;	
+            	if(fileHeader.isDirectory())
+            	{
+            		FileUtil.createDir(targetEntryPath); // 创建子目录
+                }
+            	else
+            	{
+            		extractRarEntry(archive, fileHeader, targetEntryPath);
+            	}
+            }
+            ret = true;
+        } catch (Exception e) {
+            Log.info(e);
+        }finally {
+            try {
+                if(archive != null){
+                    archive.close();
+                }
+                if(outputStream != null){
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+        return ret;
+	}
+
+	protected boolean extractRarEntry(Archive archive,  FileHeader fileHeader, String targetEntryPath) {
+        OutputStream outputStream = null;
+        boolean ret = false;
+        try {
+        	File tmpFile = new File(targetEntryPath);
+    		File parent = tmpFile.getParentFile();
+    		if (!parent.exists()) {
+    				parent.mkdirs();
+    		}
+        	
+        	outputStream = new FileOutputStream(tmpFile);
+            archive.extractFile(fileHeader, outputStream);
+            ret = true;
+        } catch (Exception e) {
+            errorLog(e);
+        }finally {
+            try {
+                if(outputStream != null){
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+        return ret;
+	}
+
+	protected boolean extractEntryFromRarFile(Doc parentZipDoc, Doc zipDoc) {
         boolean ret = false;
 		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
 		
@@ -19021,7 +19178,6 @@ public class BaseController  extends BaseFunction{
         String expEntryPath = (relativePath + zipDoc.getName()).replace("/", "\\");
         
 		Archive archive = null;
-        OutputStream outputStream = null;
         try {
             archive = new Archive(new FileInputStream(file));
             
@@ -19031,26 +19187,17 @@ public class BaseController  extends BaseFunction{
             	String subEntryPath = fileHeader.getFileNameW();
             	if(subEntryPath.equals(expEntryPath))
             	{
-                	Log.debug("subEntry:" + subEntryPath);
+                	Log.debug("extractEntryFromRarFile subEntry:" + subEntryPath);
                 	
                 	if(fileHeader.isDirectory())
                 	{
-                		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
+                		ret = FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
                     }
                 	else
                 	{
-                    	File tmpFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-    					File parent = tmpFile.getParentFile();
-    					if (!parent.exists()) {
-     						parent.mkdirs();
-     					}
-                    	
-                    	outputStream = new FileOutputStream(tmpFile);
-                        archive.extractFile(fileHeader, outputStream);
+                		ret = extractRarEntry(archive, fileHeader, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
                 	}
-                    ret = true;
                     break;
-
             	}
             }
         } catch (Exception e) {
@@ -19060,15 +19207,99 @@ public class BaseController  extends BaseFunction{
                 if(archive != null){
                     archive.close();
                 }
-                if(outputStream != null){
-                    outputStream.close();
-                }
             } catch (IOException e) {
                 Log.info(e);
             }
         }
         return ret;
 	}
+	
+	 public static boolean extractAllForZipFile(String path, String name, String targetPath) 
+	 { 
+		boolean ret = false;
+	    String zipFilePath = path + name;
+	    Log.debug("extractAllForZipFile() zipFilePath:" + zipFilePath);
+		
+		int count = -1; 
+	    InputStream is = null; 
+	    FileOutputStream fos = null; 
+	    BufferedOutputStream bos = null; 
+	    
+	    File file = new File(targetPath);
+	    if(file.exists() == false)
+	    {
+	    	file.mkdirs(); //创建保存目录 
+	    }
+	    
+	    ZipFile zipFile = null;
+	    try
+	    { 
+	      zipFile = new ZipFile(zipFilePath, "gbk"); //解决中文乱码问题 
+	      Enumeration<?> entries = zipFile.getEntries(); 
+	      while(entries.hasMoreElements()) 
+	      { 
+	    	  byte buf[] = new byte[2048]; 
+	    	  ZipEntry entry = (ZipEntry)entries.nextElement(); 
+	    	  String filename = entry.getName(); 
+	    	  if(filename.startsWith("../"))
+	    	  {
+	    		  Log.info("unZip() virus inject risk for file: [" + filename + "]");
+	    		  continue;
+	    	  }
+	        
+	    	  boolean ismkdir = false; 
+	    	  if(filename.lastIndexOf("/") != -1){ //检查此文件是否带有文件夹 
+	    		  	ismkdir = true; 
+	    	  }	 
+	    	  filename = targetPath + filename; 
+	    	  if(entry.isDirectory()){ //如果是文件夹先创建 
+	    		  file = new File(filename); 
+	    		  file.mkdirs(); 
+	    		  continue; 
+	    	  } 
+	    	  file = new File(filename); 
+	    	  if(!file.exists()){ //如果是目录先创建 
+	    		  if(ismkdir){ 
+	    			  new File(filename.substring(0, filename.lastIndexOf("/"))).mkdirs(); //目录先创建 
+	    		  } 
+	    	  } 
+	    	  file.createNewFile(); //创建文件 
+	    	  is = zipFile.getInputStream(entry); 
+	    	  fos = new FileOutputStream(file); 
+	    	  bos = new BufferedOutputStream(fos, 2048); 
+	    	  while((count = is.read(buf)) > -1) 
+	    	  { 
+	    		  bos.write(buf, 0, count); 
+	    	  } 
+	    	  bos.flush(); 
+	    	  bos.close(); 
+	    	  fos.close(); 
+	    	  is.close(); 
+	      } 
+	      zipFile.close(); 
+	      ret = true;
+	    }catch(IOException ioe){ 
+	    	errorLog(ioe); 
+	    }finally{ 
+	       try{ 
+	       if(bos != null){ 
+	         bos.close(); 
+	       } 
+	       if(fos != null) { 
+	         fos.close(); 
+	       } 
+	       if(is != null){ 
+	         is.close(); 
+	       } 
+	       if(zipFile != null){ 
+	         zipFile.close(); 
+	       } 
+	       }catch(Exception e) { 
+	         Log.info(e); 
+	       } 
+	    } 
+	    return ret;
+	} 
 
 	private boolean extractEntryFromZipFile(Doc parentZipDoc, Doc zipDoc) {
 		boolean ret = false;
@@ -19115,89 +19346,6 @@ public class BaseController  extends BaseFunction{
 		}		
 		return ret;
 	}
-	
-	 public static boolean unZip(String path, String savepath) 
-	 { 
-		boolean ret = false;
-	    int count = -1; 
-	    InputStream is = null; 
-	    FileOutputStream fos = null; 
-	    BufferedOutputStream bos = null; 
-	    
-	    File file = new File(savepath);
-	    if(file.exists() == false)
-	    {
-	    	file.mkdir(); //创建保存目录 
-	    }
-	    ZipFile zipFile = null; 
-	    try
-	    { 
-	      zipFile = new ZipFile(path,"gbk"); //解决中文乱码问题 
-	      Enumeration<?> entries = zipFile.getEntries(); 
-	      while(entries.hasMoreElements()) 
-	      { 
-			byte buf[] = new byte[2048]; 
-	        ZipEntry entry = (ZipEntry)entries.nextElement(); 
-	        String filename = entry.getName(); 
-	        if(filename.startsWith("../"))
-	        {
-	        	Log.info("unZip() virus inject risk for file: [" + filename + "]");
-	        	continue;
-	        }
-	        
-	        boolean ismkdir = false; 
-	        if(filename.lastIndexOf("/") != -1){ //检查此文件是否带有文件夹 
-	         ismkdir = true; 
-	        } 
-	        filename = savepath + filename; 
-	        if(entry.isDirectory()){ //如果是文件夹先创建 
-	         file = new File(filename); 
-	         file.mkdirs(); 
-	          continue; 
-	        } 
-	        file = new File(filename); 
-	        if(!file.exists()){ //如果是目录先创建 
-	         if(ismkdir){ 
-	         new File(filename.substring(0, filename.lastIndexOf("/"))).mkdirs(); //目录先创建 
-	         } 
-	        } 
-	        file.createNewFile(); //创建文件 
-	        is = zipFile.getInputStream(entry); 
-	        fos = new FileOutputStream(file); 
-	        bos = new BufferedOutputStream(fos, 2048); 
-	        while((count = is.read(buf)) > -1) 
-	        { 
-	          bos.write(buf, 0, count); 
-	        } 
-	        bos.flush(); 
-	        bos.close(); 
-	        fos.close(); 
-	        is.close(); 
-	      } 
-	      zipFile.close(); 
-	      ret = true;
-	    }catch(IOException ioe){ 
-	      Log.info(ioe); 
-	    }finally{ 
-	       try{ 
-	       if(bos != null){ 
-	         bos.close(); 
-	       } 
-	       if(fos != null) { 
-	         fos.close(); 
-	       } 
-	       if(is != null){ 
-	         is.close(); 
-	       } 
-	       if(zipFile != null){ 
-	         zipFile.close(); 
-	       } 
-	       }catch(Exception e) { 
-	         Log.info(e); 
-	       } 
-	    } 
-	    return ret;
-	} 
 
 	//获取doc的parentZipDoc(这里有风险parentZipDoc里面的目录的名字带压缩后缀)
 	private Doc getParentCompressDoc(Repos repos, Doc rootDoc, Doc doc) {
