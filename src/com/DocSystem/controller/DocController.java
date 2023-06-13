@@ -107,7 +107,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** addDoc [" + path + name + "] ****************");
-		Log.info("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
+		Log.info("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId  + " taskId:" + taskId);
 		Log.debug("addDoc default charset:" + Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
@@ -153,7 +153,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** addDocRS [" + path + name + "] ****************");
-		Log.info("addDocRS reposId:" + reposId + " remoteDirectory:[" + remoteDirectory + "] path:[" + path + "] name:" + name  + " type:" + type + " content:" + " authCode:" + authCode);
+		Log.info("addDocRS reposId:" + reposId + " remoteDirectory:[" + remoteDirectory + "] path:[" + path + "] name:" + name  + " type:" + type + " content:" + " authCode:" + authCode + " taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
@@ -240,7 +240,9 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** deleteDoc [" + path + name + "] ****************");
-		Log.info("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
+		Log.info("deleteDoc reposId:" + reposId 
+				+ " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type
+				+ " shareId:" + shareId  + " taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
@@ -280,7 +282,8 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** deleteDocRS [" + path + name + "] ****************");
-		Log.info("deleteDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " path:" + path + " name:" + name + " authCode:" + authCode);
+		Log.info("deleteDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory 
+				+ " path:" + path + " name:" + name + " authCode:" + authCode  + " taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
@@ -602,7 +605,9 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** copyDoc [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
-		Log.info("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
+		Log.info("copyDoc reposId:" + reposId 
+				+ " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type 
+				+ " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId  + " taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		Log.debug("copyDoc check reposAccess");
@@ -689,7 +694,9 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** copyDocRS [" + srcPath + srcName + "]  [" + dstPath + dstName + "] ****************");
-		Log.info("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory + " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " dstName:" + dstName + " isMove:" + isMove + " authCode:" + authCode);
+		Log.info("copyDocRS reposId:" + reposId + " remoteDirectory: " + remoteDirectory 
+				+ " srcPath:" + srcPath + " srcName:" + srcName + " srcPath:" + dstPath + " dstName:" + dstName + " isMove:" + isMove 
+				+ " authCode:" + authCode  + " taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		if(checkAuthCode(authCode, null, rt) == null)
@@ -1704,7 +1711,7 @@ public class DocController extends BaseController{
 		Log.infoHead("************** uploadDocRS [" + path + name + "] ****************");
 		Log.info("uploadDocRS  reposId:" + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " name:" + name  + " size:" + size + " type:" + type + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " authCode:" + authCode + " commitMsg:" + commitMsg
-							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount);
+							+ " dirPath:" + dirPath + " batchStartTime:" + batchStartTime + " totalCount:" + totalCount  + " taskId:" + taskId);
 
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 
@@ -1795,7 +1802,8 @@ public class DocController extends BaseController{
 		Log.info("pushDocRS  reposId:" + reposId + " path:" + path + " name:" + name 
 				+ " targetReposId:" + targetReposId 
 				+ " targetPath:" + targetPath
-				+ " recurciveEn:" + recurciveEn + " forceEn:" + forceEn);
+				+ " recurciveEn:" + recurciveEn + " forceEn:" + forceEn 
+				+ " taskId:" + taskId);
 		
 		ReturnAjax rt = new ReturnAjax();
 
