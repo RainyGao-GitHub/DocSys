@@ -16979,8 +16979,9 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		switch(compressFileType)
 		{
-		case "zip":
 		case "war":
+			return extractAllForZipFile(path, name, targetPath);
+		case "zip":
 			ret = extractAllForZipFile(path, name, targetPath);
 			if(ret == false)
 			{
@@ -17039,8 +17040,9 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		switch(compressFileType)
 		{
-		case "zip":
 		case "war":
+			return extractEntryFromZipFile(parentCompressDoc, doc);	
+		case "zip":
 			ret = extractEntryFromZipFile(parentCompressDoc, doc);
 			if(ret == false)
 			{
@@ -17093,9 +17095,9 @@ public class BaseController  extends BaseFunction{
 		
 		switch(compressFileType)
 		{
-		case "zip":
 		case "war":
-			//return getSubDocListForZip(repos, rootDoc, path, name, rt);
+			return getSubDocListForZip(repos, rootDoc, path, name, rt);
+		case "zip":
 		case "7z":
 			//return getSubDocListFor7z(repos, rootDoc, path, name, rt);			
 		case "rar":
@@ -17185,15 +17187,15 @@ public class BaseController  extends BaseFunction{
 		
         RandomAccessFile randomAccessFile = null;
         IInArchive inArchive = null;
-        boolean ret = true;
+        boolean ret = false;
         try {
             randomAccessFile = new RandomAccessFile(zipFilePath, "r");
             inArchive = SevenZip.openInArchive(null, // autodetect archive type
                     new RandomAccessFileInStream(randomAccessFile));
 
             inArchive.extract(null, false, new MyExtractCallback(inArchive, "366", targetPath));
+            ret = true;
         } catch (Exception e) {
-        	ret = false;
             errorLog("extractAllForCompressFile() Error occurs");
             errorLog(e);
         } finally {
@@ -17786,7 +17788,7 @@ public class BaseController  extends BaseFunction{
         FileInputStream fis = null;
         BZip2CompressorInputStream bis = null;
         TarInputStream tis = null;
-        boolean ret = true;
+        boolean ret = false;
         try {
             fis = new FileInputStream(file);
             bis = new BZip2CompressorInputStream(fis);
@@ -17808,8 +17810,8 @@ public class BaseController  extends BaseFunction{
                 	extractTarBz2Entry(tis, targetEntryPath);
                 }
             }
+            ret = true;
         } catch (IOException e) {
-        	ret = false;
             errorLog(e);
         }finally {
             try {
@@ -18001,7 +18003,7 @@ public class BaseController  extends BaseFunction{
         XZInputStream gzipIn = null;
         TarInputStream tarIn = null;
         OutputStream out = null;
-        boolean ret = true;
+        boolean ret = false;
         try {
             fileInputStream = new FileInputStream(file);
             bufferedInputStream = new BufferedInputStream(fileInputStream);
@@ -18021,10 +18023,9 @@ public class BaseController  extends BaseFunction{
             	{ 
             		extractTxzEntry(tarIn, targetEntryPath);
                 }
-				
             }            
+            ret = true;
         } catch (IOException e) {
-            ret = false;
         	errorLog(e);
         }finally {
             try {
@@ -18241,7 +18242,7 @@ public class BaseController  extends BaseFunction{
         BufferedInputStream bufferedInputStream = null;
         GZIPInputStream gzipIn = null;
         TarInputStream tarIn = null;
-        boolean ret = true;
+        boolean ret = false;
         try {
             fileInputStream = new FileInputStream(file);
             bufferedInputStream = new BufferedInputStream(fileInputStream);
@@ -18263,8 +18264,8 @@ public class BaseController  extends BaseFunction{
             		extractTgzEntry(tarIn, targetEntryPath);
                 }
             }
+            ret = true;
         } catch (IOException e) {
-        	ret = false;
             errorLog(e);
         }finally {
             try {
@@ -18568,7 +18569,7 @@ public class BaseController  extends BaseFunction{
         
         FileInputStream fis = null;
         TarInputStream tarInputStream = null;
-        boolean ret = true;
+        boolean ret = false;
         try {
             fis = new FileInputStream(file);
             tarInputStream = new TarInputStream(fis, 1024 * 2);
@@ -18594,8 +18595,8 @@ public class BaseController  extends BaseFunction{
                 	extractTarEntry(tarInputStream, targetEntryPath);
                 }
             }
+            ret = true;
         } catch (IOException e) {
-        	ret = false;
         	errorLog(e);
         }finally {
             try {
