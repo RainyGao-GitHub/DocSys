@@ -16967,7 +16967,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	protected boolean extarctZipFile(String path, String name, String targetPath)
+	protected boolean extractZipFile(String path, String name, String targetPath)
 	{
 		String compressFileType = FileUtil.getCompressFileType(name);
 		if(compressFileType == null)
@@ -16976,13 +16976,25 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		boolean ret = false;
 		switch(compressFileType)
 		{
 		case "zip":
 		case "war":
+			ret = extractAllForZipFile(path, name, targetPath);
+			if(ret == false)
+			{
+				ret = extractAllFor7zFile(path, name, targetPath);
+				if(ret == false)
+				{
+					ret = extractAllForCompressFile(path, name, targetPath);
+				}				
+			}
+			return ret;
 		case "7z":
+			return extractAllFor7zFile(path, name, targetPath);			
 		case "rar":
-			return extractAllForCompressFile(path, name, targetPath);			
+			return extractAllForCompressFile(path, name, targetPath);		
 		case "tar":
 			return extractAllForTar(path, name, targetPath);	
 		case "tgz":

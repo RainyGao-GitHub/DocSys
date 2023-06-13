@@ -1682,7 +1682,7 @@ public class ManageController extends BaseController{
 		queryTask.status = 1;	//升级解压中
 		queryTask.info = "安装包解压";
 		Log.debug("upgradeSystem() " + queryTask.info);
-		if(unZip(upgradePath + name, upgradePath + "DocSystem-tmp/") == false)
+		if(extractZipFile(upgradePath, name, upgradePath + "DocSystem-tmp/") == false)
 		{
 			Log.debug("upgradeSystem() 安装包解压失败");
 			//docSysErrorLog("安装包解压失败", rt);
