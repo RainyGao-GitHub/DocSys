@@ -18124,13 +18124,12 @@ public class BaseController  extends BaseFunction{
 	                
 	            	if(entry.isDirectory())
 	            	{
-	            		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
+	            		ret = FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
 	            	}
 	            	else
 	            	{ 
 	            		ret = extractTxzEntry(tarIn, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());	            		
 	                }
-	            	ret = true;
 	            	break;
             	}
             }
@@ -18659,9 +18658,7 @@ public class BaseController  extends BaseFunction{
 	                {
 	                	ret = extractTarEntry(tarInputStream, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
 	                }
-                    ret = true;
                     break;
-
             	}
             }
         } catch (IOException e) {
