@@ -17358,6 +17358,112 @@ public class BaseController  extends BaseFunction{
 		subDocList.add(subDoc);
 		return subDocList;
 	}
+	
+	private boolean extractAllForBz2(String path, String name, String targetPath) {
+        boolean ret = false;
+        
+        String zipFilePath = path + name;
+		Log.debug("getSubDocListForBz2() zipFilePath:" + zipFilePath);
+		
+        File file = new File(zipFilePath);
+
+        FileInputStream fis = null;
+        BZip2CompressorInputStream bis = null;
+        try {
+            fis = new FileInputStream(file);
+            bis = new BZip2CompressorInputStream(fis);
+
+            String targetEntryPath = targetPath + name;
+            ret = extractBz2Entry(bis, targetEntryPath);
+        } catch (IOException e) {
+            Log.info(e);
+        }finally {
+            try {
+                if(fis != null){
+                    fis.close();
+                }
+                if(bis != null){
+                    bis.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+	
+	private boolean extractBz2Entry(BZip2CompressorInputStream bis, String targetEntryPath) {
+        boolean ret = false;
+		OutputStream fos = null;
+		try {
+    		File tempFile = new File(targetEntryPath);
+    		File parent = tempFile.getParentFile();
+    		if (!parent.exists()) {
+    			parent.mkdirs();
+    		}
+            
+            fos = new FileOutputStream(tempFile);
+            int count;
+            byte data[] = new byte[2048];
+            while ((count = bis.read(data)) != -1) {
+                fos.write(data, 0, count);
+            }
+            fos.flush();
+            ret = true;
+        } catch (IOException e) {
+            errorLog(e);
+        }finally {
+            try {
+                if(fos != null){
+                    fos.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+
+	private boolean extractEntryFromBz2File(Doc parentZipDoc, Doc zipDoc) 
+	{
+        boolean ret = false;
+		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		
+        File file = new File(parentZipFilePath);
+		if(file.exists() == false)
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
+			return ret;
+		}
+
+        FileInputStream fis = null;
+        BZip2CompressorInputStream bis = null;
+        try {
+            fis = new FileInputStream(file);
+            bis = new BZip2CompressorInputStream(fis);
+
+            ret = extractBz2Entry(bis, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+        } catch (IOException e) {
+            Log.info(e);
+        }finally {
+            try {
+                if(fis != null){
+                    fis.close();
+                }
+                if(bis != null){
+                    bis.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
 
 	private List<Doc> getSubDocListForXz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		Log.debug("getSubDocListForXz() path:" + path + " name:" + name);
@@ -17375,6 +17481,111 @@ public class BaseController  extends BaseFunction{
 		subDocList.add(subDoc);
 		return subDocList;
 	}
+	
+	private boolean extractAllForXz(String path, String name, String targetPath) {
+        boolean ret = false;
+
+        String zipFilePath = path + name;
+        Log.debug("extractAllForXz() zipFilePath:" + zipFilePath);
+		
+        File file = new File(zipFilePath);
+
+        FileInputStream  fileInputStream = null;
+        XZInputStream gzipIn = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            gzipIn = new XZInputStream(fileInputStream, 100 * 1024);
+            
+            String targetEntryPath = targetPath + name;
+            ret = extractXzEntry(gzipIn, targetEntryPath);            
+        } catch (IOException e) {
+            Log.info(e);
+        }finally {
+            try {
+                if(gzipIn != null){
+                    gzipIn.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+
+	private boolean extractXzEntry(XZInputStream gzipIn, String targetEntryPath) {
+        boolean ret = true;
+        OutputStream out = null;
+        try {
+            File tempFile = new File(targetEntryPath);
+    		File parent = tempFile.getParentFile();
+    		if (!parent.exists()) {
+    			parent.mkdirs();
+    		}
+    		
+            out = new FileOutputStream(tempFile);
+            int count;
+            byte data[] = new byte[2048];
+            while ((count = gzipIn.read(data)) != -1) {
+                out.write(data, 0, count);
+            }
+            out.flush();
+        } catch (IOException e) {
+        	ret = false;
+            Log.info(e);
+        }finally {
+            try {
+                if(out != null){
+                    out.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+
+	private boolean extractEntryFromXzFile(Doc parentZipDoc, Doc zipDoc) 
+	{
+        boolean ret = false;
+		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		
+        File file = new File(parentZipFilePath);
+		if(file.exists() == false)
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
+			return ret;
+		}
+
+        FileInputStream  fileInputStream = null;
+        XZInputStream gzipIn = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            gzipIn = new XZInputStream(fileInputStream, 100 * 1024);
+            ret = extractXzEntry(gzipIn, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+        } catch (IOException e) {
+            errorLog(e);
+        }finally {
+            try {
+                if(gzipIn != null){
+                    gzipIn.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
 
 	private List<Doc> getSubDocListForGz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		Log.debug("getSubDocListForGz() path:" + rootDoc.getPath() + " name:" + rootDoc.getName());
@@ -17391,6 +17602,111 @@ public class BaseController  extends BaseFunction{
 		}
 		subDocList.add(subDoc);
 		return subDocList;
+	}
+	
+	private boolean extractAllForGz(String path, String name, String targetPath) 
+	{
+		String zipFilePath = path + name;
+		Log.debug("extractAllForGz() zipFilePath:" + zipFilePath);
+
+		File file = new File(zipFilePath);
+		
+        FileInputStream  fileInputStream = null;
+        GZIPInputStream gzipIn = null;
+        boolean ret = false;
+        try {
+            fileInputStream = new FileInputStream(file);
+            gzipIn = new GZIPInputStream(fileInputStream);
+            
+            String targetEntryPath = targetPath + name;
+            ret = extractGzEntry(gzipIn, targetEntryPath);
+        } catch (IOException e) {
+             errorLog(e);
+        }finally {
+            try {
+                if(gzipIn != null){
+                    gzipIn.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+        return ret;
+	}
+	
+	private boolean extractGzEntry(GZIPInputStream gzipIn, String targetEntryPath) {
+        OutputStream out = null;
+        boolean ret = false;
+        try {
+    		File tempFile = new File(targetEntryPath);
+    		File parent = tempFile.getParentFile();
+    		if (!parent.exists()) {
+    			parent.mkdirs();
+    		}
+    		
+            out = new FileOutputStream(tempFile);
+            int count;
+            byte data[] = new byte[2048];
+            while ((count = gzipIn.read(data)) != -1) {
+                out.write(data, 0, count);
+            }
+            out.flush();
+        } catch (IOException e) {
+             errorLog(e);
+        }finally {
+            try {
+                if(out != null){
+                    out.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+        return ret;
+	}
+
+	private boolean extractEntryFromGzFile(Doc parentZipDoc, Doc zipDoc) 
+	{
+        boolean ret = false;
+		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		
+        File file = new File(parentZipFilePath);
+		if(file.exists() == false)
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
+			return ret;
+		}
+
+        FileInputStream  fileInputStream = null;
+        GZIPInputStream gzipIn = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            gzipIn = new GZIPInputStream(fileInputStream);
+
+            ret = extractGzEntry(gzipIn, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+        } catch (IOException e) {
+            errorLog(e);
+        }finally {
+            try {
+                if(gzipIn != null){
+                    gzipIn.close();
+                }
+                if(fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+        return ret;
 	}
 
 	private List<Doc> getSubDocListForTarBz2(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
@@ -17448,6 +17764,156 @@ public class BaseController  extends BaseFunction{
             }
         }
 		return subDocList;
+	}
+	
+	private boolean extractAllForTarBz2(String path, String name, String targetPath) {
+		String zipFilePath = path + name;
+		Log.debug("extractAllForTarBz2() zipFilePath:" + zipFilePath);
+		        
+        File file = new File(zipFilePath);
+        FileInputStream fis = null;
+        BZip2CompressorInputStream bis = null;
+        TarInputStream tis = null;
+        boolean ret = true;
+        try {
+            fis = new FileInputStream(file);
+            bis = new BZip2CompressorInputStream(fis);
+            tis = new TarInputStream(bis, 1024 * 2);
+
+            TarEntry entry;
+            while((entry = tis.getNextEntry()) != null)
+            {
+            	String subEntryPath = entry.getName();
+            	Log.debug("subEntry:" + entry.getName());
+            	String targetEntryPath = targetPath + subEntryPath;
+            	
+            	if(entry.isDirectory())
+                {
+            		FileUtil.createDir(targetEntryPath); // 创建子目录
+                }
+                else
+                {
+                	extractTarBz2Entry(tis, targetEntryPath);
+                }
+            }
+        } catch (IOException e) {
+        	ret = false;
+            errorLog(e);
+        }finally {
+            try {
+                if(fis != null){
+                    fis.close();
+                }
+                if(bis != null){
+                    bis.close();
+                }
+                if(tis != null){
+                    tis.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+
+	private boolean extractTarBz2Entry(TarInputStream tis, String targetEntryPath) {
+        boolean ret = true;
+        OutputStream fos = null;
+		try {
+    		File tempFile = new File(targetEntryPath);
+			File parent = tempFile.getParentFile();
+			if (!parent.exists()) {
+				parent.mkdirs();
+			}
+			
+            fos  = new FileOutputStream(tempFile);
+            int count;
+            byte data[] = new byte[2048];
+            while ((count = tis.read(data)) != -1) {
+                fos.write(data, 0, count);
+            }
+            fos.flush();
+        } catch (IOException e) {
+        	ret = false;
+            errorLog(e);
+        }finally {
+            try {
+                if(fos != null){
+                    fos.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
+	}
+
+	private boolean extractEntryFromTarBz2File(Doc parentZipDoc, Doc zipDoc) 
+	{
+        boolean ret = false;
+		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
+		
+        File file = new File(parentZipFilePath);
+		if(file.exists() == false)
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
+			return ret;
+		}
+		else if(file.isDirectory())
+		{
+			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
+			return ret;
+		}
+		
+	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
+        String expEntryPath = relativePath + zipDoc.getName();
+        
+        FileInputStream fis = null;
+        BZip2CompressorInputStream bis = null;
+        TarInputStream tis = null;
+        try {
+            fis = new FileInputStream(file);
+            bis = new BZip2CompressorInputStream(fis);
+            tis = new TarInputStream(bis, 1024 * 2);
+
+            TarEntry entry;
+            while((entry = tis.getNextEntry()) != null)
+            {
+            	String subEntryPath = entry.getName();
+            	if(subEntryPath.equals(expEntryPath))
+            	{
+	            	Log.debug("subEntry:" + entry.getName());
+	            	
+	                if(entry.isDirectory())
+	                {
+	            		ret = FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
+	                }
+	                else
+	                {
+	                	ret = extractTarBz2Entry(tis, zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
+	                }
+	                break;
+            	}
+            }
+        } catch (IOException e) {
+            errorLog(e);
+        }finally {
+            try {
+                if(fis != null){
+                    fis.close();
+                }
+                if(bis != null){
+                    bis.close();
+                }
+                if(tis != null){
+                    tis.close();
+                }
+            } catch (IOException e) {
+                Log.info(e);
+            }
+        }
+		return ret;
 	}
 
 	private List<Doc> getSubDocListForTxz(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
@@ -18461,268 +18927,6 @@ public class BaseController  extends BaseFunction{
 			return checkAndGetRealParentCompressDoc(repos, rootDoc, parentParentCompressDoc);
 		}
 		return parentCompressDoc;
-	}
-
-	private boolean extractEntryFromBz2File(Doc parentZipDoc, Doc zipDoc) 
-	{
-        boolean ret = false;
-		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
-		
-        File file = new File(parentZipFilePath);
-		if(file.exists() == false)
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
-			return ret;
-		}
-		else if(file.isDirectory())
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
-			return ret;
-		}
-
-        FileInputStream fis = null;
-        OutputStream fos = null;
-        BZip2CompressorInputStream bis = null;
-
-        try {
-            fis = new FileInputStream(file);
-            bis = new BZip2CompressorInputStream(fis);
-
-            File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-			File parent = tempFile.getParentFile();
-			if (!parent.exists()) {
-				parent.mkdirs();
-			}
-            
-            fos = new FileOutputStream(tempFile);
-            int count;
-            byte data[] = new byte[2048];
-            while ((count = bis.read(data)) != -1) {
-                fos.write(data, 0, count);
-            }
-            fos.flush();
-            ret = true;
-        } catch (IOException e) {
-            Log.info(e);
-        }finally {
-            try {
-                if(fis != null){
-                    fis.close();
-                }
-                if(fos != null){
-                    fos.close();
-                }
-                if(bis != null){
-                    bis.close();
-                }
-            } catch (IOException e) {
-                Log.info(e);
-            }
-        }
-		return ret;
-	}
-
-	private boolean extractEntryFromXzFile(Doc parentZipDoc, Doc zipDoc) 
-	{
-        boolean ret = false;
-		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
-		
-        File file = new File(parentZipFilePath);
-		if(file.exists() == false)
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
-			return ret;
-		}
-		else if(file.isDirectory())
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
-			return ret;
-		}
-
-        FileInputStream  fileInputStream = null;
-        XZInputStream gzipIn = null;
-        OutputStream out = null;
-
-        try {
-            fileInputStream = new FileInputStream(file);
-            
-            gzipIn = new XZInputStream(fileInputStream, 100 * 1024);
-
-            File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-			File parent = tempFile.getParentFile();
-			if (!parent.exists()) {
-				parent.mkdirs();
-			}
-			
-            out = new FileOutputStream(tempFile);
-            int count;
-            byte data[] = new byte[2048];
-            while ((count = gzipIn.read(data)) != -1) {
-                out.write(data, 0, count);
-            }
-            out.flush();
-            ret = true;
-        } catch (IOException e) {
-            Log.info(e);
-        }finally {
-            try {
-                if(out != null){
-                    out.close();
-                }
-                if(gzipIn != null){
-                    gzipIn.close();
-                }
-                if(fileInputStream != null){
-                    fileInputStream.close();
-                }
-            } catch (IOException e) {
-                Log.info(e);
-            }
-        }
-		return ret;
-	}
-
-	private boolean extractEntryFromGzFile(Doc parentZipDoc, Doc zipDoc) 
-	{
-        boolean ret = false;
-		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
-		
-        File file = new File(parentZipFilePath);
-		if(file.exists() == false)
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
-			return ret;
-		}
-		else if(file.isDirectory())
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
-			return ret;
-		}
-
-        FileInputStream  fileInputStream = null;
-        GZIPInputStream gzipIn = null;
-        OutputStream out = null;
-        
-        try {
-            fileInputStream = new FileInputStream(file);
-            gzipIn = new GZIPInputStream(fileInputStream);
-
-            File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-			File parent = tempFile.getParentFile();
-			if (!parent.exists()) {
-				parent.mkdirs();
-			}
-			
-            out = new FileOutputStream(tempFile);
-            int count;
-            byte data[] = new byte[2048];
-            while ((count = gzipIn.read(data)) != -1) {
-                out.write(data, 0, count);
-            }
-            out.flush();
-            ret = true;
-        } catch (IOException e) {
-            Log.info(e);
-        }finally {
-            try {
-                if(out != null){
-                    out.close();
-                }
-                if(gzipIn != null){
-                    gzipIn.close();
-                }
-                if(fileInputStream != null){
-                    fileInputStream.close();
-                }
-            } catch (IOException e) {
-                Log.info(e);
-            }
-        }
-        return ret;
-	}
-
-	private boolean extractEntryFromTarBz2File(Doc parentZipDoc, Doc zipDoc) 
-	{
-        boolean ret = false;
-		String parentZipFilePath = parentZipDoc.getLocalRootPath() + parentZipDoc.getPath() + parentZipDoc.getName();
-		
-        File file = new File(parentZipFilePath);
-		if(file.exists() == false)
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 不存在！");
-			return ret;
-		}
-		else if(file.isDirectory())
-		{
-			Log.debug("extractEntryFromTarFile " + parentZipFilePath + " 是目录！");
-			return ret;
-		}
-		
-	    String relativePath = getZipRelativePath(zipDoc.getPath(), parentZipDoc.getPath() + parentZipDoc.getName() + "/");
-        String expEntryPath = relativePath + zipDoc.getName();
-        
-        FileInputStream fis = null;
-        OutputStream fos = null;
-        BZip2CompressorInputStream bis = null;
-        TarInputStream tis = null;
-        try {
-            fis = new FileInputStream(file);
-            bis = new BZip2CompressorInputStream(fis);
-            tis = new TarInputStream(bis, 1024 * 2);
-
-            TarEntry entry;
-            while((entry = tis.getNextEntry()) != null)
-            {
-            	String subEntryPath = entry.getName();
-            	if(subEntryPath.equals(expEntryPath))
-            	{
-	            	Log.debug("subEntry:" + entry.getName());
-	            	
-	                if(entry.isDirectory())
-	                {
-	            		FileUtil.createDir(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName()); // 创建子目录
-	                }
-	                else
-	                {
-	            		File tempFile = new File(zipDoc.getLocalRootPath() + zipDoc.getPath() + zipDoc.getName());
-	        			File parent = tempFile.getParentFile();
-	        			if (!parent.exists()) {
-	        				parent.mkdirs();
-	        			}
-	        			
-	                    fos = new FileOutputStream(tempFile);
-	                    int count;
-	                    byte data[] = new byte[2048];
-	                    while ((count = tis.read(data)) != -1) {
-	                        fos.write(data, 0, count);
-	                    }
-	                    fos.flush();
-	                }
-	                ret = true;
-	                break;
-            	}
-            }
-        } catch (IOException e) {
-            Log.info(e);
-        }finally {
-            try {
-                if(fis != null){
-                    fis.close();
-                }
-                if(fos != null){
-                    fos.close();
-                }
-                if(bis != null){
-                    bis.close();
-                }
-                if(tis != null){
-                    tis.close();
-                }
-            } catch (IOException e) {
-                Log.info(e);
-            }
-        }
-		return ret;
 	}
 
 	private boolean extractEntryFrom7zFile(Doc parentZipDoc, Doc zipDoc) {
