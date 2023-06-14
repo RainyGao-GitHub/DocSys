@@ -1,0 +1,3 @@
+[submodule "WebRoot/web/static/office-editor"]
+	path = WebRoot/web/static/office-editor
+	url = https://gitee.com/RainyGao/office-editor.git
