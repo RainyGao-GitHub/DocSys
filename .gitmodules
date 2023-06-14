@@ -4,3 +4,6 @@
 [submodule "Docs"]
 	path = Docs
 	url = https://gitee.com/RainyGao/DocSys-Docs.git
+[submodule "WebRoot/WEB-INF/lib"]
+	path = WebRoot/WEB-INF/lib
+	url = https://gitee.com/RainyGao/DocSys-Libs.git
