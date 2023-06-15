@@ -1916,7 +1916,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping(value="addFirstAdminUser")
-	public void addFirstAdminUser(User user, HttpSession session,HttpServletResponse response)
+	public void addFirstAdminUser(User user, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** addFirstAdminUser.do ***********************");
 
@@ -1928,6 +1928,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("系统管理员已存在!", rt);
 			writeJson(rt, response);	
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -1936,6 +1937,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("用户名不能为空！", rt);
 			writeJson(rt, response);	
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -1944,6 +1946,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("密码不能为空！", rt);
 			writeJson(rt, response);	
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -1951,6 +1954,7 @@ public class ManageController extends BaseController{
 		{
 			Log.debug("用户检查失败!");			
 			writeJson(rt, response);
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;			
 		}
 		
@@ -1964,14 +1968,18 @@ public class ManageController extends BaseController{
 		if(userService.addUser(user) == 0)
 		{
 			docSysErrorLog("Failed to add new User in DB", rt);
+			writeJson(rt, response);
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
+			return;
 		}
 		
 		writeJson(rt, response);
+		addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		return;
 	}
 
 	@RequestMapping(value="addUser")
-	public void addUser(User user, HttpSession session,HttpServletResponse response)
+	public void addUser(User user, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** addUser.do ***********************");
 
@@ -2005,6 +2013,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("danger#越权操作！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -2013,6 +2022,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("danger#账号不能为空！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -2020,12 +2030,14 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("密码不能为空！", rt);
 			writeJson(rt, response);	
+			addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
 		if(checkSystemUsersCount(rt) == false)
 		{
 			writeJson(rt, response);	
+			addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;			
 		}
 		
@@ -2033,6 +2045,7 @@ public class ManageController extends BaseController{
 		{
 			Log.debug("用户检查失败!");			
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;			
 		}
 				
@@ -2045,14 +2058,19 @@ public class ManageController extends BaseController{
 		if(userService.addUser(user) == 0)
 		{
 			docSysErrorLog("Failed to add new User in DB", rt);
+			writeJson(rt, response);
+
+			addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
+			return;
 		}
-		
+
+		addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		writeJson(rt, response);
 		return;
 	}
 
 	@RequestMapping(value="editUser")
-	public void editUser(User user, HttpSession session,HttpServletResponse response)
+	public void editUser(User user, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** editUser.do ***********************");
 
@@ -2081,6 +2099,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("用户ID不能为空", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -2095,6 +2114,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("越权操作：您无权设置该用户等级！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -2109,6 +2129,7 @@ public class ManageController extends BaseController{
 			{
 				docSysErrorLog("用户不存在！", rt);
 				writeJson(rt, response);
+				addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 				return;	
 			}
 
@@ -2116,6 +2137,7 @@ public class ManageController extends BaseController{
 			{
 				docSysErrorLog("越权操作：您无权修改高级别用户的设置！", rt);
 				writeJson(rt, response);
+				addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 				return;			
 			}
 
@@ -2125,6 +2147,7 @@ public class ManageController extends BaseController{
 				{
 					docSysErrorLog("越权操作：您无权修改同级别用户的设置！", rt);
 					writeJson(rt, response);
+					addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 					return;
 				}
 			}
@@ -2161,6 +2184,7 @@ public class ManageController extends BaseController{
 		{
 			Log.debug("用户检查失败!");			
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;			
 		}
 		
@@ -2168,15 +2192,19 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
+		addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
+
 		writeJson(rt, response);
+		addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		return;
 	}
 	
 	@RequestMapping(value="resetPwd")
-	public void resetPwd(User user, HttpSession session,HttpServletResponse response)
+	public void resetPwd(User user, HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
 		Log.infoHead("****************** resetPwd.do ***********************");
 
@@ -2201,6 +2229,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("您无权进行此操作！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "resetPwd", "resetPwd", "重置用户密码", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;			
 		}
 		
@@ -2213,6 +2242,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("用户ID不能为空", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "resetPwd", "resetPwd", "重置用户密码", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
@@ -2224,6 +2254,7 @@ public class ManageController extends BaseController{
 			{
 				docSysErrorLog("越权操作：您无权修改高级别用户的密码！", rt);
 				writeJson(rt, response);
+				addSystemLog(request, login_user, "resetPwd", "resetPwd", "重置用户密码", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 				return;			
 			}
 			
@@ -2233,6 +2264,7 @@ public class ManageController extends BaseController{
 				{
 					docSysErrorLog("越权操作：您无权修改同级别用户的密码！", rt);
 					writeJson(rt, response);
+					addSystemLog(request, login_user, "resetPwd", "resetPwd", "重置用户密码", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 					return;			
 				}
 			}
@@ -2243,16 +2275,18 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "resetPwd", "resetPwd", "重置用户密码", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
 		writeJson(rt, response);
+		addSystemLog(request, login_user, "resetPwd", "resetPwd", "重置用户密码", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		return;
 	}
 
 	
 	@RequestMapping(value="delUser")
-	public void delUser(Integer userId, HttpSession session,HttpServletResponse response)
+	public void delUser(Integer userId, HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
 		Log.infoHead("****************** delUser.do ***********************");
 
@@ -2271,6 +2305,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2278,6 +2313,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("您无权进行此操作！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;			
 		}
 		
@@ -2285,6 +2321,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("用户ID不能为空", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2296,6 +2333,7 @@ public class ManageController extends BaseController{
 			{
 				docSysErrorLog("用户不存在！", rt);
 				writeJson(rt, response);
+				addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 				return;	
 			}
 
@@ -2303,6 +2341,7 @@ public class ManageController extends BaseController{
 			{
 				docSysErrorLog("越权操作：您无权删除高级别用户！", rt);
 				writeJson(rt, response);
+				addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 				return;			
 			}
 	
@@ -2312,6 +2351,7 @@ public class ManageController extends BaseController{
 				{
 					docSysErrorLog("越权操作：您无权删除同级别用户！", rt);
 					writeJson(rt, response);
+					addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 					return;			
 				}
 			}		
@@ -2321,6 +2361,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;		
 		}
 		else
@@ -2340,6 +2381,7 @@ public class ManageController extends BaseController{
 		}
 		
 		writeJson(rt, response);
+		addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		return;		
 	}
 	
@@ -2475,7 +2517,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping(value="addGroup")
-	public void addGroup(UserGroup group, HttpSession session,HttpServletResponse response)
+	public void addGroup(UserGroup group, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** addGroup.do ***********************");
 
@@ -2498,6 +2540,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "addGroup", "addGroup", "新增用户组", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2506,6 +2549,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("组名不能为空！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addGroup", "addGroup", "新增用户组", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2513,6 +2557,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("用户组 " + name + " 已存在！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addGroup", "addGroup", "新增用户组", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 	
@@ -2524,8 +2569,13 @@ public class ManageController extends BaseController{
 		if(userService.addGroup(group) == 0)
 		{
 			docSysErrorLog("Failed to add new Group in DB", rt);
+			writeJson(rt, response);
+
+			addSystemLog(request, login_user, "addGroup", "addGroup", "新增用户组", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
+			return;
 		}
-		
+
+		addSystemLog(request, login_user, "addGroup", "addGroup", "新增用户组", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		writeJson(rt, response);
 		return;
 	}
@@ -2548,7 +2598,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping(value="delGroup")
-	public void delGroup(Integer id, HttpSession session,HttpServletResponse response)
+	public void delGroup(Integer id, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** delGroup.do ***********************");
 
@@ -2567,6 +2617,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "delGroup", "delGroup", "删除用户组", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2574,6 +2625,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("Failed to delete Group from DB", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "delGroup", "delGroup", "删除用户组", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;		
 		}
 		else
@@ -2593,11 +2645,12 @@ public class ManageController extends BaseController{
 		}
 		
 		writeJson(rt, response);
+		addSystemLog(request, login_user, "delGroup", "delGroup", "删除用户组", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		return;		
 	}
 	
 	@RequestMapping(value="editGroup")
-	public void editGroup(UserGroup group, HttpSession session,HttpServletResponse response)
+	public void editGroup(UserGroup group, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** editGroup.do ***********************");
 
@@ -2622,6 +2675,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "editGroup", "editGroup", "修改用户组信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2629,6 +2683,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("用户组ID不能为空", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "editGroup", "editGroup", "修改用户组信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2636,10 +2691,12 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "editGroup", "editGroup", "修改用户组信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
 		writeJson(rt, response);
+		addSystemLog(request, login_user, "editGroup", "editGroup", "修改用户组信息", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		return;
 	}
 	
@@ -2695,7 +2752,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping(value="addGroupMember")
-	public void addGroupMember(Integer groupId,Integer userId, HttpSession session,HttpServletResponse response)
+	public void addGroupMember(Integer groupId,Integer userId, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** addGroupMember.do ***********************");
 
@@ -2714,6 +2771,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "addGroupMember", "addGroupMember", "添加用户组成员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2722,6 +2780,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("组ID不能为空！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addGroupMember", "addGroupMember", "添加用户组成员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2730,6 +2789,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("用户ID不能为空！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addGroupMember", "addGroupMember", "添加用户组成员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		GroupMember groupMember = new GroupMember();
@@ -2741,6 +2801,7 @@ public class ManageController extends BaseController{
 			Log.debug("addGroupMember() 用户 " + userId + " 已是该组成员！");
 			docSysErrorLog("用户 " + userId + " 已是该组成员！", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addGroupMember", "addGroupMember", "添加用户组成员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 	
@@ -2749,10 +2810,12 @@ public class ManageController extends BaseController{
 			Log.debug("addGroupMember() Failed to add groupMember");
 			docSysErrorLog("Failed to add new GroupMember in DB", rt);
 			writeJson(rt, response);
+			addSystemLog(request, login_user, "addGroupMember", "addGroupMember", "添加用户组成员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
 		writeJson(rt, response);
+		addSystemLog(request, login_user, "addGroupMember", "addGroupMember", "添加用户组成员", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		return;
 	}
 
@@ -2766,7 +2829,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping(value="delGroupMember")
-	public void delGroupMember(Integer id, HttpSession session,HttpServletResponse response)
+	public void delGroupMember(Integer id, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("delGroupMember " + id);
 		
@@ -2783,15 +2846,20 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "delGroupMember", "delGroupMember", "删除用户组成员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
 		if(userService.delGroupMember(id) == 0)
 		{
 			docSysErrorLog("Failed to delete GroupMember from DB", rt);
+			writeJson(rt, response);
+			addSystemLog(request, login_user, "delGroupMember", "delGroupMember", "删除用户组成员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
+			return;
 		}
 		
 		writeJson(rt, response);
+		addSystemLog(request, login_user, "delGroupMember", "delGroupMember", "删除用户组成员", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		return;		
 	}
 	
@@ -2855,6 +2923,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "downloadLogFile", "downloadLogFile", "下载调试日志", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2869,6 +2938,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("日志文件不存在！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "downloadLogFile", "downloadLogFile", "下载调试日志", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;							
 		}
 		
@@ -2877,6 +2947,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("日志文件路径错误:" + logFilePath, rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "downloadLogFile", "downloadLogFile", "下载调试日志", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;										
 		}
 		String path = Path.localDirPathFormat(temp[0], OSType);
@@ -2889,6 +2960,7 @@ public class ManageController extends BaseController{
 		String downloadLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDoc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;
 		rt.setData(downloadLink);
 		writeJson(rt, response);			
+		addSystemLog(request, login_user, "downloadLogFile", "downloadLogFile", "下载调试日志", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		return;		
 	}
 	
@@ -2910,6 +2982,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "cleanLogFile", "cleanLogFile", "清除调试日志", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
 		}
 		
@@ -2924,6 +2997,7 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("日志文件 "  + logFilePath + " 不存在！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "cleanLogFile", "cleanLogFile", "清除调试日志", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;							
 		}
 		
@@ -2931,10 +3005,12 @@ public class ManageController extends BaseController{
 		{
 			docSysErrorLog("日志清除失败，请稍候重试！", rt);
 			writeJson(rt, response);			
+			addSystemLog(request, login_user, "cleanLogFile", "cleanLogFile", "清除调试日志", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;							
 		}
 		
         writeJson(rt, response);		
+		addSystemLog(request, login_user, "cleanLogFile", "cleanLogFile", "清除调试日志", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 	}
 
 }
