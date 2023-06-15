@@ -46,7 +46,6 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
-import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.LongTermTask;
@@ -1340,6 +1339,7 @@ public class ManageController extends BaseController{
 		}
 				
 		writeJson(rt, response);
+		addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置", null, "成功",  null, null, null, buildSystemLogDetailContent(rt));
 		
 		if(ldapConfig != null)
 		{
@@ -1357,7 +1357,6 @@ public class ManageController extends BaseController{
 			restartClusterServer();
 		}
 		
-		addSystemLog(request, accessUser, "setSystemInfo", "setSystemInfo", "系统设置", null, "成功",  null, null, null, buildSystemLogDetailContent(rt));
 	}
 	
 	@RequestMapping("/resetCluster.do")
@@ -2196,8 +2195,6 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
-
 		writeJson(rt, response);
 		addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		return;
@@ -2364,21 +2361,17 @@ public class ManageController extends BaseController{
 			addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;		
 		}
-		else
-		{
-			//Delete all related ReposAuth \ DocAuth \GroupMember Infos
-			DocAuth docAuth = new DocAuth();
-			docAuth.setUserId(userId);
-			reposService.deleteDocAuthSelective(docAuth);
-
-			ReposAuth reposAuth = new ReposAuth();
-			reposAuth.setUserId(userId);
-			reposService.deleteReposAuthSelective(reposAuth);
-			
-			GroupMember groupMember = new GroupMember();
-			groupMember.setUserId(userId);
-			userService.deleteGroupMemberSelective(groupMember);
-		}
+		
+		//Delete all related ReposAuth \ DocAuth \GroupMember Infos
+		DocAuth docAuth = new DocAuth();
+		docAuth.setUserId(userId);
+		reposService.deleteDocAuthSelective(docAuth);
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setUserId(userId);
+		reposService.deleteReposAuthSelective(reposAuth);
+		GroupMember groupMember = new GroupMember();
+		groupMember.setUserId(userId);
+		userService.deleteGroupMemberSelective(groupMember);
 		
 		writeJson(rt, response);
 		addSystemLog(request, login_user, "delUser", "delUser", "删除用户", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
@@ -2628,21 +2621,17 @@ public class ManageController extends BaseController{
 			addSystemLog(request, login_user, "delGroup", "delGroup", "删除用户组", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;		
 		}
-		else
-		{
-			//Delete all related ReposAuth \ DocAuth \GroupMember Infos
-			DocAuth docAuth = new DocAuth();
-			docAuth.setGroupId(id);
-			reposService.deleteDocAuthSelective(docAuth);
-	
-			ReposAuth reposAuth = new ReposAuth();
-			reposAuth.setGroupId(id);
-			reposService.deleteReposAuthSelective(reposAuth);
-			
-			GroupMember groupMember = new GroupMember();
-			groupMember.setGroupId(id);
-			userService.deleteGroupMemberSelective(groupMember);
-		}
+		
+		//Delete all related ReposAuth \ DocAuth \GroupMember Infos
+		DocAuth docAuth = new DocAuth();
+		docAuth.setGroupId(id);
+		reposService.deleteDocAuthSelective(docAuth);
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setGroupId(id);
+		reposService.deleteReposAuthSelective(reposAuth);
+		GroupMember groupMember = new GroupMember();
+		groupMember.setGroupId(id);
+		userService.deleteGroupMemberSelective(groupMember);
 		
 		writeJson(rt, response);
 		addSystemLog(request, login_user, "delGroup", "delGroup", "删除用户组", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
