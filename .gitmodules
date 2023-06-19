@@ -7,3 +7,12 @@
 [submodule "WebRoot/WEB-INF/lib"]
 	path = WebRoot/WEB-INF/lib
 	url = https://gitee.com/RainyGao/DocSys-Libs.git
+[submodule "src/com/DocSystem/websocket"]
+	path = src/com/DocSystem/websocket
+	url = https://gitee.com/RainyGao/websocket.git
+[submodule "src/com/DocSystem/sales"]
+	path = src/com/DocSystem/sales
+	url = https://gitee.com/RainyGao/docsys-sales.git
+[submodule "WebRoot/web/sales"]
+	path = WebRoot/web/sales
+	url = https://gitee.com/RainyGao/docsys-sales-web.git
