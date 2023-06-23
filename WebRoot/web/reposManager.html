@@ -463,11 +463,19 @@
                     }
                     else
                     {
-                    	showErrorMessage("密钥备份失败:" + ret.msgInfo);
+                        bootstrapQ.msg({
+								msg : '密钥备份失败:' + ret.msgInfo,
+								type : 'warning',
+								time : 2000,
+						});
                     }
                 },
                 error : function () {
- 	               showErrorMessage('密钥备份失败:服务器异常');
+                    bootstrapQ.msg({
+							msg : '密钥备份失败:服务器异常',
+							type : 'warning',
+							time : 2000,
+					});
                 }
         });
 	}
@@ -507,13 +515,21 @@
                     }
                     else
                     {
+                    	 bootstrapQ.msg({
+								msg : '删除失败:' + ret.msgInfo,
+								type : 'warning',
+								time : 2000,
+						});
                     	syncUpMenu();	//删除失败，只需要用本地数据刷新整个tree
-                    	showErrorMessage("Error:" + ret.msgInfo);
                     }
                 },
                 error : function () {
-                   syncUpMenu();	//删除失败，只需要用本地数据刷新整个tree
- 	               showErrorMessage('服务器异常：仓库删除失败！');
+	               	 bootstrapQ.msg({
+							msg : '删除失败:服务器异常',
+							type : 'warning',
+							time : 2000,
+					});
+                	syncUpMenu();	//删除失败，只需要用本地数据刷新整个tree
                 }
         });
 	}
