@@ -443,15 +443,15 @@
 	    });
 	}
 	
-    function backupReposEncryptConfig(vid)
+    function backupReposEncryptConfig(reposId)
 	{
-		console.log("backupReposEncryptConfig() id:" + vid);
+		console.log("backupReposEncryptConfig() reposId:" + reposId);
     	$.ajax({
                 url : "/DocSystem/Repos/backupReposEncryptConfig.do",
                 type : "post",
                 dataType : "json",
                 data : {
-                    vid : vid,
+                    reposId : reposId,
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){

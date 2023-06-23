@@ -542,6 +542,64 @@ public class ReposController extends BaseController{
 
 		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库", null, "成功", repos, null, null, buildSystemLogDetailContent(rt));
 	}
+	
+	@RequestMapping("/backupReposEncryptConfig.do")
+	public void backupReposEncryptConfig(Integer reposId, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception 
+	{
+		Log.infoHead("****************** backupReposEncryptConfig.do ***********************");
+		Log.debug("backupReposEncryptConfig reposId: " + reposId);
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			addSystemLog(request, login_user, "backupReposEncryptConfig", "backupReposEncryptConfig", "备份仓库密钥", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
+			return;
+		}
+		
+		Repos repos = getReposEx(reposId);		
+		String path = Path.getReposEncryptConfigPath(repos);
+		String name = Path.getReposEncryptConfigFileName();
+		File file = new File(path, name);
+		if(file.exists() == false)
+		{
+			docSysErrorLog("仓库密钥不存在！", rt);		
+			writeJson(rt, response);			
+			addSystemLog(request, login_user, "backupReposEncryptConfig", "backupReposEncryptConfig", "备份仓库密钥", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
+			return;
+		}
+		
+		//备份仓库密钥文件
+		String backupFilePath = path + name + "_" + DateFormat.dateTimeFormat2(new Date());
+		if(FileUtil.copyFile(path + name, backupFilePath, false) == false)
+		{
+			docSysErrorLog("密钥文件备份失败！", rt);		
+			writeJson(rt, response);		
+			addSystemLog(request, login_user, "backupReposEncryptConfig", "backupReposEncryptConfig", "备份仓库密钥", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
+			return;
+		}
+				
+		Log.debug("downloadLogFile() path:" + path + " name:" + name);		
+		Doc downloadDoc = buildDownloadDocInfo(0, "","", path, name, 0);
+		downloadDoc.encryptEn = 0;
+		
+		String downloadLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDoc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;
+		rt.setData(downloadLink);
+		writeJson(rt, response);			
+		addSystemLog(request, login_user, "backupReposEncryptConfig", "backupReposEncryptConfig", "备份仓库密钥", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
+
+		//TODO: sendMail To accessUser
+		
+		return;
+	}
 
 	/****************   user triggered Repository Auto Backup ******************/
 	@RequestMapping("/reposAutoBackup.do")
