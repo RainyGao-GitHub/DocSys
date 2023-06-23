@@ -429,6 +429,49 @@
 		    });
 	}
 	
+	function backupReposEncryptConfigConfirm(vid)
+	{	
+		console.log("backupReposEncryptConfigConfirm");
+		bootstrapQ.confirm({
+	        title: "备份密钥",
+	        msg: "是否备份仓库密钥？",
+	        okbtn: "确定",
+	        qubtn: "取消",
+	    },function () {
+	    	backupReposEncryptConfig(vid);
+	    	return true;   
+	    });
+	}
+	
+    function backupReposEncryptConfig(vid)
+	{
+		console.log("backupReposEncryptConfig() id:" + vid);
+    	$.ajax({
+                url : "/DocSystem/Repos/backupReposEncryptConfig.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    vid : vid,
+                },
+                success : function (ret) {
+                    if( "ok" == ret.status ){
+                        bootstrapQ.msg({
+    							msg : '密钥备份成功！',
+    							type : 'success',
+    							time : 2000,
+    					});
+                    }
+                    else
+                    {
+                    	showErrorMessage("密钥备份失败:" + ret.msgInfo);
+                    }
+                },
+                error : function () {
+ 	               showErrorMessage('密钥备份失败:服务器异常');
+                }
+        });
+	}
+	
 	function deleteReposConfirm(vid)
 	{	
 		console.log("deleteReposConfirm");
@@ -889,6 +932,13 @@
 				]
 			},
 			{divider: true},
+			{text: '删除仓库', action: function(e){
+						var vid = getQueryString("vid");
+						console.log("删除仓库：" + vid);	
+						deleteReposConfirm(vid);
+					}
+			},
+			{divider: true},
 			{text: '清除缓存', action: function(e){
 					e.preventDefault();
 					//显示清除缓存确认
@@ -896,10 +946,10 @@
 				}
 			},
 			{divider: true},
-			{text: '设置密码', action: function(e){
-						e.preventDefault();
-	        			showDocPwdSetPanel();
-					}
+			{text: '强制刷新', action: function(e){
+					e.preventDefault();
+					refreshDocConfirm(curRightClickedTreeNode);
+				}
 			},
 			/*{divider: true},
 			{text: '全文搜索', action: function(e){
@@ -908,16 +958,16 @@
 					}
 			},*/
 			{divider: true},
-			{text: '强制刷新', action: function(e){
-					e.preventDefault();
-					refreshDocConfirm(curRightClickedTreeNode);
-				}
+			{text: '设置密码', action: function(e){
+						e.preventDefault();
+	        			showDocPwdSetPanel();
+					}
 			},
 			{divider: true},
-			{text: '删除仓库', action: function(e){
+			{text: '备份密钥', action: function(e){
 						var vid = getQueryString("vid");
-						console.log("删除仓库：" + vid);	
-						deleteReposConfirm(vid);
+						console.log("备份仓库密钥：" + vid);	
+						backupReposEncryptConfigConfirm(vid);
 					}
 			},
 		]);
