@@ -52,7 +52,7 @@ public class FileUtil {
 				buff = content.getBytes(charset);
 			}			
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}		
 		return buff;
 	}
@@ -73,7 +73,7 @@ public class FileUtil {
 			try {
 				content = new String(buffer, charset);
 			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
+				Log.debug(e);
 			}
 		}
 		return content;		
@@ -144,14 +144,14 @@ public class FileUtil {
 			ret = true;
 		} catch (Exception e) {
 			Log.debug("saveDataToFile() new FileOutputStream failed");
-			e.printStackTrace();
+			Log.debug(e);
 		} finally {
 			if(out != null)
 			{
 				try {
 					out.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
 			}
 		}
@@ -204,14 +204,14 @@ public class FileUtil {
 			in.write(buffer);	
 			ret = true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} finally {
 			if(in != null)
 			{
 				try {
 					in.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}	
 			}
 		}
@@ -251,7 +251,7 @@ public class FileUtil {
 			in.close();	
 			return buffer;
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 			return null;
 		}
 	}
@@ -295,14 +295,14 @@ public class FileUtil {
 			in.read(buffer);	
 			return buffer;
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} finally {
 			if(in != null)
 			{
 				try {
 					in.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}	
 			}
 		}
@@ -393,7 +393,7 @@ public class FileUtil {
         }
     	catch (Exception e) { 
     		Log.error("copyFile() from " + srcFilePath + " to " + dstFilePath + " Exception"); 
-    		e.printStackTrace(); 
+    		Log.debug(e); 
     	} finally {
 			try {
 	    		if(inputChannel != null)
@@ -413,7 +413,7 @@ public class FileUtil {
 	    			out.close();
 	    		}
 			} catch (Exception e) {
-				e.printStackTrace();
+				Log.debug(e);
 			}
 
     	}
@@ -528,7 +528,7 @@ public class FileUtil {
 	    catch (Exception e) 
 	    { 
 	    	Log.error("copyDir from " + srcPath  + " to " + dstPath + " 异常"); 
-	    	e.printStackTrace(); 
+	    	Log.debug(e); 
 	    	return false;
 	    }
 	    return true;
@@ -588,7 +588,7 @@ public class FileUtil {
         try {
         	ret = dir.mkdirs();
         } catch(Exception e) {
-        	e.printStackTrace();
+        	Log.debug(e);
         }
     	return ret;
     }
@@ -610,7 +610,7 @@ public class FileUtil {
         	try {
 				return file.createNewFile();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.debug(e);
 				return false;
 			}
         }
@@ -767,7 +767,7 @@ public class FileUtil {
 			srcFile.transferTo(dstFile);
 		} catch (Exception e) {
 			ret = false;
-			e.printStackTrace();
+			Log.debug(e);
 		}
 		return ret;
 	}
@@ -858,7 +858,7 @@ public class FileUtil {
             randomFile.close();
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.debug(e);
         }
         return false;
     }
@@ -1308,14 +1308,14 @@ public class FileUtil {
 	        compress(out, input, null);
 	        ret = true;
     	} catch(Exception e) {
-    		e.printStackTrace();
+    		Log.debug(e);
     	} finally {
     		if(out != null)
     		{
     			try {
 					out.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
     		}
     	}
@@ -1476,7 +1476,7 @@ public class FileUtil {
 			}
 			rt.setData(_fileName);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 			rt.setError("上传图片失败。");
 			rt.setData("上传图片失败。");
 		}
@@ -1512,7 +1512,7 @@ public class FileUtil {
 	        	return true;    
 	        }
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
         return false;
 	}
@@ -1639,7 +1639,7 @@ public class FileUtil {
 			}
 			bis.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 			charset = null;
 		}
 		Log.debug("getCharset() file [" + path + "] charset:" + charset);
@@ -1742,7 +1742,7 @@ public class FileUtil {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 			charset = null;
 		}
 		Log.debug("\ngetCharset() charset:" + charset);

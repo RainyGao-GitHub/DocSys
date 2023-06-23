@@ -68,10 +68,10 @@ public class FtpUtil {
     		} 
     		Log.debug("connect successful...ftp服务器:"+this.host+":"+this.port);  
     	}catch (MalformedURLException e) {  
-    		e.printStackTrace();
+    		Log.debug(e);
     		return false;
     	}catch (IOException e) {  
-    		e.printStackTrace();
+    		Log.debug(e);
     		return false;
     	}
     	return true;
@@ -83,7 +83,7 @@ public class FtpUtil {
             	try {
 					ftpClient.disconnect();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
             }
         }
@@ -94,7 +94,7 @@ public class FtpUtil {
     	try {
 			list = ftpClient.listFiles(directory);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
     	return list;
     }
@@ -107,7 +107,7 @@ public class FtpUtil {
     	  ftpClient.storeFile(fileName, input); 
     	  ret = true; 
       }catch (Exception e) { 
-    	  e.printStackTrace(); 
+    	  Log.debug(e); 
       } 
       return ret; 
     } 
@@ -129,14 +129,14 @@ public class FtpUtil {
             os = new FileOutputStream(file);
 			ret = ftpClient.retrieveFile(fileName, os);  
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         } finally {
         	if(os != null)
         	{
         		try {
 					os.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
         	}
         }
@@ -148,7 +148,7 @@ public class FtpUtil {
 		try { 
 			ret = ftpClient.makeDirectory(dir);
 		} catch (Exception e) { 
-			e.printStackTrace(); 
+			Log.debug(e); 
 		} 
 		return ret; 
 	}
@@ -162,7 +162,7 @@ public class FtpUtil {
              ftpClient.dele(directory + fileName);
              ret = true;
         } catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
         return ret;
     }
@@ -173,7 +173,7 @@ public class FtpUtil {
              ftpClient.removeDirectory(directory + fileName);
              ret = true;
         } catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
         return ret;
 	}
@@ -207,7 +207,7 @@ public class FtpUtil {
 			}
 			ret = delDir(directory, fileName);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
     	return ret;
     }
@@ -257,7 +257,7 @@ public class FtpUtil {
 	    			}
 	            } 
 	        } catch (Exception e) {
-				e.printStackTrace();
+	        	Log.debug(e);
 			}
 		}
         return ret;
@@ -275,7 +275,7 @@ public class FtpUtil {
 	        in.close();
              ret = true;
         } catch (Exception e) {
-			e.printStackTrace();
+        	Log.debug(e);
 		}
         return ret;
 	} 
@@ -286,7 +286,7 @@ public class FtpUtil {
         	 ftpClient.rename(srcRemotePath + srcName, dstRemotePath + dstName);  
              ret = true;
         } catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
         return ret;
 	} 
@@ -298,7 +298,7 @@ public class FtpUtil {
         	ftpClient.changeWorkingDirectory(directory); 
         	ret = true;
         } catch (Exception e) { 
-        	e.printStackTrace(); 
+        	Log.debug(e); 
         } 
         return ret; 
      }	 

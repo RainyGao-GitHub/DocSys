@@ -23,6 +23,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
+import com.DocSystem.common.Log;
+
 @SuppressWarnings("deprecation")
 class poiTest  
 {  
@@ -68,7 +70,7 @@ class poiTest
 	    		content.append(pp.text());
 	    	}
     	} catch (Exception e) {
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return content.toString().trim();
     }
@@ -84,7 +86,7 @@ class poiTest
     		str = extractor.getText();
     		fis.close();
     	} catch (Exception e) {
-    		 e.printStackTrace();
+    		 Log.debug(e);
     	}
     	return str;
    }
@@ -104,10 +106,10 @@ class poiTest
             extractor.close();  
         } catch (FileNotFoundException e) {  
             System.out.println("没有找到指定路径"+filePath);  
-            e.printStackTrace();  
+            Log.debug(e);  
         } catch (IOException e) {  
             System.out.println("getTextFromExcel IO错误");  
-            e.printStackTrace();  
+            Log.debug(e);  
         }  
         return text;  
     }  
@@ -125,10 +127,10 @@ class poiTest
             extractor.close();  
         } catch (FileNotFoundException e) {  
             System.out.println("没有找到指定路径"+filePath);  
-            e.printStackTrace();  
+            Log.debug(e);  
         } catch (IOException e) {  
             System.out.println("getTextFromExcel2007 IO错误");  
-            e.printStackTrace();  
+            Log.debug(e);  
         }  
         return text;  
     }  
@@ -170,10 +172,10 @@ class poiTest
                 extractor.close();  
             } catch (FileNotFoundException e) {  
                 System.out.println("没有找到指定路径"+filePath);  
-                e.printStackTrace();  
+                Log.debug(e);  
             } catch (IOException e) {  
                 System.out.println("getTextFromPPT IO错误");  
-                e.printStackTrace();  
+                Log.debug(e);  
             }  
             return text;  
         }  
@@ -190,10 +192,10 @@ class poiTest
                 extractor.close();  
             } catch (FileNotFoundException e) {  
                 System.out.println("没有找到指定路径"+filePath);  
-                e.printStackTrace();  
+                Log.debug(e);  
             } catch (IOException e) {  
                 System.out.println("getTextFromPPT2007 IO错误");  
-                e.printStackTrace();  
+                Log.debug(e);  
             }  
             return text;  
         }  
@@ -258,7 +260,7 @@ class poiTest
                 //TextLogger.getLogger().info(loc + " " + Integer.toHexString(read));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         } finally {
             if (bis != null) {
                 try {
@@ -302,14 +304,14 @@ class poiTest
               }
               data = new String(sb);
           }catch(Exception e){
-              e.printStackTrace();
+              Log.debug(e);
           }finally{
               try {
                   if(isr != null){
                       isr.close();
                   }
               } catch (IOException e) {
-                  e.printStackTrace();
+                  Log.debug(e);
               }
           }
           return data;

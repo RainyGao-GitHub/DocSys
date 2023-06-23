@@ -511,7 +511,7 @@ public class GitUtil {
 				try {
 					out.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			return false;
@@ -923,7 +923,7 @@ public class GitUtil {
 					try {
 						out.close();
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						Log.debug(e1);
 					}
 				}
 				return false;

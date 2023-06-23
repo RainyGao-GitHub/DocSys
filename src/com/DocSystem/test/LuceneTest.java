@@ -16,6 +16,7 @@ import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.common.Log;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import util.LuceneUtil.LuceneUtil2;
@@ -68,7 +69,7 @@ class LuceneTest
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        System.out.println("addIndex() 异常");
-			e.printStackTrace();
+			Log.debug(e);
 			return false;
 		}
     }
@@ -80,7 +81,7 @@ class LuceneTest
         		indexWriter.close();
         	}
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			Log.debug(e1);
 		}
 		
 		if(directory != null)
@@ -88,7 +89,7 @@ class LuceneTest
 			try {
 				directory.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.debug(e);
 			}
 		}
 		if(analyzer != null)
@@ -123,7 +124,7 @@ class LuceneTest
             	LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchResult, searchType, weight, hitType);
          } catch (Exception e) {
  			// TODO Auto-generated catch block
- 			e.printStackTrace();
+ 			Log.debug(e);
  		}
 	}  
     

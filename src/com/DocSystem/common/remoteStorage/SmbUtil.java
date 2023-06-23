@@ -58,7 +58,7 @@ public class SmbUtil {
 			remoteFile =getSmbFile(remoteUrl);
 	        list =  remoteFile.listFiles();
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}        
         return list;
     }
@@ -69,7 +69,7 @@ public class SmbUtil {
 		try {
 			remoteFile = getSmbFile(remoteUrl);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}        
         return remoteFile;
     }
@@ -100,14 +100,14 @@ public class SmbUtil {
           out.flush();
     	  ret = true; 
       }catch (Exception e) { 
-    	  e.printStackTrace(); 
+    	  Log.debug(e); 
       } finally {
     	  if(out != null)
     	  {
     		try {
 				out.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.debug(e);
 			}
     	  }
       }
@@ -144,14 +144,14 @@ public class SmbUtil {
             }
             ret = true;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         } finally {
         	if(os != null)
         	{
         		try {
 					os.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
         	}
         	if(in != null)
@@ -159,7 +159,7 @@ public class SmbUtil {
         		try {
 					in.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
         	}
         }
@@ -174,7 +174,7 @@ public class SmbUtil {
     		 remoteFile.mkdir();
     		 ret = true;
     	 } catch (Exception e) { 
-    		 e.printStackTrace(); 
+    		 Log.debug(e); 
     	 } 
     	 return ret; 
 	}
@@ -187,7 +187,7 @@ public class SmbUtil {
    		 	remoteFile.delete();
    		 	ret = true;
         } catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
    	 	return ret;
     }
@@ -200,7 +200,7 @@ public class SmbUtil {
    		 	remoteFile.delete();
    		 	ret = true;
         } catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
    	 	return ret;
     }
@@ -225,7 +225,7 @@ public class SmbUtil {
    	   		 	ret = true;
    		 	}
         } catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
    	 	return ret;
 	}
@@ -250,7 +250,7 @@ public class SmbUtil {
    	   		 	ret = true;
    		 	}
         } catch (Exception e) {
-			e.printStackTrace();
+        	Log.debug(e);
 		}
    	 	return ret;
 	}
@@ -266,7 +266,7 @@ public class SmbUtil {
    	   		 	ret = true;
    		 	}
         } catch (Exception e) {
-			e.printStackTrace();
+        	Log.debug(e);
 		}
    	 	return ret;
 	}	

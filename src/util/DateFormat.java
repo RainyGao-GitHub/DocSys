@@ -4,6 +4,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.DocSystem.common.Log;
+
 /**
  * 
  * @author hzw
@@ -45,7 +47,7 @@ public class  DateFormat {
 			date=sdf.parse(dateString);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		}
 		return date;
 	}

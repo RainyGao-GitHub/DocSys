@@ -29,6 +29,8 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import com.DocSystem.common.Log;
+
 import util.ReadProperties;
 
 
@@ -113,7 +115,7 @@ public class LuceneUtil extends Thread{
 				
 				
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.debug(e);
 			}
 			
 		}
@@ -171,7 +173,7 @@ public class LuceneUtil extends Thread{
 			try {
 				luceneUtil.initIndexs();
 			} catch (Exception e) {
-				e.printStackTrace();
+				Log.debug(e);
 			}
 		}
 		return luceneUtil;
@@ -209,7 +211,7 @@ public class LuceneUtil extends Thread{
 				fileIndexWriter = new IndexWriter(d, indexWriterConfig);
 			} catch (Exception e) {
 				System.out.println("ERROR>>>>>>>>>>LuceneUtil.java:getIndexWriter()");
-				e.printStackTrace();
+				Log.debug(e);
 			} 
 		}else{
 		}
@@ -237,7 +239,7 @@ public class LuceneUtil extends Thread{
 				tmpFileIndexWriter = new IndexWriter(d, indexWriterConfig);
 			} catch (Exception e) {
 				System.out.println("ERROR>>>>>>>>>>LuceneUtil.java:getIndexWriter()");
-				e.printStackTrace();
+				Log.debug(e);
 			} 
 		}
 		
@@ -263,7 +265,7 @@ public class LuceneUtil extends Thread{
 				ramIndexWriter = new IndexWriter(ramIndex, indexWriterConfig);
 			} catch (Exception e) {
 				System.out.println("ERROR>>>>>>>>>>LuceneUtil.java:getRamIndexWriter()");
-				e.printStackTrace();
+				Log.debug(e);
 			} 
 		}
 		return ramIndexWriter;
@@ -288,7 +290,7 @@ public class LuceneUtil extends Thread{
 				tmpRamIndexWriter = new IndexWriter(tmpRamIndex, indexWriterConfig);
 			} catch (Exception e) {
 				System.out.println("ERROR>>>>>>>>>>LuceneUtil.java:getTmpRamIndexWriter()");
-				e.printStackTrace();
+				Log.debug(e);
 			} 
 		}
 		return tmpRamIndexWriter;
@@ -356,7 +358,7 @@ public class LuceneUtil extends Thread{
 				w = new IndexWriter(d, indexWriterConfig);
 			} catch (Exception e) {
 				System.out.println("ERROR>>>>>>>>>>LuceneUtil.java:getIndexWriter()");
-				e.printStackTrace();
+				Log.debug(e);
 			} 
 			return w;
 		}else{
@@ -399,7 +401,7 @@ public class LuceneUtil extends Thread{
 			System.out.println("");
 			return str;
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.info(e);
 			return null;
 		}
 	}
@@ -509,8 +511,7 @@ public class LuceneUtil extends Thread{
 			w.addDocument(doc);
 			w.commit();
 		} catch (Exception e) {
-			System.out.println("ERROR>>>>>>>>>LuceneUtil:addDic()");
-			e.printStackTrace();
+			Log.info(e);
 		}
 	}
 	
@@ -525,8 +526,7 @@ public class LuceneUtil extends Thread{
 			}
 			w.commit();
 		} catch (Exception e) {
-			System.out.println("ERROR>>>>>>>>>LuceneUtil:addDic()");
-			e.printStackTrace();
+			Log.debug(e);
 		}
 	}
 	

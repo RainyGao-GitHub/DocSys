@@ -2084,7 +2084,7 @@ public class SVNUtil  extends BaseController{
 				try {
 					out.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			return false;

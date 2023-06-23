@@ -2,6 +2,8 @@ package util.Encrypt;
 
 import java.security.MessageDigest;
 
+import com.DocSystem.common.Log;
+
 public class MD5 {
 	public static String md5(String text) {
         return md5(text, null);
@@ -22,7 +24,7 @@ public class MD5 {
         } 
         catch (Exception e) 
         {
-            e.printStackTrace();
+            Log.debug(e);
         }
 		return text;
 	}
@@ -48,7 +50,7 @@ public class MD5 {
         } 
         catch (Exception e) 
         {
-            e.printStackTrace();
+            Log.debug(e);
         }
 		return null;
 	}

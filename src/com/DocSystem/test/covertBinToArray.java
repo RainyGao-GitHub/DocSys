@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.PrintStream;
 
+import com.DocSystem.common.Log;
 import com.DocSystem.controller.BaseController;
 
 class covertBinToArray extends BaseController{
@@ -68,7 +69,7 @@ class covertBinToArray extends BaseController{
 	        
 			System.out.println("convertBinToArry write to file ok:");										
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 			return;
 		}
 	}

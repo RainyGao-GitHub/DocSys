@@ -13,6 +13,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
+import com.DocSystem.common.Log;
+
 /**
  * ClassName: ReadProperties 
  * @Description: TODO
@@ -39,7 +41,7 @@ public class ReadProperties {
 			props.load(in);
 			return (String) props.get(key);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 			return null;
 		}		
 	}
@@ -58,7 +60,7 @@ public class ReadProperties {
             props.store(fileOutputStream, "");
             ret = true;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         } finally {
             try {
                 if (null != fileOutputStream){

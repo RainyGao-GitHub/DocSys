@@ -5338,14 +5338,14 @@ public class BaseFunction{
             
     		ret = downloadFromUrl(url, os);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         } finally {
         	if(os != null)
         	{
         		try {
 					os.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
         	}
         }

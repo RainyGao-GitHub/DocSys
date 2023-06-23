@@ -80,7 +80,7 @@ public class Log {
             randomFile.close();
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+        	Log.info(e);
         }
         return false;
     }

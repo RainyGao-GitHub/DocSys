@@ -26,6 +26,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.DocSystem.common.Log;
+
 import util.ReadProperties;
 import util.ReturnAjax;
 /**
@@ -96,7 +98,7 @@ public class EmailService {
 			rt.setMsgInfo("发送系统邮件成功！");
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 			rt.setError("发送系统邮件失败！");
 		}
 		return false;		

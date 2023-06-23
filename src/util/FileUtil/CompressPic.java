@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import com.DocSystem.common.Log;
+
 public class CompressPic {
 
 	/*******************************************************************************
@@ -125,7 +127,7 @@ public class CompressPic {
 //				out.close();
 			}
 		} catch (IOException ex) {
-			ex.printStackTrace();
+			Log.debug(ex);
 		}
 		return "ok";
 	}

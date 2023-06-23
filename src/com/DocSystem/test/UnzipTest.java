@@ -20,6 +20,7 @@ import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
 import org.tukaani.xz.XZInputStream;
 
+import com.DocSystem.common.Log;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
 import com.jcraft.jzlib.GZIPInputStream;
@@ -65,7 +66,7 @@ class UnzipTest
 	        //zip(srcFile, dstFile);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		}
     }  
     
@@ -118,14 +119,14 @@ class UnzipTest
                     return FileType.UNKNOWN;
             }
         }catch (Exception e){
-            e.printStackTrace();
+            Log.debug(e);
         }finally {
             try {
                 if(inputStream!=null){
                     inputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
         return FileType.UNKNOWN;
@@ -188,7 +189,7 @@ class UnzipTest
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         }finally {
             try {
                 if(archive != null){
@@ -198,7 +199,7 @@ class UnzipTest
                     outputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
     }
@@ -232,7 +233,7 @@ class UnzipTest
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+        	Log.debug(e);
         }finally {
             try {
                 if(sevenZFile != null){
@@ -242,7 +243,7 @@ class UnzipTest
                     outputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+            	Log.debug(e);
             }
         }
     }
@@ -278,7 +279,7 @@ class UnzipTest
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.debug(e);
         }finally {
             try {
                 if(fis != null){
@@ -294,7 +295,7 @@ class UnzipTest
                     tis.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
     }
@@ -325,7 +326,7 @@ class UnzipTest
             }
             fos.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+        	Log.debug(e);
         }finally {
             try {
                 if(fis != null){
@@ -338,7 +339,7 @@ class UnzipTest
                     bis.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+            	Log.debug(e);
             }
         }
     }
@@ -379,7 +380,7 @@ class UnzipTest
                 }
             }
         } catch (IOException e) {
-           e.printStackTrace();
+           Log.debug(e);
         }finally {
             try {
                 if(fis != null){
@@ -392,7 +393,7 @@ class UnzipTest
                     tarInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
     }
@@ -437,7 +438,7 @@ class UnzipTest
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.debug(e);
         }finally {
             try {
                 if(out != null){
@@ -456,7 +457,7 @@ class UnzipTest
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
     }
@@ -501,7 +502,7 @@ class UnzipTest
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.debug(e);
         }finally {
             try {
                 if(out != null){
@@ -520,7 +521,7 @@ class UnzipTest
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
     }
@@ -553,7 +554,7 @@ class UnzipTest
             }
             out.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.debug(e);
         }finally {
             try {
                 if(out != null){
@@ -566,7 +567,7 @@ class UnzipTest
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
     }
@@ -597,7 +598,7 @@ class UnzipTest
             }
             out.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+        	Log.debug(e);
         }finally {
             try {
                 if(out != null){
@@ -610,7 +611,7 @@ class UnzipTest
                     fileInputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+            	Log.debug(e);
             }
         }
     }
@@ -675,7 +676,7 @@ class UnzipTest
  
 		} catch (Exception e) {
  
-			e.printStackTrace();
+			Log.debug(e);
  
 			return false;
  
@@ -721,7 +722,7 @@ class UnzipTest
  
 		} catch (Exception e) {
  
-			e.printStackTrace();
+			Log.debug(e);
  
 			return false;
  
@@ -743,7 +744,7 @@ class UnzipTest
  
 		} catch (Exception e) {
  
-			e.printStackTrace();
+			Log.debug(e);
  
 		}
  

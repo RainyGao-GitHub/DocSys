@@ -13,6 +13,8 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.Version;
+
+import com.DocSystem.common.Log;
 /** 
  * @ClassName: Lucene_index 
  * @Description: TODO(这里用一句话描述这个类的作用) 
@@ -35,7 +37,7 @@ public class Lucene_index {
 			directory=FSDirectory.open(new File("f:/lucene/index02"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		}
 	}
 	public void quary()
@@ -48,10 +50,10 @@ public class Lucene_index {
 			reader.close();
 		} catch (CorruptIndexException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block 
-			e.printStackTrace();
+			Log.debug(e);
 		}
 		
 	}
@@ -66,10 +68,10 @@ public class Lucene_index {
 //			reader.close();
 //		} catch (CorruptIndexException e) {
 //			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			Log.debug(e);
 //		} catch (IOException e) {
 //			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			Log.debug(e);
 //		}
 		
 	}
@@ -85,11 +87,11 @@ public class Lucene_index {
 			//此时删除的文档并未完全删除，而是存储在回收站中，可以恢复的
 			writer.forceMergeDeletes();
 		} catch (CorruptIndexException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (LockObtainFailedException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (IOException e) {
-		    e.printStackTrace();
+		    Log.debug(e);
 		}
 		finally{
 			if (writer!=null) {
@@ -97,10 +99,10 @@ public class Lucene_index {
 					writer.close();
 				} catch (CorruptIndexException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				}
 			}
 		}
@@ -115,11 +117,11 @@ public class Lucene_index {
 			
 			writer.forceMerge(2);
 		} catch (CorruptIndexException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (LockObtainFailedException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (IOException e) {
-		    e.printStackTrace();
+		    Log.debug(e);
 		}
 		finally{
 			if (writer!=null) {
@@ -127,10 +129,10 @@ public class Lucene_index {
 					writer.close();
 				} catch (CorruptIndexException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				}
 			}
 		}
@@ -146,11 +148,11 @@ public class Lucene_index {
 			//此时删除的文档并未完全删除，而是存储在回收站中，可以恢复的
 			writer.deleteDocuments(new Term("id","1"));
 		} catch (CorruptIndexException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (LockObtainFailedException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (IOException e) {
-		    e.printStackTrace();
+		    Log.debug(e);
 		}
 		finally{
 			if (writer!=null) {
@@ -158,10 +160,10 @@ public class Lucene_index {
 					writer.close();
 				} catch (CorruptIndexException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				}
 			}
 		}
@@ -185,13 +187,13 @@ public class Lucene_index {
 			}
 		} catch (CorruptIndexException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (LockObtainFailedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		}
 		   finally{
 			   if(writer!=null)
@@ -200,10 +202,10 @@ public class Lucene_index {
 					writer.close();
 				} catch (CorruptIndexException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				}   
 			   }
 		   }
@@ -232,13 +234,13 @@ public class Lucene_index {
 			}
 		} catch (CorruptIndexException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (LockObtainFailedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		}
 		   finally{
 			   if(writer!=null)
@@ -247,10 +249,10 @@ public class Lucene_index {
 					writer.close();
 				} catch (CorruptIndexException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Log.debug(e);
 				}   
 			   }
 		   }	

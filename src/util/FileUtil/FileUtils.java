@@ -1,6 +1,8 @@
 package util.FileUtil;
 import java.io.*;
 
+import com.DocSystem.common.Log;
+
 /**
  * 文件操作代码
  * 
@@ -77,7 +79,7 @@ public class FileUtils {
 			fop.close();
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
 	}
 

@@ -21,6 +21,8 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import com.DocSystem.common.Log;
+
 class LuceneBasicTest  
 {        
     private static String path = "C:/LueneBasicTest1";
@@ -60,7 +62,7 @@ class LuceneBasicTest
             
             write.close(); 
         } catch (IOException e) {
-            e.printStackTrace();
+        	Log.debug(e);
         }
     }
      
@@ -88,7 +90,7 @@ class LuceneBasicTest
             write.close();
              
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.debug(e);
         }
     }
      
@@ -114,7 +116,7 @@ class LuceneBasicTest
             	}
                  
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.debug(e);
             }
         }
 } 

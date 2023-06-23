@@ -87,7 +87,7 @@ class DBTest extends BaseController{
 			out = new FileOutputStream(filePath);
 		} catch (FileNotFoundException e) {
 			System.out.println("writeToJsonFile() new FileOutputStream failed");
-			e.printStackTrace();
+			Log.debug(e);
 			return false;
 		}
 		try {
@@ -97,7 +97,7 @@ class DBTest extends BaseController{
 			out.close();
 		} catch (IOException e) {
 			System.out.println("writeToJsonFile() out.write exception");
-			e.printStackTrace();
+			Log.debug(e);
 			return false;
 		}		
 		return true;
@@ -155,10 +155,10 @@ class DBTest extends BaseController{
             return docAuthList;
         }catch(SQLException se){
             // 处理 JDBC 错误
-            se.printStackTrace();
+            Log.debug(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            e.printStackTrace();
+            Log.debug(e);
         }finally{
             // 关闭资源
             try{
@@ -168,7 +168,7 @@ class DBTest extends BaseController{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                se.printStackTrace();
+                Log.debug(se);
             }
         }
 		return null;
@@ -214,10 +214,10 @@ class DBTest extends BaseController{
             return doc;
         }catch(SQLException se){
             // 处理 JDBC 错误
-            se.printStackTrace();
+            Log.debug(se);
         }catch(Exception e){
             // 处理 Class.forName 错误
-            e.printStackTrace();
+            Log.debug(e);
         }finally{
             // 关闭资源
             try{
@@ -227,7 +227,7 @@ class DBTest extends BaseController{
             try{
                 if(conn!=null) conn.close();
             }catch(SQLException se){
-                se.printStackTrace();
+                Log.debug(se);
             }
         }
         System.out.println("Goodbye!");
@@ -256,7 +256,7 @@ class DBTest extends BaseController{
             jsonStr = sb.toString();
             return jsonStr;
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.debug(e);
             return null;
         }
     }

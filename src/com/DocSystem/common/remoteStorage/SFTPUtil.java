@@ -112,7 +112,7 @@ public class SFTPUtil {
         try {        	
         	list = sftp.ls(directory);
         } catch (Exception e) {
-        	e.printStackTrace();
+        	Log.debug(e);
         }
         return list;
     }
@@ -125,7 +125,7 @@ public class SFTPUtil {
             sftp.put(input, sftpFileName);  //上传文件
             ret = true;
         } catch (Exception e) {
-        	e.printStackTrace();
+        	Log.debug(e);
         }
         return ret;
     }
@@ -140,14 +140,14 @@ public class SFTPUtil {
         	is = new FileInputStream(localPath + fileName);
         	ret = upload(remotePath, fileName, is);   
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} finally {
 			if(is != null)
 			{
 				try {
 					is.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
 			}
 		}
@@ -194,7 +194,7 @@ public class SFTPUtil {
             sftp.mkdir(directory);
             ret =  true;
         } catch (Exception e) {
-        	e.printStackTrace();
+        	Log.debug(e);
         }
     	return ret;
     }
@@ -233,7 +233,7 @@ public class SFTPUtil {
 			}
 			ret = delDir(directory, fileName);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
     	return ret;
     }
@@ -245,7 +245,7 @@ public class SFTPUtil {
             ret =  true;
         } catch (Exception e) {
 			Log.debug("delDir() delete file [" + directory + fileName + "] Failed");
-        	e.printStackTrace();
+        	Log.debug(e);
         }
     	return ret;
     }
@@ -257,7 +257,7 @@ public class SFTPUtil {
             ret =  true;
         } catch (Exception e) {
 			Log.debug("delFile() delete file [" + directory + fileName + "] Failed");
-        	e.printStackTrace();
+        	Log.debug(e);
         }
     	return ret;
     }    
@@ -314,7 +314,7 @@ public class SFTPUtil {
             	}
 			}
         } catch (Exception e) {
-			e.printStackTrace();
+        	Log.debug(e);
 		}
         return ret;
 	} 
@@ -332,14 +332,14 @@ public class SFTPUtil {
             Log.debug("copyFile() " + dstRemotePath + dstName + " put ok ");
         	ret = true;
         } catch (Exception e1) {
-			e1.printStackTrace();
+			Log.debug(e1);
 		} finally {
 			if(is != null)
 			{
 				try {
 					is.close();
 				} catch (Exception e2) {
-					e2.printStackTrace();
+					Log.debug(e2);
 				}
 			}
 		}
@@ -364,7 +364,7 @@ public class SFTPUtil {
             sftp.rename(srcRemotePath + srcName, dstRemotePath + dstName);
             ret =  true;
         } catch (Exception e) {
-        	e.printStackTrace();
+        	Log.debug(e);
         }
         return ret;        
     } 
@@ -374,7 +374,7 @@ public class SFTPUtil {
         try {
 			sftp.cd(directory);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		}
     }
 
@@ -385,7 +385,7 @@ public class SFTPUtil {
 			sftp.cd(directory);
 			ret = true;
         } catch (Exception e) {
-			e.printStackTrace();
+        	Log.debug(e);
 		}
         return ret;
     }
@@ -406,7 +406,7 @@ public class SFTPUtil {
         try {
             sftp.ls(directory, selector);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         }
  
         if (findFilelist.size() > 0) {

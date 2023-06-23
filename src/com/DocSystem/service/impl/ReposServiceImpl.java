@@ -18,6 +18,7 @@ import com.DocSystem.dao.DocShareMapper;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.DocShare;
+import com.DocSystem.common.Log;
 import com.DocSystem.dao.DocAuthMapper;
 import com.DocSystem.dao.DocLockMapper;
 import com.DocSystem.entity.User;
@@ -51,7 +52,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret = reposDao.add(repos);
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;
     }
@@ -62,7 +63,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret = reposDao.deleteByPrimaryKey(id); 
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;
     }
@@ -73,7 +74,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret =  reposDao.selectAll();
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -84,7 +85,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret =  reposDao.selectSelective(repos);  
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -96,7 +97,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret =  reposDao.selectAuthedReposList(UserId);   
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -107,7 +108,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret =  reposDao.selectByPrimaryKey(id);  
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
 	}
@@ -118,7 +119,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret =  reposDao.updateByPrimaryKeySelective(repos);  
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -130,7 +131,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docDao.insertSelective(doc);
     	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.info(e);
     	}
     	return ret;
     }
@@ -142,7 +143,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docDao.selectByPrimaryKey(id);
     	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -154,7 +155,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret = docDao.updateByPrimaryKeySelective(doc);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -165,7 +166,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret = docDao.updateByPrimaryKey(doc);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -177,7 +178,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret = docDao.deleteByPrimaryKey(id);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;
     }
@@ -187,7 +188,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     	   	ret = docDao.deleteSelective(doc);	
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;		
 	}
@@ -198,7 +199,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docDao.selectSelective(doc);	
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;		
     }
@@ -210,7 +211,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = 	docDao.queryDocList(params);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}    
@@ -220,7 +221,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docLockDao.insertSelective(docLock);
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;
     }
@@ -230,7 +231,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docLockDao.deleteByPrimaryKey(docLock.getId());
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;
  	}
@@ -240,7 +241,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docLockDao.updateByPrimaryKeySelective(docLock);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;		
 	}
@@ -251,7 +252,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docLockDao.selectSelective(docLock); 
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
     }
@@ -261,7 +262,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.insertSelective(reposAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;	
 	}
@@ -273,7 +274,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret =  reposAuthDao.getReposAuth(reposAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;	
     }
@@ -285,7 +286,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret =  docAuthDao.selectSelective(docAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
     }
@@ -297,7 +298,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret =  reposAuthDao.selectSelective(reposAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;			
 	}
@@ -308,7 +309,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.getDocAuthForUser(docAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -319,7 +320,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.getDocAuthForGroup(docAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;			
 	}
@@ -330,7 +331,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.getDocAuthForAnyUser(docAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -340,7 +341,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.updateByPrimaryKeySelective(reposAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;		
 	}
@@ -350,7 +351,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.insertSelective(docAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;	
 	}
@@ -360,7 +361,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.updateByPrimaryKeySelective(docAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -371,7 +372,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.getReposAllUsers(reposId);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -381,7 +382,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.queryReposMemberWithParamLike(param);	
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}	
@@ -392,7 +393,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.getReposAllGroups(reposId);		
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -402,7 +403,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.deleteByPrimaryKey(id);	
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -412,7 +413,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.updateByPrimaryKeySelective(qReposAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -422,7 +423,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.deleteByPrimaryKey(id);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -433,7 +434,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.deleteSelective(reposAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -443,7 +444,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.deleteSelective(docAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 		
@@ -462,7 +463,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docAuthDao.getAllDocAuthList(params);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -473,7 +474,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = reposAuthDao.getReposAuthForUser(reposAuth);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;			
 	}
@@ -483,7 +484,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = userDao.selectByPrimaryKey(userId);	
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -493,7 +494,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = userGroupDao.selectByPrimaryKey(groupId);	
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
 	}
@@ -504,7 +505,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docShareDao.insertSelective(docShare);
       	} catch(Exception e){
-    		e.printStackTrace();
+      		Log.info(e);
     	}
     	return ret;	
     }
@@ -515,7 +516,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docShareDao.selectByPrimaryKey(id);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	
     }
@@ -526,7 +527,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docShareDao.updateByPrimaryKeySelective(docShare);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	    	
     }
@@ -537,7 +538,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docShareDao.updateByPrimaryKey(docShare);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	    
     }
@@ -548,7 +549,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docShareDao.deleteByPrimaryKey(id);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	   
     }
@@ -559,7 +560,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docShareDao.deleteSelective(docShare);
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	   
     }
@@ -569,7 +570,7 @@ public class ReposServiceImpl implements ReposService {
     	try {
     		ret = docShareDao.selectSelective(docShare);  
       	} catch(Exception e){
-    		e.printStackTrace();
+    		Log.debug(e);
     	}
     	return ret;	  
     }

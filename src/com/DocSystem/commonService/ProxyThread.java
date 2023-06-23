@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.DocSystem.common.Log;
 import com.DocSystem.entity.DocShare;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.alibaba.fastjson.JSON;
@@ -59,7 +60,7 @@ public class ProxyThread extends Thread {
 			server.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		}
 	}
 
@@ -92,7 +93,7 @@ public class ProxyThread extends Thread {
         	return true;
         } catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.debug(e);
 		}
 		return false;
 	}

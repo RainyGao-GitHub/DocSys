@@ -19,6 +19,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.DocSystem.common.Log;
+
 import util.GsonUtils;
 import util.RegularUtil;
 import util.ReturnAjax;
@@ -97,7 +99,7 @@ public class SmsService {
 				return true;
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.debug(e);
 			rt.setError("发送短信失败！");
 		}
 		return false;		

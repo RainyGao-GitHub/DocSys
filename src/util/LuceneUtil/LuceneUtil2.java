@@ -193,7 +193,7 @@ public class LuceneUtil2   extends BaseFunction
 		        ret = true;
 			} catch (Exception e) {				
 		        Log.debug("addIndex() 异常");
-				e.printStackTrace();
+		        Log.debug(e);
 			} finally {
 				closeResource(indexWriter, directory, analyzer);
 			}
@@ -213,7 +213,7 @@ public class LuceneUtil2   extends BaseFunction
         		indexWriter.close();
         	}
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			Log.debug(e1);
 		}
 		
 		if(directory != null)
@@ -221,7 +221,7 @@ public class LuceneUtil2   extends BaseFunction
 			try {
 				directory.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.debug(e);
 			}
 		}
 		if(analyzer != null)
@@ -433,7 +433,7 @@ public class LuceneUtil2   extends BaseFunction
 		        ret =  true;			
 			} catch (IOException e) {
 				Log.debug("updateIndex() 异常");
-				e.printStackTrace();
+				Log.debug(e);
 			} finally {
 				closeResource(indexWriter, directory, analyzer);
 			}	
@@ -488,7 +488,7 @@ public class LuceneUtil2   extends BaseFunction
 		        ret = true;
 			} catch (Exception e) {
 				Log.info("deleteIndex() 异常");
-				e.printStackTrace();
+				Log.debug(e);
 			} finally {
 				closeResource(indexWriter, directory, analyzer);					
 			}
@@ -551,7 +551,7 @@ public class LuceneUtil2   extends BaseFunction
 				        
 					} catch (Exception e) {
 						Log.info("deleteIndexEx() 异常");
-						e.printStackTrace();
+						Log.debug(e);
 					} finally {
 						closeResource(indexWriter, directory, analyzer);
 					}
@@ -592,14 +592,14 @@ public class LuceneUtil2   extends BaseFunction
 	
 			stream.end(); //这句很重要
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} finally {
 			if(stream != null)
 			{
 				try {
 					stream.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			if(analyzer != null)
@@ -669,14 +669,14 @@ public class LuceneUtil2   extends BaseFunction
 	
 			stream.end(); //这句很重要
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.debug(e);
 		} finally {
 			if(stream != null)
 			{
 				try {
 					stream.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			if(analyzer != null)
@@ -839,7 +839,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					ireader.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -848,7 +848,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					directory.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -1146,7 +1146,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					doc1.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -1155,7 +1155,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					fis.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
     	}
@@ -1187,7 +1187,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					extractor.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -1196,7 +1196,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					xdoc.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		
@@ -1205,7 +1205,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					fis.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		}
@@ -1239,7 +1239,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					extractor.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -1248,7 +1248,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					workBook.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		
@@ -1257,7 +1257,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					is.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}        	
         }
@@ -1287,7 +1287,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					extractor.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -1296,7 +1296,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					workBook.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		
@@ -1305,7 +1305,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					is.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
         }      
@@ -1332,7 +1332,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					extractor.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		
@@ -1341,7 +1341,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					is.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
         }        
@@ -1370,7 +1370,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					extractor.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -1379,7 +1379,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					slide.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		
@@ -1388,7 +1388,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					is.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
         }
@@ -1423,7 +1423,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					document.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}	
 	   }
@@ -1479,7 +1479,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					reader.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			if(is != null)
@@ -1487,7 +1487,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					is.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		}
@@ -1543,14 +1543,14 @@ public class LuceneUtil2   extends BaseFunction
 	        }
 		} catch (Exception e) {
 			Log.debug("multiQuery() 异常");
-			e.printStackTrace();
+			Log.debug(e);
 		} finally {
 			if(ireader != null)
 			{
 				try {
 					ireader.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 			
@@ -1559,7 +1559,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					directory.close();
 				} catch (Exception e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 			}
 		}				
@@ -1606,7 +1606,7 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					ireader.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 	        }
 	        
@@ -1615,7 +1615,7 @@ public class LuceneUtil2   extends BaseFunction
 		        try {
 					directory.close();
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					Log.debug(e1);
 				}
 	        }
 		}

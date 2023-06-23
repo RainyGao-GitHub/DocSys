@@ -195,14 +195,14 @@ public class MxsDocUtil {
     		}
             ret = BaseFunction.downloadFromUrl(requestUrl, os);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         } finally {
         	if(os != null)
         	{
         		try {
 					os.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.debug(e);
 				}
         	}
         }
@@ -229,7 +229,7 @@ public class MxsDocUtil {
         		ret = remoteUploadFile(remotePath, localPath, fileName, file.length(), null, isEnd, dirPath, batchStartTime, totalCount);
         	}
         } catch (Exception e) {
-        	e.printStackTrace();
+        	Log.debug(e);
         }
         return ret;
 	}
@@ -400,7 +400,7 @@ public class MxsDocUtil {
     		
     		result = true;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.info(e);
         }
         return result;		
 	}
@@ -459,7 +459,7 @@ public class MxsDocUtil {
     		
     		result = true;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.debug(e);
         }
         return result;	
 	}
@@ -510,7 +510,7 @@ public class MxsDocUtil {
     		
     		result = true;
         } catch (Exception e) {
-            e.printStackTrace();
+        	Log.debug(e);
         }
         return result;	
 	}	

@@ -16,6 +16,7 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.DocSystem.common.Log;
 import com.DocSystem.entity.MyEmail;
 
 /** 
@@ -63,7 +64,7 @@ public class EmailUtil {
 			Transport transport = mailSession.getTransport("smtp");
 			transport.send(message, message.getRecipients(RecipientType.TO));
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			Log.debug(e1);
 		}
 		System.out.println("props:"+props.toString());
 		return true;
