@@ -2117,21 +2117,22 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		//get userInfo
+		User tempUser  = userService.getUser(userId);
+		if(tempUser == null)
+		{
+			docSysErrorLog("用户不存在！", rt);
+			writeJson(rt, response);
+			addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
+			return;	
+		}
+		
 		//注意：两个Integer类型==是地址比较
 		//但Integer把-128到127（可调）的整数都提前实例化了， 所以你不管创建多少个这个范围内的Integer都是同一个对象。
 		//所以在数字大于127时用==会出现逻辑错误问题
-		if(!userId.equals(login_user.getId()))
+		if(userId.equals(login_user.getId()) == false)
 		{
 			//不得修改同级别或高级别用户的信息
-			User tempUser  = userService.getUser(userId);
-			if(tempUser == null)
-			{
-				docSysErrorLog("用户不存在！", rt);
-				writeJson(rt, response);
-				addSystemLog(request, login_user, "editUser", "editUser", "修改用户信息", null, "失败", null, null, null, buildSystemLogDetailContent(rt));				
-				return;	
-			}
-
 			if(login_user.getType() < tempUser.getType())
 			{
 				docSysErrorLog("越权操作：您无权修改高级别用户的设置！", rt);
@@ -2150,32 +2151,32 @@ public class ManageController extends BaseController{
 					return;
 				}
 			}
-			
-			//检查用户名是否有改动
-			if(user.getName() != null)
+		}
+		
+		//检查用户名是否有改动
+		if(user.getName() != null)
+		{
+			if(tempUser.getName() != null && user.getName().equals(tempUser.getName()))
 			{
-				if(tempUser.getName() == null || user.getName().equals(tempUser.getName()))
-				{
-					user.setName(null);
-				}
+				user.setName(null);
 			}
+		}
 			
-			//检查Tel是否改动
-			if(user.getTel() != null)
+		//检查Tel是否改动
+		if(user.getTel() != null)
+		{
+			if(tempUser.getTel() != null && user.getTel().equals(tempUser.getTel()))
 			{
-				if(tempUser.getTel() == null || user.getTel().equals(tempUser.getTel()))
-				{
-					user.setTel(null);
-				}
+				user.setTel(null);
 			}
+		}
 
-			//检查Email是否改动
-			if(user.getEmail() != null)
+		//检查Email是否改动
+		if(user.getEmail() != null)
+		{
+			if(tempUser.getEmail() != null && user.getEmail().equals(tempUser.getEmail()))
 			{
-				if(tempUser.getEmail() == null || user.getEmail().equals(tempUser.getEmail()))
-				{
-					user.setEmail(null);
-				}
+				user.setEmail(null);
 			}
 		}
 		

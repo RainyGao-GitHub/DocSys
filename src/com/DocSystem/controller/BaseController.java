@@ -3481,7 +3481,7 @@ public class BaseController  extends BaseFunction{
 		String email = user.getEmail();
 		Integer type = user.getType();
 		
-		Log.debug("userName:"+userName + " pwd:"+pwd + " type:" + type + " tel:" + user.getTel() + " email:" + user.getEmail());
+		Log.debug("userEditCheck() userName:"+userName + " pwd:"+pwd + " type:" + type + " tel:" + user.getTel() + " email:" + user.getEmail());
 		
 		//检查用户名是否改动
 		if(userName != null && !userName.isEmpty())
