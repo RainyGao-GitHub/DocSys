@@ -611,9 +611,9 @@ public class ReposController extends BaseController{
 	
 
 	private void sendEncrptFileWithEmail(ReturnAjax rt, String userMail, Repos repos, String encrypConfigFilePath) {
+		Log.debug("sendEncrptFileWithEmail() userMail:" + userMail);
 		if(userMail != null && userMail.isEmpty() == false)
 		{
-
 			String content = 		
 					"<br>"
 					+ "附件是" +repos.getId() + "号仓库[" + repos.getName()+ "]的密钥文件，用于仓库文件的加解密，请妥善保存。"
@@ -632,6 +632,7 @@ public class ReposController extends BaseController{
 				return;
 			}
 			
+			Log.debug("sendEncrptFileWithEmail() send encrptConfigFile to " + userMail);
 			emailService.sendEmailEx(rt, userMail, mailContent, "来自MxsDoc的邮件", encrypConfigFilePath);
 		}
 	}
