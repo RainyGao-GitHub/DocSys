@@ -22,6 +22,7 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -92,6 +93,69 @@ public class EmailService {
 				rt.setError("发送系统邮件失败！");
 				return false;
 			}	
+			
+			Transport transport = mailSession.getTransport("smtp");
+			transport.send(message, message.getRecipients(RecipientType.TO));
+			rt.setMsgInfo("发送系统邮件成功！");
+			return true;
+		} catch (Exception e) {
+			Log.debug(e);
+			rt.setError("发送系统邮件失败！");
+		}
+		return false;		
+	}
+	
+	@SuppressWarnings("static-access")
+	@ResponseBody
+	@RequestMapping("/sendEmailEx")
+	public boolean sendEmailEx(ReturnAjax rt, String toEmail,String content, String subject, String attchment){
+		try {
+			Properties props = new Properties();
+			String basePath = new EmailService().getClass().getClassLoader().getResource("/").getPath();
+			File config = new File(basePath+"docSysConfig.properties");
+			InputStream in = new FileInputStream(config);
+			props.load(in);
+			
+			Session mailSession = Session.getInstance(props,new MyAuthenticator(fromUser,fromPwd));
+			
+			InternetAddress fromAddress = new InternetAddress(fromUser);
+			InternetAddress toAddress = new InternetAddress(toEmail);
+
+			MimeMessage message = new MimeMessage(mailSession);
+
+			message.setFrom(fromAddress);
+			message.addRecipient(RecipientType.TO, toAddress);
+
+			message.setSentDate(Calendar.getInstance().getTime());
+			if(subject == null || subject.isEmpty())
+			{
+				message.setSubject("来自MxsDoc的邮件");
+			}
+			else
+			{
+				message.setSubject(subject);				
+			}
+			
+			if(content!=null&&!"".equals(content)){
+				content = URLDecoder.decode(content, "UTF-8");
+				message.setContent(EmailService.getEmailHtmlByCode(content), messagetype);
+			}
+			else
+			{
+				rt.setError("发送系统邮件失败:邮件内容不能为空！");
+				return false;
+			}
+
+			//添加附件
+			if(attchment != null && !attchment.isEmpty())
+			{
+				File file = new File(attchment);
+				if(file.exists())
+				{
+					MimeMessageHelper helper = new MimeMessageHelper(message, true);
+					helper.addAttachment(file.getName(), file);
+				}
+			}
 			
 			Transport transport = mailSession.getTransport("smtp");
 			transport.send(message, message.getRecipients(RecipientType.TO));

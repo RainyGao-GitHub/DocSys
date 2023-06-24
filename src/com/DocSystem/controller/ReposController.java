@@ -410,6 +410,14 @@ public class ReposController extends BaseController{
 		setReposIsBusy(repos.getId(), false);
 
 		addSystemLog(request, login_user, "addRepos", "addRepos", "新建仓库", null, "成功", repos, null, null, buildSystemLogDetailContent(rt));
+
+		//发送邮件备份密钥
+		if(encryptType != null && encryptType != 0)
+		{
+			String encrptConfigPath = Path.getReposEncryptConfigPath(repos);
+			String encrptConfigName = Path.getReposEncryptConfigFileName();
+			sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, encrptConfigPath + encrptConfigName);
+		}
 	}
 
 	protected boolean setReposRemoteServer(Repos repos, String remoteServer) {
@@ -578,8 +586,8 @@ public class ReposController extends BaseController{
 		}
 		
 		//备份仓库密钥文件
-		String backupFilePath = path + name + "_" + DateFormat.dateTimeFormat2(new Date());
-		if(FileUtil.copyFile(path + name, backupFilePath, false) == false)
+		String backupFileName = DateFormat.dateTimeFormat2(new Date()) + "_" + name;
+		if(FileUtil.copyFile(path + name, path + backupFileName, false) == false)
 		{
 			docSysErrorLog("密钥文件备份失败！", rt);		
 			writeJson(rt, response);		
@@ -587,8 +595,8 @@ public class ReposController extends BaseController{
 			return;
 		}
 				
-		Log.debug("downloadLogFile() path:" + path + " name:" + name);		
-		Doc downloadDoc = buildDownloadDocInfo(0, "","", path, name, 0);
+		Log.debug("backupReposEncryptConfig() path:" + path + " backupFileName:" + backupFileName);		
+		Doc downloadDoc = buildDownloadDocInfo(0, "","", path, backupFileName, 0);
 		downloadDoc.encryptEn = 0;
 		
 		String downloadLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDoc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;
@@ -596,9 +604,36 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);			
 		addSystemLog(request, login_user, "backupReposEncryptConfig", "backupReposEncryptConfig", "备份仓库密钥", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 
-		//TODO: sendMail To accessUser
-		
+		//Send EncryptConfigFile to user with email
+		sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, path + backupFileName);
 		return;
+	}
+	
+
+	private void sendEncrptFileWithEmail(ReturnAjax rt, String userMail, Repos repos, String encrypConfigFilePath) {
+		if(userMail != null && userMail.isEmpty() == false)
+		{
+
+			String content = 		
+					"<br>"
+					+ "附件是" +repos.getId() + "号仓库[" + repos.getName()+ "]的密钥文件，用于仓库文件的加解密，请妥善保存。"
+					+ "<br>"
+					+ "<br>";
+			String mailContent =  channel.buildMailContent(content);
+			if(mailContent == null)
+			{
+				mailContent = content;
+			}
+			
+			File file = new File(encrypConfigFilePath);
+			if(file.exists() == false)
+			{
+				Log.debug("sendEncrptFileWithEmail() " + encrypConfigFilePath + " 不存在");
+				return;
+			}
+			
+			emailService.sendEmailEx(rt, userMail, mailContent, "来自MxsDoc的邮件", encrypConfigFilePath);
+		}
 	}
 
 	/****************   user triggered Repository Auto Backup ******************/
@@ -1072,12 +1107,14 @@ public class ReposController extends BaseController{
 			setReposTextSearch(reposInfo, textSearch);
 			initReposTextSearchConfig(reposInfo, textSearch);
 		}
-				
+			
+		boolean encryptTypeChanged = false;
 		if(encryptType != null)
 		{			
 			if(reposInfo.encryptType == null || encryptType != reposInfo.encryptType)
 			{
-				setReposEncrypt(reposInfo, encryptType);				
+				setReposEncrypt(reposInfo, encryptType);
+				encryptTypeChanged = true;
 			}			
 		}
 		
@@ -1221,6 +1258,14 @@ public class ReposController extends BaseController{
 		setReposIsBusy(reposId, false);
 		
 		addSystemLog(request, login_user, "updateReposInfo", "updateReposInfo", "修改仓库", null, "成功", repos, null, null, buildSystemLogDetailContent(rt));		
+		
+		//发送邮件备份密钥
+		if(encryptTypeChanged)
+		{
+			String encrptConfigPath = Path.getReposEncryptConfigPath(repos);
+			String encrptConfigName = Path.getReposEncryptConfigFileName();
+			sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, encrptConfigPath + encrptConfigName);
+		}
 	}
 
 	private void checkAndClearOldBackupIndexLib(Repos reposInfo, ReposBackupConfig oldAutoBackupConfig,
