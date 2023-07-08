@@ -193,8 +193,9 @@
 	<script type="text/javascript" src="js/DocDelete.js"></script>
 	<script type="text/javascript" src="js/DocCopy.js"></script>
 	<script type="text/javascript" src="js/DocMove.js"></script>
-	<script type="text/javascript" src="js/DocEdit.js"></script>
 	<script type="text/javascript" src="js/DocHistoryDetail.js"></script>
+	<!-- <script type="text/javascript" src="js/DocEdit.js"></script> -->
+	<script type="text/javascript" src="js/VDocEditor.js"></script>
     <script type="text/javascript">
     	//这里的接口会在body元素加载时被调用，因此需要放到header这里
 	    function FileLogoErrHandler()
@@ -340,9 +341,9 @@
          		</div>
         		<div class="filetitle nowrap ellipsis" id="filetitle"></div>
         		<div style="position:absolute; right:5px; top:10px">
-	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="DocEdit.exitEdit()" style="display:none">退出编辑
+	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="VDocEditor.exitEdit()" style="display:none">退出编辑
 	                   	</button>
-	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
+	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="VDocEditor.saveWiki()" style="display:none">保存
 	                    </button>
         		</div>
          	</div>
@@ -1593,7 +1594,7 @@
 	  	$('#filetitle').html("");
 
 	  	//清除文件预览内容
-	  	DocEdit.loadmd("");
+	  	VDocEditor.loadmd("");
 	  	$(".editormd-preview-close-btn").hide();//css("display","none");
 	}
 
@@ -1632,7 +1633,7 @@
 	            	if(gDocInfo.docId && gDocInfo.docId != 0 && gDocInfo.docId != doc.docId && gDocInfo.edit == true)
 	            	{
 	            		console.log("getAndShowDoc() 理论上不应该执行到这里，处于编辑状态的文件必须先退出编辑！");
-	            		DocEdit.exitEdit();
+	            		VDocEditor.exitEdit();
 	            		return;
 	            	}
 
@@ -1765,7 +1766,7 @@
 		gTmpSavedContent = gDocInfo.tmpContent;
 		//console.log("showGDocVDocContent gDocInfo.content:" + gDocInfo.content + " gDocContent:" + gDocContent);
 
-		DocEdit.loadmd(gDocContent, gDocInfo.edit);
+		VDocEditor.loadmd(gDocContent, gDocInfo.edit);
 	  	$(".editormd-preview-close-btn").show();//css("display","none");
 	}
 
@@ -2535,7 +2536,7 @@
           if(gDocInfo.edit == true)
           {
 				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
-              	DocEdit.exitEdit(treeNode);
+              	VDocEditor.exitEdit(treeNode);
           }
           else
           {
@@ -2565,7 +2566,7 @@
           if(gDocInfo.edit == true)
           {
 				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
-              	DocEdit.exitEdit(treeNode);
+              	VDocEditor.exitEdit(treeNode);
           }
           else
           {
@@ -2797,6 +2798,17 @@
 		}
 
 		getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name, showInitDocAndSubDocList);
+		
+		initVDocEditor(gInitDocInfo);
+	}
+	
+	var vdocEditor;
+	function initVDocEditor(docInfo)
+	{
+		var config = {
+			"docInfo" : docInfo,
+		};
+		vdocEditor = new MxsdocAPI.VDocEditor("vdocPreview", config);
 	}
 
 	function showInitDocAndSubDocList()
@@ -3934,7 +3946,7 @@
        	  $(".second-line").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width()); //第二个拖拽线的位置
           $(".manual-right").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width() + $(".second-line").width()); //第二个拖拽线的位置
           //$(".manual-right")[0].style.left = $(".manual-left").width() + $("#line").width()) + $(".second-table").width() + $(".second-table").width() + 'px';
-          DocEdit.resize();
+          VDocEditor.resize();
       };
 
       document.onmouseup=function(ev){
@@ -3956,7 +3968,7 @@
            $('.second-table').width($(".second-line").position().left-$('.manual-left').width());
            $(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
 
-           DocEdit.resize();
+           VDocEditor.resize();
            return false;
    	  };
     	  document.onmouseup=function(ev){
@@ -6015,7 +6027,7 @@
 					{
 						//上传失败
 						console.log("上传成功");
-				        DocEdit.insertTextAtCursor("![]("+ ret.url +")");
+				        VDocEditor.insertTextAtCursor("![]("+ ret.url +")");
 					}
 					else	//上传失败
 					{
