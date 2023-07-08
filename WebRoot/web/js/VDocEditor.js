@@ -1,7 +1,64 @@
+/*
+一、(function(){})(); 和 (function(){}()); 
+1. (function(){})(); 
+把函数当作表达式解析，然后执行解析后的函数
+相当于 var a = function(){}; a(); a得到的是函数
+2. (function(){}()); 
+把函数表达式和执行当作语句直接执行
+相当于 var a = function(){}(); a得到的是结果
+
+最终结果是一样的
+()只是起了 自执行的作用
+和 () 一样的还有很多
+比如 +function (){}
+这个等于 (function (){}) 
+一般用(function (){}) 还有个作用,就是 避免全局变量
+
+二、什么是this
+this，从字面上含义是(指较近的人或事物) 这，这个;
+this：表示当前对象的一个引用。
+this的指向：this不是固定不变的，是根据调用的上下文（执行时环境）改变而改变。
+
+如果单独使用，this 表示全局对象。
+在方法中，this 表示该方法所属的对象。
+在函数中，this 表示全局对象。
+在函数中，在严格模式下，this 是未定义的(undefined)。
+在事件中，this 表示接收事件的元素。
+
+<script>
+	console.log(this); // 全局环境，即window对象下，this -> window 
+	
+	function fun() {
+		console.log(this);
+	}
+	fun(); // fun() 实际上是window.fun(), 所以this -> window
+	
+	var obj1 = {
+	    a: 1,
+	    fun1: function() {
+	        console.log(this);
+	    },
+	    obj2: {
+	    	fun2: function() {
+	    		console.log(this);
+	    	}
+	    }
+	}
+	obj1.fun1(); // fun1由obj调用，所以this -> obj1
+	obj1.obj2.fun2(); // fun2由obj2调用，所以this -> obj2
+	
+	var Person = function() {
+		this.name = "小刘"; // 这里的this -> obj对象
+	}
+	var obj = new Person();
+</script>
+
+*/
+
 ;(function(MxsdocAPI, window, document, undefined) {
 
 	MxsdocAPI.VDocEditor = function(placeholderId, config) {
-        var _self = this,
+        var _self = this,	//_self是指实例化后的对象
             _config = config || {};
 
         extend(_config, MxsdocAPI.VDocEditor.defaultConfig);
