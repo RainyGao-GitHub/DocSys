@@ -1609,7 +1609,7 @@
                 pid: node.pid,
                 path: node.path,
                 name: node.name,
-                docType: 2, //取回备注内容
+                docType: 0, //不读取文件内容和备注内容
                 shareId: gShareId,
             },
             success : function (ret) {
@@ -1618,15 +1618,6 @@
             	{
             		var doc = ret.data
             		console.log("getAndShowDoc gDocInfo.docId:" + gDocInfo.docId + " docId:" + doc.docId + " gShowType:" + gShowType);
-
-            		//TODO: 避免重复打开文件
-					//当前有打开的文件，还处于编辑状态必须先退出编辑，理论上不应该执行到这里
-	            	if(gDocInfo.docId && gDocInfo.docId != 0 && gDocInfo.docId != doc.docId && gDocInfo.edit == true)
-	            	{
-	            		console.log("getAndShowDoc() 理论上不应该执行到这里，处于编辑状态的文件必须先退出编辑！");
-	            		VDocEditor.exitEdit();
-	            		return;
-	            	}
 
                 	//Show Doc and update gDocInfo
             		$('#filetitle').html(doc.name);
@@ -1652,7 +1643,7 @@
 	            	gDocInfo.content = parseDocContent(doc.content);
 	                gDocInfo.tmpContent = parseDocContent(doc.tmpContent);
 
-	                showGDoc(gShowType);
+	                previewDoc(gShowType);
                 }
                 else
                 {
@@ -1698,14 +1689,29 @@
 		});
 	}
 
-	//showGDoc根据showType和edit显示gDoc
-    function showGDoc(showType)
+	//previewDoc根据showType和edit显示gDoc
+	var gDocInfoInPreview;	//当前预览中的Doc
+	function previewDoc(doc, showType)
     {
-		console.log("showGDoc gShowType:" + gShowType + " gDocInfo", gDocInfo);
+		console.log("previewDoc gShowType:" + gShowType + " doc", doc);
+		if(doc.docId == gDocInfoForPreview.docId)
+		{
+	    	//该文件已处于预览状态
+	    	return;
+	    }
+		
+		if(vDocEditor.edit == true || vDocEditor.isBusy == true)
+		{
+			//用户真正编辑备注或者编辑器正忙（初始化）
+			return;
+		}
+		
+		//更新gDocInfoInPreview
+		gDocInfoInPreview = doc;
 
 		//显示文件图标
-		var fileSuffix = getFileSuffix(gDocInfo.name);
-		gDocInfo.fileSuffix = fileSuffix;
+		var fileSuffix = getFileSuffix(doc.name);
+		doc.fileSuffix = fileSuffix;
 
 		if(showType == 2)	//电子书模式：不显示图标
 		{
@@ -1717,7 +1723,7 @@
 			if(isPicture(fileSuffix))
 			{
 				showFileLogo(null);
-				showFileImg(gDocInfo);
+				showFileImg(doc);
 	            showVideoPreview(false);
 			}
 			else if(isVideo(fileSuffix))
@@ -1728,30 +1734,15 @@
 			}
 			else
 			{
-				showFileLogo(gDocInfo);
+				showFileLogo(doc);
 				showFileImg(null);
 		        showVideoPreview(false);
 			}
 		}
 
-		//预览文件
-    	previewDoc();
-
-    	//显示文件内容
-    	if(gDocInfo.openMode == 2)
-    	{
-			//Open Doc in Dialog
-			openDoc(gDocInfo, false, "openInArtDialog", "office", gShareId);
-		}
+		//显示备注
+		vdocEditor.openDocument(doc);
     }
-
-	//TODO: previewDoc : show Doc Title and VDoc
-	//如果VDOC正在编辑open可能失败，open成功才会切换gPreviewDoc
-	var gDocInfoInPreview;	//当前预览中的Doc
-	function previewDoc()
-	{
-		vdocEditor.openDocument(gDocInfo);
-	}
 
 	function DocOnClick()
 	{
