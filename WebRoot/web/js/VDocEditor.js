@@ -135,6 +135,15 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
                 iframe.parentNode && iframe.parentNode.replaceChild(target, iframe);
             }
         };
+        
+        var _openDocument = function(doc) {
+            _sendCommand({
+                command: 'openDocument',
+                data: {
+                    doc: doc
+                }
+            });
+        };
 
         var _sendCommand = function(cmd) {
             if (iframe && iframe.contentWindow)
@@ -145,6 +154,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
             attachMouseEvents   : _attachMouseEvents,
             detachMouseEvents   : _detachMouseEvents,
             destroyEditor       : _destroyEditor,
+            openDocument		: _openDocument,
         }
     };
 

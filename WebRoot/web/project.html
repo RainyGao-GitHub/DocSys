@@ -340,12 +340,6 @@
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
          		</div>
         		<div class="filetitle nowrap ellipsis" id="filetitle"></div>
-        		<div style="position:absolute; right:5px; top:10px">
-	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="VDocEditor.exitEdit()" style="display:none">退出编辑
-	                   	</button>
-	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="VDocEditor.saveWiki()" style="display:none">保存
-	                    </button>
-        		</div>
          	</div>
             <div class="manual-article" id="previewZone">
 				<!--文件轮播显示-->
@@ -1592,10 +1586,6 @@
 
 		//清除文件名
 	  	$('#filetitle').html("");
-
-	  	//清除文件预览内容
-	  	VDocEditor.loadmd("");
-	  	$(".editormd-preview-close-btn").hide();//css("display","none");
 	}
 
 	//获取文件信息并显示
@@ -1629,6 +1619,7 @@
             		var doc = ret.data
             		console.log("getAndShowDoc gDocInfo.docId:" + gDocInfo.docId + " docId:" + doc.docId + " gShowType:" + gShowType);
 
+            		//TODO: 避免重复打开文件
 					//当前有打开的文件，还处于编辑状态必须先退出编辑，理论上不应该执行到这里
 	            	if(gDocInfo.docId && gDocInfo.docId != 0 && gDocInfo.docId != doc.docId && gDocInfo.edit == true)
 	            	{
@@ -1743,10 +1734,8 @@
 			}
 		}
 
-		//显示备注
-	    $("#btnExitEdit").hide();
-      	$("#btnSaveWiki").hide();
-    	showGDocVDocContent();
+		//预览文件
+    	previewDoc();
 
     	//显示文件内容
     	if(gDocInfo.openMode == 2)
@@ -1756,18 +1745,12 @@
 		}
     }
 
-	function showGDocVDocContent()
+	//TODO: previewDoc : show Doc Title and VDoc
+	//如果VDOC正在编辑open可能失败，open成功才会切换gPreviewDoc
+	var gDocInfoInPreview;	//当前预览中的Doc
+	function previewDoc()
 	{
-		console.log("showGDocVDocContent gDocInfo.docId:" + gDocInfo.docId);
-	    $("#vdocPreview").show();
-
-		gDocInfo.contentType = 2; //MdEditor中的是备注内容
-		gDocContent = gDocInfo.content;
-		gTmpSavedContent = gDocInfo.tmpContent;
-		//console.log("showGDocVDocContent gDocInfo.content:" + gDocInfo.content + " gDocContent:" + gDocContent);
-
-		VDocEditor.loadmd(gDocContent, gDocInfo.edit);
-	  	$(".editormd-preview-close-btn").show();//css("display","none");
+		vdocEditor.openDocument(gDocInfo);
 	}
 
 	function DocOnClick()
@@ -2533,16 +2516,8 @@
 
     	  showDocList(treeNode);
 
-          if(gDocInfo.edit == true)
-          {
-				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
-              	VDocEditor.exitEdit(treeNode);
-          }
-          else
-          {
-        	  //当前打开的文件未处于编辑模式，直接打开新文件（摘要模式）
-	      	  getAndShowDoc(treeNode, 1, false);
-          }
+    	  //TODO: 需要考虑将RealDoc和VDOC分开处理
+    	  getAndShowDoc(treeNode, 1, false);
       }
 
       //Double Click 对于文件应该是编辑，对于目录应该是打开
@@ -3946,7 +3921,6 @@
        	  $(".second-line").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width()); //第二个拖拽线的位置
           $(".manual-right").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width() + $(".second-line").width()); //第二个拖拽线的位置
           //$(".manual-right")[0].style.left = $(".manual-left").width() + $("#line").width()) + $(".second-table").width() + $(".second-table").width() + 'px';
-          VDocEditor.resize();
       };
 
       document.onmouseup=function(ev){
@@ -3968,7 +3942,6 @@
            $('.second-table').width($(".second-line").position().left-$('.manual-left').width());
            $(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
 
-           VDocEditor.resize();
            return false;
    	  };
     	  document.onmouseup=function(ev){
