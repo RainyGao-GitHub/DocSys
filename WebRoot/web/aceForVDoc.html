@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>TextEditor</title>
+    <script src="static/scripts/jquery.min.js"></script>
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+    <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+    <link href="static/markdown/css/editormd.min.css" rel="stylesheet">
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/base64.js"></script>
+    <script type="text/javascript" src="js/DocSys.js"></script>
+    <script src="static/ace-builds/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript" src="js/AceTextEditor.js"></script>
+    
+    <style type="text/css" media="screen">
+	  body {
+	      overflow: hidden;
+	  }
+	
+	  #editor {
+	      margin: 40px 0 0 0;
+	      position: absolute;
+	      top: 0;
+	      bottom: 0;
+	      left: 0;
+	      right: 0;
+	  }
+	</style>
+</head>
+<body style="height: 100%; margin: 0;">
+    <div>
+		<div id="textEditor">
+			<div id="textEditorToolBar" style="height:40px;">
+				<div class="editormd-toolbar" style="display: block;">
+					<div class="editormd-toolbar-container">
+						<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
+							<li><a href="javascript:;" onclick="AceTextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
+							<li class="divider" unselectable="on">|</li>
+							<li><a href="javascript:;" onclick="AceTextEditor.ctrlZ();" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
+							<li><a href="javascript:;" onclick="AceTextEditor.ctrlY();" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
+							<li class="divider" unselectable="on">|</li>
+						</ul>
+						<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
+							<li id="textEditorCloseBtn" style="display:none;">
+								<a href="javascript:;" onclick="AceTextEditor.exitEdit()" title="退出编辑" unselectable="on">
+									<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
+								</a>
+							</li>
+							<li id="textEditorEditBtn" style="display:none;">
+								<a href="javascript:;" onclick="AceTextEditor.enableEdit()" title="编辑" unselectable="on">
+									<i class="fa fa-edit" name="edit" unselectable="on"></i>
+								</a>
+							</li>
+						</ul>				
+					</div>
+				</div>
+			</div>
+			<div class="textEditorContent" style="min-height: 600px;">
+				<pre id="editor">
+				</pre>
+			</div>
+		</div>
+    </div>   
+	<script type="text/javascript">
+		//页面加载完成处理函数
+		$(document).ready(function () {
+			AceVDocEditor.initForNewPage();
+		});	
+    </script>
+</body>
+</html>

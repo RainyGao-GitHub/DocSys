@@ -59,6 +59,8 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
 
 	MxsdocAPI.VDocEditor = function(placeholderId, config) {
 		console.log("VDocEditor() config", config);
+		var _isBusy = false; //编辑正在初始化或者正在打开文件过程中
+		var _edit = false;	 //默认处于非编辑状态
 		
 		var _self = this,	//_self是指实例化后的对象
             _config = config || {};
@@ -211,19 +213,30 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
     };
     
     function getAppPath(config) {
-    	docInfo = config.docInfo;
-        //var path = 'stackeditEditorForVDoc.html?docid='+docInfo.docId;
-        
-    	//通过网页链接传递参数,临时方案
-        var urlParamStr = buildRequestParamStrForDoc(docInfo);
-    	path = "/DocSystem/web/ace.html?" + urlParamStr;
+    	var path = "/DocSystem/web/aceForVDoc.html";
         return path;
+    }
+    
+    function getAppParameters(config) {
+        var params = "?_version=2.02.50";
+        if (config.frameEditorId)
+            params += "&frameEditorId=" + config.frameEditorId;
+        if (config.parentOrigin)
+            params += "&parentOrigin=" + config.parentOrigin;
+        
+        if(config.docInfo)
+        {
+        	var docParams = buildRequestParamStrForDoc(docInfo);
+        	params += docParams;
+        }
+        console.log("getAppParameters() params:", params);
+        return params;
     }
 
     function createIframe(config) {
         var iframe = document.createElement("iframe");
 
-        iframe.src = getAppPath(config);
+        iframe.src = getAppPath(config) + getAppParameters(config);
         iframe.width = config.width;
         iframe.height = config.height;
         iframe.align = "top";
