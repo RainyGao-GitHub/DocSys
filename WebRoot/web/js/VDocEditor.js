@@ -66,6 +66,8 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
             _config = config || {};
 
         extend(_config, MxsdocAPI.VDocEditor.defaultConfig);
+        console.log("VDocEditor() _config", _config);
+        
         _config.frameEditorId = placeholderId;
         _config.parentOrigin = window.location.origin;
 
@@ -226,8 +228,31 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         
         if(config.docInfo)
         {
-        	var docParams = buildRequestParamStrForDoc(docInfo);
-        	params += docParams;
+        	var docInfo = config.docInfo;
+        	if(docInfo.vid)
+        	{
+        		params += "&reposId=" + docInfo.vid;
+        	}
+
+        	if(docInfo.docId)
+        	{
+        		params += "&docId=" + docInfo.docId;
+        	}
+        	
+        	if(docInfo.path)
+        	{
+        		params += "&path=" + base64_encode(docInfo.path);
+        	}
+        	
+        	if(docInfo.name)
+        	{
+        		params += "&name=" + base64_encode(docInfo.name);
+        	}
+        	
+        	if(docInfo.shareId)
+        	{
+        		params += "&shareId=" + docInfo.shareId;
+        	}
         }
         console.log("getAppParameters() params:", params);
         return params;

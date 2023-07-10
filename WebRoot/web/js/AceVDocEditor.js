@@ -17,29 +17,6 @@ var AceVDocEditor = (function () {
 		editor.setReadOnly(false); // false to make it editable
 	}
 	
-	//Init For ArtDialog
-	function initForArtDialog()
-	{
-		initAceEditor();
-
-		var params = GetRequest();
-		var docid = params['docid'];
-		//获取artDialog父窗口传递过来的参数
-		var artDialog2 = window.top.artDialogList['ArtDialog' + docid];
-		if (artDialog2 == null) {
-			artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
-		}
-		// 获取对话框传递过来的数据
-		docInfo = artDialog2.config.data;
-	    console.log("initForArtDialog() docInfo:", docInfo);
-
-		if (!docInfo.fileSuffix) {
-			docInfo.fileSuffix = getFileSuffix(docInfo.name);
-		}
-		
-		getDocText(docInfo, showText, showErrorInfo);
-	}
-	
 	//Init For NewPage
 	function initForNewPage()
 	{
@@ -49,26 +26,10 @@ var AceVDocEditor = (function () {
 	    document.title = docInfo.name;
 	    
 	    console.log("initForNewPage() docInfo:", docInfo);
-	    
-		if (!docInfo.fileSuffix) {
-			docInfo.fileSuffix = getFileSuffix(docInfo.name);
-		}
 		
 		docInfo.docType = 2; //获取文件备注内容
 		getDocText(docInfo, showText, showErrorInfo);
 	}
-	
-	//Init For Bootstrap Dialog
-	function textEditorPageInit(Input_doc)
-	{
-		initAceEditor();
-		
-		docInfo = Input_doc;		
-	
-		console.log("textEditorPageInit() docInfo:", docInfo);
-		
-		getDocText(docInfo, showText, showErrorInfo);	  	
-  	}
 	
 	function showErrorInfo(msg)
 	{
@@ -92,11 +53,8 @@ var AceVDocEditor = (function () {
 		return theRequest;
 	}
 
-
-			
 	function showText(docText, tmpSavedDocText)
 	{
-		checkAndSetFileShowMode(docInfo);
 		checkAndSetEditBtn(docInfo);	
 		
 		editor.setValue(docText);	
@@ -413,41 +371,14 @@ var AceVDocEditor = (function () {
 	
 	function checkAndSetEditBtn(docInfo)
 	{
-		if(docInfo.isZip && docInfo.isZip == 1)
-		{
-			return;
-		}
-		if(docInfo.isHistory && docInfo.isHistory == 1)
-		{
-			return;
-		}
-		
-		
-		var editable = isEditableText(docInfo.fileSuffix);
-		console.log("checkAndSetEditBtn() isEditableText:" + editable);
-		if(editable)
-		{
-			$("#textEditorEditBtn").show();
-		}
+		$("#textEditorEditBtn").show();
 	}
 	
-	function checkAndSetFileShowMode(docInfo)
-	{
-		var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
-		console.log("checkAndSetFileShowMode() showMode:" + showMode);
-		editor.session.setMode("ace/mode/" + showMode);
-	}
 	//开放给外部的调用接口
 	return {
-		initForArtDialog: function(){
-			initForArtDialog();
-	    },
 		initForNewPage: function(){
 			initForNewPage();
 	    },
-        textEditorPageInit: function(docInfo){
-        	textEditorPageInit(docInfo);
-        },
 	    saveDoc: function(){
 	    	return saveDoc();
 	    },

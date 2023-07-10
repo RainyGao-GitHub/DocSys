@@ -1710,11 +1710,11 @@
 	    	return;
 	    }
 		
-		if(vdocEditor.edit == true || vdocEditor.isBusy == true)
-		{
-			//用户真正编辑备注或者编辑器正忙（初始化）
-			return;
-		}
+		//if(vdocEditor.edit == true || vdocEditor.isBusy == true)
+		//{
+		//	//用户真正编辑备注或者编辑器正忙（初始化）
+		//	return;
+		//}
 		
 		//TODO:注意gDocInfo可能是根目录
 		//更新gDocInfoInPreview
@@ -2772,6 +2772,7 @@
 
 		if(gInitDocInfo.docId == 0)
 		{
+			gInitDocInfo.vid = gRootDoc.vid;
 			gInitDocInfo.docId = gRootDoc.docId;
 			gInitDocInfo.path = gRootDoc.path;
 			gInitDocInfo.name = gRootDoc.name;
@@ -4169,6 +4170,7 @@
 			edit = false;
 		}
 
+		gInitDocInfo.vid = gInitReposInfo.id;
 		gInitDocInfo.docId = docId;
 		gInitDocInfo.path = path;
 		gInitDocInfo.name = name;
