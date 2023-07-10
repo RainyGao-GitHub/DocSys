@@ -1580,15 +1580,41 @@
 	function cleanDocPreview()
 	{
     	console.log("cleanDocPreview() ");
-		//清除当前选中的信息
-		gDocInfo = {};
-		updateUrl();
 
-		//清除文件名
-	  	$('#filetitle').html("");
+    	//clean gDocInfo
+		updateGDocInfo();
+		
+    	//更新预览信息
+    	previewDoc(gDocInfo);
 	}
-
-	//获取文件信息并显示
+	
+    function updateGDocInfo(doc, dataEx, openMode)
+    {
+    	//Reset gDocInfo
+    	gDocInfo = {};
+    	
+    	if(doc)
+    	{	
+	        gDocInfo.vid = gReposInfo.id;
+	    	gDocInfo.docId = doc.docId;
+	    	gDocInfo.path = doc.path;
+	    	gDocInfo.name = doc.name;
+	    	gDocInfo.type = doc.type;
+	    	gDocInfo.isBussiness = doc.isBussiness;
+	    	gDocInfo.officeType = doc.officeType;
+	    	gDocInfo.size = doc.size;
+	    	gDocInfo.createTime = doc.createTime;
+	    	gDocInfo.latestEditTime = doc.latestEditTime;
+	    	
+	    	//扩展参数
+	    	gDocInfo.dataEx = dataEx;
+	    	gDocInfo.openMode = openMode;
+    	}
+    	
+    	updateUrl();
+    }
+    
+	//getAndShowDoc涉及密码校验问题，因此更新gDocInfo以及预览的前提是要获取成功
     function getAndShowDoc(node, openMode, edit)
 	{
 		console.log("getAndShowDoc() gShowType:" + gShowType + " openMode:" + openMode + " edit:" + edit + " node:", node);
@@ -1618,32 +1644,11 @@
             	{
             		var doc = ret.data
             		console.log("getAndShowDoc gDocInfo.docId:" + gDocInfo.docId + " docId:" + doc.docId + " gShowType:" + gShowType);
-
-                	//Show Doc and update gDocInfo
-            		$('#filetitle').html(doc.name);
-	                //Reset gDocInfo
-                	gDocInfo = {};
-	                gDocInfo.vid = gReposInfo.id;
-                	gDocInfo.docId = doc.docId;
-	            	gDocInfo.path = doc.path;
-	            	gDocInfo.name = doc.name;
-	            	gDocInfo.type = doc.type;
-	            	gDocInfo.isBussiness = doc.isBussiness;
-	            	gDocInfo.officeType = doc.officeType;
-                	gDocInfo.size = doc.size;
-	            	gDocInfo.createTime = doc.createTime;
-                	gDocInfo.latestEditTime = doc.latestEditTime;
                 	
-	            	gDocInfo.dataEx = ret.dataEx;
+            		updateGDocInfo(doc, ret.dataEx, openMode);
 
-                	gDocInfo.openMode = openMode;
-	            	gDocInfo.edit = edit;
-	            	updateUrl();
-
-	            	gDocInfo.content = parseDocContent(doc.content);
-	                gDocInfo.tmpContent = parseDocContent(doc.tmpContent);
-
-	                previewDoc(gShowType);
+            		//当前文件处于打开状态，则不会进行预览
+	                previewDoc(gDocInfo, gShowType);
                 }
                 else
                 {
@@ -1689,12 +1694,12 @@
 		});
 	}
 
-	//previewDoc根据showType和edit显示gDoc
+	//Function: previewDoc
 	var gDocInfoInPreview;	//当前预览中的Doc
 	function previewDoc(doc, showType)
     {
 		console.log("previewDoc gShowType:" + gShowType + " doc", doc);
-		if(doc.docId == gDocInfoForPreview.docId)
+		if(gDocInfoForPreview != undefined && doc.docId == gDocInfoForPreview.docId)
 		{
 	    	//该文件已处于预览状态
 	    	return;
@@ -1706,9 +1711,13 @@
 			return;
 		}
 		
+		//TODO:注意gDocInfo可能是根目录
 		//更新gDocInfoInPreview
 		gDocInfoInPreview = doc;
 
+    	//更新文件名显示
+		$('#filetitle').html(doc.name);
+		
 		//显示文件图标
 		var fileSuffix = getFileSuffix(doc.name);
 		doc.fileSuffix = fileSuffix;
@@ -2499,16 +2508,16 @@
     	  		return;
     	  }
 
+    	  
     	  if(gDocInfo.docId == treeNode.id)
     	  {
-    		  //文件已打开了不处理
+    		  //当前文件处于打开状态，则不会进行预览
+    		  previewDoc(gDocInfo, gShowType);
     		  return;
     	  }
-
-    	  showDocList(treeNode);
-
-    	  //TODO: 需要考虑将RealDoc和VDOC分开处理
+       	  
     	  getAndShowDoc(treeNode, 1, false);
+    	  showDocList(treeNode);    	  
       }
 
       //Double Click 对于文件应该是编辑，对于目录应该是打开
