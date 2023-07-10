@@ -1699,13 +1699,18 @@
 	function previewDoc(doc, showType)
     {
 		console.log("previewDoc gShowType:" + gShowType + " doc", doc);
-		if(gDocInfoForPreview != undefined && doc.docId == gDocInfoForPreview.docId)
+		if(doc == undefined)
+		{
+			return;
+		}
+		
+		if(gDocInfoInPreview != undefined && doc.docId == gDocInfoInPreview.docId)
 		{
 	    	//该文件已处于预览状态
 	    	return;
 	    }
 		
-		if(vDocEditor.edit == true || vDocEditor.isBusy == true)
+		if(vdocEditor.edit == true || vdocEditor.isBusy == true)
 		{
 			//用户真正编辑备注或者编辑器正忙（初始化）
 			return;
