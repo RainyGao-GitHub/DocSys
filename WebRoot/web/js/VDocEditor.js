@@ -164,7 +164,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
 
 
     MxsdocAPI.VDocEditor.defaultConfig = {
-        type: 'stackEditor',	//编辑器类型
+    	editor: 'stackedit',
         width: '100%',
         height: '100%',
     };
@@ -215,8 +215,18 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
     };
     
     function getAppPath(config) {
-    	var path = "/DocSystem/web/aceForVDoc.html";
-        return path;
+    	console.log("getAppPath() editor:" + config.editor);
+    	var path = "/DocSystem/web/stackeditForVDoc.html";
+    	switch(config.editor)
+    	{
+    		case "ace":
+    			path = "/DocSystem/web/stackeditForVDoc.html";
+    			break;
+    		case "stackedit":
+    			path = "/DocSystem/web/aceForVDoc.html";    			
+    			break;
+    	}
+    	return path;
     }
     
     function getAppParameters(config) {

@@ -21,7 +21,8 @@ var StackMdEditor = (function () {
 		}
 		
 		docInfo = artDialog2.config.data; // 获取对话框传递过来的数据
-	
+		docInfo.docType = 1;
+		
 		// 初始化文档信息
 		docInfoInit();
 		
@@ -37,6 +38,8 @@ var StackMdEditor = (function () {
 	function initForNewPage()
 	{
 		docInfo = getDocInfoFromRequestParamStr();
+		docInfo.docType = 1;
+
 	    document.title = docInfo.name;
 	    
 	    // 初始化文档信息
@@ -54,6 +57,7 @@ var StackMdEditor = (function () {
 	function PageInit(Input_doc)
 	{
 		docInfo = Input_doc;
+		docInfo.docType = 1;
 
 	    // 初始化文档信息
 		docInfoInit();
@@ -65,6 +69,25 @@ var StackMdEditor = (function () {
 		
 		getDocText(docInfo, showText, showErrorInfo);
   	}
+	
+	//For VDoc
+	function initForVDoc()
+	{
+		docInfo = getDocInfoFromRequestParamStr();
+		docInfo.docType = 2;
+
+	    document.title = docInfo.name;
+	    
+	    // 初始化文档信息
+		docInfoInit();
+		
+		console.log("initForNewPage() docInfo:", docInfo);
+	    
+		//history file or file in zip is readonly
+		checkAndSetIsReadOnly(docInfo);
+		
+		getDocText(docInfo, showText, showErrorInfo);
+	}
 	
 	function showErrorInfo(msg)
 	{
@@ -90,6 +113,12 @@ var StackMdEditor = (function () {
 	
 	function checkAndSetIsReadOnly(docInfo)
 	{
+		if(docInfo.docType == 2)
+		{
+			isReadOnly = false;
+			return;
+		}
+		
 		if(docInfo.isZip && docInfo.isZip == 1)
 		{
 			isReadOnly = true;
@@ -106,9 +135,12 @@ var StackMdEditor = (function () {
 	 * 文档信息初始化方法
 	 */
 	function docInfoInit() {
-		// 为空时获取文档的后缀
-		if(docInfo.fileSuffix !==  undefined || docInfo.fileSuffix !== "") {
-			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		if(docInfo.docType == 1)
+		{
+			// 为空时获取文档的后缀
+			if(docInfo.fileSuffix !==  undefined || docInfo.fileSuffix !== "") {
+				docInfo.fileSuffix = getFileSuffix(docInfo.name);
+			}
 		}
 	}
 	/**
@@ -324,7 +356,7 @@ var StackMdEditor = (function () {
             	path: docInfo.path,
                 name: docInfo.name,
             	content : docText,
-            	docType: 1, //RealDoc
+            	docType: docInfo.docType, //RealDoc: 1 VDoc: 2
                 shareId: docInfo.shareId,
             },
             success : function (ret) {
@@ -373,7 +405,7 @@ var StackMdEditor = (function () {
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
-				docType: 1,
+				docType: docInfo.docType,
                 shareId: docInfo.shareId,
 			},
 			success : function (ret) {
@@ -422,7 +454,7 @@ var StackMdEditor = (function () {
             	docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
-				docType: 1,
+				docType: docInfo.docType,
                 shareId: docInfo.shareId,
 			},
 			success : function (ret) {
@@ -492,7 +524,7 @@ var StackMdEditor = (function () {
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
-				docType: 1,
+				docType: docInfo.docType,
 	            shareId: docInfo.shareId,
 			},
 			success : function (ret) {
@@ -527,7 +559,10 @@ var StackMdEditor = (function () {
 	    PageInit: function(docInfo){
         	PageInit(docInfo);
         },
-	    saveDoc: function(){
+		initForVDoc: function(){
+			initForVDoc();
+	    },
+        saveDoc: function(){
 	    	return saveDoc();
 	    },
 	    enableEdit: function(){
