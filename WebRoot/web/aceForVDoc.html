@@ -11,8 +11,9 @@
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
+    <script type="text/javascript" src="js/aceEditor.js"></script>
     <script src="static/ace-builds/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script type="text/javascript" src="js/AceVDocEditor.js"></script>
+    <script type="text/javascript" src="js/AceTextEditor.js"></script>
     
     <style type="text/css" media="screen">
 	  body {
@@ -36,20 +37,20 @@
 				<div class="editormd-toolbar" style="display: block;">
 					<div class="editormd-toolbar-container">
 						<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
-							<li><a href="javascript:;" onclick="AceVDocEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
+							<li><a href="javascript:;" onclick="AceTextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
 							<li class="divider" unselectable="on">|</li>
-							<li><a href="javascript:;" onclick="AceVDocEditor.ctrlZ();" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
-							<li><a href="javascript:;" onclick="AceVDocEditor.ctrlY();" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
+							<li><a href="javascript:;" onclick="AceTextEditor.ctrlZ();" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
+							<li><a href="javascript:;" onclick="AceTextEditor.ctrlY();" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
 							<li class="divider" unselectable="on">|</li>
 						</ul>
 						<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
 							<li id="textEditorCloseBtn" style="display:none;">
-								<a href="javascript:;" onclick="AceVDocEditor.exitEdit()" title="退出编辑" unselectable="on">
+								<a href="javascript:;" onclick="AceTextEditor.exitEdit()" title="退出编辑" unselectable="on">
 									<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
 								</a>
 							</li>
 							<li id="textEditorEditBtn" style="display:none;">
-								<a href="javascript:;" onclick="AceVDocEditor.enableEdit()" title="编辑" unselectable="on">
+								<a href="javascript:;" onclick="AceTextEditor.enableEdit()" title="编辑" unselectable="on">
 									<i class="fa fa-edit" name="edit" unselectable="on"></i>
 								</a>
 							</li>
@@ -66,7 +67,7 @@
 	<script type="text/javascript">
 		//页面加载完成处理函数
 		$(document).ready(function () {
-			AceVDocEditor.initForNewPage();
+			AceTextEditor.initForNewPage();
 		});	
     </script>
 </body>

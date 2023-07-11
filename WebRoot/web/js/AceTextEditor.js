@@ -31,7 +31,9 @@ var AceTextEditor = (function () {
 		}
 		// 获取对话框传递过来的数据
 		docInfo = artDialog2.config.data;
-	    console.log("initForArtDialog() docInfo:", docInfo);
+		docInfo.docType = 1;	//RealDoc
+		
+		console.log("initForArtDialog() docInfo:", docInfo);
 
 		if (!docInfo.fileSuffix) {
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);
@@ -46,6 +48,8 @@ var AceTextEditor = (function () {
 		initAceEditor();
 		
 	    docInfo = getDocInfoFromRequestParamStr();
+	    docInfo.docType = 1;	//RealDoc
+	    
 	    document.title = docInfo.name;
 	    
 	    console.log("initForNewPage() docInfo:", docInfo);
@@ -63,7 +67,8 @@ var AceTextEditor = (function () {
 		initAceEditor();
 		
 		docInfo = Input_doc;		
-	
+		docInfo.docType = 1;	//RealDoc
+	    
 		console.log("textEditorPageInit() docInfo:", docInfo);
 		
 		if (!docInfo.fileSuffix) {
@@ -72,6 +77,21 @@ var AceTextEditor = (function () {
 		
 		getDocText(docInfo, showText, showErrorInfo);	  	
   	}
+	
+	//Init For VDoc 
+	function initForVDoc()
+	{
+		initAceEditor();
+		
+	    docInfo = getDocInfoFromRequestParamStr();
+	    docInfo.docType = 2;	//VirtualDoc
+	    
+	    document.title = docInfo.name;
+	    
+	    console.log("initForVDoc() docInfo:", docInfo);
+
+		getDocText(docInfo, showText, showErrorInfo);
+	}
 	
 	function showErrorInfo(msg)
 	{
@@ -200,7 +220,7 @@ var AceTextEditor = (function () {
 	        	path: docInfo.path,
 	            name: docInfo.name,
 	        	content : content,
-	        	docType: 1, //RealDoc
+	        	docType: docInfo.docType, //RealDoc
 	            shareId: docInfo.shareId,
 	        },
 	        success : function (ret) {
@@ -255,7 +275,7 @@ var AceTextEditor = (function () {
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
-				docType: 1,
+				docType: docInfo.docType,
 	            shareId: docInfo.shareId,
 			},
 			success : function (ret) {
@@ -302,7 +322,7 @@ var AceTextEditor = (function () {
 	        	docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
-				docType: 1,
+				docType: docInfo.docType,
 	            shareId: docInfo.shareId,
 			},
 			success : function (ret) {
@@ -391,7 +411,7 @@ var AceTextEditor = (function () {
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
-				docType: 1,
+				docType: docInfo.docType,
 	            shareId: docInfo.shareId,
 			},
 			success : function (ret) {
@@ -416,6 +436,12 @@ var AceTextEditor = (function () {
 	
 	function checkAndSetEditBtn(docInfo)
 	{
+		if(docInfo.docType == 2)
+		{
+			$("#textEditorEditBtn").show();
+			return;
+		}
+		
 		if(docInfo.isZip && docInfo.isZip == 1)
 		{
 			return;
@@ -436,9 +462,12 @@ var AceTextEditor = (function () {
 	
 	function checkAndSetFileShowMode(docInfo)
 	{
-		var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
-		console.log("checkAndSetFileShowMode() showMode:" + showMode);
-		editor.session.setMode("ace/mode/" + showMode);
+		if(docInfo.docType == 1)
+		{
+			var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
+			console.log("checkAndSetFileShowMode() showMode:" + showMode);
+			editor.session.setMode("ace/mode/" + showMode);
+		}
 	}
 	//开放给外部的调用接口
 	return {
