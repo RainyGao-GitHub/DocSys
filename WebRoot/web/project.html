@@ -3954,11 +3954,12 @@
            	{
            		oDiv.style.left=l+'px';
            		$(".manual-left")[0].style.width=ev.clientX+'px';
+           		//second-table只要调整左边位置就可以了，宽度不变
+             	$(".second-table").css("left",$(".manual-left").width() + $("#line").width());             	
            	}
            	
            	$('.second-table').width($(".second-line").position().left-$('.manual-left').width());
-           	$(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
-
+	        $(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
            	return false;
    	  	};
    	  
