@@ -480,6 +480,9 @@ var AceTextEditor = (function () {
         textEditorPageInit: function(docInfo){
         	textEditorPageInit(docInfo);
         },
+		initForVDoc: function(){
+			initForVDoc();
+	    },
 	    saveDoc: function(){
 	    	return saveDoc();
 	    },
