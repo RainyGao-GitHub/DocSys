@@ -3940,18 +3940,29 @@
 
     var oDiv2=document.getElementById('second-line');
     oDiv2.onmousedown=function(ev){
-        var disX=ev.clientX-oDiv2.offsetLeft;
-        var disY=ev.clientY-oDiv2.offsetTop;
-
-       document.onmousemove=function(ev){
+		var disX=ev.clientX-oDiv2.offsetLeft;
+		var disY=ev.clientY-oDiv2.offsetTop;
+		
+		document.onmousemove=function(ev){
        		var l=ev.clientX-disX;	//计算Line的位置
-           oDiv2.style.left=l+'px';	//设置Line的位置
-           $('.second-table').width($(".second-line").position().left-$('.manual-left').width());
-           $(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
+           	oDiv2.style.left=l+'px';	//设置Line的位置
+           	
+           	var lineLeft = $("#line").position().left;
+           	var secondLineLeft = $("#second-line").position().left;
+           	console.log("lineLeft:" + lineLeft + " secondLineLeft:" + secondLineLeft);
+           	if(lineLeft > secondLineLeft)
+           	{
+           		oDiv.style.left=l+'px';
+           		$(".manual-left")[0].style.width=ev.clientX+'px';
+           	}
+           	
+           	$('.second-table').width($(".second-line").position().left-$('.manual-left').width());
+           	$(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
 
-           return false;
-   	  };
-    	  document.onmouseup=function(ev){
+           	return false;
+   	  	};
+   	  
+   	  	document.onmouseup=function(ev){
     	 	document.onmousemove=null;
     	  	document.onmouseup=null;
         };
