@@ -132,6 +132,10 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
             iframe;
 
         if (target) {
+        	_config.height = document.body.scrollHeight - target.scrollTop - 300;
+        	//_config.height = document.documentElement.scrollHeight;
+        	console.log("target height:" + _config.height);
+        	
             iframe = createIframe(_config);
             if (iframe.src) {
                 var pathArray = iframe.src.split('/');
