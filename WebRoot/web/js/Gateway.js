@@ -93,6 +93,8 @@
         };
 
         var _postMessage = function(msg) {
+            console.log("Gateway _postMessage() msg:", msg);
+
             // TODO: specify explicit origin
             if (window.parent && window.JSON) {
                 msg.frameEditorId = window.frameEditorId;
@@ -101,7 +103,7 @@
         };
 
         var _onMessage = function(msg) {
-            console.log("_onMessage() msg:", msg);
+            console.log("Gateway _onMessage() msg:", msg);
 
         	// TODO: check message origin
             var data = msg.data;

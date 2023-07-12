@@ -72,12 +72,13 @@ var StackMdEditor = (function () {
 	//For VDoc
 	function initForVDoc()
 	{		
-		Common.Gateway.on('opendocument', _.bind(this.loadDocument, this));
+		Common.Gateway.on('opendocument', loadDocument);
         Common.Gateway.appReady();
 	}
 	
 	var loadDocument = function(data){
 		var docInfo = data.doc;
+		docInfo.docType = 2;
 		
 		//docInfo = getDocInfoFromRequestParamStr();
 		//docInfo.docType = 2;
@@ -86,10 +87,8 @@ var StackMdEditor = (function () {
 	    
 	    // 初始化文档信息
 		docInfoInit();
-		
-		console.log("initForNewPage() docInfo:", docInfo);
-	    
-		//history file or file in zip is readonly
+		console.log("loadDocument() docInfo:", docInfo);
+
 		checkAndSetIsReadOnly(docInfo);
 		
 		getDocText(docInfo, showText, showErrorInfo);	
@@ -176,7 +175,7 @@ var StackMdEditor = (function () {
 	 * @param event 事件对象
 	 */
 	function messageHandler(event) {
-		console.log("messageHandler() event:", event);
+		console.log("StackMdEditor messageHandler() event:", event);
 		switch (event.data.type) 
 		{
 			case 'ready':

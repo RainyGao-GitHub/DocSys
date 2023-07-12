@@ -15,6 +15,15 @@ var AceTextEditor = (function () {
 		//editor.setTheme("ace/theme/tomorrow_night");
 		editor.session.setMode("ace/mode/text");
 		editor.setReadOnly(true); // false to make it editable
+		editor.getSession().on('change', function(e) {
+			isContentChanged = true;
+			console.log("textChange stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
+			if(false == isCtrlZY)
+			{
+				var content = editor.getValue();
+				stackZ.push(content);
+			}
+		});
 	}
 	
 	//Init For ArtDialog
@@ -93,6 +102,28 @@ var AceTextEditor = (function () {
 		getDocText(docInfo, showText, showErrorInfo);
 	}
 	
+	//For VDoc
+	function initForVDoc()
+	{		
+		Common.Gateway.on('opendocument', loadDocument);
+        Common.Gateway.appReady();
+	}
+	
+	var loadDocument = function(data){
+		var docInfo = data.doc;
+		docInfo.docType = 2;
+		
+		//docInfo = getDocInfoFromRequestParamStr();
+		//docInfo.docType = 2;
+
+	    document.title = docInfo.name;
+	    
+	    // 初始化文档信息
+		console.log("loadDocument() docInfo:", docInfo);
+		
+		getDocText(docInfo, showText, showErrorInfo);	
+	};
+	
 	function showErrorInfo(msg)
 	{
 		bootstrapQ.msg({
@@ -122,16 +153,7 @@ var AceTextEditor = (function () {
 		checkAndSetFileShowMode(docInfo);
 		checkAndSetEditBtn(docInfo);	
 		
-		editor.setValue(docText);	
-		editor.getSession().on('change', function(e) {
-			isContentChanged = true;
-			console.log("textChange stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
-			if(false == isCtrlZY)
-			{
-				var content = editor.getValue();
-				stackZ.push(content);
-			}
-		});
+		editor.setValue(docText);
 	}
 	    
 	function ArrayStack(){

@@ -59,7 +59,6 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
 
 	MxsdocAPI.VDocEditor = function(placeholderId, config) {
 		console.log("VDocEditor() config", config);
-		var _isBusy = false; //编辑正在初始化或者正在打开文件过程中
 		var _edit = false;	 //默认处于非编辑状态
 		
 		var _self = this,	//_self是指实例化后的对象
@@ -100,7 +99,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         };
         
         var _onMessage = function(msg) {
-        	console.log("_onMessage() msg:", msg);
+        	console.log("VDocEditor _onMessage() msg:", msg);
             if ( msg ) {
                 if ( msg.type === "onExternalPluginMessage" ) {
                     _sendCommand(msg);
@@ -166,7 +165,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
             if (iframe && iframe.contentWindow)
                 postMessage(iframe.contentWindow, cmd);
         };
-
+      
         return {
             attachMouseEvents   : _attachMouseEvents,
             detachMouseEvents   : _detachMouseEvents,
@@ -209,6 +208,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
 
         var _onMessage = function(msg) {
             // TODO: check message origin
+        	console.log("VDocEditor MessageDispatcher _onMessage() msg:", msg);
             if (msg && window.JSON && _scope.frameOrigin==msg.origin ) {
 
                 try {
@@ -305,6 +305,8 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
     }
 
     function postMessage(wnd, msg) {
+        console.log("VDocEditor postMessage() msg:", msg);
+
         if (wnd && wnd.postMessage && window.JSON) {
             // TODO: specify explicit origin
             wnd.postMessage(window.JSON.stringify(msg), "*");
