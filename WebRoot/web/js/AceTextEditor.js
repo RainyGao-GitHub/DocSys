@@ -88,29 +88,65 @@ var AceTextEditor = (function () {
   	}
 	
 	//Init For VDoc 
+    var commandMap = {
+        'openDocument': function(data) {
+            _loadDocument(data);
+        },
+    };
+    
 	function initForVDoc()
 	{
 		initAceEditor();
 		
-	    docInfo = getDocInfoFromRequestParamStr();
-	    docInfo.docType = 2;	//VirtualDoc
-	    
-	    document.title = docInfo.name;
-	    
-	    console.log("initForVDoc() docInfo:", docInfo);
+		//Bind message handler
+        if (window.attachEvent) {
+            window.attachEvent('onmessage', _onMessage);
+        } else {
+            window.addEventListener('message', _onMessage, false);
+        }
+        
+        //Notify VDocEditor that eidtor is ready
+        _postMessage({ event: 'onAppReady' });
+	}
+	
+    var _postMessage = function(msg) {
+        console.log("AceTextEditor _postMessage() msg:", msg);
 
-		getDocText(docInfo, showText, showErrorInfo);
-	}
-	
-	//For VDoc
-	function initForVDoc()
-	{		
-		Common.Gateway.on('opendocument', loadDocument);
-        Common.Gateway.appReady();
-	}
-	
-	var loadDocument = function(data){
-		var docInfo = data.doc;
+        // TODO: specify explicit origin
+        if (window.parent && window.JSON) {
+            msg.frameEditorId = window.frameEditorId;
+            window.parent.postMessage(window.JSON.stringify(msg), "*");
+        }
+    };
+    
+    var _onMessage = function(msg) {
+        console.log("AceTextEditor _onMessage() msg:", msg);
+
+    	// TODO: check message origin
+        var data = msg.data;
+        
+        if (Object.prototype.toString.apply(data) !== '[object String]' || !window.JSON) {
+            return;
+        }
+
+        var cmd, handler;
+
+        try {
+            cmd = window.JSON.parse(data)
+        } catch(e) {
+            cmd = '';
+        }
+
+        if (cmd) {
+            handler = commandMap[cmd.command];
+            if (handler) {
+                handler.call(this, cmd.data);
+            }
+        }
+    };
+    
+	var _loadDocument = function(data){
+		docInfo = data.doc;
 		docInfo.docType = 2;
 		
 		//docInfo = getDocInfoFromRequestParamStr();
@@ -122,6 +158,9 @@ var AceTextEditor = (function () {
 		console.log("loadDocument() docInfo:", docInfo);
 		
 		getDocText(docInfo, showText, showErrorInfo);	
+		
+		checkAndSetFileShowMode(docInfo);
+		checkAndSetEditBtn(docInfo);
 	};
 	
 	function showErrorInfo(msg)
@@ -149,10 +188,7 @@ var AceTextEditor = (function () {
 
 			
 	function showText(docText, tmpSavedDocText)
-	{
-		checkAndSetFileShowMode(docInfo);
-		checkAndSetEditBtn(docInfo);	
-		
+	{	
 		editor.setValue(docText);
 	}
 	    
@@ -491,6 +527,7 @@ var AceTextEditor = (function () {
 			editor.session.setMode("ace/mode/" + showMode);
 		}
 	}
+	
 	//开放给外部的调用接口
 	return {
 		initForArtDialog: function(){
