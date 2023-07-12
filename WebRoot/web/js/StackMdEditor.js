@@ -8,6 +8,12 @@ var StackMdEditor = (function () {
 	//注意: editState用于标记编辑器当前的状态，如果不一致会导致切换状态时不正常
 	//要使用editState进行标记是因为编辑器的changeView很多按键都会触发，需要避免重复触发
 	var editState = true;	//编辑器的默认状态是处于编辑状态
+    //supported command in message
+	var commandMap = {
+            'openDocument': function(data) {
+                _loadDocument(data);
+            },
+        };
 	
 	//For ArtDialog
 	function initForArtDialog() 
@@ -72,11 +78,54 @@ var StackMdEditor = (function () {
 	//For VDoc
 	function initForVDoc()
 	{		
-		Common.Gateway.on('opendocument', loadDocument);
-        Common.Gateway.appReady();
+		//Bind message handler
+        if (window.attachEvent) {
+            window.attachEvent('onmessage', _onMessage);
+        } else {
+            window.addEventListener('message', _onMessage, false);
+        }
+        
+        //Notify VDocEditor that eidtor is ready
+        _postMessage({ event: 'onAppReady' });
 	}
 	
-	var loadDocument = function(data){
+    var _postMessage = function(msg) {
+        console.log("StackMdEditor _postMessage() msg:", msg);
+
+        // TODO: specify explicit origin
+        if (window.parent && window.JSON) {
+            msg.frameEditorId = window.frameEditorId;
+            window.parent.postMessage(window.JSON.stringify(msg), "*");
+        }
+    };
+    
+    var _onMessage = function(msg) {
+        console.log("StackMdEditor _onMessage() msg:", msg);
+
+    	// TODO: check message origin
+        var data = msg.data;
+        
+        if (Object.prototype.toString.apply(data) !== '[object String]' || !window.JSON) {
+            return;
+        }
+
+        var cmd, handler;
+
+        try {
+            cmd = window.JSON.parse(data)
+        } catch(e) {
+            cmd = '';
+        }
+
+        if (cmd) {
+            handler = commandMap[cmd.command];
+            if (handler) {
+                handler.call(this, cmd.data);
+            }
+        }
+    };
+    
+	var _loadDocument = function(data){
 		var docInfo = data.doc;
 		docInfo.docType = 2;
 		

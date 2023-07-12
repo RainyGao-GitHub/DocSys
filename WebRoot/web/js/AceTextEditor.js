@@ -6,7 +6,13 @@ var AceTextEditor = (function () {
 	var isContentChanged = false;
 	var editState = false;
 	var editor = {};	
-	
+    //supported command in message
+	var commandMap = {
+            'openDocument': function(data) {
+                _loadDocument(data);
+            },
+        };
+        
 	function initAceEditor()
 	{
 		editor = ace.edit("editor");
@@ -88,12 +94,6 @@ var AceTextEditor = (function () {
   	}
 	
 	//Init For VDoc 
-    var commandMap = {
-        'openDocument': function(data) {
-            _loadDocument(data);
-        },
-    };
-    
 	function initForVDoc()
 	{
 		initAceEditor();
