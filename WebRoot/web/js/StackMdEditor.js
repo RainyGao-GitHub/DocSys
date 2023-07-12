@@ -28,7 +28,6 @@ var StackMdEditor = (function () {
 		
 		console.log("initForArtDialog() docInfo:", docInfo);
 
-		//history file or file in zip is readonly
 		checkAndSetIsReadOnly(docInfo);
 		
 		getDocText(docInfo, showText, showErrorInfo);
@@ -72,9 +71,16 @@ var StackMdEditor = (function () {
 	
 	//For VDoc
 	function initForVDoc()
-	{
-		docInfo = getDocInfoFromRequestParamStr();
-		docInfo.docType = 2;
+	{		
+		Common.Gateway.on('opendocument', _.bind(this.loadDocument, this));
+        Common.Gateway.appReady();
+	}
+	
+	var loadDocument = function(data){
+		var docInfo = data.doc;
+		
+		//docInfo = getDocInfoFromRequestParamStr();
+		//docInfo.docType = 2;
 
 	    document.title = docInfo.name;
 	    
@@ -86,8 +92,8 @@ var StackMdEditor = (function () {
 		//history file or file in zip is readonly
 		checkAndSetIsReadOnly(docInfo);
 		
-		getDocText(docInfo, showText, showErrorInfo);
-	}
+		getDocText(docInfo, showText, showErrorInfo);	
+	};
 	
 	function showErrorInfo(msg)
 	{
@@ -150,7 +156,7 @@ var StackMdEditor = (function () {
 	 */
 	function showText(docText_, tmpSavedDocText_) {
 		// 传入staticedit插件地址和文件内容，获取staticedit插件指定路径
-		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html",docText_);
+		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", docText_);
 		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
 		var stackEditIframeEl = $(".stackedit-iframe");
 		stackEditIframeEl.prop("src",url);
@@ -170,7 +176,7 @@ var StackMdEditor = (function () {
 	 * @param event 事件对象
 	 */
 	function messageHandler(event) {
-		
+		console.log("messageHandler() event:", event);
 		switch (event.data.type) 
 		{
 			case 'ready':

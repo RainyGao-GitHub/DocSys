@@ -100,17 +100,30 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         };
         
         var _onMessage = function(msg) {
+        	console.log("_onMessage() msg:", msg);
             if ( msg ) {
+                if ( msg.type === "onExternalPluginMessage" ) {
+                    _sendCommand(msg);
+                } else if (msg.type === "onExternalPluginMessageCallback") {
+                    postMessage(window.parent, msg);
+                } else
                 if ( msg.frameEditorId == placeholderId ) {
                     var events = _config.events || {},
                         handler = events[msg.event],
                         res;
-                    if (msg.event === 'onAppReady') {
-                        _onAppReady();
-                    }
 
-                    if (handler && typeof handler == "function") {
-                        res = handler.call(_self, {target: _self, data: msg.data});
+                    if (msg.event === 'onRequestEditRights' && !handler) {
+                        _applyEditRights(false, 'handler isn\'t defined');
+                    } else if (msg.event === 'onInternalMessage' && msg.data && msg.data.type == 'localstorage') {
+                        _callLocalStorage(msg.data.data);
+                    } else {
+                        if (msg.event === 'onAppReady') {
+                            _onAppReady();
+                        }
+
+                        if (handler && typeof handler == "function") {
+                            res = handler.call(_self, {target: _self, data: msg.data});
+                        }
                     }
                 }
             }
@@ -206,7 +219,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
                 } catch(e) {}
             }
         };
-
+        
         _bindEvents.call(this);
 
         return {

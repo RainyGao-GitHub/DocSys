@@ -101,8 +101,11 @@
         };
 
         var _onMessage = function(msg) {
-            // TODO: check message origin
+            console.log("_onMessage() msg:", msg);
+
+        	// TODO: check message origin
             var data = msg.data;
+            
             if (Object.prototype.toString.apply(data) !== '[object String]' || !window.JSON) {
                 return;
             }
