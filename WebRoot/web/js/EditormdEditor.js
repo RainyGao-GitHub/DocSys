@@ -1,5 +1,5 @@
-//AceTextEditor类
-var AceTextEditor = (function () {
+//EditormdEditor类
+var EditormdEditor = (function () {
 	var docInfo = {};
 	var docText = "";
 	var tmpSavedDocText = "";
@@ -15,21 +15,72 @@ var AceTextEditor = (function () {
         
 	function initEditor()
 	{
-		editor = ace.edit("editor");
-		editor.setTheme("ace/theme/twilight");
-		//editor.setTheme("ace/theme/chrome");
-		//editor.setTheme("ace/theme/tomorrow_night");
-		editor.session.setMode("ace/mode/text");
-		editor.setReadOnly(true); // false to make it editable
-		editor.getSession().on('change', function(e) {
-			isContentChanged = true;
-			console.log("textChange stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
-			if(false == isCtrlZY)
-			{
-				var content = editor.getValue();
-				stackZ.push(content);
-			}
-		});
+  		console.log("EditormdEditor editorInit edit:" + edit);
+
+  		var params = {
+           width: "100%",
+           height: $(document).height()-70,
+           path : 'static/markdown/lib/',
+           markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
+           toolbar  : false,             // 关闭工具栏
+           codeFold : true,
+           searchReplace : true,
+           saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
+           htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+           emoji : true,
+           taskList : true,
+           tocm: true,          			// Using [TOCM]
+           tex : true,                      // 开启科学公式 TeX 语言支持，默认关闭
+           //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
+           flowChart : true,
+           sequenceDiagram : true,
+           //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
+           //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
+           //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
+           dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
+           dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
+           imageUpload : true,
+           imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
+           imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
+           onchange : function () {
+                console.log("EditormdEditor onchange docInfo.edit:" + docInfo.edit);       
+                isContentChanged = true;
+	   		    console.log("textChange stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
+	   			if(false == isCtrlZY)
+	   			{
+	   				var content = editor.getValue();
+	   				stackZ.push(content);
+	   			}
+           },
+           onpreviewing : function () {
+               console.log("EditormdEditor onpreviewing docInfo.edit:" + docInfo.edit);
+               exitEditWiki();
+           },
+           onpreviewed :function () {
+               console.log("EditormdEditor onpreviewed docInfo.edit:" + docInfo.edit);
+               lockAndEditWiki();
+           },
+           onload : function () {
+               console.log("EditormdEditor onload docInfo.edit:" + docInfo.edit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+	    		   this.previewing(); 		  //加载成默认是预览
+	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载，会触发onchange事件
+	    		   isOnLoadTriggerChange = true;
+	    		   if(!edit || edit == false)
+    		   {
+	    			   console.log("EditormdEditor onload edit is false");
+    		   }
+	    		   else
+	    		   {
+	    			   console.log("EditormdEditor onload edit is true");
+	    			   lockAndEditWiki();
+    		   }
+           },
+           onresize: function(){
+        	   console.log("EditormdEditor onresize");
+           }
+   		};
+   		
+  		editor = editormd("mdPlayer",params);
 	}
 	
 	//Init For ArtDialog
@@ -110,7 +161,7 @@ var AceTextEditor = (function () {
 	}
 	
     var _postMessage = function(msg) {
-        console.log("AceTextEditor _postMessage() msg:", msg);
+        console.log("EditormdEditor _postMessage() msg:", msg);
 
         // TODO: specify explicit origin
         if (window.parent && window.JSON) {
@@ -120,7 +171,7 @@ var AceTextEditor = (function () {
     };
     
     var _onMessage = function(msg) {
-        console.log("AceTextEditor _onMessage() msg:", msg);
+        console.log("EditormdEditor _onMessage() msg:", msg);
 
     	// TODO: check message origin
         var data = msg.data;
@@ -189,7 +240,7 @@ var AceTextEditor = (function () {
 			
 	function showText(docText, tmpSavedDocText)
 	{	
-		editor.setValue(docText);
+		editor.setMarkdown(docText);
 	}
 	    
 	function ArrayStack(){
@@ -390,7 +441,7 @@ var AceTextEditor = (function () {
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
 					switchEditMode(false);
 					return;
-					}
+				}
 				else
 				{
 					showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
@@ -419,11 +470,32 @@ var AceTextEditor = (function () {
 			$("#textEditorEditBtn").hide();
 	
 			//Enable Edit
-			editor.setReadOnly(false);
+			editor.previewing();
 			editState = true;
 			
 			//Start beat thread to keep 
 			startBeatThread();
+			
+			//启动内容自动保存线程
+			startAutoTmpSaver();
+			
+			if(tmpSavedDocText && tmpSavedDocText != docText)
+			{
+				bootstrapQ.confirm({
+					id: "loadContentConfirm",
+					title: "加载确认",
+					msg : "上次有未保存的编辑内容，是否加载？",
+					},function () {
+				    	//alert("点击了确定");
+				        editor.loadmd(tmpSavedDocText);
+				    	return true;   
+				 	},function (){
+				 		//alert("点击了取消");
+				        tmpSavedDocText = docText;
+				        deleteTmpSavedContent(docInfo.docId);
+				        return true;
+				 	});
+			}
 		}
 		else
 		{
@@ -437,8 +509,11 @@ var AceTextEditor = (function () {
 			$("#textEditorEditBtn").show();			
 			
 			//Disable Edit
-			editor.setReadOnly(true);
+			editor.previewed();
 			editState = false;			
+
+			//关闭内容自动保存线程
+			stopAutoTmpSaver();
 		}
 	}
 	
@@ -520,13 +595,127 @@ var AceTextEditor = (function () {
 	
 	function checkAndSetFileShowMode(docInfo)
 	{
-		if(docInfo.docType == 1)
+		//Do nothing
+	}
+	
+	function startAutoTmpSaver()
+	{ 
+		console.log("EditormdEditor.startAutoTmpSaver timerState:" + timerState);
+		if(timerState == 0)
 		{
-			var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
-			console.log("checkAndSetFileShowMode() showMode:" + showMode);
-			editor.session.setMode("ace/mode/" + showMode);
+			timerState = 1;
+			autoSaveTimer = setInterval(function () {
+	        	var newContent = getMarkdown();
+	        	if(!tmpSavedDocText)
+	        	{
+	        		tmpSavedDocText = "";
+	        	}
+	        	
+				if(tmpSavedDocText != newContent)
+	    		{
+	    			console.log("autoTmpSaveWiki");
+	    			tmpSaveDoc(docInfo.docId, newContent);
+	    			tmpSavedDocText = newContent;
+	    		}
+	    	},20000);
+	    }
+	}
+
+	function stopAutoTmpSaver(){
+		console.log("EditormdEditor.stopAutoTmpSaver timerState:" + timerState);
+		if(timerState == 1)
+		{
+			timerState = 0;
+			clearInterval(autoSaveTimer);
 		}
 	}
+	
+    //文件临时保存操作
+    function tmpSaveDoc(node, content){
+		$.ajax({
+            url : "/DocSystem/Doc/tmpSaveDocContent.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	reposId: gReposInfo.id,
+                docId : node.docId,
+                pid: node.pid,
+                path: node.path,
+                name: node.name,
+                content : content,
+                docType : 1, //realDoc
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    console.log("临时保存成功 :" , (new Date()).toLocaleDateString());
+                    bootstrapQ.msg({
+								msg : "临时保存成功 :" + (new Date()).toLocaleDateString(),
+								type : 'success',
+								time : 1000,
+					});
+                }else {
+                    //bootstrapQ.alert("临时保存失败:"+ret.msgInfo);
+                    bootstrapQ.msg({
+						msg : "临时保存失败 :" + +ret.msgInfo,
+						type : 'danger',
+						time : 1000,
+					});
+                }
+            },
+            error : function () {
+                //bootstrapQ.alert("临时保存异常");
+                bootstrapQ.msg({
+					msg : "临时保存失败 :服务器异常",
+					type : 'danger',
+					time : 1000,
+				});
+            }
+        });
+
+    }
+    
+    //文件临时Delete操作
+    function deleteTmpSavedContent(node)
+    {	
+        $.ajax({
+            url : "/DocSystem/Doc/deleteTmpSavedDocContent.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	reposId: gReposInfo.id,
+                docId : node.docId,
+                pid: node.pid,
+                path: node.path,
+                name: node.name,
+                docType: 1,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    console.log("删除临时保存内容成功 :" , (new Date()).toLocaleDateString());
+                    bootstrapQ.msg({
+								msg : "删除临时保存内容成功 :" + (new Date()).toLocaleDateString(),
+								type : 'success',
+								time : 1000,
+					});
+                }else {
+                    //bootstrapQ.alert("临时保存失败:"+ret.msgInfo);
+                    bootstrapQ.msg({
+						msg : "删除临时保存内容失败 :" + +ret.msgInfo,
+						type : 'danger',
+						time : 1000,
+					});
+                }
+            },
+            error : function () {
+                //bootstrapQ.alert("临时保存异常");
+                bootstrapQ.msg({
+					msg : "删除临时保存内容失败 :服务器异常",
+					type : 'danger',
+					time : 1000,
+				});
+            }
+        });
+    }
 	
 	//开放给外部的调用接口
 	return {

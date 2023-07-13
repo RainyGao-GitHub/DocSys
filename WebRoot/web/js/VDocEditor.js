@@ -242,6 +242,9 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
 		case "ace":
 			path = "/DocSystem/web/aceForVDoc.html";    			
 			break;
+		case "editormd":
+			path = "/DocSystem/web/editormdForVDoc.html";    			
+			break;
     	}
     	return path;
     }
