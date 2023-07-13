@@ -15,7 +15,7 @@ var EditormdEditor = (function () {
         
 	function initEditor()
 	{
-  		console.log("EditormdEditor editorInit edit:" + edit);
+  		console.log("EditormdEditor editorInit editState:" + editState);
 
   		var params = {
            width: "100%",
@@ -43,37 +43,26 @@ var EditormdEditor = (function () {
            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
            imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
            onchange : function () {
-                console.log("EditormdEditor onchange docInfo.edit:" + docInfo.edit);       
+                console.log("EditormdEditor onchange docInfo.edit:", docInfo.edit);       
                 isContentChanged = true;
 	   		    console.log("textChange stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
 	   			if(false == isCtrlZY)
 	   			{
-	   				var content = editor.getValue();
+	   				var content = editor.getMarkdown();
 	   				stackZ.push(content);
 	   			}
            },
            onpreviewing : function () {
-               console.log("EditormdEditor onpreviewing docInfo.edit:" + docInfo.edit);
+               console.log("EditormdEditor onpreviewing docInfo.edit:", docInfo.edit);
                exitEditWiki();
            },
            onpreviewed :function () {
-               console.log("EditormdEditor onpreviewed docInfo.edit:" + docInfo.edit);
+               console.log("EditormdEditor onpreviewed docInfo.edit:", docInfo.edit);
                lockAndEditWiki();
            },
            onload : function () {
-               console.log("EditormdEditor onload docInfo.edit:" + docInfo.edit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
-	    		   this.previewing(); 		  //加载成默认是预览
-	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载，会触发onchange事件
-	    		   isOnLoadTriggerChange = true;
-	    		   if(!edit || edit == false)
-    		   {
-	    			   console.log("EditormdEditor onload edit is false");
-    		   }
-	    		   else
-	    		   {
-	    			   console.log("EditormdEditor onload edit is true");
-	    			   lockAndEditWiki();
-    		   }
+               console.log("EditormdEditor onload editState:" + editState);
+	    	   this.previewing(); 		  //加载成默认是预览
            },
            onresize: function(){
         	   console.log("EditormdEditor onresize");
@@ -284,7 +273,7 @@ var EditormdEditor = (function () {
 				//put entry to stackY
 				stackY.push(p);
 				isCtrlZY = true;
-				editor.setValue(p);
+				editor.setMarkdown(p);
 				console.log("ctrlZ stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
 				isCtrlZY = false;
 			}
@@ -301,7 +290,7 @@ var EditormdEditor = (function () {
 			{
 				stackZ.push(p);
 				isCtrlZY = true;
-				editor.setValue(p);
+				editor.setMarkdown(p);
 				console.log("ctrlY stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
 				isCtrlZY = false;
 			}
@@ -318,7 +307,7 @@ var EditormdEditor = (function () {
 			return;
 		}
 		
-		var content = editor.getValue();
+		var content = editor.getMarkdown();
 		$.ajax({
 	        url : "/DocSystem/Doc/updateDocContent.do",
 	        type : "post",
@@ -456,9 +445,9 @@ var EditormdEditor = (function () {
 		});
 	}
 	
-	function switchEditMode(edit)
+	function switchEditMode(editState)
 	{
-		if(edit == true)
+		if(editState == true)
 		{
 			//显示工具条
 			$("#toolBarMenu").show();
@@ -715,6 +704,117 @@ var EditormdEditor = (function () {
 				});
             }
         });
+    }
+    
+    //Markdown的图片截图粘贴接口
+    document.addEventListener('paste', handlePasteImgEvent);
+    function handlePasteImgEvent(event)
+    {
+    	if(!docInfo.edit || docInfo.edit == false)
+    	{
+    		return;
+    	}
+
+    	var  file = null;
+    	//粘贴事件
+        if (event.clipboardData || event.originalEvent)
+        {
+        	var clipboardData = (event.clipboardData || event.originalEvent.clipboardData);
+        	console.log("handlePasteImgEvent clipboardData", clipboardData);
+        	var items = clipboardData.items;
+            if(items)
+            {
+            	console.log("handlePasteImgEvent items", items);
+                for (var i = 0; i <items.length; i++)
+                {
+                	if (clipboardData.items[i].type.indexOf("image") !== -1)
+                	{
+                		file = items[i].getAsFile();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(file == null)
+    	{
+        	console.log("handlePasteImgEvent file is null");
+        	return;
+        }
+
+        uploadMarkdownPic(file);
+
+    	function uploadMarkdownPic(file)
+    	{
+			console.log("uploadMarkdownPic() file:", file);
+
+			var xhr = new XMLHttpRequest();
+
+			var form = new FormData();
+			form.append("editormd-image-file", file);
+
+			//上传表单
+			var imgName =  file.lastModified + "_" + file.name;
+			var path = base64_urlsafe_encode(gDocInfo.path);
+    		var name = base64_urlsafe_encode(gDocInfo.name);
+    		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
+      		if(gShareId)
+      		{
+      			imageUploadURL="&shareId="+gShareId;
+      		}
+    		xhr.open("post", imageUploadURL);
+			xhr.send(form);
+
+			//设置异步上传状态变化回调处a理函数
+			xhr.onreadystatechange = function() {
+				//文件上传状态
+				console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
+				if(xhr.status == 200)
+				{
+					if(xhr.readyState != 4)
+					{
+						//文件上传未结束
+						return;
+					}
+
+					//上传成功！
+					var ret = JSON.parse(xhr.responseText);
+					console.log("uploadMarkdownPic ret", ret);
+					if(1 == ret.success)
+					{
+						//上传失败
+						console.log("上传成功");
+				        VDocEditor.insertTextAtCursor("![]("+ ret.url +")");
+					}
+					else	//上传失败
+					{
+						//上传失败
+						console.log("上传失败：" + ret.msgInfo);
+						return;
+		            }
+				}else{
+					if(xhr.status < 300)
+					{
+						//不是真正的异常
+						return;
+					}
+					//上传失败
+					console.log("系统异常: 上传异常！");
+					return;
+				}
+			};
+    	}
+
+        //setImg Directly,以下代码可以直接将
+        /*
+        var render = new FileReader();
+        render.onload = function (evt) {
+            //输出base64编码
+            var base64 = evt.target.result;
+            document.getElementById('fileLogo').setAttribute('src',base64);
+        }
+        render.readAsDataURL(file);
+        return;*/
     }
 	
 	//开放给外部的调用接口
