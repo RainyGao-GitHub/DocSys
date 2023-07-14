@@ -514,6 +514,7 @@ var EditormdEditor = (function () {
 	{
 		//更新编辑器状态
 		editState = state;
+		docInfo.edit = state;
 		
 		if(mode == 3)
 		{
