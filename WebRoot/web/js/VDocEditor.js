@@ -98,6 +98,12 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
             }
         };
         
+        var _onSwitchEditMode = function(data) {
+        	if (_config.docInfo) {
+            	_edit = data;	
+            }
+        };
+        
         var _onMessage = function(msg) {
         	console.log("VDocEditor _onMessage() msg:", msg);
             if ( msg ) {
@@ -116,8 +122,14 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
                     } else if (msg.event === 'onInternalMessage' && msg.data && msg.data.type == 'localstorage') {
                         _callLocalStorage(msg.data.data);
                     } else {
+                    	//CommonEditor init ready
                         if (msg.event === 'onAppReady') {
                             _onAppReady();
+                        }
+                        
+                        //CommonEditor switched the edit Mode
+                        if (msg.event === 'onSwitchEditMode') {	
+                        	_onSwitchEditMode(msg.data);
                         }
 
                         if (handler && typeof handler == "function") {

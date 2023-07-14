@@ -5,14 +5,17 @@ var EditormdEditor = (function () {
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
 	var editState = false;
+	var switchEditModeOnly = false;
 	var editor = {};	
-    //supported command in message
+    
+	//supported command in message
 	var commandMap = {
             'openDocument': function(data) {
                 _loadDocument(data);
             },
         };
-        
+    
+	
 	function initEditor()
 	{
   		console.log("EditormdEditor editorInit editState:" + editState);
@@ -53,16 +56,35 @@ var EditormdEditor = (function () {
 	   			}
            },
            onpreviewing : function () {
-               console.log("EditormdEditor onpreviewing docInfo.edit:", docInfo.edit);
-               exitEditWiki();
+               console.log("EditormdEditor onpreviewing switchEditModeOnly:" + switchEditModeOnly);
+               if(switchEditModeOnly)
+               {
+            	   switchEditModeOnly = false;
+               }
+               else
+               {
+            	   _exitEdit(2);	//编辑器触发的退出编辑
+               }
            },
            onpreviewed :function () {
                console.log("EditormdEditor onpreviewed docInfo.edit:", docInfo.edit);
-               lockAndEditWiki();
+               if(switchEditModeOnly)
+               {
+            	   switchEditModeOnly = false;
+               }
+               else
+               {
+            	   _enableEdit(2);	//编辑器触发的退出编辑
+               }
+
            },
            onload : function () {
                console.log("EditormdEditor onload editState:" + editState);
-	    	   this.previewing(); 		  //加载成默认是预览
+
+                //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
+				switchEditModeOnly = true;
+                //Disable Edit
+				this.previewing(); 		  //加载成默认是预览
            },
            onresize: function(){
         	   console.log("EditormdEditor onresize");
@@ -354,11 +376,21 @@ var EditormdEditor = (function () {
 	    });
 	}
 	
-	function enableEdit()
+	//TODO: 进入编辑状态和退出编辑状态的两种模式
+	//1. 编辑器外部触发
+	//   文件锁定或解锁成功后，将编辑器切换到指定的编辑状态
+	//2. 编辑器内部按键触发
+	//   编辑器先切换到指定编辑状态，再进行文件锁定或解锁，如果失败则将编辑器切换回原来的编辑状态
+	
+	function _enableEdit(switchMode)
 	{
-		console.log("enableEdit()");
+		console.log("_enableEdit() switchMode:" + switchMode);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
+			if(switchMode == 2)
+			{
+				switchEditMode(false, 3);	//只需要切换编辑器状态
+			}
 			showErrorInfo("请选择文件!");
 			return;
 		}
@@ -383,17 +415,32 @@ var EditormdEditor = (function () {
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
 	
 					//显示工具条和退出编辑按键
-					switchEditMode(true);
-					return;
+					if(switchMode == 1)
+					{
+						switchEditMode(true, 1);
 					}
+					else
+					{
+						switchEditMode(true, 2);	//编辑器状态不需要切换						
+					}
+					return;
+				}
 				else
-				{
+				{					
+					if(switchMode == 2)
+					{
+						switchEditMode(false, 3);	//只需要切换编辑器状态
+					}
 					showErrorInfo("lockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function () 
 			{
+				if(switchMode == 2)
+				{
+					switchEditMode(false, 3);	//只需要切换编辑器状态
+				}
 				showErrorInfo("lockDoc 异常");
 				return;
 			}
@@ -401,12 +448,15 @@ var EditormdEditor = (function () {
 	}
 	
 	//退出文件编辑状态
-	function exitEdit() {   	
-		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
+	function _exitEdit(switchMode) {   	
+		console.log("exitEdit()  switchMode:" + switchMode);
 		if(!docInfo.docId || docInfo.docId == 0)
 		{
+			if(switchMode == 2)
+			{
+				switchEditMode(true, 3);	//只需要切换编辑器状态
+			}
 			showErrorInfo("文件不存在");
-			switchEditMode(false);
 			return;
 		}
 		
@@ -428,79 +478,121 @@ var EditormdEditor = (function () {
 				{
 					console.log("exitEdit() ret:",ret.data);
 					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
-					switchEditMode(false);
+					if(switchMode == 1)
+					{
+						switchEditMode(false, 1);
+					}
+					else
+					{
+						switchEditMode(false, 2);	//编辑器状态不需要切换						
+					}
 					return;
 				}
 				else
 				{
+					if(switchMode == 2)
+					{
+						switchEditMode(true, 3);	//只需要切换编辑器状态
+					}
 					showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
 					return;
 				}
 			},
 			error : function () 
 			{
+				if(switchMode == 2)
+				{
+					switchEditMode(true, 3);	//只需要切换编辑器状态
+				}
 				showErrorInfo("exitEdit() unlockDoc 异常");
 				return;
 			}
 		});
 	}
 	
-	function switchEditMode(editState)
+	function switchEditMode(state, mode)
 	{
+		//更新编辑器状态
+		editState = state;
+		
+		if(mode == 3)
+		{
+			switchEditModeOnly = true;	//避免编辑器回调再次触发状态切换回调
+			if(editState == true)
+			{	
+				//Enable Edit
+				editor.previewing();
+			}
+			else
+			{
+				//Disable Edit
+				editor.previewed();
+			}
+			return;
+		}
+		
 		if(editState == true)
 		{
+			_postMessage({ event: 'onSwitchEditMode', data: editState });
+
 			//显示工具条
 			$("#toolBarMenu").show();
-			
 			//显示退出编辑按键
 			$("#textEditorCloseBtn").show();
-			
 			//隐藏编辑按键
 			$("#textEditorEditBtn").hide();
-	
-			//Enable Edit
-			editor.previewing();
-			editState = true;
+			
+			if(mode == 1)
+			{
+				//TODO: 如果主动设置编辑器状态，会触发回调则需要设置
+				switchEditModeOnly = true;
+				//Enable Edit
+				editor.previewing();
+			}
 			
 			//Start beat thread to keep 
 			startBeatThread();
 			
 			//启动内容自动保存线程
 			startAutoTmpSaver();
-			
+				
 			if(tmpSavedDocText && tmpSavedDocText != docText)
 			{
 				bootstrapQ.confirm({
 					id: "loadContentConfirm",
 					title: "加载确认",
 					msg : "上次有未保存的编辑内容，是否加载？",
-					},function () {
-				    	//alert("点击了确定");
-				        editor.loadmd(tmpSavedDocText);
-				    	return true;   
-				 	},function (){
-				 		//alert("点击了取消");
-				        tmpSavedDocText = docText;
-				        deleteTmpSavedContent(docInfo.docId);
-				        return true;
-				 	});
+				},function () {
+			    	//alert("点击了确定");
+			        editor.loadmd(tmpSavedDocText);
+			    	return true;   
+			 	},function (){
+			 		//alert("点击了取消");
+			        tmpSavedDocText = docText;
+			        deleteTmpSavedContent(docInfo.docId);
+			        return true;
+			 	});
 			}
 		}
 		else
 		{
+			_postMessage({ event: 'onSwitchEditMode', data: editState });
+
 			//隐藏工具条
-			$("#toolBarMenu").hide();
-			
+			$("#toolBarMenu").hide();			
 			//隐藏退出编辑按键
 			$("#textEditorCloseBtn").hide();
-		
 			//显示编辑按键
 			$("#textEditorEditBtn").show();			
 			
-			//Disable Edit
-			editor.previewed();
-			editState = false;			
-
+			if(mode == 1)
+			{
+				//TODO: 如果主动设置编辑器状态，会触发回调则需要设置
+				switchEditModeOnly = true;
+				//Disable Edit
+				editor.previewed();
+			}
+			
 			//关闭内容自动保存线程
 			stopAutoTmpSaver();
 		}
@@ -841,10 +933,10 @@ var EditormdEditor = (function () {
 	    	return ctrlY();
 	    },
 	    enableEdit: function(){
-	    	return enableEdit();
+	    	return _enableEdit(1);
 	    },	    
 	    exitEdit: function(){
-	    	return exitEdit();
+	    	return _exitEdit(1);
 	    },
 	};
 })();
