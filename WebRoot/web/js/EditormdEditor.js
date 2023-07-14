@@ -7,8 +7,14 @@ var EditormdEditor = (function () {
 	var editState = false;
 	var switchEditModeOnly = false;
 	var editor = {};	
-    
-	//supported command in message
+	
+	//文件自动保存
+	var autoSaveTimer;
+  	var timerState = 0;
+  	
+  	var isOnLoadTriggerChange = false;
+	
+  	//supported command in message
 	var commandMap = {
             'openDocument': function(data) {
                 _loadDocument(data);
@@ -159,6 +165,13 @@ var EditormdEditor = (function () {
 	function initForVDoc()
 	{
 		initEditor();
+		
+		//get frameEditorId from url
+		var frameEditorId = getQueryString("frameEditorId");
+		if(frameEditorId && frameEditorId != null)
+		{
+			window.frameEditorId = frameEditorId;
+		}		
 		
 		//Bind message handler
         if (window.attachEvent) {
@@ -687,7 +700,7 @@ var EditormdEditor = (function () {
 		{
 			timerState = 1;
 			autoSaveTimer = setInterval(function () {
-	        	var newContent = getMarkdown();
+	        	var newContent = editor.getMarkdown();
 	        	if(!tmpSavedDocText)
 	        	{
 	        		tmpSavedDocText = "";
