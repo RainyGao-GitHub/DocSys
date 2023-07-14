@@ -230,7 +230,7 @@ fc-cache
 
 ### 五、什么是分布式远程存储
 
-1、仓库文件可以存储在远程文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）
+1、仓库文件可以存储在远程文件服务器（FTP/SFTP/SMB/SVN/GIT/MXSDOC）
 
 2、在当前仓库可查看远程文件服务器文件
 
@@ -244,7 +244,7 @@ fc-cache
 
 1. 设置为文件服务器前置的仓库，可以作为的文件服务器的客户端使用，
 
-2. 在该仓库页面上，能够查看和操作文件服务器（FTP/SFTP/SMB/SVN/GTI/MXSDOC）上的文件和目录
+2. 在该仓库页面上，能够查看和操作文件服务器（FTP/SFTP/SMB/SVN/GIT/MXSDOC）上的文件和目录
 
 ### 七、如何使用MxsDoc作为自动备份工具
 
@@ -256,7 +256,7 @@ fc-cache
 
 （1）本地自动备份需要指定本地备份目录
 
-（2）异地自动备份需要指定备份的文件服务器（目前支持FTP/SFTP/SMB/SVN/GTI/MXSDOC）
+（2）异地自动备份需要指定备份的文件服务器（目前支持FTP/SFTP/SMB/SVN/GIT/MXSDOC）
 
 （3）根据自己需求勾选备份时间
 
