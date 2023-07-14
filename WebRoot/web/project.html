@@ -1690,11 +1690,11 @@
 	    	return;
 	    }
 		
-		//if(vdocEditor.edit == true || vdocEditor.isBusy == true)
-		//{
-		//	//用户真正编辑备注或者编辑器正忙（初始化）
-		//	return;
-		//}
+		if(vdocEditor.getEditState() == true)
+		{
+			console.log("previewDoc 文档编辑中，请先退出编辑");
+			return;
+		}
 		
 		//TODO:注意gDocInfo可能是根目录
 		//更新gDocInfoInPreview

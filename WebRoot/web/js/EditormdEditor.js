@@ -67,7 +67,7 @@ var EditormdEditor = (function () {
                }
            },
            onpreviewed :function () {
-               console.log("EditormdEditor onpreviewed docInfo.edit:", docInfo.edit);
+               console.log("EditormdEditor onpreviewed switchEditModeOnly:" + switchEditModeOnly);
                if(switchEditModeOnly)
                {
             	   switchEditModeOnly = false;
@@ -82,7 +82,7 @@ var EditormdEditor = (function () {
                console.log("EditormdEditor onload editState:" + editState);
 
                 //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
-				switchEditModeOnly = true;
+				//switchEditModeOnly = true;
                 //Disable Edit
 				this.previewing(); 		  //加载成默认是预览
            },
