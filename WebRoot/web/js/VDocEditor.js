@@ -167,6 +167,21 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
             }
         };
         
+        var _processMouse = function(evt) {
+            var r = iframe.getBoundingClientRect();
+            var data = {
+                type: evt.type,
+                x: evt.x - r.left,
+                y: evt.y - r.top,
+                event: evt
+            };
+
+            _sendCommand({
+                command: 'processMouse',
+                data: data
+            });
+        };
+        
         var _openDocument = function(doc) {
             _sendCommand({
                 command: 'openDocument',

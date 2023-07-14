@@ -86,11 +86,12 @@ var EditormdEditor = (function () {
            },
            onload : function () {
                console.log("EditormdEditor onload editState:" + editState);
-
                 //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
 				//switchEditModeOnly = true;
                 //Disable Edit
-				this.previewing(); 		  //加载成默认是预览
+				editor.previewing(); 		  //加载成默认是预览
+		        editor.setMarkdown(""); 	  //内容需要在onload的时候进行加载，会触发onchange事件
+	    		isOnLoadTriggerChange = true;
            },
            onresize: function(){
         	   console.log("EditormdEditor onresize");
@@ -265,6 +266,7 @@ var EditormdEditor = (function () {
 	function showText(docText, tmpSavedDocText)
 	{	
 		editor.setMarkdown(docText);
+		editor.resize();
 	}
 	    
 	function ArrayStack(){
@@ -536,11 +538,13 @@ var EditormdEditor = (function () {
 			{	
 				//Enable Edit
 				editor.previewing();
+				editor.resize();
 			}
 			else
 			{
 				//Disable Edit
 				editor.previewed();
+				editor.resize();
 			}
 			return;
 		}
@@ -562,6 +566,7 @@ var EditormdEditor = (function () {
 				switchEditModeOnly = true;
 				//Enable Edit
 				editor.previewing();
+				editor.resize();
 			}
 			
 			//Start beat thread to keep 
@@ -605,6 +610,7 @@ var EditormdEditor = (function () {
 				switchEditModeOnly = true;
 				//Disable Edit
 				editor.previewed();
+				editor.resize();
 			}
 			
 			//关闭内容自动保存线程
