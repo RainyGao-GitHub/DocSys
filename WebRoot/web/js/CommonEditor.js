@@ -21,26 +21,57 @@
 	  	//supported command in message
 		var commandMap = {
 	            'openDocument': function(data) {
-	                _loadDocument(data);
+	                openDocument(data);
 	            },
 	        };
-	    
-		function initEditor()
+		
+		//****** Editor的抽象接口 Start ********
+		//使用回调方式实现，因此具体的实现函数是通过config传入的
+		function _initEditor()
 		{
-	  		console.log("CommonEditor editorInit editState:" + editState);
 	  		var handler = _config.initEditor;
 	  		if (handler && typeof handler == "function") {
                 handler.call(_self);
             }
 		}
 		
-		function showText(docText, tmpSavedDocText)
-		{	
-	  		console.log("CommonEditor showText editState:" + editState);
-	  		var handler = _config.showText;
+		function _setContent(content)
+		{
+	  		var handler = _config.setContent;
 	  		if (handler && typeof handler == "function") {
-                handler.call(_self, docText, tmpSavedDocText);
+                handler.call(_self, content);
             }
+		}
+
+		function _getContent()
+		{
+	  		var handler = _config.getContent;
+	  		if (handler && typeof handler == "function") {
+                return handler.call(_self);
+            }
+		}
+
+		function _setEditMode(mode)
+		{
+	  		var handler = _config.setEditMode;
+	  		if (handler && typeof handler == "function") {
+                handler.call(_self, mode);
+            }
+		}
+		
+	    function _onLoadDocument(docInfo)
+	    {
+	  		var handler = _config.onLoadDocument;
+	  		if (handler && typeof handler == "function") {
+                handler.call(_self, docInfo);
+            }	    	
+	    }
+		//****** Editor的抽象接口 End ********
+		
+		function initEditor()
+		{
+	  		console.log("CommonEditor editorInit editState:" + editState);
+	  		_initEditor();
 		}
 		
 		//Init For ArtDialog
@@ -163,26 +194,26 @@
 	        }
 	    };
 	    
-		var _loadDocument = function(data){
+		var openDocument = function(data){
 			docInfo = data.doc;
 			docInfo.docType = 2;
 			
-			//docInfo = getDocInfoFromRequestParamStr();
-			//docInfo.docType = 2;
-	
 		    document.title = docInfo.name;
 		    
 		    // 初始化文档信息
-			console.log("loadDocument() docInfo:", docInfo);
+			console.log("CommonEditor openDocument() docInfo:", docInfo);
 			
 			getDocText(docInfo, showText, showErrorInfo);	
 			
-			//调用后处理
-	  		var handler = _config.onLoadDocument;
-	  		if (handler && typeof handler == "function") {
-                handler.call(_self, docInfo);
-            }
+			_onLoadDocument(docInfo);
 		};
+		
+		function showText(docText, tmpSavedDocText)
+		{
+			console.log("CommonEditor showText()");
+			//这里可以机上docText和tmpSavedDocText是否一致，以及用户的选择来来确定需要加载内容
+			_setContent(docText);
+		}
 		
 		function showErrorInfo(msg)
 		{
@@ -247,7 +278,7 @@
 					//put entry to stackY
 					stackY.push(p);
 					isCtrlZY = true;
-					editor.setMarkdown(p);
+					_setContent(p);
 					console.log("ctrlZ stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
 					isCtrlZY = false;
 				}
@@ -264,7 +295,7 @@
 				{
 					stackZ.push(p);
 					isCtrlZY = true;
-					editor.setMarkdown(p);
+					_setContent(p);
 					console.log("ctrlY stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
 					isCtrlZY = false;
 				}
@@ -281,7 +312,7 @@
 				return;
 			}
 			
-			var content = editor.getMarkdown();
+			var content = _getContent();
 			$.ajax({
 		        url : "/DocSystem/Doc/updateDocContent.do",
 		        type : "post",
@@ -471,18 +502,7 @@
 			if(mode == 3)
 			{
 				switchEditModeOnly = true;	//避免编辑器回调再次触发状态切换回调
-				if(editState == true)
-				{	
-					//Enable Edit
-					editor.previewing();
-					editor.resize();
-				}
-				else
-				{
-					//Disable Edit
-					editor.previewed();
-					editor.resize();
-				}
+				_setEditMode(editState);
 				return;
 			}
 			
@@ -490,20 +510,12 @@
 			{
 				_postMessage({ event: 'onSwitchEditMode', data: editState });
 	
-				//显示工具条
-				$("#toolBarMenu").show();
-				//显示退出编辑按键
-				$("#textEditorCloseBtn").show();
-				//隐藏编辑按键
-				$("#textEditorEditBtn").hide();
-				
 				if(mode == 1)
 				{
 					//TODO: 如果主动设置编辑器状态，会触发回调则需要设置
 					switchEditModeOnly = true;
 					//Enable Edit
-					editor.previewing();
-					editor.resize();
+					_setEditMode(true);
 				}
 				
 				//Start beat thread to keep 
@@ -520,7 +532,7 @@
 						msg : "上次有未保存的编辑内容，是否加载？",
 					},function () {
 				    	//alert("点击了确定");
-				        editor.loadmd(tmpSavedDocText);
+						_setContent(tmpSavedDocText);
 				    	return true;   
 				 	},function (){
 				 		//alert("点击了取消");
@@ -533,21 +545,13 @@
 			else
 			{
 				_postMessage({ event: 'onSwitchEditMode', data: editState });
-	
-				//隐藏工具条
-				$("#toolBarMenu").hide();			
-				//隐藏退出编辑按键
-				$("#textEditorCloseBtn").hide();
-				//显示编辑按键
-				$("#textEditorEditBtn").show();			
-				
+					
 				if(mode == 1)
 				{
 					//TODO: 如果主动设置编辑器状态，会触发回调则需要设置
 					switchEditModeOnly = true;
 					//Disable Edit
-					editor.previewed();
-					editor.resize();
+					_setEditMode(false);
 				}
 				
 				//关闭内容自动保存线程
@@ -722,117 +726,6 @@
 					});
 	            }
 	        });
-	    }
-	    
-	    //Markdown的图片截图粘贴接口
-	    document.addEventListener('paste', handlePasteImgEvent);
-	    function handlePasteImgEvent(event)
-	    {
-	    	if(!docInfo.edit || docInfo.edit == false)
-	    	{
-	    		return;
-	    	}
-	
-	    	var  file = null;
-	    	//粘贴事件
-	        if (event.clipboardData || event.originalEvent)
-	        {
-	        	var clipboardData = (event.clipboardData || event.originalEvent.clipboardData);
-	        	console.log("handlePasteImgEvent clipboardData", clipboardData);
-	        	var items = clipboardData.items;
-	            if(items)
-	            {
-	            	console.log("handlePasteImgEvent items", items);
-	                for (var i = 0; i <items.length; i++)
-	                {
-	                	if (clipboardData.items[i].type.indexOf("image") !== -1)
-	                	{
-	                		file = items[i].getAsFile();
-	                        break;
-	                    }
-	                }
-	            }
-	        }
-	
-	        if(file == null)
-	    	{
-	        	console.log("handlePasteImgEvent file is null");
-	        	return;
-	        }
-	
-	        uploadMarkdownPic(file);
-	
-	    	function uploadMarkdownPic(file)
-	    	{
-				console.log("uploadMarkdownPic() file:", file);
-	
-				var xhr = new XMLHttpRequest();
-	
-				var form = new FormData();
-				form.append("editormd-image-file", file);
-	
-				//上传表单
-				var imgName =  file.lastModified + "_" + file.name;
-				var path = base64_urlsafe_encode(gDocInfo.path);
-	    		var name = base64_urlsafe_encode(gDocInfo.name);
-	    		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
-	      		if(gShareId)
-	      		{
-	      			imageUploadURL="&shareId="+gShareId;
-	      		}
-	    		xhr.open("post", imageUploadURL);
-				xhr.send(form);
-	
-				//设置异步上传状态变化回调处a理函数
-				xhr.onreadystatechange = function() {
-					//文件上传状态
-					console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
-					if(xhr.status == 200)
-					{
-						if(xhr.readyState != 4)
-						{
-							//文件上传未结束
-							return;
-						}
-	
-						//上传成功！
-						var ret = JSON.parse(xhr.responseText);
-						console.log("uploadMarkdownPic ret", ret);
-						if(1 == ret.success)
-						{
-							//上传失败
-							console.log("上传成功");
-					        VDocEditor.insertTextAtCursor("![]("+ ret.url +")");
-						}
-						else	//上传失败
-						{
-							//上传失败
-							console.log("上传失败：" + ret.msgInfo);
-							return;
-			            }
-					}else{
-						if(xhr.status < 300)
-						{
-							//不是真正的异常
-							return;
-						}
-						//上传失败
-						console.log("系统异常: 上传异常！");
-						return;
-					}
-				};
-	    	}
-	
-	        //setImg Directly,以下代码可以直接将
-	        /*
-	        var render = new FileReader();
-	        render.onload = function (evt) {
-	            //输出base64编码
-	            var base64 = evt.target.result;
-	            document.getElementById('fileLogo').setAttribute('src',base64);
-	        }
-	        render.readAsDataURL(file);
-	        return;*/
 	    }
 		
 		//开放给外部的调用接口
