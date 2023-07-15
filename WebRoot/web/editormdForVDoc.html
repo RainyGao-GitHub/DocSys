@@ -70,7 +70,7 @@
 	<script type="text/javascript">
         var initEditorForEditormd = function()
 		{
-	  		console.log("initEditorForEditormd editState:" + editState);
+	  		console.log("initEditorForEditormd editState:" + this.editState);
 	  		var params = {
 	           width: "100%",
 	           height: $(document).height()-70,
@@ -95,60 +95,105 @@
 	           dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
 	           imageUpload : true,
 	           imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
-	           imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
+	           //imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+ this.docInfo.docId + "&path=" + this.docInfo.path + "&name=" + this.docInfo.name,
 	           onchange : function () {
-	                console.log("CommonEditor onchange docInfo.edit:", docInfo.edit);       
-	                isContentChanged = true;
-		   		    console.log("textChange stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
-		   			if(false == isCtrlZY)
+	                console.log("CommonEditor onchange");
+	                this.isContentChanged = true;
+		   		    console.log("textChange stackZ.size:" + this.stackZ.size() +  " stackY.size:" + this.stackY.size() +  " ctrlZY:" + this.isCtrlZY);
+		   			if(false == this.isCtrlZY)
 		   			{
-		   				var content = editor.getMarkdown();
-		   				stackZ.push(content);
+		   				var content = this.editor.getMarkdown();
+		   				this.stackZ.push(content);
 		   			}
 	           },
 	           onpreviewing : function () {
-	               console.log("initEditorForEditormd onpreviewing switchEditModeOnly:" + switchEditModeOnly);
-	               if(switchEditModeOnly)
+	               console.log("initEditorForEditormd onpreviewing switchEditModeOnly:" + this.switchEditModeOnly);
+	               if(this.switchEditModeOnly)
 	               {
-	            	   switchEditModeOnly = false;
+	            	   this.switchEditModeOnly = false;
 	               }
 	               else
 	               {
-	            	   _exitEdit(2);	//编辑器触发的退出编辑
+	            	   this._exitEdit(2);	//编辑器触发的退出编辑
 	               }
 	           },
 	           onpreviewed :function () {
-	               console.log("initEditorForEditormd onpreviewed switchEditModeOnly:" + switchEditModeOnly);
-	               if(switchEditModeOnly)
+	               console.log("initEditorForEditormd onpreviewed switchEditModeOnly:" + this.switchEditModeOnly);
+	               if(this.switchEditModeOnly)
 	               {
-	            	   switchEditModeOnly = false;
+	            	   this.switchEditModeOnly = false;
 	               }
 	               else
 	               {
-	            	   _enableEdit(2);	//编辑器触发的退出编辑
+	            	   this._enableEdit(2);	//编辑器触发的退出编辑
 	               }
 	
 	           },
 	           onload : function () {
-	               console.log("initEditorForEditormd onload editState:" + editState);
+	               console.log("initEditorForEditormd onload editState:" + this.editState);
 	                //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
 					//switchEditModeOnly = true;
 	                //Disable Edit
-					editor.previewing(); 		  //加载成默认是预览
-			        editor.setMarkdown(""); 	  //内容需要在onload的时候进行加载，会触发onchange事件
-		    		isOnLoadTriggerChange = true;
+					this.previewing(); 		  //加载成默认是预览
+					this.setMarkdown(""); 	  //内容需要在onload的时候进行加载，会触发onchange事件
+					this.isOnLoadTriggerChange = true;
 	           },
 	           onresize: function(){
 	        	   console.log("initEditorForEditormd onresize");
 	           }
 	   		};
 	   		
-	  		editor = editormd("mdPlayer",params);
+	  		this.editor = editormd("mdPlayer",params);
+		};
+		
+		var showTextForEditormd = function(docText, tmpSavedDocText)
+		{	
+			this.editor.setMarkdown(docText);
+			this.editor.resize();
+		};
+		
+		var onLoadDocument = function(docInfo){
+			console.log("onLoadDocument() docInfo:", docInfo);
+			this.editor.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?docId="+ docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name);
+			
+			checkAndSetFileShowMode(docInfo);
+			checkAndSetEditBtn(docInfo);
 		};
 		
 		var configForEditormd = {
 			"initEditor": initEditorForEditormd,
+			"showText": showTextForEditormd,
 		};
+		
+		function checkAndSetEditBtn(docInfo)
+		{
+			if(docInfo.docType == 2)
+			{
+				$("#textEditorEditBtn").show();
+				return;
+			}
+			
+			if(docInfo.isZip && docInfo.isZip == 1)
+			{
+				return;
+			}
+			if(docInfo.isHistory && docInfo.isHistory == 1)
+			{
+				return;
+			}
+			
+			var editable = isEditableText(docInfo.fileSuffix);
+			console.log("checkAndSetEditBtn() isEditableText:" + editable);
+			if(editable)
+			{
+				$("#textEditorEditBtn").show();
+			}
+		}
+		
+		function checkAndSetFileShowMode(docInfo)
+		{
+			//Do nothing
+		}
 		
 		//页面加载完成处理函数
 		$(document).ready(function () {

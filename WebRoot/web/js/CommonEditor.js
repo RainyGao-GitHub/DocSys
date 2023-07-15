@@ -25,17 +25,27 @@
 	            },
 	        };
 	    
-		
 		function initEditor()
 		{
 	  		console.log("CommonEditor editorInit editState:" + editState);
-	  		_config.initEditor && _config.initEditor();
+	  		var handler = _config.initEditor;
+	  		if (handler && typeof handler == "function") {
+                handler.call(_self);
+            }
+		}
+		
+		function showText(docText, tmpSavedDocText)
+		{	
+	  		console.log("CommonEditor showText editState:" + editState);
+	  		var handler = _config.showText;
+	  		if (handler && typeof handler == "function") {
+                handler.call(_self, docText, tmpSavedDocText);
+            }
 		}
 		
 		//Init For ArtDialog
 		function initForArtDialog()
 		{
-			_config = config || {};
 			initEditor();
 	
 			var params = GetRequest();
@@ -167,8 +177,11 @@
 			
 			getDocText(docInfo, showText, showErrorInfo);	
 			
-			checkAndSetFileShowMode(docInfo);
-			checkAndSetEditBtn(docInfo);
+			//调用后处理
+	  		var handler = _config.onLoadDocument;
+	  		if (handler && typeof handler == "function") {
+                handler.call(_self, docInfo);
+            }
 		};
 		
 		function showErrorInfo(msg)
@@ -191,14 +204,6 @@
 				}
 			}
 			return theRequest;
-		}
-	
-	
-				
-		function showText(docText, tmpSavedDocText)
-		{	
-			editor.setMarkdown(docText);
-			editor.resize();
 		}
 		    
 		function ArrayStack(){
@@ -598,37 +603,6 @@
 					return;
 				}
 			});		
-		}
-		
-		function checkAndSetEditBtn(docInfo)
-		{
-			if(docInfo.docType == 2)
-			{
-				$("#textEditorEditBtn").show();
-				return;
-			}
-			
-			if(docInfo.isZip && docInfo.isZip == 1)
-			{
-				return;
-			}
-			if(docInfo.isHistory && docInfo.isHistory == 1)
-			{
-				return;
-			}
-			
-			
-			var editable = isEditableText(docInfo.fileSuffix);
-			console.log("checkAndSetEditBtn() isEditableText:" + editable);
-			if(editable)
-			{
-				$("#textEditorEditBtn").show();
-			}
-		}
-		
-		function checkAndSetFileShowMode(docInfo)
-		{
-			//Do nothing
 		}
 		
 		function startAutoTmpSaver()
