@@ -20,44 +20,27 @@
 		//使用回调方式实现，因此具体的实现函数是通过config传入的
 		function _initEditor()
 		{
-	  		var handler = _config.initEditor;
-	  		if (handler && typeof handler == "function") {
-                handler.call(_self);
-            }
-	  		
-	  		_config.initEditor && _config.initEditor();
+	  		_config.initEditor();
 		}
 		
 		function _setContent(content)
 		{
-	  		var handler = _config.setContent;
-	  		if (handler && typeof handler == "function") {
-                handler.call(_self, content);
-            }
+	  		_config.setContent(content);
 		}
 
 		function _getContent()
 		{
-	  		var handler = _config.getContent;
-	  		if (handler && typeof handler == "function") {
-                return handler.call(_self);
-            }
+			return _config.getContent();
 		}
 
 		function _setEditMode(mode)
 		{
-	  		var handler = _config.setEditMode;
-	  		if (handler && typeof handler == "function") {
-                handler.call(_self, mode);
-            }
+	  		_config.setEditMode(mode);
 		}
 		
 	    function _onLoadDocument(docInfo)
 	    {
-	  		var handler = _config.onLoadDocument;
-	  		if (handler && typeof handler == "function") {
-                handler.call(_self, docInfo);
-            }	    	
+	  		_config.onLoadDocument(docInfo);
 	    }
 		//****** Editor的抽象接口 End ********
 		
@@ -740,7 +723,8 @@
 		}
 		
 		function contentChangeHandler(){
-			console.log("CommonEditor contentChangeHanlder() stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
+			console.log("CommonEditor contentChangeHandler() stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
+			isContentChanged = true;
 			if(false == isCtrlZY)
 			{
 				var content = _getContent();
@@ -774,9 +758,15 @@
 		    exitEdit: function(mode){
 		    	exitEdit(mode);
 		    },
-		    contentChangeHanlder: function(){
-		    	contentChangeHanlder();
-		    }
+		    contentChangeHandler: function(){
+		    	contentChangeHandler();
+		    },
+		    ctrlZ: function(){
+		    	ctrlZ();
+		    },
+		    ctrlY: function(){
+		    	ctrlY();
+		    },
 		}
 	};
 })(window.MxsdocAPI = window.MxsdocAPI || {}, window, document);

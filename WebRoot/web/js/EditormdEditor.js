@@ -35,7 +35,7 @@ var EditormdEditor = (function () {
            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
            //imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+ docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
            onchange : function () {
-        	   commonEditor.contentChangeHanlder();
+        	   commonEditor.contentChangeHandler();
            },
            onpreviewing : function () {
               	console.log("EditormdEditor onpreviewing() switchEditModeOnly:" + switchEditModeOnly);
@@ -146,7 +146,7 @@ var EditormdEditor = (function () {
 		return imageUploadURL;
 	}
 	
-	function init(mode)
+	function init(mode, docInfo)
 	{
 		commonEditor = new MxsdocAPI.CommonEditor(config);
 		switch(mode)
@@ -158,7 +158,7 @@ var EditormdEditor = (function () {
 			commonEditor.initForNewPage();
 			break;
 		case "BootstrapDialog":
-			commonEditor.initForBootstrapDialog();
+			commonEditor.initForBootstrapDialog(docInfo);
 			break;
 		case "VDoc":
 			commonEditor.initForVDoc();
@@ -194,35 +194,6 @@ var EditormdEditor = (function () {
 	function checkAndSetFileShowMode(docInfo)
 	{
 		//Do nothing
-	}
-	
-	function ArrayStack(){
-	    var arr = [];  
-	        //压栈操作  
-	    this.push = function(element){  
-	        arr.push(element);  
-	    }  
-	        //退栈操作  
-	    this.pop = function(){  
-	        return arr.pop();  
-	    }  
-	        //获取栈顶元素  
-	    this.top = function(){  
-	        return arr[arr.length-1];  
-	    }  
-	        //获取栈长  
-	    this.size = function(){  
-	        return arr.length;  
-	    }  
-	        //清空栈  
-	    this.clear = function(){  
-	        arr = [];  
-	        return true;  
-	    }  
-	  
-	    this.toString = function(){  
-	        return arr.toString();  
-	    }  
 	}
 	
     //Markdown的图片截图粘贴接口
@@ -338,8 +309,8 @@ var EditormdEditor = (function () {
 	
 	//开放给外部的调用接口
 	return {
-		init: function(mode){
-			init(mode);					
+		init: function(mode, docInfo){
+			init(mode, docInfo);					
 		},
 	    ctrlZ: function(){
 	    	commonEditor.ctrlZ();

@@ -2064,7 +2064,7 @@ function showTextInDialog(docInfo, openType)
 			big: true,
 			mstyle: getDialogStyle(),
 			callback: function(){
-				AceTextEditor.textEditorPageInit(docInfo);
+				AceTextEditor.init("BootstrapDialog", docInfo);
 			},
 		});
 	}

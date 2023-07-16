@@ -83,7 +83,7 @@ var AceTextEditor = (function () {
 			"onLoadDocument": onLoadDocument,
 		};
 
-	function init(mode)
+	function init(mode, docInfo)
 	{
 		console.log("AceTextEditor init() mode:" + mode);
 		commonEditor = new MxsdocAPI.CommonEditor(config);
@@ -96,7 +96,7 @@ var AceTextEditor = (function () {
 			commonEditor.initForNewPage();
 			break;
 		case "BootstrapDialog":
-			commonEditor.initForBootstrapDialog();
+			commonEditor.initForBootstrapDialog(docInfo);
 			break;
 		case "VDoc":
 			commonEditor.initForVDoc();
@@ -142,8 +142,8 @@ var AceTextEditor = (function () {
 	//开放给外部的调用接口
 	//开放给外部的调用接口
 	return {
-		init: function(mode){
-			init(mode);					
+		init: function(mode, docInfo){
+			init(mode, docInfo);					
 		},
 	    ctrlZ: function(){
 	    	commonEditor.ctrlZ();
