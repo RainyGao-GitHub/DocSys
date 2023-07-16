@@ -152,13 +152,13 @@ var AceTextEditor = (function () {
 	    	commonEditor.ctrlY();
 	    },
 	    enableEdit: function(){
-	    	return commonEditor.enableEdit(1);
+	    	commonEditor.enableEdit(1);
 	    },	    
 	    exitEdit: function(mode){
-	    	return commonEditor.exitEdit(1);
+	    	commonEditor.exitEdit(1);
 	    },
 	    saveDoc: function(){
-	    	return commonEditor.saveDoc();
+	    	commonEditor.saveDoc();
 	    },
 	}
 })();

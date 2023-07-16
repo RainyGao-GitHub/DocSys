@@ -93,6 +93,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         };
 
         var _onAppReady = function() {
+        	console.log("VDocEditor _onAppReady() _config:", _config);
         	_isAppReady = true;
 
         	_attachMouseEvents();
@@ -109,36 +110,23 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         
         var _onMessage = function(msg) {
         	console.log("VDocEditor _onMessage() msg:", msg);
-            if ( msg ) {
-                if ( msg.type === "onExternalPluginMessage" ) {
-                    _sendCommand(msg);
-                } else if (msg.type === "onExternalPluginMessageCallback") {
-                    postMessage(window.parent, msg);
-                } else
-                if ( msg.frameEditorId == placeholderId ) {
-                    var events = _config.events || {},
+            if ( msg ) 
+            {
+                var events = _config.events || {},
                         handler = events[msg.event],
                         res;
+                //CommonEditor init ready
+                if (msg.event === 'onAppReady') {
+                	_onAppReady();
+                }
+                    
+                //CommonEditor switched the edit Mode
+                if (msg.event === 'onSwitchEditMode') {	
+                	_onSwitchEditMode(msg.data);
+                }
 
-                    if (msg.event === 'onRequestEditRights' && !handler) {
-                        _applyEditRights(false, 'handler isn\'t defined');
-                    } else if (msg.event === 'onInternalMessage' && msg.data && msg.data.type == 'localstorage') {
-                        _callLocalStorage(msg.data.data);
-                    } else {
-                    	//CommonEditor init ready
-                        if (msg.event === 'onAppReady') {
-                            _onAppReady();
-                        }
-                        
-                        //CommonEditor switched the edit Mode
-                        if (msg.event === 'onSwitchEditMode') {	
-                        	_onSwitchEditMode(msg.data);
-                        }
-
-                        if (handler && typeof handler == "function") {
-                            res = handler.call(_self, {target: _self, data: msg.data});
-                        }
-                    }
+                if (handler && typeof handler == "function") {
+                	res = handler.call(_self, {target: _self, data: msg.data});
                 }
             }
         };
@@ -149,13 +137,15 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         if (target) {
         	_config.height = document.body.scrollHeight - target.scrollTop - 300;
         	//_config.height = document.documentElement.scrollHeight;
-        	console.log("target height:" + _config.height);
+        	console.log("VDocEditor target height:" + _config.height);
         	
             iframe = createIframe(_config);
             if (iframe.src) {
-                var pathArray = iframe.src.split('/');
+            	console.log("VDocEditor iframe.src:" + iframe.src);
+            	var pathArray = iframe.src.split('/');
                 this.frameOrigin = pathArray[0] + '//' + pathArray[2];
             }
+            
             target.parentNode && target.parentNode.replaceChild(iframe, target);
             var _msgDispatcher = new MessageDispatcher(_onMessage, this);
         }
@@ -187,7 +177,8 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         };
         
         var _openDocument = function(doc) {
-        	if(_isAppReady)
+        	console.log("VDocEditor _openDocument() doc:", doc);
+        	if(_isAppReady == true)
         	{
 	            _sendCommand({
 	                command: 'openDocument',

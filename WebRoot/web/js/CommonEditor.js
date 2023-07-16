@@ -24,6 +24,8 @@
 	  		if (handler && typeof handler == "function") {
                 handler.call(_self);
             }
+	  		
+	  		_config.initEditor && _config.initEditor();
 		}
 		
 		function _setContent(content)
