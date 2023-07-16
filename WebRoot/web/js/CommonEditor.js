@@ -75,6 +75,8 @@
 			}
 			
 			getDocText(docInfo, showText, showErrorInfo);
+			
+			_onLoadDocument(docInfo);
 		}
 		
 		//Init For NewPage
@@ -96,6 +98,8 @@
 			}
 			
 			getDocText(docInfo, showText, showErrorInfo);
+			
+			_onLoadDocument(docInfo);
 		}
 		
 		//Init For Bootstrap Dialog
@@ -114,7 +118,9 @@
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
 			}
 			
-			getDocText(docInfo, showText, showErrorInfo);	  	
+			getDocText(docInfo, showText, showErrorInfo);	
+			
+			_onLoadDocument(docInfo);
 	  	}
 		
 		//Init For VDoc 
@@ -466,7 +472,7 @@
 				 	},function (){
 				 		//alert("点击了取消");
 				        tmpSavedDocText = docText;
-				        deleteTmpSavedContent(docInfo.docId);
+				        deleteTmpSavedContent(docInfo);
 				        return true;
 				 	});
 				}
@@ -545,7 +551,7 @@
 			{
 				timerState = 1;
 				autoSaveTimer = setInterval(function () {
-		        	var newContent = editor.getMarkdown();
+		        	var newContent = _getContent();
 		        	if(!tmpSavedDocText)
 		        	{
 		        		tmpSavedDocText = "";
@@ -554,7 +560,7 @@
 					if(tmpSavedDocText != newContent)
 		    		{
 		    			console.log("autoTmpSaveWiki");
-		    			tmpSaveDoc(docInfo.docId, newContent);
+		    			tmpSaveDoc(docInfo, newContent);
 		    			tmpSavedDocText = newContent;
 		    		}
 		    	},20000);
@@ -571,19 +577,17 @@
 		}
 		
 	    //文件临时保存操作
-	    function tmpSaveDoc(node, content){
+	    function tmpSaveDoc(docInfo, content){
 			$.ajax({
 	            url : "/DocSystem/Doc/tmpSaveDocContent.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	            	reposId: gReposInfo.id,
-	                docId : node.docId,
-	                pid: node.pid,
-	                path: node.path,
-	                name: node.name,
+	            	reposId: docInfo.vid,
+	                path: docInfo.path,
+	                name: docInfo.name,
 	                content : content,
-	                docType : 1, //realDoc
+	                docType : docInfo.docType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -615,19 +619,17 @@
 	    }
 	    
 	    //文件临时Delete操作
-	    function deleteTmpSavedContent(node)
+	    function deleteTmpSavedContent(docInfo)
 	    {	
 	        $.ajax({
 	            url : "/DocSystem/Doc/deleteTmpSavedDocContent.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	            	reposId: gReposInfo.id,
-	                docId : node.docId,
-	                pid: node.pid,
-	                path: node.path,
-	                name: node.name,
-	                docType: 1,
+	            	reposId: docInfo.vid,
+	                path: docInfo.path,
+	                name: docInfo.name,
+	                docType: docInfo.docType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
