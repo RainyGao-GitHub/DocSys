@@ -213,10 +213,24 @@
 				"onLoadDocument": onLoadDocument,
 			};
 			
-			function init()
+			function init(mode)
 			{
 				commonEditor = new MxsdocAPI.CommonEditor(config);
-				commonEditor.initForVDoc();
+				switch(mode)
+				{
+				case "ArtDialog":
+					commonEditor.initForArtDialog();
+					break;
+				case "NewPage":
+					commonEditor.initForNewPage();
+					break;
+				case "BootstrapDialog":
+					commonEditor.initForBootstrapDialog();
+					break;
+				case "VDoc":
+					commonEditor.initForVDoc();
+					break;
+				}					
 			}
 		
 			function checkAndSetEditBtn(docInfo)
@@ -427,8 +441,8 @@
 			
 			//开放给外部的调用接口
 			return {
-				init: function(){
-					init();					
+				init: function(mode){
+					init(mode);					
 				},
 			    ctrlZ: function(){
 			    	return ctrlZ();
@@ -450,7 +464,7 @@
 		
 		//页面加载完成处理函数
 		$(document).ready(function () {
-			EditormdEditor.init();
+			EditormdEditor.init("VDoc");
 		});
     </script>
 </body>

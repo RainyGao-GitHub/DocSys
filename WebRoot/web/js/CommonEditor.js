@@ -114,16 +114,16 @@
 		}
 		
 		//Init For Bootstrap Dialog
-		function textEditorPageInit(Input_doc)
+		function initForBootstrapDialog(Input_doc)
 		{
-			console.log("CommonEditor textEditorPageInit()");
+			console.log("CommonEditor initForBootstrapDialog()");
 
 			initEditor();
 			
 			docInfo = Input_doc;		
 			docInfo.docType = 1;	//RealDoc
 		    
-			console.log("CommonEditor textEditorPageInit() docInfo:", docInfo);
+			console.log("CommonEditor initForBootstrapDialog() docInfo:", docInfo);
 			
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
