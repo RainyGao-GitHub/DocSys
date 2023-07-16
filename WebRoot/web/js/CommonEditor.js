@@ -671,6 +671,80 @@
 	            }
 	        });
 	    }
+	    
+		function ArrayStack(){
+		    var arr = [];  
+		        //压栈操作  
+		    this.push = function(element){  
+		        arr.push(element);  
+		    }  
+		        //退栈操作  
+		    this.pop = function(){  
+		        return arr.pop();  
+		    }  
+		        //获取栈顶元素  
+		    this.top = function(){  
+		        return arr[arr.length-1];  
+		    }  
+		        //获取栈长  
+		    this.size = function(){  
+		        return arr.length;  
+		    }  
+		        //清空栈  
+		    this.clear = function(){  
+		        arr = [];  
+		        return true;  
+		    }  
+		  
+		    this.toString = function(){  
+		        return arr.toString();  
+		    }  
+		}
+		
+		var stackZ = new ArrayStack();
+		var stackY = new ArrayStack();
+		var isCtrlZY = false;
+		function ctrlZ(){
+			if(stackZ.size() > 0)
+			{
+				var p = stackZ.pop();
+				if(p)
+				{
+					//put entry to stackY
+					stackY.push(p);
+					isCtrlZY = true;
+					_setContent(p);
+					console.log("ctrlZ stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
+					isCtrlZY = false;
+				}
+			}
+		}
+		
+		//ctrl + y
+		function ctrlY()
+		{
+			if(stackY.size() > 0)
+			{
+				var p = stackY.pop();
+				if(p)
+				{
+					stackZ.push(p);
+					isCtrlZY = true;
+					_setContent(p);
+					console.log("ctrlY stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
+					isCtrlZY = false;
+				}
+			}
+		}
+		
+		function contentChangeHandler(){
+			console.log("CommonEditor contentChangeHanlder() stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
+			if(false == isCtrlZY)
+			{
+				var content = _getContent();
+				stackZ.push(content);
+			}			
+		}
 		
 		//开放给外部的调用接口
 		return {
@@ -690,14 +764,17 @@
 		    	appReady();
 		    },
 		    saveDoc: function(){
-		    	return saveDoc();
+		    	saveDoc();
 		    },
 		    enableEdit: function(mode){
-		    	return enableEdit(mode);
+		    	enableEdit(mode);
 		    },	    
 		    exitEdit: function(mode){
-		    	return exitEdit(mode);
+		    	exitEdit(mode);
 		    },
+		    contentChangeHanlder: function(){
+		    	contentChangeHanlder();
+		    }
 		}
 	};
 })(window.MxsdocAPI = window.MxsdocAPI || {}, window, document);

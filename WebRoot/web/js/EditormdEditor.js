@@ -1,8 +1,6 @@
 var EditormdEditor = (function () {
 	var commonEditor; //It will be set when callback from commonEditor
 	
-	var docInfo;
-	
 	var editor;		  //editormd
 	var switchEditModeOnly = false;
 	
@@ -37,14 +35,7 @@ var EditormdEditor = (function () {
            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
            //imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+ docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
            onchange : function () {
-                //文件内容改动存入堆栈，用于实现外置撤销按键行为
-        	    console.log("EditormdEditor onchange() stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
-	   			if(false == isCtrlZY)
-	   			{
-	   				var content = this.getMarkdown();
-	   				stackZ.push(content);
-	   			}
-	   			//TODO: 通知commonEditor内容有变化(通过接口或者发送消息)
+        	   commonEditor.contentChangeHanlder();
            },
            onpreviewing : function () {
               	console.log("EditormdEditor onpreviewing() switchEditModeOnly:" + switchEditModeOnly);
@@ -133,14 +124,6 @@ var EditormdEditor = (function () {
 		checkAndSetEditBtn(docInfo);
 	};
 	
-	function buildImageUploadURL(docInfo){
-		var path = base64_urlsafe_encode(docInfo.path);
-		var name = base64_urlsafe_encode(docInfo.name);
-		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + docInfo.vid + "&docId=" + docInfo.docId + "&path="+ path + "&name="+ name; 
-		console.log("EditormdEditor buildImageUploadURL() imageUploadURL:" + imageUploadURL);
-		return imageUploadURL;
-	}
-	
 	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
 	//"initEditor": initEditorForEditormd,
 	//"setContent": setContentForEditormd,
@@ -154,6 +137,14 @@ var EditormdEditor = (function () {
 		"setEditMode": setEditMode,			
 		"onLoadDocument": onLoadDocument,
 	};
+	
+	function buildImageUploadURL(docInfo){
+		var path = base64_urlsafe_encode(docInfo.path);
+		var name = base64_urlsafe_encode(docInfo.name);
+		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + docInfo.vid + "&docId=" + docInfo.docId + "&path="+ path + "&name="+ name; 
+		console.log("EditormdEditor buildImageUploadURL() imageUploadURL:" + imageUploadURL);
+		return imageUploadURL;
+	}
 	
 	function init(mode)
 	{
@@ -232,42 +223,6 @@ var EditormdEditor = (function () {
 	    this.toString = function(){  
 	        return arr.toString();  
 	    }  
-	}
-	
-	var stackZ = new ArrayStack();
-	var stackY = new ArrayStack();
-	var isCtrlZY = false;
-	function ctrlZ(){
-		if(stackZ.size() > 0)
-		{
-			var p = stackZ.pop();
-			if(p)
-			{
-				//put entry to stackY
-				stackY.push(p);
-				isCtrlZY = true;
-				setContent(p);
-				console.log("ctrlZ stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
-				isCtrlZY = false;
-			}
-		}
-	}
-	
-	//ctrl + y
-	function ctrlY()
-	{
-		if(stackY.size() > 0)
-		{
-			var p = stackY.pop();
-			if(p)
-			{
-				stackZ.push(p);
-				isCtrlZY = true;
-				setContent(p);
-				console.log("ctrlY stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
-				isCtrlZY = false;
-			}
-		}
 	}
 	
     //Markdown的图片截图粘贴接口
@@ -387,19 +342,19 @@ var EditormdEditor = (function () {
 			init(mode);					
 		},
 	    ctrlZ: function(){
-	    	return ctrlZ();
+	    	commonEditor.ctrlZ();
 	    },
 	    ctrlY: function(){
-	    	return ctrlY();
+	    	commonEditor.ctrlY();
 	    },
 	    enableEdit: function(){
-	    	return commonEditor.enableEdit(1);
+	    	commonEditor.enableEdit(1);
 	    },	    
 	    exitEdit: function(mode){
-	    	return commonEditor.exitEdit(1);
+	    	commonEditor.exitEdit(1);
 	    },
 	    saveDoc: function(){
-	    	return commonEditor.saveDoc();
+	    	commonEditor.saveDoc();
 	    },
 	}
 })();
