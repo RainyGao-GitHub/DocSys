@@ -59,6 +59,8 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
 
 	MxsdocAPI.VDocEditor = function(placeholderId, config) {
 		console.log("VDocEditor() config", config);
+		var _isAppReady = false;
+		
 		var _edit = false;	 //默认处于非编辑状态
 		
 		var _self = this,	//_self是指实例化后的对象
@@ -91,7 +93,9 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         };
 
         var _onAppReady = function() {
-            _attachMouseEvents();
+        	_isAppReady = true;
+
+        	_attachMouseEvents();
 
             if (_config.docInfo) {
                 _openDocument(_config.docInfo);
@@ -183,12 +187,15 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         };
         
         var _openDocument = function(doc) {
-            _sendCommand({
-                command: 'openDocument',
-                data: {
-                    doc: doc
-                }
-            });
+        	if(_isAppReady)
+        	{
+	            _sendCommand({
+	                command: 'openDocument',
+	                data: {
+	                    doc: doc
+	                }
+	            });
+        	}
         };
         
         var _getEditState = function() {

@@ -61,13 +61,15 @@
 		
 		function initEditor()
 		{
-	  		console.log("CommonEditor editorInit editState:" + editState);
+	  		console.log("CommonEditor initEditor()");
 	  		_initEditor();
 		}
 		
 		//Init For ArtDialog
 		function initForArtDialog()
 		{
+			console.log("CommonEditor initForArtDialog()");
+
 			initEditor();
 	
 			var params = GetRequest();
@@ -81,7 +83,7 @@
 			docInfo = artDialog2.config.data;
 			docInfo.docType = 1;	//RealDoc
 			
-			console.log("initForArtDialog() docInfo:", docInfo);
+			console.log("CommonEditor initForArtDialog() docInfo:", docInfo);
 	
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
@@ -93,6 +95,8 @@
 		//Init For NewPage
 		function initForNewPage()
 		{
+			console.log("CommonEditor initForNewPage()");
+
 			initEditor();
 			
 		    docInfo = getDocInfoFromRequestParamStr();
@@ -100,7 +104,7 @@
 		    
 		    document.title = docInfo.name;
 		    
-		    console.log("initForNewPage() docInfo:", docInfo);
+		    console.log("CommonEditor initForNewPage() docInfo:", docInfo);
 		    
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
@@ -112,12 +116,14 @@
 		//Init For Bootstrap Dialog
 		function textEditorPageInit(Input_doc)
 		{
+			console.log("CommonEditor textEditorPageInit()");
+
 			initEditor();
 			
 			docInfo = Input_doc;		
 			docInfo.docType = 1;	//RealDoc
 		    
-			console.log("textEditorPageInit() docInfo:", docInfo);
+			console.log("CommonEditor textEditorPageInit() docInfo:", docInfo);
 			
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
@@ -129,6 +135,8 @@
 		//Init For VDoc 
 		function initForVDoc()
 		{
+			console.log("CommonEditor initForVDoc()");
+			
 			initEditor();
 			
 			//get frameEditorId from url
@@ -144,9 +152,12 @@
 	        } else {
 	            window.addEventListener('message', _onMessage, false);
 	        }
-	        
+		}
+		
+		function appReady(){
+			console.log("CommonEditor appReady()");
 	        //Notify VDocEditor that eidtor is ready
-	        _postMessage({ event: 'onAppReady' });
+	        _postMessage({ event: 'onAppReady' });			
 		}
 		
 		var openDocument = function(data){
@@ -237,11 +248,11 @@
 		
 		function saveDoc()
 		{
-			console.log("saveDoc docInfo.docId:" + docInfo.docId);
+			console.log("CommonEditor saveDoc docInfo.docId:" + docInfo.docId);
 			
 			if(isContentChanged == false)
 			{
-			   	console.log("saveDoc there is no change");
+			   	console.log("CommonEditor saveDoc there is no change");
 				return;
 			}
 			
@@ -300,7 +311,7 @@
 		
 		function enableEdit(switchMode)
 		{
-			console.log("_enableEdit() switchMode:" + switchMode);
+			console.log("CommonEditor enableEdit() switchMode:" + switchMode);
 			if(!docInfo.docId || docInfo.docId == 0)
 			{
 				if(switchMode == 2)
@@ -365,7 +376,7 @@
 		
 		//退出文件编辑状态
 		function exitEdit(switchMode) {   	
-			console.log("exitEdit()  switchMode:" + switchMode);
+			console.log("CommonEditor exitEdit()  switchMode:" + switchMode);
 			if(!docInfo.docId || docInfo.docId == 0)
 			{
 				if(switchMode == 2)
@@ -496,11 +507,11 @@
 		{
 			//启动超时定式器
 			var timeOut = 180000; //超时时间3分钟
-		    console.log("EditormdEditor startBeatThread() with " + timeOut + " ms");
+		    console.log("CommonEditor startBeatThread() with " + timeOut + " ms");
 		    setTimeout(function () {
 		        if(editState == true)
 		    	{
-		        	console.log("EditormdEditor startBeatThread() refreshDocLock");
+		        	console.log("CommonEditor startBeatThread() refreshDocLock");
 		    		refreshDocLock();
 		    		startBeatThread();
 		    	}
@@ -544,7 +555,7 @@
 		
 		function startAutoTmpSaver()
 		{ 
-			console.log("CommonEditor.startAutoTmpSaver timerState:" + timerState);
+			console.log("CommonEditor startAutoTmpSaver timerState:" + timerState);
 			if(timerState == 0)
 			{
 				timerState = 1;
@@ -566,7 +577,7 @@
 		}
 	
 		function stopAutoTmpSaver(){
-			console.log("CommonEditor.stopAutoTmpSaver timerState:" + timerState);
+			console.log("CommonEditor stopAutoTmpSaver timerState:" + timerState);
 			if(timerState == 1)
 			{
 				timerState = 0;
@@ -674,6 +685,9 @@
 	        },
 			initForVDoc: function(){
 				initForVDoc();
+		    },
+		    appReady: function(){
+		    	appReady();
 		    },
 		    saveDoc: function(){
 		    	return saveDoc();

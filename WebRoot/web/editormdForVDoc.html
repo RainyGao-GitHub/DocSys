@@ -73,20 +73,10 @@
 			var editor;		  //editormd
 			var switchEditModeOnly = false;
 			
-			//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
-			//"initEditor": initEditorForEditormd,
-			//"setContent": setContentForEditormd,
-			//"getContent": setContentForEditormd,
-			//"setEditMode": setEditModeForEditormd,			
-			//"onLoadDocument": onLoadDocumentForEditormd,
-			
 			var initEditor = function()
 			{
 		  		console.log("EditormdEditor initEditor()");
 
-		  		//绑定commonEditor
-	        	commonEditor = this;
-		  		
 		  		//初始化编辑器
 		  		var params = {
 		           width: "100%",
@@ -124,7 +114,7 @@
 			   			//TODO: 通知commonEditor内容有变化(通过接口或者发送消息)
 		           },
 		           onpreviewing : function () {
-		              	console.log("EditormdEditor onpreviewing()");
+		              	console.log("EditormdEditor onpreviewing() switchEditModeOnly:" + switchEditModeOnly);
 						if(switchEditModeOnly == true)
 						{
 							switchEditModeOnly = false;
@@ -135,7 +125,7 @@
 						}
 		           },
 		           onpreviewed :function () {
-		               	console.log("EditormdEditor onpreviewed switchEditModeOnly:" + commonEditor.switchEditModeOnly);
+		               	console.log("EditormdEditor onpreviewed switchEditModeOnly:" + switchEditModeOnly);
 		               	if(switchEditModeOnly == true)
 						{
 							switchEditModeOnly = false;
@@ -146,10 +136,11 @@
 		               	}
 		           },
 		           onload : function () {
-		               console.log("EditormdEditor onload editState:" + commonEditor.editState);
+		               console.log("EditormdEditor onload");
 		               //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
 					   this.previewing(); 		  //加载成默认是预览
 					   this.setMarkdown(""); 	  //内容需要在onload的时候进行加载，会触发onchange事件
+					   commonEditor.appReady();
 				   },
 		           onresize: function(){
 		        	   console.log("EditormdEditor onresize");
@@ -207,8 +198,13 @@
 				checkAndSetFileShowMode(docInfo);
 				checkAndSetEditBtn(docInfo);
 			};
-		
 			
+			//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
+			//"initEditor": initEditorForEditormd,
+			//"setContent": setContentForEditormd,
+			//"getContent": setContentForEditormd,
+			//"setEditMode": setEditModeForEditormd,			
+			//"onLoadDocument": onLoadDocumentForEditormd,
 			var config = {
 				"initEditor": initEditor,
 				"setContent": setContent,
@@ -216,6 +212,12 @@
 				"setEditMode": setEditMode,			
 				"onLoadDocument": onLoadDocument,
 			};
+			
+			function init()
+			{
+				commonEditor = new MxsdocAPI.CommonEditor(config);
+				commonEditor.initForVDoc();
+			}
 		
 			function checkAndSetEditBtn(docInfo)
 			{
@@ -425,9 +427,9 @@
 			
 			//开放给外部的调用接口
 			return {
-				getConfig: function(){
-					return config;
-			    },
+				init: function(){
+					init();					
+				},
 			    ctrlZ: function(){
 			    	return ctrlZ();
 			    },
@@ -448,9 +450,7 @@
 		
 		//页面加载完成处理函数
 		$(document).ready(function () {
-			var configForEditormd = EditormdEditor.getConfig();
-			var commonEditorForEditormd = new MxsdocAPI.CommonEditor(configForEditormd);
-			commonEditorForEditormd.initForVDoc();
+			EditormdEditor.init();
 		});
     </script>
 </body>
