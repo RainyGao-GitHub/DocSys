@@ -12,18 +12,9 @@
 		var tmpSavedDocText = "";
 		var isContentChanged = false;
 		var editState = false;
-		var switchEditModeOnly = false;
-		var editor = {};	
 		var autoSaveTimer;
 	  	var timerState = 0;
 	  	var isOnLoadTriggerChange = false;
-		
-	  	//supported command in message
-		var commandMap = {
-	            'openDocument': function(data) {
-	                openDocument(data);
-	            },
-	        };
 		
 		//****** Editor的抽象接口 Start ********
 		//使用回调方式实现，因此具体的实现函数是通过config传入的
@@ -158,6 +149,20 @@
 	        _postMessage({ event: 'onAppReady' });
 		}
 		
+		var openDocument = function(data){
+			docInfo = data.doc;
+			docInfo.docType = 2;
+			
+		    document.title = docInfo.name;
+		    
+		    // 初始化文档信息
+			console.log("CommonEditor openDocument() docInfo:", docInfo);
+			
+			getDocText(docInfo, showText, showErrorInfo);	
+			
+			_onLoadDocument(docInfo);
+		};
+		
 	    var _postMessage = function(msg) {
 	        console.log("CommonEditor _postMessage() msg:", msg);
 	
@@ -168,6 +173,13 @@
 	        }
 	    };
 	    
+	  	//消息交互接口
+		var commandMap = {
+	            'openDocument': function(data) {
+	                openDocument(data);
+	            },
+	        };
+		
 	    var _onMessage = function(msg) {
 	        console.log("CommonEditor _onMessage() msg:", msg);
 	
@@ -193,20 +205,6 @@
 	            }
 	        }
 	    };
-	    
-		var openDocument = function(data){
-			docInfo = data.doc;
-			docInfo.docType = 2;
-			
-		    document.title = docInfo.name;
-		    
-		    // 初始化文档信息
-			console.log("CommonEditor openDocument() docInfo:", docInfo);
-			
-			getDocText(docInfo, showText, showErrorInfo);	
-			
-			_onLoadDocument(docInfo);
-		};
 		
 		function showText(docText, tmpSavedDocText)
 		{
@@ -235,71 +233,6 @@
 				}
 			}
 			return theRequest;
-		}
-		    
-		function ArrayStack(){
-		    var arr = [];  
-		        //压栈操作  
-		    this.push = function(element){  
-		        arr.push(element);  
-		    }  
-		        //退栈操作  
-		    this.pop = function(){  
-		        return arr.pop();  
-		    }  
-		        //获取栈顶元素  
-		    this.top = function(){  
-		        return arr[arr.length-1];  
-		    }  
-		        //获取栈长  
-		    this.size = function(){  
-		        return arr.length;  
-		    }  
-		        //清空栈  
-		    this.clear = function(){  
-		        arr = [];  
-		        return true;  
-		    }  
-		  
-		    this.toString = function(){  
-		        return arr.toString();  
-		    }  
-		}
-		
-		var stackZ = new ArrayStack();
-		var stackY = new ArrayStack();
-		var isCtrlZY = false;
-		function ctrlZ(){
-			if(stackZ.size() > 0)
-			{
-				var p = stackZ.pop();
-				if(p)
-				{
-					//put entry to stackY
-					stackY.push(p);
-					isCtrlZY = true;
-					_setContent(p);
-					console.log("ctrlZ stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
-					isCtrlZY = false;
-				}
-			}
-		}
-		
-		//ctrl + y
-		function ctrlY()
-		{
-			if(stackY.size() > 0)
-			{
-				var p = stackY.pop();
-				if(p)
-				{
-					stackZ.push(p);
-					isCtrlZY = true;
-					_setContent(p);
-					console.log("ctrlY stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() + " ctrlZY:" + isCtrlZY);
-					isCtrlZY = false;
-				}
-			}
 		}
 		
 		function saveDoc()
@@ -365,7 +298,7 @@
 		//2. 编辑器内部按键触发
 		//   编辑器先切换到指定编辑状态，再进行文件锁定或解锁，如果失败则将编辑器切换回原来的编辑状态
 		
-		function _enableEdit(switchMode)
+		function enableEdit(switchMode)
 		{
 			console.log("_enableEdit() switchMode:" + switchMode);
 			if(!docInfo.docId || docInfo.docId == 0)
@@ -431,7 +364,7 @@
 		}
 		
 		//退出文件编辑状态
-		function _exitEdit(switchMode) {   	
+		function exitEdit(switchMode) {   	
 			console.log("exitEdit()  switchMode:" + switchMode);
 			if(!docInfo.docId || docInfo.docId == 0)
 			{
@@ -745,17 +678,11 @@
 		    saveDoc: function(){
 		    	return saveDoc();
 		    },
-		    ctrlZ: function(){
-		    	return ctrlZ();
-		    },
-		    ctrlY: function(){
-		    	return ctrlY();
-		    },
-		    enableEdit: function(){
-		    	return _enableEdit(1);
+		    enableEdit: function(mode){
+		    	return enableEdit(mode);
 		    },	    
-		    exitEdit: function(){
-		    	return _exitEdit(1);
+		    exitEdit: function(mode){
+		    	return exitEdit(mode);
 		    },
 		}
 	};
