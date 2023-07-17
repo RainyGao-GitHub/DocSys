@@ -45,7 +45,7 @@ var StackMdEditor = (function () {
 				//TODO: fileChange事件以后不要直接把内容带回来
 				content = event.data.payload.content.text;
 				
-				commonEditor.contentChangeHanlder();
+				commonEditor.contentChangeHandler();
 				break;
 			case 'close':
 				//收到iframe的关闭消息
@@ -218,10 +218,9 @@ var StackMdEditor = (function () {
 	 */
 	function getStaticEditUrl(url,doc_text) {
 		var origin = window.location.protocol + '//' + window.location.host;
-		var fileName = docInfo.name;
 		var params = {
 			origin: origin,
-			fileName: fileName,
+			//fileName: fileName,
 			contentText: doc_text,
 			silent: false
 		};
