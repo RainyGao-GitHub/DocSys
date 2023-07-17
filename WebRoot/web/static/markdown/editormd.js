@@ -65,25 +65,23 @@
     
     editormd.toolbarModes = {
         full : [
-            "undo", "redo", "|", 
+        	"saveContent", "undo", "redo", "|", 
             "bold", "del", "italic", "quote", "ucwords", "|",
             "h1", "h2", "h3", "h4", "h5", "h6", "|", 
             "list-ul", "list-ol", "hr", "|",
             "link", "reference-link", "image", "code", "preformatted-text", "code-block", "table", "datetime", "emoji", "html-entities", "pagebreak", "|",
-            "goto-line", "watch", "preview", "fullscreen", "clear", "search"
+            "goto-line", "watch", "fullscreen", "clear", "search", "preview",
         ],
         simple : [
-            "undo", "redo", "|", 
-            "bold", "del", "italic", "quote", "uppercase", "lowercase", "|", 
+        	"saveContent", "undo", "redo", "|", 
+            "bold", "del", "italic", "|", 
             "h1", "h2", "h3", "h4", "h5", "h6", "|", 
-            "list-ul", "list-ol", "hr", "|",
-            "watch", "preview", "fullscreen", "|",
-            "help", "info"
+            "list-ul", "list-ol", "|",
+            "watch", "|",
+             "preview",
         ],
         mini : [
-            "undo", "redo", "|",
-            "watch", "preview", "|",
-            "help", "info"
+            "saveContent", "undo", "redo", "|", "preview",
         ]
     };
     
@@ -133,6 +131,7 @@
         disabledKeyMaps      : [],
         
         onload               : function() {},
+        onsave               : function() {},
         onresize             : function() {},
         onchange             : function() {},
         onwatch              : null,
@@ -186,7 +185,8 @@
             "ucwords"        : "<a href=\"javascript:;\" title=\"ucwords\" unselectable=\"on\"><i class=\"fa\" name=\"ucwords\" style=\"font-size:20px;margin-top: -3px;\">Aa</i></a>"
         }, 
         toolbarIconsClass    : {
-            undo             : "fa-undo",
+            saveContent          : "fa-save",
+        	undo             : "fa-undo",
             redo             : "fa-repeat",
             bold             : "fa-bold",
             del              : "fa-strikethrough",
@@ -216,12 +216,13 @@
             "goto-line"      : "fa-terminal", // fa-crosshairs
             watch            : "fa-eye-slash",
             unwatch          : "fa-eye",
-            preview          : "fa-desktop",
             search           : "fa-search",
             fullscreen       : "fa-arrows-alt",
             clear            : "fa-eraser",
             help             : "fa-question-circle",
-            info             : "fa-info-circle"
+            info             : "fa-info-circle",
+            preview          : "fa-close",
+            close            : "fa-close"
         },        
         toolbarIconTexts     : {},
         
@@ -230,7 +231,8 @@
             description : "开源在线Markdown编辑器<br/>Open source online Markdown editor.",
             tocTitle    : "目录",
             toolbar     : {
-                undo             : "撤销（Ctrl+Z）",
+            	saveContent			 : "保存（Ctrl+S）",
+            	undo             : "撤销（Ctrl+Z）",
                 redo             : "重做（Ctrl+Y）",
                 bold             : "粗体",
                 del              : "删除线",
@@ -262,12 +264,13 @@
                 "goto-line"      : "跳转到行",
                 watch            : "关闭实时预览",
                 unwatch          : "开启实时预览",
-                preview          : "全窗口预览HTML（按 Shift + ESC还原）",
                 fullscreen       : "全屏（按ESC还原）",
                 clear            : "清空",
                 search           : "搜索",
                 help             : "使用帮助",
-                info             : "关于" + editormd.title
+                info             : "关于" + editormd.title,
+                preview          : "退出编辑",
+                close            : "退出编辑"
             },
             buttons : {
                 enter  : "确定",
@@ -2483,6 +2486,15 @@
             return this;
         },
         
+        //saveContent
+        saveContent : function() {
+            var settings         = this.settings;
+            if (this.state.loaded)
+            {
+                $.proxy(settings.onsave, this)();
+            }
+		},
+        
         /**
          * 隐藏编辑器部分，只预览HTML
          * Enter preview html state
@@ -2839,7 +2851,12 @@
     };
 
     editormd.toolbarHandlers = {
-        undo : function() {
+    	saveContent : function() {
+        	console.log("editormd.js saveContent handler");
+        	this.saveContent();
+        },
+        
+    	undo : function() {
             this.cm.undo();
         },
         
@@ -2882,7 +2899,7 @@
                 cm.setCursor(cursor.line, cursor.ch + 1);
             }
         },
-
+        
         quote : function() {
             var cm        = this.cm;
             var cursor    = cm.getCursor();
