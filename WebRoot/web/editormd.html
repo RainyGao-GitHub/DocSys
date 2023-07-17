@@ -55,22 +55,18 @@
 	</style>
 </head>
 <body style="height: 100%; margin: 0;">
-	<div id="mdViewer">
-		<div id="mdViewerToolBar" style="height:100px;">
-		     <button id="btnMdExitEdit" class="btn btn-default" type="button" onclick="EditormdEditor.exitEdit()" style="display:none">退出编辑
-		     </button>
-		     <button id="btnMdSaveWiki" class="btn btn-default" type="button" onclick="EditormdEditor.saveWiki()" style="display:none">保存
-		     </button>
-		</div>
-		<div class="EditormdEditorContent" style="min-height: 600px;">
-			<div id="mdPlayer">
+    <div>
+		<div id="textEditor">
+			<div class="textEditorContent" style="min-height: 600px;">
+				<div id="mdPlayer">
+				</div>
 			</div>
 		</div>
-	</div>
+    </div>
 	<script type="text/javascript">
 		//页面加载完成处理函数
 		$(document).ready(function () {
-			EditormdEditor.initForNewPage();
+			EditormdEditor.init("NewPage");
 		});	
     </script>
 </body>

@@ -14,7 +14,7 @@
 		var editState = false;
 		var autoSaveTimer;
 	  	var timerState = 0;
-	  	var isOnLoadTriggerChange = false;
+	  	var isDynamicMode = false;	//docInfo can be changed with openDocument message
 		
 		//****** Editor的抽象接口 Start ********
 		//使用回调方式实现，因此具体的实现函数是通过config传入的
@@ -73,10 +73,6 @@
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
 			}
-			
-			getDocText(docInfo, showText, showErrorInfo);
-			
-			_onLoadDocument(docInfo);
 		}
 		
 		//Init For NewPage
@@ -96,10 +92,6 @@
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
 			}
-			
-			getDocText(docInfo, showText, showErrorInfo);
-			
-			_onLoadDocument(docInfo);
 		}
 		
 		//Init For Bootstrap Dialog
@@ -116,18 +108,15 @@
 			
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
-			}
-			
-			getDocText(docInfo, showText, showErrorInfo);	
-			
-			_onLoadDocument(docInfo);
+			}			
 	  	}
 		
 		//Init For VDoc 
 		function initForVDoc()
 		{
 			console.log("CommonEditor initForVDoc()");
-			
+			isDynamicMode = true;
+
 			initEditor();
 			
 			//get frameEditorId from url
@@ -147,32 +136,42 @@
 		
 		function appReady(){
 			console.log("CommonEditor appReady()");
-	        //Notify VDocEditor that eidtor is ready
-	        _postMessage({ event: 'onAppReady' });			
+	        
+			//Notify VDocEditor that eidtor is ready
+	        _postMessage({ event: 'onAppReady' });
+	        
+	        if(docInfo)
+	        {
+				getDocText(docInfo, showText, showErrorInfo);			
+				_onLoadDocument(docInfo);
+	        }
 		}
 		
 		var openDocument = function(data){
 			docInfo = data.doc;
-			docInfo.docType = 2;
 			
-		    document.title = docInfo.name;
-		    
-		    // 初始化文档信息
-			console.log("CommonEditor openDocument() docInfo:", docInfo);
-			
-			getDocText(docInfo, showText, showErrorInfo);	
-			
-			_onLoadDocument(docInfo);
+			if(docInfo)
+		    {
+				docInfo.docType = 2;
+				document.title = docInfo.name;
+			    
+			    // 初始化文档信息
+				console.log("CommonEditor openDocument() docInfo:", docInfo);
+				getDocText(docInfo, showText, showErrorInfo);
+				_onLoadDocument(docInfo);
+		    }
 		};
 		
 	    var _postMessage = function(msg) {
-	        console.log("CommonEditor _postMessage() msg:", msg);
-	
-	        // TODO: specify explicit origin
-	        if (window.parent && window.JSON) {
-	            msg.frameEditorId = window.frameEditorId;
-	            window.parent.postMessage(window.JSON.stringify(msg), "*");
-	        }
+	    	if(isDynamicMode)
+	    	{
+		    	console.log("CommonEditor _postMessage() msg:", msg);
+		        // TODO: specify explicit origin
+		        if (window.parent && window.JSON) {
+		            msg.frameEditorId = window.frameEditorId;
+		            window.parent.postMessage(window.JSON.stringify(msg), "*");
+		        }
+	    	}
 	    };
 	    
 	  	//消息交互接口
@@ -184,7 +183,6 @@
 		
 	    var _onMessage = function(msg) {
 	        console.log("CommonEditor _onMessage() msg:", msg);
-	
 	    	// TODO: check message origin
 	        var data = msg.data;
 	        
