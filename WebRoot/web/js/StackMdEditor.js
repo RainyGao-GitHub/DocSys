@@ -1,168 +1,143 @@
 //StackMdEditor类
 var StackMdEditor = (function () {
-	var docInfo = {};
-	var docText = "";
-	var tmpSavedDocText = "";
-	var isContentChanged = false;
-	var isReadOnly = false;	//zip or history doc set it as readonly
-	//注意: editState用于标记编辑器当前的状态，如果不一致会导致切换状态时不正常
-	//要使用editState进行标记是因为编辑器的changeView很多按键都会触发，需要避免重复触发
-	var editState = true;	//编辑器的默认状态是处于编辑状态
-    //supported command in message
-	var commandMap = {
-            'openDocument': function(data) {
-                _loadDocument(data);
-            },
-        };
+	var commonEditor; //It will be set when callback from commonEditor
 	
-	//For ArtDialog
-	function initForArtDialog() 
+	var editor;		  //editormd
+	var switchEditModeOnly = false;
+	var content = "";	//目前内容第一次通过url进行set, 取回通过fileChange事件返回
+	var isReadOnly = true;	//默认不允许编辑
+	var docInfo;
+	
+	var initEditor = function()
 	{
-		var params = GetRequest();
-		var docid = params['docid'];
-		//获取artDialog父窗口传递过来的参数
-		var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
-		if (artDialog2 == null) {
-			artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
-		}
-		
-		docInfo = artDialog2.config.data; // 获取对话框传递过来的数据
-		docInfo.docType = 1;
-		
-		// 初始化文档信息
-		docInfoInit();
-		
-		console.log("initForArtDialog() docInfo:", docInfo);
+  		console.log("EditormdEditor initEditor()");
 
-		checkAndSetIsReadOnly(docInfo);
-		
-		getDocText(docInfo, showText, showErrorInfo);
-	}
-	
-	//For NewPage
-	function initForNewPage()
-	{
-		docInfo = getDocInfoFromRequestParamStr();
-		docInfo.docType = 1;
+		// 传入staticedit插件地址和文件内容，获取staticedit插件指定路径
+		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", "");
+		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
+		var stackEditIframeEl = $(".stackedit-iframe");
+		stackEditIframeEl.prop("src",url);
 
-	    document.title = docInfo.name;
-	    
-	    // 初始化文档信息
-		docInfoInit();
-		
-		console.log("initForNewPage() docInfo:", docInfo);
-	    
-		//history file or file in zip is readonly
-		checkAndSetIsReadOnly(docInfo);
-		
-		getDocText(docInfo, showText, showErrorInfo);
-	}
-	
-	//For BootstrapDialog
-	function PageInit(Input_doc)
-	{
-		docInfo = Input_doc;
-		docInfo.docType = 1;
-
-	    // 初始化文档信息
-		docInfoInit();
-
-		console.log("PageInit() docInfo:", docInfo);
-
-		//history file or file in zip is readonly
-		checkAndSetIsReadOnly(docInfo); 
-		
-		getDocText(docInfo, showText, showErrorInfo);
-  	}
-	
-	//For VDoc
-	function initForVDoc()
-	{		
-		//Bind message handler
-        if (window.attachEvent) {
-            window.attachEvent('onmessage', _onMessage);
-        } else {
-            window.addEventListener('message', _onMessage, false);
-        }
-        
-        //Notify VDocEditor that eidtor is ready
-        _postMessage({ event: 'onAppReady' });
-	}
-	
-    var _postMessage = function(msg) {
-        console.log("StackMdEditor _postMessage() msg:", msg);
-
-        // TODO: specify explicit origin
-        if (window.parent && window.JSON) {
-            msg.frameEditorId = window.frameEditorId;
-            window.parent.postMessage(window.JSON.stringify(msg), "*");
-        }
-    };
-    
-    var _onMessage = function(msg) {
-        console.log("StackMdEditor _onMessage() msg:", msg);
-
-    	// TODO: check message origin
-        var data = msg.data;
-        
-        if (Object.prototype.toString.apply(data) !== '[object String]' || !window.JSON) {
-            return;
-        }
-
-        var cmd, handler;
-
-        try {
-            cmd = window.JSON.parse(data)
-        } catch(e) {
-            cmd = '';
-        }
-
-        if (cmd) {
-            handler = commandMap[cmd.command];
-            if (handler) {
-                handler.call(this, cmd.data);
-            }
-        }
-    };
-    
-	var _loadDocument = function(data){
-		var docInfo = data.doc;
-		docInfo.docType = 2;
-		
-		//docInfo = getDocInfoFromRequestParamStr();
-		//docInfo.docType = 2;
-
-	    document.title = docInfo.name;
-	    
-	    // 初始化文档信息
-		docInfoInit();
-		console.log("loadDocument() docInfo:", docInfo);
-
-		checkAndSetIsReadOnly(docInfo);
-		
-		getDocText(docInfo, showText, showErrorInfo);	
+		// Listen to StackEdit events and apply the changes to the textarea.
+		//监听iframe发来的消息
+		window.addEventListener('message', messageHandler);
+		// 设置定时0.5s后设置页面为只读
+		//setTimeout(function () {
+		//	switchEditMode(false);
+		//},500)
 	};
 	
-	function showErrorInfo(msg)
-	{
-		bootstrapQ.msg({
-			msg : msg,
-			type : 'warning',
-			time : 5000,
-		    }); 
-	}
-	
-	function GetRequest() {
-		var url = location.search; //获取url中"?"符后的字串
-		var theRequest = {};
-		if (url.indexOf("?") !== -1) {
-			var str = url.substr(1);
-			var strs = str.split("&");
-			for(var i = 0; i < strs.length; i ++) {
-				theRequest[strs[i].split("=")[0]]=unescape(strs[i].split("=")[1]);
-			}
+	/**
+	 * staticEdit消息事件处理
+	 *
+	 * @param event 事件对象
+	 */
+	function messageHandler(event) {
+		console.log("StackMdEditor messageHandler() event:", event);
+		switch (event.data.type) 
+		{
+			case 'ready':
+				// iframe 页面加载完成,设置当前页面为只读
+				setStaticEditReaOnly(false);
+				commonEditor.appReady();
+				break;
+			case 'fileChange':
+				//TODO: fileChange事件以后不要直接把内容带回来
+				content = event.data.payload.content.text;
+				
+				commonEditor.contentChangeHanlder();
+				break;
+			case 'close':
+				//收到iframe的关闭消息
+				var artDialog = top.dialog.get(window);
+				artDialog.close();
+				break;
+			case 'saveChange':
+				commonEditor.saveDoc();
+				break;
+			case 'changeView':
+              	console.log("StackMdEditor changeView() switchEditModeOnly:" + switchEditModeOnly);
+				if(switchEditModeOnly == true)
+				{
+					switchEditModeOnly = false;
+				}
+				else
+				{		        
+					console.log("messageHandler() changeView flag:", event.data.flag);
+					//flag需要能够区分按键
+					if(event.data.flag)
+					{
+				      	commonEditor.exitEdit(2);
+					}
+					else
+					{
+				      	commonEditor.enableEdit(2);
+					}
+				}
+				break;
+			case 'uploadImages':
+				var images = event.data.payload.content.images;
+				if (images && images.length > 0) {
+					// 仅上传第一个传输过来的图片
+					uploadMarkdownPic(images[0]);
+				}
+				break;
+			default:
+				break;
 		}
-		return theRequest;
+	}
+    
+	var setContent = function(content)
+	{	
+		//TODO: 目前没有接口，通过onChange事件带回来的
+		//因此没法设置
+	};
+	
+	var getContent = function()
+	{	
+		//TODO: 目前没有接口，通过onChange事件带回来的
+		return content;
+	};
+	
+	var setEditMode = function(mode)
+	{
+		switchEditModeOnly = true;
+		setStaticEditReaOnly(mode);
+	};
+	
+	var onLoadDocument = function(docInfo){
+		console.log("onLoadDocument() docInfo:", docInfo);	
+		this.docInfo = docInfo;
+		checkAndSetIsReadOnly(docInfo);
+	};
+	
+	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
+	var config = {
+		"initEditor": initEditor,
+		"setContent": setContent,
+		"getContent": getContent,
+		"setEditMode": setEditMode,			
+		"onLoadDocument": onLoadDocument,
+	};
+	
+	function init(mode, docInfo)
+	{
+		commonEditor = new MxsdocAPI.CommonEditor(config);
+		switch(mode)
+		{
+		case "ArtDialog":
+			commonEditor.initForArtDialog();
+			break;
+		case "NewPage":
+			commonEditor.initForNewPage();
+			break;
+		case "BootstrapDialog":
+			commonEditor.initForBootstrapDialog(docInfo);
+			break;
+		case "VDoc":
+			commonEditor.initForVDoc();
+			break;
+		}					
 	}
 	
 	function checkAndSetIsReadOnly(docInfo)
@@ -185,121 +160,6 @@ var StackMdEditor = (function () {
 		}
 	}
 	
-	/**
-	 * 文档信息初始化方法
-	 */
-	function docInfoInit() {
-		if(docInfo.docType == 1)
-		{
-			// 为空时获取文档的后缀
-			if(docInfo.fileSuffix !==  undefined || docInfo.fileSuffix !== "") {
-				docInfo.fileSuffix = getFileSuffix(docInfo.name);
-			}
-		}
-	}
-	/**
-	 * 文档加载类
-	 * @param docText_ 文档内容
-	 * @param tmpSavedDocText_ 临时保存文档内容（暂时未使用）
-	 */
-	function showText(docText_, tmpSavedDocText_) {
-		// 传入staticedit插件地址和文件内容，获取staticedit插件指定路径
-		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", docText_);
-		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
-		var stackEditIframeEl = $(".stackedit-iframe");
-		stackEditIframeEl.prop("src",url);
-
-		// Listen to StackEdit events and apply the changes to the textarea.
-		//监听iframe发来的消息
-		window.addEventListener('message', messageHandler);
-		// 设置定时0.5s后设置页面为只读
-		//setTimeout(function () {
-		//	switchEditMode(false);
-		//},500)
-	}
-
-	/**
-	 * staticEdit消息事件处理
-	 *
-	 * @param event 事件对象
-	 */
-	function messageHandler(event) {
-		console.log("StackMdEditor messageHandler() event:", event);
-		switch (event.data.type) 
-		{
-			case 'ready':
-				// iframe 页面加载完成,设置当前页面为只读
-				switchEditMode(false);
-				break;
-			case 'fileChange':
-				if(isReadOnly == false)
-				{
-					//收到iframe文件改动消息
-					var file = event.data.payload;
-					docText = file.content.text;
-					isContentChanged = true;
-				}
-				break;
-			case 'close':
-				//收到iframe的关闭消息
-				var artDialog = top.dialog.get(window);
-				artDialog.close();
-				break;
-			case 'saveChange':
-				if(isContentChanged) {
-					//执行文档保存操作
-					saveDoc();
-				}
-				break;
-			case 'changeView':
-				console.log("messageHandler() changeView flag:", event.data.flag);
-				//TODO: 注意除了点击编辑按键外，所有的按键点击的flag都是true（退出编辑），这样会导致逻辑错误
-				if(event.data.flag)
-				{
-					if(isReadOnly)
-					{
-						console.log("readOnly: do nothing");
-					}
-					else
-					{
-						if(editState == true)
-						{
-							console.log("编辑器退出编辑状态...");
-							editState = false;
-							exitEdit();
-						}
-					}
-				}
-				else
-				{
-					if(isReadOnly)
-					{
-						console.log("readOnly: switch back to readonly");
-						setStaticEditReaOnly(editState);
-					}
-					else
-					{
-						if(editState == false)
-						{
-							console.log("编辑器进入编辑状态...");
-							editState = true;
-							enableEdit();
-						}
-					}
-				}
-				break;
-			case 'uploadImages':
-				var images = event.data.payload.content.images;
-				if (images && images.length > 0) {
-					// 仅上传第一个传输过来的图片
-					uploadMarkdownPic(images[0]);
-				}
-				break;
-			default:
-				break;
-		}
-	}
-
 	/**
 	 * 图片上传
 	 */
@@ -395,235 +255,26 @@ var StackMdEditor = (function () {
 			stackeditEl[0].contentWindow.postMessage({"type":"updateEditState","flag":editFlag},"*")
 		}
 	}
-
-	/**
-	 * 保存文档
-	 */
-    function saveDoc() {
-		$.ajax({
-            url : "/DocSystem/Doc/updateDocContent.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposId: docInfo.vid,
-            	docId : docInfo.docId,
-            	path: docInfo.path,
-                name: docInfo.name,
-            	content : docText,
-            	docType: docInfo.docType, //RealDoc: 1 VDoc: 2
-                shareId: docInfo.shareId,
-            },
-            success : function (ret) {
-                if( "ok" === ret.status ){
-                    isContentChanged = false;
-					disabledEditState(true);
-                    bootstrapQ.msg({
-								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
-								type : 'success',
-								time : 1000,
-					});
-				}else {
-					bootstrapQ.msg({
-						msg : "保存失败 : " + ret.msgInfo,
-						type : 'warning',
-						time : 1000,
-	        		});
-                }
-            },
-            error : function () {
-            	bootstrapQ.msg({
-					msg : "保存失败: 服务器异常",
-					type : 'warning',
-					time : 1000,
-	    		});
-            }
-        });
-    }
-
-    function enableEdit()
-    {
-		console.log("enableEdit()");
-		if(!docInfo.docId || docInfo.docId == 0)
-		{
-			showErrorInfo("请选择文件!");
-			return;
-		}
-
-		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 1, //LockType: Online Edit
-				reposId : docInfo.vid,
-				docId : docInfo.docId,
-				path: docInfo.path,
-				name: docInfo.name,
-				docType: docInfo.docType,
-                shareId: docInfo.shareId,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status)
-				{
-					console.log("enableEdit() ret.data",ret.data);
-					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
-
-					//显示工具条和退出编辑按键
-					switchEditMode(true);
-					return;
- 				}
-				else
-				{
-					showErrorInfo("lockDoc Error:" + ret.msgInfo);
-					switchEditMode(false);
-					return;
-				}
-			},
-			error : function ()
-			{
-				showErrorInfo("lockDoc 异常");
-				switchEditMode(false);
-				return;
-			}
-		});
-    }
-
-	//退出文件编辑状态
-    function exitEdit() {
-		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
-		if(!docInfo.docId || docInfo.docId == 0)
-		{
-			showErrorInfo("文件不存在");
-			switchEditMode(false);
-			return;
-		}
-
-		$.ajax({
-			url : "/DocSystem/Doc/unlockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 1, //unlock the doc
-				reposId : docInfo.vid,
-            	docId : docInfo.docId,
-				path: docInfo.path,
-				name: docInfo.name,
-				docType: docInfo.docType,
-                shareId: docInfo.shareId,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status)
-				{
-					console.log("exitEdit() ret:",ret.data);
-					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
-					switchEditMode(false);
-					return;
- 				}
-				else
-				{
-					showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
-					switchEditMode(true);
-					return;
-				}
-			},
-			error : function ()
-			{
-				showErrorInfo("exitEdit() unlockDoc 异常");
-				switchEditMode(true);
-				return;
-			}
-		});
-	}
-	
-	function switchEditMode(edit)
-	{
-		console.log("switchEditMode() edit:" + edit);
-		if(edit != editState)
-		{
-			editState = edit;
-			setStaticEditReaOnly(edit);
-			
-			if(edit == true)
-			{
-				//Start beat thread to keep 
-				startBeatThread();					
-			}
-		}			
-	}
-	
-	function startBeatThread()
-	{
-		//启动超时定式器
-		var timeOut = 180000; //超时时间3分钟
-	    console.log("stackMdEditorForArt startBeatThread() with " + timeOut + " ms");
-	    setTimeout(function () {
-	        if(editState == true)
-	    	{
-	        	console.log("stackMdEditorForArt startBeatThread() refreshDocLock");
-	    		refreshDocLock();
-	    		startBeatThread();
-	    	}
-	    },timeOut);	
-	}
-	
-	function refreshDocLock()
-	{
-		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 1, //LockType: Normal Lock
-				reposId : docInfo.vid, 
-				docId : docInfo.docId,
-				path: docInfo.path,
-				name: docInfo.name,
-				docType: docInfo.docType,
-	            shareId: docInfo.shareId,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status)
-				{
-					console.log("refreshDocLock() ret.data",ret.data);
-					return;
-				}
-				else
-				{
-					//showErrorInfo("lockDoc Error:" + ret.msgInfo);
-					return;
-				}
-			},
-			error : function () 
-			{
-				//showErrorInfo("lockDoc 异常");
-				return;
-			}
-		});		
-	}
-	
 	
 	//开放给外部的调用接口
 	return {
-		initForArtDialog: function(){
-			initForArtDialog();
+		init: function(mode, docInfo){
+			init(mode, docInfo);					
+		},
+	    ctrlZ: function(){
+	    	commonEditor.ctrlZ();
 	    },
-	    initForNewPage: function(){
-	    	initForNewPage();
-	    },
-	    PageInit: function(docInfo){
-        	PageInit(docInfo);
-        },
-		initForVDoc: function(){
-			initForVDoc();
-	    },
-        saveDoc: function(){
-	    	return saveDoc();
+	    ctrlY: function(){
+	    	commonEditor.ctrlY();
 	    },
 	    enableEdit: function(){
-	    	return enableEdit();
+	    	commonEditor.enableEdit(1);
 	    },	    
-	    exitEdit: function(){
-	    	return exitEdit();
+	    exitEdit: function(mode){
+	    	commonEditor.exitEdit(1);
 	    },
-	};
+	    saveDoc: function(){
+	    	commonEditor.saveDoc();
+	    },
+	}
 })();

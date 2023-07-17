@@ -125,11 +125,6 @@ var EditormdEditor = (function () {
 	};
 	
 	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
-	//"initEditor": initEditorForEditormd,
-	//"setContent": setContentForEditormd,
-	//"getContent": setContentForEditormd,
-	//"setEditMode": setEditModeForEditormd,			
-	//"onLoadDocument": onLoadDocumentForEditormd,
 	var config = {
 		"initEditor": initEditor,
 		"setContent": setContent,

@@ -2004,7 +2004,7 @@ function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 		big: true,
 		mstyle: getDialogStyle(),
 		callback: function(){
-			StackMdEditor.PageInit(docInfo);
+			StackMdEditor.init("BootstrapDialog", docInfo);
 		},
 	});
 }
@@ -2049,7 +2049,7 @@ function showTextInDialog(docInfo, openType)
 			big: true,
 			mstyle: getDialogStyle(),
 			callback: function(){
-				TextViewer.textViewerPageInit(docInfo);
+				TextViewer.init("BootstrapDialog", docInfo);
 			},
 		});
 	}
