@@ -8,31 +8,31 @@ var EditormdEditor = (function () {
 	{
   		console.log("EditormdEditor initEditor()");
 
-  		//初始化编辑器
-  		var params = {
-           width: "100%",
-           height: $(document).height()-70,
-           path : 'static/markdown/lib/',
-           markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
-           toolbar  : false,             // 关闭工具栏
-           codeFold : true,
-           searchReplace : true,
-           saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
-           htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
-           emoji : true,
-           taskList : true,
-           tocm: true,          			// Using [TOCM]
-           tex : true,                      // 开启科学公式 TeX 语言支持，默认关闭
-           //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
-           flowChart : true,
-           sequenceDiagram : true,
-           //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
-           //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
-           //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
-           dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
-           dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
-           imageUpload : true,
-           imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
+      	var params = {
+            width: "100%",
+            height: $(document).height()-70,
+            path : 'static/markdown/lib/',
+            markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
+            //toolbar  : false,             // 关闭工具栏
+            codeFold : true,
+            searchReplace : true,
+            watch : true,                // 关闭实时预览
+            saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
+            htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+            emoji : true,
+            taskList : true,
+            tocm: true,          			// Using [TOCM]
+            tex : true,                      // 开启科学公式 TeX 语言支持，默认关闭
+            //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
+            flowChart : true,
+            sequenceDiagram : true,
+            //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
+            //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
+            //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
+            dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
+            dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
+            imageUpload : true,
+            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
            //imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+ docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
            onchange : function () {
         	   commonEditor.contentChangeHandler();
@@ -99,6 +99,7 @@ var EditormdEditor = (function () {
 			//Enable Edit
 			switchEditModeOnly = true;
 			editor.previewing();
+			editor.resize();
 		}
 		else
 		{
@@ -112,6 +113,7 @@ var EditormdEditor = (function () {
 			//Disable Edit
 			switchEditModeOnly = true;
 			editor.previewed();
+			editor.resize();
 		}
 	};
 	
