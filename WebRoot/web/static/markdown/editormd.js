@@ -75,8 +75,8 @@
         simple : [
         	"saveContent", "undo", "redo", "|", 
             "bold", "del", "italic", "|", 
-            "h1", "h2", "h3", "h4", "h5", "h6", "|", 
-            "list-ul", "list-ol", "|",
+            "h1", "h2", "h3", "h4", "|", 
+            "list-ul", "list-ol", "table", "code", "|",
             "watch", "|",
              "preview",
         ],
