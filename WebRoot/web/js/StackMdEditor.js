@@ -70,11 +70,10 @@ var StackMdEditor = (function () {
 				{
 					onLoadDocument(this.docInfo);
 				}
-				else
-				{
-					// iframe 页面加载完成,设置当前页面为只读
-					setStaticEditReaOnly(false);
-				}
+				
+				// iframe 页面加载完成,设置当前页面为只读
+				setStaticEditReaOnly(false);
+				
 				commonEditor.appReady();
 				break;
 			case 'fileChange':

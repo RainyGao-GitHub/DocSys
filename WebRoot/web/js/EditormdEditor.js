@@ -131,12 +131,8 @@ var EditormdEditor = (function () {
 			   {
             	   onLoadDocument(docInfo);
 			   }
-			   else
-			   {
-	               //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
-				   this.previewing(); 		  //加载成默认是预览
-				   this.setMarkdown(""); 	  //内容需要在onload的时候进行加载，会触发onchange事件
-			   }
+
+               this.previewing(); 		  //加载成默认是预览
 			   commonEditor.appReady();
 		   },
            onresize: function(){
