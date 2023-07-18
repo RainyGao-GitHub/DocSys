@@ -1617,7 +1617,12 @@
             		console.log("getAndShowDoc gDocInfo.docId:" + gDocInfo.docId + " docId:" + doc.docId + " gShowType:" + gShowType);
                 	
             		updateGDocInfo(doc, ret.dataEx, openMode);
-
+					
+            		//openMode == 2则需要打开文件
+            		if(openMode == 2)
+            		{
+              		  openDoc(gDocInfo, false, "openInArtDialog", "office", gShareId);
+            		}
             		//当前文件处于打开状态，则不会进行预览
 	                previewDoc(gDocInfo, gShowType);
                 }
@@ -1742,14 +1747,14 @@
 	//对于直接图标直接点击将尝试打开二进制文件
     function DocOnDblClick()
     {
-		if(gDocInfo.type == 1)
+		if(gDocInfoInPreview.type == 1)
 		{
 	    	//open doc in dialog
-	    	openDoc(gDocInfo, true, "openInArtDialog", "office", gShareId);
+	    	openDoc(gDocInfoInPreview, true, "openInArtDialog", "office", gShareId);
 		}
 		else
 		{
-			showDocList(gDocInfo);
+			showDocList(gDocInfoInPreview);
 			showCenterDiv();
 		}
     }
@@ -2507,23 +2512,19 @@
     	  		return;
     	  }
 
+    	  //文件列表已展示
     	  if(gDocInfo.docId == treeNode.id)
     	  {
+    		  //直接用gDocInfo打开文件
     		  openDoc(gDocInfo, false, "openInArtDialog", "office", gShareId);
+    		  
+    		  //预览gDocInfo(该接口会自行判断是否需要更新gDocInfoInPreview)
+    		  previewDoc(gDocInfo);
     		  return;
     	  }
-
-    	  //当前
-          if(gDocInfo.edit == true)
-          {
-				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
-              	VDocEditor.exitEdit(treeNode);
-          }
-          else
-          {
-        	  //当前打开的文件未处于编辑模式，直接打开新文件（详情模式）
-	      	  getAndShowDoc(treeNode, 2, false);
-          }
+		  
+    	  //文件没有被打开 (openMode = 2 表示需要打开文件并预览文件（比如dbclick事件），openMode = 1 则表示只需要预览文件（比如click事件）)
+	      getAndShowDoc(treeNode, 2, false);
      }
 
 	//判断当前目录下名字为 name的Node是否已经存在，parentNode是null表示根目录
