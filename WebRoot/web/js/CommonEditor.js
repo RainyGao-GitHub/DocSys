@@ -35,11 +35,13 @@
 
 		function _setEditMode(mode)
 		{
+			console.log("CommonEditor _setEditMode() mode", mode);
 	  		_config.setEditMode(mode);
 		}
 		
 	    function _onLoadDocument(docInfo)
 	    {
+	    	console.log("CommonEditor _onLoadDocument() docInfo", docInfo);
 	  		_config.onLoadDocument(docInfo);
 	    }
 		//****** Editor的抽象接口 End ********
@@ -140,7 +142,7 @@
 			//Notify VDocEditor that eidtor is ready
 	        _postMessage({ event: 'onAppReady' });
 	        
-	        if(docInfo)
+	        if(checkDocInfo(docInfo))
 	        {
 				getDocText(docInfo, showText, showErrorInfo);			
 				_onLoadDocument(docInfo);
@@ -149,8 +151,7 @@
 		
 		var openDocument = function(data){
 			docInfo = data.doc;
-			
-			if(docInfo)
+			if(checkDocInfo(docInfo))
 		    {
 				docInfo.docType = 2;
 				document.title = docInfo.name;
@@ -161,6 +162,16 @@
 				_onLoadDocument(docInfo);
 		    }
 		};
+		
+		function checkDocInfo(doc)
+		{
+			if(doc.vid == undefined)
+			{
+				console.log("CommonEditor checkDocInfo() vid is null", doc);
+				return false;
+			}	
+			return true;
+		}
 		
 	    var _postMessage = function(msg) {
 	    	if(isDynamicMode)

@@ -123,7 +123,7 @@ var EditormdEditor = (function () {
 	};
 	
 	var onLoadDocument = function(docInfo){
-		console.log("onLoadDocument() docInfo:", docInfo);
+		console.log("EditormdEditor onLoadDocument() docInfo:", docInfo);
 
 		editor.setImageUploadURL(buildImageUploadURL(docInfo));
 	
