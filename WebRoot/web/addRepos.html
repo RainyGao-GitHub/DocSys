@@ -155,24 +155,24 @@
 					</div>
 	            	<label style="margin-top:10px">高级选项
 	            		<span style="margin-left:5px">
-	            			<input type="checkbox" id="remoteBackupFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupFilterEnable()">
+	            			<input type="checkbox" id="remoteStorageFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageFilterEnable()">
 	            		</span>
 	            	</label>
-					<div id="remoteBackupFilterConfig" style="margin-top:5px; display:none">
+					<div id="remoteStroageFilterConfig" style="margin-top:5px; display:none">
 						<div style="height:60px;">
-							<span>允许未知文件类型<input type="checkbox" id="remoteBackup-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
+							<span>允许未知文件类型<input type="checkbox" id="remoteStorage-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
 						</div> 
 						<div style="height:60px;">
 							<span style="margin-top:5px">不允许的文件类型</span>
-							<textarea class="form-control" id="remoteBackup-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
+							<textarea class="form-control" id="remoteStorage-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
 						</div>  
 						<div style="height:60px;">
 							<span style="margin-top:5px">不允许的文件</span>
-							<textarea class="form-control" id="remoteBackup-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
+							<textarea class="form-control" id="remoteStorage-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
 						</div>  
 						<div style="height:60px;">
 							<span style="margin-top:5px">允许的最大文件</span>
-							<select class="form-control" id="remoteBackup-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:75%">  
+							<select class="form-control" id="remoteStorage-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:75%">  
 						        <option value="10485760">10M</option>   
 						        <option value="20971520">20M</option>   
 						        <option value="52428800">50M</option>   

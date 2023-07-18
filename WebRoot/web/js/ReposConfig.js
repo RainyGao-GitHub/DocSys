@@ -1487,7 +1487,22 @@ var ReposConfig = (function () {
 		}
 	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
 		return remoteStorage;
-	}	
+	}
+	
+	/** 远程存储高级选项 **/
+	function doSelectRemoteStorageFilterEnable()
+	{
+		var enable = MyJquery.isChecked("remoteStorageFilterEnable");
+		console.log("doSelectRemoteStorageFilterEnable enable:" + enable);
+		if(enable == 0)
+		{
+			MyJquery.hide("remoteStroageFilterConfig");
+		}
+		else
+		{	
+			MyJquery.show("remoteStroageFilterConfig");
+		}
+	}
 	
 	/********* 自动同步设置 *****************/
 	function doSelectAutoSyncupConfigEnable()
@@ -1997,7 +2012,10 @@ var ReposConfig = (function () {
 	    },    
 	    doRemoteStorageTest: function(){
 	    	doRemoteStorageTest();
-	    },    
+	    },
+	    doSelectRemoteStorageFilterEnable: function(){
+	    	doSelectRemoteStorageFilterEnable();
+	    },
 	    doSelectVerCtrlEnable: function(){
 	    	doSelectVerCtrlEnable();
 	    },    
