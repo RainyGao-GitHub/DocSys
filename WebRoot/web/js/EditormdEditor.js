@@ -1,83 +1,11 @@
 var EditormdEditor = (function () {
 	var commonEditor; //It will be set when callback from commonEditor
 	
-	var editor;		  //editormd
-	var switchEditModeOnly = false;
-	
-	var initEditor = function()
-	{
-  		console.log("EditormdEditor initEditor()");
-
-      	var params = {
-            width: "100%",
-            height: $(document).height()-70,
-            path : 'static/markdown/lib/',
-            markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
-            toolbar  : true,
-            toolbarIcons: "simple",
-            codeFold : false,
-            searchReplace : true,
-            watch : false,
-            saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
-            htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
-            emoji : false,
-            taskList : false,
-            tocm: false,          			// Using [TOCM]
-            tex : false,                      // 开启科学公式 TeX 语言支持，默认关闭
-            previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
-            flowChart : true,
-            sequenceDiagram : true,
-            //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
-            //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
-            //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
-            dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
-            dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
-            imageUpload : true,
-            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
-           //imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+ docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
-           onchange : function () {
-        	   commonEditor.contentChangeHandler();
-           },
-           onpreviewing : function () {
-              	console.log("EditormdEditor onpreviewing() switchEditModeOnly:" + switchEditModeOnly);
-				if(switchEditModeOnly == true)
-				{
-					switchEditModeOnly = false;
-				}
-				else
-				{
-	              	commonEditor.exitEdit(2);	//编辑器触发的退出编辑
-				}
-           },
-           onpreviewed :function () {
-               	console.log("EditormdEditor onpreviewed switchEditModeOnly:" + switchEditModeOnly);
-               	if(switchEditModeOnly == true)
-				{
-					switchEditModeOnly = false;
-			    }
-               	else
-               	{
-	               commonEditor.enableEdit(2);	//编辑器触发的编辑
-               	}
-           },
-           onload : function () {
-               console.log("EditormdEditor onload");
-               //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
-			   this.previewing(); 		  //加载成默认是预览
-			   this.setMarkdown(""); 	  //内容需要在onload的时候进行加载，会触发onchange事件
-			   commonEditor.appReady();
-		   },
-           onresize: function(){
-        	   console.log("EditormdEditor onresize");
-           },
-           onsave: function(){
-        	   console.log("EditormdEditor onsave");
-        	   commonEditor.saveDoc();
-           },
-   		};
-   		
-  		editor = editormd("mdPlayer",params);
-	};
+	var editor;		  		//编辑器句柄
+	var isReadOnly = true;	//true: 只读模式
+	var docInfo;			//docInfo
+	var content = "";		//编辑器内容
+	var switchEditModeOnly = false;	//编辑器状态切换回调控制变量
 
 	var setContent = function(content)
 	{	
@@ -129,6 +57,98 @@ var EditormdEditor = (function () {
 	
 		checkAndSetFileShowMode(docInfo);
 		checkAndSetEditBtn(docInfo);
+	};
+	
+	var initEditor = function(docText, tmpSavedDocText, docInfo)
+	{
+  		console.log("EditormdEditor initEditor() docInfo:", docInfo);
+		
+  		//如果传入了docInfo，那么docInfo在初始化的时候就进行设置
+		if(docInfo)
+  		{
+  			this.docInfo = docInfo;
+  		}
+  		if(docText)
+  		{
+  			this.content = docText;
+  		}
+  		
+      	var params = {
+            width: "100%",
+            height: $(document).height()-70,
+            path : 'static/markdown/lib/',
+            markdown : this.content,	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
+            toolbar  : true,
+            toolbarIcons: "simple",
+            codeFold : false,
+            searchReplace : true,
+            watch : false,
+            saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
+            htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+            emoji : false,
+            taskList : false,
+            tocm: false,          			// Using [TOCM]
+            tex : false,                      // 开启科学公式 TeX 语言支持，默认关闭
+            previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
+            flowChart : true,
+            sequenceDiagram : true,
+            //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
+            //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
+            //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
+            dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
+            dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
+            imageUpload : true,
+            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
+           //imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+ docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
+           onchange : function () {
+        	   commonEditor.contentChangeHandler();
+           },
+           onpreviewing : function () {
+              	console.log("EditormdEditor onpreviewing() switchEditModeOnly:" + switchEditModeOnly);
+				if(switchEditModeOnly == true)
+				{
+					switchEditModeOnly = false;
+				}
+				else
+				{
+	              	commonEditor.exitEdit(2);	//编辑器触发的退出编辑
+				}
+           },
+           onpreviewed :function () {
+               	console.log("EditormdEditor onpreviewed switchEditModeOnly:" + switchEditModeOnly);
+               	if(switchEditModeOnly == true)
+				{
+					switchEditModeOnly = false;
+			    }
+               	else
+               	{
+	               commonEditor.enableEdit(2);	//编辑器触发的编辑
+               	}
+           },
+           onload : function () {
+               console.log("EditormdEditor onload");
+               if(docInfo)
+			   {
+            	   onLoadDocument(docInfo);
+			   }
+			   else
+			   {
+	               //TODO: 如果主动设置编辑器状态，会触发回调则需要设置
+				   this.previewing(); 		  //加载成默认是预览
+				   this.setMarkdown(""); 	  //内容需要在onload的时候进行加载，会触发onchange事件
+			   }
+			   commonEditor.appReady();
+		   },
+           onresize: function(){
+        	   console.log("EditormdEditor onresize");
+           },
+           onsave: function(){
+        	   console.log("EditormdEditor onsave");
+        	   commonEditor.saveDoc();
+           },
+   		};
+   		
+  		editor = editormd("mdPlayer",params);
 	};
 	
 	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor

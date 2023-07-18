@@ -2,29 +2,58 @@
 var StackMdEditor = (function () {
 	var commonEditor; //It will be set when callback from commonEditor
 	
-	var editor;		  //editormd
-	var switchEditModeOnly = false;
-	var content = "";	//目前内容第一次通过url进行set, 取回通过fileChange事件返回
-	var isReadOnly = true;	//默认不允许编辑
-	var docInfo;
+	var editor;		  		//编辑器句柄
+	var isReadOnly = true;	//true: 只读模式
+	var docInfo;			//docInfo
+	var content = "";		//编辑器内容
+	var switchEditModeOnly = false;	//编辑器状态切换回调控制变量
+    
+	var setContent = function(content)
+	{	
+		//TODO: 目前没有接口，通过onChange事件带回来的
+		//因此没法设置
+	};
 	
-	var initEditor = function()
+	var getContent = function()
+	{	
+		//TODO: 目前没有接口，通过onChange事件带回来的
+		return content;
+	};
+	
+	var setEditMode = function(mode)
 	{
-  		console.log("EditormdEditor initEditor()");
+		switchEditModeOnly = true;
+		setStaticEditReaOnly(mode);
+	};
+	
+	var onLoadDocument = function(docInfo){
+		console.log("onLoadDocument() docInfo:", docInfo);	
+		this.docInfo = docInfo;
+		checkAndSetIsReadOnly(docInfo);
+	};
+	
+	var initEditor = function(docText, tmpSavedDocText, docInfo)
+	{
+		//如果传入了docInfo，那么docInfo在初始化的时候就进行设置
+  		console.log("EditormdEditor initEditor() docInfo:", docInfo);
+  		if(docInfo)
+  		{
+  			this.docInfo = docInfo;
+  		}
+ 
+  		if(docText)
+  		{
+  			this.content = docText;
+  		}
 
 		// 传入staticedit插件地址和文件内容，获取staticedit插件指定路径
-		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", "");
+		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", this.content);
 		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
 		var stackEditIframeEl = $(".stackedit-iframe");
 		stackEditIframeEl.prop("src",url);
 
-		// Listen to StackEdit events and apply the changes to the textarea.
-		//监听iframe发来的消息
+		//监听stackeidtor发来的消息
 		window.addEventListener('message', messageHandler);
-		// 设置定时0.5s后设置页面为只读
-		//setTimeout(function () {
-		//	switchEditMode(false);
-		//},500)
 	};
 	
 	/**
@@ -37,8 +66,15 @@ var StackMdEditor = (function () {
 		switch (event.data.type) 
 		{
 			case 'ready':
-				// iframe 页面加载完成,设置当前页面为只读
-				setStaticEditReaOnly(false);
+				if(this.docInfo)
+				{
+					onLoadDocument(this.docInfo);
+				}
+				else
+				{
+					// iframe 页面加载完成,设置当前页面为只读
+					setStaticEditReaOnly(false);
+				}
 				commonEditor.appReady();
 				break;
 			case 'fileChange':
@@ -86,30 +122,6 @@ var StackMdEditor = (function () {
 				break;
 		}
 	}
-    
-	var setContent = function(content)
-	{	
-		//TODO: 目前没有接口，通过onChange事件带回来的
-		//因此没法设置
-	};
-	
-	var getContent = function()
-	{	
-		//TODO: 目前没有接口，通过onChange事件带回来的
-		return content;
-	};
-	
-	var setEditMode = function(mode)
-	{
-		switchEditModeOnly = true;
-		setStaticEditReaOnly(mode);
-	};
-	
-	var onLoadDocument = function(docInfo){
-		console.log("onLoadDocument() docInfo:", docInfo);	
-		this.docInfo = docInfo;
-		checkAndSetIsReadOnly(docInfo);
-	};
 	
 	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
 	var config = {

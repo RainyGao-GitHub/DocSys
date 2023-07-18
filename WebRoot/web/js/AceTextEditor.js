@@ -2,25 +2,11 @@
 var AceTextEditor = (function () {
 	var commonEditor; //It will be set when callback from commonEditor
 	
-	var editor;		  //editormd
-	var switchEditModeOnly = false;
-	
-	var initEditor = function()
-	{
-  		console.log("AceTextEditor initEditor()");
-
-		editor = ace.edit("editor");
-		editor.setTheme("ace/theme/twilight");
-		//editor.setTheme("ace/theme/chrome");
-		//editor.setTheme("ace/theme/tomorrow_night");
-		editor.session.setMode("ace/mode/text");
-		editor.setReadOnly(true); // false to make it editable
-		editor.getSession().on('change', function(e) {
-			commonEditor.contentChangeHandler();
-		});
-		
-		commonEditor.appReady();
-	};
+	var editor;		  		//编辑器句柄
+	var isReadOnly = true;	//true: 只读模式
+	var docInfo;			//docInfo
+	var content = "";		//编辑器内容
+	var switchEditModeOnly = false;	//编辑器状态切换回调控制变量
 	
 	var setContent = function(content)
 	{	
@@ -67,6 +53,39 @@ var AceTextEditor = (function () {
 	
 		checkAndSetFileShowMode(docInfo);
 		checkAndSetEditBtn(docInfo);
+	};
+	
+	var initEditor = function(docText, tmpSavedDocText, docInfo)
+	{
+		console.log("AceTextEditor initEditor() docInfo:", docInfo);
+		
+		//如果传入了docInfo，那么docInfo在初始化的时候就进行设置
+		if(docInfo)
+  		{
+  			this.docInfo = docInfo;
+  		}
+  		if(docText)
+  		{
+  			this.content = docText;
+  		}
+  		
+		editor = ace.edit("editor");
+		editor.setTheme("ace/theme/twilight");
+		//editor.setTheme("ace/theme/chrome");
+		//editor.setTheme("ace/theme/tomorrow_night");
+		editor.session.setMode("ace/mode/text");
+		editor.setReadOnly(true); // false to make it editable
+		editor.getSession().on('change', function(e) {
+			commonEditor.contentChangeHandler();
+		});
+		editor.setValue(this.content);
+		
+		if(this.docInfo)
+		{
+			onLoadDocument(this.docInfo);
+		}
+		
+		commonEditor.appReady();
 	};
 	
 	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor

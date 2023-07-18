@@ -433,7 +433,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
     {
     	//未定义需要显示的文件
     	errorInfo = "请选择文件";
-    	errorCallback && errorCallback(errorInfo);
+    	errorCallback && errorCallback(errorInfo, docInfo);
     	//showErrorMessage("请选择文件");
     	return;
     }
@@ -459,7 +459,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
 	            	//console.log("getDocText docText",docText);
 	            	if(docInfo.isHistory && docInfo.isHistory == 1)
 	            	{
-	            		successCallback &&successCallback(docText, "");
+	            		successCallback &&successCallback(docText, "", docInfo);
 	            	}
 	            	else
 	            	{
@@ -480,13 +480,13 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
 		            	            success : function (ret2) {
 		            	            	//console.log("getDocText ret2",ret2);
 		            	            	tmpSavedDocText = ret2;
-		            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+		            	            	successCallback &&successCallback(docText, tmpSavedDocText, docInfo);
 		            	            },
 		            	            error : function () {	            	            	
-		            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+		            	            	successCallback &&successCallback(docText, tmpSavedDocText, docInfo);
 	
 		            	            	errorInfo = "临时保存文件内容获取失败：服务器异常";
-		            	            	errorCallback && errorCallback(errorInfo);
+		            	            	errorCallback && errorCallback(errorInfo, docInfo);
 		            	                //showErrorMessage("临时保存文件内容失败：服务器异常");
 		            	            }
 		            	        });
@@ -495,13 +495,13 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
             	else
             	{
             		errorInfo = "获取文件内容失败：" + ret1
-            		errorCallback && errorCallback(errorInfo);
+            		errorCallback && errorCallback(errorInfo, docInfo);
             		//showErrorMessage("获取文件内容失败：" + ret1);
             	}
             },
             error : function () {
             	errorInfo = "获取文件内容失败：服务器异常";
-        		errorCallback && errorCallback(errorInfo);
+        		errorCallback && errorCallback(errorInfo, docInfo);
                 //showErrorMessage("获取文件内容失败：服务器异常");
             }
         });
@@ -518,7 +518,7 @@ function getZipDocText(docInfo, successCallback, errorCallback)
     {
     	//未定义需要显示的文件
     	errorInfo = "请选择文件";
-    	errorCallback && errorCallback(errorInfo);
+    	errorCallback && errorCallback(errorInfo, docInfo);
     	//showErrorMessage("请选择文件");
     	return;
     }
@@ -545,18 +545,18 @@ function getZipDocText(docInfo, successCallback, errorCallback)
             	{
 	            	docText = ret1.substring(2);
 	            	//console.log("getDocText docText",docText);
-	            	successCallback &&successCallback(docText, "");
+	            	successCallback &&successCallback(docText, "", docInfo);
             	}
             	else
             	{
             		errorInfo = "获取文件内容失败：" + ret1
-            		errorCallback && errorCallback(errorInfo);
+            		errorCallback && errorCallback(errorInfo, docInfo);
             		//showErrorMessage("获取文件内容失败：" + ret1);
             	}
             },
             error : function () {
             	errorInfo = "获取文件内容失败：服务器异常";
-        		errorCallback && errorCallback(errorInfo);
+        		errorCallback && errorCallback(errorInfo, docInfo);
                 //showErrorMessage("获取文件内容失败：服务器异常");
             }
         });
@@ -2018,8 +2018,8 @@ function showMarkdownInArtDialog(docInfo)
 	var d = new artDialog({
 		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
-		//content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="stackeditEditorForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="editormdForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="stackeditEditorForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		//content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="editormdForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,

@@ -7,20 +7,22 @@
 		var _self = this,	//_self是指实例化后的对象
         _config = config || {};
         
-        var docInfo = {};
+        var docInfo;
 		var docText = "";
 		var tmpSavedDocText = "";
 		var isContentChanged = false;
 		var editState = false;
 		var autoSaveTimer;
 	  	var timerState = 0;
-	  	var isDynamicMode = false;	//docInfo can be changed with openDocument message
+	  	
+	  	var isDynamicMode = false;	//true: 编辑器预加载模式(文件内容需要在AppReady之后进行显示，适用于需切换文件的场景)  false:文件内容在编辑器初始化时显示
 		
 		//****** Editor的抽象接口 Start ********
 		//使用回调方式实现，因此具体的实现函数是通过config传入的
-		function _initEditor()
+		function _initEditor(docText, tmpSavedDocText, docInfo)
 		{
-	  		_config.initEditor();
+			console.log("CommonEditor _initEditor() docInfo:", docInfo);
+	  		_config.initEditor(docText, tmpSavedDocText, docInfo);
 		}
 		
 		function _setContent(content)
@@ -45,19 +47,11 @@
 	  		_config.onLoadDocument(docInfo);
 	    }
 		//****** Editor的抽象接口 End ********
-		
-		function initEditor()
-		{
-	  		console.log("CommonEditor initEditor()");
-	  		_initEditor();
-		}
-		
+
 		//Init For ArtDialog
 		function initForArtDialog()
 		{
 			console.log("CommonEditor initForArtDialog()");
-
-			initEditor();
 	
 			var params = GetRequest();
 			var docid = params['docid'];
@@ -75,14 +69,14 @@
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
 			}
+			
+			getDocText(docInfo, _initEditor, showErrorInfo);	
 		}
 		
 		//Init For NewPage
 		function initForNewPage()
 		{
 			console.log("CommonEditor initForNewPage()");
-
-			initEditor();
 			
 		    docInfo = getDocInfoFromRequestParamStr();
 		    docInfo.docType = 1;	//RealDoc
@@ -94,6 +88,8 @@
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
 			}
+			
+			getDocText(docInfo, _initEditor, showErrorInfo);	
 		}
 		
 		//Init For Bootstrap Dialog
@@ -101,8 +97,6 @@
 		{
 			console.log("CommonEditor initForBootstrapDialog()");
 
-			initEditor();
-			
 			docInfo = Input_doc;		
 			docInfo.docType = 1;	//RealDoc
 		    
@@ -110,7 +104,9 @@
 			
 			if (!docInfo.fileSuffix) {
 				docInfo.fileSuffix = getFileSuffix(docInfo.name);
-			}			
+			}	
+			
+			getDocText(docInfo, _initEditor, showErrorInfo);
 	  	}
 		
 		//Init For VDoc 
@@ -119,7 +115,7 @@
 			console.log("CommonEditor initForVDoc()");
 			isDynamicMode = true;
 
-			initEditor();
+			_initEditor("", "", undefined);
 			
 			//get frameEditorId from url
 			var frameEditorId = getQueryString("frameEditorId");
@@ -137,16 +133,19 @@
 		}
 		
 		function appReady(){
-			console.log("CommonEditor appReady()");
-	        
-			//Notify VDocEditor that eidtor is ready
-	        _postMessage({ event: 'onAppReady' });
-	        
-	        if(checkDocInfo(docInfo))
-	        {
-				getDocText(docInfo, showText, showErrorInfo);			
-				_onLoadDocument(docInfo);
-	        }
+			if(isDynamicMode)
+			{
+				//只有动态加载模式才需要在appReady之后加载文件
+				console.log("CommonEditor appReady()");
+				//Notify VDocEditor that eidtor is ready
+			    _postMessage({ event: 'onAppReady' });
+			        
+			    if(checkDocInfo(docInfo))
+			    {
+			    	getDocText(docInfo, showText, showErrorInfo);			
+					_onLoadDocument(docInfo);
+			    }			
+			}
 		}
 		
 		var openDocument = function(data){
@@ -165,9 +164,15 @@
 		
 		function checkDocInfo(doc)
 		{
+			if(doc == undefined)
+			{
+				console.log("CommonEditor checkDocInfo() doc is null", doc);
+				return false;
+			}
+			
 			if(doc.vid == undefined)
 			{
-				console.log("CommonEditor checkDocInfo() vid is null", doc);
+				console.log("CommonEditor checkDocInfo() doc.vid is null", doc);
 				return false;
 			}	
 			return true;
