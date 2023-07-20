@@ -8,6 +8,8 @@ var StackMdEditor = (function () {
 	var content = "";		//编辑器内容
 	var switchEditModeOnly = false;	//编辑器状态切换回调控制变量
     
+	var isReady = false; //用于处理编辑器初始化期间的一些异常事件
+	
 	var setContent = function(content)
 	{	
 		//TODO: 目前没有接口，通过onChange事件带回来的
@@ -35,7 +37,9 @@ var StackMdEditor = (function () {
 	var initEditor = function(docText, tmpSavedDocText, docInfo)
 	{
 		//如果传入了docInfo，那么docInfo在初始化的时候就进行设置
-  		console.log("EditormdEditor initEditor() docInfo:", docInfo);
+  		console.log("StackMdEditor initEditor() docInfo:", docInfo);
+  		console.log("StackMdEditor initEditor() docText:", docText);
+  		
   		if(docInfo)
   		{
   			this.docInfo = docInfo;
@@ -43,11 +47,11 @@ var StackMdEditor = (function () {
  
   		if(docText)
   		{
-  			this.content = docText;
+  			content = docText;
   		}
 
 		// 传入staticedit插件地址和文件内容，获取staticedit插件指定路径
-		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", this.content);
+		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", content);
 		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
 		var stackEditIframeEl = $(".stackedit-iframe");
 		stackEditIframeEl.prop("src",url);
@@ -66,6 +70,7 @@ var StackMdEditor = (function () {
 		switch (event.data.type) 
 		{
 			case 'ready':
+				isReady = true;
 				if(this.docInfo)
 				{
 					onLoadDocument(this.docInfo);
@@ -77,18 +82,32 @@ var StackMdEditor = (function () {
 				commonEditor.appReady();
 				break;
 			case 'fileChange':
-				//TODO: fileChange事件以后不要直接把内容带回来
-				content = event.data.payload.content.text;
-				
-				commonEditor.contentChangeHandler();
+				console.log("StackMdEditor fileChange");
+				if(isReady == true)
+				{
+					//TODO: fileChange事件以后不要直接把内容带回来
+					var newContent = event.data.payload.content.text;
+					if(content != newContent)
+					{
+						//console.log("StackMdEditor fileChange content:", content);
+						//console.log("StackMdEditor fileChange newContent:", newContent);
+						content = newContent;
+						commonEditor.contentChangeHandler();
+					}
+				}
 				break;
 			case 'close':
+				console.log("StackMdEditor close");
 				//收到iframe的关闭消息
 				var artDialog = top.dialog.get(window);
 				artDialog.close();
 				break;
 			case 'saveChange':
-				commonEditor.saveDoc();
+				console.log("StackMdEditor saveChange");
+				if(isReady == true)
+				{
+					commonEditor.saveDoc();
+				}
 				break;
 			case 'changeView':
               	console.log("StackMdEditor changeView() switchEditModeOnly:" + switchEditModeOnly);
@@ -111,6 +130,7 @@ var StackMdEditor = (function () {
 				}
 				break;
 			case 'uploadImages':
+				console.log("StackMdEditor uploadImages");
 				var images = event.data.payload.content.images;
 				if (images && images.length > 0) {
 					// 仅上传第一个传输过来的图片
@@ -133,6 +153,7 @@ var StackMdEditor = (function () {
 	
 	function init(mode, docInfo)
 	{
+		console.log("StackMdEditor init() mode:", mode);
 		commonEditor = new MxsdocAPI.CommonEditor(config);
 		switch(mode)
 		{

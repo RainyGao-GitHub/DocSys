@@ -62,7 +62,8 @@ var EditormdEditor = (function () {
 	var initEditor = function(docText, tmpSavedDocText, docInfo)
 	{
   		console.log("EditormdEditor initEditor() docInfo:", docInfo);
-		
+  		console.log("EditormdEditor initEditor() docText:", docText);
+  		
   		//如果传入了docInfo，那么docInfo在初始化的时候就进行设置
 		if(docInfo)
   		{
@@ -101,7 +102,8 @@ var EditormdEditor = (function () {
             imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
            //imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+ docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
            onchange : function () {
-        	   commonEditor.contentChangeHandler();
+             	console.log("EditormdEditor onchange()");
+        	    commonEditor.contentChangeHandler();
            },
            onpreviewing : function () {
               	console.log("EditormdEditor onpreviewing() switchEditModeOnly:" + switchEditModeOnly);

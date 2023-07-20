@@ -19,10 +19,19 @@
 		
 		//****** Editor的抽象接口 Start ********
 		//使用回调方式实现，因此具体的实现函数是通过config传入的
-		function _initEditor(docText, tmpSavedDocText, docInfo)
+		function _initEditor(content, tmpSavedContent, docInfo)
 		{
 			console.log("CommonEditor _initEditor() docInfo:", docInfo);
-	  		_config.initEditor(docText, tmpSavedDocText, docInfo);
+			console.log("CommonEditor _initEditor() docText:", content);
+			if(content)
+			{
+				docText = content;
+			}
+			if(tmpSavedContent)
+			{
+				tmpSavedDocText = tmpSavedContent;
+			}
+			_config.initEditor(content, tmpSavedContent, docInfo);
 		}
 		
 		function _setContent(content)
@@ -251,11 +260,33 @@
 			return theRequest;
 		}
 		
+		function checkContentChange()
+		{
+			if(isContentChanged == true)
+			{
+				//content change event received
+				console.log("CommonEditor checkContentChange() isContentChanged:", isContentChanged);
+				return true;
+			}
+			
+			var newContent = _getContent();
+			if(docText != newContent)
+			{
+				console.log("CommonEditor checkContentChange() docText:", docText);
+				console.log("CommonEditor checkContentChange() newContent:", newContent);
+				console.log("CommonEditor checkContentChange() isContentChanged == false, but content is changed");
+				return true;
+			}
+			
+			return false;
+		}
+		
 		function saveDoc()
 		{
 			console.log("CommonEditor saveDoc docInfo.docId:" + docInfo.docId);
 			
-			if(isContentChanged == false)
+			//TODO: 应该check的时候把docText改成最新内容
+			if(checkContentChange() == false)
 			{
 			   	console.log("CommonEditor saveDoc there is no change");
 				return;
