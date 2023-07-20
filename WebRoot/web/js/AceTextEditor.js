@@ -76,9 +76,14 @@ var AceTextEditor = (function () {
 		editor.session.setMode("ace/mode/text");
 		editor.setReadOnly(true); // false to make it editable
 		editor.getSession().on('change', function(e) {
+			console.log("AceTextEditor change");
 			commonEditor.contentChangeHandler();
 		});
-		editor.setValue(this.content);
+		
+		if(this.content)
+		{
+			editor.setValue(this.content);
+		}
 		
 		if(this.docInfo)
 		{
