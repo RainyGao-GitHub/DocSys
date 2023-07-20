@@ -22,7 +22,7 @@
 		function _initEditor(content, tmpSavedContent, docInfo)
 		{
 			console.log("CommonEditor _initEditor() docInfo:", docInfo);
-			console.log("CommonEditor _initEditor() docText:", content);
+			//console.log("CommonEditor _initEditor() docText:", content);
 			if(content)
 			{
 				docText = content;
@@ -272,8 +272,8 @@
 			var newContent = _getContent();
 			if(docText != newContent)
 			{
-				console.log("CommonEditor checkContentChange() docText:", docText);
-				console.log("CommonEditor checkContentChange() newContent:", newContent);
+				//console.log("CommonEditor checkContentChange() docText:", docText);
+				//console.log("CommonEditor checkContentChange() newContent:", newContent);
 				console.log("CommonEditor checkContentChange() isContentChanged == false, but content is changed");
 				return true;
 			}
