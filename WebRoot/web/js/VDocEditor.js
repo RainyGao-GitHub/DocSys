@@ -178,6 +178,7 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
         
         var _openDocument = function(doc) {
         	console.log("VDocEditor _openDocument() doc:", doc);
+        	_config.docInfo = doc;
         	if(_isAppReady == true)
         	{
 	            _sendCommand({

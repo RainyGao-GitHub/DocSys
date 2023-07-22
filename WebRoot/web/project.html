@@ -1386,6 +1386,7 @@
                 	console.log("gReposInfo:", gReposInfo);
 
                 	gRootDoc.vid = gReposInfo.id;
+                	gRootDoc.shareId = gShareId;
                 	if(!gRootDoc.showName)
                 	{
 	                	gRootDoc.showName = gReposInfo.name;
@@ -1691,6 +1692,10 @@
 		//TODO:注意gDocInfo可能是根目录
 		//更新gDocInfoInPreview
 		gDocInfoInPreview = doc;
+		if(gShareId)
+		{
+			gDocInfoInPreview.shareId = gShareId;
+		}
 
     	//更新文件名显示
 		$('#filetitle').html(doc.name);
@@ -2744,6 +2749,7 @@
 			gInitDocInfo.docId = gRootDoc.docId;
 			gInitDocInfo.path = gRootDoc.path;
 			gInitDocInfo.name = gRootDoc.name;
+			gInitDocInfo.shareId = gRootDoc.shareId;
 		}
 
 		getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name, showInitDocAndSubDocList);
@@ -3987,6 +3993,7 @@
                 	gRootDoc.name = docShare.name;
                 	gRootDoc.path = docShare.path;
                 	gRootDoc.docId = docShare.docId;
+                	gRootDoc.shareId = gShareId;
                 	$("#projectName").text(gRootDoc.showName);
 
                 	//成功后台回调
