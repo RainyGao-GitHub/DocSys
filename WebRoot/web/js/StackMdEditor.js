@@ -32,6 +32,7 @@ var StackMdEditor = (function () {
 	var onLoadDocument = function(docInfo){
 		console.log("onLoadDocument() docInfo:", docInfo);	
 		_docInfo = docInfo;
+		
 		checkAndSetIsReadOnly(docInfo);
 	};
 	
@@ -212,14 +213,12 @@ var StackMdEditor = (function () {
 	function uploadMarkdownPic(file) {
 		console.log("StackMdEditor uploadMarkdownPic() _docInfo:", _docInfo);
 		var imageUploadBaseURL = getImageUploadBaseURL(_docInfo);
+		var imgName =  file.lastModified + "_" + file.name;
+		var imageUploadURL = imageUploadBaseURL + "&imgName=" + imgName;
 		
 		var xhr = new XMLHttpRequest();
 		var form = new FormData();
 		form.append("editormd-image-file", file);
-		
-		var imgName =  file.lastModified + "_" + file.name;
-		var imageUploadURL = imageUploadBaseURL + "&imgName=" + imgName;
-		
 		xhr.open("post", imageUploadURL);
 		xhr.send(form);
 		//设置异步上传状态变化回调处a理函数
