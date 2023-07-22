@@ -1,36 +1,37 @@
 //StackMdEditor类
 var StackMdEditor = (function () {
-	var commonEditor; //It will be set when callback from commonEditor
+	var _commonEditor; //It will be set when callback from commonEditor
 	
-	var editor;		  		//编辑器句柄
-	var isReadOnly = true;	//true: 只读模式
-	var docInfo;			//docInfo
-	var content = "";		//编辑器内容
-	var switchEditModeOnly = false;	//编辑器状态切换回调控制变量
+	var _editor;		  		//编辑器句柄
+	var _isReadOnly = true;	//true: 只读模式
+	var _docInfo;			//_docInfo
+	var _content = "";		//编辑器内容
+	var _switchEditModeOnly = false;	//编辑器状态切换回调控制变量
     
-	var isReady = false; //用于处理编辑器初始化期间的一些异常事件
+	var _isReady = false; //用于处理编辑器初始化期间的一些异常事件
 	
 	var setContent = function(content)
 	{	
 		//TODO: 目前没有接口，通过onChange事件带回来的
 		//因此没法设置
+		_content = content;
 	};
 	
 	var getContent = function()
 	{	
 		//TODO: 目前没有接口，通过onChange事件带回来的
-		return content;
+		return _content;
 	};
 	
 	var setEditMode = function(mode)
 	{
-		switchEditModeOnly = true;
+		_switchEditModeOnly = true;
 		setStaticEditReaOnly(mode);
 	};
 	
 	var onLoadDocument = function(docInfo){
 		console.log("onLoadDocument() docInfo:", docInfo);	
-		this.docInfo = docInfo;
+		_docInfo = docInfo;
 		checkAndSetIsReadOnly(docInfo);
 	};
 	
@@ -42,16 +43,16 @@ var StackMdEditor = (function () {
   		
   		if(docInfo)
   		{
-  			this.docInfo = docInfo;
+  			_docInfo = docInfo;
   		}
  
   		if(docText)
   		{
-  			content = docText;
+  			_content = docText;
   		}
 
 		// 传入staticedit插件地址和文件内容，获取staticedit插件指定路径
-		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", content);
+		var url = getStaticEditUrl("/DocSystem/web/static/stackedit/dist/index.html", _content);
 		// 获取iframe并设置其src路径，渲染stackEdit编辑器，加载待修改markdown文件
 		var stackEditIframeEl = $(".stackedit-iframe");
 		stackEditIframeEl.prop("src",url);
@@ -71,15 +72,15 @@ var StackMdEditor = (function () {
 		{
 			case 'ready':
 				isReady = true;
-				if(this.docInfo)
+				if(_docInfo)
 				{
-					onLoadDocument(this.docInfo);
+					onLoadDocument(_docInfo);
 				}
 				
 				// iframe 页面加载完成,设置当前页面为只读
 				setStaticEditReaOnly(false);
 				
-				commonEditor.appReady();
+				_commonEditor.appReady();
 				break;
 			case 'fileChange':
 				console.log("StackMdEditor fileChange");
@@ -87,12 +88,12 @@ var StackMdEditor = (function () {
 				{
 					//TODO: fileChange事件以后不要直接把内容带回来
 					var newContent = event.data.payload.content.text;
-					if(content != newContent)
+					if(_content != newContent)
 					{
-						//console.log("StackMdEditor fileChange content:", content);
+						//console.log("StackMdEditor fileChange _content:", _content);
 						//console.log("StackMdEditor fileChange newContent:", newContent);
-						content = newContent;
-						commonEditor.contentChangeHandler();
+						_content = newContent;
+						_commonEditor.contentChangeHandler();
 					}
 				}
 				break;
@@ -106,14 +107,14 @@ var StackMdEditor = (function () {
 				console.log("StackMdEditor saveChange");
 				if(isReady == true)
 				{
-					commonEditor.saveDoc();
+					_commonEditor.saveDoc();
 				}
 				break;
 			case 'changeView':
-              	console.log("StackMdEditor changeView() switchEditModeOnly:" + switchEditModeOnly);
-				if(switchEditModeOnly == true)
+              	console.log("StackMdEditor changeView() _switchEditModeOnly:" + _switchEditModeOnly);
+				if(_switchEditModeOnly == true)
 				{
-					switchEditModeOnly = false;
+					_switchEditModeOnly = false;
 				}
 				else
 				{		        
@@ -121,11 +122,11 @@ var StackMdEditor = (function () {
 					//flag需要能够区分按键
 					if(event.data.flag)
 					{
-				      	commonEditor.exitEdit(2);
+				      	_commonEditor.exitEdit(2);
 					}
 					else
 					{
-				      	commonEditor.enableEdit(2);
+				      	_commonEditor.enableEdit(2);
 					}
 				}
 				break;
@@ -142,7 +143,7 @@ var StackMdEditor = (function () {
 		}
 	}
 	
-	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
+	//抽象编辑器的以下接口, 通过config参数传递给_commonEditor
 	var config = {
 		"initEditor": initEditor,
 		"setContent": setContent,
@@ -154,20 +155,20 @@ var StackMdEditor = (function () {
 	function init(mode, docInfo)
 	{
 		console.log("StackMdEditor init() mode:", mode);
-		commonEditor = new MxsdocAPI.CommonEditor(config);
+		_commonEditor = new MxsdocAPI.CommonEditor(config);
 		switch(mode)
 		{
 		case "ArtDialog":
-			commonEditor.initForArtDialog();
+			_commonEditor.initForArtDialog();
 			break;
 		case "NewPage":
-			commonEditor.initForNewPage();
+			_commonEditor.initForNewPage();
 			break;
 		case "BootstrapDialog":
-			commonEditor.initForBootstrapDialog(docInfo);
+			_commonEditor.initForBootstrapDialog(docInfo);
 			break;
 		case "VDoc":
-			commonEditor.initForVDoc();
+			_commonEditor.initForVDoc();
 			break;
 		}					
 	}
@@ -176,18 +177,18 @@ var StackMdEditor = (function () {
 	{
 		if(docInfo.docType == 2)
 		{
-			isReadOnly = false;
+			_isReadOnly = false;
 			return;
 		}
 		
 		if(docInfo.isZip && docInfo.isZip == 1)
 		{
-			isReadOnly = true;
+			_isReadOnly = true;
 			return;
 		}
 		if(docInfo.isHistory && docInfo.isHistory == 1)
 		{
-			isReadOnly = true;
+			_isReadOnly = true;
 			return;
 		}
 	}
@@ -195,18 +196,30 @@ var StackMdEditor = (function () {
 	/**
 	 * 图片上传
 	 */
+	function getImageUploadBaseURL(docInfo)
+	{
+		//上传表单
+		var path = base64_urlsafe_encode(docInfo.path);
+		var name = base64_urlsafe_encode(docInfo.name);
+		
+		var url = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + docInfo.vid + "&docId=" + docInfo.docId + "&path="+ path + "&name="+ name;
+		if(docInfo.shareId) {
+			url += "&shareId="+_docInfo.shareId;
+		}
+		return url;
+	}
+	
 	function uploadMarkdownPic(file) {
+		console.log("StackMdEditor uploadMarkdownPic() _docInfo:", _docInfo);
+		var imageUploadBaseURL = getImageUploadBaseURL(_docInfo);
+		
 		var xhr = new XMLHttpRequest();
 		var form = new FormData();
 		form.append("editormd-image-file", file);
-		//上传表单
+		
 		var imgName =  file.lastModified + "_" + file.name;
-		var path = base64_urlsafe_encode(docInfo.path);
-		var name = base64_urlsafe_encode(docInfo.name);
-		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + docInfo.vid + "&docId=" + docInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
-		if(docInfo.shareId) {
-			imageUploadURL="&shareId="+docInfo.shareId;
-		}
+		var imageUploadURL = imageUploadBaseURL + "&imgName=" + imgName;
+		
 		xhr.open("post", imageUploadURL);
 		xhr.send(form);
 		//设置异步上传状态变化回调处a理函数
@@ -293,19 +306,19 @@ var StackMdEditor = (function () {
 			init(mode, docInfo);					
 		},
 	    ctrlZ: function(){
-	    	commonEditor.ctrlZ();
+	    	_commonEditor.ctrlZ();
 	    },
 	    ctrlY: function(){
-	    	commonEditor.ctrlY();
+	    	_commonEditor.ctrlY();
 	    },
 	    enableEdit: function(){
-	    	commonEditor.enableEdit(1);
+	    	_commonEditor.enableEdit(1);
 	    },	    
 	    exitEdit: function(mode){
-	    	commonEditor.exitEdit(1);
+	    	_commonEditor.exitEdit(1);
 	    },
 	    saveDoc: function(){
-	    	commonEditor.saveDoc();
+	    	_commonEditor.saveDoc();
 	    },
 	}
 })();
