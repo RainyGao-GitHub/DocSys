@@ -348,13 +348,9 @@
 		function enableEdit(switchMode)
 		{
 			console.log("CommonEditor enableEdit() switchMode:" + switchMode);
-			if(!docInfo.docId || docInfo.docId == 0)
+			if(docInfo == undefined || docInfo.docId == undefined)
 			{
-				if(switchMode == 2)
-				{
-					switchEditMode(false, 3);	//只需要切换编辑器状态
-				}
-				showErrorInfo("请选择文件!");
+				showErrorInfo("文件信息不能为空");
 				return;
 			}
 		
@@ -413,13 +409,9 @@
 		//退出文件编辑状态
 		function exitEdit(switchMode) {   	
 			console.log("CommonEditor exitEdit()  switchMode:" + switchMode);
-			if(!docInfo.docId || docInfo.docId == 0)
+			if(docInfo == undefined || docInfo.docId == undefined)
 			{
-				if(switchMode == 2)
-				{
-					switchEditMode(true, 3);	//只需要切换编辑器状态
-				}
-				showErrorInfo("文件不存在");
+				showErrorInfo("文件信息为空");
 				return;
 			}
 			
