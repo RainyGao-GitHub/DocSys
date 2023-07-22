@@ -2,10 +2,11 @@
 var StackMdEditor = (function () {
 	var _commonEditor; //It will be set when callback from commonEditor
 	
-	var _editor;		  		//编辑器句柄
-	var _isReadOnly = true;	//true: 只读模式
-	var _docInfo;			//_docInfo
-	var _content = "";		//编辑器内容
+	var _editor;		  			//编辑器句柄
+	var _isReadOnly = true;			//true: 只读模式
+	var _editState = false;			//
+	var _docInfo;					//_docInfo
+	var _content = "";				//编辑器内容
 	var _switchEditModeOnly = false;	//编辑器状态切换回调控制变量
     
 	var _isReady = false; //用于处理编辑器初始化期间的一些异常事件
@@ -72,7 +73,7 @@ var StackMdEditor = (function () {
 		switch (event.data.type) 
 		{
 			case 'ready':
-				isReady = true;
+				_isReady = true;
 				if(_docInfo)
 				{
 					onLoadDocument(_docInfo);
@@ -85,7 +86,7 @@ var StackMdEditor = (function () {
 				break;
 			case 'fileChange':
 				console.log("StackMdEditor fileChange");
-				if(isReady == true)
+				if(_isReady == true)
 				{
 					//TODO: fileChange事件以后不要直接把内容带回来
 					var newContent = event.data.payload.content.text;
@@ -106,28 +107,37 @@ var StackMdEditor = (function () {
 				break;
 			case 'saveChange':
 				console.log("StackMdEditor saveChange");
-				if(isReady == true)
+				if(_isReady == true)
 				{
 					_commonEditor.saveDoc();
 				}
 				break;
 			case 'changeView':
               	console.log("StackMdEditor changeView() _switchEditModeOnly:" + _switchEditModeOnly);
-				if(_switchEditModeOnly == true)
+              	if(_isReady == true)
 				{
-					_switchEditModeOnly = false;
-				}
-				else
-				{		        
-					console.log("messageHandler() changeView flag:", event.data.flag);
-					//flag需要能够区分按键
-					if(event.data.flag)
+	              	if(_switchEditModeOnly == true)
 					{
-				      	_commonEditor.exitEdit(2);
+						_switchEditModeOnly = false;
 					}
 					else
-					{
-				      	_commonEditor.enableEdit(2);
+					{		        
+						console.log("StackMdEditor changeView() flag:", event.data.flag);
+						console.log("StackMdEditor changeView() **************** _editState:", _editState);
+						//flag需要能够区分按键
+						var state = !event.data.flag;
+						if(_editState != state)
+						{
+							_editState = state;
+							if(_editState == true)
+							{
+								_commonEditor.enableEdit(2);
+							}
+							else
+							{
+						      	_commonEditor.exitEdit(2);						      	
+							}
+						}
 					}
 				}
 				break;
