@@ -2,8 +2,8 @@ var EditormdEditor = (function () {
 	var _commonEditor; //It will be set when callback from _commonEditor
 	
 	var _editor;		  		//编辑器句柄
-	var _isReadOnly = true;		//true: 编辑器只读模式
-	var _editState = false;		//编辑器当前状态
+	var _isReadOnly = false;	//编辑器只读模式[设置为true]
+	var _editorState = false;	//编辑器当前状态
 	var _docInfo;				//编辑器当前打开的文档信息
 	var _content = "";			//编辑器当前展示的内容
 	var _switchEditModeOnly = false;	//编辑器状态切换回调控制变量
@@ -121,9 +121,9 @@ var EditormdEditor = (function () {
 				else
 				{
 					var state = false;
-					if(_editState != state)
+					if(_editorState != state)
 					{
-						_editState = state;
+						_editorState = state;
 						_commonEditor.exitEdit(2);	//编辑器触发的退出编辑
 					}
 				}
@@ -137,9 +137,9 @@ var EditormdEditor = (function () {
                	else
                	{
 					var state = true;
-					if(_editState != state)
+					if(_editorState != state)
 					{
-						_editState = state;
+						_editorState = state;
 						_commonEditor.enableEdit(2);	//编辑器触发的编辑
 					}
                	}
@@ -298,10 +298,10 @@ var EditormdEditor = (function () {
     {
     	console.log("EditormdEditor handlePasteImgEvent event:", event);
     	
-    	if(_editState == undefined || _editState == false)
+    	if(_editorState == undefined || _editorState == false)
     	{
     		//编辑器处于编辑状态才处理paste事件
-    		console.log("EditormdEditor handlePasteImgEvent _editState:", _editState);
+    		console.log("EditormdEditor handlePasteImgEvent _editorState:", _editorState);
     		return;
     	}
 

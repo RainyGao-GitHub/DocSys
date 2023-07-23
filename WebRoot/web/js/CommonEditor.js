@@ -7,29 +7,29 @@
 		var _self = this,	//_self是指实例化后的对象
         _config = config || {};
         
-        var docInfo;
-		var docText = "";
-		var tmpSavedDocText = "";
-		var isContentChanged = false;
-		var editState = false;
-		var autoSaveTimer;
-	  	var timerState = 0;
+        var _docInfo;
+		var _docText = "";
+		var _tmpSavedDocText = "";
+		var _isContentChanged = false;
+		var _editState = false;
+		var _autoSaveTimer;
+	  	var _timerState = 0;
 	  	
-	  	var isDynamicMode = false;	//true: 编辑器预加载模式(文件内容需要在AppReady之后进行显示，适用于需切换文件的场景)  false:文件内容在编辑器初始化时显示
+	  	var _isDynamicMode = false;	//true: 编辑器预加载模式(文件内容需要在AppReady之后进行显示，适用于需切换文件的场景)  false:文件内容在编辑器初始化时显示
 		
 		//****** Editor的抽象接口 Start ********
 		//使用回调方式实现，因此具体的实现函数是通过config传入的
 		function _initEditor(content, tmpSavedContent, docInfo)
 		{
 			console.log("CommonEditor _initEditor() docInfo:", docInfo);
-			//console.log("CommonEditor _initEditor() docText:", content);
+			//console.log("CommonEditor _initEditor() _docText:", content);
 			if(content)
 			{
-				docText = content;
+				_docText = content;
 			}
 			if(tmpSavedContent)
 			{
-				tmpSavedDocText = tmpSavedContent;
+				_tmpSavedDocText = tmpSavedContent;
 			}
 			_config.initEditor(content, tmpSavedContent, docInfo);
 		}
@@ -70,16 +70,16 @@
 				artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
 			}
 			// 获取对话框传递过来的数据
-			docInfo = artDialog2.config.data;
-			docInfo.docType = 1;	//RealDoc
+			_docInfo = artDialog2.config.data;
+			_docInfo.docType = 1;	//RealDoc
 			
-			console.log("CommonEditor initForArtDialog() docInfo:", docInfo);
+			console.log("CommonEditor initForArtDialog() _docInfo:", _docInfo);
 	
-			if (!docInfo.fileSuffix) {
-				docInfo.fileSuffix = getFileSuffix(docInfo.name);
+			if (!_docInfo.fileSuffix) {
+				_docInfo.fileSuffix = getFileSuffix(_docInfo.name);
 			}
 			
-			getDocText(docInfo, _initEditor, showErrorInfo);	
+			getDocText(_docInfo, _initEditor, showErrorInfo);	
 		}
 		
 		//Init For NewPage
@@ -87,18 +87,18 @@
 		{
 			console.log("CommonEditor initForNewPage()");
 			
-		    docInfo = getDocInfoFromRequestParamStr();
-		    docInfo.docType = 1;	//RealDoc
+		    _docInfo = getDocInfoFromRequestParamStr();
+		    _docInfo.docType = 1;	//RealDoc
 		    
-		    document.title = docInfo.name;
+		    document.title = _docInfo.name;
 		    
-		    console.log("CommonEditor initForNewPage() docInfo:", docInfo);
+		    console.log("CommonEditor initForNewPage() _docInfo:", _docInfo);
 		    
-			if (!docInfo.fileSuffix) {
-				docInfo.fileSuffix = getFileSuffix(docInfo.name);
+			if (!_docInfo.fileSuffix) {
+				_docInfo.fileSuffix = getFileSuffix(_docInfo.name);
 			}
 			
-			getDocText(docInfo, _initEditor, showErrorInfo);	
+			getDocText(_docInfo, _initEditor, showErrorInfo);	
 		}
 		
 		//Init For Bootstrap Dialog
@@ -106,23 +106,23 @@
 		{
 			console.log("CommonEditor initForBootstrapDialog()");
 
-			docInfo = Input_doc;		
-			docInfo.docType = 1;	//RealDoc
+			_docInfo = Input_doc;		
+			_docInfo.docType = 1;	//RealDoc
 		    
-			console.log("CommonEditor initForBootstrapDialog() docInfo:", docInfo);
+			console.log("CommonEditor initForBootstrapDialog() _docInfo:", _docInfo);
 			
-			if (!docInfo.fileSuffix) {
-				docInfo.fileSuffix = getFileSuffix(docInfo.name);
+			if (!_docInfo.fileSuffix) {
+				_docInfo.fileSuffix = getFileSuffix(_docInfo.name);
 			}	
 			
-			getDocText(docInfo, _initEditor, showErrorInfo);
+			getDocText(_docInfo, _initEditor, showErrorInfo);
 	  	}
 		
 		//Init For VDoc 
 		function initForVDoc()
 		{
 			console.log("CommonEditor initForVDoc()");
-			isDynamicMode = true;
+			_isDynamicMode = true;
 
 			_initEditor("", "", undefined);
 			
@@ -142,32 +142,32 @@
 		}
 		
 		function appReady(){
-			if(isDynamicMode)
+			if(_isDynamicMode)
 			{
 				//只有动态加载模式才需要在appReady之后加载文件
 				console.log("CommonEditor appReady()");
 				//Notify VDocEditor that eidtor is ready
 			    _postMessage({ event: 'onAppReady' });
 			        
-			    if(checkDocInfo(docInfo))
+			    if(checkDocInfo(_docInfo))
 			    {
-			    	getDocText(docInfo, showText, showErrorInfo);			
-					_onLoadDocument(docInfo);
+			    	getDocText(_docInfo, showText, showErrorInfo);			
+					_onLoadDocument(_docInfo);
 			    }			
 			}
 		}
 		
 		var openDocument = function(data){
-			docInfo = data.doc;
-			if(checkDocInfo(docInfo))
+			_docInfo = data.doc;
+			if(checkDocInfo(_docInfo))
 		    {
-				docInfo.docType = 2;
-				document.title = docInfo.name;
+				_docInfo.docType = 2;
+				document.title = _docInfo.name;
 			    
 			    // 初始化文档信息
-				console.log("CommonEditor openDocument() docInfo:", docInfo);
-				getDocText(docInfo, showText, showErrorInfo);
-				_onLoadDocument(docInfo);
+				console.log("CommonEditor openDocument() _docInfo:", _docInfo);
+				getDocText(_docInfo, showText, showErrorInfo);
+				_onLoadDocument(_docInfo);
 		    }
 		};
 		
@@ -188,7 +188,7 @@
 		}
 		
 	    var _postMessage = function(msg) {
-	    	if(isDynamicMode)
+	    	if(_isDynamicMode)
 	    	{
 		    	console.log("CommonEditor _postMessage() msg:", msg);
 		        // TODO: specify explicit origin
@@ -262,19 +262,19 @@
 		
 		function checkContentChange()
 		{
-			if(isContentChanged == true)
+			if(_isContentChanged == true)
 			{
 				//content change event received
-				console.log("CommonEditor checkContentChange() isContentChanged:", isContentChanged);
+				console.log("CommonEditor checkContentChange() _isContentChanged:", _isContentChanged);
 				return true;
 			}
 			
 			var newContent = _getContent();
-			if(docText != newContent)
+			if(_docText != newContent)
 			{
-				//console.log("CommonEditor checkContentChange() docText:", docText);
+				//console.log("CommonEditor checkContentChange() _docText:", _docText);
 				//console.log("CommonEditor checkContentChange() newContent:", newContent);
-				console.log("CommonEditor checkContentChange() isContentChanged == false, but content is changed");
+				console.log("CommonEditor checkContentChange() _isContentChanged == false, but content is changed");
 				return true;
 			}
 			
@@ -283,9 +283,9 @@
 		
 		function saveDoc()
 		{
-			console.log("CommonEditor saveDoc docInfo.docId:" + docInfo.docId);
+			console.log("CommonEditor saveDoc _docInfo.docId:" + _docInfo.docId);
 			
-			//TODO: 应该check的时候把docText改成最新内容
+			//TODO: 应该check的时候把_docText改成最新内容
 			if(checkContentChange() == false)
 			{
 			   	console.log("CommonEditor saveDoc there is no change");
@@ -298,19 +298,19 @@
 		        type : "post",
 		        dataType : "json",
 		        data : {
-		            reposId: docInfo.vid,
-		        	docId : docInfo.docId,
-		        	path: docInfo.path,
-		            name: docInfo.name,
+		            reposId: _docInfo.vid,
+		        	docId : _docInfo.docId,
+		        	path: _docInfo.path,
+		            name: _docInfo.name,
 		        	content : content,
-		        	docType: docInfo.docType, //RealDoc
-		            shareId: docInfo.shareId,
+		        	docType: _docInfo.docType, //RealDoc
+		            shareId: _docInfo.shareId,
 		        },
 		        success : function (ret) {
 		            if( "ok" == ret.status ){
 		                console.log("保存成功 : " , (new Date()).toLocaleDateString());
-		                docText = content;
-		                isContentChanged = false;
+		                _docText = content;
+		                _isContentChanged = false;
 		                stackZ.clear();
 		                stackY.clear();
 		                
@@ -348,7 +348,7 @@
 		function enableEdit(switchMode)
 		{
 			console.log("CommonEditor enableEdit() switchMode:" + switchMode);
-			if(docInfo == undefined || docInfo.docId == undefined)
+			if(_docInfo == undefined || _docInfo.docId == undefined)
 			{
 				showErrorInfo("文件信息不能为空");
 				return;
@@ -360,18 +360,18 @@
 				dataType : "json",
 				data : {
 					lockType : 1, //LockType: Normal Lock
-					reposId : docInfo.vid, 
-					docId : docInfo.docId,
-					path: docInfo.path,
-					name: docInfo.name,
-					docType: docInfo.docType,
-		            shareId: docInfo.shareId,
+					reposId : _docInfo.vid, 
+					docId : _docInfo.docId,
+					path: _docInfo.path,
+					name: _docInfo.name,
+					docType: _docInfo.docType,
+		            shareId: _docInfo.shareId,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
 					{
 						console.log("enableEdit() ret.data",ret.data);
-						$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
+						$("[dataId='"+ _docInfo.docId +"']").children("div:first-child").css("color","red");
 		
 						//显示工具条和退出编辑按键
 						if(switchMode == 1)
@@ -409,7 +409,7 @@
 		//退出文件编辑状态
 		function exitEdit(switchMode) {   	
 			console.log("CommonEditor exitEdit()  switchMode:" + switchMode);
-			if(docInfo == undefined || docInfo.docId == undefined)
+			if(_docInfo == undefined || _docInfo.docId == undefined)
 			{
 				showErrorInfo("文件信息为空");
 				return;
@@ -421,18 +421,18 @@
 				dataType : "json",
 				data : {
 					lockType : 1, //unlock the doc
-					reposId : docInfo.vid, 
-		        	docId : docInfo.docId,
-					path: docInfo.path,
-					name: docInfo.name,
-					docType: docInfo.docType,
-		            shareId: docInfo.shareId,
+					reposId : _docInfo.vid, 
+		        	docId : _docInfo.docId,
+					path: _docInfo.path,
+					name: _docInfo.name,
+					docType: _docInfo.docType,
+		            shareId: _docInfo.shareId,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
 					{
 						console.log("exitEdit() ret:",ret.data);
-						$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
+						$("[dataId='"+ _docInfo.docId +"']").children("div:first-child").css("color","black");
 						if(switchMode == 1)
 						{
 							switchEditMode(false, 1);
@@ -468,19 +468,19 @@
 		function switchEditMode(state, mode)
 		{
 			//更新编辑器状态
-			editState = state;
-			docInfo.edit = state;
+			_editState = state;
+			_docInfo.edit = state;
 			
 			if(mode == 3)
 			{
 				switchEditModeOnly = true;	//避免编辑器回调再次触发状态切换回调
-				_setEditMode(editState);
+				_setEditMode(_editState);
 				return;
 			}
 			
-			if(editState == true)
+			if(_editState == true)
 			{
-				_postMessage({ event: 'onSwitchEditMode', data: editState });
+				_postMessage({ event: 'onSwitchEditMode', data: _editState });
 	
 				if(mode == 1)
 				{
@@ -496,7 +496,7 @@
 				//启动内容自动保存线程
 				startAutoTmpSaver();
 					
-				if(tmpSavedDocText && tmpSavedDocText != docText)
+				if(_tmpSavedDocText && _tmpSavedDocText != _docText)
 				{
 					bootstrapQ.confirm({
 						id: "loadContentConfirm",
@@ -504,19 +504,19 @@
 						msg : "上次有未保存的编辑内容，是否加载？",
 					},function () {
 				    	//alert("点击了确定");
-						_setContent(tmpSavedDocText);
+						_setContent(_tmpSavedDocText);
 				    	return true;   
 				 	},function (){
 				 		//alert("点击了取消");
-				        tmpSavedDocText = docText;
-				        deleteTmpSavedContent(docInfo);
+				        _tmpSavedDocText = _docText;
+				        deleteTmpSavedContent(_docInfo);
 				        return true;
 				 	});
 				}
 			}
 			else
 			{
-				_postMessage({ event: 'onSwitchEditMode', data: editState });
+				_postMessage({ event: 'onSwitchEditMode', data: _editState });
 					
 				if(mode == 1)
 				{
@@ -537,7 +537,7 @@
 			var timeOut = 180000; //超时时间3分钟
 		    console.log("CommonEditor startBeatThread() with " + timeOut + " ms");
 		    setTimeout(function () {
-		        if(editState == true)
+		        if(_editState == true)
 		    	{
 		        	console.log("CommonEditor startBeatThread() refreshDocLock");
 		    		refreshDocLock();
@@ -554,12 +554,12 @@
 				dataType : "json",
 				data : {
 					lockType : 1, //LockType: Normal Lock
-					reposId : docInfo.vid, 
-					docId : docInfo.docId,
-					path: docInfo.path,
-					name: docInfo.name,
-					docType: docInfo.docType,
-		            shareId: docInfo.shareId,
+					reposId : _docInfo.vid, 
+					docId : _docInfo.docId,
+					path: _docInfo.path,
+					name: _docInfo.name,
+					docType: _docInfo.docType,
+		            shareId: _docInfo.shareId,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
@@ -583,33 +583,33 @@
 		
 		function startAutoTmpSaver()
 		{ 
-			console.log("CommonEditor startAutoTmpSaver timerState:" + timerState);
-			if(timerState == 0)
+			console.log("CommonEditor startAutoTmpSaver _timerState:" + _timerState);
+			if(_timerState == 0)
 			{
-				timerState = 1;
-				autoSaveTimer = setInterval(function () {
+				_timerState = 1;
+				_autoSaveTimer = setInterval(function () {
 		        	var newContent = _getContent();
-		        	if(!tmpSavedDocText)
+		        	if(!_tmpSavedDocText)
 		        	{
-		        		tmpSavedDocText = "";
+		        		_tmpSavedDocText = "";
 		        	}
 		        	
-					if(tmpSavedDocText != newContent)
+					if(_tmpSavedDocText != newContent)
 		    		{
 		    			console.log("autoTmpSaveWiki");
-		    			tmpSaveDoc(docInfo, newContent);
-		    			tmpSavedDocText = newContent;
+		    			tmpSaveDoc(_docInfo, newContent);
+		    			_tmpSavedDocText = newContent;
 		    		}
 		    	},20000);
 		    }
 		}
 	
 		function stopAutoTmpSaver(){
-			console.log("CommonEditor stopAutoTmpSaver timerState:" + timerState);
-			if(timerState == 1)
+			console.log("CommonEditor stopAutoTmpSaver _timerState:" + _timerState);
+			if(_timerState == 1)
 			{
-				timerState = 0;
-				clearInterval(autoSaveTimer);
+				_timerState = 0;
+				clearInterval(_autoSaveTimer);
 			}
 		}
 		
@@ -763,7 +763,7 @@
 		
 		function contentChangeHandler(){
 			console.log("CommonEditor contentChangeHandler() stackZ.size:" + stackZ.size() +  " stackY.size:" + stackY.size() +  " ctrlZY:" + isCtrlZY);
-			isContentChanged = true;
+			_isContentChanged = true;
 			if(false == isCtrlZY)
 			{
 				var content = _getContent();
