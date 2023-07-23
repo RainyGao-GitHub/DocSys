@@ -339,17 +339,20 @@
 		    });
 		}
 		
-		//TODO: 进入编辑状态和退出编辑状态的两种模式
-		//1. 编辑器外部触发
-		//   文件锁定或解锁成功后，将编辑器切换到指定的编辑状态
-		//2. 编辑器内部按键触发
-		//   编辑器先切换到指定编辑状态，再进行文件锁定或解锁，如果失败则将编辑器切换回原来的编辑状态
-		
-		function enableEdit(switchMode)
+		function enableEdit(callback)
 		{
-			console.log("CommonEditor enableEdit() switchMode:" + switchMode);
+			console.log("CommonEditor enableEdit() _editState:" + _editState);
+			//if(_editState == true)
+			//{
+			//	var result = {};
+			//	result.status = "ok";
+			//	callback && callback(result);
+			//	return;
+			//}
+			
 			if(_docInfo == undefined || _docInfo.docId == undefined)
 			{
+				callback && callback();
 				showErrorInfo("文件信息不能为空");
 				return;
 			}
@@ -368,49 +371,34 @@
 		            shareId: _docInfo.shareId,
 				},
 				success : function (ret) {
-					if( "ok" == ret.status)
+					callback && callback(ret);
+					if("ok" == ret.status)
 					{
-						console.log("enableEdit() ret.data",ret.data);
-						$("[dataId='"+ _docInfo.docId +"']").children("div:first-child").css("color","red");
-		
-						//显示工具条和退出编辑按键
-						if(switchMode == 1)
-						{
-							switchEditMode(true, 1);
-						}
-						else
-						{
-							switchEditMode(true, 2);	//编辑器状态不需要切换						
-						}
-						return;
-					}
-					else
-					{					
-						if(switchMode == 2)
-						{
-							switchEditMode(false, 3);	//只需要切换编辑器状态
-						}
-						showErrorInfo("lockDoc Error:" + ret.msgInfo);
-						return;
+						switchEditState(true);
 					}
 				},
 				error : function () 
 				{
-					if(switchMode == 2)
-					{
-						switchEditMode(false, 3);	//只需要切换编辑器状态
-					}
+					callback && callback();
 					showErrorInfo("lockDoc 异常");
 					return;
 				}
 			});
 		}
 		
-		//退出文件编辑状态
-		function exitEdit(switchMode) {   	
-			console.log("CommonEditor exitEdit()  switchMode:" + switchMode);
+		function exitEdit(callback) {   	
+			console.log("CommonEditor exitEdit() _editState:" + _editState);
+			//if(_editState == false)
+			//{
+			//	var result = {};
+			//	result.status = "ok";
+			//	callback && callback(result);
+			//	return;
+			//}
+			
 			if(_docInfo == undefined || _docInfo.docId == undefined)
 			{
+				callback && callback();
 				showErrorInfo("文件信息为空");
 				return;
 			}
@@ -429,67 +417,30 @@
 		            shareId: _docInfo.shareId,
 				},
 				success : function (ret) {
-					if( "ok" == ret.status)
+					if("ok" == ret.status)
 					{
-						console.log("exitEdit() ret:",ret.data);
-						$("[dataId='"+ _docInfo.docId +"']").children("div:first-child").css("color","black");
-						if(switchMode == 1)
-						{
-							switchEditMode(false, 1);
-						}
-						else
-						{
-							switchEditMode(false, 2);	//编辑器状态不需要切换						
-						}
-						return;
+						switchEditState(false);
 					}
-					else
-					{
-						if(switchMode == 2)
-						{
-							switchEditMode(true, 3);	//只需要切换编辑器状态
-						}
-						showErrorInfo("exitEdit() unlockDoc Error:" + ret.msgInfo);
-						return;
-					}
+					callback && callback(ret);
 				},
 				error : function () 
 				{
-					if(switchMode == 2)
-					{
-						switchEditMode(true, 3);	//只需要切换编辑器状态
-					}
+					callback && callback();
 					showErrorInfo("exitEdit() unlockDoc 异常");
 					return;
 				}
 			});
 		}
 		
-		function switchEditMode(state, mode)
+		function switchEditState(state)
 		{
 			//更新编辑器状态
 			_editState = state;
 			_docInfo.edit = state;
-			
-			if(mode == 3)
-			{
-				switchEditModeOnly = true;	//避免编辑器回调再次触发状态切换回调
-				_setEditMode(_editState);
-				return;
-			}
-			
 			if(_editState == true)
 			{
 				_postMessage({ event: 'onSwitchEditMode', data: _editState });
 	
-				if(mode == 1)
-				{
-					//TODO: 如果主动设置编辑器状态，会触发回调则需要设置
-					switchEditModeOnly = true;
-					//Enable Edit
-					_setEditMode(true);
-				}
-				
 				//Start beat thread to keep 
 				startBeatThread();
 				
@@ -517,15 +468,7 @@
 			else
 			{
 				_postMessage({ event: 'onSwitchEditMode', data: _editState });
-					
-				if(mode == 1)
-				{
-					//TODO: 如果主动设置编辑器状态，会触发回调则需要设置
-					switchEditModeOnly = true;
-					//Disable Edit
-					_setEditMode(false);
-				}
-				
+									
 				//关闭内容自动保存线程
 				stopAutoTmpSaver();
 			}
@@ -791,11 +734,11 @@
 		    saveDoc: function(){
 		    	saveDoc();
 		    },
-		    enableEdit: function(mode){
-		    	enableEdit(mode);
+		    enableEdit: function(callback){
+		    	enableEdit(callback);
 		    },	    
-		    exitEdit: function(mode){
-		    	exitEdit(mode);
+		    exitEdit: function(callback){
+		    	exitEdit(callback);
 		    },
 		    contentChangeHandler: function(){
 		    	contentChangeHandler();

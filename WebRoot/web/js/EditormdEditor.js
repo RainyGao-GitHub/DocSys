@@ -20,9 +20,11 @@ var EditormdEditor = (function () {
 		return _editor.getMarkdown();
 	};
 
-	var setEditMode = function(mode)
+	var setEditMode = function(state)
 	{
-		if(mode == true)
+		console.log("EditormdEditor setEditMode() state:" + state + " _editorState:" + _editorState);
+		_editorState = state;
+		if(state == true)
 		{	
 			//显示工具条
 			$("#toolBarMenu").show();
@@ -31,10 +33,8 @@ var EditormdEditor = (function () {
 			//隐藏编辑按键
 			$("#textEditorEditBtn").hide();
 			
-			//Enable Edit
-			_switchEditModeOnly = true;
-			_editor.previewing();
-			_editor.resize();
+			//切换编辑器状态
+			_editor.previewed();
 		}
 		else
 		{
@@ -45,10 +45,8 @@ var EditormdEditor = (function () {
 			//显示编辑按键
 			$("#textEditorEditBtn").show();		
 			
-			//Disable Edit
-			_switchEditModeOnly = true;
-			_editor.previewed();
-			_editor.resize();
+			//切换编辑器状态
+			_editor.previewing();
 		}
 	};
 	
@@ -113,36 +111,24 @@ var EditormdEditor = (function () {
         	    _commonEditor.contentChangeHandler();
            },
            onpreviewing : function () {
-              	console.log("EditormdEditor onpreviewing() _switchEditModeOnly:" + _switchEditModeOnly);
-				if(_switchEditModeOnly == true)
+				var state = false;
+               	console.log("EditormdEditor onpreviewing _editorState:" + _editorState + " state:" + state);
+
+				if(_editorState != state)
 				{
-					_switchEditModeOnly = false;
-				}
-				else
-				{
-					var state = false;
-					if(_editorState != state)
-					{
-						_editorState = state;
-						_commonEditor.exitEdit(2);	//编辑器触发的退出编辑
-					}
+					_editorState = state;
+					_commonEditor.exitEdit(exitEditCallback2);
 				}
            },
            onpreviewed :function () {
-               	console.log("EditormdEditor onpreviewed _switchEditModeOnly:" + _switchEditModeOnly);
-               	if(_switchEditModeOnly == true)
+               	var state = true;
+               	console.log("EditormdEditor onpreviewed _editorState:" + _editorState + " state:" + state);
+
+               	if(_editorState != state)
 				{
-					_switchEditModeOnly = false;
-			    }
-               	else
-               	{
-					var state = true;
-					if(_editorState != state)
-					{
-						_editorState = state;
-						_commonEditor.enableEdit(2);	//编辑器触发的编辑
-					}
-               	}
+					_editorState = state;
+               		_commonEditor.enableEdit(enableEditCallback2);	//编辑器触发的编辑
+				}
            },
            onload : function () {
                console.log("EditormdEditor onload");
@@ -345,7 +331,84 @@ var EditormdEditor = (function () {
         render.readAsDataURL(file);
         return;*/
     }
+    
+    //EnableEditBtn触发的EnableEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
+    function enableEditCallback1(ret)
+    {
+    	console.log("EditormdEditor enableEditCallback1() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+    		//enableEdit失败
+    		return;
+    	}
+    	
+    	//切换编辑器状态
+    	setEditMode(true);
+    }
+    
+    //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
+    function enableEditCallback2(ret)
+    {
+    	console.log("EditormdEditor enableEditCallback2() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		//切换编辑器状态
+        	setEditMode(false);
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+        	//切换编辑器状态
+        	setEditMode(false);
+    		return;
+    	}
+
+    }
 	
+    //ExitEditBtn触发的exitEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
+    function exitEditCallback1(ret)
+    {
+    	console.log("EditormdEditor exitEditCallback1() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//异常
+    	{
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+    		//exitEdit失败
+    		return;
+    	}
+    	
+    	//切换编辑器状态
+    	setEditMode(false);
+    }
+    
+    //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
+    function exitEditCallback2(ret)
+    {
+    	console.log("EditormdEditor exitEditCallback2() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		//切换编辑器状态
+        	setEditMode(true);
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+        	//切换编辑器状态
+        	setEditMode(true);
+    		return;
+    	}    	
+    }
+    
 	//开放给外部的调用接口
 	return {
 		init: function(mode, docInfo){
@@ -358,10 +421,10 @@ var EditormdEditor = (function () {
 	    	_commonEditor.ctrlY();
 	    },
 	    enableEdit: function(){
-	    	_commonEditor.enableEdit(1);
+	    	_commonEditor.enableEdit(enableEditCallback1);
 	    },	    
 	    exitEdit: function(mode){
-	    	_commonEditor.exitEdit(1);
+	    	_commonEditor.exitEdit(exitEditCallback1);
 	    },
 	    saveDoc: function(){
 	    	_commonEditor.saveDoc();
