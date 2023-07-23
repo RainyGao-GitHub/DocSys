@@ -22,7 +22,6 @@ var EditormdEditor = (function () {
 
 	var setEditMode = function(mode)
 	{
-		_editState = mode;
 		if(mode == true)
 		{	
 			//显示工具条
@@ -121,7 +120,12 @@ var EditormdEditor = (function () {
 				}
 				else
 				{
-	              	_commonEditor.exitEdit(2);	//编辑器触发的退出编辑
+					var state = false;
+					if(_editState != state)
+					{
+						_editState = state;
+						_commonEditor.exitEdit(2);	//编辑器触发的退出编辑
+					}
 				}
            },
            onpreviewed :function () {
@@ -132,7 +136,12 @@ var EditormdEditor = (function () {
 			    }
                	else
                	{
-	               _commonEditor.enableEdit(2);	//编辑器触发的编辑
+					var state = true;
+					if(_editState != state)
+					{
+						_editState = state;
+						_commonEditor.enableEdit(2);	//编辑器触发的编辑
+					}
                	}
            },
            onload : function () {
@@ -292,6 +301,7 @@ var EditormdEditor = (function () {
     	if(_editState == undefined || _editState == false)
     	{
     		//编辑器处于编辑状态才处理paste事件
+    		console.log("EditormdEditor handlePasteImgEvent _editState:", _editState);
     		return;
     	}
 
