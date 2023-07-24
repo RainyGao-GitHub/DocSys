@@ -14199,13 +14199,13 @@ public class BaseController  extends BaseFunction{
 	private Long getDelayTimeForNextAutoTask(AutoTaskConfig autoTaskConfig, int offsetMinute) {
 		//初始化weekDayBackupEnTab
 		int weekDayBackupEnTab[] = new int[7];
-		weekDayBackupEnTab[1] = autoTaskConfig.weekDay1;
-		weekDayBackupEnTab[2] = autoTaskConfig.weekDay2;
-		weekDayBackupEnTab[3] = autoTaskConfig.weekDay3;
-		weekDayBackupEnTab[4] = autoTaskConfig.weekDay4;
-		weekDayBackupEnTab[5] = autoTaskConfig.weekDay5;
-		weekDayBackupEnTab[6] = autoTaskConfig.weekDay6;
-		weekDayBackupEnTab[0] = autoTaskConfig.weekDay7;
+		weekDayBackupEnTab[1] = autoTaskConfig.weekDay1 == null? 0 : autoTaskConfig.weekDay1;
+		weekDayBackupEnTab[2] = autoTaskConfig.weekDay2 == null? 0 : autoTaskConfig.weekDay2;
+		weekDayBackupEnTab[3] = autoTaskConfig.weekDay3 == null? 0 : autoTaskConfig.weekDay3;
+		weekDayBackupEnTab[4] = autoTaskConfig.weekDay4 == null? 0 : autoTaskConfig.weekDay4;
+		weekDayBackupEnTab[5] = autoTaskConfig.weekDay5 == null? 0 : autoTaskConfig.weekDay5;
+		weekDayBackupEnTab[6] = autoTaskConfig.weekDay6 == null? 0 : autoTaskConfig.weekDay6;
+		weekDayBackupEnTab[0] = autoTaskConfig.weekDay7 == null? 0 : autoTaskConfig.weekDay7;
 		
 		Calendar calendar = Calendar.getInstance();
 		int curHour = calendar.get(Calendar.HOUR_OF_DAY);
