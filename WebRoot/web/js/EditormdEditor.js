@@ -10,9 +10,9 @@ var EditormdEditor = (function () {
 
 	var setContent = function(content)
 	{	
+		//console.log("EditormdEditor setContent() content:", content);
 		_content = content;
-		_editor.setMarkdown(content);
-		//_editor.resize();
+		_editor.setMarkdown(_content);
 	};
 
 	var getContent = function()
@@ -368,7 +368,9 @@ var EditormdEditor = (function () {
         	setEditMode(false);
     		return;
     	}
-
+    	
+    	//这个设置content是因为这个编辑器有Bug,从只读切换到编辑，不会自己显示内容
+    	setContent(_content);
     };
 	
     //ExitEditBtn触发的exitEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
