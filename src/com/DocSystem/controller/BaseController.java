@@ -14215,7 +14215,8 @@ public class BaseController  extends BaseFunction{
 		Log.debug("getDelayTimeForNextBackupTask() curWeekDay:" + curWeekDay + " curHour:" + curHour + " curMinute:" + curMinute + 
 				" curMinuteOfDay:" + curMinuteOfDay + " backupTime:" + autoTaskConfig.executeTime);
 		
-		Long delayTime  = getNextAutoTaskDelayTime(curWeekDay, curMinuteOfDay, offsetMinute, autoTaskConfig.executeTime, weekDayBackupEnTab);
+		int executeTime = autoTaskConfig.executeTime == null? 0 : autoTaskConfig.executeTime;
+		Long delayTime  = getNextAutoTaskDelayTime(curWeekDay, curMinuteOfDay, offsetMinute, executeTime, weekDayBackupEnTab);
 		return delayTime;
 	}
 	
