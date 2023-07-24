@@ -376,6 +376,10 @@
 					{
 						switchEditState(true);
 					}
+					else
+					{
+						showErrorInfo("lockDoc 失败:" + ret.msgInfo);							
+					}
 				},
 				error : function () 
 				{
@@ -417,16 +421,20 @@
 		            shareId: _docInfo.shareId,
 				},
 				success : function (ret) {
+					callback && callback(ret);
 					if("ok" == ret.status)
 					{
 						switchEditState(false);
 					}
-					callback && callback(ret);
+					else
+					{
+						showErrorInfo("unlockDoc 失败:" + ret.msgInfo);	
+					}
 				},
 				error : function () 
 				{
 					callback && callback();
-					showErrorInfo("exitEdit() unlockDoc 异常");
+					showErrorInfo("unlockDoc 异常");
 					return;
 				}
 			});

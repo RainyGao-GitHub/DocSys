@@ -4,7 +4,7 @@ var StackMdEditor = (function () {
 	
 	var _editor;		  			//编辑器句柄
 	var _isReadOnly = true;			//true: 只读模式
-	var _editState = false;			//
+	var _editorState = false;			//
 	var _docInfo;					//_docInfo
 	var _content = "";				//编辑器内容
 	var _switchEditModeOnly = false;	//编辑器状态切换回调控制变量
@@ -24,10 +24,11 @@ var StackMdEditor = (function () {
 		return _content;
 	};
 	
-	var setEditMode = function(mode)
+	var setEditMode = function(state)
 	{
-		_switchEditModeOnly = true;
-		setStaticEditReaOnly(mode);
+		console.log("StackMdEditor setEditMode() state:" + state + " _editorState:" + _editorState);
+		_editorState = state;
+		setStaticEditReaOnly(state);
 	};
 	
 	var onLoadDocument = function(docInfo){
@@ -80,7 +81,7 @@ var StackMdEditor = (function () {
 				}
 				
 				// iframe 页面加载完成,设置当前页面为只读
-				setStaticEditReaOnly(false);
+				setEditMode(false);
 				
 				_commonEditor.appReady();
 				break;
@@ -113,30 +114,21 @@ var StackMdEditor = (function () {
 				}
 				break;
 			case 'changeView':
-              	console.log("StackMdEditor changeView() _switchEditModeOnly:" + _switchEditModeOnly);
+              	console.log("StackMdEditor changeView() _editorState:" + _editorState);
               	if(_isReady == true)
-				{
-	              	if(_switchEditModeOnly == true)
+				{        
+					var state = !event.data.flag;
+					console.log("StackMdEditor changeView() _editorState:" +  _editorState + " state:" + state);
+					if(_editorState != state)
 					{
-						_switchEditModeOnly = false;
-					}
-					else
-					{		        
-						console.log("StackMdEditor changeView() flag:", event.data.flag);
-						console.log("StackMdEditor changeView() **************** _editState:", _editState);
-						//flag需要能够区分按键
-						var state = !event.data.flag;
-						if(_editState != state)
+						_editorState = state;
+						if(_editorState == true)
 						{
-							_editState = state;
-							if(_editState == true)
-							{
-								_commonEditor.enableEdit(2);
-							}
-							else
-							{
-						      	_commonEditor.exitEdit(2);						      	
-							}
+							_commonEditor.enableEdit(enableEditCallback2);
+						}
+						else
+						{
+					      	_commonEditor.exitEdit(exitEditCallback2);						      	
 						}
 					}
 				}
@@ -309,6 +301,83 @@ var StackMdEditor = (function () {
 		}
 	}
 	
+    //EnableEditBtn触发的EnableEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
+    function enableEditCallback1(ret)
+    {
+    	console.log("StackMdEditor enableEditCallback1() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+    		//enableEdit失败
+    		return;
+    	}
+    	
+    	//切换编辑器状态
+    	setEditMode(true);
+    }
+    
+    //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
+    function enableEditCallback2(ret)
+    {
+    	console.log("StackMdEditor enableEditCallback2() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		//切换编辑器状态
+        	setEditMode(false);
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+        	//切换编辑器状态
+        	setEditMode(false);
+    		return;
+    	}
+
+    }
+	
+    //ExitEditBtn触发的exitEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
+    function exitEditCallback1(ret)
+    {
+    	console.log("StackMdEditor exitEditCallback1() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//异常
+    	{
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+    		//exitEdit失败
+    		return;
+    	}
+    	
+    	//切换编辑器状态
+    	setEditMode(false);
+    }
+    
+    //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
+    function exitEditCallback2(ret)
+    {
+    	console.log("StackMdEditor exitEditCallback2() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		//切换编辑器状态
+        	setEditMode(true);
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+        	//切换编辑器状态
+        	setEditMode(true);
+    		return;
+    	}    	
+    }
+	
 	//开放给外部的调用接口
 	return {
 		init: function(mode, docInfo){
@@ -321,10 +390,10 @@ var StackMdEditor = (function () {
 	    	_commonEditor.ctrlY();
 	    },
 	    enableEdit: function(){
-	    	_commonEditor.enableEdit(1);
+	    	_commonEditor.enableEdit(enableEditCallback1);
 	    },	    
 	    exitEdit: function(mode){
-	    	_commonEditor.exitEdit(1);
+	    	_commonEditor.exitEdit(exitEditCallback1);
 	    },
 	    saveDoc: function(){
 	    	_commonEditor.saveDoc();
