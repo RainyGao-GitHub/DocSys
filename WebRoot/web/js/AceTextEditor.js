@@ -1,26 +1,27 @@
 //AceTextEditor类
 var AceTextEditor = (function () {
-	var commonEditor; //It will be set when callback from commonEditor
+	var _commonEditor; //It will be set when callback from _commonEditor
 	
-	var editor;		  		//编辑器句柄
-	var isReadOnly = true;	//true: 只读模式
-	var docInfo;			//docInfo
-	var content = "";		//编辑器内容
-	var switchEditModeOnly = false;	//编辑器状态切换回调控制变量
+	var _editor;		  		//编辑器句柄
+	var _editorState = false;	//
+	var _docInfo;				//_docInfo
+	var _content = "";			//编辑器内容
 	
 	var setContent = function(content)
 	{	
-		editor.setValue(content);
+		_editor.setValue(content);
 	};
 
 	var getContent = function()
 	{	
-		return editor.getValue();
+		return _editor.getValue();
 	};
 
-	var setEditMode = function(mode)
+	var setEditMode = function(state)
 	{
-		if(mode == true)
+		console.log("AceTextEditor setEditMode() state:" + state + " _editorState:" + _editorState);
+		_editorState = state;
+		if(state == true)
 		{	
 			//显示工具条
 			$("#toolBarMenu").show();
@@ -30,7 +31,7 @@ var AceTextEditor = (function () {
 			$("#textEditorEditBtn").hide();
 	
 			//Enable Edit
-			editor.setReadOnly(false);
+			_editor.setReadOnly(false);
 		}
 		else
 		{
@@ -42,15 +43,14 @@ var AceTextEditor = (function () {
 			$("#textEditorEditBtn").show();		
 			
 			//Disable Edit
-			editor.setReadOnly(true);
+			_editor.setReadOnly(true);
 		}
 	};
 	
 	var onLoadDocument = function(docInfo){
-		console.log("onLoadDocument() docInfo:", docInfo);
-
-		//editor.setImageUploadURL(buildImageUploadURL(docInfo));
-	
+		console.log("AceTextEditor onLoadDocument() docInfo:", docInfo);
+		_docInfo = docInfo;
+		
 		checkAndSetFileShowMode(docInfo);
 		checkAndSetEditBtn(docInfo);
 	};
@@ -62,35 +62,36 @@ var AceTextEditor = (function () {
 		//如果传入了docInfo，那么docInfo在初始化的时候就进行设置
 		if(docInfo)
   		{
-  			this.docInfo = docInfo;
+  			_docInfo = docInfo;
   		}
+		
   		if(docText)
   		{
-  			this.content = docText;
+  			_content = docText;
   		}
   		
-		editor = ace.edit("editor");
-		editor.setTheme("ace/theme/twilight");
-		//editor.setTheme("ace/theme/chrome");
-		//editor.setTheme("ace/theme/tomorrow_night");
-		editor.session.setMode("ace/mode/text");
-		editor.setReadOnly(true); // false to make it editable
-		editor.getSession().on('change', function(e) {
+		_editor = ace.edit("editor");
+		_editor.setTheme("ace/theme/twilight");
+		//_editor.setTheme("ace/theme/chrome");
+		//_editor.setTheme("ace/theme/tomorrow_night");
+		_editor.session.setMode("ace/mode/text");
+		_editor.setReadOnly(true); // false to make it editable
+		_editor.getSession().on('change', function(e) {
 			console.log("AceTextEditor change");
-			commonEditor.contentChangeHandler();
+			_commonEditor.contentChangeHandler();
 		});
 		
-		if(this.content)
+		if(_content)
 		{
-			editor.setValue(this.content);
+			_editor.setValue(_content);
 		}
 		
-		if(this.docInfo)
+		if(_docInfo)
 		{
-			onLoadDocument(this.docInfo);
+			onLoadDocument(_docInfo);
 		}
 		
-		commonEditor.appReady();
+		_commonEditor.appReady();
 	};
 	
 	//抽象编辑器的以下接口, 通过config参数传递给CommonEditor
@@ -110,20 +111,20 @@ var AceTextEditor = (function () {
 	function init(mode, docInfo)
 	{
 		console.log("AceTextEditor init() mode:" + mode);
-		commonEditor = new MxsdocAPI.CommonEditor(config);
+		_commonEditor = new MxsdocAPI.CommonEditor(config);
 		switch(mode)
 		{
 		case "ArtDialog":
-			commonEditor.initForArtDialog();
+			_commonEditor.initForArtDialog();
 			break;
 		case "NewPage":
-			commonEditor.initForNewPage();
+			_commonEditor.initForNewPage();
 			break;
 		case "BootstrapDialog":
-			commonEditor.initForBootstrapDialog(docInfo);
+			_commonEditor.initForBootstrapDialog(docInfo);
 			break;
 		case "VDoc":
-			commonEditor.initForVDoc();
+			_commonEditor.initForVDoc();
 			break;
 		}					
 	}
@@ -146,7 +147,7 @@ var AceTextEditor = (function () {
 		}
 		
 		var editable = isEditableText(docInfo.fileSuffix);
-		console.log("checkAndSetEditBtn() isEditableText:" + editable);
+		console.log("AceTextEditor checkAndSetEditBtn() isEditableText:" + editable);
 		if(editable)
 		{
 			$("#textEditorEditBtn").show();
@@ -159,9 +160,86 @@ var AceTextEditor = (function () {
 		{
 			var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
 			console.log("checkAndSetFileShowMode() showMode:" + showMode);
-			editor.session.setMode("ace/mode/" + showMode);
+			_editor.session.setMode("ace/mode/" + showMode);
 		}
 	}
+	
+    //EnableEditBtn触发的EnableEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
+    function enableEditCallback1(ret)
+    {
+    	console.log("AceTextEditor enableEditCallback1() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+    		//enableEdit失败
+    		return;
+    	}
+    	
+    	//切换编辑器状态
+    	setEditMode(true);
+    }
+    
+    //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
+    function enableEditCallback2(ret)
+    {
+    	console.log("AceTextEditor enableEditCallback2() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		//切换编辑器状态
+        	setEditMode(false);
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+        	//切换编辑器状态
+        	setEditMode(false);
+    		return;
+    	}
+
+    }
+	
+    //ExitEditBtn触发的exitEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
+    function exitEditCallback1(ret)
+    {
+    	console.log("AceTextEditor exitEditCallback1() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//异常
+    	{
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+    		//exitEdit失败
+    		return;
+    	}
+    	
+    	//切换编辑器状态
+    	setEditMode(false);
+    }
+    
+    //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
+    function exitEditCallback2(ret)
+    {
+    	console.log("AceTextEditor exitEditCallback2() ret:", ret);
+    	if(ret == undefined || ret.status == undefined)	//enableEdit异常
+    	{
+    		//切换编辑器状态
+        	setEditMode(true);
+    		return;
+    	}
+    	
+    	if(ret.status != "ok")
+    	{
+        	//切换编辑器状态
+        	setEditMode(true);
+    		return;
+    	}    	
+    }
 	
 	//开放给外部的调用接口
 	//开放给外部的调用接口
@@ -170,19 +248,19 @@ var AceTextEditor = (function () {
 			init(mode, docInfo);					
 		},
 	    ctrlZ: function(){
-	    	commonEditor.ctrlZ();
+	    	_commonEditor.ctrlZ();
 	    },
 	    ctrlY: function(){
-	    	commonEditor.ctrlY();
+	    	_commonEditor.ctrlY();
 	    },
 	    enableEdit: function(){
-	    	commonEditor.enableEdit(1);
+	    	_commonEditor.enableEdit(enableEditCallback1);
 	    },	    
 	    exitEdit: function(mode){
-	    	commonEditor.exitEdit(1);
+	    	_commonEditor.exitEdit(exitEditCallback1);
 	    },
 	    saveDoc: function(){
-	    	commonEditor.saveDoc();
+	    	_commonEditor.saveDoc();
 	    },
 	}
 })();
