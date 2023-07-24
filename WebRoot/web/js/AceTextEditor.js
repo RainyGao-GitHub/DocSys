@@ -165,7 +165,7 @@ var AceTextEditor = (function () {
 	}
 	
     //EnableEditBtn触发的EnableEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
-    function enableEditCallback1(ret)
+    var enableEditCallback1 = function(ret)
     {
     	console.log("AceTextEditor enableEditCallback1() ret:", ret);
     	if(ret == undefined || ret.status == undefined)	//enableEdit异常
@@ -181,10 +181,10 @@ var AceTextEditor = (function () {
     	
     	//切换编辑器状态
     	setEditMode(true);
-    }
+    };
     
     //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
-    function enableEditCallback2(ret)
+    var enableEditCallback2 = function(ret)
     {
     	console.log("AceTextEditor enableEditCallback2() ret:", ret);
     	if(ret == undefined || ret.status == undefined)	//enableEdit异常
@@ -200,11 +200,10 @@ var AceTextEditor = (function () {
         	setEditMode(false);
     		return;
     	}
-
-    }
+    };
 	
     //ExitEditBtn触发的exitEdit，此时编辑器状态未发生任何变化，因此如果失败的话则不需要进行任何处理，如果成功的话则需要切换编辑器状态
-    function exitEditCallback1(ret)
+    var exitEditCallback1 = function (ret)
     {
     	console.log("AceTextEditor exitEditCallback1() ret:", ret);
     	if(ret == undefined || ret.status == undefined)	//异常
@@ -220,10 +219,10 @@ var AceTextEditor = (function () {
     	
     	//切换编辑器状态
     	setEditMode(false);
-    }
+    };
     
     //编辑器状态切换回调触发的EditEnable，此时编辑器状态已切换，因此如果成功的话则不需要进行任何处理，如果失败的话则需要切换编辑器状态
-    function exitEditCallback2(ret)
+    var exitEditCallback2 = function(ret)
     {
     	console.log("AceTextEditor exitEditCallback2() ret:", ret);
     	if(ret == undefined || ret.status == undefined)	//enableEdit异常
@@ -239,7 +238,7 @@ var AceTextEditor = (function () {
         	setEditMode(true);
     		return;
     	}    	
-    }
+    };
 	
 	//开放给外部的调用接口
 	//开放给外部的调用接口
@@ -256,7 +255,7 @@ var AceTextEditor = (function () {
 	    enableEdit: function(){
 	    	_commonEditor.enableEdit(enableEditCallback1);
 	    },	    
-	    exitEdit: function(mode){
+	    exitEdit: function(){
 	    	_commonEditor.exitEdit(exitEditCallback1);
 	    },
 	    saveDoc: function(){
