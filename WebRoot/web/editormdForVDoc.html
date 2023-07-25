@@ -3,10 +3,11 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>TextEditor</title>
-    <script src="static/scripts/jquery.min.js"></script>
+    <script src="static/artDialog/lib/jquery-1.10.2.js" type="text/javascript"></script>
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
-    <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+    <script src="static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+	<script src="static/bootstrapQ/qiao.js" type="text/javascript"></script>
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
@@ -78,13 +79,18 @@
 			for (var t = e.target; t !== this.$el; ) {
 	            if(t)
 	            {
-					console.log("try to block ", t.tagName);
 					if(t.tagName == 'A')
 					{
+						console.log("try to block ", t.tagName);
 						e.preventDefault();
+						console.log("try to open t.href:", t.href);
 						if(t.href)
 						{
-							return void window.open(t.href, "_blank").focus();
+							if(isValidUrl(t.href))
+							{
+								return void window.open(t.href, "_blank").focus();
+							}
+							return;
 						}
 						return;
 					}
@@ -95,6 +101,15 @@
 	            	return;
 	            }
 	        }
+		}
+		
+		function isValidUrl(href)
+		{
+			if(href.indexOf("javascript") == 0)
+			{
+				return false;
+			}
+			return true;
 		}
     </script>
 </body>

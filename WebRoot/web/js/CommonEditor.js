@@ -151,6 +151,8 @@
 			        
 			    if(checkDocInfo(_docInfo))
 			    {
+			    	console.log("CommonEditor appReady() _docInfo:", _docInfo);
+					_tmpSavedDocText = undefined;	//重新获取文件内容前清空临时文件内容
 			    	getDocText(_docInfo, showText, showErrorInfo);			
 					_onLoadDocument(_docInfo);
 			    }			
@@ -166,6 +168,7 @@
 			    
 			    // 初始化文档信息
 				console.log("CommonEditor openDocument() _docInfo:", _docInfo);
+				_tmpSavedDocText = undefined;	//重新获取文件内容前清空临时文件内容
 				getDocText(_docInfo, showText, showErrorInfo);
 				_onLoadDocument(_docInfo);
 		    }
@@ -464,6 +467,7 @@
 					},function () {
 				    	//alert("点击了确定");
 						_setContent(_tmpSavedDocText);
+						_tmpSavedDocText = undefined;	//清空_tmpSavedDocText
 				    	return true;   
 				 	},function (){
 				 		//alert("点击了取消");
