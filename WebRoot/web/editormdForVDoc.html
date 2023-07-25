@@ -68,6 +68,30 @@
 		$(document).ready(function () {
 			EditormdEditor.init("VDoc");
 		});
+		
+		//重载onClick避免超链接在当前页面打开
+		document.onclick = onClick;//当用户在文档中点击是调用onClick function（）
+		function onClick(e)
+		{
+			e = e || window.event; // 事件
+			//	var target = ev.target || ev.srcElement; // 获得事件源
+			for (var t = e.target; t !== this.$el; ) {
+	            if(t)
+	            {
+					console.log("try to block ", t.tagName);
+					if(t.tagName == 'A')
+					{
+						e.preventDefault();
+						return;
+					}
+					t = t.parentNode;
+	            }
+	            else
+	            {
+	            	return;
+	            }
+	        }
+		}
     </script>
 </body>
 </html>
