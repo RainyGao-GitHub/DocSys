@@ -31536,20 +31536,7 @@ webpackJsonp([1], [, , function(e, t, n) {
                     return e.toggleSidePreview()
                 }
             }
-        }, [n("icon-side-preview")], 1), e._v(" "), n("button", {
-            directives: [{
-                name: "title",
-                rawName: "v-title",
-                value: "Reader mode",
-                expression: "'Reader mode'"
-            }],
-            staticClass: "button-bar__button button-bar__button--editor-toggler button",
-            on: {
-                click: function(t) {
-                    return e.toggleEditor()
-                }
-            }
-        }, [n("icon-eye")], 1)]), e._v(" "), n("div", {
+        }, [n("icon-side-preview")], 1), e._v(" "), n()]), e._v(" "), n("div", {
             staticClass: "button-bar__inner button-bar__inner--bottom"
         }, [n("button", {
             directives: [{
@@ -32423,7 +32410,7 @@ webpackJsonp([1], [, , function(e, t, n) {
                     return e.toggleEditor()
                 }
             }
-        }, [n("icon-eye")], 1), e._v(" "), e.revisionContent ? n("div", {
+        }, [n("icon-close")], 1), e._v(" "), e.revisionContent ? n("div", {
             staticClass: "flex flex--row"
         }, [n("button", {
             staticClass: "navigation-bar__button navigation-bar__button--revision navigation-bar__button--restore button",
