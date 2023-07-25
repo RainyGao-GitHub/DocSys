@@ -9,7 +9,7 @@
         
         var _docInfo;
 		var _docText = "";
-		var _tmpSavedDocText = "";
+		var _tmpSavedDocText;
 		var _isContentChanged = false;
 		var _editState = false;
 		var _autoSaveTimer;
@@ -23,14 +23,8 @@
 		{
 			console.log("CommonEditor _initEditor() docInfo:", docInfo);
 			//console.log("CommonEditor _initEditor() _docText:", content);
-			if(content)
-			{
-				_docText = content;
-			}
-			if(tmpSavedContent)
-			{
-				_tmpSavedDocText = tmpSavedContent;
-			}
+			_docText = content;
+			_tmpSavedDocText = tmpSavedContent;
 			_config.initEditor(content, tmpSavedContent, docInfo);
 		}
 		
@@ -237,7 +231,8 @@
 		function showText(docText, tmpSavedDocText)
 		{
 			console.log("CommonEditor showText()");
-			//这里可以机上docText和tmpSavedDocText是否一致，以及用户的选择来来确定需要加载内容
+			_docText = docText;
+			_tmpSavedDocText = tmpSavedDocText;
 			_setContent(docText);
 		}
 		
