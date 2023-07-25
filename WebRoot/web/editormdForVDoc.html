@@ -82,6 +82,10 @@
 					if(t.tagName == 'A')
 					{
 						e.preventDefault();
+						if(t.href)
+						{
+							return void window.open(t.href, "_blank").focus();
+						}
 						return;
 					}
 					t = t.parentNode;
