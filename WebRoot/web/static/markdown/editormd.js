@@ -1874,9 +1874,11 @@
          */
         
         resize : function(width, height) {
-            
+            console.log("editormd.js resize()");
             width  = width  || null;
             height = height || null;
+
+            console.log("editormd.js resize() width:" + width + " height:" + height);
             
             var state      = this.state;
             var editor     = this.editor;
@@ -1916,7 +1918,8 @@
                     codeMirror.css("margin-top", 0).height(editor.height());
                 }
             }
-            
+
+        	console.log("editormd.js resize() settings.watch:" + settings.watch + " state.preview:" + state.preview);
             if(settings.watch) 
             {
                 codeMirror.width(editor.width() / 2);
@@ -1947,7 +1950,7 @@
             else 
             {
                 codeMirror.width(editor.width());
-                preview.hide();
+                //preview.hide();
             }
             
             if (state.loaded) 
