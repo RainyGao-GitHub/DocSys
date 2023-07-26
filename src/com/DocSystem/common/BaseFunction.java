@@ -2838,9 +2838,49 @@ public class BaseFunction{
 		}
 		
 		String localVerReposPathForGit = getLocalVerReposPathForGit(repos, type);
+		
+		if(isJsonFormat(remoteStorage))
+		{
+			return parseRemoteStorageConfigJson(remoteStorage, localVerReposPathForGit);			
+		}
 		return parseRemoteStorageConfig(remoteStorage, localVerReposPathForGit);
 	}
 	
+	private static RemoteStorageConfig parseRemoteStorageConfigJson(String remoteStorage,
+			String localVerReposPathForGit) {
+		
+		JSONObject jsonObj = JSON.parseObject(remoteStorage);
+		if(jsonObj == null)
+		{
+			return null;
+		}
+		
+		Log.printObject("parseRemoteStorageConfigJson() ", jsonObj);
+		
+		String legacyConfigStr = jsonObj.getString("config");
+		RemoteStorageConfig remote = parseRemoteStorageConfig(legacyConfigStr, localVerReposPathForGit);	
+		if(remote != null)
+		{		
+			remote.allowedMaxFile =  getAllowedMaxFile(jsonObj.getString("allowedMaxFile"));
+			remote.isUnkownFileAllowed =  getIsUnkownFileAllowed(jsonObj.getString("isUnkownFileAllowed"));
+			remote.allowedFileTypeHashMap =  getHashMapByListStr(jsonObj.getString("allowedFileTypeList"));
+			remote.notAllowedFileTypeHashMap =  getHashMapByListStr(jsonObj.getString("notAllowedFileTypeList"));
+			remote.notAllowedFileHashMap =  getHashMapByListStr(jsonObj.getString("notAllowedFileList"));
+			
+			//忽略列表初始化不在这里哦
+			remote.ignoreHashMap = new ConcurrentHashMap<String, Integer>();
+		}
+		return remote;
+	}
+
+	private static boolean isJsonFormat(String remoteStorage) {
+		if(remoteStorage.charAt(0) == '{')
+		{
+			return true;
+		}
+		return false;
+	}
+
 	protected static RemoteStorageConfig parseRemoteStorageConfig(String remoteStorage, String localVerReposPathForGit) {
 		if(remoteStorage == null)
 		{
