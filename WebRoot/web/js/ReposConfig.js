@@ -273,6 +273,80 @@ var ReposConfig = (function () {
 	   	{
 	   		$("#remoteStorage-autoPushForce").attr("checked",false);
 	   	}
+	   	
+	   	showRemoteStorageFilterConfig(reposInfo.remoteStorageConfig);
+	}
+	
+	function showRemoteStorageFilterConfig(remoteStorageConfig)
+	{
+		console.log("showRemoteStorageFilterConfig remoteStorageConfig:", remoteStorageConfig);
+		if(remoteStorageConfig == undefined)
+		{
+			return;
+		}
+		
+		var remoteStorageFilterEnable = 0;
+		
+		if(remoteStorageConfig.isUnkownFileAllowed != undefined)
+		{
+			remoteStorageFilterEnable = 1;
+			if(remoteStorageConfig.isUnkownFileAllowed == 0)
+			{
+	   			$("#remoteStorage-isUnkownFileAllowed").attr("checked", false);		
+			}
+			else
+			{
+	   			$("#remoteStorage-isUnkownFileAllowed").attr("checked","checked");		
+			}
+		}
+		else
+		{
+			$("#remoteStorage-isUnkownFileAllowed").attr("checked","checked");
+		}
+		
+		if(remoteStorageConfig.allowedMaxFile != undefined)
+		{
+			remoteStorageFilterEnable = 1;
+			$("#remoteStorage-allowedMaxFile option[value='" + remoteStorageConfig.allowedMaxFile + "']").attr("selected","selected");	
+		}
+		else
+		{
+			$("#remoteStorage-allowedMaxFile option[value='0']").attr("selected","selected");			
+		}
+		
+		if(remoteStorageConfig.allowedFileTypeHashMap)
+		{
+			remoteStorageFilterEnable = 1;	
+			var allowedFileTypeList = getAllowedFileTypeList(remoteStorageConfig.allowedFileTypeHashMap);
+			$("#remoteStorage-allowedFileTypeList").val(allowedFileTypeList);
+		}
+		
+		if(remoteStorageConfig.notAllowedFileTypeHashMap)
+		{
+			remoteStorageFilterEnable = 1;
+			var notAllowedFileTypeList = getNotAllowedFileTypeList(remoteStorageConfig.notAllowedFileTypeHashMap);
+			$("#remoteStorage-notAllowedFileTypeList").val(notAllowedFileTypeList);
+		}
+		
+		if(remoteStorageConfig.notAllowedFileHashMap)
+		{
+			remoteStorageFilterEnable = 1;
+			var notAllowedFileList = getNotAllowedFileList(remoteStorageConfig.notAllowedFileHashMap);
+			$("#remoteStorage-notAllowedFileList").val(notAllowedFileList);
+		}
+		
+		if(remoteStorageFilterEnable == 0)
+		{
+			//隐藏高级选项
+			$("#remoteStorageFilterConfig").hide();
+	   		$("#remoteStorageFilterEnable").attr("checked",false);
+		}
+		else
+		{
+			//显示高级选项
+			$("#remoteStorageFilterConfig").show();
+	   		$("#remoteStorageFilterEnable").attr("checked","checked");		
+		}
 	}
 	
 	/****** 全文搜索  *****/
@@ -1410,7 +1484,7 @@ var ReposConfig = (function () {
 		{
 	    	remoteServer = prefix + remoteServer;
 		}
-	    console.log("getRemoteStorageConfig remoteServer:" + remoteServer);
+	    console.log("getRemoteServerConfig remoteServer:" + remoteServer);
 		return remoteServer;
 	}	
 	
@@ -1445,14 +1519,14 @@ var ReposConfig = (function () {
 		MyJquery.show("remoteStorageProtocolConfig");
 	}
 	
-	function getRemoteStorageConfig()
+	function getRemoteStorageConfigBasic()
 	{   
-		var remoteStorageConfigEnable = MyJquery.isChecked("remoteStorageConfigEnable");
-		console.log("getRemoteStorageConfig remoteStorageConfigEnable:" + remoteStorageConfigEnable);
-		if(remoteStorageConfigEnable == 0)
-		{
-			return "";
-		}
+		//var remoteStorageConfigEnable = MyJquery.isChecked("remoteStorageConfigEnable");
+		//console.log("getRemoteStorageConfig remoteStorageConfigEnable:" + remoteStorageConfigEnable);
+		//if(remoteStorageConfigEnable == 0)
+		//{
+		//	return "";
+		//}
 		
 		var protocol = MyJquery.getValue("remoteStorageProtocol");
 		console.log("getRemoteStorageConfig protocol:" + protocol);
@@ -1487,6 +1561,49 @@ var ReposConfig = (function () {
 		}
 	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);
 		return remoteStorage;
+	}
+	
+	function getRemoteStorageConfig()
+	{		
+		var remoteBackupEnable = MyJquery.isChecked("remoteStorageConfigEnable");
+		console.log("getRemoteStorageConfig remoteStorageConfigEnable:" + remoteStorageConfigEnable);
+		if(remoteStorageConfigEnable == 0)
+		{
+			return "{}";
+		}
+	
+		var config = getRemoteStorageConfigBasic();
+		if(config == "")
+		{
+			return "{}";
+		}
+		
+		//高级选项
+	    var isUnkownFileAllowed = "";
+	    var allowedMaxFile = "";
+	    var allowedFileTypeList = "";
+	    var notAllowedFileTypeList = "";
+	    var notAllowedFileList = "";
+		var remoteStorageFilterEnable = MyJquery.isChecked("remoteStorageFilterEnable");
+		console.log("getRemoteStorageConfig remoteStorageFilterEnable:" + remoteStorageFilterEnable);
+		if(remoteStorageFilterEnable == 1)
+		{
+			isUnkownFileAllowed = MyJquery.isChecked("remoteStorage-isUnkownFileAllowed");
+		    allowedMaxFile = MyJquery.getValue("remoteStorage-allowedMaxFile");
+		    notAllowedFileTypeList = MyJquery.getValue("remoteStorage-notAllowedFileTypeList");
+		    notAllowedFileList = MyJquery.getValue("remoteStorage-notAllowedFileList");
+		}
+	    
+	    var remoteStorageConfig = 
+		"{" +
+			"config:\"" + config + "\"," +
+			"isUnkownFileAllowed:\"" + isUnkownFileAllowed + "\"," +
+			"allowedMaxFile:\"" + allowedMaxFile + "\"," +
+			"notAllowedFileTypeList:\"" + notAllowedFileTypeList + "\"," +
+			"notAllowedFileList:\"" + notAllowedFileList + "\"" +
+		"}";
+		
+		return remoteStorageConfig;
 	}
 	
 	/** 远程存储高级选项 **/
