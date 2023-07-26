@@ -1613,11 +1613,11 @@ var ReposConfig = (function () {
 		console.log("doSelectRemoteStorageFilterEnable enable:" + enable);
 		if(enable == 0)
 		{
-			MyJquery.hide("remoteStroageFilterConfig");
+			MyJquery.hide("remoteStorageFilterConfig");
 		}
 		else
 		{	
-			MyJquery.show("remoteStroageFilterConfig");
+			MyJquery.show("remoteStorageFilterConfig");
 		}
 	}
 	

@@ -2874,7 +2874,7 @@ public class BaseFunction{
 	}
 
 	private static boolean isJsonFormat(String remoteStorage) {
-		if(remoteStorage.charAt(0) == '{')
+		if(remoteStorage.length() > 0 && remoteStorage.charAt(0) == '{')
 		{
 			return true;
 		}
