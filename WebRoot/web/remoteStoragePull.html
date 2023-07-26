@@ -13,7 +13,7 @@
 	       <input type="text" name="pullEntryPath" class="form-control"  maxlength="400"></input>
 	   </div>
 	   <div class="col-sm-1">
-	       <button  type="button" class="btn btnPrimary">...</button>
+	       <button  type="button" class="btn btnPrimary" onclick="RemoteStoragePull.openFileSelector()">...</button>
 	   </div>
 	   <div name="pullControlDiv" style="margin-left:90px; margin-top:30px">
 		   <label>
@@ -33,6 +33,7 @@
 </div>
 
 <script src="js/md5.js"></script>
+<script src="js/FileSelector.js"></script>
 <script type="text/javascript">
 	function remoteStoragePullPageInit(_node, _repos)
 	{
@@ -200,6 +201,19 @@
 			     	window.location.reload();			        	
 	            }, 100);
       		}
+	   	}
+
+	   	function initFileSelector()
+	   	{
+	   		var config = {
+	   			"type" : "repos",	//repos:仓库;  zip: 压缩文件; remoteStorage: 远程存储; remoteServer: 远程服务器   
+	   		};
+	   		var fileSelector = new MxsdocAPI.FileSelector(config);
+	   	}
+			   	
+	   	function openFileSelector(selectedDoc)
+	   	{
+	   		fileSelector.open(selectedDoc);
 	   	}
 	   	
 		//开放给外部的调用接口
