@@ -15,11 +15,6 @@
           margin-top: 8px !important;
       }
 </style>
-<!-- artDialog -->
-<script src="static/artDialog/dist/dialog.js"></script>
-<script src="static/artDialog/dist/dialog-plus.js"></script>
-<link rel="stylesheet" href="./css/artDialog.css">
-<script src="./js/artDialog.js"></script>
 <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
@@ -32,7 +27,7 @@
 <script type="text/javascript" src="static/ContextJS/js/context.js"></script>
 
 <div>
-	<ul id="zipPlayer" class="ztree" style="margin-bottom: 120px;"></ul>
+	<ul id="ztreePlayer" class="ztree" style="margin-bottom: 120px;"></ul>
 </div>
 
 <script type="text/javascript">
@@ -50,26 +45,23 @@
 	}
 
 	var params = GetRequest();
-	var docid = params['docid'];
+	var dialogId = params['dialogId'];
 	//获取artDialog父窗口传递过来的参数
-	var artDialog2 = window.top.artDialogList['ArtDialog' + docid];
+	var artDialog2 = window.top.artDialogList['ArtDialog' + dialogId];
 	if (artDialog2 == null) {
-		artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
+		artDialog2 = window.parent.artDialogList['ArtDialog' + dialogId];
 	}
+	
 	// 获取对话框传递过来的数据
-	var docInfo = artDialog2.config.data;
-	console.log("docInfo:",docInfo);
-	var gShareId = docInfo.shareId;
-	var curRightClickedTreeNode = null;
-	
-	//用于解决artDialog再次调用artDialog的数据穿透问题
-	var gDialogData = {};
-	
+	var configData = artDialog2.config.data;
+	console.log("configData:",configData);
+	var docInfo = configData.docInfo;
+		
 	contextMenuInit();
 	
 	$(document).ready(function()
 	{
-		getAndShowZipInitMenu(docInfo);
+		getAndShowInitMenu(docInfo);
 	});
 		
 	function getAndShowZipInitMenu(docInfo) 
@@ -153,7 +145,7 @@
     		dataFilter: asyncDataFilter,
 	    };
     	setting.async = async;
-	    var doctree = $.fn.zTree.init($("#zipPlayer"), setting, data);
+	    var doctree = $.fn.zTree.init($("#ztreePlayer"), setting, data);
 	}
 	
 	//zTree's setting
@@ -325,7 +317,7 @@
  	
  	function showContextMenu(obj,event){
  		event.stopPropagation();
- 		context.show('#zipPlayer',event, -150);
+ 		context.show('#ztreePlayer',event, -150);
  	}
  	
     function contextMenuInit()
@@ -334,7 +326,7 @@
 		context.init({preventDoubleContext: true});
 		
 		//zTree上的右键菜单
-		context.attach('#zipPlayer', [
+		context.attach('#ztreePlayer', [
 			{text: '打开', action: function(e){
 					e.preventDefault();
 					zipOpenDoc();
