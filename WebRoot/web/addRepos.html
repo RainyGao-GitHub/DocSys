@@ -160,19 +160,16 @@
 	            	</label>
 					<div id="remoteStroageFilterConfig" style="margin-top:5px; display:none">
 						<div style="height:60px;">
-							<span>允许未知文件类型<input type="checkbox" id="remoteStorage-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
-						</div> 
-						<div style="height:60px;">
 							<span style="margin-top:5px">不允许的文件类型</span>
-							<textarea class="form-control" id="remoteStorage-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
+							<textarea class="form-control" id="remoteStorage-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 						</div>  
 						<div style="height:60px;">
 							<span style="margin-top:5px">不允许的文件</span>
-							<textarea class="form-control" id="remoteStorage-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
+							<textarea class="form-control" id="remoteStorage-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 						</div>  
 						<div style="height:60px;">
 							<span style="margin-top:5px">允许的最大文件</span>
-							<select class="form-control" id="remoteStorage-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:75%">  
+							<select class="form-control" id="remoteStorage-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:70%">  
 						        <option value="10485760">10M</option>   
 						        <option value="20971520">20M</option>   
 						        <option value="52428800">50M</option>   
@@ -184,7 +181,11 @@
 						        <option value="4294967296">4G</option>  
 						        <option value="0" selected>不限</option>  
 						    </select>
+						</div>
+						<div style="height:60px;">
+							<span>允许未知文件类型<input type="checkbox" id="remoteStorage-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
 						</div> 
+						 
 					</div>
 				</div>
 			</div>        	
@@ -399,23 +400,16 @@
 		            	</label>
 						<div id="remoteBackupFilterConfig" style="margin-top:5px; display:none">
 							<div style="height:60px;">
-								<span>允许未知文件类型<input type="checkbox" id="remoteBackup-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
-							</div> 
-							<div style="height:60px;">
-								<span style="margin-top:5px">允许的文件类型</span>
-								<textarea class="form-control" id="remoteBackup-allowedFileTypeList" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
-							</div>  
-							<div style="height:60px;">
 								<span style="margin-top:5px">不允许的文件类型</span>
-								<textarea class="form-control" id="remoteBackup-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
+								<textarea class="form-control" id="remoteBackup-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 							</div>  
 							<div style="height:60px;">
 								<span style="margin-top:5px">不允许的文件</span>
-								<textarea class="form-control" id="remoteBackup-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:75%"></textarea>
+								<textarea class="form-control" id="remoteBackup-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 							</div>  
 							<div style="height:60px;">
 								<span style="margin-top:5px">允许的最大文件</span>
-								<select class="form-control" id="remoteBackup-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:75%">  
+								<select class="form-control" id="remoteBackup-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:70%">  
 							        <option value="10485760">10M</option>   
 							        <option value="20971520">20M</option>   
 							        <option value="52428800">50M</option>   
@@ -427,6 +421,9 @@
 							        <option value="4294967296">4G</option>  
 							        <option value="0" selected>不限</option>  
 							    </select>
+							</div> 
+							<div style="height:60px;">
+								<span>允许未知文件类型<input type="checkbox" id="remoteBackup-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
 							</div> 
 						</div>
 						<div></div>
