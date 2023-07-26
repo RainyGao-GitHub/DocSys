@@ -7,6 +7,7 @@
 		var _self = this,	//_self是指实例化后的对象
         _config = config || {};
         	
+        //消息发送接口
 	    var _postMessage = function(msg) {
 	    	console.log("FileSelector _postMessage() msg:", msg);
 		    if (window.parent && window.JSON) {
@@ -105,16 +106,16 @@
             }
         };
         
-        function showFileSelectorInArtDialog(data) {
+        function showFileSelectorInArtDialog(config) {
         	//获取窗口的高度并设置高度
         	var height =  getArtDialogInitHeight();
         	var width = getArtDialogInitWidth();
-        	var fileSelectorId = data.fileSelectorId;
+        	var fileSelectorId = config.fileSelectorId;
         	var ArtDialogDivContentId = "div[aria-describedby='content:ArtDialog"+fileSelectorId+"']";
         	var ArtDialogId = "ArtDialog"  + fileSelectorId;
         	var d = new artDialog({
         		id: "ArtDialog" + fileSelectorId,
-        		title: data.title,
+        		title: config.title,
         		content: '<iframe frameborder="0" name="ArtDialog' + fileSelectorId + '" src="fileSelectorForArt.html?fileSelectorId=' + fileSelectorId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
         		msg: '页面正在加载，请稍等...',
         		foot: false,
@@ -124,9 +125,9 @@
         		height: height,
         		resize: true,
         		drag: true,
-        		data: data,
+        		data: config,
         		cancel: function () {
-        			console.log("showFileSelectorInArtDialog data:",data);
+        			console.log("showFileSelectorInArtDialog dialog was closed");
         			_unbindEvents(_onMessage);
         			return true;
         		}
@@ -140,12 +141,12 @@
         	$("."+ArtDialogId+" .aui-footer").parent().remove();
         }
         
-		function _init()
+		function _init(selectedDoc)
 		{
-			console.log("FileSelector _init() _config:", _config);
+			console.log("FileSelector _init() selectedDoc:", selectedDoc);
 
 			//open fileSelector.html in artDialog
-			showFileSelectorInArtDialog(_config);
+			showFileSelectorInArtDialog(_config, selectedDoc);
 			
 			//监听来自fileSelector的消息
 			_bindEvents(_onMessage);

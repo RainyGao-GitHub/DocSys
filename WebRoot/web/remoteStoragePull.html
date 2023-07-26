@@ -97,6 +97,7 @@
 	var RemoteStoragePull = (function () {
 		var node;
 		var repos;
+		var fileSelector;
 		
 		function init(_node, _repos)
 		{
@@ -125,6 +126,8 @@
 				pullEntryPath += node.name;	
 			}
 	        $("#dialog-remoteStoragePull input[name='pullEntryPath']").val(pullEntryPath);
+	        
+	        initFileSelector();
 		}
 
 		function doRemoteStoragePull()
@@ -205,15 +208,18 @@
 
 	   	function initFileSelector()
 	   	{
+	   		console.log("RemoteStoragePull initFileSelector");
 	   		var config = {
-	   			"type" : "repos",	//repos:仓库;  zip: 压缩文件; remoteStorage: 远程存储; remoteServer: 远程服务器   
+		   		"title"			 : "请选择需要拉取的文件或目录",
+	   			"fileSelectorId" : "RemoteStoragePullFileSelector", 
 	   		};
-	   		var fileSelector = new MxsdocAPI.FileSelector(config);
+	   		fileSelector = new MxsdocAPI.FileSelector(config);
 	   	}
 			   	
 	   	function openFileSelector(selectedDoc)
 	   	{
-	   		fileSelector.open(selectedDoc);
+	   		console.log("RemoteStoragePull openFileSelector");
+	   		fileSelector.init(selectedDoc);
 	   	}
 	   	
 		//开放给外部的调用接口
@@ -224,6 +230,9 @@
         	doRemoteStoragePull: function(){
         		doRemoteStoragePull();
             },
+            openFileSelector: function(selectedDoc){
+            	openFileSelector(selectedDoc);
+            },            
         };
 	})();
 
