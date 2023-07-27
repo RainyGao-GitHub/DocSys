@@ -33,8 +33,8 @@ var FileSelector = (function () {
            jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
            jsonObj.isZip = 1;
-           jsonObj.rootPath = docInfo.path;
-           jsonObj.rootName = docInfo.name;
+           jsonObj.rootPath = "";
+           jsonObj.rootName = "";
            //设置用户自定义文件图标（必须在standardStyle中有定义）
            if(jsonObj.type == 1)
            {
