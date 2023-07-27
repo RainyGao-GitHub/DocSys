@@ -17,16 +17,16 @@
 	   </div>
 	   <div name="pullControlDiv" style="margin-left:90px; margin-top:30px">
 		   <label>
-		   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">拉取子目录</span>
-		   	   <span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">强制拉取</span>
+		   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="RemoteStoragePull.doSelectRecurciveConfirm()">拉取子目录</span>
+		   	   <span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="RemoteStoragePull.doSelectForceConfirm()">强制拉取</span>
 		   </label>
 	   </div>			
 	</div>   
 	<div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="doRemoteStoragePull();" style="width: 100px;height: 42px;">确定</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelRemoteStoragePull();" style="width: 100px;height: 42px;">取消</button>
+		        <button  type="button" class="btn btnPrimary" onclick="RemoteStoragePull.doRemoteStoragePull();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="RemoteStoragePull.cancelRemoteStoragePull();" style="width: 100px;height: 42px;">取消</button>
 			</div>
 		</div>
 	</div>
@@ -34,65 +34,6 @@
 
 <script src="js/md5.js"></script>
 <script type="text/javascript">
-	function remoteStoragePullPageInit(_node, _repos)
-	{
-		console.log("remoteStoragePullPageInit() ", _node, _repos);
-		RemoteStoragePull.init(_node, _repos);  
-	}
-	
-	function closeRemoteStoragePullDialog()
-	{
-		closeBootstrapDialog("remoteStoragePull");
-	}
-
-	function doRemoteStoragePull()
-	{
-		RemoteStoragePull.doRemoteStoragePull();
-      	closeRemoteStoragePullDialog();	
-	}
-	
-	function cancelRemoteStoragePull()
-	{
-		closeRemoteStoragePullDialog();
-	}
-	
-	function doSelectRecurciveConfirm()
-	{
-		var recurciveEn = $("#dialog-remoteStoragePull input[name='recurciveEn']").is(':checked')? 1: 0;
-		if(recurciveEn == 1)
-		{
-			qiao.bs.confirm({
-		        id: 'recurcivePullConfirm',
-		        msg: '该操作将拉取目录下的所有文件，是否允许？',
-		    },function(){
-		    	//确认
-		    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked","checked");
-		    },function(){
-				//取消
-		    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked",false);			
-		    });
-		}
-	}
-	
-	
-	function doSelectForceConfirm()
-	{
-		var forceEn = $("#dialog-remoteStoragePull input[name='forceEn']").is(':checked')? 1: 0;
-		if(forceEn == 1)
-		{
-			qiao.bs.confirm({
-		        id: 'forcePullConfirm',
-		        msg: '文件可能被删除或覆盖，是否强制拉取？',
-		    },function(){
-		    	//确认
-		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked","checked");
-		    },function(){
-				//取消
-		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked",false);			
-		    });
-		}
-	}
-	
 	var RemoteStoragePull = (function () {
 		var node;
 		var repos;
@@ -125,12 +66,6 @@
 				pullEntryPath += node.name;	
 			}
 	        $("#dialog-remoteStoragePull input[name='pullEntryPath']").val(pullEntryPath);
-		}
-
-		function doRemoteStoragePull()
-		{		   	   
-		    remoteStoragePull();
-		    return true;
 		}
 		
 	   	function remoteStoragePull()
@@ -229,18 +164,89 @@
 	   		showFileSelectorInBootstrapDialog(data);
 	   	}
 	   	
+		function remoteStoragePullPageInit(_node, _repos)
+		{
+			console.log("remoteStoragePullPageInit() ", _node, _repos);
+			RemoteStoragePull.init(_node, _repos);  
+		}
+		
+		function closeRemoteStoragePullDialog()
+		{
+			closeBootstrapDialog("remoteStoragePull");
+		}
+
+		function doRemoteStoragePull()
+		{
+			remoteStoragePull();
+	      	closeRemoteStoragePullDialog();	
+		}
+		
+		function cancelRemoteStoragePull()
+		{
+			closeRemoteStoragePullDialog();
+		}
+		
+		function doSelectRecurciveConfirm()
+		{
+			var recurciveEn = $("#dialog-remoteStoragePull input[name='recurciveEn']").is(':checked')? 1: 0;
+			if(recurciveEn == 1)
+			{
+				qiao.bs.confirm({
+			        id: 'recurcivePullConfirm',
+			        msg: '该操作将拉取目录下的所有文件，是否允许？',
+			    },function(){
+			    	//确认
+			    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked","checked");
+			    },function(){
+					//取消
+			    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked",false);			
+			    });
+			}
+		}
+		
+		
+		function doSelectForceConfirm()
+		{
+			var forceEn = $("#dialog-remoteStoragePull input[name='forceEn']").is(':checked')? 1: 0;
+			if(forceEn == 1)
+			{
+				qiao.bs.confirm({
+			        id: 'forcePullConfirm',
+			        msg: '文件可能被删除或覆盖，是否强制拉取？',
+			    },function(){
+			    	//确认
+			    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked","checked");
+			    },function(){
+					//取消
+			    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked",false);			
+			    });
+			}
+		}
+	   	
 		//开放给外部的调用接口
         return {
 			init: function(_node, _repos){
 				init(_node, _repos);
 			},
-        	doRemoteStoragePull: function(){
-        		doRemoteStoragePull();
+            remoteStoragePullPageInit: function(node, repos){
+            	remoteStoragePullPageInit(node, repos);
             },
             openFileSelector: function(){
             	openFileSelector();
-            },            
-        };
+            },                        
+        	doRemoteStoragePull: function(){
+        		doRemoteStoragePull();
+            },
+            cancelRemoteStoragePull: function(){
+            	cancelRemoteStoragePull();
+            },   
+            doSelectRecurciveConfirm: function(){
+            	doSelectRecurciveConfirm();
+            },   
+            doSelectForceConfirm: function(){
+            	doSelectForceConfirm();
+            }, 
+		};
 	})();
 
 </script>
