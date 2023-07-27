@@ -74,40 +74,7 @@ var FileSelector = (function () {
 	            beforeRightClick: zTreeBeforeRightClick,
 	            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 	    },
-	    view: {
-        	//showLine: false,	//不显示文件下面的下划线
-        	//addDiyDom: addDiyDom         //设置zTree的自定义图标
-			addHoverDom: addHoverDom,
-			removeHoverDom: removeHoverDom,
-        }
 	};
-	
-	function addHoverDom(treeId, treeNode) {
-		var aObj = $("#" + treeNode.tId + "_a");
-		if ($("#diyBtn_"+treeNode.id).length>0) return;
-		var editStr = "<span class='caret pull-right' id='diyBtn_" + treeNode.id
-			+ "' title='"+treeNode.name+"' onfocus='this.blur();'></span>";
-		aObj.append(editStr);
-		var btn = $("#diyBtn_"+treeNode.id);
-		if (btn) btn.bind("click", function(e){
-			console.log("diyBtn onclick for " + treeNode.name);
-			curRightClickedTreeNode = treeNode;
-			showZipTreeContextMenu(e, -20, 5);
-		});
-	}
-	
-	function showZipTreeContextMenu(e, xoffset, yoffset)
-	{
-		$dd = $('#zipTreeContextMenu');
-		$dd.css({
-				left: e.pageX -360 + xoffset,
-				top: e.pageY - 100 + yoffset,
-			}).fadeIn(100);
-	}
-	
-	function removeHoverDom(treeId, treeNode) {
-		$("#diyBtn_"+treeNode.id).unbind().remove();
-	}
 	
 	function drawMenu(data) {
 		console.log("drawMenu");
@@ -158,6 +125,7 @@ var FileSelector = (function () {
 		_docInfo = data.docInfo;
 		_repos = data.repos;
 		_menu = data.menu;
+		//TODO: 插入根目录
 		drawMenu(data.menu);
 	}
 	
