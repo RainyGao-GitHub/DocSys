@@ -35,52 +35,24 @@
 <script src="js/md5.js"></script>
 <script type="text/javascript">
 	var RemoteStoragePull = (function () {
-		var node;
-		var repos;
-		var fileSelector;
-		
-		function init(_node, _repos)
-		{
-			console.log("RemoteStoragePull.init() node:", _node, _repos);
-
-			node = _node;
-			repos = _repos;
-			
-			var targetServer = getTargetServerDispInfo(repos);
-			console.log("targetSever:" + targetServer);
-	        $("#dialog-remoteStoragePull input[name='targetServer']").val(targetServer);
-
-			if(node.type == 2)
-			{
-				$("#dialog-remoteStoragePull span[name='recurciveEnSpan']").show();				
-			}
-						
-			//set pullEntryPath
-			var pullEntryPath = node.path;
-			if(pullEntryPath == undefined || pullEntryPath == "")
-			{
-				pullEntryPath = "/";
-			}
-			if(node.name)
-			{
-				pullEntryPath += node.name;	
-			}
-	        $("#dialog-remoteStoragePull input[name='pullEntryPath']").val(pullEntryPath);
-		}
+		var _node;
+		var _repos;
 		
 	   	function remoteStoragePull()
 	   	{
 	   		var forceEn = $("#dialog-remoteStoragePull input[name='forceEn']").is(':checked')? 1: 0;
 	   		var recurciveEn = $("#dialog-remoteStoragePull input[name='recurciveEn']").is(':checked')? 1: 0;
+	   		var pullEntryPath = $("#dialog-remoteStoragePull input[name='pullEntryPath']").val();
+	   		console.log("remoteStoragePull() pull entry:" + pullEntryPath);
 	   		
 	    	$.ajax({
 	             url : "/DocSystem/Bussiness/remoteStoragePull.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	                reposId : repos.id, 
-	                path: node.path,
-	                name : node.name,
+	                reposId : _repos.id, 
+	                path: pullEntryPath,
+	                name : "",
 		            shareId: gShareId,
 		            recurciveEn : recurciveEn,
 		            forceEn : forceEn,
@@ -159,17 +131,40 @@
 	   	{
 	   		console.log("RemoteStoragePull openFileSelector");
 	   		var data = {};
-	   		data.repos = repos;
+	   		data.repos = _repos;
 	   		data.menu = window.menu;
 	   		showFileSelectorInBootstrapDialog(data);
 	   	}
 	   	
-		function remoteStoragePullPageInit(_node, _repos)
+		function remoteStoragePullPageInit(node, repos)
 		{
-			console.log("remoteStoragePullPageInit() ", _node, _repos);
-			RemoteStoragePull.init(_node, _repos);  
-		}
-		
+			console.log("remoteStoragePullPageInit() node:", node, repos);
+
+			_node = node;
+			_repos = repos;
+			
+			var targetServer = getTargetServerDispInfo(repos);
+			console.log("targetSever:" + targetServer);
+	        $("#dialog-remoteStoragePull input[name='targetServer']").val(targetServer);
+
+			if(node.type == 2)
+			{
+				$("#dialog-remoteStoragePull span[name='recurciveEnSpan']").show();				
+			}
+						
+			//set pullEntryPath
+			var pullEntryPath = node.path;
+			if(pullEntryPath == undefined || pullEntryPath == "")
+			{
+				pullEntryPath = "/";
+			}
+			if(node.name)
+			{
+				pullEntryPath += node.name;	
+			}
+	        $("#dialog-remoteStoragePull input[name='pullEntryPath']").val(pullEntryPath);		
+	    }
+
 		function closeRemoteStoragePullDialog()
 		{
 			closeBootstrapDialog("remoteStoragePull");
@@ -225,9 +220,6 @@
 	   	
 		//开放给外部的调用接口
         return {
-			init: function(_node, _repos){
-				init(_node, _repos);
-			},
             remoteStoragePullPageInit: function(node, repos){
             	remoteStoragePullPageInit(node, repos);
             },
