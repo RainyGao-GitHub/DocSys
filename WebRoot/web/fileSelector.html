@@ -5,8 +5,8 @@
 	<div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="doSelect();" style="width: 100px;height: 42px;">确定</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelSelect();" style="width: 100px;height: 42px;">取消</button>
+		        <button  type="button" class="btn btnPrimary" onclick="FileSelector.doSelect();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="FileSelector.cancelSelect();" style="width: 100px;height: 42px;">取消</button>
 			</div>
 		</div>
 	</div>
@@ -62,18 +62,6 @@ var FileSelector = (function () {
 	            	parent: true,
 	            },
 	    },
-        //设置异步加载的参数
-        var async =  {
-    		enable : true,//设置 zTree 是否开启异步加载模式
-            url : "/DocSystem/Repos/getSubDocList.do",
-            type : "post",
-    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数
-    		otherParam:{
-    			"vid": reposId,
-                "shareId": gShareId,
-    		},
-    		dataFilter: asyncDataFilter,
-		};
 	    //zTree各种操作的回调函数定义
 	    callback: {
 	            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
@@ -91,21 +79,43 @@ var FileSelector = (function () {
         }
 	};
 	
+	function addHoverDom(treeId, treeNode) {
+		var aObj = $("#" + treeNode.tId + "_a");
+		if ($("#diyBtn_"+treeNode.id).length>0) return;
+		var editStr = "<span class='caret pull-right' id='diyBtn_" + treeNode.id
+			+ "' title='"+treeNode.name+"' onfocus='this.blur();'></span>";
+		aObj.append(editStr);
+		var btn = $("#diyBtn_"+treeNode.id);
+		if (btn) btn.bind("click", function(e){
+			console.log("diyBtn onclick for " + treeNode.name);
+			curRightClickedTreeNode = treeNode;
+			showZipTreeContextMenu(e, -20, 5);
+		});
+	}
+	
+	function showZipTreeContextMenu(e, xoffset, yoffset)
+	{
+		$dd = $('#zipTreeContextMenu');
+		$dd.css({
+				left: e.pageX -360 + xoffset,
+				top: e.pageY - 100 + yoffset,
+			}).fadeIn(100);
+	}
+	
+	function removeHoverDom(treeId, treeNode) {
+		$("#diyBtn_"+treeNode.id).unbind().remove();
+	}
+	
 	function zTreeInit(data) {
 	    console.log("zTreeInit");
-	    var async = {  
-    		enable : true,//设置 zTree 是否开启异步加载模式  
-            url : "/DocSystem/Doc/getSubDocList.do",
+        //设置异步加载的参数
+        var async =  {
+    		enable : true,//设置 zTree 是否开启异步加载模式
+            url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
-    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
-    		otherParam:{
-    			"reposId": docInfo.vid,
-		    	"docPath": docInfo.path, //zipFile的路径
-		    	"docName": docInfo.name, //zipFile的名字
-                "shareId": docInfo.shareId,
-    		},
+    		autoParam : ["vid", "id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数
     		dataFilter: asyncDataFilter,
-	    };
+		};
     	setting.async = async;
 	    var doctree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
 	}
@@ -122,7 +132,7 @@ var FileSelector = (function () {
 		closeBootstrapDialog("fileSelector");
 	}
 
-	function doSelect()
+	function doSelect(data)
 	{
 		//TODO: 回调
 		
@@ -136,32 +146,15 @@ var FileSelector = (function () {
 	
 	//开放给外部的调用接口
     return {
-		init: function(_type, _parentNode){
-			init(_type, _parentNode);
+    	fileSelectorPageInit: function(data){
+    		fileSelectorPageInit(data);
 		},
-    	doPullDoc: function(){
-    		doPullDoc();
-        },
-        deleteUserPreferServerConfirm: function()
-        {
-        	deleteUserPreferServerConfirm();
-        },
-        deleteUserPreferServer: function(serverId){
-        	deleteUserPreferServer(serverId);
-        },
-        showEditUserPreferServerPanel: function(){
-        	showEditUserPreferServerPanel();
-        },
-        initTaregetServerList: function() {
-        	initTaregetServerList();
-        },
-        doSelectTargetSever: function(){
-        	doSelectTargetSever();
-        },
-        doSelectTargetStorageType: function(){
-        	doSelectTargetStorageType();            	
-        },
-    };
+		doSelect: function(data){
+			doSelect(data);
+		},		
+		cancelSelect: function(){
+			cancelSelect();
+		},    };
 })();
 </script>
 

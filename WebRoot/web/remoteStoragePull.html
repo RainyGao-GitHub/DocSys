@@ -223,7 +223,10 @@
 	   	function openFileSelector()
 	   	{
 	   		console.log("RemoteStoragePull openFileSelector");
-	   		showFileSelectorInBootstrapDialog(window.menu);
+	   		var data = {};
+	   		data.repos = repos;
+	   		data.menu = window.menu;
+	   		showFileSelectorInBootstrapDialog(data);
 	   	}
 	   	
 		//开放给外部的调用接口
