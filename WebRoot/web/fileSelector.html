@@ -14,7 +14,10 @@
 
 <script type="text/javascript">
 var FileSelector = (function () {
-
+	var _docInfo;
+	var _repos;
+	var _menu;
+	
   	function asyncDataFilter(treeId, parentNode, responseData) {
 		console.log("asyncDataFilter");
 		var docList = responseData.data;
@@ -106,6 +109,34 @@ var FileSelector = (function () {
 		$("#diyBtn_"+treeNode.id).unbind().remove();
 	}
 	
+	function drawMenu(data) {
+		console.log("drawMenu");
+		window.menu = data;
+	    var menu = data;
+	    //遍历jason_arry
+      	for(var i=0; i<menu.length; i++)
+      	{
+           var jsonObj = menu[i];
+           jsonObj.id = jsonObj.docId;
+           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+           jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.Level = jsonObj.level;
+           jsonObj.isZip = 1;
+           jsonObj.rootPath = "";
+           jsonObj.rootName = "";
+           //设置用户自定义文件图标（必须在standardStyle中有定义）
+           if(jsonObj.type == 1)
+           {
+        	   var iconType = getDiyFileIconType(jsonObj.name);
+        	   if(iconType && iconType != "")
+        	   {
+        		   jsonObj.iconSkin = iconType;
+        	   }
+           }
+       }
+	   zTreeInit(menu);
+	}
+	
 	function zTreeInit(data) {
 	    console.log("zTreeInit");
         //设置异步加载的参数
@@ -123,8 +154,11 @@ var FileSelector = (function () {
 	function fileSelectorPageInit(data)
 	{
 		//初始目录
-		console.log("fileSelectorPageInit() data:",data);	
-		zTreeInit(data);
+		console.log("fileSelectorPageInit() data:",data);
+		_docInfo = data.docInfo;
+		_repos = data.repos;
+		_menu = data.menu;
+		drawMenu(data.menu);
 	}
 	
 	function closeFileSelectorDialog()
