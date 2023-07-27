@@ -109,10 +109,44 @@
 	            }, 100);
       		}
 	   	}
-
-    	function showFileSelectorInBootstrapDialog(data)
+    	
+    	var fileSelectorCallback =  function(node)
     	{
-    		console.log("showFileSelectorInBootstrapDialog data:", data);
+    		//update pullEntryPath
+			var pullEntryPath = node.path;
+			if(pullEntryPath == undefined || pullEntryPath == "")
+			{
+				pullEntryPath = "/";
+			}
+			if(node.name)
+			{
+				pullEntryPath += node.name;	
+			}
+	        $("#dialog-remoteStoragePull input[name='pullEntryPath']").val(pullEntryPath);		
+	        
+			if(node.type == 2)
+			{
+				$("#dialog-remoteStoragePull span[name='recurciveEnSpan']").show();				
+			}
+			else
+			{
+				$("#dialog-remoteStoragePull span[name='recurciveEnSpan']").hide();								
+			}
+    	}
+    	
+	   	function openFileSelector()
+	   	{
+	   		console.log("RemoteStoragePull openFileSelector");
+	   		var config = {};
+	   		config.repos = _repos;
+	   		config.menu = window.menu;
+	   		config.onSelect = fileSelectorCallback;
+	   		showFileSelectorInBootstrapDialog(config);
+	   	}
+	   	
+    	function showFileSelectorInBootstrapDialog(config)
+    	{
+    		console.log("showFileSelectorInBootstrapDialog config:", config);
 
     		bootstrapQ.dialog({
     			id: 'fileSelector',
@@ -122,19 +156,10 @@
     			foot: false,
     			big: false,
     			callback: function(){
-    				FileSelector.fileSelectorPageInit(data);	//fileSlector.html 页面加载完成，此时可以通过改函数传递参数了
+    				FileSelector.fileSelectorPageInit(config);	//fileSlector.html 页面加载完成，此时可以通过改函数传递参数了
     			},
     		});
     	}
-	   	
-	   	function openFileSelector()
-	   	{
-	   		console.log("RemoteStoragePull openFileSelector");
-	   		var data = {};
-	   		data.repos = _repos;
-	   		data.menu = window.menu;
-	   		showFileSelectorInBootstrapDialog(data);
-	   	}
 	   	
 		function remoteStoragePullPageInit(node, repos)
 		{

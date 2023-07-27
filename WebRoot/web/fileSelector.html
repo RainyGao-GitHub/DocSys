@@ -14,10 +14,26 @@
 
 <script type="text/javascript">
 var FileSelector = (function () {
-	var _docInfo;
+	var _config;
 	var _repos;
 	var _menu;
+	var _selectedNode;
 	
+	//zTree callback definitions
+    function zTreeOnClick(event, treeId, treeNode) 
+    {
+    	console.log("zTreeOnClick treeId:"+ treeId, treeNode);
+    	_selectedNode = treeNode;
+    }
+      
+    function zTreeOnDbClick(event, treeId, treeNode) 
+    {
+    	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
+    	_selectedNode = treeNode;
+
+    	doSelect();
+    }
+      
   	function asyncDataFilter(treeId, parentNode, responseData) {
 		console.log("asyncDataFilter");
 		var docList = responseData.data;
@@ -78,7 +94,6 @@ var FileSelector = (function () {
 	
 	function drawMenu(data) {
 		console.log("drawMenu");
-		window.menu = data;
 	    var menu = data;
 	    //遍历jason_arry
       	for(var i=0; i<menu.length; i++)
@@ -118,15 +133,15 @@ var FileSelector = (function () {
 	    var doctree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
 	}
 	
-	function fileSelectorPageInit(data)
+	function fileSelectorPageInit(config)
 	{
 		//初始目录
-		console.log("fileSelectorPageInit() data:",data);
-		_docInfo = data.docInfo;
-		_repos = data.repos;
-		_menu = data.menu;
+		console.log("fileSelectorPageInit() config:",config);
+		_config = config || {};
+		_repos = config.repos;
+		_menu = config.menu;
 		//TODO: 插入根目录
-		drawMenu(data.menu);
+		drawMenu(config.menu);
 	}
 	
 	function closeFileSelectorDialog()
@@ -134,9 +149,12 @@ var FileSelector = (function () {
 		closeBootstrapDialog("fileSelector");
 	}
 
-	function doSelect(data)
+	function doSelect()
 	{
-		//TODO: 回调
+		console.log("doSelect() _selectedNode:",_selectedNode);
+
+		//callbck
+		_config.onSelect && _config.onSelect(_selectedNode);
 		
 		closeFileSelectorDialog();	
 	}
@@ -148,11 +166,11 @@ var FileSelector = (function () {
 	
 	//开放给外部的调用接口
     return {
-    	fileSelectorPageInit: function(data){
-    		fileSelectorPageInit(data);
+    	fileSelectorPageInit: function(config){
+    		fileSelectorPageInit(config);
 		},
-		doSelect: function(data){
-			doSelect(data);
+		doSelect: function(){
+			doSelect();
 		},		
 		cancelSelect: function(){
 			cancelSelect();
