@@ -1,0 +1,167 @@
+<div id="dialog-fileSelector" class="form-horizontal">
+    <div class="form-group">
+    	<ul id="ztreeForFileSelector" class="ztree" style="margin-bottom: 120px;"></ul>
+    </div>
+	<div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="doSelect();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelSelect();" style="width: 100px;height: 42px;">取消</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+var FileSelector = (function () {
+
+  	function asyncDataFilter(treeId, parentNode, responseData) {
+		console.log("asyncDataFilter");
+		var docList = responseData.data;
+		if(!docList)
+		{
+			return docList;
+		}
+		//遍历jason_arry, convert the node type to isParent flag
+      	for(var i=0; i<docList.length; i++)
+      	{
+           var jsonObj = docList[i];
+           jsonObj.id = jsonObj.docId;
+           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+           jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.isZip = 1;
+           jsonObj.rootPath = docInfo.path;
+           jsonObj.rootName = docInfo.name;
+           //设置用户自定义文件图标（必须在standardStyle中有定义）
+           if(jsonObj.type == 1)
+           {
+        	   var iconType = getDiyFileIconType(jsonObj.name);
+        	   if(iconType && iconType != "")
+        	   {
+        		   jsonObj.iconSkin = iconType;
+        	   }
+           }
+       }
+       console.log(docList);
+	   return docList;
+	}
+  	
+	//zTree's setting
+	var setting = {
+	   	//可编辑功能设置
+		edit: {},
+           //zTree数据格式
+	   	data: {
+	   			//使用简单数据模式
+	            simpleData: {
+	                enable: true,
+	            },
+	            //不允许修改leaf node and parent node的isParent属性
+	            keep: {
+	            	leaf: true,
+	            	parent: true,
+	            },
+	    },
+        //设置异步加载的参数
+        var async =  {
+    		enable : true,//设置 zTree 是否开启异步加载模式
+            url : "/DocSystem/Repos/getSubDocList.do",
+            type : "post",
+    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数
+    		otherParam:{
+    			"vid": reposId,
+                "shareId": gShareId,
+    		},
+    		dataFilter: asyncDataFilter,
+		};
+	    //zTree各种操作的回调函数定义
+	    callback: {
+	            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
+                onAsyncSuccess: zTreeOnAsyncSuccess, //异步加载完成后的回调
+	            onClick: zTreeOnClick,
+	            onDblClick: zTreeOnDbClick,
+	            beforeRightClick: zTreeBeforeRightClick,
+	            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
+	    },
+	    view: {
+        	//showLine: false,	//不显示文件下面的下划线
+        	//addDiyDom: addDiyDom         //设置zTree的自定义图标
+			addHoverDom: addHoverDom,
+			removeHoverDom: removeHoverDom,
+        }
+	};
+	
+	function zTreeInit(data) {
+	    console.log("zTreeInit");
+	    var async = {  
+    		enable : true,//设置 zTree 是否开启异步加载模式  
+            url : "/DocSystem/Doc/getSubDocList.do",
+            type : "post",
+    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
+    		otherParam:{
+    			"reposId": docInfo.vid,
+		    	"docPath": docInfo.path, //zipFile的路径
+		    	"docName": docInfo.name, //zipFile的名字
+                "shareId": docInfo.shareId,
+    		},
+    		dataFilter: asyncDataFilter,
+	    };
+    	setting.async = async;
+	    var doctree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
+	}
+	
+	function fileSelectorPageInit(data)
+	{
+		//初始目录
+		console.log("fileSelectorPageInit() data:",data);	
+		zTreeInit(data);
+	}
+	
+	function closeFileSelectorDialog()
+	{
+		closeBootstrapDialog("fileSelector");
+	}
+
+	function doSelect()
+	{
+		//TODO: 回调
+		
+		closeFileSelectorDialog();	
+	}
+	
+	function cancelSelect()
+	{
+		closeFileSelectorDialog();
+	}
+	
+	//开放给外部的调用接口
+    return {
+		init: function(_type, _parentNode){
+			init(_type, _parentNode);
+		},
+    	doPullDoc: function(){
+    		doPullDoc();
+        },
+        deleteUserPreferServerConfirm: function()
+        {
+        	deleteUserPreferServerConfirm();
+        },
+        deleteUserPreferServer: function(serverId){
+        	deleteUserPreferServer(serverId);
+        },
+        showEditUserPreferServerPanel: function(){
+        	showEditUserPreferServerPanel();
+        },
+        initTaregetServerList: function() {
+        	initTaregetServerList();
+        },
+        doSelectTargetSever: function(){
+        	doSelectTargetSever();
+        },
+        doSelectTargetStorageType: function(){
+        	doSelectTargetStorageType();            	
+        },
+    };
+})();
+</script>
+

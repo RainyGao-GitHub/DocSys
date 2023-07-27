@@ -33,7 +33,6 @@
 </div>
 
 <script src="js/md5.js"></script>
-<script src="js/FileSelector.js"></script>
 <script type="text/javascript">
 	function remoteStoragePullPageInit(_node, _repos)
 	{
@@ -126,8 +125,6 @@
 				pullEntryPath += node.name;	
 			}
 	        $("#dialog-remoteStoragePull input[name='pullEntryPath']").val(pullEntryPath);
-	        
-	        initFileSelector();
 		}
 
 		function doRemoteStoragePull()
@@ -206,20 +203,27 @@
       		}
 	   	}
 
-	   	function initFileSelector()
-	   	{
-	   		console.log("RemoteStoragePull initFileSelector");
-	   		var config = {
-		   		"title"			 : "请选择需要拉取的文件或目录",
-	   			"fileSelectorId" : "RemoteStoragePullFileSelector", 
-	   		};
-	   		fileSelector = new MxsdocAPI.FileSelector(config);
-	   	}
-			   	
-	   	function openFileSelector(selectedDoc)
+    	function showFileSelectorInBootstrapDialog(data)
+    	{
+    		console.log("showFileSelectorInBootstrapDialog data:", data);
+
+    		bootstrapQ.dialog({
+    			id: 'fileSelector',
+    			url: 'fileSelector.html',
+    			title: '文件选择',
+    			msg: '页面正在加载，请稍等...',
+    			foot: false,
+    			big: false,
+    			callback: function(){
+    				FileSelector.fileSelectorPageInit(data);	//fileSlector.html 页面加载完成，此时可以通过改函数传递参数了
+    			},
+    		});
+    	}
+	   	
+	   	function openFileSelector()
 	   	{
 	   		console.log("RemoteStoragePull openFileSelector");
-	   		fileSelector.init(selectedDoc);
+	   		showFileSelectorInBootstrapDialog(window.menu);
 	   	}
 	   	
 		//开放给外部的调用接口
@@ -230,8 +234,8 @@
         	doRemoteStoragePull: function(){
         		doRemoteStoragePull();
             },
-            openFileSelector: function(selectedDoc){
-            	openFileSelector(selectedDoc);
+            openFileSelector: function(){
+            	openFileSelector();
             },            
         };
 	})();
