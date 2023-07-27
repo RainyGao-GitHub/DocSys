@@ -33,22 +33,21 @@ var FileSelector = (function () {
 
     	doSelect();
     }
-      
-  	function asyncDataFilter(treeId, parentNode, responseData) {
-		console.log("asyncDataFilter");
-		var docList = responseData.data;
-		if(!docList)
+    
+    function formatDocList(docList)
+    {
+    	if(!docList)
 		{
 			return docList;
 		}
-		//遍历jason_arry, convert the node type to isParent flag
+	
+    	//遍历jason_arry, convert the node type to isParent flag
       	for(var i=0; i<docList.length; i++)
       	{
            var jsonObj = docList[i];
            jsonObj.id = jsonObj.docId;
-           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
-           jsonObj.isZip = 1;
            jsonObj.rootPath = "";
            jsonObj.rootName = "";
            //设置用户自定义文件图标（必须在standardStyle中有定义）
@@ -60,63 +59,16 @@ var FileSelector = (function () {
         		   jsonObj.iconSkin = iconType;
         	   }
            }
-       }
-       console.log(docList);
-	   return docList;
-	}
-  	
-	//zTree's setting
-	var setting = {
-	   	//可编辑功能设置
-		edit: {},
-           //zTree数据格式
-	   	data: {
-	   			//使用简单数据模式
-	            simpleData: {
-	                enable: true,
-	            },
-	            //不允许修改leaf node and parent node的isParent属性
-	            keep: {
-	            	leaf: true,
-	            	parent: true,
-	            },
-	    },
-	    //zTree各种操作的回调函数定义
-	    callback: {
-	            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
-                onAsyncSuccess: zTreeOnAsyncSuccess, //异步加载完成后的回调
-	            onClick: zTreeOnClick,
-	            onDblClick: zTreeOnDbClick,
-	            beforeRightClick: zTreeBeforeRightClick,
-	            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
-	    },
-	};
-	
-	function drawMenu(data) {
-		console.log("drawMenu");
-	    var menu = data;
-	    //遍历jason_arry
-      	for(var i=0; i<menu.length; i++)
-      	{
-           var jsonObj = menu[i];
-           jsonObj.id = jsonObj.docId;
-           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
-           jsonObj.isParent = jsonObj.type == 1? false: true;
-           jsonObj.Level = jsonObj.level;
-           jsonObj.isZip = 1;
-           jsonObj.rootPath = "";
-           jsonObj.rootName = "";
-           //设置用户自定义文件图标（必须在standardStyle中有定义）
-           if(jsonObj.type == 1)
-           {
-        	   var iconType = getDiyFileIconType(jsonObj.name);
-        	   if(iconType && iconType != "")
-        	   {
-        		   jsonObj.iconSkin = iconType;
-        	   }
-           }
-       }
-	   zTreeInit(menu);
+      	}
+    }
+    
+  	function asyncDataFilter(treeId, parentNode, responseData) 
+  	{
+		console.log("asyncDataFilter");
+		var docList = responseData.data;
+		formatDocList(docList);		
+		console.log(docList);
+		return docList;
 	}
 	
 	function zTreeInit(data) {
@@ -129,8 +81,115 @@ var FileSelector = (function () {
     		autoParam : ["vid", "id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数
     		dataFilter: asyncDataFilter,
 		};
+        
+    	//zTree's setting
+    	var setting = {
+    	   	//可编辑功能设置
+    		edit: {},
+               //zTree数据格式
+    	   	data: {
+    	   			//使用简单数据模式
+    	            simpleData: {
+    	                enable: true,
+    	            },
+    	            //不允许修改leaf node and parent node的isParent属性
+    	            keep: {
+    	            	leaf: true,
+    	            	parent: true,
+    	            },
+    	    },
+    	    //zTree各种操作的回调函数定义
+    	    callback: {
+    	            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
+                    onAsyncSuccess: zTreeOnAsyncSuccess, //异步加载完成后的回调
+    	            onClick: zTreeOnClick,
+    	            onDblClick: zTreeOnDbClick,
+    	            beforeRightClick: zTreeBeforeRightClick,
+    	            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
+    	    },
+    	};
+    	
     	setting.async = async;
-	    var doctree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
+	    var zTree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
+	    var rootNode = zTree.getNodeByParam("id", 0);
+		if(rootNode)
+		{
+			zTree.expandNode(rootNode, true, false, true); //展开根目录
+		}
+	}
+	
+	function buildRootDoc(repos)
+	{
+		var node = {};
+		node.vid = repos.id;
+		node.id = 0;
+		node.docId = 0;	//docId same to id
+		node.pid = -1;
+		node.path = "";
+		node.name = "";
+		node.type = 2;	//rootDoc must be folder
+		return node;
+	}
+	
+	function getInitMenu(repos, node)
+   	{
+		console.log("getInitMenu repos:", repos, " node:", node);
+		var docId = 0;
+		var path = "";
+		var name = "";
+		if(node)
+		{
+			docId = node.id;
+			path = node.path;
+			name = node.name;
+		}
+		
+		$.ajax({
+		    url : "/DocSystem/Repos/getReposInitMenu.do",
+		    type : "post",
+		    dataType : "json",
+		    data : {
+		        reposId : repos.id,
+		    	docId:  docId,
+		    	path: path,
+		    	name: name,
+		    },
+		    success : function (ret) {
+		        	if( "ok" == ret.status ){
+		        		console.log("getInitMenu() ret",ret);
+
+		        		var docList = ret.data || [];
+		        		var rootDoc = buildRootDoc(repos);
+		        		docList.push(rootDoc);
+		        		formatDocList(docList);
+		        	    zTreeInit(docList);
+		                
+		        	    var treeNode;
+		        	    if(node)	//try to select the node
+		        	    {
+		        	    	treeNode = getNodeByNodeId(node.id);
+			        		if(treeNode && treeNode != null)
+			        		{
+			        			var zTree = $.fn.zTree.getZTreeObj("ztreeForFileSelector");
+			        			//select this node in zTree
+			        		 	zTree.selectNode(treeNode);
+			        			_selectedNode = treeNode;
+			        		}
+		        	    }
+		        	    else
+		        	    {
+		        	    	zTree
+		        	    }
+		            }
+		            else
+		           	{
+						showErrorMessage("获取目录失败:" + ret.msgInfo);
+		           	}
+		        },
+		        error : function () {
+		            showErrorMessage("获取目录失败:服务器异常");
+		        }
+		    });
 	}
 	
 	function fileSelectorPageInit(config)
@@ -139,9 +198,9 @@ var FileSelector = (function () {
 		console.log("fileSelectorPageInit() config:",config);
 		_config = config || {};
 		_repos = config.repos;
-		_menu = config.menu;
-		//TODO: 插入根目录
-		drawMenu(config.menu);
+		_docInfo = config.doc;
+		
+		getInitMenu(_repos, _docInfo);
 	}
 	
 	function closeFileSelectorDialog()
