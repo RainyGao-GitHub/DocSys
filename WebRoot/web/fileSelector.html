@@ -176,10 +176,7 @@ var FileSelector = (function () {
 		        		console.log("getInitMenu() ret",ret);
 
 		        		var docList = ret.data || [];
-		        		var rootDoc = buildRootDoc(repos);
-		        		docList.push(rootDoc);
-		        		formatDocList(docList);
-		        	    zTreeInit(docList, node);
+		        		InitMenu(docList, node);
 		            }
 		            else
 		           	{
@@ -192,6 +189,14 @@ var FileSelector = (function () {
 		    });
 	}
 	
+	function InitMenu(menu, node)
+	{
+		var rootDoc = buildRootDoc(_repos);
+		menu.push(rootDoc);
+		formatDocList(menu);
+	    zTreeInit(menu, node);
+	}
+	
 	function fileSelectorPageInit(config)
 	{
 		//初始目录
@@ -200,7 +205,14 @@ var FileSelector = (function () {
 		_repos = config.repos;
 		_docInfo = config.doc;
 		
-		getInitMenu(_repos, _docInfo);
+		if(_config.menu)
+		{
+			InitMenu(_config.menu, _docInfo);
+		}
+		else
+		{
+			getInitMenu(_repos, _docInfo);
+		}
 	}
 	
 	function closeFileSelectorDialog()
