@@ -79,6 +79,9 @@ var FileSelector = (function () {
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
     		autoParam : ["vid", "id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数
+    		otherParam:{
+    			"listType": 3,	//LocalEntryAndRemoteStorage
+    		},
     		dataFilter: asyncDataFilter,
 		};
         
@@ -166,6 +169,7 @@ var FileSelector = (function () {
 		    	docId:  docId,
 		    	path: path,
 		    	name: name,
+		    	listType : 3,    //LocalEntryAndRemoteStorage
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
