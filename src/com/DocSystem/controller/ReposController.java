@@ -1650,6 +1650,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getReposInitMenu.do")
 	public void getReposInitMenu(Integer reposId,Long docId, Long pid, String path, String name, Integer level, Integer type,
 			Integer shareId,
+			Integer listType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** getReposInitMenu.do ***********************");
@@ -1753,12 +1754,12 @@ public class ReposController extends BaseController{
 		List <Doc> subDocList = null;
 		if(doc == null)
 		{
-			subDocList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);
+			subDocList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, listType, rt);
 		}
 		else
 		{
 			//获取用户可访问文件列表(From Root to Doc)
-			subDocList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt);
+			subDocList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, listType, rt);
 		}
 		
 		if(subDocList != null)
@@ -1781,6 +1782,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getSubDocList.do")
 	public void getSubDocList(Integer vid, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			Integer shareId,
+			Integer listType,
 			String sort,
 			Integer needLockState,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1890,7 +1892,7 @@ public class ReposController extends BaseController{
 		//docAuthHashMap for access_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		
-		docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
+		docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, listType, rt);
 
 		if(docList == null)
 		{
@@ -1943,6 +1945,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getSubDocListRS.do")
 	public void getSubDocListEx(Integer reposId, String remoteDirectory, String path,
 			String authCode,
+			Integer listType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** getSubDocListRS.do ***********************");
@@ -2023,7 +2026,7 @@ public class ReposController extends BaseController{
 		//docAuthHashMap for access_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		
-		docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, false, rt);
+		docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, listType, rt);
 		rt.setData(docList);	
 		Log.debug("getSubDocListRS() docList ready");
 		writeJson(rt, response);
@@ -2062,6 +2065,7 @@ public class ReposController extends BaseController{
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			Integer listType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){		
 		Log.infoHead("****************** getReposManagerMenu.do ***********************");
 		Log.debug("getReposManagerMenu vid: " + vid);
@@ -2118,14 +2122,14 @@ public class ReposController extends BaseController{
 		List <Doc> docList = null;
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);
+			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, listType, rt);
 		}
 		else
 		{
 			Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, null, docAuthHashMap, rt);
+			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, null, docAuthHashMap, listType, rt);
 		}
 		
 		//清除errorStaus, 管理后台这里不要让前台报错, 避免因为无法获取远程的列表导致无法进行仓库配置修改

@@ -118,6 +118,11 @@ public class BaseFunction{
 	protected static final int SAVE_TYPE_DataBuffer = 4;
 	protected static final int SAVE_TYPE_ChunkedFile = 5;
 	
+	//getDocListType
+	protected static final int GetDocList_LocalEntry = 1;
+	protected static final int GetDocList_RemoteStorage = 2;
+	protected static final int GetDocList_LocalEntryAndRemoteStorage = 3;
+	
 	//应用路径
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;

@@ -562,10 +562,10 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, Integer listType, ReturnAjax rt) 
 	{	
 		Log.debug("getAccessableSubDocList() docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");				
-		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, true, rt);
+		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, listType, rt);
 	
 		if(docList != null)
 		{
@@ -577,10 +577,10 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, boolean remoteStorageEn, ReturnAjax rt)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, Integer type, ReturnAjax rt)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
-		List<Doc> tmpDocList = docSysGetDocList(repos, doc, remoteStorageEn);
+		List<Doc> tmpDocList = docSysGetDocList(repos, doc, type);
 
 		if(tmpDocList != null)
     	{
@@ -599,25 +599,63 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 
-	protected List<Doc> docSysGetDocList(Repos repos, Doc doc, boolean remoteStorageEn) 
+	protected List<Doc> docSysGetDocList(Repos repos, Doc doc, Integer type) 
 	{
 		Log.debug("docSysGetDocList() docId:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 		//文件管理系统
 		if(isFSM(repos))
 		{
+			if(type == null)
+			{
+				type = GetDocList_LocalEntry;
+			}
+			
+			List<Doc> docList = null;
+			switch(type)
+			{
+			case GetDocList_LocalEntry:
+				docList =  getLocalEntryList(repos, doc);
+				break;
+			case GetDocList_RemoteStorage:
+				docList = getReposRemoteStorageEntryList(repos, doc);
+				break;
+			case GetDocList_LocalEntryAndRemoteStorage:
+				docList = docSysGetDocListWithChangeType(repos, doc);
+				break;
+			}
+			
 			//用户更关心本地真实存在的文件，远程存储的文件用户自己会去确认，因此没有必要获取远程的文件列表
 			//除非以后有显示文件的本地和远程区别的需求
 			//if(remoteStorageEn)
 			//{
 			//	return docSysGetDocListWithChangeType(repos, doc);
 			//}
-			return getLocalEntryList(repos, doc);
+			return docList;
 		}
 		
 		//文件服务器前置
 		return getRemoteServerEntryList(repos, doc);
 	}
-	
+
+	protected List<Doc> getReposRemoteStorageEntryList(Repos repos, Doc doc) {
+		RemoteStorageConfig remote = repos.remoteStorageConfig;
+		if(remote == null)
+		{
+			Log.debug("getReposRemoteStorageEntryList remote is null");
+			return null;
+		}
+		
+		List<Doc> remoteList = getRemoteStorageEntryList(repos, doc, remote, null);
+		if(remoteList == null)
+		{
+			Log.debug("getReposRemoteStorageEntryList remoteList is null");
+			return null;
+		}
+		
+		Log.printObject("getReposRemoteStorageEntryList remoteList:", remoteList);
+		return remoteList;
+	}
+
 	protected List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
 		List<Doc> localList = getLocalEntryList(repos, doc);
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
@@ -1081,11 +1119,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  Doc rootDoc, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  Doc rootDoc, HashMap<Long, DocAuth> docAuthHashMap, Integer listType, ReturnAjax rt)
 	{
 		//Log.debug("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
 				
-		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);	//get subDocList under root
+		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, listType, rt);	//get subDocList under root
 		if(resultList == null || resultList.size() == 0)
 		{
 			//Log.debug("getDocListFromRootToDoc() docList under root is empty");			
@@ -1129,7 +1167,7 @@ public class BaseController  extends BaseFunction{
 			Doc tempDoc = buildBasicDoc(reposId, null, pid, doc.getReposPath(), pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
-			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt);
+			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, listType, rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
 				docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + pPath+name, rt);
@@ -5068,7 +5106,7 @@ public class BaseController  extends BaseFunction{
 			subEntryPushFlag = 0;
 		}
 		
-		List<Doc> entryList = docSysGetDocList(repos, doc, true);
+		List<Doc> entryList = docSysGetDocList(repos, doc, GetDocList_LocalEntry);
 		if(entryList == null)
 		{
 			Log.info("refreshSearchIndexForSubEntries() getLocalEntryList return null for:" + doc.getPath() + doc.getName());			
@@ -5398,7 +5436,7 @@ public class BaseController  extends BaseFunction{
 			subDocSyncupFlag = 0;
 		}
 		
-		List<Doc> entryList = docSysGetDocList(repos, doc, false);		
+		List<Doc> entryList = docSysGetDocList(repos, doc, GetDocList_LocalEntry);		
 		if(entryList == null)
     	{
     		Log.debug("buildIndexForDoc() entryList 获取异常:");
@@ -6948,7 +6986,7 @@ public class BaseController  extends BaseFunction{
     	
 		if(addSubDocs)
 		{
-			List<Doc> subDocList = docSysGetDocList(repos, doc, false);			
+			List<Doc> subDocList = docSysGetDocList(repos, doc, GetDocList_LocalEntry);			
 			if(subDocList != null)
 			{
 				for(int i=0; i<subDocList.size(); i++)
