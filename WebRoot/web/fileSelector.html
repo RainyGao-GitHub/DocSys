@@ -71,7 +71,7 @@ var FileSelector = (function () {
 		return docList;
 	}
 	
-	function zTreeInit(data) {
+	function zTreeInit(data, node) {
 	    console.log("zTreeInit");
         //设置异步加载的参数
         var async =  {
@@ -110,12 +110,25 @@ var FileSelector = (function () {
     	};
     	
     	setting.async = async;
-	    var zTree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
-	    var rootNode = zTree.getNodeByParam("id", 0);
-		if(rootNode)
-		{
-			zTree.expandNode(rootNode, true, false, true); //展开根目录
-		}
+	    
+    	var zTree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
+	    if(node && node.docId)	//try to select the node
+	    {
+	    	var treeNode = zTree.getNodeByParam("id", node.docId);
+    		if(treeNode && treeNode != null)
+    		{
+    		 	zTree.selectNode(treeNode);
+    			_selectedNode = treeNode;
+    		}
+	    }
+	    else
+	    {
+	    	var rootNode = zTree.getNodeByParam("id", 0);
+			if(rootNode)
+			{
+				zTree.expandNode(rootNode, true, false, true); //展开根目录
+			}
+	    }
 	}
 	
 	function buildRootDoc(repos)
@@ -162,24 +175,7 @@ var FileSelector = (function () {
 		        		var rootDoc = buildRootDoc(repos);
 		        		docList.push(rootDoc);
 		        		formatDocList(docList);
-		        	    zTreeInit(docList);
-		                
-		        	    var treeNode;
-		        	    if(node)	//try to select the node
-		        	    {
-		        	    	treeNode = getNodeByNodeId(node.id);
-			        		if(treeNode && treeNode != null)
-			        		{
-			        			var zTree = $.fn.zTree.getZTreeObj("ztreeForFileSelector");
-			        			//select this node in zTree
-			        		 	zTree.selectNode(treeNode);
-			        			_selectedNode = treeNode;
-			        		}
-		        	    }
-		        	    else
-		        	    {
-		        	    	zTree
-		        	    }
+		        	    zTreeInit(docList, node);
 		            }
 		            else
 		           	{
