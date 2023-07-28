@@ -14,8 +14,13 @@ var StackMdEditor = (function () {
 	var setContent = function(content)
 	{	
 		//TODO: 目前没有接口，通过onChange事件带回来的
-		//因此没法设置
+		console.log("StackMdEditor setContent() content:", content);
 		_content = content;
+		
+		var stackeditEl = $(".stackedit-iframe");
+		if (stackeditEl !== undefined) {
+			stackeditEl[0].contentWindow.postMessage({"type":"setContent","content":content},"*")
+		}
 	};
 	
 	var getContent = function()
@@ -42,7 +47,7 @@ var StackMdEditor = (function () {
 	{
 		//如果传入了docInfo，那么docInfo在初始化的时候就进行设置
   		console.log("StackMdEditor initEditor() docInfo:", docInfo);
-  		console.log("StackMdEditor initEditor() docText:", docText);
+  		//console.log("StackMdEditor initEditor() docText:", docText);
   		
   		if(docInfo)
   		{

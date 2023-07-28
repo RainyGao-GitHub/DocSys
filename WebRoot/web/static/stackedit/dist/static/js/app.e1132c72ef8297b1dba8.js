@@ -10475,6 +10475,9 @@ webpackJsonp([1], [, , function(e, t, n) {
                     case "toggleEditor":
                         e.toggleEditor(t.data.flag);
                         break;
+                    case "setContent":
+                        e.setContent(t.data.content);
+                        break;
                     case "toggleFocusMode":
                         e.toggleFocusMode();
                         break;
