@@ -14,7 +14,7 @@ var StackMdEditor = (function () {
 	var setContent = function(content)
 	{	
 		//TODO: 目前没有接口，通过onChange事件带回来的
-		console.log("StackMdEditor setContent() content:", content);
+		//console.log("StackMdEditor setContent() content:", content);
 		_content = content;
 		
 		var stackeditEl = $(".stackedit-iframe");
