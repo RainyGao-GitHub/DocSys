@@ -735,7 +735,6 @@ webpackJsonp([1], [, , function(e, t, n) {
     
     console.log("api.js Object4444 e:", e);
     console.log("api.js Object4444 t:", t);
-    console.log("api.js Object4444 n:", n);
 
     var r = n(15)
       , a = n.n(r)
@@ -2322,7 +2321,6 @@ webpackJsonp([1], [, , function(e, t, n) {
     
     console.log("api.js Object2222 e:", e);
     console.log("api.js Object2222 t:", t);
-    console.log("api.js Object2222 n:", n);
 
     t.a = {
         createFile: function() {
@@ -3247,7 +3245,6 @@ webpackJsonp([1], [, , function(e, t, n) {
     
     console.log("api.js Object6666 e:", e);
     console.log("api.js Object6666 t:", t);
-    console.log("api.js Object6666 n:", n);
 
     function r(e, t) {
     	console.log("api.js Object6666 r(e,t)");
@@ -10500,15 +10497,16 @@ webpackJsonp([1], [, , function(e, t, n) {
       , a = n.n(r)
       , i = n(7)
       , o = n(2)
-      , p = n(727);
+      , p = n(727)
+      , q = n(27);
     
     console.log("api.js Object3333 e:", e);
     console.log("api.js Object3333 t:", t);
-    console.log("api.js Object3333 n:", n);
     t.a = {
         computed: a()({}, n.i(i.a)(["light"]), n.i(i.b)("data", ["layoutSettings"])),
         mounted: function() {
             var e = this;
+            
             window.addEventListener("message", function(t) {
             	console.log("app.js message e:", e, t);
                 if (void 0 !== t.origin && "" !== t.origin && void 0 !== t.data && "" !== t.data)
@@ -10523,7 +10521,7 @@ webpackJsonp([1], [, , function(e, t, n) {
                         e.toggleEditor(t.data.flag);
                         break;
                     case "setContent":
-                        p(0, 10, t.data.content);
+                        q.a.clEditor.setContent(t.data.content, !0)
                         break;
                     case "toggleFocusMode":
                         e.toggleFocusMode();
@@ -17738,9 +17736,7 @@ webpackJsonp([1], [, , function(e, t, n) {
     "use strict";
     
     console.log("api.js Object5555 e:", e);
-    console.log("api.js Object5555 t:", t);
-    console.log("api.js Object5555 n:", n);
-    
+    console.log("api.js Object5555 t:", t);    
     function r(e) {
         function t(e) {
             return e
@@ -20247,8 +20243,15 @@ webpackJsonp([1], [, , function(e, t, n) {
 }
 , function(e, t, n) {
     "use strict";
+    console.log("api.js Object7777 e:", e);
+    console.log("api.js Object7777 e:", t);
+
     var r = n(27)
       , a = n(2);
+    
+    console.log("api.js Object7777 r:", r);
+    console.log("api.js Object7777 a:", a);
+
     r.a.$on("inited", function() {
         var e = function e(t) {
             var n = 0;
