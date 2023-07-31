@@ -1,0 +1,301 @@
+<div id="zipViewer" style="overflow:auto;">
+	<ul id="zipPlayer" class="ztree" style="margin-bottom: 120px; width: 95%"></ul>
+</div>
+<div >
+	<ul id="zipTreeContextMenu" style="display:none" class='dropdown-menu dropdown-context' role='menu'>
+		<li><a onclick='ZipViewer.openDoc()'>打开</a></li> 
+		<li><a onclick='ZipViewer.downloadDoc()'>下载</a></li>
+		<li class="divider"></li>
+		<li><a onclick='ZipViewer.showDocDetail()'>详细信息</a></li>
+	</ul>
+</div>
+
+<script type="text/javascript">
+//获取窗口的高度并设置高度
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.7;
+console.log("dialog height=" + height)
+document.getElementById('zipViewer').style.height = height + "px";
+
+//ZipViewer类
+var ZipViewer = (function () {
+	var docInfo = {};
+	var curRightClickedTreeNode = null;
+	
+	function zipViewerPageInit(Input_doc)
+	{
+		console.log("pdfViewerPageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+		getAndShowZipInitMenu(docInfo);
+	}
+		
+	function getAndShowZipInitMenu(docInfo) 
+	{
+		console.log("getAndShowZipInitMenu docId:" + docInfo.docId + " parentPath:" + docInfo.path + " docName:" + docInfo.name);
+			
+		$.ajax({
+		    url : "/DocSystem/Doc/getZipInitMenu.do",
+		    type : "post",
+		    dataType : "json",
+		    data : {
+		        reposId : docInfo.vid,  
+		    	docId:  docInfo.docId,
+		    	docPath: docInfo.path,
+		    	docName: docInfo.name,
+		    	shareId: docInfo.shareId,
+		    },
+		    success : function (ret) {
+		        	if( "ok" == ret.status ){
+		        		console.log("getMenu() ret",ret);
+		                drawMenu(ret.data);
+		            }
+		            else
+		           	{
+	                	showErrorMessage("获取压缩文件列表失败:" + ret.msgInfo);
+		           	}
+		    },
+		    error : function () {
+		            showErrorMessage("获取压缩文件列表失败:服务器异常");
+		    }
+		});
+	}			
+	
+	function reDrawMenu(data)
+	{
+	   drawMenu(data);
+	}
+	
+	//绘制zTree with the data:强制绘制，判断的东西不应该放在这里
+	function drawMenu(data) {
+		console.log("drawMenu");
+		window.menu = data;
+	    var menu = data;
+	    //遍历jason_arry
+      	for(var i=0; i<menu.length; i++)
+      	{
+           var jsonObj = menu[i];
+           jsonObj.id = jsonObj.docId;
+           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+           jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.Level = jsonObj.level;
+           jsonObj.isZip = 1;
+           jsonObj.rootPath = docInfo.path;
+           jsonObj.rootName = docInfo.name;
+           //设置用户自定义文件图标（必须在standardStyle中有定义）
+           if(jsonObj.type == 1)
+           {
+        	   var iconType = getDiyFileIconType(jsonObj.name);
+        	   if(iconType && iconType != "")
+        	   {
+        		   jsonObj.iconSkin = iconType;
+        	   }
+           }
+       }
+	   zTreeInit(menu);
+	}
+	
+	function zTreeInit(data) {
+	    console.log("zTreeInit");
+	    var async = {  
+    		enable : true,//设置 zTree 是否开启异步加载模式  
+            url : "/DocSystem/Doc/getZipSubDocList.do",
+            type : "post",
+    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
+    		otherParam:{
+    			"reposId": docInfo.vid,
+		    	"docPath": docInfo.path, //zipFile的路径
+		    	"docName": docInfo.name, //zipFile的名字
+                "shareId": docInfo.shareId,
+    		},
+    		dataFilter: asyncDataFilter,
+	    };
+    	setting.async = async;
+	    var doctree = $.fn.zTree.init($("#zipPlayer"), setting, data);
+	}
+	
+	//zTree's setting
+	var setting = {
+	   	//可编辑功能设置
+		edit: {},
+           //zTree数据格式
+	   	data: {
+	   			//使用简单数据模式
+	            simpleData: {
+	                enable: true,
+	            },
+	            //不允许修改leaf node and parent node的isParent属性
+	            keep: {
+	            	leaf: true,
+	            	parent: true,
+	            },
+	    },
+        //设置异步加载的参数
+        async : {  
+    		enable : true,//设置 zTree 是否开启异步加载模式  
+            url : "/DocSystem/Doc/getZipSubDocList.do",
+            type : "post",
+    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
+    		otherParam:{
+    			"reposId": docInfo.vid,
+		    	"docPath": docInfo.path, //zipFile的路径
+		    	"docName": docInfo.name, //zipFile的名字
+                "shareId": docInfo.shareId,
+    		},
+    		dataFilter: asyncDataFilter, 
+		},
+	    //zTree各种操作的回调函数定义
+	    callback: {
+	            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
+                onAsyncSuccess: zTreeOnAsyncSuccess, //异步加载完成后的回调
+	            onClick: zTreeOnClick,
+	            onDblClick: zTreeOnDbClick,
+	            beforeRightClick: zTreeBeforeRightClick,
+	            onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
+	    },
+	    view: {
+        	//showLine: false,	//不显示文件下面的下划线
+        	//addDiyDom: addDiyDom         //设置zTree的自定义图标
+			addHoverDom: addHoverDom,
+			removeHoverDom: removeHoverDom,
+        }
+	};
+	
+	function addHoverDom(treeId, treeNode) {
+		var aObj = $("#" + treeNode.tId + "_a");
+		if ($("#diyBtn_"+treeNode.id).length>0) return;
+		var editStr = "<span class='caret pull-right' id='diyBtn_" + treeNode.id
+			+ "' title='"+treeNode.name+"' onfocus='this.blur();'></span>";
+		aObj.append(editStr);
+		var btn = $("#diyBtn_"+treeNode.id);
+		if (btn) btn.bind("click", function(e){
+			console.log("diyBtn onclick for " + treeNode.name);
+			curRightClickedTreeNode = treeNode;
+			showZipTreeContextMenu(e, -20, 5);
+		});
+	}
+	
+	function showZipTreeContextMenu(e, xoffset, yoffset)
+	{
+		$dd = $('#zipTreeContextMenu');
+		$dd.css({
+				left: e.pageX -360 + xoffset,
+				top: e.pageY - 100 + yoffset,
+			}).fadeIn(100);
+	}
+	
+	function removeHoverDom(treeId, treeNode) {
+		$("#diyBtn_"+treeNode.id).unbind().remove();
+	}
+	
+	
+    //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
+    function zTreeOnClick(event, treeId, treeNode) 
+    {
+    	console.log("zTreeOnClick treeId:"+ treeId, treeNode);
+    	//手机端上点击则打开
+    }
+      
+      //Double Click 对于文件应该是编辑，对于目录应该是打开
+    function zTreeOnDbClick(event, treeId, treeNode) 
+    {
+    	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
+		openDoc(treeNode, true, "openInDialog", docInfo.shareId);
+    }
+	
+      //This function was used to get the rightClick treeNode,it will be used for contextjs
+	function zTreeBeforeRightClick(treeId, treeNode) {
+		console.log("zTreeBeforeRightClick treeId:"+ treeId, treeNode);
+		curRightClickedTreeNode = treeNode;
+    	return true;	
+	}
+	
+	function zTreeOnRightClick(event, treeId, treeNode) {
+		//alert(treeNode ? treeNode.tId + ", " + treeNode.name : "isRoot");
+		showZipTreeContextMenu(event, 0, 0);
+	}
+      
+    function zTreeBeforeAsync(treeId, treeNode) {  
+      	console.log("zTreeBeforeAsync treeId:"+ treeId, treeNode);
+    }  
+        
+    function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
+      	console.log("zTreeOnAsyncSuccess treeId:" + treeId);
+    }
+  	function asyncDataFilter(treeId, parentNode, responseData) {
+		console.log("asyncDataFilter");
+		var docList = responseData.data;
+		if(!docList)
+		{
+			return docList;
+		}
+		//遍历jason_arry, convert the node type to isParent flag
+      	for(var i=0; i<docList.length; i++)
+      	{
+           var jsonObj = docList[i];
+           jsonObj.id = jsonObj.docId;
+           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+           jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.isZip = 1;
+           jsonObj.rootPath = docInfo.path;
+           jsonObj.rootName = docInfo.name;
+           //设置用户自定义文件图标（必须在standardStyle中有定义）
+           if(jsonObj.type == 1)
+           {
+        	   var iconType = getDiyFileIconType(jsonObj.name);
+        	   if(iconType && iconType != "")
+        	   {
+        		   jsonObj.iconSkin = iconType;
+        	   }
+           }
+       }
+       console.log(docList);
+	   return docList;
+	}
+  	
+  	function zipOpenDoc()
+  	{
+  		console.log("zipOpenDoc:", curRightClickedTreeNode);
+	  	if(curRightClickedTreeNode && curRightClickedTreeNode != null)
+  		{
+	  		openDoc(curRightClickedTreeNode, true, "openInDialog", docInfo.shareId);
+  		}
+  	}
+  	
+  	function zipDownloadDoc()
+  	{
+  		console.log("zipDownloadDoc:", curRightClickedTreeNode);
+  		getDocFileLink(curRightClickedTreeNode, doDownloadDoc, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+  	}
+  	
+  	function zipShowDocDetail()
+  	{
+  		console.log("zipShowDocDetail:", curRightClickedTreeNode);
+  		showDocDetail(curRightClickedTreeNode); 		
+  	}
+	   	
+	function doDownloadDoc(fileLink)
+	{   	
+	 	console.log("doDownloadDoc fileLink: " + fileLink);
+	   	window.location.href = fileLink;
+	}
+	
+	//开放给外部的调用接口
+    return {
+    	zipViewerPageInit: function(docInfo){
+    		zipViewerPageInit(docInfo);
+        },
+    	openDoc: function(){
+    		zipOpenDoc();
+        },
+    	downloadDoc: function(){
+    		zipDownloadDoc();
+        },
+        showDocDetail: function()
+        {
+        	zipShowDocDetail();
+        }
+    };
+})();
+</script>

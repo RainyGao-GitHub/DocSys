@@ -1,0 +1,36 @@
+<div id="textPlayer" class="textPlayer" style="width: 100%; word-wrap: break-word; white-space: pre-wrap;"></div>
+
+<script type="text/javascript">
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.95;
+console.log("dialog height=" + height)
+document.getElementById('textPlayer').style.height = height + "px";
+
+var TextViewer = (function () {
+	var docInfo = {};
+	
+	var docText = "";
+	var tmpSavedDocText = "";
+	
+	function textViewerPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
+	{
+		console.log("textViewerPageInit InputDoc:", Input_doc);
+		console.log("textViewerPageInit Input_docText:", Input_docText);
+		docInfo = Input_doc;		
+		getDocText(docInfo, showText, showErrorMessage);
+  	}
+	
+	function showText(docText, tmpSavedDocText)
+	{
+		//$('#textPlayer').html(content); //html的标签会被解析
+		$('#textPlayer').text(docText); //html标签会被当做字符串
+	}
+	
+    return {
+        textViewerPageInit: function(docInfo){
+        	textViewerPageInit(docInfo);
+        },
+    };
+})();
+</script>

@@ -1,0 +1,59 @@
+<div align=center style="margin-top:20px" >
+	<!-- HTML5 Default Mode --> 
+    <!-- <video id="videoPlayer" name="videoPreview" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+    -->
+    <!-- VideoJs Mode  -->
+    <video-js id=videoPlayer class="video-js vjs-big-play-centered vjs-fluid" 
+    	webkit-playsinline="" x-webkit-airplay="allow" playsinline="" controls
+        crossorigin="anonymous" 
+        style="display:none;"></video-js>
+    <!-- DPlayer Mode -->
+    <!-- <div id="videoPlayer"></div> -->
+</div>  
+
+<script type="text/javascript">
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.95;
+console.log("dialog height=" + height)
+document.getElementById('videoPlayer').style.height = height + "px";
+
+var VideoViewer = (function () {
+	var docInfo = {};
+	
+	function videoViewerPageInit(Input_doc)
+	{
+		console.log("videoViewerPageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+	    var fileLink = docInfo.fileLink;	    
+	    if(!fileLink || fileLink != null)
+	    {
+	    	getDocFileLink(docInfo, showVideo, showErrorMessage);    	
+	    }
+	    else
+	    {
+	    	showVideo(fileLink);
+	    }
+  	}
+    
+	function showVideo(fileLink)
+	{	
+		$("#videoPlayer").show();
+		$("#videoPlayer").attr('src', fileLink);	
+		//Videojs Mode
+		var type = getVideoTypeByFileSuffix(docInfo.fileSuffix);
+		showVideoWithVideojs('videoPlayer', fileLink, type);
+		
+		//DPlayer Mode
+		//showVideoWithDPlayer('videoPlayer', fileLink);
+	}
+	
+    return {
+        videoViewerPageInit: function(docInfo){
+        	videoViewerPageInit(docInfo);
+        },
+    };
+})();
+
+</script>

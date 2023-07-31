@@ -1733,11 +1733,11 @@ function showImgInNewPage(docInfo, fileLink)
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		window.open("/DocSystem/web/image.html?" + urlParamStr);				
+		window.open("/DocSystem/web/imgViewer.html?" + urlParamStr);				
 	}
 	else
 	{
-		window.open("/DocSystem/web/imageList.html?" + urlParamStr);		
+		window.open("/DocSystem/web/imageListViewer.html?" + urlParamStr);		
 	}
 }
 
@@ -1748,14 +1748,14 @@ function showVideoInNewPage(docInfo, fileLink){
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/video.html?" + urlParamStr);
+	window.open("/DocSystem/web/videoViewer.html?" + urlParamStr);
 }
 
 function showZipInNewPage(docInfo)
 {
 	console.log("showZipInNewPage docInfo:", docInfo);
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/zip.html?" + urlParamStr);
+	window.open("/DocSystem/web/zipViewer.html?" + urlParamStr);
 }
 
 function showPdfInNewPage(docInfo, fileLink)
@@ -1766,7 +1766,7 @@ function showPdfInNewPage(docInfo, fileLink)
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/pdf.html?" + urlParamStr);
+	window.open("/DocSystem/web/pdfViewer.html?" + urlParamStr);
 }
 
 function showMarkdownInNewPage(docInfo, openType)
@@ -1782,7 +1782,7 @@ function showTextInNewPage(docInfo, openType)
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
 	if(openType && openType == "textViewer")
 	{
-		window.open("/DocSystem/web/text.html?" + urlParamStr);
+		window.open("/DocSystem/web/textViewer.html?" + urlParamStr);
 	}
 	else
 	{
@@ -1804,16 +1804,16 @@ function showOfficeInNewPage(docInfo)
 function showImgInDialog(docInfo)
 {
 	console.log("showImgInDialog docInfo:", docInfo);
-	var url = 'imgListViewer.html';
+	var url = 'imgListViewerForBootstrap.html';
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		url = 'imgViewer.html';
+		url = 'imgViewerForBootstrap.html';
 	}
 	
 	bootstrapQ.dialog({
 		id: "ImgListViewer",
 		title: docInfo.name,
-		url: 'imgListViewer.html',
+		url: 'imgListViewerForBootstrap.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1859,7 +1859,7 @@ function showVideoInDialog(docInfo){
 	bootstrapQ.dialog({
 		id: "VideoViewer",
 		title: docInfo.name,
-		url: 'videoViewer.html',
+		url: 'videoViewerForBootstrap.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1900,7 +1900,7 @@ function showZipInDialog(docInfo)
 	bootstrapQ.dialog({
 		id: "ZipViewer",
 		title: docInfo.name,
-		url: 'zipViewer.html',
+		url: 'zipViewerForBootstrap.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1940,7 +1940,7 @@ function showPdfInDialog(docInfo)
 	bootstrapQ.dialog({
 		id: "PdfViewer",
 		title: docInfo.name,
-		url: 'pdfViewer.html',
+		url: 'pdfViewerForBootstrap.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1980,7 +1980,7 @@ function showPdfInDialog(docInfo)
 	bootstrapQ.dialog({
 		id: "PdfViewer",
 		title: docInfo.name,
-		url: 'pdfViewer.html',
+		url: 'pdfViewerForBootstrap.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -1998,7 +1998,7 @@ function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 	bootstrapQ.dialog({
 		id: "StackeidtEditor",
 		title: docInfo.name,
-		url: 'stackeditEditor.html',
+		url: 'stackeditForBootstrap.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -2018,7 +2018,7 @@ function showMarkdownInArtDialog(docInfo)
 	var d = new artDialog({
 		id: "ArtDialog"  + docInfo.docId,
 		title: docInfo.name,
-		content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="stackeditEditorForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="stackeditForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		//content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="editormdForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -2044,7 +2044,7 @@ function showTextInDialog(docInfo, openType)
 		bootstrapQ.dialog({
 			id: "textViewer",
 			title: docInfo.name,
-			url: 'textViewer.html',
+			url: 'textViewerForBootstrap.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
@@ -2059,7 +2059,7 @@ function showTextInDialog(docInfo, openType)
 		bootstrapQ.dialog({
 			id: "AceEditor",
 			title: docInfo.name,
-			url: 'aceEditor.html',
+			url: 'aceForBootstrap.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
@@ -2079,7 +2079,7 @@ function showTextInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="aceEditorForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="aceForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -2156,7 +2156,7 @@ function showOfficeInDialog(docInfo)
 	bootstrapQ.dialog({
 		id: "OfficeEditor",
 		title: docInfo.name,
-		url: 'officeEditor.jsp',
+		url: 'officeForBootstrap.jsp',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -2176,7 +2176,7 @@ function showOfficeInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeEditorForArt.jsp?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeForArt.jsp?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,

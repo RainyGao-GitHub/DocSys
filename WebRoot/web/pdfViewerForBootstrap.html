@@ -1,0 +1,45 @@
+<div id="pdfPlayer" class="pdfPlayer" style="width: 100%; height:1200px;"></div>
+
+<script type="text/javascript">
+//获取窗口的高度并设置高度
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.95;
+console.log("dialog height=" + height)
+document.getElementById('pdfPlayer').style.height = height + "px";
+
+//PdfViewer类
+var PdfViewer = (function () {
+	var docInfo = {};
+	
+	function pdfViewerPageInit(Input_doc)
+	{
+		console.log("pdfViewerPageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+	    var fileLink = docInfo.fileLink;	    
+	    if(!fileLink || fileLink == null || fileLink == "")
+	    {
+	    	getDocFileLink(docInfo, showPDF, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink    	
+	    }
+	    else
+	    {
+	    	showPDF(fileLink);
+	    }
+	}
+		
+	function showPDF(url)
+	{
+		//注意：pdfjs会把url中的参数部分去掉，所以传入的方式需要使用REST风格的路径
+		$('#pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
+		'" style="width:100%; height:100%;"></iframe>');
+	}
+	
+	//开放给外部的调用接口
+    return {
+    	pdfViewerPageInit: function(docInfo){
+    		pdfViewerPageInit(docInfo);
+        },
+    };
+})();
+</script>
