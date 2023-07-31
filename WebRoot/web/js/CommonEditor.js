@@ -729,8 +729,8 @@
 			initForNewPage: function(){
 				initForNewPage();
 		    },
-	        textEditorPageInit: function(docInfo){
-	        	textEditorPageInit(docInfo);
+		    initForBootstrapDialog: function(docInfo){
+		    	initForBootstrapDialog(docInfo);
 	        },
 			initForVDoc: function(){
 				initForVDoc();

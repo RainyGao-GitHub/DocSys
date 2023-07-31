@@ -733,8 +733,8 @@ webpackJsonp([1], [, , function(e, t, n) {
 , , , , , , , , , , , , , function(e, t, n) {
     "use strict";
     
-    console.log("api.js Object4444 e:", e);
-    console.log("api.js Object4444 t:", t);
+    //console.log("api.js Object4444 e:", e);
+    ////console.log("api.js Object4444 t:", t);
 
     var r = n(15)
       , a = n.n(r)
@@ -854,7 +854,7 @@ webpackJsonp([1], [, , function(e, t, n) {
         },
         refreshPreview: function() {
             var e = this;
-            console.log("api.js Object4444 refreshPreview e:", e);
+            //console.log("api.js Object4444 refreshPreview e:", e);
             return h()(l.a.mark(function t() {
                 var n, r, a, i, o, s, c, u, d, f;
                 return l.a.wrap(function(t) {
@@ -1005,7 +1005,7 @@ webpackJsonp([1], [, , function(e, t, n) {
         },
         init: function(e, t, r) {
             var i = this;
-            console.log("api.js Object4444 init i:", i);
+            //console.log("api.js Object4444 init i:", i);
 
             this.editorElt = e,
             this.previewElt = t,
@@ -2319,8 +2319,8 @@ webpackJsonp([1], [, , function(e, t, n) {
       , h = n(12)
       , g = /^\.stackedit-data$|^\.stackedit-trash$|\.md$|\.sync$|\.publish$/;
     
-    console.log("api.js Object2222 e:", e);
-    console.log("api.js Object2222 t:", t);
+    //console.log("api.js Object2222 e:", e);
+    //console.log("api.js Object2222 t:", t);
 
     t.a = {
         createFile: function() {
@@ -2334,12 +2334,12 @@ webpackJsonp([1], [, , function(e, t, n) {
               , s = t.comments
               , c = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
    
-            console.log("api.js Object2222 createFile e:", e);              
+            //console.log("api.js Object2222 createFile e:", e);              
             return p()(l.a.mark(function t() {
                 var u, d, p, h, g, b;
                 return l.a.wrap(function(t) {
                     for (; ; ){
-                        console.log("api.js Object2222 createFile t.next:", t.next);              
+                        //console.log("api.js Object2222 createFile t.next:", t.next);              
                         switch (t.prev = t.next) {
                         case 0:
                             if (u = v.a.uid(),
@@ -2386,7 +2386,7 @@ webpackJsonp([1], [, , function(e, t, n) {
                                 item: d
                             });
                         case 14:
-                        	console.log("api.js Object2222 createFile p:", p);  
+                        	//console.log("api.js Object2222 createFile p:", p);  
                             return f.a.commit("content/setItem", p),
                             f.a.commit("file/setItem", d),
                             h && e.makePathUnique(u),
@@ -3243,11 +3243,11 @@ webpackJsonp([1], [, , function(e, t, n) {
 , , , , , , , , , function(e, t, n) {
     "use strict";
     
-    console.log("api.js Object6666 e:", e);
-    console.log("api.js Object6666 t:", t);
+    //console.log("api.js Object6666 e:", e);
+    //console.log("api.js Object6666 t:", t);
 
     function r(e, t) {
-    	console.log("api.js Object6666 r(e,t)");
+    	//console.log("api.js Object6666 r(e,t)");
     	
         function n() {
             var t = e.textContent.replace(/\r[\n\u0085]?|[\u2424\u2028\u0085]/g, "\n");
@@ -3267,9 +3267,9 @@ webpackJsonp([1], [, , function(e, t, n) {
             i)
         }
         function l(e, t, r) {
-        	console.log("api.js Object6666 setContent e:", e);
-        	console.log("api.js Object6666 setContent t:", t);
-        	console.log("api.js Object6666 setContent r:", r);
+        	//console.log("api.js Object6666 setContent e:", e);
+        	//console.log("api.js Object6666 setContent t:", t);
+        	//console.log("api.js Object6666 setContent r:", r);
         	
             var a = n()
               , i = null != r && r < a.length ? r : a.length - 1
@@ -3278,7 +3278,7 @@ webpackJsonp([1], [, , function(e, t, n) {
               , u = e.substring(s, e.length - c)
               , l = o(s, a.length - c, u);
             
-            console.log("api.js Object6666 setContent s:", s, a.length - c, u);
+            //console.log("api.js Object6666 setContent s:", s, a.length - c, u);
         	return l && (T = t,
             D = !0),
             {
@@ -3486,7 +3486,7 @@ webpackJsonp([1], [, , function(e, t, n) {
         }
         ),
         e.addEventListener("paste", function(e) {
-        	console.log("api.js Object6666 paste e:", e);        	
+        	//console.log("api.js Object6666 paste e:", e);        	
             P.setCurrentMode("single"),
             e.preventDefault();
             var t = void 0
@@ -6703,7 +6703,7 @@ webpackJsonp([1], [, , function(e, t, n) {
             }))()
         },
         openFile: function(e, t) {
-        	console.log("app.js openFile e:", e, t);
+        	//console.log("app.js openFile e:", e, t);
             var n = this;
             return c()(a.a.mark(function r() {
                 var i, s, c, l, p;
@@ -7487,10 +7487,10 @@ webpackJsonp([1], [, , function(e, t, n) {
       , w = h.contentProperties
       , y = g && window.parent;
     
-    console.log("api.js Object1111 e:", e);
-    console.log("api.js Object1111 t:", t);
-    console.log("api.js Object1111 n:", n);
-    console.log("api.js Object1111 h:", h);
+    //console.log("api.js Object1111 e:", e);
+    //console.log("api.js Object1111 t:", t);
+    //console.log("api.js Object1111 n:", n);
+    //console.log("api.js Object1111 h:", h);
     t.a = {
         setReady: function() {
             y && setTimeout(function() {
@@ -7508,12 +7508,12 @@ webpackJsonp([1], [, , function(e, t, n) {
         },
         init: function() {
             var e = this;
-        	console.log("api.js Object1111 t.a.init e:", e);
+        	//console.log("api.js Object1111 t.a.init e:", e);
             return l()(a.a.mark(function t() {
                 var n, r, i, s;
                 return a.a.wrap(function(t) {
                     for (; ; ){
-                    	console.log("api.js Object1111 t.a.init t.next:", t.next);                    	
+                    	//console.log("api.js Object1111 t.a.init t.next:", t.next);                    	
                         switch (t.prev = t.next) {
                         case 0:
                             if (y) {
@@ -10500,15 +10500,15 @@ webpackJsonp([1], [, , function(e, t, n) {
       , p = n(727)
       , q = n(27);
     
-    console.log("api.js Object3333 e:", e);
-    console.log("api.js Object3333 t:", t);
+    //console.log("api.js Object3333 e:", e);
+    //console.log("api.js Object3333 t:", t);
     t.a = {
         computed: a()({}, n.i(i.a)(["light"]), n.i(i.b)("data", ["layoutSettings"])),
         mounted: function() {
             var e = this;
             
             window.addEventListener("message", function(t) {
-            	console.log("app.js message e:", e, t);
+            	//console.log("app.js message e:", e, t);
                 if (void 0 !== t.origin && "" !== t.origin && void 0 !== t.data && "" !== t.data)
                     switch (t.data.type) {
                     case "toggleNavigationBar":
@@ -17735,8 +17735,8 @@ webpackJsonp([1], [, , function(e, t, n) {
 , function(e, t, n) {
     "use strict";
     
-    console.log("api.js Object5555 e:", e);
-    console.log("api.js Object5555 t:", t);    
+    //console.log("api.js Object5555 e:", e);
+    //console.log("api.js Object5555 t:", t);    
     function r(e) {
         function t(e) {
             return e
@@ -17796,9 +17796,9 @@ webpackJsonp([1], [, , function(e, t, n) {
         var t = this
           , n = e;
         
-        console.log("api.js Object5555 i() e:", e);        
+        //console.log("api.js Object5555 i() e:", e);        
         this.init = function() {
-            console.log("api.js Object5555 i() init");        
+            //console.log("api.js Object5555 i() init");        
         	this.setInputAreaSelectionStartEnd(),
             this.text = n.getContent()
         }
@@ -18053,8 +18053,8 @@ webpackJsonp([1], [, , function(e, t, n) {
     }
     ,
     f.doBold = function(e, t) {
-        console.log("api.js Object5555 f.doBold e:", e);
-        console.log("api.js Object5555 f.doBold t:", t);
+        //console.log("api.js Object5555 f.doBold e:", e);
+        //console.log("api.js Object5555 f.doBold t:", t);
         return this.doBorI(e, t, 2, this.getString("boldexample"))
     }
     ,
@@ -18063,10 +18063,10 @@ webpackJsonp([1], [, , function(e, t, n) {
     }
     ,
     f.doBorI = function(e, t, n, r) {
-        console.log("api.js Object5555 f.doBorI e:", e);
+        //console.log("api.js Object5555 f.doBorI e:", e);
     	e.trimWhitespace(),
         e.selection = e.selection.replace(/\n{2,}/g, "\n");
-        console.log("api.js f.doBorI e.selection:", e.selection);
+        //console.log("api.js f.doBorI e.selection:", e.selection);
         var a = /(\**$)/.exec(e.before)[0]
           , i = /(^\**)/.exec(e.after)[0]
           , o = Math.min(a.length, i.length);
@@ -20243,14 +20243,14 @@ webpackJsonp([1], [, , function(e, t, n) {
 }
 , function(e, t, n) {
     "use strict";
-    console.log("api.js Object7777 e:", e);
-    console.log("api.js Object7777 e:", t);
+    //console.log("api.js Object7777 e:", e);
+    //console.log("api.js Object7777 e:", t);
 
     var r = n(27)
       , a = n(2);
     
-    console.log("api.js Object7777 r:", r);
-    console.log("api.js Object7777 a:", a);
+    //console.log("api.js Object7777 r:", r);
+    //console.log("api.js Object7777 a:", a);
 
     r.a.$on("inited", function() {
         var e = function e(t) {
