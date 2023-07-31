@@ -10425,7 +10425,8 @@ public class BaseController  extends BaseFunction{
 		String userTmpDir = Path.getReposTmpPathForTextEdit(repos,login_user, true);
 		if(doc.getCharset() == null  && doc.autoCharsetDetect)
 		{
-			return FileUtil.saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName());			
+			String charset = getEncryptFileCharset(repos, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			doc.setCharset(charset);
 		}
 		return FileUtil.saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName(), doc.getCharset());
 	}
@@ -10439,8 +10440,9 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		if(doc.getCharset() == null  && doc.autoCharsetDetect)
-		{		
-			return FileUtil.readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName());
+		{	
+			String charset = getEncryptFileCharset(repos, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			doc.setCharset(charset);
 		}
 		return FileUtil.readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName(), doc.getCharset());
 	}
