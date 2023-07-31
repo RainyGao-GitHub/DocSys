@@ -4221,7 +4221,7 @@ public class DocController extends BaseController{
 	
 	private boolean isForceUnlockAllow(Doc doc, Integer lockType, User accessUser) {
 		
-		if(accessUser.getType() < 2)	//超级管理员才可以强行解锁
+		if(accessUser.getType() == null || accessUser.getType() < 2)	//超级管理员才可以强行解锁
 		{
 			Log.debug("isForceUnlockAllow() " + accessUser.getName() + " is not superAdmin");
 			return false;
