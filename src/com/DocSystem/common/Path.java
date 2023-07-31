@@ -262,8 +262,9 @@ public class Path {
 		{
 			String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/TextEdit/" + login_user.getId() + "/RDOC/";
 			FileUtil.createDir(userTmpDir);
+			return userTmpDir;
 		}
-		
+
 		//VDoc
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/TextEdit/" + login_user.getId() + "/VDOC/";
 		FileUtil.createDir(userTmpDir);
