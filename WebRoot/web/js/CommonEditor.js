@@ -565,7 +565,9 @@
 		
 	    //文件临时保存操作
 	    function tmpSaveDoc(docInfo, content){
-			$.ajax({
+	    	console.log("tmpSaveDoc docInfo:", docInfo);
+	    	console.log("tmpSaveDoc content:", content);
+	    	$.ajax({
 	            url : "/DocSystem/Doc/tmpSaveDocContent.do",
 	            type : "post",
 	            dataType : "json",
@@ -577,7 +579,8 @@
 	                docType : docInfo.docType,
 	            },
 	            success : function (ret) {
-	                if( "ok" == ret.status ){
+	    	    	console.log("tmpSaveDoc ret:", ret);
+	            	if( "ok" == ret.status ){
 	                    console.log("临时保存成功 :" , (new Date()).toLocaleDateString());
 	                    bootstrapQ.msg({
 									msg : "临时保存成功 :" + (new Date()).toLocaleDateString(),

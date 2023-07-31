@@ -2158,10 +2158,17 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** tmpSaveDocContent [" + path + name + "] ****************");
-		Log.info("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
+		Log.info("tmpSaveDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId + " docType:" + docType);
 		//Log.debug("tmpSaveVirtualDocContent content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		if(docType == null)
+		{
+			docSysErrorLog("docType is null", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -2187,8 +2194,8 @@ public class DocController extends BaseController{
 		{
 			if(saveTmpRealDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
-				docSysErrorLog("saveRealDocContent Error!", rt);
-				docSysDebugLog("tmpSaveVirtualDocContent() saveTmpRealDocContent [" + doc.getPath() + doc.getName() + "]", rt);
+				docSysErrorLog("tmpSaveRealDocContent Error!", rt);
+				docSysDebugLog("tmpSaveDocContent() tmpSaveRealDocContent [" + doc.getPath() + doc.getName() + "]", rt);
 				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "文件修改临时保存", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));						
 			}			
 		}
@@ -2196,8 +2203,8 @@ public class DocController extends BaseController{
 		{
 			if(saveTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
-				docSysErrorLog("saveVirtualDocContent Error!", rt);
-				docSysDebugLog("tmpSaveVirtualDocContent() saveTmpRealDocContent [" + doc.getPath() + doc.getName() + "]", rt);
+				docSysErrorLog("tmpSaveVirtualDocContent Error!", rt);
+				docSysDebugLog("tmpSaveDocContent() tmpSaveVirtualDocContent [" + doc.getPath() + doc.getName() + "]", rt);
 				addSystemLog(request, reposAccess.getAccessUser(), "tmpSaveDocContent", "tmpSaveDocContent", "备注修改临时保存", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));						
 			}
 		}
