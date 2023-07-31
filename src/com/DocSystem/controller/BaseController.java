@@ -10433,6 +10433,11 @@ public class BaseController  extends BaseFunction{
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String userTmpDir = Path.getReposTmpPathForTextEdit(repos,login_user, true);
+		if(FileUtil.isFileExist(userTmpDir + doc.getDocId() + "_" + doc.getName()) == false)
+		{
+			return null;
+		}
+		
 		if(doc.getCharset() == null  && doc.autoCharsetDetect)
 		{		
 			return FileUtil.readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName());

@@ -590,7 +590,7 @@
 	                }else {
 	                    //bootstrapQ.alert("临时保存失败:"+ret.msgInfo);
 	                    bootstrapQ.msg({
-							msg : "临时保存失败 :" + +ret.msgInfo,
+							msg : "临时保存失败 :" + ret.msgInfo,
 							type : 'danger',
 							time : 1000,
 						});
