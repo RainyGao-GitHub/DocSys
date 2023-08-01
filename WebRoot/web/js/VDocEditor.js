@@ -136,7 +136,11 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
 
         if (target) {
         	_config.height = document.body.scrollHeight - target.scrollTop - 300;
-        	//_config.height = document.documentElement.scrollHeight;
+        	if(_config.height < 300)
+        	{
+        		_config.height = 300;
+        		//_config.height = document.documentElement.scrollHeight;
+        	}
         	console.log("VDocEditor target height:" + _config.height);
         	
             iframe = createIframe(_config);
