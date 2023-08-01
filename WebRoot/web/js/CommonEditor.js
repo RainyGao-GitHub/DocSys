@@ -577,6 +577,7 @@
 	                name: docInfo.name,
 	                content : content,
 	                docType : docInfo.docType,
+	                shareId : docInfo.shareId,
 	            },
 	            success : function (ret) {
 	    	    	console.log("tmpSaveDoc ret:", ret);
