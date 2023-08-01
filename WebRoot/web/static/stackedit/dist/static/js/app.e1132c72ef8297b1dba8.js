@@ -601,6 +601,8 @@ webpackJsonp([1], [, , function(e, t, n) {
     };
     t.a = {
         addBadge: function(e) {
+        	console.log("api.js addBadge() e:", e);
+        	/*
             if (!s.a.getters["data/badgeCreations"][e]) {
                 if (!c) {
                     var t = s.a.getters["data/allBadges"].filter(function(e) {
@@ -617,7 +619,7 @@ webpackJsonp([1], [, , function(e, t, n) {
                 u = setTimeout(function() {
                     return l()
                 }, 5e3)
-            }
+            }*/
         }
     }
 }
