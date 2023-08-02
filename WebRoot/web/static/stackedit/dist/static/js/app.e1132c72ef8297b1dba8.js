@@ -3245,8 +3245,8 @@ webpackJsonp([1], [, , function(e, t, n) {
 , , , , , , , , , function(e, t, n) {
     "use strict";
     
-    //console.log("api.js Object6666 e:", e);
-    //console.log("api.js Object6666 t:", t);
+    console.log("api.js Object6666 e:", e);
+    console.log("api.js Object6666 t:", t);
 
     function r(e, t) {
     	//console.log("api.js Object6666 r(e,t)");
@@ -3269,6 +3269,7 @@ webpackJsonp([1], [, , function(e, t, n) {
             i)
         }
         function l(e, t, r) {
+        	console.log("api.js Object6666 setContent()");
         	//console.log("api.js Object6666 setContent e:", e);
         	//console.log("api.js Object6666 setContent t:", t);
         	//console.log("api.js Object6666 setContent r:", r);
@@ -10502,17 +10503,19 @@ webpackJsonp([1], [, , function(e, t, n) {
       , p = n(727)
       , q = n(27);
     
-    //console.log("api.js Object3333 e:", e);
-    //console.log("api.js Object3333 t:", t);
+    console.log("api.js Object3333 e:", e);
+    console.log("api.js Object3333 t:", t);
+    
     t.a = {
         computed: a()({}, n.i(i.a)(["light"]), n.i(i.b)("data", ["layoutSettings"])),
         mounted: function() {
             var e = this;
             
             window.addEventListener("message", function(t) {
-            	//console.log("app.js message e:", e, t);
+            	//console.log("app.js Object3333 message handler e:", e);
                 if (void 0 !== t.origin && "" !== t.origin && void 0 !== t.data && "" !== t.data)
-                    switch (t.data.type) {
+                	console.log("app.js Object3333 message handler t.data.type:", t.data.type);
+                	switch (t.data.type) {
                     case "toggleNavigationBar":
                         e.toggleNavigationBar();
                         break;
