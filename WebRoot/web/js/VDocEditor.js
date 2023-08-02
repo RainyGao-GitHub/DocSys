@@ -101,6 +101,13 @@ this的指向：this不是固定不变的，是根据调用的上下文（执行
             if (_config.docInfo) {
                 _openDocument(_config.docInfo);
             }
+            
+            //stackedit编辑器会把滚动位置改变，需要进行恢复
+            if(config.editor == "stackedit")
+            {
+	            console.log("VDocEditor _onAppReady() scrollTop to 0");
+	            $(".manual-right").scrollTop(0);
+            }
         };
         
         var _onSwitchEditMode = function(data) {
