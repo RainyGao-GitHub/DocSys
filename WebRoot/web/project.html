@@ -1841,7 +1841,7 @@
 		}
 
 		docDataEx.shareId = gShareId;
-		var docLink = getDocDownloadLink(docInfo);
+		var docLink = getDocImagePreviewLink(docInfo, 1, "REST");
 
 		console.log("showImgPreview() docLink:" + docLink);
 		$("#imgPreview").attr('src', docLink);

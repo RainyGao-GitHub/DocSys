@@ -2,6 +2,7 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,6 +55,7 @@ import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocSearchContext;
 import com.alibaba.fastjson.JSONObject;
 import util.ReturnAjax;
+import util.FileUtil.CompressPic;
 
 /*
 1、文件节点
@@ -2740,6 +2742,185 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	//图片文件获取接口: 可以通过resolutionLevel指定分辨率等级
+	@RequestMapping(value="/downloadImg/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}/{encryptEn}/{resolutionLevel}", method=RequestMethod.GET)
+	public void downloadImg(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId, @PathVariable("encryptEn") Integer encryptEn,
+			 @PathVariable("resolutionLevel") Integer resolutionLevel,
+			String disposition,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		Log.infoHead("************** downloadDoc ****************");
+		Log.info("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = null;
+		//Convert authCode and shareId same with Non Rest Style request
+		if(authCode.equals("0"))
+		{
+			authCode = null;
+		}
+		if(shareId == 0)
+		{
+			shareId = null;
+		}
+	
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode, null, rt) == null)
+			{
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
+			}
+			//reposAccess = getAuthCode(authCode).getReposAccess();
+		}
+		else
+		{
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
+			if(reposAccess == null)
+			{
+				docSysErrorLog("非法仓库访问！", rt);
+				//writeJson(rt, response);			
+				//return;
+				throw new Exception(rt.getMsgInfo());
+			}
+		}
+		
+		if(targetPath == null || targetName == null)
+		{
+			docSysErrorLog("目标路径不能为空！", rt);
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = Base64Util.base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			docSysErrorLog("目标路径解码失败！", rt);
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = Base64Util.base64Decode(targetName);
+		if(targetName == null)
+		{
+			docSysErrorLog("目标文件名解码失败！", rt);
+			//writeJson(rt, response);			
+			//return;
+			throw new Exception(rt.getMsgInfo());
+		}
+	
+		Log.info("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		
+		Repos repos = null;
+		if(vid != null)
+		{
+			repos = getReposEx(vid);
+		}
+		
+		//获取目标图片文件的信息
+		Doc targetDoc = getImageDocInfoWithResolutionLevel(repos, path, name, resolutionLevel);		
+		if(targetDoc != null)
+		{
+			sendFileToWebPage(targetDoc.getLocalRootPath(), targetDoc.getName(), rt,response, request, disposition);
+			return;
+		}
+		
+		//use legacy solution
+		if(encryptEn == null || encryptEn == 0 || vid == null)
+		{
+			sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false, disposition);			
+		}
+		else
+		{
+			sendTargetToWebPageEx(repos, targetPath, targetName, rt, response, request, null, disposition);						
+		}
+	}
+
+	private Doc getImageDocInfoWithResolutionLevel(Repos repos, String path, String name, Integer resolutionLevel) {
+		if(repos == null || resolutionLevel == null || path == null || name == null)
+		{
+			return null;
+		}
+		
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			//TODO: 目前加密的仓库不支持缩略图方式
+			return null;
+		}
+		
+		try {	
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+			path = Base64Util.base64Decode(path);
+			if(path == null)
+			{
+				return null;
+			}
+
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");
+			name = Base64Util.base64Decode(name);
+			if(name == null)
+			{
+				return null;
+			}
+			
+			String imgPreviewPath = Path.getReposTmpPathForImagePreview(repos, path, name);
+			String localRootPath = Path.getReposRealPath(repos);
+			
+			return generateImageWithResolutionLevel(localRootPath + path, name, imgPreviewPath, resolutionLevel);			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+
+	private Doc generateImageWithResolutionLevel(String localFilePath, String name, String imgPreviewPath, Integer resolutionLevel) {
+		Doc targetDoc = new Doc();
+		targetDoc.setLocalRootPath(imgPreviewPath);
+		targetDoc.setName(resolutionLevel + "_" + name);
+		if(FileUtil.isFileExist(imgPreviewPath + resolutionLevel + "_" + name) == true)
+		{
+			return targetDoc;
+		}
+		
+		//图片压缩
+		CompressPic cp = new CompressPic();
+		cp.setInputDir(localFilePath);
+		cp.setOutputDir(imgPreviewPath);
+		cp.setInputFileName(name);
+		cp.setOutputFileName(resolutionLevel + "_" + name);
+		switch(resolutionLevel)
+		{
+		case 1:
+			cp.setOutputHeight(300);
+			cp.setOutputWidth(300);
+			break;
+		case 2:
+			cp.setOutputHeight(600);
+			cp.setOutputWidth(600);
+			break;
+		case 3:
+			cp.setOutputHeight(900);
+			cp.setOutputWidth(900);
+			break;
+		}
+		
+		String result = cp.compressPic();
+		if(result == null || result.equals("ok") == false)
+		{
+			return null;
+		}
+		
+		return targetDoc;
+	}
+
 	@RequestMapping(value="/downloadDoc/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}/{encryptEn}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId, @PathVariable("encryptEn") Integer encryptEn,

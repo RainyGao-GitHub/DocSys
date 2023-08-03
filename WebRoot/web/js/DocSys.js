@@ -642,7 +642,7 @@ function buildDocDownloadLink(downloadDocInfo, urlStyle)
    		}
    		if(downloadDocInfo.encryptEn)
    		{
-   			docRestLink +=  "/"  + downloadDocInfo.encryptEnd;
+   			docRestLink +=  "/"  + downloadDocInfo.encryptEn;
    		}
    		else
    		{
@@ -695,6 +695,88 @@ function getDocDownloadFullLink(docInfo, urlStyle)
 	var docLink = getDocDownloadLink(docInfo, urlStyle);
 	var url =  buildFullLink(docLink);
 	return url;
+}
+
+function buildDocImagePreviewLink(downloadDocInfo, resolutionLevel, urlStyle)
+{	
+	console.log("buildDocDownloadLink downloadDocInfo:", downloadDocInfo);
+	var name = encodeURI(downloadDocInfo.name);
+   	var path = encodeURI(downloadDocInfo.path);
+   	var targetName = encodeURI(downloadDocInfo.targetName);
+   	var targetPath = encodeURI(downloadDocInfo.targetPath);
+   	
+   	if(urlStyle && urlStyle == "REST")
+   	{
+   		var docRestLink =  "/DocSystem/Doc/downloadImg/" + downloadDocInfo.vid + "/" + path + "/" + name + "/" +targetPath+ "/"+targetName;
+   		if(downloadDocInfo.authCode)
+   		{
+   			docRestLink += "/" + downloadDocInfo.authCode;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";
+   		}
+   		if(downloadDocInfo.shareId)
+   		{
+   			docRestLink +=  "/"  + downloadDocInfo.shareId;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";
+   		}
+   		if(downloadDocInfo.encryptEn)
+   		{
+   			docRestLink +=  "/"  + downloadDocInfo.encryptEn;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";   			
+   		}
+   		if(resolutionLevel)
+   		{
+   			docRestLink +=  "/"  + resolutionLevel;
+   		}
+   		else
+   		{
+   			docRestLink += "/0"; 
+   		}
+   		return docRestLink;
+   	}
+   	
+	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDocInfo.vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName;
+	if(downloadDocInfo.authCode)
+   	{
+		docLink += "&authCode=" + downloadDocInfo.authCode;
+   	}
+	if(downloadDocInfo.shareId)
+	{
+		docLink += "&shareId="+downloadDocInfo.shareId;
+	}
+	if(downloadDocInfo.deleteFlag)
+	{
+		docLink += "&deleteFlag="+ downloadDocInfo.deleteFlag;	
+	}
+	if(downloadDocInfo.encryptEn)
+	{
+		docLink += "&encryptEn="+ downloadDocInfo.encryptEn;	
+	}
+	if(resolutionLevel)
+	{
+		docLink += "&resolutionLevel="+ resolutionLevel;	
+	}	
+	return docLink;
+}
+
+function getDocImagePreviewLink(docInfo, resolutionLevel, urlStyle)
+{
+	var docDataEx = docInfo.dataEx;
+	if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+	{
+		return null;
+	}
+	
+	docDataEx.vid = docInfo.vid;
+	return buildDocImagePreviewLink(docDataEx, resolutionLevel, urlStyle);
 }
 
 //文件类型获取与判断接口
