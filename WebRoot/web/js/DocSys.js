@@ -803,6 +803,24 @@ function isVideo(suffix)
 			asf : true,
 			flv : true,
 			ogg : true,
+	};
+	
+	var type = fileTypeMap[suffix];
+	if ( undefined == type )
+	{
+		return false;
+	}
+	
+	return true;
+}
+
+function isAudio(suffix)
+{
+	if(!suffix || suffix == "")
+	{
+		return false;
+	}
+	var fileTypeMap = {
 			mp3: true,
 	};
 	
@@ -1285,6 +1303,10 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 	{
 		showVideo(docInfo, openInNewPage);
 	}
+	else if(isAudio(docInfo.fileSuffix))
+	{
+		showAudio(docInfo, openInNewPage);
+	}
 	else if(isPdf(docInfo.fileSuffix))
 	{
 		docInfo.fileLink = ""; //copyDocInfo的fileLink不是RESTLink，因此需要清空，保证showPdf接口重新获取RESTLINK
@@ -1524,6 +1546,25 @@ function showImage(docInfo, openInNewPage)
 	}
 }
 
+function showAudio(docInfo, openInNewPage)
+{
+	if(openInNewPage == "openInNewPage")
+	{
+		showAudioInNewPage(docInfo);
+	}
+	else
+	{
+		if(openInNewPage == "openInArtDialog")
+		{			
+			showAudioInArtDialog(docInfo);
+		}
+		else
+		{
+			showAudioInDialog(docInfo);
+		}
+	}
+}
+
 function showVideo(docInfo, openInNewPage)
 {
 	if(openInNewPage == "openInNewPage")
@@ -1751,6 +1792,16 @@ function showVideoInNewPage(docInfo, fileLink){
 	window.open("/DocSystem/web/videoViewer.html?" + urlParamStr);
 }
 
+function showAudioInNewPage(docInfo, fileLink){
+	console.log("showAudioInNewPage docInfo:", docInfo);
+	if(fileLink && fileLink != "")
+	{
+		docInfo.fileLink = fileLink;
+	}
+	var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	window.open("/DocSystem/web/audio.html?" + urlParamStr);
+}
+
 function showZipInNewPage(docInfo)
 {
 	console.log("showZipInNewPage docInfo:", docInfo);
@@ -1879,6 +1930,31 @@ function showVideoInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="videoViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		padding: 0,
+		width: width,
+		height: height,
+		resize: true,
+		drag: true,
+		data: docInfo,
+	});
+	if (window.artDialogList === undefined) {
+		window.artDialogList = {};
+	}
+	window.artDialogList["ArtDialog" + docInfo.docId] = d;
+}
+
+function showAudioInArtDialog(docInfo) {
+	console.log("showAudioInArtDialog docInfo:", docInfo);
+	//获取窗口的高度并设置高度
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();
+	var d = new artDialog({
+		id: "ArtDialog" + docInfo.docId,
+		title: docInfo.name,
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="audioForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
