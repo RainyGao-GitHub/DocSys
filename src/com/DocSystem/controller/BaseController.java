@@ -4938,7 +4938,7 @@ public class BaseController  extends BaseFunction{
 		case SYNC_ALL_FORCE: //用户强制刷新
 			if(isFSM(repos) == true)
 			{
-				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
+				syncUpLocalWithVerReposForce(repos, doc, login_user, action, 2, rt);
 				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			}
 			syncUpDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
@@ -5201,6 +5201,43 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		ScanOption scanOption = new ScanOption();
 		scanOption.scanType = 2;	//localChange and treatRevisionNullAsLocalChange, remoteNotChecked
+		scanOption.scanTime = new Date().getTime();
+		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-localChanges-" + scanOption.scanTime + "/";
+		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-remoteChanges-" + scanOption.scanTime + "/";
+		
+		syncUpLocalWithVerRepos(repos, doc, action, subDocSyncupFlag, scanOption, login_user, rt); 
+		
+		cleanSyncUpTmpFiles(scanOption);
+	}
+	
+	private void syncUpLocalWithVerReposForce(Repos repos, Doc doc, User login_user, CommonAction action, Integer subDocSyncupFlag,
+			ReturnAjax rt) 
+	{	
+		Log.info("syncUpLocalWithVerReposForce() 同步版本管理");
+		if(repos.autoSyncupConfig == null)
+		{
+			Log.info("syncUpLocalWithVerReposForce() repos:" + repos.getName() + " autoSyncupConfig is null");
+			return;
+		}
+		
+		if(repos.autoSyncupConfig.verReposSyncupConfig == null 
+				|| repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == null 
+				|| repos.autoSyncupConfig.verReposSyncupConfig.autoSyncupEn == 0)
+		{
+			Log.info("syncUpLocalWithVerReposForce() repos:" + repos.getName() + " verReposSyncup was disabled");
+			return;
+		}
+		
+		if(repos.getIsRemote() == 1)
+		{
+			//Sync Up local VerRepos with remote VerRepos
+			Log.info("syncUpLocalWithVerReposForce() 同步远程版本仓库");
+			verReposPullPush(repos, true, null);
+		}
+			
+		//文件管理系统
+		ScanOption scanOption = new ScanOption();
+		scanOption.scanType = 4;	//localChanged or remoteChangedAsLocalChanged
 		scanOption.scanTime = new Date().getTime();
 		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-localChanges-" + scanOption.scanTime + "/";
 		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/syncupForDocChange-remoteChanges-" + scanOption.scanTime + "/";
