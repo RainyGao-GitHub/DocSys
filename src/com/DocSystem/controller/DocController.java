@@ -2750,8 +2750,8 @@ public class DocController extends BaseController{
 			String disposition,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		Log.infoHead("************** downloadDoc ****************");
-		Log.info("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
+		Log.infoHead("************** downloadImg ****************");
+		Log.info("downloadImg reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2817,7 +2817,7 @@ public class DocController extends BaseController{
 			throw new Exception(rt.getMsgInfo());
 		}
 	
-		Log.info("downloadDoc targetPath:" + targetPath + " targetName:" + targetName);		
+		Log.info("downloadImg targetPath:" + targetPath + " targetName:" + targetName);		
 		
 		Repos repos = null;
 		if(vid != null)
