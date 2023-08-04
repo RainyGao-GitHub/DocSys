@@ -1325,15 +1325,112 @@
  			var threadCount = 0;
  			var maxThreadCount = 10;
  			
+			function getFileSuffix(name) {
+				if (name !== undefined && name !== "" && name.lastIndexOf(".") !== -1) {
+					var i = name.lastIndexOf(".")
+					if (i < 0) {
+						// 默认是文本类型
+						return "";
+					}
+					var suffix = name.substring(i + 1, name.length).toLowerCase();
+					return suffix;
+				} else {
+					return "";
+				}
+			}
+			
+			
+			function isFullChunkStepNeed(suffix)
+			{
+				if(!suffix || suffix == "")
+				{
+					return false;
+				}
+				var fileTypeMap = {
+						//Office
+						doc : true,
+						docx : true,
+					 	ppt : true,
+						pptx : true,
+						xls : true,
+						xlsx : true,
+						csv: true,
+						wps: true,
+						et: true,
+						dps: true,
+						//autoCad
+						dwg : true,
+						dxf: true,
+					 	stl: true,
+						//text
+						txt : true,
+						//markdown
+						md : true,
+						//code
+						cpp : true,
+						hpp : true,
+						c : true,
+						h : true,
+						java : true,
+						py : true,
+						go : true,
+						js : true,
+						css : true,
+						html : true,
+						jsp : true,
+						php : true,
+						//config
+						json : true,
+						xml : true,
+						sql : true,
+						properties : true,
+						conf : true,
+						cnf : true,
+						asn : true,
+						//script
+						sh : true,
+						bash: true,
+						bat : true,
+						cmake : true,
+						yaml : true,
+						yml : true,
+						cmake : true,
+				};
+				
+				var type = fileTypeMap[suffix];
+				if ( undefined == type )
+				{
+					return false;
+				}
+				
+				return true;
+			}
+			
+ 			function getChunkStep(chunks)
+ 			{
+ 				var chunkStep = 1;
+ 				if(chunks <= 10)
+ 	            {
+ 					return chunkStep;
+ 	            }
+ 	 			
+ 				//根据文件类型判断是否需要调整chunStep
+ 				SubContext.fileSuffix = getFileSuffix(SubContext.name); 
+ 				if(isFullChunkStepNeed(SubContext.fileSuffix) == true)
+ 				{
+ 					return chunkStep;
+ 				}
+ 				
+ 				chunkStep = chunks / 10;
+ 	            return chunkStep;
+ 			}
+ 			
  			function buildChunkList()
  			{
  	 			var chunkSize = 2097152;
  	 			var chunks = Math.ceil(SubContext.size / chunkSize); 	 			
- 				var chunkStep = 1;
- 	 			if(chunks > 10)
- 	            {
- 	 				chunkStep = chunks / 10;
- 	            }
+ 				var chunkStep = getChunkStep(chunks);
+
  	 			console.log("[" + SubContext.index + "] getFileCheckSum() buildChunkList() chunkSize:" + chunkSize + " chunks:" + chunks + " chunkStep:" + chunkStep);
  				
  				var index = 0;
