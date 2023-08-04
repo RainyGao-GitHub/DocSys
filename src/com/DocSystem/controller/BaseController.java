@@ -5826,7 +5826,9 @@ public class BaseController  extends BaseFunction{
 			int subDocSyncFlag, 
 			ScanOption scanOption) 
 	{
-		//Log.printObject("syncupScanForDoc_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
+		//Log.printObject("syncupScanForDoc_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", dbDoc);
+		//Log.printObject("syncupScanForDoc_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", localEntry);
+		//Log.printObject("syncupScanForDoc_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", remoteEntry);
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
