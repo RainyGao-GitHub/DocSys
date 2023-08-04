@@ -1395,6 +1395,8 @@
 						yaml : true,
 						yml : true,
 						cmake : true,
+						//pdf
+						pdf	: true,
 				};
 				
 				var type = fileTypeMap[suffix];
