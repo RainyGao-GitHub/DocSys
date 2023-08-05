@@ -74,6 +74,29 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 #### 2、升级
 管理后台 --> 系统管理 --> 系统设置 --> 系统升级
 
+### 二、系统手动升级
+
+适用于V2.02.45以下版本和一些特殊情况
+
+#### 1、下载系统安装包
+Linux系统下载【docsys-linux-x.xx.xx.tar.gz】
+
+Windows系统下载【docsys-win-x.xx.xx.zip】
+
+国内下载地址：[微云](https://share.weiyun.com/0Kjpf2o0)
+
+国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/reeases)
+
+#### 2、升级
+（1）解压系统安装包至本地目录
+
+（2）更新应用
+    
+替换 [docsys/tomcat/webapps/DocSystem] 目录
+
+（3）更新系统控制脚本
+
+替换 [docsys] 目录下所有脚本文件 [.bat/.sh/.vbs]
 
 # 限制与价格
 ### 限制
