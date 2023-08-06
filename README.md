@@ -83,7 +83,7 @@ Windows系统下载【docsys-win-x.xx.xx.zip】
 
 国内下载地址：[微云](https://share.weiyun.com/0Kjpf2o0)
 
-国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/reeases)
+国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
 #### 2、升级
 （1）解压系统安装包至本地目录
