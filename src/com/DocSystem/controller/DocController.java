@@ -6781,5 +6781,116 @@ public class DocController extends BaseController{
 		rt.setDataEx(total);
         writeJson(rt, response);
 	}
+	
+	/* 
+	 *   大文件搜索接口
+	 */
+	@RequestMapping("/getLargeFileList.do")
+	public void getLargeFileList(
+			String storageType,	//
+			Integer reposId, 	//如果是仓库需要指定该参数
+			String path,		//path For LargeFileScan
+			String sort,		//排序方案
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getLargeFileList.do ***********************");
+		Log.debug("getLargeFileList storageType: " + storageType + " reposId: " + reposId  + " path:" + path + " sort:"+ sort);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		User accessUser = adminAccessCheck(authCode, "LargeFileScan", session, rt);
+		if(accessUser == null) 
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//ScanForLargeFile
+		List<Doc> list = largetFileScan(storageType, reposId, path, sort);
+		rt.setData(list);	
+		writeJson(rt, response);
+	}
+
+	private List<Doc> largetFileScan(String storageType, Integer reposId, String path, String sort) {
+		if(storageType.equals("disk"))
+		{
+			return largetFileScanForDisk(path, sort);
+		}
+		return null;
+	}
+	
+	private List<Doc> largetFileScanForDisk(String path, String sort) {		
+		String localRootPath = Path.localDirPathFormat(path, OSType);
+		Doc doc = new Doc();	//rootDoc
+		doc.setVid(-1);
+		doc.setPath("");
+		doc.setName("");
+		doc.setType(2);
+		doc.setLocalRootPath(localRootPath);
+		doc.setSize(0L);
+		
+		List<Doc> largeFileList = new ArrayList<Doc>();
+		return largetFileScanForDisk(doc, largeFileList);
+	}
+	
+	List<Doc> largetFileScanForDisk(Doc doc, List<Doc> largeFileList)
+	{
+		File dir = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+    	if(false == dir.exists())
+    	{
+    		Log.debug("largetFileScanForDisk() " + doc.getPath() + doc.getName() + " 不存在！");
+    		return largeFileList;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		Log.debug("largetFileScanForDisk() " +  doc.getPath() + doc.getName() + " 不是目录！");
+    		return largeFileList;
+    	}
+    	
+    	String subDocParentPath = getSubDocParentPath(doc);
+    	
+    	File[] localFileList = dir.listFiles();
+    	if(localFileList == null)
+    	{
+    		Log.debug("largetFileScanForDisk() " +  doc.getPath() + doc.getName() + " 是空目录！");
+    		return largeFileList;
+    	}
+    		
+    	for(int i=0;i<localFileList.length;i++)
+    	{
+    		File file = localFileList[i];
+
+    		if(file.isDirectory())
+    		{
+    			Doc subFolder = new Doc();	//rootDoc
+    			subFolder.setVid(doc.getVid());
+    			subFolder.setPath(subDocParentPath);
+    			subFolder.setName(file.getName());
+    			subFolder.setType(2);
+    			subFolder.setLocalRootPath(doc.getLocalRootPath());
+    			largetFileScanForDisk(subFolder, largeFileList);
+    		}
+    		else
+    		{
+    			long size = file.length();
+    			if(size >= 100*1024*1024)
+    			{
+        			Doc subDoc = new Doc();	//rootDoc
+        			subDoc.setVid(doc.getVid());
+        			subDoc.setPath(subDocParentPath);
+        			subDoc.setName(file.getName());
+        			subDoc.setType(1);
+        			subDoc.setLocalRootPath(doc.getLocalRootPath());
+          			subDoc.setSize(size);
+            		subDoc.setLatestEditTime(file.lastModified());
+            		subDoc.setCreateTime(file.lastModified());          			
+            		largeFileList.add(subDoc);
+    			}
+    		}
+    	}
+		return largeFileList;
+	}
 }
 	
