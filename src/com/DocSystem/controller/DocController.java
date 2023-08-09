@@ -6854,7 +6854,7 @@ public class DocController extends BaseController{
 		LargeFileScanTask scanTask = getLargeFileScanTaskById(sacnTaskId);
 		if(scanTask != null)
 		{
-			rt.setData(sacnTaskId);	
+			rt.setData(scanTask);	
 			writeJson(rt, response);
 			return;
 		}
@@ -7084,7 +7084,6 @@ public class DocController extends BaseController{
     	
 		return largeFileList;
 	}
-	
 	
 	
 	/**************** queryLargeFileScanTask ******************/

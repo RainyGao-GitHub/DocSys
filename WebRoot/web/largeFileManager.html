@@ -148,7 +148,7 @@
 	
 	var gLargeFileList = [];
 	var gStorageType = "disk";
-	var gScanTaskId;
+	var gScanTask;
 	function largeFileScan(){
 	   	var pathForScan = $("#searchWord").val();
 		console.log("largeFileScan() pathForScan:" + pathForScan);
@@ -165,10 +165,11 @@
 	                	localDiskPath: pathForScan,
 	                },
 	                success : function (ret) {
-	                    if( "ok" == ret.status ){
-	                    	
-	                    	gScanTaskId = ret.data;
-	                    	startQueryLargeFileScanTask(gScanTaskId, 2000);	//2秒后开始查询
+	                    console.log("startLargeFileScanTask ret:", ret);
+	                	if( "ok" == ret.status )
+	                    {
+	                    	gScanTask = ret.data;
+	                    	startQueryLargeFileScanTask(gScanTask.id, 2000);	//2秒后开始查询
 	                    }
 	                    else
 	                    {
