@@ -181,9 +181,9 @@
 	    });
 	}
 	
-	function startQueryLargeFileScanTask(taskId, delayTime)
+	function startQueryLargeFileScanTask(scanTaskId, delayTime)
 	{
-		console.log("startQueryLargeFileScanTask() taskId:" + taskId + " delayTime:" + delayTime);
+		console.log("startQueryLargeFileScanTask() scanTaskId:" + scanTaskId + " delayTime:" + delayTime);
 		var nextDelayTime = delayTime; //每次增加5s
 		if(nextDelayTime < 60000) //最长1分钟
 		{
@@ -192,20 +192,20 @@
 		
 		setTimeout(function () {
 			console.log("startQueryLargeFileScanTask() timerForQueryLargeFileScanTask triggered!");
-			doQueryLargeFileScanTask(taskId, nextDelayTime);
+			doQueryLargeFileScanTask(scanTaskId, nextDelayTime);
 		},delayTime);	//check it 2s later	
 	}
 	
-	function doQueryLargeFileScanTask(taskId, nextDelayTime)
+	function doQueryLargeFileScanTask(scanTaskId, nextDelayTime)
 	{
-		console.log("doQueryLargeFileScanTask() taskId:" + taskId + " nextDelayTime:" + nextDelayTime);
+		console.log("doQueryLargeFileScanTask() scanTaskId:" + scanTaskId + " nextDelayTime:" + nextDelayTime);
 
 		$.ajax({
             url : "/DocSystem/Doc/queryLargeFileScanTask.do",
             type : "post",
             dataType : "json",
             data : {
-                taskId: taskId,
+                taskId: scanTaskId,
             },
             success : function (ret) {
         	   console.log("doQueryLargeFileScanTask() ret:",ret);        
@@ -226,11 +226,11 @@
            	       var info = "已扫描" + task.count + "个文件, 正在扫描 [" + task.currentScanFolder + "]...";
            	    	$("#scanInfo").text(info);
 		           
-		           startQueryLargeFileScanTask(taskId,  nextDelayTime);
+		           startQueryLargeFileScanTask(scanTaskId,  nextDelayTime);
                }
                else	//后台报错
                {
-            	   var info = "扫描失败:" + task.info;
+            	   var info = "扫描失败:" + ret.msgInfo;
           	    	$("#scanInfo").text(info);
        	       }
             },

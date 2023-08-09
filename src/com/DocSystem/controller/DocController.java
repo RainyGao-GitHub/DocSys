@@ -6795,6 +6795,7 @@ public class DocController extends BaseController{
 	 */
 	@RequestMapping("/startLargeFileScanTask.do")
 	public void startLargeFileScanTask(
+			String taskId,				//taskId was used to save to systemLog
 			String storageType,			//disk / repos
 			Integer reposId, 			//For repos
 			String localDiskPath,		//For disk
@@ -6803,8 +6804,8 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.infoHead("****************** startLargeFileScan.do ***********************");
-		Log.debug("startLargeFileScan storageType: " + storageType + " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " sort:"+ sort);
+		Log.infoHead("****************** startLargeFileScanTask.do ***********************");
+		Log.debug("startLargeFileScanTask() storageType: " + storageType + " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " sort:"+ sort);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -6817,13 +6818,13 @@ public class DocController extends BaseController{
 		
 		if(storageType == null || storageType.isEmpty())
 		{
-			Log.debug("startLargeFileScan() storageType is null");
+			Log.debug("startLargeFileScanTask() storageType is null");
 			docSysErrorLog("未指定扫描类型", rt);
 			writeJson(rt, response);			
 			return;			
 		}
 		
-		String taskId = null;
+		String sacnTaskId = "";
 		switch(storageType)
 		{
 		case "disk":
@@ -6836,48 +6837,56 @@ public class DocController extends BaseController{
 			{
 				path = Path.dirPathFormat(path);
 			}
-			taskId = storageType + "_" + (localDiskPath + path).hashCode();
+			sacnTaskId = storageType + "_" + (localDiskPath + path).hashCode();
 			break;
 		//case "repos":
 		//	path = Path.dirPathFormat(path);
+		//	sacnTaskId = storageType + "_" + (reposId + path).hashCode();
 		//	break;		
 		default:
-			Log.debug("startLargeFileScan() 未知扫描类型:" + storageType);
+			Log.debug("startLargeFileScanTask() 未知扫描类型:" + storageType);
 			docSysErrorLog("未知扫描类型", rt);
 			writeJson(rt, response);						
 			return;
 		}
 		
 		//判断扫描任务是否已启动且有效
-		LargeFileScanTask scanTask = getLargeFileScanTaskById(taskId);
+		LargeFileScanTask scanTask = getLargeFileScanTaskById(sacnTaskId);
 		if(scanTask != null)
 		{
-			rt.setData(taskId);	
+			rt.setData(sacnTaskId);	
 			writeJson(rt, response);
 			return;
 		}
 		
 		//判断扫描结果是否已经存在且有效		
-		scanTask = createLargeFileScanTask(taskId, storageType, reposId, path, sort, rt);
+		scanTask = createLargeFileScanTask(sacnTaskId, storageType, reposId, localDiskPath, path, sort, rt);
 		if(scanTask == null)
 		{
-			Log.info("startLargeFileScan() 大文件扫描任务创建失败");
+			Log.info("startLargeFileScanTask() 大文件扫描任务创建失败");
 			writeJson(rt, response);						
 			return;
 		}
 				
-		rt.setData(taskId);	
+		rt.setData(scanTask);	
 		writeJson(rt, response);
-
-		//Start to scan
-		largetFileScanForDisk(scanTask);
+		
+		new Thread(new Runnable() {
+			LargeFileScanTask task = (LargeFileScanTask)rt.getData();
+			//String requestIP = getRequestIpAddress(request);
+			public void run() {
+				Log.debug("startLargeFileScanTask() execute largetFileScanForDisk in new thread");
+				//Start to scan
+				largetFileScanForDisk(task);
+			}
+		}).start();
 	}
 	
 	private LargeFileScanTask getLargeFileScanTaskById(String taskId) {
 		return largeFileScanTaskHashMap.get(taskId);
 	}
 	
-	private LargeFileScanTask createLargeFileScanTask(String taskId, String storageType, Integer reposId, String path,
+	private LargeFileScanTask createLargeFileScanTask(String taskId, String storageType, Integer reposId, String localDiskPath, String path,
 			String sort, ReturnAjax rt) 
 	{
 		if(largeFileScanTaskHashMap.size() > 1000)
@@ -6903,6 +6912,7 @@ public class DocController extends BaseController{
 		task.id = taskId;
 		task.storageType = storageType;
 		task.reposId = reposId;
+		task.localDiskPath = localDiskPath;
 		task.path = path;
 		task.createTime = curTime;				
 		task.status = 0;	//初始化 		
@@ -6983,10 +6993,10 @@ public class DocController extends BaseController{
 		//启动扫描任务		
 		Doc doc = new Doc();	//rootDoc
 		doc.setVid(-1);
-		doc.setPath("");
+		doc.setPath(task.path);
 		doc.setName("");
 		doc.setType(2);
-		doc.setLocalRootPath(task.path);
+		doc.setLocalRootPath(task.localDiskPath);
 		doc.setSize(0L);		
 		
 		File dir = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
@@ -7120,7 +7130,7 @@ public class DocController extends BaseController{
 	 *   大文件删除接口
 	 */
 	@RequestMapping("/deleteLargeFile.do")
-	public void startLargeFileScanTask(
+	public void deleteLargeFile(
 			String taskId,
 			String storageType,		//disk / repos
 			Integer reposId, 		//For repos

@@ -8,7 +8,8 @@ public class LargeFileScanTask {
 	public String id;			// storageType + reposId + path or  storageType + path
 	
 	public String storageType;	//disk / repos
-	public Integer reposId;		//available for repos
+	public Integer reposId;		//For repos
+	public String localDiskPath;//For disk
 	public String path;			//pathForScan
 	
 	public Long createTime;		//task create time
@@ -24,4 +25,5 @@ public class LargeFileScanTask {
 	public int largeFileCount;	//大文件个数
 
 	public String currentScanFolder;	//当前正在扫描的路径
+
 }
