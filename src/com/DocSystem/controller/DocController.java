@@ -10,7 +10,12 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -38,6 +43,8 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
+import com.DocSystem.common.entity.LargeFileScanTask;
+import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -6783,10 +6790,11 @@ public class DocController extends BaseController{
 	}
 	
 	/* 
-	 *   大文件搜索接口
+	 *   大文件搜索启动接口
+	 *   该接口将会触发大文件搜索任务，相同的目录6小时内只会启动一次
 	 */
-	@RequestMapping("/getLargeFileList.do")
-	public void getLargeFileList(
+	@RequestMapping("/startLargeFileScanTask.do")
+	public void startLargeFileScanTask(
 			String storageType,	//
 			Integer reposId, 	//如果是仓库需要指定该参数
 			String path,		//path For LargeFileScan
@@ -6794,8 +6802,8 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.infoHead("****************** getLargeFileList.do ***********************");
-		Log.debug("getLargeFileList storageType: " + storageType + " reposId: " + reposId  + " path:" + path + " sort:"+ sort);
+		Log.infoHead("****************** startLargeFileScan.do ***********************");
+		Log.debug("startLargeFileScan storageType: " + storageType + " reposId: " + reposId  + " path:" + path + " sort:"+ sort);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -6806,62 +6814,225 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//ScanForLargeFile
-		List<Doc> list = largetFileScan(storageType, reposId, path, sort);
-		rt.setData(list);	
-		writeJson(rt, response);
-	}
-
-	private List<Doc> largetFileScan(String storageType, Integer reposId, String path, String sort) {
-		if(storageType.equals("disk"))
+		if(storageType == null || storageType.isEmpty())
 		{
-			return largetFileScanForDisk(path, sort);
+			Log.debug("startLargeFileScan() storageType is null");
+			docSysErrorLog("未指定扫描类型", rt);
+			writeJson(rt, response);			
+			return;			
 		}
-		return null;
+		
+		switch(storageType)
+		{
+		case "disk":
+			path = Path.localDirPathFormat(path, OSType);
+			break;
+		case "repos":
+			path = Path.dirPathFormat(path);
+			break;		
+		default:
+			Log.debug("startLargeFileScan() 未知扫描类型:" + storageType);
+			docSysErrorLog("未知扫描类型", rt);
+			writeJson(rt, response);						
+			return;
+		}
+		
+		//大文件扫描任务ID
+		String taskId = storageType + "_" + path.hashCode();
+		
+		//判断扫描任务是否已启动且有效
+		LargeFileScanTask scanTask = getLargeFileScanTaskById(taskId);
+		if(scanTask != null)
+		{
+			rt.setData(taskId);	
+			writeJson(rt, response);
+			return;
+		}
+		
+		//判断扫描结果是否已经存在且有效		
+		scanTask = createLargeFileScanTask(taskId, storageType, reposId, path, sort, rt);
+		if(scanTask == null)
+		{
+			Log.info("startLargeFileScan() 大文件扫描任务创建失败");
+			writeJson(rt, response);						
+			return;
+		}
+				
+		rt.setData(taskId);	
+		writeJson(rt, response);
+
+		//Start Scan in new Thread
 	}
 	
-	private List<Doc> largetFileScanForDisk(String path, String sort) {		
-		String localRootPath = Path.localDirPathFormat(path, OSType);
+	private LargeFileScanTask getLargeFileScanTaskById(String taskId) {
+		return largeFileScanTaskHashMap.get(taskId);
+	}
+	
+	private LargeFileScanTask createLargeFileScanTask(String taskId, String storageType, Integer reposId, String path,
+			String sort, ReturnAjax rt) 
+	{
+		if(largeFileScanTaskHashMap.size() > 1000)
+		{
+			Log.info("createLargeFileScanTask() LargeFileScanTask 总数已超限，请检查您的系统是否正常");
+			rt.setError("系统大文件扫描任务过多，请检查您的系统是否正常");
+			return null;
+		}
+
+		long curTime = new Date().getTime();
+        Log.info("createLargeFileScanTask() curTime:" + curTime);
+		cleanExpiredLargeFileScanTask(curTime);
+   
+		LargeFileScanTask task = largeFileScanTaskHashMap.get(taskId);
+		if(task != null)
+		{
+			Log.info("createLargeFileScanTask() LargeFileScanTask [" + taskId + "] 已存在");
+			return task;
+		}
+		
+		//create new task
+		task =	new LargeFileScanTask();
+		task.id = taskId;
+		task.storageType = storageType;
+		task.reposId = reposId;
+		task.path = path;
+		task.createTime = curTime;				
+		task.status = 0;	//初始化 		
+		task.info = "";
+		largeFileScanTaskHashMap.put(taskId, task);	
+		return task;
+	}
+
+	private void cleanExpiredLargeFileScanTask(long curTime) {
+		if(largeFileScanTaskHashMap.size() < 100)
+		{
+			return;
+		}
+
+		List<String> deleteList = new ArrayList<String>();
+		for (Entry<String, LargeFileScanTask> entry : largeFileScanTaskHashMap.entrySet()) 
+		{
+			LargeFileScanTask task = entry.getValue();
+			if(task.status == 0)
+			{
+				//未开始的任务，如果超过10分钟，删除
+				if(curTime - task.createTime > 10*60*1000)
+				{
+					deleteList.add(entry.getKey());
+				}
+			}
+			else
+			{
+				//已经开始的任务，如果超过6小时，删除
+				if(curTime - task.createTime > 6*60*60*1000)
+				{
+					deleteList.add(entry.getKey());
+				}
+			}
+		}
+		//删除过期的任务
+		for(String taskId : deleteList)
+		{
+			largeFileScanTaskHashMap.remove(taskId);
+		}
+	}
+	
+	public void addDelayTaskForLargeFileScanTaskDelete(String taskId, Long deleteDelayTime) {
+		if(deleteDelayTime == null)
+		{
+			Log.info("addDelayTaskForLargeFileScanTaskDelete() delayTime is null");			
+			return;
+		}
+		Log.info("addDelayTaskForLargeFileScanTaskDelete() delayTime:" + deleteDelayTime + " 秒后开始删除扫描任务！" );		
+		
+		long curTime = new Date().getTime();
+        Log.info("addDelayTaskForLargeFileScanTaskDelete() curTime:" + curTime);        
+		
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("******** addDelayTaskForLargeFileScanTaskDelete *****");
+	                        largeFileScanTaskHashMap.remove(taskId);
+                        } catch(Exception e) {
+	                		Log.info("******** addDelayTaskForLargeFileScanTaskDelete 扫描任务 [" + taskId + "] 删除异常\n");		                        
+                        	Log.info(e);                        	
+                        }                        
+                    }
+                },
+                deleteDelayTime,
+                TimeUnit.SECONDS);
+	}
+	
+	private List<Doc> largetFileScanForDisk(LargeFileScanTask task) {				
+		task.status = 0;	//扫描任务开始
+		task.info = "开始扫描";
+		task.count = 0;	//已扫描文件
+		task.largeFileCount = 0; //大文件计数		
+		
+		//启动扫描任务		
 		Doc doc = new Doc();	//rootDoc
 		doc.setVid(-1);
 		doc.setPath("");
 		doc.setName("");
 		doc.setType(2);
-		doc.setLocalRootPath(localRootPath);
-		doc.setSize(0L);
+		doc.setLocalRootPath(task.path);
+		doc.setSize(0L);		
+		
+		File dir = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+    	if(false == dir.exists())
+    	{
+    		Log.debug("largetFileScanForDisk() [" + doc.getPath() + doc.getName() + "] 不存在！");
+    		task.status = -1;
+    		task.info = "[" + doc.getPath() + doc.getName() + "] 不存在！";
+    		return null;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		Log.debug("largetFileScanForDisk() [" +  doc.getPath() + doc.getName() + "] 不是目录！");
+    		task.status = -1;
+    		task.info = "[" + doc.getPath() + doc.getName() + "] 不是目录！";
+    		return null;
+    	}
 		
 		List<Doc> largeFileList = new ArrayList<Doc>();
-		return largetFileScanForDisk(doc, largeFileList);
+		task.result = largetFileScanForDisk(doc, largeFileList, task);
+		task.status = 200;	//扫描结束
+		return task.result;
 	}
 	
-	List<Doc> largetFileScanForDisk(Doc doc, List<Doc> largeFileList)
+	List<Doc> largetFileScanForDisk(Doc doc, List<Doc> largeFileList, LargeFileScanTask task)
 	{
 		File dir = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
     	if(false == dir.exists())
     	{
-    		Log.debug("largetFileScanForDisk() " + doc.getPath() + doc.getName() + " 不存在！");
+    		//Log.debug("largetFileScanForDisk() [" + doc.getPath() + doc.getName() + "] 不存在！");
     		return largeFileList;
     	}
     	
     	if(dir.isFile())
     	{
-    		Log.debug("largetFileScanForDisk() " +  doc.getPath() + doc.getName() + " 不是目录！");
+    		//Log.debug("largetFileScanForDisk() [" +  doc.getPath() + doc.getName() + "] 不是目录！");
     		return largeFileList;
     	}
     	
     	String subDocParentPath = getSubDocParentPath(doc);
+		task.currentScanFolder = doc.getLocalRootPath() + doc.getPath() + doc.getName();
     	
     	File[] localFileList = dir.listFiles();
     	if(localFileList == null)
     	{
-    		Log.debug("largetFileScanForDisk() " +  doc.getPath() + doc.getName() + " 是空目录！");
+    		//Log.debug("largetFileScanForDisk() " +  doc.getPath() + doc.getName() + " 是空目录！");
     		return largeFileList;
     	}
     		
     	for(int i=0;i<localFileList.length;i++)
     	{
     		File file = localFileList[i];
-
+    		task.count++;
+    		
     		if(file.isDirectory())
     		{
     			Doc subFolder = new Doc();	//rootDoc
@@ -6870,13 +7041,14 @@ public class DocController extends BaseController{
     			subFolder.setName(file.getName());
     			subFolder.setType(2);
     			subFolder.setLocalRootPath(doc.getLocalRootPath());
-    			largetFileScanForDisk(subFolder, largeFileList);
+    			largetFileScanForDisk(subFolder, largeFileList, task);
     		}
     		else
     		{
     			long size = file.length();
-    			if(size >= 100*1024*1024)
+    			if(size >= task.sizeThreshold)
     			{
+    				task.largeFileCount++;
         			Doc subDoc = new Doc();	//rootDoc
         			subDoc.setVid(doc.getVid());
         			subDoc.setPath(subDocParentPath);
@@ -6890,7 +7062,49 @@ public class DocController extends BaseController{
     			}
     		}
     	}
+    	
 		return largeFileList;
+	}
+	
+	
+	
+	/**************** queryLargeFileScanTask ******************/
+	@RequestMapping("/queryLargeFileScanTask.do")
+	public void queryLongTermTask(
+			String taskId, 
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.infoHead("************** queryLargeFileScanTask.do ****************");
+		Log.info("queryLargeFileScanTask taskId:" + taskId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		LargeFileScanTask task = getLargeFileScanTaskById(taskId);
+		if(task == null)
+		{
+			//可能任务已被取消或者超时删除
+			rt.setError("queryLargeFileScanTask [" + taskId + "] 不存在");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Log.debug("queryLargeFileScanTask() status:" + task.status + " info:" + task.info);
+		switch(task.status)
+		{
+		case 200:	//成功
+			//延时删除下载压缩任务
+			addDelayTaskForLargeFileScanTaskDelete(task.id, 6*60*60L);	//6小时后删除
+			break;
+		case -1: 	//失败
+			rt.setError(task.info);
+			addDelayTaskForLargeFileScanTaskDelete(task.id, 60L);	//1分钟后删除			
+			break;
+		default:
+			//任务未结束
+			break;
+		}
+
+		rt.setData(task);
+		writeJson(rt, response);			
 	}
 }
 	

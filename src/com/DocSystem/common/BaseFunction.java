@@ -71,6 +71,7 @@ import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
 import com.DocSystem.common.entity.LDAPConfig;
+import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.License;
 import com.DocSystem.common.entity.LocalConfig;
 import com.DocSystem.common.entity.MxsDocConfig;
@@ -175,6 +176,10 @@ public class BaseFunction{
 	
 	//Global StatusQueryTask
 	protected static ConcurrentHashMap<String, LongTermTask> longTermTaskHashMap = new ConcurrentHashMap<String, LongTermTask>();
+
+	//Global LargFileScanTask
+	protected static ConcurrentHashMap<String, LargeFileScanTask> largeFileScanTaskHashMap = new ConcurrentHashMap<String, LargeFileScanTask>();
+
 	
 	//系统默认用户
 	protected static User coEditUser = new User();
