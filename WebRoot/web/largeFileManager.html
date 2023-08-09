@@ -162,7 +162,7 @@
 	                dataType : "json",
 	                data : {
 	                    storageType : "disk",
-	                	path: pathForScan,
+	                	localDiskPath: pathForScan,
 	                },
 	                success : function (ret) {
 	                    if( "ok" == ret.status ){
@@ -326,13 +326,13 @@
 	            dataType : "json",
 	            data : {
 	                storageType: gStorageType,
-	                localRootPath: docInfo.localRootPath,
+	                localDiskPath: docInfo.localRootPath,
 	                path : docInfo.path,
 	                name : docInfo.name,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
-	                	gLargeFileList.delete(id);
+	                	gLargeFileList.splice(id, 1);
 	                    showLargeFileList(gLargeFileList);
                     	// 普通消息提示条
 						bootstrapQ.msg({
