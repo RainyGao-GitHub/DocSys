@@ -44,7 +44,6 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
-import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -7017,7 +7016,17 @@ public class DocController extends BaseController{
     	}
 		
 		List<Doc> largeFileList = new ArrayList<Doc>();
-		task.result = largetFileScanForDisk(doc, largeFileList, task);
+		largeFileList = largetFileScanForDisk(doc, largeFileList, task);
+		
+		//按照文件大小进行排序
+		Collections.sort(largeFileList,new Comparator<Doc>(){
+			@Override
+			public int compare(Doc o1, Doc o2) {
+				return o2.getSize().compareTo(o1.getSize());
+			}
+		});
+		
+		task.result = largeFileList;
 		task.status = 200;	//扫描结束
 		return task.result;
 	}
@@ -7181,7 +7190,7 @@ public class DocController extends BaseController{
 		{
 		case "disk":
 			localDiskPath = Path.localDirPathFormat(localDiskPath, OSType);
-			Log.debug("deleteLargeFile() 文件 [" + localDiskPath + path + name  + "] 删除失败");
+			Log.debug("deleteLargeFile() [" + localDiskPath + path + name  + "]");
 			ret = FileUtil.delFileOrDir(localDiskPath + path + name);
 			break;
 		//case "repos":
