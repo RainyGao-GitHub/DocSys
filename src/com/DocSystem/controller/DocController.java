@@ -6827,9 +6827,9 @@ public class DocController extends BaseController{
 		case "disk":
 			path = Path.localDirPathFormat(path, OSType);
 			break;
-		case "repos":
-			path = Path.dirPathFormat(path);
-			break;		
+		//case "repos":
+		//	path = Path.dirPathFormat(path);
+		//	break;		
 		default:
 			Log.debug("startLargeFileScan() 未知扫描类型:" + storageType);
 			docSysErrorLog("未知扫描类型", rt);
@@ -6861,7 +6861,8 @@ public class DocController extends BaseController{
 		rt.setData(taskId);	
 		writeJson(rt, response);
 
-		//Start Scan in new Thread
+		//Start to scan
+		largetFileScanForDisk(scanTask);
 	}
 	
 	private LargeFileScanTask getLargeFileScanTaskById(String taskId) {
@@ -7070,7 +7071,7 @@ public class DocController extends BaseController{
 	
 	/**************** queryLargeFileScanTask ******************/
 	@RequestMapping("/queryLargeFileScanTask.do")
-	public void queryLongTermTask(
+	public void queryLargeFileScanTask(
 			String taskId, 
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{

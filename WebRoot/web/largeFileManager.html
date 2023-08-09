@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Cheney" />
     
-    <title>大文件管理-MxsDoc</title>
+    <title>磁盘扫描工具-MxsDoc</title>
     <link href="css/logo/logo.css" rel="stylesheet">
     <!-- Bootstrap -->
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -143,11 +143,12 @@
     }
 	
 	var gLargeFileList = [];
+	var gScanTaskId;
 	function largeFileScan(){
 	   	var pathForScan = $("#searchWord").val();
 		console.log("largeFileScan() pathForScan:" + pathForScan);
 	   	$.ajax({
-	                url : "/DocSystem/Doc/getLargeFileList.do",
+	                url : "/DocSystem/Doc/startLargeFileScanTask.do",
 	                type : "post",
 	                dataType : "json",
 	                data : {
@@ -156,26 +157,77 @@
 	                },
 	                success : function (ret) {
 	                    if( "ok" == ret.status ){
-	                        $("#btnExportLargeFileList").hide();
-	                        $("#btnDeleteLargeFiles").hide();
-	                        $("#btnCancelDeleteLargeFiels").hide();
-					        gLargeFileList = ret.data;
-	                    	showLargeFileList(ret.data);
+	                    	gScanTaskId = ret.data;
+	                    	startQueryLargeFileScanTask(gScanTaskId, 2000);	//2秒后开始查询
 	                    }
 	                    else
 	                    {
-	                        $("#btnExportLargeFileList").hide();
-	                        $("#btnDeleteLargeFiles").hide();
-	                        $("#btnCancelDeleteLargeFiels").hide();
-	                    	showErrorMessage("文件列表获取失败:" + ret.msgInfo);
+	                    	showErrorMessage("扫描任务启动失败:" + ret.msgInfo);
 	                    }
 	                },
 	                error : function () {
-	    		        $("#btnSaveShare").hide();
-				        $("#btnCancelSaveShare").hide();
-	                   	showErrorMessage('文件列表获取失败：服务器异常');
+	    		        showErrorMessage('扫描任务启动失败：服务器异常');
 	                }
 	    });
+	}
+	
+	function startQueryLargeFileScanTask(taskId, delayTime)
+	{
+		console.log("startQueryLargeFileScanTask() taskId:" + taskId + " delayTime:" + delayTime);
+		var nextDelayTime = delayTime; //每次增加5s
+		if(nextDelayTime < 60000) //最长1分钟
+		{
+			nextDelayTime += 5000;
+		}
+		
+		setTimeout(function () {
+			console.log("startQueryLargeFileScanTask() timerForQueryLargeFileScanTask triggered!");
+			doQuerySystemUpgradePrepareTask(_taskId, nextDelayTime);
+		},delayTime);	//check it 2s later	
+	}
+	
+	function doQueryLargeFileScanTask(taskId, nextDelayTime)
+	{
+		console.log("doQueryLargeFileScanTask() taskId:" + taskId + " nextDelayTime:" + nextDelayTime);
+
+		$.ajax({
+            url : "/DocSystem/Doc/queryLargeFileScanTask.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                taskId: taskId,
+            },
+            success : function (ret) {
+        	   console.log("doQueryLargeFileScanTask() ret:",ret);        
+               if( "ok" == ret.status )
+               {    
+            	   var task = ret.data;
+           	       if(task.status == 200)
+            	   {
+	           	    	$("#btnExportLargeFileList").hide();
+	                    $("#btnDeleteLargeFiles").hide();
+	                    $("#btnCancelDeleteLargeFiels").hide();
+				        gLargeFileList = task.result;
+	           			showLargeFileList(gLargeFileList);
+           	        	return;
+            	   }
+           	       
+           	       var info = "已扫描" + task.count + + "个文件, 正在扫描 [" + task.currentScanFolder + "]...";
+		           $("#fileListArea").append("<p>" + info + "</p>");
+		           
+		           startQueryLargeFileScanTask(taskId,  nextDelayTime);
+               }
+               else	//后台报错
+               {
+            	   var info = "扫描失败:" + task.info;
+	           	   $("#fileListArea").append("<p>" + info + "</p>");
+       	       }
+            },
+            error : function () {	//后台异常
+         	   var info = "扫描失败:服务器异常";
+           	   $("#fileListArea").append("<p>" + info + "</p>");
+            }
+    	});	
 	}
 	
 	function showLargeFileList(data){
