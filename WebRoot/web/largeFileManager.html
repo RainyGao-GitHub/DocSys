@@ -101,7 +101,9 @@
     <article class="container-fluid manual-body">
         <div class="manual-right" style="left:0px;overflow-y: auto;">
             <div class="manual-article">
-               <div class="article-body editor-content"  id="doc" style="min-height: 650px">
+               <div id="scanInfo" style="display:none;"></div>
+               
+               <div class="article-body editor-content"  id="scanResult" style="min-height: 650px; display:none;">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
 							<i class="cell select w7">
@@ -114,8 +116,10 @@
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
-               		<div class="panel-body eventset-list" id="fileListArea">
-			 			<!-- 列表区域-->
+			 		
+
+               		<!-- 列表区域-->
+			 		<div class="panel-body eventset-list" id="fileListArea">
 					</div>
 			 </div>
 			</div>
@@ -147,7 +151,11 @@
 	function largeFileScan(){
 	   	var pathForScan = $("#searchWord").val();
 		console.log("largeFileScan() pathForScan:" + pathForScan);
-	   	$.ajax({
+		$("#scanInfo").text("开始扫描...");
+		$("#scanInfo").show();
+		$("#scanResult").hide();
+		
+		$.ajax({
 	                url : "/DocSystem/Doc/startLargeFileScanTask.do",
 	                type : "post",
 	                dataType : "json",
@@ -157,6 +165,7 @@
 	                },
 	                success : function (ret) {
 	                    if( "ok" == ret.status ){
+	                    	
 	                    	gScanTaskId = ret.data;
 	                    	startQueryLargeFileScanTask(gScanTaskId, 2000);	//2秒后开始查询
 	                    }
@@ -182,7 +191,7 @@
 		
 		setTimeout(function () {
 			console.log("startQueryLargeFileScanTask() timerForQueryLargeFileScanTask triggered!");
-			doQuerySystemUpgradePrepareTask(_taskId, nextDelayTime);
+			doQueryLargeFileScanTask(taskId, nextDelayTime);
 		},delayTime);	//check it 2s later	
 	}
 	
@@ -204,6 +213,7 @@
             	   var task = ret.data;
            	       if(task.status == 200)
             	   {
+	           	    	$("#scanInfo").hide();
 	           	    	$("#btnExportLargeFileList").hide();
 	                    $("#btnDeleteLargeFiles").hide();
 	                    $("#btnCancelDeleteLargeFiels").hide();
@@ -212,20 +222,20 @@
            	        	return;
             	   }
            	       
-           	       var info = "已扫描" + task.count + + "个文件, 正在扫描 [" + task.currentScanFolder + "]...";
-		           $("#fileListArea").append("<p>" + info + "</p>");
+           	       var info = "已扫描" + task.count + "个文件, 正在扫描 [" + task.currentScanFolder + "]...";
+           	    	$("#scanInfo").text(info);
 		           
 		           startQueryLargeFileScanTask(taskId,  nextDelayTime);
                }
                else	//后台报错
                {
             	   var info = "扫描失败:" + task.info;
-	           	   $("#fileListArea").append("<p>" + info + "</p>");
+          	    	$("#scanInfo").text(info);
        	       }
             },
             error : function () {	//后台异常
-         	   var info = "扫描失败:服务器异常";
-           	   $("#fileListArea").append("<p>" + info + "</p>");
+         	   	var info = "扫描失败:服务器异常";
+      	    	$("#scanInfo").text(info);
             }
     	});	
 	}
@@ -234,6 +244,7 @@
 		console.log("showLargeFileList");
 		console.log(data);
 		
+		$("#scanResult").show();
 		var c = $("#fileListArea").children();
 		$(c).remove();
 		if(data.length==0)
