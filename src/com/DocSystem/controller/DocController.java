@@ -6795,15 +6795,16 @@ public class DocController extends BaseController{
 	 */
 	@RequestMapping("/startLargeFileScanTask.do")
 	public void startLargeFileScanTask(
-			String storageType,	//
-			Integer reposId, 	//如果是仓库需要指定该参数
-			String path,		//path For LargeFileScan
-			String sort,		//排序方案
+			String storageType,			//disk / repos
+			Integer reposId, 			//For repos
+			String localDiskPath,		//For disk
+			String path,				//指定仓库或磁盘路径下的扫描文件
+			String sort,				//排序方案
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** startLargeFileScan.do ***********************");
-		Log.debug("startLargeFileScan storageType: " + storageType + " reposId: " + reposId  + " path:" + path + " sort:"+ sort);
+		Log.debug("startLargeFileScan storageType: " + storageType + " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " sort:"+ sort);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -6822,10 +6823,20 @@ public class DocController extends BaseController{
 			return;			
 		}
 		
+		String taskId = null;
 		switch(storageType)
 		{
 		case "disk":
-			path = Path.localDirPathFormat(path, OSType);
+			localDiskPath = Path.localDirPathFormat(localDiskPath, OSType);
+			if(path == null)
+			{
+				path = "";
+			}
+			else
+			{
+				path = Path.dirPathFormat(path);
+			}
+			taskId = storageType + "_" + (localDiskPath + path).hashCode();
 			break;
 		//case "repos":
 		//	path = Path.dirPathFormat(path);
@@ -6836,9 +6847,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);						
 			return;
 		}
-		
-		//大文件扫描任务ID
-		String taskId = storageType + "_" + path.hashCode();
 		
 		//判断扫描任务是否已启动且有效
 		LargeFileScanTask scanTask = getLargeFileScanTaskById(taskId);
@@ -7106,6 +7114,85 @@ public class DocController extends BaseController{
 
 		rt.setData(task);
 		writeJson(rt, response);			
+	}
+	
+	/* 
+	 *   大文件删除接口
+	 */
+	@RequestMapping("/deleteLargeFile.do")
+	public void startLargeFileScanTask(
+			String taskId,
+			String storageType,		//disk / repos
+			Integer reposId, 		//For repos
+			String localDiskPath, 	//For disk
+			String path,			//path For LargeFile
+			String name,			//name For LargeFile
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** deleteLargeFile.do ***********************");
+		Log.debug("deleteLargeFile storageType: " + storageType + " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " path:" + path + " name:"+ name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		User accessUser = adminAccessCheck(authCode, "LargeFileScan", session, rt);
+		if(accessUser == null) 
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(storageType == null || storageType.isEmpty())
+		{
+			Log.debug("deleteLargeFile() storageType is null");
+			docSysErrorLog("未指定扫描类型", rt);
+			writeJson(rt, response);			
+			return;			
+		}
+		
+		if(path == null)
+		{
+			path = "";
+		}
+		else
+		{
+			path = Path.dirPathFormat(path);
+		}
+		
+		if(name == null || name.isEmpty())
+		{
+			Log.debug("deleteLargeFile() name is not specified");
+			docSysErrorLog("文件名不能为空", rt);
+			writeJson(rt, response);			
+			return;						
+		}
+		
+		boolean ret = false;
+		switch(storageType)
+		{
+		case "disk":
+			localDiskPath = Path.localDirPathFormat(localDiskPath, OSType);
+			Log.debug("deleteLargeFile() 文件 [" + localDiskPath + path + name  + "] 删除失败");
+			ret = FileUtil.delFileOrDir(localDiskPath + path + name);
+			break;
+		//case "repos":
+		//	path = Path.dirPathFormat(path);
+		//	break;		
+		default:
+			Log.debug("deleteLargeFile() 未知扫描类型:" + storageType);
+			docSysErrorLog("未知扫描类型", rt);
+			writeJson(rt, response);						
+			return;
+		}
+		
+		if(ret == false)
+		{
+			docSysErrorLog("文件删除失败", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		writeJson(rt, response);
 	}
 }
 	

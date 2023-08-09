@@ -147,6 +147,7 @@
     }
 	
 	var gLargeFileList = [];
+	var gStorageType = "disk";
 	var gScanTaskId;
 	function largeFileScan(){
 	   	var pathForScan = $("#searchWord").val();
@@ -258,7 +259,7 @@
 			var opBtn2 = "";
 			var LargeFileId = d.i;
 			
-			opBtn2 = "<a href='javascript:void(0)' onclick='deleteFileConfirm("+LargeFileId+");' class='mybtn-primary'>删除</a>";
+			opBtn2 = "<a href='javascript:void(0)' onclick='deleteLargeFileConfirm("+LargeFileId+");' class='mybtn-primary'>删除</a>";
 							
 			var fileInfo = d.localRootPath + d.path + d.name;
 			var latestEditTime = getDate(d.latestEditTime);
@@ -268,7 +269,7 @@
 				+"	</i> "
 				+"	<i class='cell fileinfo w30'>"
 				+"		<span class='name'>"
-				+"			<a id='ShareInfo"+i+"' value='"+d.vid+"' href='javascript:void(0)'>"+ fileInfo + "</a>"
+				+"			<a id='FileInfo"+i+"' value='"+d.name+"' href='javascript:void(0)'>"+ fileInfo + "</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell fileinfo w10'>"
@@ -292,16 +293,23 @@
 
 	function deleteLargeFileConfirm(id)
 	{
-	   	console.log("deleteDocLargeFileConfirm()");
-			qiao.bs.confirm({
+	   	console.log("deleteDocLargeFileConfirm() id:" + id);
+		var docInfo = gLargeFileList[id];
+		if(docInfo == undefined)
+		{
+			console.log("deleteDocLargeFileConfirm() docInfo is null");
+			return;
+		}
+	   	
+	   	qiao.bs.confirm({
 	 	    	id: 'deleteLargeFileConfirm',
-	 	        msg: "是否删除该文件?",
+	 	        msg: "是否删除 [" + docInfo.name + "]?",
 	 	        close: false,		
 	 	        okbtn: "删除",
 	 	        qubtn: "取消",
 	 	    },function () {
 	 	    	//alert("点击了确定");
-	 	    	deleteLargeFile(id);
+	 	    	deleteLargeFile(id, docInfo);
 	 	    	return true;   
 	 	    },function(){
 	 	    	//alert("点击了取消");
@@ -309,19 +317,23 @@
 	 	    }); 
 	}
 	
-	function deleteLargeFile(LargeFileId)
+	function deleteLargeFile(id, docInfo)
 	{	
-	   	console.log("deleteLargeFile()");   	
+	   	console.log("deleteLargeFile() docInfo:",  docInfo);   	
 	   	$.ajax({
 	            url : "/DocSystem/Doc/deleteLargeFile.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	                shareId: LargeFileId,
+	                storageType: gStorageType,
+	                localRootPath: docInfo.localRootPath,
+	                path : docInfo.path,
+	                name : docInfo.name,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
-	                    showLargeFileList();
+	                	gLargeFileList.delete(id);
+	                    showLargeFileList(gLargeFileList);
                     	// 普通消息提示条
 						bootstrapQ.msg({
 								msg : '删除成功！',
