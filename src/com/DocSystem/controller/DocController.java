@@ -7215,8 +7215,8 @@ public class DocController extends BaseController{
 	
 	
 	/* 
-	 * 获取文件列表接口
-	 * storageType
+	 * 获取文件列表通用接口
+	 * storageType: disk:磁盘  repos:仓库 remoteServer:远程文件服务器
 	 *   
 	 */
 	@RequestMapping("/getSubDocList.do")
@@ -7252,13 +7252,13 @@ public class DocController extends BaseController{
 		switch(storageType)
 		{
 		case "disk":
-			getSubDocListForDisk(localDiskPath, path, name, listType, sort, shareId, authCode, session, request, response);
+			getSubDocListForDisk(localDiskPath, path, name, listType, sort, shareId, authCode, rt, session, request, response);
 			return;
 		case "repos":
-			getSubDocListForRepos(reposId, path, name, listType, sort, shareId, authCode, session, request, response); 
+			getSubDocListForRepos(reposId, path, name, listType, sort, shareId, authCode, rt, session, request, response); 
 			return;
 		case "remoteServer":
-			getSubDocListForRemoteServer(serverId, path, name, listType, sort, shareId, authCode, session, request, response);
+			getSubDocListForRemoteServer(serverId, path, name, listType, sort, shareId, authCode, rt, session, request, response);
 			return;
 		}
 		
@@ -7269,17 +7269,79 @@ public class DocController extends BaseController{
 
 	private void getSubDocListForRemoteServer(String serverId, String path, String name,
 			Integer listType, String sort, Integer shareId, String authCode, 
-			HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, path, name, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		//获取服务器信息
+		UserPreferServer server = getUserPreferServer(serverId);
+		if(server == null)
+		{
+			Log.debug("editUserPreferServer() 服务器[" + serverId + "] 不存在"); 
+			rt.setError("服务器不存在！");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		RemoteStorageConfig remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);
+		
+		Doc doc = buildBasicDocBase(-1, null, null, null, path, name, null, 2, true, null, null, 0L, "");
+		
+		List<Doc> list = getRemoteStorageEntryList(null, doc, remoteStorageConfig, null);
+		rt.setData(list);
+		writeJson(rt, response);
 	}
 
 	private void getSubDocListForRepos(Integer reposId, String path, String name,
 			Integer listType, String sort, Integer shareId, String authCode, 
-			HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		//Get Repos
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		Doc doc = buildBasicDocBase(reposId, null, null, reposPath, path, name, null, 2, true, localRootPath, localVRootPath, 0L, "");
+		List<Doc> list = docSysGetDocList(repos, doc, listType);
+		rt.setData(list);
+		writeJson(rt, response);
 	}
 
 	private void getSubDocListForDisk(String localDiskPath, String path, String name,
 			Integer listType, String sort, Integer shareId, String authCode, 
-			HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+		
+		User accessUser = adminAccessCheck(authCode, "getSubDocListForDisk", session, rt);
+		if(accessUser == null) 
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		localDiskPath = Path.localDirPathFormat(localDiskPath, OSType);
+		Doc doc = buildBasicDocBase(-1, null, null, null, path, name, null, 2, true, localDiskPath, null, 0L, "");
+		
+		List<Doc> list = getLocalEntryList(doc);
+		rt.setData(list);
+		writeJson(rt, response);
 	}
 }
 	

@@ -745,7 +745,7 @@ public class BaseController  extends BaseFunction{
         return channel.remoteStorageGetEntryEx(null, remote, repos, doc, null);
 	}
 
-	private List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc, RemoteStorageConfig remote, String commitId) {
+	protected List<Doc> getRemoteStorageEntryList(Repos repos, Doc doc, RemoteStorageConfig remote, String commitId) {
 		List<Doc> list = channel.remoteStorageGetEntryListEx(null, remote, repos, doc, commitId);
         return list;
 	}
@@ -767,9 +767,17 @@ public class BaseController  extends BaseFunction{
 	//注意：该接口调用前doc的localRootPath和LocalVRootPath必须正确设置
 	protected static List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
+		String reposPath = Path.getReposPath(repos);
+		doc.setReposPath(reposPath);
+		doc.setVid(repos.getId());
+		return getLocalEntryList(doc);
+	}
+	
+	protected static List<Doc> getLocalEntryList(Doc doc) 
+	{
 		//Log.debug("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
-    		String reposPath = Path.getReposPath(repos);
+    		String reposPath = doc.getReposPath();
     		//由于该接口可以被重用于获取非仓库相对路径的目录，所以需要冲doc中获取rootpath
 			String localRootPath = doc.getLocalRootPath();
 			String localVRootPath = doc.getLocalVRootPath();
@@ -817,7 +825,7 @@ public class BaseController  extends BaseFunction{
 	    		String name = file.getName();
 	    		//Log.debug("getLocalEntryList subFile:" + name);
 	
-	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc);
+	    		Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), reposPath, subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, size, "", doc);
 	    		subDoc.setLatestEditTime(file.lastModified());
 	    		subDoc.setCreateTime(file.lastModified());
 	    		subEntryList.add(subDoc);
@@ -829,6 +837,7 @@ public class BaseController  extends BaseFunction{
     		return null;
     	}
 	}
+	
 	
 	protected HashMap<String, Doc> getLocalEntryHashMap(Repos repos, Doc doc) 
 	{
