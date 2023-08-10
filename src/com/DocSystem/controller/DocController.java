@@ -7212,5 +7212,74 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 	}
+	
+	
+	/* 
+	 * 获取文件列表接口
+	 * storageType
+	 *   
+	 */
+	@RequestMapping("/getSubDocList.do")
+	public void getSubDocList(
+			String storageType, 
+			Integer reposId,			//For Repos
+			String localDiskPath, 		//For disk
+			String serverId,			//For remoteServer
+			String path, String name, 	//RootDoc Info
+			Integer listType,
+			String sort,
+			Integer shareId,
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getSubDocList.do ***********************");
+		Log.debug("getSubDocList storageType: " + storageType 
+				+ " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " serverId:" + serverId 
+				+ " path:" + path + " name:"+ name 
+				+ " listType:" + " sort:" + sort 
+				+ " shareId:" + shareId + " authCode:" + authCode);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(storageType == null)
+		{	
+			Log.debug("getSubDocList() storageType is null");
+			rt.setError("非法存储类型！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		switch(storageType)
+		{
+		case "disk":
+			getSubDocListForDisk(localDiskPath, path, name, listType, sort, shareId, authCode, session, request, response);
+			return;
+		case "repos":
+			getSubDocListForRepos(reposId, path, name, listType, sort, shareId, authCode, session, request, response); 
+			return;
+		case "remoteServer":
+			getSubDocListForRemoteServer(serverId, path, name, listType, sort, shareId, authCode, session, request, response);
+			return;
+		}
+		
+		Log.debug("getSubDocList() 非法存储类型:" + storageType);
+		rt.setError("非法存储类型！");
+		writeJson(rt, response);			
+	}
+
+	private void getSubDocListForRemoteServer(String serverId, String path, String name,
+			Integer listType, String sort, Integer shareId, String authCode, 
+			HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+	}
+
+	private void getSubDocListForRepos(Integer reposId, String path, String name,
+			Integer listType, String sort, Integer shareId, String authCode, 
+			HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+	}
+
+	private void getSubDocListForDisk(String localDiskPath, String path, String name,
+			Integer listType, String sort, Integer shareId, String authCode, 
+			HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+	}
 }
 	

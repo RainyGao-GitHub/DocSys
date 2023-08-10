@@ -1649,13 +1649,13 @@ public class ReposController extends BaseController{
 	/****************   get Repository Menu so that we can touch the docId******************/
 	@RequestMapping("/getReposInitMenu.do")
 	public void getReposInitMenu(Integer reposId,Long docId, Long pid, String path, String name, Integer level, Integer type,
-			Integer shareId,
 			Integer listType,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** getReposInitMenu.do ***********************");
 		Log.debug("getReposInitMenu reposId: " + reposId + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type 
-				+ " shareId:" + shareId+ " listType:" + listType);
+				+ " listType:" + listType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -1946,12 +1946,12 @@ public class ReposController extends BaseController{
 	 */
 	@RequestMapping("/getSubDocListRS.do")
 	public void getSubDocListEx(Integer reposId, String remoteDirectory, String path,
-			String authCode,
 			Integer listType,
+			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** getSubDocListRS.do ***********************");
-		Log.debug("getSubDocListRS reposId: " + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path);
+		Log.debug("getSubDocListRS reposId: " + reposId + " remoteDirectory:" + remoteDirectory + " path:" + path + " listType:" + listType + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
