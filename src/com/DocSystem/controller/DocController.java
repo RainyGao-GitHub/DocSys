@@ -49,6 +49,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.UserPreferServer;
+import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -7342,6 +7343,369 @@ public class DocController extends BaseController{
 		List<Doc> list = getLocalEntryList(doc);
 		rt.setData(list);
 		writeJson(rt, response);
+	}
+	
+	/* 
+	 * 获取文件列表通用接口
+	 * storageType: disk:磁盘  repos:仓库 remoteServer:远程文件服务器
+	 *   
+	 */
+	@RequestMapping("/getInitSubDocList.do")
+	public void getInitSubDocList(
+			String storageType, 
+			Integer reposId,			//For Repos
+			String localDiskPath, 		//For disk
+			String serverId,			//For remoteServer
+			String path, String name, 	//RootDoc Info
+			Integer listType,
+			String sort,
+			Integer shareId,
+			String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getSubDocList.do ***********************");
+		Log.debug("getSubDocList storageType: " + storageType 
+				+ " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " serverId:" + serverId 
+				+ " path:" + path + " name:"+ name 
+				+ " listType:" + " sort:" + sort 
+				+ " shareId:" + shareId + " authCode:" + authCode);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(storageType == null)
+		{	
+			Log.debug("getSubDocList() storageType is null");
+			rt.setError("非法存储类型！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		switch(storageType)
+		{
+		case "disk":
+			getInitSubDocListForDisk(localDiskPath, path, name, listType, sort, shareId, authCode, rt, session, request, response);
+			return;
+		case "repos":
+			getInitSubDocListForRepos(reposId, path, name, listType, sort, shareId, authCode, rt, session, request, response); 
+			return;
+		case "remoteServer":
+			getInitSubDocListForRemoteServer(serverId, path, name, listType, sort, shareId, authCode, rt, session, request, response);
+			return;
+		}
+		
+		Log.debug("getSubDocList() 非法存储类型:" + storageType);
+		rt.setError("非法存储类型！");
+		writeJson(rt, response);			
+	}
+	
+	private void getInitSubDocListForRemoteServer(String serverId, String path, String name,
+			Integer listType, String sort, Integer shareId, String authCode, 
+			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, path, name, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		//获取服务器信息
+		UserPreferServer server = getUserPreferServer(serverId);
+		if(server == null)
+		{
+			Log.debug("editUserPreferServer() 服务器[" + serverId + "] 不存在"); 
+			rt.setError("服务器不存在！");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		RemoteStorageConfig remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);
+		
+		Doc rootDoc = buildBasicDocBase(-1, null, null, null, "", "", null, 2, true, null, null, 0L, "");
+		Doc doc = null;
+		if(path != null && name != null)
+		{
+			doc = buildBasicDoc(-1, null, null, null, path, name, null, null, true, null, null, null, null);
+			if(doc.getDocId() == rootDoc.getDocId())
+			{
+				doc = null;
+			}
+		}
+		
+		Repos fakeRepos = new Repos();
+		RemoteStorageSession remoteStorageSession = channel.doRemoteStorageLoginEx(fakeRepos , remoteStorageConfig);
+        if(remoteStorageSession == null)
+        {
+        	for(int i=0; i < 3; i++)
+        	{
+        		//Try Again
+        		remoteStorageSession = channel.doRemoteStorageLoginEx(fakeRepos, remoteStorageConfig);
+        		if(remoteStorageSession != null)
+        		{
+        			break;
+        		}
+        	}
+        }
+        
+    	if(remoteStorageSession == null)
+    	{
+			rt.setError("登录远程服务器失败");
+			writeJson(rt, response);		
+			return;
+    	}
+    	
+    	List<Doc> list = getDocListFromRootToDocForRemoteServer(remoteStorageSession, remoteStorageConfig, fakeRepos, rootDoc, doc);
+		    	
+    	channel.doRemoteStorageLogoutEx(remoteStorageSession);
+		
+		rt.setData(list);
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getDocListFromRootToDocForRemoteServer(RemoteStorageSession remoteStorageSession,
+			RemoteStorageConfig remoteStorageConfig, Repos fakeRepos, Doc rootDoc, Doc doc) {
+		// TODO Auto-generated method stub
+    	//from rootDoc to doc
+    	List<Doc> resultList = channel.getRemoteStorageEntryListEx(remoteStorageSession, remoteStorageConfig, fakeRepos, rootDoc, null);
+    	if(doc == null || resultList == null || resultList.size() == 0)
+    	{
+    		return resultList;
+    	}
+    	
+    	String relativePath = getRelativePath(doc, rootDoc);
+		Log.debug("getDocListFromRootToDocForRemoteServer() relativePath:" + relativePath);		
+		if(relativePath == null || relativePath.isEmpty())
+		{
+			return resultList;
+		}
+			
+		String [] paths = relativePath.split("/");
+		int deepth = paths.length;
+		if(deepth < 1)
+		{
+			return resultList;
+		}
+			
+		Integer reposId = fakeRepos.getId();
+		Long pid = rootDoc.getDocId();
+		String pPath = rootDoc.getPath() + rootDoc.getName() + "/";
+		if(rootDoc.getName().isEmpty())
+		{
+			pPath = rootDoc.getPath();
+		}
+		
+		int pLevel = rootDoc.getLevel();
+		for(int i=0; i<deepth; i++)
+		{
+			String name = paths[i];
+			Log.debug("getDocListFromRootToDocForRemoteServer() name:" + name);
+			if(name.isEmpty())
+			{
+				continue;
+			}	
+				
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, doc.getReposPath(), pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+				
+			List<Doc> subDocList = channel.getRemoteStorageEntryListEx(remoteStorageSession, remoteStorageConfig, fakeRepos, tempDoc, null);
+			if(subDocList == null || subDocList.size() == 0)
+			{
+				Log.debug("getDocListFromRootToDocForRemoteServer() Failed to get the subDocList under doc: " + pPath+name);
+				break;
+			}
+			resultList.addAll(subDocList);
+				
+			pPath = pPath + name + "/";
+			pid = tempDoc.getPid();
+			pLevel++;
+		}
+		
+		return resultList;
+	}
+
+	private void getInitSubDocListForRepos(Integer reposId, String path, String name,
+			Integer listType, String sort, Integer shareId, String authCode, 
+			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		//Get Repos
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		Doc rootDoc = buildBasicDocBase(reposId, null, null, reposPath, "", "", null, 2, true, localRootPath, localVRootPath, 0L, "");
+		Doc doc = null;
+		if(path != null && name != null)
+		{
+			doc = buildBasicDocBase(reposId, null, null, reposPath, path, name, null, 2, true, localRootPath, localVRootPath, 0L, "");
+			if(doc.getDocId() == rootDoc.getDocId())
+			{
+				doc = null;
+			}
+		}
+	
+		List<Doc> list = getDocListFromRootToDocForRepos(repos, rootDoc, doc, listType);
+		
+		rt.setData(list);
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getDocListFromRootToDocForRepos(Repos repos, Doc rootDoc, Doc doc, Integer listType) {
+		// TODO Auto-generated method stub
+    	//from rootDoc to doc
+    	List<Doc> resultList = docSysGetDocList(repos, rootDoc, listType);
+    	if(doc == null || resultList == null || resultList.size() == 0)
+    	{
+    		return resultList;
+    	}
+    	
+    	String relativePath = getRelativePath(doc, rootDoc);
+		Log.debug("getDocListFromRootToDocForRepos() relativePath:" + relativePath);		
+		if(relativePath == null || relativePath.isEmpty())
+		{
+			return resultList;
+		}
+			
+		String [] paths = relativePath.split("/");
+		int deepth = paths.length;
+		if(deepth < 1)
+		{
+			return resultList;
+		}
+			
+		Integer reposId = repos.getId();
+		Long pid = rootDoc.getDocId();
+		String pPath = rootDoc.getPath() + rootDoc.getName() + "/";
+		if(rootDoc.getName().isEmpty())
+		{
+			pPath = rootDoc.getPath();
+		}
+		
+		int pLevel = rootDoc.getLevel();
+		for(int i=0; i<deepth; i++)
+		{
+			String name = paths[i];
+			Log.debug("getDocListFromRootToDocForRepos() name:" + name);
+			if(name.isEmpty())
+			{
+				continue;
+			}	
+				
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, doc.getReposPath(), pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+				
+			List<Doc> subDocList = docSysGetDocList(repos, tempDoc, listType);
+			if(subDocList == null || subDocList.size() == 0)
+			{
+				Log.debug("getDocListFromRootToDocForRepos() Failed to get the subDocList under doc: " + pPath+name);
+				break;
+			}
+			resultList.addAll(subDocList);
+				
+			pPath = pPath + name + "/";
+			pid = tempDoc.getPid();
+			pLevel++;
+		}
+		
+		return resultList;
+	}
+
+	private void getInitSubDocListForDisk(String localDiskPath, String path, String name,
+			Integer listType, String sort, Integer shareId, String authCode, 
+			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
+		
+		User accessUser = adminAccessCheck(authCode, "getSubDocListForDisk", session, rt);
+		if(accessUser == null) 
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		localDiskPath = Path.localDirPathFormat(localDiskPath, OSType);
+		Doc rootDoc = buildBasicDocBase(-1, null, null, null, "", "", null, 2, true, localDiskPath, null, 0L, "");
+		Doc doc = null;
+		if(path != null && name != null)
+		{
+			doc = buildBasicDocBase(-1, null, null, null, path, name, null, 2, true, localDiskPath, null, 0L, "");
+			if(doc.getDocId() == rootDoc.getDocId())
+			{
+				doc = null;
+			}
+		}
+		
+		List<Doc> list = getDocListFromRootToDocForDisk(rootDoc, doc);
+		
+		rt.setData(list);
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getDocListFromRootToDocForDisk(Doc rootDoc, Doc doc) {
+		// TODO Auto-generated method stub
+    	//from rootDoc to doc
+    	List<Doc> resultList = getLocalEntryList(rootDoc);
+    	if(doc == null || resultList == null || resultList.size() == 0)
+    	{
+    		return resultList;
+    	}
+    	
+    	String relativePath = getRelativePath(doc, rootDoc);
+		Log.debug("getDocListFromRootToDocForRepos() relativePath:" + relativePath);		
+		if(relativePath == null || relativePath.isEmpty())
+		{
+			return resultList;
+		}
+			
+		String [] paths = relativePath.split("/");
+		int deepth = paths.length;
+		if(deepth < 1)
+		{
+			return resultList;
+		}
+			
+		Integer reposId = rootDoc.getVid();
+		Long pid = rootDoc.getDocId();
+		String pPath = rootDoc.getPath() + rootDoc.getName() + "/";
+		if(rootDoc.getName().isEmpty())
+		{
+			pPath = rootDoc.getPath();
+		}
+		
+		int pLevel = rootDoc.getLevel();
+		for(int i=0; i<deepth; i++)
+		{
+			String name = paths[i];
+			Log.debug("getDocListFromRootToDocForRepos() name:" + name);
+			if(name.isEmpty())
+			{
+				continue;
+			}	
+				
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, doc.getReposPath(), pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+				
+			List<Doc> subDocList = getLocalEntryList(tempDoc);
+			if(subDocList == null || subDocList.size() == 0)
+			{
+				Log.debug("getDocListFromRootToDocForRepos() Failed to get the subDocList under doc: " + pPath+name);
+				break;
+			}
+			resultList.addAll(subDocList);
+				
+			pPath = pPath + name + "/";
+			pid = tempDoc.getPid();
+			pLevel++;
+		}
+		
+		return resultList;
 	}
 }
 	

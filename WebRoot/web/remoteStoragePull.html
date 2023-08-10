@@ -138,6 +138,8 @@
 	   	{
 	   		console.log("RemoteStoragePull openFileSelector");
 	   		var config = {};
+	   		config.storageType = "repos";
+	   		config.reposId = _repos.id;
 	   		config.repos = _repos;
 	   		config.doc = _node;
 	   		config.onSelect = fileSelectorCallback;   	   		

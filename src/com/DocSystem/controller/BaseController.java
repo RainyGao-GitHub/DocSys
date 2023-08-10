@@ -1167,7 +1167,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
-			Log.debug("name:" + name);
+			Log.debug("getDocListFromRootToDoc() name:" + name);
 			if(name.isEmpty())
 			{
 				continue;
@@ -1193,7 +1193,7 @@ public class BaseController  extends BaseFunction{
 		return resultList;
 	}
 	
-	private String getRelativePath(Doc doc, Doc rootDoc) {
+	protected String getRelativePath(Doc doc, Doc rootDoc) {
 		String docPath = doc.getPath() + doc.getName();
 		String rootDocPath = rootDoc.getPath() + rootDoc.getName();
 		if(docPath.equals(rootDocPath))

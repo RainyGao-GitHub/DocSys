@@ -76,10 +76,13 @@ var FileSelector = (function () {
         //设置异步加载的参数
         var async =  {
     		enable : true,//设置 zTree 是否开启异步加载模式
-            url : "/DocSystem/Repos/getSubDocList.do",
+            url : "/DocSystem/Doc/getSubDocList.do",
             type : "post",
-    		autoParam : ["vid", "id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数
+    		autoParam : ["path","name"],//异步加载时需要自动提交父节点属性的参数
     		otherParam:{
+    			"reposId" : _reposId,
+    			"localDiskPath" : _localDiskPath,
+				"serverId"	: _serverId,
     			"listType": 3,	//LocalEntryAndRemoteStorage
     		},
     		dataFilter: asyncDataFilter,
@@ -137,7 +140,7 @@ var FileSelector = (function () {
 	function buildRootDoc(repos)
 	{
 		var node = {};
-		node.vid = repos.id;
+		node.vid = _reposId;
 		node.id = 0;
 		node.docId = 0;	//docId same to id
 		node.pid = -1;
@@ -147,26 +150,27 @@ var FileSelector = (function () {
 		return node;
 	}
 	
-	function getInitMenu(repos, node)
+	function getInitMenu(node)
    	{
-		console.log("getInitMenu repos:", repos, " node:", node);
+		console.log("getInitMenu node:", node);
 		var docId = 0;
 		var path = "";
 		var name = "";
 		if(node)
 		{
-			docId = node.id;
 			path = node.path;
 			name = node.name;
 		}
 		
 		$.ajax({
-		    url : "/DocSystem/Repos/getReposInitMenu.do",
+		    url : "/DocSystem/Doc/getInitSubDocList.do",
 		    type : "post",
 		    dataType : "json",
 		    data : {
-		        reposId : repos.id,
-		    	docId:  docId,
+		        storageType: _storageType,
+		        localDiskPath: _localDiskPath,
+		        reposId  : _reposId,
+		    	serverId : _serverId,
 		    	path: path,
 		    	name: name,
 		    	listType : 3,    //LocalEntryAndRemoteStorage
@@ -202,6 +206,35 @@ var FileSelector = (function () {
 		//初始目录
 		console.log("fileSelectorPageInit() config:",config);
 		_config = config || {};
+		_storageType = _config.storageType;
+		
+		if(_config.localDiskPath)
+		{
+			_localDiskPath = _config.localDiskPath;	
+		}
+		else
+		{
+			_localDiskPath = "";			
+		}
+		
+		if(_config.serverId)
+		{
+			_serverId = _config.serverId;	
+		}
+		else
+		{
+			_serverId = -1;			
+		}
+		
+		if(_config.reposId)
+		{
+			_reposId = _config.reposId;	
+		}
+		else
+		{
+			_reposId = "";			
+		}
+		
 		_repos = config.repos;
 		_docInfo = config.doc;
 		
@@ -211,7 +244,7 @@ var FileSelector = (function () {
 		}
 		else
 		{
-			getInitMenu(_repos, _docInfo);
+			getInitMenu(_docInfo);
 		}
 	}
 	
