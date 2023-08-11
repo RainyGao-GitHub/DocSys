@@ -163,7 +163,12 @@
 		{
 			entryPath += node.name;	
 		}
-        $("#searchWord").val(entryPath);		
+		
+		if(node.localRootPath)
+		{
+			entryPath = node.localRootPath + entryPath;
+		}
+		$("#searchWord").val(entryPath);		
 	}
 	
    	function openFileSelector()
