@@ -11,9 +11,11 @@
     
     <title>磁盘扫描工具-MxsDoc</title>
     <link href="css/logo/logo.css" rel="stylesheet">
-    <!-- Bootstrap -->
+    <link href="css/logo/logo.css" rel="stylesheet">
+    <!-- CSS: Bootstrap、font-awesome、boostrapQ、 -->
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="static/styles/styles.css" rel="stylesheet">
     <link href="static/highlight/styles/default.css" rel="stylesheet">
     <link href="static/highlight/styles/zenburn.css" rel="stylesheet">
     <link href="static/zTree/css/metroStyle/metroStyle.css" rel="stylesheet">
@@ -74,7 +76,7 @@
     <header class="navbar navbar-static-top manual-head" role="banner">
         <div class="container-fluid">
             <div class="navbar-header pull-left manual-title">
-            	<a class="navbar-brand" href="/DocSystem/web/projects.html">
+            	<a class="navbar-brand" href="/DocSystem/web/projects.html" style="margin-top:10px;">
             		<i class="logo small"></i> 
             		MxsDoc
             	</a>
@@ -82,7 +84,10 @@
                     <div class="form-inline">
                 		<span></span>
                         <input class="form-control" id="searchWord" name="searchWord" type="search" placeholder="请输入搜索路径..." style="width:500px;">
-                    	<button id="btnLargeFileScan" class="btn btn-default" type="button" onclick="largeFileScan()">搜索大文件</button>
+                    	<button id="btnLargeFileScan" class="search-btn" onclick="largeFileScan();">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    	<button id="btnFileSelector" class="btn btn-default" type="button" onclick="openFileSelector()" style="margin-left:8px;">...</button>
                     </div>
                 </div>               
             </div>
@@ -145,6 +150,49 @@
         //刷新分享列表
         showLargeFileList(gLargeFileList);
     }
+	
+	var fileSelectorCallback =  function(node)
+	{
+		//update pullEntryPath
+		var entryPath = node.path;
+		if(entryPath == undefined || entryPath == "")
+		{
+			entryPath = "";
+		}
+		if(node.name)
+		{
+			entryPath += node.name;	
+		}
+        $("#searchWord").val(entryPath);		
+	}
+	
+   	function openFileSelector()
+   	{
+   		console.log("RemoteStoragePull openFileSelector");
+   		var config = {};
+   		var node = {};
+   		config.storageType = "disk";
+   		config.localDiskPath = "";
+   		config.onSelect = fileSelectorCallback;   	   		
+   		showFileSelectorInBootstrapDialog(config);
+   	}
+   		   	
+	function showFileSelectorInBootstrapDialog(config)
+	{
+		console.log("showFileSelectorInBootstrapDialog config:", config);
+
+		bootstrapQ.dialog({
+			id: 'fileSelector',
+			url: 'fileSelector.html',
+			title: '文件选择',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				FileSelector.fileSelectorPageInit(config);	//fileSlector.html 页面加载完成，此时可以通过改函数传递参数了
+			},
+		});
+	}
 	
 	var gLargeFileList = [];
 	var gStorageType = "disk";

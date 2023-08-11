@@ -19,6 +19,25 @@ var FileSelector = (function () {
 	var _menu;
 	var _selectedNode;
 	
+    function zTreeBeforeAsync(treeId, treeNode) {
+    	console.log("zTreeBeforeAsync treeId:"+ treeId, treeNode);
+    }
+
+    function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
+    	console.log("zTreeOnAsyncSuccess treeId:" + treeId);
+    }
+
+	//This function was used to get the rightClick treeNode,it will be used for contextjs
+	function zTreeBeforeRightClick(treeId, treeNode) {
+		_selectedNode = treeNode;
+    	return true;
+	};
+
+	//This function will replace all righot click, so i did not use it
+	function zTreeOnRightClick(event, treeId, treeNode) {
+    	//alert(treeNode ? treeNode.tId + ", " + treeNode.name : "isRoot");
+	};
+	
 	//zTree callback definitions
     function zTreeOnClick(event, treeId, treeNode) 
     {
@@ -80,8 +99,9 @@ var FileSelector = (function () {
             type : "post",
     		autoParam : ["path","name"],//异步加载时需要自动提交父节点属性的参数
     		otherParam:{
-    			"reposId" : _reposId,
+    			"storageType" : _storageType,
     			"localDiskPath" : _localDiskPath,
+    			"reposId" : _reposId,
 				"serverId"	: _serverId,
     			"listType": 3,	//LocalEntryAndRemoteStorage
     		},
