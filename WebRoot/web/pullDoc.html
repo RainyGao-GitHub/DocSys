@@ -38,17 +38,20 @@
 	</div>
 	<div class="modal-footer"></div>
 	<div class="form-group">
-	        <label class="col-sm-2 control-label">拉取</label>
-	        <div class="col-sm-10">
-	            <input type="text" name="pullEntryPath" class="form-control"  maxlength="400"></input>
-	        </div>
-		    <div name="pullControlDiv" style="margin-left:90px; margin-top:30px">
-			   <label>
-			   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">拉取子目录</span>
-			   	   <span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">强制拉取</span>
-			   </label>
-		    </div>	
+		<label class="col-sm-2 control-label">拉取</label>
+		<div class="col-sm-9">
+			<input type="text" name="pullEntryPath" class="form-control"  maxlength="400"></input>
+		</div>
+		<div class="col-sm-1">
+			<button id="btnFileSelector" class="btn btn-default" type="button" onclick="openFileSelector()">...</button>		    	
+		</div>
 	</div>
+	<div name="pullControlDiv" style="margin-left:80px; margin-top:0px">
+			<label>
+				<span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">拉取子目录</span>
+			   	<span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">强制拉取</span>
+			</label>
+	</div>	
 	<div class="form-group" style="display:none;">
 	        <label class="col-sm-2 control-label">目录</label>
 	        <div class="col-sm-10">
