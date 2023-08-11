@@ -685,10 +685,24 @@
     	
 	   	function openFileSelector()
 	   	{
-	   		console.log("RemoteStoragePull openFileSelector");
+	   		console.log("PullDoc openFileSelector");
+	   		
+	   		targetStorageType = $("#dialog-pull-doc select[name='targetStorageType']").val();
+	   		if(targetStorageType == 1)
+		    {
+		    	targetReposId = $("#dialog-pull-doc select[name='targetRepos']").val();
+		    	targetDiskPath = "";
+		    }
+		    else
+		    {
+		    	targetReposId = "";
+		    	var diskIndex = $("#dialog-pull-doc select[name='targetDiskPath']").val();	
+		    	targetDiskPath = targetStorage.diskList[diskIndex].path;
+		    }
+	   		
 	   		var config = {};
 	   		if(selectedServer.isLocal)
-	   		{
+	   		{	
 		   		if(targetStorageType == 1)
 		   		{
 			   		config.storageType = "repos";

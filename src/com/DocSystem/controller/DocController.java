@@ -7223,8 +7223,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/getSubDocList.do")
 	public void getSubDocList(
 			String storageType, 
-			Integer reposId,			//For Repos
 			String localDiskPath, 		//For disk
+			Integer reposId,			//For Repos
 			String serverId,			//For remoteServer
 			Integer targetReposId,		//For remoteServer
 			String targetDiskPath,		//For remoteServer
@@ -7237,7 +7237,9 @@ public class DocController extends BaseController{
 	{
 		Log.infoHead("****************** getSubDocList.do ***********************");
 		Log.debug("getSubDocList storageType: " + storageType 
-				+ " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " serverId:" + serverId 
+				+ " localDiskPath:" + localDiskPath 
+				+ " reposId: " + reposId  
+				+ " serverId:" + serverId + " targetReposId:" + targetReposId + " targetDiskPath:" + targetDiskPath
 				+ " path:" + path + " name:"+ name 
 				+ " listType:" + " sort:" + sort 
 				+ " shareId:" + shareId + " authCode:" + authCode);
@@ -7292,12 +7294,9 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		server.reposId = targetReposId;
+		server.remoteDirectory = targetDiskPath;
 		RemoteStorageConfig remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);
-		if(remoteStorageConfig.protocol == "mxsdoc")
-		{
-			remoteStorageConfig.MXSDOC.reposId = targetReposId;
-			remoteStorageConfig.MXSDOC.remoteDirectory = targetDiskPath;			
-		}
 		
 		Doc doc = buildBasicDocBase(-1, null, null, null, path, name, null, 2, true, null, null, 0L, "");
 		
@@ -7361,8 +7360,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/getInitSubDocList.do")
 	public void getInitSubDocList(
 			String storageType, 
-			Integer reposId,			//For Repos
 			String localDiskPath, 		//For disk
+			Integer reposId,			//For Repos
 			String serverId,			//For remoteServer
 			Integer targetReposId,		//For remoteServer
 			String targetDiskPath,		//For remoteServer
@@ -7373,9 +7372,11 @@ public class DocController extends BaseController{
 			String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Log.infoHead("****************** getSubDocList.do ***********************");
-		Log.debug("getSubDocList storageType: " + storageType 
-				+ " reposId: " + reposId  + " localDiskPath:" + localDiskPath + " serverId:" + serverId 
+		Log.infoHead("****************** getInitSubDocList.do ***********************");
+		Log.debug("getInitSubDocList storageType: " + storageType 
+				+ " localDiskPath:" + localDiskPath 
+				+ " reposId: " + reposId  
+				+ " serverId:" + serverId + " targetReposId:" + targetReposId + " targetDiskPath:" + targetDiskPath
 				+ " path:" + path + " name:"+ name 
 				+ " listType:" + " sort:" + sort 
 				+ " shareId:" + shareId + " authCode:" + authCode);
@@ -7384,7 +7385,7 @@ public class DocController extends BaseController{
 		
 		if(storageType == null)
 		{	
-			Log.debug("getSubDocList() storageType is null");
+			Log.debug("getInitSubDocList() storageType is null");
 			rt.setError("非法存储类型！");
 			writeJson(rt, response);			
 			return;
@@ -7403,7 +7404,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Log.debug("getSubDocList() 非法存储类型:" + storageType);
+		Log.debug("getInitSubDocList() 非法存储类型:" + storageType);
 		rt.setError("非法存储类型！");
 		writeJson(rt, response);			
 	}
@@ -7424,19 +7425,15 @@ public class DocController extends BaseController{
 		UserPreferServer server = getUserPreferServer(serverId);
 		if(server == null)
 		{
-			Log.debug("editUserPreferServer() 服务器[" + serverId + "] 不存在"); 
+			Log.debug("getInitSubDocList() 服务器[" + serverId + "] 不存在"); 
 			rt.setError("服务器不存在！");
 			writeJson(rt, response);	
 			return;
 		}
 		
-		RemoteStorageConfig remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);
-		if(remoteStorageConfig.protocol == "mxsdoc")
-		{
-			remoteStorageConfig.MXSDOC.reposId = targetReposId;
-			remoteStorageConfig.MXSDOC.remoteDirectory = targetDiskPath;			
-		}
-		
+		server.reposId = targetReposId;
+		server.remoteDirectory = targetDiskPath;
+		RemoteStorageConfig remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);		
 		
 		Doc rootDoc = buildBasicDocBase(-1, null, null, null, "", "", null, 2, true, null, null, 0L, "");
 		Doc doc = null;
