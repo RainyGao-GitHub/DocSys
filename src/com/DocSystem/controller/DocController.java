@@ -6789,13 +6789,11 @@ public class DocController extends BaseController{
 		queryLog.userId = userId;
 		queryLog.userName = userName;
 		
-		QueryResult queryResult = new QueryResult();
 		List<SystemLog> list = channel.getSystemLogList(queryLog, null, null);
-		Integer total = queryResult.total;
-		Log.debug("getSystemLogList() total:" + total);
+		Log.debug("getSystemLogList() total:" + list.size());
 		
 		rt.setData(list);
-		rt.setDataEx(total);
+		rt.setDataEx(list.size());
         writeJson(rt, response);
 	}
 	

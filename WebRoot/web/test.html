@@ -676,6 +676,7 @@ function querySystemLogTest()
             authCode: gAuthCode,
         },
         success : function (ret) {
+        	console.log("querySystemLogTest", ret)
      		if(ret.status == "ok")
         	{
             	alert("查询状态成功");
