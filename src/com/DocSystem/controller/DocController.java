@@ -7226,7 +7226,9 @@ public class DocController extends BaseController{
 			Integer reposId,			//For Repos
 			String localDiskPath, 		//For disk
 			String serverId,			//For remoteServer
-			String path, String name, 	//RootDoc Info
+			Integer targetReposId,		//For remoteServer
+			String targetDiskPath,		//For remoteServer
+			String path, String name, 	//doc Info
 			Integer listType,
 			String sort,
 			Integer shareId,
@@ -7259,7 +7261,7 @@ public class DocController extends BaseController{
 			getSubDocListForRepos(reposId, path, name, listType, sort, shareId, authCode, rt, session, request, response); 
 			return;
 		case "remoteServer":
-			getSubDocListForRemoteServer(serverId, path, name, listType, sort, shareId, authCode, rt, session, request, response);
+			getSubDocListForRemoteServer(serverId, targetReposId, targetDiskPath, path, name, listType, sort, shareId, authCode, rt, session, request, response);
 			return;
 		}
 		
@@ -7268,7 +7270,8 @@ public class DocController extends BaseController{
 		writeJson(rt, response);			
 	}
 
-	private void getSubDocListForRemoteServer(String serverId, String path, String name,
+	private void getSubDocListForRemoteServer(String serverId, Integer targetReposId, String targetDiskPath,
+			String path, String name,
 			Integer listType, String sort, Integer shareId, String authCode, 
 			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
 		
@@ -7290,6 +7293,11 @@ public class DocController extends BaseController{
 		}
 		
 		RemoteStorageConfig remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);
+		if(remoteStorageConfig.protocol == "mxsdoc")
+		{
+			remoteStorageConfig.MXSDOC.reposId = targetReposId;
+			remoteStorageConfig.MXSDOC.remoteDirectory = targetDiskPath;			
+		}
 		
 		Doc doc = buildBasicDocBase(-1, null, null, null, path, name, null, 2, true, null, null, 0L, "");
 		
@@ -7356,7 +7364,9 @@ public class DocController extends BaseController{
 			Integer reposId,			//For Repos
 			String localDiskPath, 		//For disk
 			String serverId,			//For remoteServer
-			String path, String name, 	//RootDoc Info
+			Integer targetReposId,		//For remoteServer
+			String targetDiskPath,		//For remoteServer
+			String path, String name, 	//end doc Info
 			Integer listType,
 			String sort,
 			Integer shareId,
@@ -7389,7 +7399,7 @@ public class DocController extends BaseController{
 			getInitSubDocListForRepos(reposId, path, name, listType, sort, shareId, authCode, rt, session, request, response); 
 			return;
 		case "remoteServer":
-			getInitSubDocListForRemoteServer(serverId, path, name, listType, sort, shareId, authCode, rt, session, request, response);
+			getInitSubDocListForRemoteServer(serverId, targetReposId, targetDiskPath, path, name, listType, sort, shareId, authCode, rt, session, request, response);
 			return;
 		}
 		
@@ -7398,7 +7408,8 @@ public class DocController extends BaseController{
 		writeJson(rt, response);			
 	}
 	
-	private void getInitSubDocListForRemoteServer(String serverId, String path, String name,
+	private void getInitSubDocListForRemoteServer(String serverId, Integer targetReposId, String targetDiskPath,
+			String path, String name,
 			Integer listType, String sort, Integer shareId, String authCode, 
 			ReturnAjax rt, HttpSession session, HttpServletRequest request,HttpServletResponse response) {
 		
@@ -7420,6 +7431,12 @@ public class DocController extends BaseController{
 		}
 		
 		RemoteStorageConfig remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);
+		if(remoteStorageConfig.protocol == "mxsdoc")
+		{
+			remoteStorageConfig.MXSDOC.reposId = targetReposId;
+			remoteStorageConfig.MXSDOC.remoteDirectory = targetDiskPath;			
+		}
+		
 		
 		Doc rootDoc = buildBasicDocBase(-1, null, null, null, "", "", null, 2, true, null, null, 0L, "");
 		Doc doc = null;

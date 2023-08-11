@@ -191,6 +191,8 @@ var FileSelector = (function () {
 		        localDiskPath: _localDiskPath,
 		        reposId  : _reposId,
 		    	serverId : _serverId,
+		    	targetReposId: _targetReposId,
+		    	targetDiskPath: _targetDiskPath,
 		    	path: path,
 		    	name: name,
 		    	listType : 3,    //LocalEntryAndRemoteStorage
@@ -240,6 +242,8 @@ var FileSelector = (function () {
 		if(_config.serverId)
 		{
 			_serverId = _config.serverId;	
+			_targetDiskPath = _config.targetDiskPath;
+			_targetReposId = _config.targetReposId;
 		}
 		else
 		{

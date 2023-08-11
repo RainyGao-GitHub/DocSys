@@ -43,7 +43,7 @@
 			<input type="text" name="pullEntryPath" class="form-control"  maxlength="400"></input>
 		</div>
 		<div class="col-sm-1">
-			<button id="btnFileSelector" class="btn btn-default" type="button" onclick="openFileSelector()">...</button>		    	
+			<button id="btnFileSelector" class="btn btn-default" type="button" onclick="DocPull.openFileSelector()">...</button>		    	
 		</div>
 	</div>
 	<div name="pullControlDiv" style="margin-left:80px; margin-top:0px">
@@ -175,7 +175,7 @@
 		
 		//Selected ServerInfo
 		var curServerIndex = 0;
-		var seletedServer;
+		var selectedServer;
 		var targetServerId;
 		var targetServerUrl = "";
 		var userName = "";
@@ -213,7 +213,7 @@
 		function showEditUserPreferServerPanel()
 		{
 			console.log("showEditUserPreferServerPanel");
-			if(seletedServer.isLocal)
+			if(selectedServer.isLocal)
 			{
 				showErrorMessage("无法修改本地服务器！");
 				return;
@@ -227,7 +227,7 @@
 				foot: false,
 				big: false,
 				callback: function(){
-					editUserPreferServerPageInit(seletedServer, DocPull.initTaregetServerList);
+					editUserPreferServerPageInit(selectedServer, DocPull.initTaregetServerList);
 				},
 			});
 		}
@@ -236,16 +236,16 @@
 		{
 			console.log("deleteUserPreferServerConfirm()");
 			
-			if(seletedServer.isLocal)
+			if(selectedServer.isLocal)
 			{			
 				showErrorMessage("无法删除本地服务器！");
 				return;
 			}
 			
-			var showName = seletedServer.serverUrl;
-			if(seletedServer.serverName)
+			var showName = selectedServer.serverUrl;
+			if(selectedServer.serverName)
 			{		
-				showName = seletedServer.serverName;
+				showName = selectedServer.serverName;
 			}
 			bootstrapQ.confirm(
 					{
@@ -255,7 +255,7 @@
 					},
 					function () {
 				    	//alert("点击了确定");
-						DocPull.deleteUserPreferServer(seletedServer.id);
+						DocPull.deleteUserPreferServer(selectedServer.id);
 				    	return true;   
 				 	});
 		}
@@ -307,7 +307,7 @@
 			
 			//设置当前选择的serverInfo
 			curServerIndex = 0;
-			seletedServer = localServer;
+			selectedServer = localServer;
 		   	
 			//获取用户自定义服务器列表
 			getUserPreferServerList(showTargetServerSelectList);
@@ -406,9 +406,9 @@
 			curServerIndex = $("#dialog-pull-doc select[name='targetServer']").val();
 		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
 	
-		   	seletedServer = targetServerList[curServerIndex];
-			console.log("doSelectTargetSever() seletedServer:", seletedServer);
-		   	if(seletedServer.serverType == "mxsdoc")
+		   	selectedServer = targetServerList[curServerIndex];
+			console.log("doSelectTargetSever() selectedServer:", selectedServer);
+		   	if(selectedServer.serverType == "mxsdoc")
 		   	{
 		   		//显示存储选择区域
 		   		$("#dialog-pull-doc div[name='targetStorageDiv']").show();
@@ -453,15 +453,15 @@
 		
 		function getRemoteAuthCode()
 		{
-		   	console.log("getRemoteAuthCode() seletedServer:", seletedServer);		   	
+		   	console.log("getRemoteAuthCode() selectedServer:", selectedServer);		   	
 		   	
-		   	targetServerId = seletedServer.id;
-		   	targetServerUrl = seletedServer.serverUrl;
-		   	userName = seletedServer.serverUserName;
-		   	pwd = seletedServer.serverPwd;		
+		   	targetServerId = selectedServer.id;
+		   	targetServerUrl = selectedServer.serverUrl;
+		   	userName = selectedServer.serverUserName;
+		   	pwd = selectedServer.serverPwd;		
 		   	
 		   	var serverUrl = targetServerUrl;
-		   	if(seletedServer.isLocal)
+		   	if(selectedServer.isLocal)
 		    {
 		    	serverUrl = undefined;
 		    }
@@ -558,11 +558,11 @@
 		
 		function doPullDoc()
 		{
-		   	targetServerUrl = seletedServer.serverUrl;
-		   	userName = seletedServer.serverUserName;
-		   	pwd = seletedServer.serverPwd;	
+		   	targetServerUrl = selectedServer.serverUrl;
+		   	userName = selectedServer.serverUserName;
+		   	pwd = selectedServer.serverPwd;	
 		   	
-		   	if(seletedServer.serverType == "mxsdoc")
+		   	if(selectedServer.serverType == "mxsdoc")
 		   	{
 		   		targetStorageType = $("#dialog-pull-doc select[name='targetStorageType']").val();
 		   		if(targetStorageType == 1)
@@ -659,6 +659,78 @@
       		}
 	   	}
 	   	
+	   	var fileSelectorCallback =  function(node)
+    	{
+    		//update pullEntryPath
+			var pullEntryPath = node.path;
+			if(pullEntryPath == undefined || pullEntryPath == "")
+			{
+				pullEntryPath = "/";
+			}
+			if(node.name)
+			{
+				pullEntryPath += node.name;	
+			}
+	        $("#dialog-pull-doc input[name='pullEntryPath']").val(pullEntryPath);		
+	        
+			if(node.type == 2)
+			{
+				$("#dialog-pull-doc span[name='recurciveEnSpan']").show();				
+			}
+			else
+			{
+				$("#dialog-pull-doc span[name='recurciveEnSpan']").hide();								
+			}
+    	}
+    	
+	   	function openFileSelector()
+	   	{
+	   		console.log("RemoteStoragePull openFileSelector");
+	   		var config = {};
+	   		if(selectedServer.isLocal)
+	   		{
+		   		if(targetStorageType == 1)
+		   		{
+			   		config.storageType = "repos";
+		   			config.reposId = targetReposId;
+		   		}
+		   		else
+		   		{
+			   		config.storageType = "disk";
+		   			config.localDiskPath = targetDiskPath;
+		   		}
+	   		}
+	   		else
+	   		{
+		   		config.storageType = "remoteServer";
+	   			config.serverId = targetServerId;
+	   			config.targetReposId = targetReposId;
+         		config.targetDiskPath = targetDiskPath;
+	   		}
+	   		
+	   		config.doc = node;
+	   		config.onSelect = fileSelectorCallback;   	   		
+	   		showFileSelectorInBootstrapDialog(config);
+	   	}
+	   		   	
+    	function showFileSelectorInBootstrapDialog(config)
+    	{
+    		console.log("showFileSelectorInBootstrapDialog config:", config);
+
+    		bootstrapQ.dialog({
+    			id: 'fileSelector',
+    			url: 'fileSelector.html',
+    			title: '文件选择',
+    			msg: '页面正在加载，请稍等...',
+    			foot: false,
+    			big: false,
+    			callback: function(){
+    				FileSelector.fileSelectorPageInit(config);	//fileSlector.html 页面加载完成，此时可以通过改函数传递参数了
+    			},
+    		});
+    	}
+	   	
+	   	
 		//开放给外部的调用接口
         return {
 			init: function(_type, _parentNode){
@@ -686,7 +758,10 @@
             doSelectTargetStorageType: function(){
             	doSelectTargetStorageType();            	
             },
-        };
+            openFileSelector: function(){
+            	openFileSelector();
+            },
+		};
 	})();
 
 </script>
