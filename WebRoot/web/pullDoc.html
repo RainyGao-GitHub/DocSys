@@ -71,10 +71,10 @@
 <script src="js/md5.js"></script>
 <script type="text/javascript">
 	//type: 1: pull to repos for mxsdoc server 2:pull to file server
-	function pullDocPageInit(_node)
+	function pullDocPageInit(node)
 	{
-		console.log("pullDocPageInit() node:", _node);
-		DocPull.init(_node);  
+		console.log("pullDocPageInit() node:", node);
+		DocPull.init(node);  
 	}
 	
 	function closePullDocDialog()
@@ -166,16 +166,16 @@
 	}
 	
 	var DocPull = (function () {
-		var node;
+		var _node;
 		
-		var localServer = {};
-		var targetServerList = [];
+		var _localServer = {};
+		var _targetServerList = [];
 		
-		var pullEntryPath = "";
+		var _pullEntryPath = "";
 		
 		//Selected ServerInfo
 		var curServerIndex = 0;
-		var selectedServer;
+		var _selectedServer;
 		var targetServerId;
 		var targetServerUrl = "";
 		var userName = "";
@@ -188,22 +188,22 @@
 		var targetDiskPath = "";
 		var targetPath = "";
 		
-		function init(_node)
+		function init(node)
 		{
-			console.log("DocPull.init() node:", _node);
+			console.log("DocPull.init() node:", node);
 
-			node = _node;
+			_node = node;
 
-			//set pullEntryPath
-			pullEntryPath = node.path + "/" + node.name
-	        $("#dialog-pull-doc input[name='pullEntryPath']").val(pullEntryPath);
-			if(node.type == 2)
+			//set _pullEntryPath
+			_pullEntryPath = _node.path + "/" + _node.name
+	        $("#dialog-pull-doc input[name='pullEntryPath']").val(_pullEntryPath);
+			if(_node.type == 2)
 			{
 				$("#dialog-pull-doc span[name='recurciveEnSpan']").show();				
 			}
 			
 			//set targetPath
-			targetPath = node.path;
+			targetPath = _node.path;
 	        $("#dialog-pull-doc input[name='targetPath']").val(targetPath);
 			
 			//初始化serverList
@@ -213,7 +213,7 @@
 		function showEditUserPreferServerPanel()
 		{
 			console.log("showEditUserPreferServerPanel");
-			if(selectedServer.isLocal)
+			if(_selectedServer.isLocal)
 			{
 				showErrorMessage("无法修改本地服务器！");
 				return;
@@ -227,7 +227,7 @@
 				foot: false,
 				big: false,
 				callback: function(){
-					editUserPreferServerPageInit(selectedServer, DocPull.initTaregetServerList);
+					editUserPreferServerPageInit(_selectedServer, DocPull.initTaregetServerList);
 				},
 			});
 		}
@@ -236,16 +236,16 @@
 		{
 			console.log("deleteUserPreferServerConfirm()");
 			
-			if(selectedServer.isLocal)
+			if(_selectedServer.isLocal)
 			{			
 				showErrorMessage("无法删除本地服务器！");
 				return;
 			}
 			
-			var showName = selectedServer.serverUrl;
-			if(selectedServer.serverName)
+			var showName = _selectedServer.serverUrl;
+			if(_selectedServer.serverName)
 			{		
-				showName = selectedServer.serverName;
+				showName = _selectedServer.serverName;
 			}
 			bootstrapQ.confirm(
 					{
@@ -255,7 +255,7 @@
 					},
 					function () {
 				    	//alert("点击了确定");
-						DocPull.deleteUserPreferServer(selectedServer.id);
+						DocPull.deleteUserPreferServer(_selectedServer.id);
 				    	return true;   
 				 	});
 		}
@@ -293,21 +293,21 @@
 		
 		function initTaregetServerList()
 		{	
-			targetServerList = [];
+			_targetServerList = [];
 			
 			//Build Local ServerUrl
 			var protocol = window.location.protocol + '//';
 			var host = window.location.host; //域名带端口  
 			var serverUrl = protocol + host;
-			localServer.serverUrl = serverUrl;
-			localServer.serverType = "mxsdoc";
-			localServer.serverName = "本地服务器";	
-			localServer.isLocal = true;				
-			targetServerList.push(localServer);
+			_localServer.serverUrl = serverUrl;
+			_localServer.serverType = "mxsdoc";
+			_localServer.serverName = "本地服务器";	
+			_localServer.isLocal = true;				
+			_targetServerList.push(_localServer);
 			
 			//设置当前选择的serverInfo
 			curServerIndex = 0;
-			selectedServer = localServer;
+			_selectedServer = _localServer;
 		   	
 			//获取用户自定义服务器列表
 			getUserPreferServerList(showTargetServerSelectList);
@@ -334,7 +334,7 @@
 			                    		{
 			                    			server.serverType = "mxsdoc";
 			                    		}
-			                    		targetServerList.push(server);
+			                    		_targetServerList.push(server);
 			                    	}
 		                    	}
 		                    	callback && callback();
@@ -355,7 +355,7 @@
 		function showTargetServerSelectList()
 		{
 		   	console.log("showTargetServerSelectList()");
-		   	var data = targetServerList;
+		   	var data = _targetServerList;
 		   	
 			console.log(data);
 			if(data.length > 0){
@@ -406,9 +406,9 @@
 			curServerIndex = $("#dialog-pull-doc select[name='targetServer']").val();
 		   	console.log("doSelectTargetSever() curServerIndex:" + curServerIndex);
 	
-		   	selectedServer = targetServerList[curServerIndex];
-			console.log("doSelectTargetSever() selectedServer:", selectedServer);
-		   	if(selectedServer.serverType == "mxsdoc")
+		   	_selectedServer = _targetServerList[curServerIndex];
+			console.log("doSelectTargetSever() _selectedServer:", _selectedServer);
+		   	if(_selectedServer.serverType == "mxsdoc")
 		   	{
 		   		//显示存储选择区域
 		   		$("#dialog-pull-doc div[name='targetStorageDiv']").show();
@@ -453,15 +453,15 @@
 		
 		function getRemoteAuthCode()
 		{
-		   	console.log("getRemoteAuthCode() selectedServer:", selectedServer);		   	
+		   	console.log("getRemoteAuthCode() _selectedServer:", _selectedServer);		   	
 		   	
-		   	targetServerId = selectedServer.id;
-		   	targetServerUrl = selectedServer.serverUrl;
-		   	userName = selectedServer.serverUserName;
-		   	pwd = selectedServer.serverPwd;		
+		   	targetServerId = _selectedServer.id;
+		   	targetServerUrl = _selectedServer.serverUrl;
+		   	userName = _selectedServer.serverUserName;
+		   	pwd = _selectedServer.serverPwd;		
 		   	
 		   	var serverUrl = targetServerUrl;
-		   	if(selectedServer.isLocal)
+		   	if(_selectedServer.isLocal)
 		    {
 		    	serverUrl = undefined;
 		    }
@@ -558,11 +558,11 @@
 		
 		function doPullDoc()
 		{
-		   	targetServerUrl = selectedServer.serverUrl;
-		   	userName = selectedServer.serverUserName;
-		   	pwd = selectedServer.serverPwd;	
+		   	targetServerUrl = _selectedServer.serverUrl;
+		   	userName = _selectedServer.serverUserName;
+		   	pwd = _selectedServer.serverPwd;	
 		   	
-		   	if(selectedServer.serverType == "mxsdoc")
+		   	if(_selectedServer.serverType == "mxsdoc")
 		   	{
 		   		targetStorageType = $("#dialog-pull-doc select[name='targetStorageType']").val();
 		   		if(targetStorageType == 1)
@@ -579,7 +579,7 @@
 		   	}
 		   	
 		    targetPath = $("#dialog-pull-doc input[name='targetPath']").val();
-		    pullEntryPath = $("#dialog-pull-doc input[name='pullEntryPath']").val();
+		    _pullEntryPath = $("#dialog-pull-doc input[name='pullEntryPath']").val();
 		    
 		    if(targetServerUrl)
 			{
@@ -603,8 +603,8 @@
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	                reposId : node.vid, 
-	                path: pullEntryPath,
+	                reposId : _node.vid, 
+	                path: _pullEntryPath,
 	                name : "",
 	                serverId: targetServerId,
 		            targetServerUrl: targetServerUrl,
@@ -661,19 +661,20 @@
 	   	
 	   	var fileSelectorCallback =  function(node)
     	{
-    		//update pullEntryPath
-			var pullEntryPath = node.path;
-			if(pullEntryPath == undefined || pullEntryPath == "")
+    		//update _pullEntryPath
+    		_node = node;
+			_pullEntryPath = _node.path;
+			if(_pullEntryPath == undefined || _pullEntryPath == "")
 			{
-				pullEntryPath = "/";
+				_pullEntryPath = "/";
 			}
 			if(node.name)
 			{
-				pullEntryPath += node.name;	
+				_pullEntryPath += _node.name;	
 			}
-	        $("#dialog-pull-doc input[name='pullEntryPath']").val(pullEntryPath);		
+	        $("#dialog-pull-doc input[name='pullEntryPath']").val(_pullEntryPath);		
 	        
-			if(node.type == 2)
+			if(_node.type == 2)
 			{
 				$("#dialog-pull-doc span[name='recurciveEnSpan']").show();				
 			}
@@ -701,7 +702,7 @@
 		    }
 	   		
 	   		var config = {};
-	   		if(selectedServer.isLocal)
+	   		if(_selectedServer.isLocal)
 	   		{	
 		   		if(targetStorageType == 1)
 		   		{
@@ -722,7 +723,7 @@
          		config.targetDiskPath = targetDiskPath;
 	   		}
 	   		
-	   		config.doc = node;
+	   		config.doc = _node;
 	   		config.onSelect = fileSelectorCallback;   	   		
 	   		showFileSelectorInBootstrapDialog(config);
 	   	}

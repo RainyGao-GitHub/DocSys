@@ -21,6 +21,7 @@ var FileSelector = (function () {
 	var _serverId = "";
 	var _targetReposId = "";
 	var _targetDiskPath = "";
+	var _listType = ""; //默认不指定
 	var _docInfo;
 	var _menu;
 	var _selectedNode;
@@ -109,7 +110,9 @@ var FileSelector = (function () {
     			"localDiskPath" : _localDiskPath,
     			"reposId" : _reposId,
 				"serverId"	: _serverId,
-    			"listType": 3,	//LocalEntryAndRemoteStorage
+				"targetReposId" : _targetReposId,
+		    	"targetDiskPath" : _targetDiskPath,
+				"listType": _listType,	//3: LocalEntryAndRemoteStorage
     		},
     		dataFilter: asyncDataFilter,
 		};
@@ -258,6 +261,11 @@ var FileSelector = (function () {
 			{
 				_targetReposId = _config.targetReposId;	
 			}
+		}
+		
+		if(_config.listType)
+		{
+			_listType = _config.listType;
 		}
 		
 		_docInfo = config.doc;
