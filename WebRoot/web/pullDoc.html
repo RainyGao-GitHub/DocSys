@@ -167,7 +167,7 @@
 	
 	var DocPull = (function () {
 		var _node;
-		
+		var _reposId;
 		var _localServer = {};
 		var _targetServerList = [];
 		
@@ -193,6 +193,7 @@
 			console.log("DocPull.init() node:", node);
 
 			_node = node;
+			_reposId = node.vid;
 
 			//set _pullEntryPath
 			_pullEntryPath = _node.path + "/" + _node.name
@@ -603,7 +604,7 @@
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	                reposId : _node.vid, 
+	                reposId : _reposId, 
 	                path: _pullEntryPath,
 	                name : "",
 	                serverId: targetServerId,
