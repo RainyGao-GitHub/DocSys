@@ -667,6 +667,12 @@ function querySystemLogTest()
         dataType : "json",
         data : {
             queryId: param.queryId,
+			event: param.event,
+            reposName: param.reposName,
+            path:param.path,
+            name:param.name,
+            userId:param.userId,
+            userName:param.userName,
             authCode: gAuthCode,
         },
         success : function (ret) {

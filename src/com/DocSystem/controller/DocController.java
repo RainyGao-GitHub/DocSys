@@ -6755,12 +6755,20 @@ public class DocController extends BaseController{
 	
 	//系统日志精确查询
 	@RequestMapping("/querySystemLog.do")
-	public void querySystemLog(String id, String event, String reposName, String path, String name, String queryId,
+	public void querySystemLog(
+			String id, 
+			String event, 
+			String reposName, String path, String name, 
+			String userId, String userName,
+			String queryId,			
 			String authCode,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
 		Log.infoHead("*********** querySystemLog *******************");
-		Log.info("querySystemLog id: " + id + " event: " + event  +  " reposName:" + reposName + " path:" + path + " name:"+ name + " queryId:" + queryId);
+		Log.info("querySystemLog id: " + id + " event: " + event  
+				+ " reposName:" + reposName + " path:" + path + " name:"+ name 
+				+ " userId:"+ userId + " userName:"+ userName 
+				+ " queryId:" + queryId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -6778,6 +6786,8 @@ public class DocController extends BaseController{
 		queryLog.path = path;
 		queryLog.name = name;
 		queryLog.queryId = queryId;
+		queryLog.userId = userId;
+		queryLog.userName = userName;
 		
 		QueryResult queryResult = new QueryResult();
 		List<SystemLog> list = channel.getSystemLogList(queryLog, null, null);
