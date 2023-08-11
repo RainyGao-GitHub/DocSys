@@ -18,4 +18,5 @@ public class SystemLog {
 	public String newName;
 	public String content;
 	public String queryId;	//For User query, defined by user
+	public String commitInfo;	//版本提交记录(版本仓库地址/账户/密码/commitId) 
 }

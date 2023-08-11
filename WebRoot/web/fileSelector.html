@@ -15,7 +15,13 @@
 <script type="text/javascript">
 var FileSelector = (function () {
 	var _config;
+	var _localDiskPath = "";
+	var _reposId = "";
 	var _repos;
+	var _serverId = "";
+	var _targetReposId = "";
+	var _targetDiskPath = "";
+	var _docInfo;
 	var _menu;
 	var _selectedNode;
 	
@@ -234,32 +240,26 @@ var FileSelector = (function () {
 		{
 			_localDiskPath = _config.localDiskPath;	
 		}
-		else
-		{
-			_localDiskPath = "";			
-		}
-		
-		if(_config.serverId)
-		{
-			_serverId = _config.serverId;	
-			_targetDiskPath = _config.targetDiskPath;
-			_targetReposId = _config.targetReposId;
-		}
-		else
-		{
-			_serverId = -1;			
-		}
 		
 		if(_config.reposId)
 		{
 			_reposId = _config.reposId;	
-		}
-		else
-		{
-			_reposId = "";			
+			_repos = config.repos;
 		}
 		
-		_repos = config.repos;
+		if(_config.serverId)
+		{
+			_serverId = _config.serverId;
+			if(_config.targetDiskPath)
+			{
+				_targetDiskPath = _config.targetDiskPath;
+			}
+			if(_config.targetReposId)
+			{
+				_targetReposId = _config.targetReposId;	
+			}
+		}
+		
 		_docInfo = config.doc;
 		
 		if(_config.menu)
