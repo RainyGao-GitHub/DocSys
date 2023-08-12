@@ -2859,7 +2859,7 @@ public class DocController extends BaseController{
 		
 		if(repos.encryptType != null && repos.encryptType != 0)
 		{
-			//TODO: 目前加密的仓库不支持缩略图方式
+			//加密的仓库不支持缩略图方式
 			return null;
 		}
 		
@@ -6498,7 +6498,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		//TODO: 考虑多线程搜索，避免仓库越多速度越慢
+		//这里是多线程搜索接口
 		DocSearchContext searchContext = new DocSearchContext();
 		searchContext.pid = pid;
 		searchContext.path = path;
@@ -7486,7 +7486,6 @@ public class DocController extends BaseController{
 
 	private List<Doc> getDocListFromRootToDocForRemoteServer(RemoteStorageSession remoteStorageSession,
 			RemoteStorageConfig remoteStorageConfig, Repos fakeRepos, Doc rootDoc, Doc doc) {
-		// TODO Auto-generated method stub
     	//from rootDoc to doc
     	List<Doc> resultList = channel.getRemoteStorageEntryListEx(remoteStorageSession, remoteStorageConfig, fakeRepos, rootDoc, null);
     	if(doc == null || resultList == null || resultList.size() == 0)
@@ -7584,7 +7583,6 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getDocListFromRootToDocForRepos(Repos repos, Doc rootDoc, Doc doc, Integer listType) {
-		// TODO Auto-generated method stub
     	//from rootDoc to doc
     	List<Doc> resultList = docSysGetDocList(repos, rootDoc, listType);
     	if(doc == null || resultList == null || resultList.size() == 0)
@@ -7672,7 +7670,6 @@ public class DocController extends BaseController{
 	}
 
 	private List<Doc> getDocListFromRootToDocForDisk(Doc rootDoc, Doc doc) {
-		// TODO Auto-generated method stub
     	//from rootDoc to doc
     	List<Doc> resultList = getLocalEntryList(rootDoc);
     	if(doc == null || resultList == null || resultList.size() == 0)
