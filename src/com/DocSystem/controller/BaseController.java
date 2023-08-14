@@ -3823,6 +3823,9 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("addDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 				return 0;
 			}
+			
+			//TODO: generateCommitId
+			context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		}
 		
 		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
@@ -3850,6 +3853,10 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("addDoc_FSM() createRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				return 0;
 			}
+			
+			//TODO: insertCommitEntry
+			Long commitTime = new Date().getTime();
+			insertCommitEntry(repos, doc, "addDoc", "add", context.commitId, commitTime);
 		}
 		else
 		{
@@ -3878,6 +3885,10 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("addDoc_FSM() updateRealDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 				return 0;
 			}
+			
+			//TODO: insertCommitEntry
+			Long commitTime = new Date().getTime();
+			insertCommitEntry(repos, doc, "addDoc", "update", context.commitId, commitTime);
 		}
 		
 		//Update the DBEntry
@@ -4127,6 +4138,9 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("saveDoc_FSM() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
 				return 0;
 			}
+			
+			//TODO: generateCommitId
+			context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		}
 		
 		Doc preDoc = docSysGetDoc(repos, doc, false);
@@ -4166,6 +4180,10 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
+		//TODO: insertCommitEntry
+		Long commitTime = new Date().getTime();
+		insertCommitEntry(repos, doc, "saveDoc", "save", context.commitId, commitTime);
+		
 		Doc fsDoc = fsGetDoc(repos, doc);
 		Action Action_Type = Action.UPDATE;
 		if(preDoc == null || preDoc.getType() == 0)	//0: add  1: update
@@ -4180,7 +4198,7 @@ public class BaseController  extends BaseFunction{
 			doc.setLatestEditor(login_user.getId());
 			if(dbAddDoc(repos, doc, false, false) == false)
 			{	
-				docSysDebugLog("addDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+				docSysDebugLog("saveDoc_FSM() dbAddDoc [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
 			}
 			 
 			rt.setData(doc);
@@ -4400,14 +4418,15 @@ public class BaseController  extends BaseFunction{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		//String lockInfo = "deleteDoc_FSM() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 2*60*60*1000, login_user, rt, true, context.info, EVENT.deleteDoc);	//lock 2 Hours 2*60*60*1000
-		
 		if(docLock == null)
 		{
 			docSysDebugLog("deleteDoc_FSM() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return 0;			
 		}
-		
 		Log.info("deleteDoc_FSM() [" + doc.getPath() + doc.getName() + "] Lock OK");		
+		
+		//TODO: generateCommitId
+		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
 		//get RealDoc Full ParentPath
 		if(deleteRealDoc(repos,doc,rt) == false)
@@ -4418,6 +4437,10 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("deleteDoc_FSM() deleteRealDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return 0;
 		}
+		
+		//TODO: insertCommitEntry
+		Long commitTime = new Date().getTime();
+		insertCommitEntry(repos, doc, "deleteDoc", "delete", context.commitId, commitTime);
 		
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		rt.setData(doc);
@@ -4469,8 +4492,6 @@ public class BaseController  extends BaseFunction{
 		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
 		BuildAsyncActionListForDocDelete(asyncActionList, repos, doc, commitMsg, commitUser,true);
 		
-
-		
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
 			context.docLockType = lockType;
@@ -4484,6 +4505,26 @@ public class BaseController  extends BaseFunction{
 		return 1;
 	}
 	
+	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, String commitId, Long commitTime) {
+		//TODO:
+	}
+	
+	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, String commitId, Long commitTime) {
+		switch(action)
+		{
+		case "copyDoc":
+			//需要插入两条记录
+			insertCommitEntry(repos, srcDoc, action, "noChange", commitId, commitTime);
+			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime);
+			break;
+		case "moveDoc":
+			//需要插入两条记录
+			insertCommitEntry(repos, srcDoc, action, "delete", commitId, commitTime);
+			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime);
+			break;			
+		}
+	}
+
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		//Insert index add action for RDoc Name
@@ -7820,6 +7861,9 @@ public class BaseController  extends BaseFunction{
 				Log.info("updateDoc_FSM() lockDoc " + doc.getName() +" Failed！");
 				return 0;
 			}
+			
+			//TODO: generateCommitId
+			context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		}
 		
 		//保存文件信息
@@ -7851,6 +7895,10 @@ public class BaseController  extends BaseFunction{
 			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return 0;
 		}
+		
+		//TODO: insertCommitEntry
+		Long commitTime = new Date().getTime();
+		insertCommitEntry(repos, doc, "updateDoc", "update", context.commitId, commitTime);
 
 		//Update DBEntry
 		doc.setLatestEditor(login_user.getId());
@@ -8064,6 +8112,9 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
+		//TODO: generateCommitId
+		context.commitId = generateCommitId(repos, dstDoc, dstDocLock.createTime[lockType]);
+		
 		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
 		{
 			unlockDoc(srcDoc, lockType, login_user);
@@ -8073,6 +8124,10 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("moveDoc_FSM() moveRealDoc srcDoc [" + srcDoc.getPath() + srcDoc.getName() + "] dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return 0;
 		}
+		
+		//TODO: insertCommitEntry
+		Long commitTime = new Date().getTime();
+		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, commitTime);
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8180,6 +8235,9 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("copyDoc_FSM() lock dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
 			return 0;
 		}
+		
+		//TODO: generateCommitId
+		context.commitId = generateCommitId(repos, dstDoc, dstDocLock.createTime[lockType]);
 						
 		//复制文件或目录
 		Log.debug("copyDoc_FSM() copyRealDoc");		
@@ -8193,6 +8251,10 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
+		//TODO: insertCommitEntry
+		Long commitTime = new Date().getTime();
+		insertCommitEntry(repos, srcDoc, dstDoc, "copyDoc", context.commitId, commitTime);
+				
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
@@ -20786,6 +20848,8 @@ public class BaseController  extends BaseFunction{
 					action.stopTime = new Date().getTime();
 				}
 				
+				action.commitId = generateCommitId(repos, doc, docLock.createTime[action.docLockType]);
+				
 				//this thread is also responsible for delete action
 				startFolderUploadActionBeatCheckThread(action);
     		}
@@ -20793,6 +20857,11 @@ public class BaseController  extends BaseFunction{
 		return action;
 	}
 	
+	
+	private String generateCommitId(Repos repos, Doc doc, long startTime) {
+		return repos.getId() + "_" + doc.getDocId() + "_" + startTime;
+	}
+
 	private void startFolderUploadActionBeatCheckThread(FolderUploadAction action) 
 	{
 		String actionId = action.actionId;

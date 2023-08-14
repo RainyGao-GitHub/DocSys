@@ -25,4 +25,7 @@ public class ActionContext {
 	
 	//用于目录上传
 	public FolderUploadAction folderUploadAction;
+
+	//MxsDoc系统的commitId
+	public String commitId;
 }
