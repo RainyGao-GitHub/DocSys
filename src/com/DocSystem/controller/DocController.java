@@ -44,7 +44,6 @@ import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
-import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.SystemLog;
@@ -6762,6 +6761,7 @@ public class DocController extends BaseController{
 			String userId, String userName,
 			String queryId,			
 			String authCode,
+			Long startTime, Long endTime,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
 		Log.infoHead("*********** querySystemLog *******************");
@@ -6789,7 +6789,7 @@ public class DocController extends BaseController{
 		queryLog.userId = userId;
 		queryLog.userName = userName;
 		
-		List<SystemLog> list = channel.getSystemLogList(queryLog, null, null);
+		List<SystemLog> list = channel.getSystemLogList(queryLog, startTime, endTime);
 		Log.debug("getSystemLogList() total:" + list.size());
 		
 		rt.setData(list);
