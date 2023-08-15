@@ -4517,10 +4517,9 @@ public class BaseController  extends BaseFunction{
 		return 1;
 	}
 	
-	private void insertCommit(Repos repos, Doc doc, String action, String subAction, String commitId, Long commitTime) {
-		//TODO:
-	}
-	
+	//TODO: MxsDoc版本管理机制是先写入commitEntryInfo，然后最后再写入commitInfo，如果有版本管理的话，则在版本仓库提交后更新commitInfo
+	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
+	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
 	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, String commitId, Long commitTime) {
 		//TODO:
 	}
@@ -4539,6 +4538,28 @@ public class BaseController  extends BaseFunction{
 			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime);
 			break;			
 		}
+	}
+	
+	private void insertCommit(Repos repos, ActionContext context) {
+		// TODO Auto-generated method stub
+		//reposId / reposName
+		//commitMsg / commitUser / commitId
+		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+	}
+	
+	private void insertCommit(Repos repos, FolderUploadAction action) {
+		// TODO Auto-generated method stub
+		//reposId / reposName
+		//commitMsg / commitUser / commitId
+		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+	}
+	
+	private void updateCommit(String commitId) {
+		// TODO Auto-generated method stub
+		//reposId / reposName
+		//commitMsg / commitUser / commitId
+		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+		
 	}
 
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
@@ -8484,22 +8505,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return 1;
-	}
-	
-
-	private void insertCommit(Repos repos, ActionContext context) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	private void insertCommit(Repos repos, FolderUploadAction action) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	private void updateCommit(String commitId) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	protected boolean updateRealDocContent(Repos repos, Doc doc, 
