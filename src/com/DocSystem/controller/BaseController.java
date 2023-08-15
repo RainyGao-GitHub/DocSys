@@ -3911,6 +3911,10 @@ public class BaseController  extends BaseFunction{
 			return 1;
 		}
 		
+		//TODO: insertCommit
+		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		insertCommit(repos, context);
+		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
@@ -4223,6 +4227,10 @@ public class BaseController  extends BaseFunction{
 			return 1;
 		}
 		
+		//TODO: insertCommit
+		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		insertCommit(repos, context);
+		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
@@ -4442,6 +4450,10 @@ public class BaseController  extends BaseFunction{
 		Long commitTime = new Date().getTime();
 		insertCommitEntry(repos, doc, "deleteDoc", "delete", context.commitId, commitTime);
 		
+		//TODO: insertCommit
+		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		insertCommit(repos, context);
+		
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		rt.setData(doc);
 		
@@ -4503,6 +4515,10 @@ public class BaseController  extends BaseFunction{
 		unlockDoc(doc, lockType, login_user);
 		
 		return 1;
+	}
+	
+	private void insertCommit(Repos repos, Doc doc, String action, String subAction, String commitId, Long commitTime) {
+		//TODO:
 	}
 	
 	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, String commitId, Long commitTime) {
@@ -7917,6 +7933,10 @@ public class BaseController  extends BaseFunction{
 			return 1;
 		}
 		
+		//TODO: insertCommit
+		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		insertCommit(repos, context);
+		
 		//需要将文件Commit到版本仓库上去
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8358,6 +8378,9 @@ public class BaseController  extends BaseFunction{
 				docSysDebugLog("copySameDocForUpload() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				return 0;
 			}
+			
+			//TODO: generateCommitId
+			context.commitId = generateCommitId(repos, doc, dstDocLock.createTime[lockType]);
 		}
 		
 		
@@ -8395,12 +8418,20 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
+		//TODO: insertCommitEntry
+		Long commitTime = new Date().getTime();
+		insertCommitEntry(repos, doc, "uploadDoc", "upload", context.commitId, commitTime);
+		
 		if(context.folderUploadAction != null)
 		{
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
 			return 1;
 		}
+		
+		//TODO: insertCommit
+		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		insertCommit(repos, context);
 		
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);		
@@ -8455,6 +8486,21 @@ public class BaseController  extends BaseFunction{
 		return 1;
 	}
 	
+
+	private void insertCommit(Repos repos, ActionContext context) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	private void insertCommit(Repos repos, FolderUploadAction action) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	private void updateCommit(String commitId) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	protected boolean updateRealDocContent(Repos repos, Doc doc, 
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
@@ -21052,6 +21098,8 @@ public class BaseController  extends BaseFunction{
 		case 0:
 			if(context.folderUploadAction != null)
 			{
+				//TODO: insertCommitInfo
+				//insertCommitInfo(repos, doc, context.folderUploadAction.commitId, context.folderUploadAction.commitMsg, context.folderUploadAction.commitUser);
 				folderSubEntryUploadErrorHandler(context.folderUploadAction);
 			}
 			else
@@ -21068,6 +21116,9 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
+				//TODO: insertCommitInfo
+				//insertCommitInfo(repos, doc, context.commitId, context.commitMsg, context.commitUser);
+
 				deleteChunks(name, chunkIndex, chunkNum,chunkParentPath);
 				deletePreviewFile(doc);
 				addSystemLog(context, reposAccess.getAccessUser(), "成功", buildSystemLogDetailContent(rt));						
@@ -21157,10 +21208,15 @@ public class BaseController  extends BaseFunction{
 		User user = action.user;
 		String commitMsg = action.commitMsg;
 		String commitUser = action.commitUser;
+		String commitId = action.commitId;
 		String localChangesRootPath =  action.localChangesRootPath;
 
 		Log.info("folderUploadEndHander() [" + doc.getPath() + doc.getName() + "]");
 
+		//TODO: insertCommit
+		//注意: 这里commitInfo里还没有版本仓库的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		insertCommit(repos, action);
+		
 		if(isLocalChanged(action.localChangesRootPath) == false)
 		{
 			//解锁目录
@@ -21181,9 +21237,17 @@ public class BaseController  extends BaseFunction{
 				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, null, null);
 				if(revision != null)
 				{
+					//更新commitInfo的版本提交信息: 将revision写入commitInfo中
+					updateCommit(commitId);
+					
 					verReposPullPush(repos, true, rt);
-				}
 				
+				}
+				else
+				{
+					//更新commitInfo的版本提交信息: 将verReposDocCommit失败的信息写入commitInfo中
+					updateCommit(commitId);					
+				}
 				
 				//远程自动推送
 				realTimeRemoteStoragePush(repos, doc, null, user, commitMsg, rt, action.event);
