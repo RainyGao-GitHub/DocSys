@@ -133,6 +133,8 @@ import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.AutoTaskConfig;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
+import com.DocSystem.common.entity.CommitEntry;
+import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
@@ -4522,6 +4524,15 @@ public class BaseController  extends BaseFunction{
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
 	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, String commitId, Long commitTime) {
 		//TODO:
+		CommitEntry entry = new CommitEntry();
+		entry.id = commitId;
+		entry.time = commitTime;
+		entry.reposId = repos.getId();
+		entry.reposName = repos.getName();
+		entry.path = doc.getPath();
+		entry.name = doc.getName();
+		entry.commitAction = action;
+		entry.commitSubAction = subAction;
 	}
 	
 	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, String commitId, Long commitTime) {
@@ -4545,6 +4556,10 @@ public class BaseController  extends BaseFunction{
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+		CommitLog commit = new CommitLog();
+		commit.id = context.commitId;
+		commit.reposId = repos.getId();
+		commit.reposName = repos.getName();
 	}
 	
 	private void insertCommit(Repos repos, FolderUploadAction action) {
@@ -4552,6 +4567,11 @@ public class BaseController  extends BaseFunction{
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+		CommitLog commit = new CommitLog();
+		commit.id = action.commitId;
+		commit.reposId = repos.getId();
+		commit.reposName = repos.getName();
+		commit.time = action.startTime;
 	}
 	
 	private void updateCommit(String commitId) {

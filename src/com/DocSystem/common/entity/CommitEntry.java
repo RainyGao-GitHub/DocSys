@@ -10,6 +10,8 @@ public class CommitEntry {
 	public String userName;		//commit User Name
 	public String commitMsg;	//commit Message
 	public String commitUsers;	//Users who involved in this commit
+	public String commitAction;		//addDoc/deleteDoc/copyDoc/moveDoc/updateDoc/uploadDoc/saveDoc
+	public String commitSubAction;	//add/delete/noChange/             update/upload/save
 	
 	public Integer reposId;		//reposId 
 	public String reposName;	//reposName

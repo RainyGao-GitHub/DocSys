@@ -10,12 +10,12 @@ public class CommitLog {
 	public String userName;		//commit User Name
 	public String commitMsg;	//commit Message
 	public String commitUsers;	//Users who involved in this commit
-	
-	public String result;		//commit Result
-	
+		
 	public Integer reposId;		//reposId 
 	public String reposName;	//reposName
 	
-	public String verReposInfo;		//Version Repository Info (url/user/pwd)
-	public String verReposRevision;	//Revision in Version Repository for this commit
+	public String verReposInfo;			//verReposInfo (url/user/pwd)
+	public Integer verReposStatus = 0;	//status for verReposCommit: 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息
+	public String verReposRevision;		//revision of this verReposCommit
+	public String verReposErrorInfo;	//errorInfo of this verReposCommit
 }
