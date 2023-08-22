@@ -22,10 +22,6 @@ public class FolderUploadAction {
 	public Doc doc;				//folder doc
 	public Integer docLockType;	//docLockType
 	public String info; //用于lockDoc的备注
-
-	//Following data is for folderUpload
-	public String commitMsg;
-	public String commitUser;
 	
 	public String uploadLogPath; //存放subDocs upload info，上传结束时要写入系统日志中
 	public String localChangesRootPath; //上传成功的文件	
@@ -50,5 +46,6 @@ public class FolderUploadAction {
 	
 	//MxsDoc系统的commitId
 	public String commitId;
-	
+	public String commitMsg;
+	public String commitUser;	
 }

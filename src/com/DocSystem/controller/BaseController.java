@@ -3858,7 +3858,7 @@ public class BaseController  extends BaseFunction{
 			
 			//TODO: insertCommitEntry
 			Long commitTime = new Date().getTime();
-			insertCommitEntry(repos, doc, "addDoc", "add", context.commitId, commitTime, commitMsg, commitUser);
+			insertCommitEntry(repos, doc, "addDoc", "add", context.commitId, commitTime, commitMsg, commitUser, login_user);
 		}
 		else
 		{
@@ -3890,7 +3890,7 @@ public class BaseController  extends BaseFunction{
 			
 			//TODO: insertCommitEntry
 			Long commitTime = new Date().getTime();
-			insertCommitEntry(repos, doc, "addDoc", "update", context.commitId, commitTime, commitMsg, commitUser);
+			insertCommitEntry(repos, doc, "addDoc", "update", context.commitId, commitTime, commitMsg, commitUser, login_user);
 		}
 		
 		//Update the DBEntry
@@ -4188,7 +4188,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "saveDoc", "save", context.commitId, commitTime, commitMsg, commitUser);
+		insertCommitEntry(repos, doc, "saveDoc", "save", context.commitId, commitTime, commitMsg, commitUser, login_user);
 		
 		Doc fsDoc = fsGetDoc(repos, doc);
 		Action Action_Type = Action.UPDATE;
@@ -4450,7 +4450,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "deleteDoc", "delete", context.commitId, commitTime, commitMsg, commitUser);
+		insertCommitEntry(repos, doc, "deleteDoc", "delete", context.commitId, commitTime, commitMsg, commitUser, login_user);
 		
 		//TODO: insertCommit
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
@@ -4523,34 +4523,38 @@ public class BaseController  extends BaseFunction{
 	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
 	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, 
-			String commitId, Long commitTime, String commitMsg, String commitUsers) {
+			String commitId, Long commitTime, String commitMsg, String commitUsers, User user) {
 		//TODO:
 		CommitEntry entry = new CommitEntry();
 		entry.id = commitId;
 		entry.time = commitTime;
+		entry.userId = user.getId();
+		entry.userName = user.getName();
+		entry.commitMsg = commitMsg;
+		entry.commitUsers = commitUsers;
+
+		entry.commitAction = action;
+		entry.commitSubAction = subAction;
+
 		entry.reposId = repos.getId();
 		entry.reposName = repos.getName();
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
-		entry.commitAction = action;
-		entry.commitSubAction = subAction;
-		entry.commitMsg = commitMsg;
-		entry.commitUsers = commitUsers;
 	}
 	
 	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
-			String commitId, Long commitTime, String commitMsg, String commitUser) {
+			String commitId, Long commitTime, String commitMsg, String commitUser, User user) {
 		switch(action)
 		{
 		case "copyDoc":
 			//需要插入两条记录
-			insertCommitEntry(repos, srcDoc, action, "noChange", commitId, commitTime, commitMsg, commitUser);
-			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime, commitMsg, commitUser);
+			insertCommitEntry(repos, srcDoc, action, "noChange", commitId, commitTime, commitMsg, commitUser, user);
+			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime, commitMsg, commitUser, user);
 			break;
 		case "moveDoc":
 			//需要插入两条记录
-			insertCommitEntry(repos, srcDoc, action, "delete", commitId, commitTime, commitMsg, commitUser);
-			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime, commitMsg, commitUser);
+			insertCommitEntry(repos, srcDoc, action, "delete", commitId, commitTime, commitMsg, commitUser, user);
+			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime, commitMsg, commitUser, user);
 			break;			
 		}
 	}
@@ -4562,6 +4566,13 @@ public class BaseController  extends BaseFunction{
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
 		commit.id = context.commitId;
+		commit.time = context.commitTime;
+		commit.userId = context.user.getId();
+		commit.userName = context.user.getName();
+		
+		commit.commitMsg = context.commitMsg;
+		commit.commitUsers = context.commitUser;
+		
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();
 	}
@@ -4573,9 +4584,15 @@ public class BaseController  extends BaseFunction{
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
 		commit.id = action.commitId;
-		commit.reposId = repos.getId();
-		commit.reposName = repos.getName();
 		commit.time = action.startTime;
+		commit.userId = action.user.getId();
+		commit.userName = action.user.getName();
+		
+		commit.commitMsg = action.commitMsg;
+		commit.commitUsers = action.commitUser;
+		
+		commit.reposId = repos.getId();
+		commit.reposName = repos.getName();				
 	}
 	
 	private void updateCommit(String commitId) {
@@ -7959,7 +7976,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "updateDoc", "update", context.commitId, commitTime, commitMsg, commitUser);
+		insertCommitEntry(repos, doc, "updateDoc", "update", context.commitId, commitTime, commitMsg, commitUser, login_user);
 
 		//Update DBEntry
 		doc.setLatestEditor(login_user.getId());
@@ -8192,7 +8209,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, commitTime, commitMsg, commitUser);
+		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, commitTime, commitMsg, commitUser, login_user);
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8318,7 +8335,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, srcDoc, dstDoc, "copyDoc", context.commitId, commitTime, commitMsg, commitUser);
+		insertCommitEntry(repos, srcDoc, dstDoc, "copyDoc", context.commitId, commitTime, commitMsg, commitUser, login_user);
 				
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8465,7 +8482,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "uploadDoc", "upload", context.commitId, commitTime, commitMsg, commitUser);
+		insertCommitEntry(repos, doc, "uploadDoc", "upload", context.commitId, commitTime, commitMsg, commitUser, login_user);
 		
 		if(context.folderUploadAction != null)
 		{
@@ -21474,6 +21491,8 @@ public class BaseController  extends BaseFunction{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, subEvent, eventName, queryId, repos, doc, null, folderUploadAction);
 		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
+		context.commitMsg = commitMsg;
+		context.commitUser = reposAccess.getAccessUser().getName();
 
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
 		
@@ -21540,7 +21559,9 @@ public class BaseController  extends BaseFunction{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, event, eventName, queryId, repos, doc, null, folderUploadAction);
 		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
-
+		context.commitMsg = commitMsg;
+		context.commitUser = reposAccess.getAccessUser().getName();
+		
 		//Check Edit Right
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)

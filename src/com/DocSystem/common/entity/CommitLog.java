@@ -5,9 +5,12 @@ public class CommitLog {
 	public String id;			//commitId
 	public Long time;			//startTime
 	public Long endTime;		//endTime
+	
 	public String ip;			//IP for commit Request
-	public String userId;		//commit User ID
+	
+	public Integer userId;		//commit User ID
 	public String userName;		//commit User Name
+	
 	public String commitMsg;	//commit Message
 	public String commitUsers;	//Users who involved in this commit
 		

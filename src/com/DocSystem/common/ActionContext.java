@@ -28,5 +28,7 @@ public class ActionContext {
 
 	//MxsDoc系统的commitId
 	public String commitId;
-	public Long time;
+	public Long commitTime;
+	public String commitMsg;
+	public String commitUser;
 }
