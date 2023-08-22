@@ -3858,7 +3858,7 @@ public class BaseController  extends BaseFunction{
 			
 			//TODO: insertCommitEntry
 			Long commitTime = new Date().getTime();
-			insertCommitEntry(repos, doc, "addDoc", "add", context.commitId, commitTime);
+			insertCommitEntry(repos, doc, "addDoc", "add", context.commitId, commitTime, commitMsg, commitUser);
 		}
 		else
 		{
@@ -3890,7 +3890,7 @@ public class BaseController  extends BaseFunction{
 			
 			//TODO: insertCommitEntry
 			Long commitTime = new Date().getTime();
-			insertCommitEntry(repos, doc, "addDoc", "update", context.commitId, commitTime);
+			insertCommitEntry(repos, doc, "addDoc", "update", context.commitId, commitTime, commitMsg, commitUser);
 		}
 		
 		//Update the DBEntry
@@ -4188,7 +4188,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "saveDoc", "save", context.commitId, commitTime);
+		insertCommitEntry(repos, doc, "saveDoc", "save", context.commitId, commitTime, commitMsg, commitUser);
 		
 		Doc fsDoc = fsGetDoc(repos, doc);
 		Action Action_Type = Action.UPDATE;
@@ -4450,7 +4450,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "deleteDoc", "delete", context.commitId, commitTime);
+		insertCommitEntry(repos, doc, "deleteDoc", "delete", context.commitId, commitTime, commitMsg, commitUser);
 		
 		//TODO: insertCommit
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
@@ -4522,7 +4522,8 @@ public class BaseController  extends BaseFunction{
 	//TODO: MxsDoc版本管理机制是先写入commitEntryInfo，然后最后再写入commitInfo，如果有版本管理的话，则在版本仓库提交后更新commitInfo
 	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
-	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, String commitId, Long commitTime) {
+	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, 
+			String commitId, Long commitTime, String commitMsg, String commitUsers) {
 		//TODO:
 		CommitEntry entry = new CommitEntry();
 		entry.id = commitId;
@@ -4533,20 +4534,23 @@ public class BaseController  extends BaseFunction{
 		entry.name = doc.getName();
 		entry.commitAction = action;
 		entry.commitSubAction = subAction;
+		entry.commitMsg = commitMsg;
+		entry.commitUsers = commitUsers;
 	}
 	
-	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, String commitId, Long commitTime) {
+	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
+			String commitId, Long commitTime, String commitMsg, String commitUser) {
 		switch(action)
 		{
 		case "copyDoc":
 			//需要插入两条记录
-			insertCommitEntry(repos, srcDoc, action, "noChange", commitId, commitTime);
-			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime);
+			insertCommitEntry(repos, srcDoc, action, "noChange", commitId, commitTime, commitMsg, commitUser);
+			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime, commitMsg, commitUser);
 			break;
 		case "moveDoc":
 			//需要插入两条记录
-			insertCommitEntry(repos, srcDoc, action, "delete", commitId, commitTime);
-			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime);
+			insertCommitEntry(repos, srcDoc, action, "delete", commitId, commitTime, commitMsg, commitUser);
+			insertCommitEntry(repos, dstDoc, action, "add", commitId, commitTime, commitMsg, commitUser);
 			break;			
 		}
 	}
@@ -7955,7 +7959,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "updateDoc", "update", context.commitId, commitTime);
+		insertCommitEntry(repos, doc, "updateDoc", "update", context.commitId, commitTime, commitMsg, commitUser);
 
 		//Update DBEntry
 		doc.setLatestEditor(login_user.getId());
@@ -8188,7 +8192,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, commitTime);
+		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, commitTime, commitMsg, commitUser);
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8314,7 +8318,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, srcDoc, dstDoc, "copyDoc", context.commitId, commitTime);
+		insertCommitEntry(repos, srcDoc, dstDoc, "copyDoc", context.commitId, commitTime, commitMsg, commitUser);
 				
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8461,7 +8465,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, doc, "uploadDoc", "upload", context.commitId, commitTime);
+		insertCommitEntry(repos, doc, "uploadDoc", "upload", context.commitId, commitTime, commitMsg, commitUser);
 		
 		if(context.folderUploadAction != null)
 		{
