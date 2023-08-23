@@ -4662,6 +4662,35 @@ public class BaseController  extends BaseFunction{
 		channel.insertCommit(commit);
 	}
 	
+	
+	private void updateCommit(Repos repos, ActionContext context) {
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return;
+		}
+		
+		//reposId / reposName
+		//commitMsg / commitUser / commitId
+		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+		CommitLog commit = new CommitLog();
+		commit.id = context.commitId;
+		commit.time = context.commitTime;
+		commit.endTime = new Date().getTime();	//End Time
+		
+		commit.userId = context.user.getId();
+		commit.userName = context.user.getName();
+		
+		commit.commitMsg = context.commitMsg;
+		commit.commitUsers = context.commitUser;
+		
+		commit.reposId = repos.getId();
+		commit.reposName = repos.getName();
+		
+		//TODO: fill verReposInfo
+		
+		channel.updateCommit(commit);
+	}
+	
 	private void insertCommit(Repos repos, FolderUploadAction action) {
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
@@ -4686,18 +4715,6 @@ public class BaseController  extends BaseFunction{
 		channel.insertCommit(commit);
 	}
 	
-	private void updateCommit(Repos repos, ActionContext context) {
-		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		{
-			return;
-		}
-		
-		//reposId / reposName
-		//commitMsg / commitUser / commitId
-		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
-		
-	}
-	
 	private void updateCommit(Repos repos, FolderUploadAction action) {
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
@@ -4707,7 +4724,22 @@ public class BaseController  extends BaseFunction{
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+		CommitLog commit = new CommitLog();
+		commit.id = action.commitId;
+		commit.time = action.startTime;
+		commit.endTime = new Date().getTime();	//结束时间
+		commit.userId = action.user.getId();
+		commit.userName = action.user.getName();
 		
+		commit.commitMsg = action.commitMsg;
+		commit.commitUsers = action.commitUser;
+		
+		commit.reposId = repos.getId();
+		commit.reposName = repos.getName();
+		
+		//TODO: fill verReposInfo
+		
+		channel.insertCommit(commit);
 	}
 
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, ActionContext context) 
@@ -7974,11 +8006,13 @@ public class BaseController  extends BaseFunction{
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+					updateCommit(repos, action.context);
 				}
 				else
 				{
 					ret = true;
-					verReposPullPush(repos, isRealDoc, rt);
+					updateCommit(repos, action.context);
+					verReposPullPush(repos, isRealDoc, rt);					
 				}
 				break;
 			case MOVE:	//move
@@ -7987,6 +8021,7 @@ public class BaseController  extends BaseFunction{
 				{
 					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
 					docSysDebugLog("executeVerReposAction() verReposRealDocMove srcDoc [" + doc.getPath() + doc.getName() + "] dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
+					updateCommit(repos, action.context);
 				}
 				else
 				{
@@ -7995,6 +8030,7 @@ public class BaseController  extends BaseFunction{
 					newDoc.setRevision(revision);
 					updateVerReposDBEntry(repos, newDoc, true);				
 
+					updateCommit(repos, action.context);
 					verReposPullPush(repos, isRealDoc, rt);
 				}
 				break;
@@ -8002,6 +8038,7 @@ public class BaseController  extends BaseFunction{
 				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
 				if(revision == null)
 				{
+					updateCommit(repos, action.context);
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
 				}
 				else
@@ -8010,10 +8047,11 @@ public class BaseController  extends BaseFunction{
 					newDoc.setRevision(revision);
 					updateVerReposDBEntry(repos, newDoc, true);
 
+					updateCommit(repos, action.context);
 					verReposPullPush(repos, isRealDoc, rt);
 				}
 				break;
-			case PUSH: //pull
+			case PUSH: //push
 				ret = verReposPullPush(repos, isRealDoc, rt);
 				break;
 			default:

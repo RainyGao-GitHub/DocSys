@@ -91,4 +91,6 @@ public interface Channel {
 	void insertCommitEntry(CommitEntry entry);
 
 	void insertCommit(CommitLog commit);
+
+	void updateCommit(CommitLog commit);
 }
