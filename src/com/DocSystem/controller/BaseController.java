@@ -11891,13 +11891,13 @@ public class BaseController  extends BaseFunction{
 	/**************** IndexLib For CommitHistory *******/
 	protected static String getIndexLibPathForCommitEntry(Repos repos, Date date)
 	{
-		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "-" + date.getMonth() + "/CommitEntry";	
+		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "/CommitEntry";	
 		return indexLib;
 	}
 	
 	protected static String getIndexLibPathForCommitLog(Repos repos, Date date)
 	{
-		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "-" + date.getMonth() + "/CommitLog";	
+		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "/CommitLog";	
 		return indexLib;
 	}
 	
