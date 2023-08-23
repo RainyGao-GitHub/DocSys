@@ -4588,7 +4588,7 @@ public class BaseController  extends BaseFunction{
 	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
 	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, 
-			String commitId, Long commitTime, String commitMsg, String commitUsers, User user) {
+			Long commitId, Long startTime, String commitMsg, String commitUsers, User user) {
 		
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
@@ -4596,8 +4596,9 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		CommitEntry entry = new CommitEntry();
-		entry.id = commitId + "_" + doc.getDocId();
-		entry.time = commitTime;
+		entry.id = buildUniqueIdForCommitEntry(commitId, repos, doc);
+
+		entry.startTime = startTime;
 		entry.userId = user.getId();
 		entry.userName = user.getName();
 
@@ -4617,7 +4618,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
-			String commitId, Long commitTime, String commitMsg, String commitUser, User user) {
+			Long commitId, Long commitTime, String commitMsg, String commitUser, User user) {
 		
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
@@ -4650,11 +4651,14 @@ public class BaseController  extends BaseFunction{
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.id = context.commitId;
-		commit.time = context.commitTime;
+		commit.id = buildUniqueIdForCommitLog(context.commitId, repos);
+		
+		
+		commit.startTime = context.startTime;
 		commit.userId = context.user.getId();
 		commit.userName = context.user.getName();
 		
+		commit.commitId = context.commitId;
 		commit.commitMsg = context.commitMsg;
 		commit.commitUsers = context.commitUser;
 		
@@ -4675,8 +4679,8 @@ public class BaseController  extends BaseFunction{
 		//commitMsg / commitUser / commitId
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.id = context.commitId;
-		commit.time = context.commitTime;
+		commit.id = buildUniqueIdForCommitLog(context.commitId, repos);
+		commit.startTime = context.startTime;
 		commit.endTime = new Date().getTime();	//End Time
 		
 		commit.userId = context.user.getId();
@@ -4693,6 +4697,14 @@ public class BaseController  extends BaseFunction{
 		channel.updateCommit(repos, commit);
 	}
 	
+	private String buildUniqueIdForCommitLog(Long commitId, Repos repos) {
+		return commitId + "_" + repos.getId();
+	}
+	
+	private String buildUniqueIdForCommitEntry(Long commitId, Repos repos, Doc doc) {
+		return commitId + "_" + repos.getId() + "_" + doc.getDocId();
+	}
+
 	private void insertCommit(Repos repos, FolderUploadAction action) {
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
@@ -4703,11 +4715,13 @@ public class BaseController  extends BaseFunction{
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.id = action.commitId;
-		commit.time = action.startTime;
+		commit.id = buildUniqueIdForCommitLog(action.commitId, repos);
+		
+		commit.startTime = action.startTime;
 		commit.userId = action.user.getId();
 		commit.userName = action.user.getName();
 		
+		commit.commitId = action.commitId;
 		commit.commitMsg = action.commitMsg;
 		commit.commitUsers = action.commitUser;
 		
@@ -4727,12 +4741,14 @@ public class BaseController  extends BaseFunction{
 		//commitMsg / commitUser / commitId
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.id = action.commitId;
-		commit.time = action.startTime;
+		commit.id = buildUniqueIdForCommitLog(action.commitId, repos);
+		
+		commit.startTime = action.startTime;
 		commit.endTime = new Date().getTime();	//结束时间
 		commit.userId = action.user.getId();
 		commit.userName = action.user.getName();
 		
+		commit.commitId = action.commitId;
 		commit.commitMsg = action.commitMsg;
 		commit.commitUsers = action.commitUser;
 		
@@ -11905,7 +11921,7 @@ public class BaseController  extends BaseFunction{
 	public boolean addIndexForCommitEntry(Repos repos, CommitEntry entry)
 	{
 		Log.debug("addIndexForCommitEntry() commitId:" + entry.commitId);
-		Date date = new Date(entry.time);
+		Date date = new Date(entry.startTime);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
 		ret = LuceneUtil2.addCommitEntryIndex(entry, indexLib);
@@ -11914,8 +11930,8 @@ public class BaseController  extends BaseFunction{
 	
 	public boolean addIndexForCommitLog(Repos repos, CommitLog commit)
 	{
-		Log.debug("addIndexForCommitEntry() commitId:" + commit.id);
-		Date date = new Date(commit.time);
+		Log.debug("addIndexForCommitEntry() id:" + commit.id);
+		Date date = new Date(commit.startTime);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
 		ret = LuceneUtil2.addCommitLogIndex(commit, indexLib);
@@ -11924,8 +11940,8 @@ public class BaseController  extends BaseFunction{
 	
 	public boolean updateIndexForCommitLog(Repos repos, CommitLog commit)
 	{
-		Log.debug("addIndexForCommitEntry() commitId:" + commit.id);
-		Date date = new Date(commit.time);
+		Log.debug("addIndexForCommitEntry() id:" + commit.id);
+		Date date = new Date(commit.startTime);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
 		ret = LuceneUtil2.updateCommitLogIndex(commit, indexLib);
@@ -21327,8 +21343,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	
-	private String generateCommitId(Repos repos, Doc doc, long startTime) {
-		return repos.getId() + "_" + doc.getDocId() + "_" + startTime;
+	private Long generateCommitId(Repos repos, Doc doc, long startTime) {
+		return startTime;
 	}
 
 	private void startFolderUploadActionBeatCheckThread(FolderUploadAction action) 

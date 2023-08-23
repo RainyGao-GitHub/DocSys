@@ -2,9 +2,9 @@ package com.DocSystem.common.entity;
 
 public class CommitEntry {
 
-	public String id;			//commitId
+	public String id;			//uniqueId for commitEntry [commitId-docId]
 	
-	public Long time;			//startTime
+	public Long startTime;		//startTime
 	public Long endTime;		//endTime
 	
 	public String ip;			//IP for commit Request
@@ -12,7 +12,7 @@ public class CommitEntry {
 	public Integer userId;		//commit User ID
 	public String userName;		//commit User Name
 	
-	public String commitId;		//commitID
+	public Long commitId;		//commitId [commit's init timestamp]
 	public String commitMsg;	//commit Message
 	public String commitUsers;	//Users who involved in this commit
 

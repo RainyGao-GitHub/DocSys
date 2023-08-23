@@ -1,9 +1,9 @@
 package com.DocSystem.common.entity;
 
 public class CommitLog {
+	public String id;			//uniqueId [commitId-reposId]
 
-	public String id;			//commitId
-	public Long time;			//startTime
+	public Long startTime;			//startTime
 	public Long endTime;		//endTime
 	
 	public String ip;			//IP for commit Request
@@ -11,6 +11,7 @@ public class CommitLog {
 	public Integer userId;		//commit User ID
 	public String userName;		//commit User Name
 	
+	public Long commitId;		//commitId [commit's init time]
 	public String commitMsg;	//commit Message
 	public String commitUsers;	//Users who involved in this commit
 		

@@ -45,7 +45,7 @@ public class FolderUploadAction {
 	public long stopTime;
 	
 	//MxsDoc系统的commitId
-	public String commitId;
+	public Long commitId;
 	public String commitMsg;
 	public String commitUser;	
 }

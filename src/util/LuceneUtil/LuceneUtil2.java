@@ -2000,9 +2000,9 @@ public class LuceneUtil2   extends BaseFunction
     	return ret;
     }
     
-	protected static boolean deleteCommitLogIndex(String commitId, String indexLib)
+	protected static boolean deleteCommitLogIndex(String id, String indexLib)
 	{
-    	Log.debug("deleteCommitLogIndex() commitId:" + commitId + " indexLib:"+indexLib);
+    	Log.debug("deleteCommitLogIndex() id:" + id + " indexLib:"+indexLib);
     	Analyzer analyzer = null;
     	Directory directory = null;
     	IndexWriter indexWriter = null;
@@ -2013,7 +2013,7 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
 	        indexWriter = new IndexWriter(directory, config);
 	        
-	        Query query = new TermQuery(new Term("id", commitId));
+	        Query query = new TermQuery(new Term("id", id));
 	        indexWriter.deleteDocuments(query);
 	        indexWriter.commit();
 
@@ -2031,7 +2031,7 @@ public class LuceneUtil2   extends BaseFunction
 	
 	public static boolean updateCommitLogIndex(CommitLog commit, String indexLib)
     {	
-    	Log.debug("updateCommitLogIndex() commitId:" + commit.id + " indexLib:"+indexLib);    	
+    	Log.debug("updateCommitLogIndex() id:" + commit.id + " indexLib:"+indexLib);    	
     	deleteCommitLogIndex(commit.id, indexLib);
     	return addCommitLogIndex(commit, indexLib);
     }

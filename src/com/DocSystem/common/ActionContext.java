@@ -27,8 +27,10 @@ public class ActionContext {
 	public FolderUploadAction folderUploadAction;
 
 	//MxsDoc系统的commitId
-	public String commitId;
-	public Long commitTime;
+	
+	public Long commitId;
 	public String commitMsg;
 	public String commitUser;
+	public Long startTime;
+	public Long endTime;
 }
